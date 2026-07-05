@@ -1,0 +1,155 @@
+# =========================
+# OS / Editor
+# =========================
+
+.DS_Store
+Thumbs.db
+
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# =========================
+# Python
+# =========================
+
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+.venv/
+venv/
+env/
+ENV/
+
+# Match virtual environments in nested directories
+**/.venv/
+**/venv/
+**/env/
+**/ENV/
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# =========================
+# FastAPI / local app runtime
+# =========================
+
+*.log
+logs/
+tmp/
+temp/
+
+# =========================
+# Environment files / secrets
+# =========================
+
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+secrets/
+.local/
+.local.env
+
+# =========================
+# Docker
+# =========================
+
+docker-compose.override.yml
+
+# =========================
+# Kubernetes local files
+# =========================
+
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+
+.kube/
+.kubeconfig/
+
+*secret*.yaml
+*secret*.yml
+!*secret*.example.yaml
+!*secret*.example.yml
+
+# =========================
+# Helm
+# =========================
+
+*.tgz
+charts/
+Chart.lock
+
+!apps/**/helm/
+!apps/**/helm/**
+
+# =========================
+# Argo CD local files
+# =========================
+
+.argocd/
+argocd-context
+
+# =========================
+# Terraform / OpenTofu
+# Reserved for future AWS/EKS versions
+# =========================
+
+.terraform/
+.terraform.lock.hcl
+
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# =========================
+# Node.js
+# Reserved for future tooling
+# =========================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Build / coverage
+# =========================
+
+dist/
+build/
+coverage/
+
+# =========================
+# Archive / generated packages
+# =========================
+
+*.zip
+*.tar
+*.tar.gz
+*.rar

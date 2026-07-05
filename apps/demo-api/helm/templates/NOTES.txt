@@ -1,0 +1,13 @@
+Demo API has been deployed.
+
+Service name:
+  {{ include "demo-api.fullname" . }}
+
+Namespace:
+  {{ .Release.Namespace }}
+
+Local port-forward test:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "demo-api.fullname" . }} 8080:{{ .Values.service.port }}
+
+Health check:
+  curl http://localhost:8080/health

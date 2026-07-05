@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-api
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/YOUR_GITHUB_USERNAME/startup-devops-baseline.git
+    targetRevision: HEAD
+    path: apps/demo-api/helm
+    helm:
+      releaseName: demo-api
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: startup-apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

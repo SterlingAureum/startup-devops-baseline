@@ -3,7 +3,8 @@ set -euo pipefail
 
 ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 ROOT_APP_FILE="clusters/local/root-app.yaml"
-REPO_URL="${REPO_URL:-}"
+DEFAULT_REPO_URL="https://github.com/SterlingAureum/startup-devops-baseline.git"
+REPO_URL="${REPO_URL:-$DEFAULT_REPO_URL}"
 
 require_cmd() {
   local cmd="$1"

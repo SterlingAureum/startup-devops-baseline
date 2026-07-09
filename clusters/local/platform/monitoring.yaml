@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/YOUR_GITHUB_USERNAME/startup-devops-baseline.git
+    repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
     targetRevision: HEAD
     path: platform/monitoring/prometheus
     directory:

@@ -13,15 +13,18 @@ INGRESS_BASE_URL="${INGRESS_BASE_URL:-http://localhost}"
 MONITORING_APP_NAME="${MONITORING_APP_NAME:-monitoring}"
 MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-monitoring}"
 PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-prometheus}"
-PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-9090}"
-PROMETHEUS_BASE_URL="${PROMETHEUS_BASE_URL:-http://localhost:${PROMETHEUS_LOCAL_PORT}}"
 PROMETHEUS_QUERY="${PROMETHEUS_QUERY:-demo_api_requests_total}"
+PROMETHEUS_HTTP_MODE="${PROMETHEUS_HTTP_MODE:-port-forward}"
+PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19090}"
+PROMETHEUS_BASE_URL="${PROMETHEUS_BASE_URL:-http://127.0.0.1:${PROMETHEUS_LOCAL_PORT}}"
 TIMEOUT="${TIMEOUT:-180s}"
 SKIP_PROMETHEUS_HTTP="${SKIP_PROMETHEUS_HTTP:-false}"
 
 PASS_COUNT=0
 WARN_COUNT=0
 FAIL_COUNT=0
+PROMETHEUS_PF_PID=""
+PROMETHEUS_PF_LOG=""
 
 info() {
   printf 'INFO: %s\n' "$*"
@@ -41,6 +44,18 @@ fail() {
   FAIL_COUNT=$((FAIL_COUNT + 1))
   printf 'FAIL: %s\n' "$*" >&2
 }
+
+cleanup() {
+  if [ -n "${PROMETHEUS_PF_PID:-}" ] && kill -0 "$PROMETHEUS_PF_PID" >/dev/null 2>&1; then
+    kill "$PROMETHEUS_PF_PID" >/dev/null 2>&1 || true
+    wait "$PROMETHEUS_PF_PID" >/dev/null 2>&1 || true
+  fi
+
+  if [ -n "${PROMETHEUS_PF_LOG:-}" ] && [ -f "$PROMETHEUS_PF_LOG" ]; then
+    rm -f "$PROMETHEUS_PF_LOG"
+  fi
+}
+trap cleanup EXIT
 
 require_cmd() {
   local cmd="$1"
@@ -148,18 +163,100 @@ check_http_endpoint() {
   fi
 }
 
-check_prometheus_http() {
-  if [ "$SKIP_PROMETHEUS_HTTP" = "true" ]; then
-    warn "skipping Prometheus HTTP checks because SKIP_PROMETHEUS_HTTP=true"
+port_in_use() {
+  local port="$1"
+
+  if command -v ss >/dev/null 2>&1; then
+    ss -ltn | awk '{print $4}' | grep -Eq "(^|:|\\])${port}$"
+    return $?
+  fi
+
+  if command -v lsof >/dev/null 2>&1; then
+    lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1
+    return $?
+  fi
+
+  return 1
+}
+
+find_available_port() {
+  local start_port="$1"
+  local end_port=$((start_port + 100))
+  local port
+
+  for port in $(seq "$start_port" "$end_port"); do
+    if ! port_in_use "$port"; then
+      printf '%s\n' "$port"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+wait_for_url() {
+  local url="$1"
+  local attempts="${2:-30}"
+  local i
+
+  for i in $(seq 1 "$attempts"); do
+    if curl -fsS "$url" >/dev/null 2>&1; then
+      return 0
+    fi
+    sleep 1
+  done
+
+  return 1
+}
+
+start_prometheus_port_forward() {
+  local local_port
+  local_port="$(find_available_port "$PROMETHEUS_LOCAL_PORT")" || {
+    warn "no available local port found for Prometheus port-forward starting from ${PROMETHEUS_LOCAL_PORT}"
+    return 1
+  }
+
+  PROMETHEUS_LOCAL_PORT="$local_port"
+  PROMETHEUS_BASE_URL="http://127.0.0.1:${PROMETHEUS_LOCAL_PORT}"
+  PROMETHEUS_PF_LOG="$(mktemp)"
+
+  kubectl -n "$MONITORING_NAMESPACE" port-forward "svc/${PROMETHEUS_SERVICE}" "${PROMETHEUS_LOCAL_PORT}:9090" >"$PROMETHEUS_PF_LOG" 2>&1 &
+  PROMETHEUS_PF_PID="$!"
+
+  if wait_for_url "${PROMETHEUS_BASE_URL}/-/ready" 30; then
+    pass "Prometheus port-forward is ready: ${PROMETHEUS_BASE_URL}"
     return 0
   fi
 
-  local ready_output
-  if ready_output="$(curl -fsS "${PROMETHEUS_BASE_URL}/-/ready" 2>/dev/null)"; then
+  warn "Prometheus port-forward did not become ready: ${PROMETHEUS_BASE_URL}"
+  if [ -f "$PROMETHEUS_PF_LOG" ]; then
+    warn "port-forward log: $(tr '\n' ' ' < "$PROMETHEUS_PF_LOG" | sed 's/[[:space:]]\+/ /g')"
+  fi
+  return 1
+}
+
+check_prometheus_http() {
+  if [ "$SKIP_PROMETHEUS_HTTP" = "true" ] || [ "$PROMETHEUS_HTTP_MODE" = "skip" ]; then
+    warn "skipping Prometheus HTTP checks"
+    return 0
+  fi
+
+  if [ "$PROMETHEUS_HTTP_MODE" = "port-forward" ]; then
+    if ! start_prometheus_port_forward; then
+      warn "Prometheus HTTP checks skipped because port-forward failed"
+      return 0
+    fi
+  elif [ "$PROMETHEUS_HTTP_MODE" = "external" ]; then
+    warn "using external Prometheus URL: ${PROMETHEUS_BASE_URL}"
+  else
+    warn "unknown PROMETHEUS_HTTP_MODE=${PROMETHEUS_HTTP_MODE}; expected port-forward, external, or skip"
+    return 0
+  fi
+
+  if curl -fsS "${PROMETHEUS_BASE_URL}/-/ready" >/dev/null 2>&1; then
     pass "Prometheus readiness endpoint is reachable"
   else
     warn "Prometheus readiness endpoint is not reachable at ${PROMETHEUS_BASE_URL}/-/ready"
-    warn "Run: kubectl -n ${MONITORING_NAMESPACE} port-forward svc/${PROMETHEUS_SERVICE} ${PROMETHEUS_LOCAL_PORT}:9090"
     return 0
   fi
 
@@ -186,7 +283,8 @@ info "Application namespace: $APP_NAMESPACE"
 info "Ingress host: $INGRESS_HOST"
 info "Ingress base URL: $INGRESS_BASE_URL"
 info "Monitoring namespace: $MONITORING_NAMESPACE"
-info "Prometheus base URL: $PROMETHEUS_BASE_URL"
+info "Prometheus HTTP mode: $PROMETHEUS_HTTP_MODE"
+info "Prometheus local port start: $PROMETHEUS_LOCAL_PORT"
 info "Timeout: $TIMEOUT"
 
 print_section "Command checks"

@@ -1,119 +1,185 @@
-# Deployment
+# Deployment Guide
 
-This document explains how to deploy the current v0.1 kind + Argo CD baseline.
-
-The current batch only creates the local Kubernetes cluster, installs Argo CD, and creates the root GitOps application.
-
-It does not deploy the demo API, ingress-nginx, or monitoring yet.
+This guide describes how to deploy the v0.1 local GitOps baseline from a clean local environment.
 
 ## Prerequisites
 
-Install the following tools before running the scripts:
+Required tools:
 
 - Docker
-- kubectl
 - kind
+- kubectl
+- curl
+- git
+- helm, recommended for local Helm template checks
 
-Check versions:
+Verify tools:
 
 ```bash
 docker version
-kubectl version --client
 kind version
+kubectl version --client
+helm version
+curl --version
+git --version
 ```
 
-## 1. Prepare Scripts
+## 1. Create the kind Cluster
 
 From the repository root:
-
-```bash
-chmod +x scripts/*.sh
-```
-
-## 2. Create the kind Cluster
 
 ```bash
 ./scripts/bootstrap-kind.sh
 ```
 
-Expected checks:
+The kind cluster should expose local HTTP and HTTPS ports so ingress can be tested from the host.
+
+Check:
 
 ```bash
 kubectl get nodes
-kubectl cluster-info --context kind-startup-devops-baseline
+kubectl get pods -n kube-system
 ```
 
-The cluster name is:
+Expected state:
 
-```text
-startup-devops-baseline
-```
+- Node is `Ready`.
+- CoreDNS is Ready.
+- kube-proxy is Ready.
+- kindnet is Ready.
 
-## 3. Install Argo CD
+## 2. Install Argo CD
 
 ```bash
 ./scripts/install-argocd.sh
 ```
 
-Expected checks:
+The script installs Argo CD into the `argocd` namespace using server-side apply. This avoids large CRD annotation issues in newer Argo CD manifests.
+
+Check:
 
 ```bash
 kubectl get pods -n argocd
-kubectl get svc -n argocd
+kubectl get crd | grep argoproj
 ```
 
-## 4. Deploy the Root Application
+## 3. Build and Load demo-api Image
 
-If the repository has not been pushed to GitHub yet, you can still apply the placeholder root app:
+Since the v0.1 baseline runs locally with kind, the demo image is built locally and loaded into the kind cluster.
 
 ```bash
-./scripts/deploy-root-app.sh
+./scripts/build-load-demo-api-image.sh
 ```
 
-This creates the Argo CD application object, but sync will not work correctly until the repository URL points to a real Git repository.
+Check that the image exists in the kind node if needed:
 
-After pushing the repository to GitHub, run:
+```bash
+docker exec startup-devops-baseline-control-plane crictl images | grep demo-api
+```
+
+## 4. Push Repository Changes
+
+Argo CD reads manifests and Helm charts from Git. Make sure your repository has been pushed to GitHub or another reachable Git server.
+
+```bash
+git status
+git add .
+git commit -m "chore: prepare v0.1 local gitops baseline"
+git push
+```
+
+## 5. Deploy Root Application
+
+Deploy the Argo CD root application with the real repository URL:
 
 ```bash
 REPO_URL=https://github.com/<your-user>/startup-devops-baseline.git \
   ./scripts/deploy-root-app.sh
 ```
 
-Check the application:
+The root app syncs the platform applications under:
+
+```text
+clusters/local/platform/
+```
+
+Expected applications:
 
 ```bash
 kubectl get applications -n argocd
-kubectl describe application startup-devops-root -n argocd
 ```
 
-## 5. Access Argo CD UI
-
-Port-forward the Argo CD API server:
-
-```bash
-kubectl -n argocd port-forward svc/argocd-server 8080:443
-```
-
-Open:
+Expected result:
 
 ```text
-https://localhost:8080
+startup-devops-root   Synced   Healthy
+demo-api              Synced   Healthy
+ingress-nginx         Synced   Healthy
+monitoring            Synced   Healthy
 ```
 
-Get the initial admin password:
+## 6. Validate Workloads
+
+Check demo-api:
 
 ```bash
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath='{.data.password}' | base64 -d; echo
+kubectl get pods -n startup-apps
+kubectl get deploy -n startup-apps
+kubectl get svc -n startup-apps
+kubectl get ingress -n startup-apps
 ```
 
-Username:
+Check ingress-nginx:
 
-```text
-admin
+```bash
+kubectl get pods -n ingress-nginx
+kubectl get svc -n ingress-nginx
 ```
 
-## 6. Cleanup
+Check monitoring:
+
+```bash
+kubectl get pods -n monitoring
+kubectl get svc -n monitoring
+```
+
+## 7. Test demo-api Through Ingress
+
+Without editing `/etc/hosts`:
+
+```bash
+curl -H "Host: demo-api.local" http://localhost/health
+curl -H "Host: demo-api.local" http://localhost/ready
+curl -H "Host: demo-api.local" http://localhost/version
+curl -H "Host: demo-api.local" http://localhost/metrics
+```
+
+With `/etc/hosts`:
+
+```bash
+echo "127.0.0.1 demo-api.local" | sudo tee -a /etc/hosts
+curl http://demo-api.local/health
+```
+
+## 8. Run Full Validation
+
+```bash
+./scripts/validate.sh
+```
+
+The script validates:
+
+- Kubernetes cluster access.
+- kube-system core pods.
+- Argo CD core components.
+- Argo CD Application status.
+- demo-api deployment and service.
+- ingress-nginx deployment.
+- demo-api ingress.
+- demo-api HTTP endpoints.
+- Prometheus deployment and query path.
+
+## 9. Cleanup
 
 To delete the local kind cluster:
 
@@ -121,18 +187,17 @@ To delete the local kind cluster:
 ./scripts/cleanup.sh
 ```
 
-This deletes the full local Kubernetes cluster.
+Or directly:
 
-## Current Limitation
+```bash
+kind delete cluster --name startup-devops-baseline
+```
 
-The root application points to `clusters/local/platform`, but that directory does not deploy real platform components yet.
+## Notes
 
-This is intentional for the current batch.
+If Argo CD cannot sync the applications, confirm that:
 
-The next batches will add:
-
-- demo API service
-- Helm chart
-- ingress-nginx
-- monitoring
-- validation script
+- `REPO_URL` points to your real repository.
+- The repository is public, or Argo CD has credentials to access it.
+- The expected paths exist in the Git repository.
+- Changes have been pushed to Git.

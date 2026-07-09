@@ -1,109 +1,31 @@
-# Ingress Access
+# Ingress
 
-This document describes how local ingress access works in the v0.1 local GitOps baseline.
+The v0.1 baseline uses ingress-nginx to expose the demo API through local HTTP ingress.
 
-## Overview
-
-The local baseline uses `ingress-nginx` to expose the `demo-api` service through Kubernetes Ingress.
-
-The intended access path is:
+## Components
 
 ```text
-Client
-  -> localhost:80 on the host VM
-  -> kind control-plane port mapping
-  -> ingress-nginx controller
-  -> demo-api Service
-  -> demo-api Pod
+ingress-nginx namespace
+  |
+  +-- ingress-nginx-controller
+
+startup-apps namespace
+  |
+  +-- demo-api Service
+  +-- demo-api Ingress
 ```
 
-The default local hostname is:
+## Hostname
+
+The demo API uses:
 
 ```text
 demo-api.local
 ```
 
-## Prerequisites
+## Access Without /etc/hosts
 
-The kind control-plane container must expose ports 80 and 443 to the host.
-
-Check this with:
-
-```bash
-docker ps | grep startup-devops-baseline-control-plane
-```
-
-Expected port mapping:
-
-```text
-0.0.0.0:80->80/tcp
-0.0.0.0:443->443/tcp
-```
-
-## GitOps Flow
-
-The root Argo CD application manages platform applications under:
-
-```text
-clusters/local/platform/
-```
-
-The ingress controller is declared as:
-
-```text
-clusters/local/platform/ingress-nginx.yaml
-```
-
-After this file is committed and pushed to the Git repository, Argo CD should create and sync the `ingress-nginx` application automatically through the root application.
-
-You can force Argo CD to refresh the root application during local testing:
-
-```bash
-kubectl -n argocd annotate application startup-devops-root \
-  argocd.argoproj.io/refresh=hard --overwrite
-```
-
-## Validate Applications
-
-Check Argo CD applications:
-
-```bash
-kubectl get applications -n argocd
-```
-
-Expected applications:
-
-```text
-startup-devops-root
-ingress-nginx
-demo-api
-```
-
-The application name should be `ingress-nginx`. If you see a typo in your local output, check the manifest names first.
-
-## Validate Controller
-
-Check ingress-nginx pods:
-
-```bash
-kubectl get pods -n ingress-nginx
-```
-
-Check controller rollout:
-
-```bash
-kubectl -n ingress-nginx rollout status deployment/ingress-nginx-controller
-```
-
-## Validate Demo API Ingress
-
-Check the Ingress resource:
-
-```bash
-kubectl get ingress -n startup-apps
-```
-
-Test with an explicit Host header:
+Use the Host header directly:
 
 ```bash
 curl -H "Host: demo-api.local" http://localhost/health
@@ -111,7 +33,9 @@ curl -H "Host: demo-api.local" http://localhost/ready
 curl -H "Host: demo-api.local" http://localhost/version
 ```
 
-Alternatively, add a local hosts entry:
+## Access With /etc/hosts
+
+Add the local hostname:
 
 ```bash
 echo "127.0.0.1 demo-api.local" | sudo tee -a /etc/hosts
@@ -125,37 +49,79 @@ curl http://demo-api.local/ready
 curl http://demo-api.local/version
 ```
 
-## Helper Script
+## Check Ingress Resources
 
-You can run:
+```bash
+kubectl get application ingress-nginx -n argocd
+kubectl get pods -n ingress-nginx
+kubectl get svc -n ingress-nginx
+kubectl get ingress -n startup-apps
+kubectl get ingress -n startup-apps demo-api -o yaml
+```
+
+Expected ingress rule:
+
+```text
+host: demo-api.local
+path: /
+backend service: demo-api:80
+```
+
+## Check kind Port Mapping
+
+The kind control-plane container should expose local ports 80 and 443:
+
+```bash
+docker ps | grep startup-devops-baseline-control-plane
+```
+
+Expected ports include:
+
+```text
+0.0.0.0:80->80/tcp
+0.0.0.0:443->443/tcp
+```
+
+## Scripted Check
+
+Run:
 
 ```bash
 ./scripts/check-ingress.sh
 ```
 
-The script checks the ingress controller rollout, the demo-api Ingress resource, and the demo-api HTTP endpoints through ingress.
+This checks the ingress controller rollout, demo-api ingress resource, and HTTP access through ingress.
 
-## Troubleshooting
+## Common Issues
 
-If the ingress controller application is not created, refresh the root application:
+### Port 80 Is Already Used
 
-```bash
-kubectl -n argocd annotate application startup-devops-root \
-  argocd.argoproj.io/refresh=hard --overwrite
-```
+If another local service is already using port 80, kind may fail to create the expected port mapping.
 
-If the ingress controller pod is pending, check node scheduling and hostPort conflicts:
+Check:
 
 ```bash
-kubectl describe pod -n ingress-nginx -l app.kubernetes.io/component=controller
+sudo ss -ltnp | grep ':80'
 ```
 
-If `curl http://demo-api.local/health` does not work, first test with the explicit Host header:
+Stop the conflicting service or change the kind port mapping.
+
+### Hostname Does Not Resolve
+
+Use the Host header approach first:
 
 ```bash
 curl -H "Host: demo-api.local" http://localhost/health
 ```
 
-If the Host header test works but the hostname test fails, the issue is local DNS or `/etc/hosts`, not Kubernetes ingress.
+If that works, add `/etc/hosts` for direct hostname access.
 
-If port 80 is already used on the host VM, the kind control-plane container may fail to bind port 80. Stop the conflicting service or recreate the kind cluster with different port mappings.
+### Ingress Exists but Requests Fail
+
+Check:
+
+```bash
+kubectl get pods -n ingress-nginx
+kubectl logs -n ingress-nginx deploy/ingress-nginx-controller --tail=100
+kubectl get endpoints -n startup-apps demo-api
+```

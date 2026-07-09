@@ -1,189 +1,79 @@
 # Observability
 
-This document describes the basic observability setup used by the local GitOps baseline.
+The v0.1 baseline includes basic Prometheus monitoring.
 
-The current version uses a lightweight standalone Prometheus deployment. It is intentionally simple and is not intended to replace a production-grade monitoring stack.
+The goal is not to provide a full production observability stack. The goal is to prove that the demo workload exposes metrics and that Prometheus can scrape and query them.
 
-## Scope
-
-The v0.1 monitoring scope includes:
-
-- A `monitoring` namespace.
-- A standalone Prometheus deployment.
-- A Prometheus scrape config for the `demo-api` service.
-- A Prometheus service for local port-forward access.
-- Validation checks for Prometheus readiness and demo-api metrics ingestion.
-
-The current version does not include:
-
-- Grafana dashboards.
-- Alertmanager.
-- Prometheus Operator.
-- ServiceMonitor resources.
-- kube-state-metrics.
-- node-exporter.
-- Long-term metrics storage.
-- Production alerting rules.
-
-These can be added in later versions.
-
-## GitOps Flow
-
-The monitoring stack is managed by Argo CD.
-
-The root application reads:
+## Components
 
 ```text
-clusters/local/platform/
+monitoring namespace
+  |
+  +-- prometheus Deployment
+  +-- prometheus Service
+  +-- prometheus ConfigMap
 ```
 
-The monitoring application is defined at:
-
-```text
-clusters/local/platform/monitoring.yaml
-```
-
-It deploys manifests from:
+Prometheus resources are stored under:
 
 ```text
 platform/monitoring/prometheus/
 ```
 
-The expected Argo CD application tree is:
+The Argo CD Application is stored at:
 
 ```text
-startup-devops-root
-  ├── ingress-nginx
-  ├── demo-api
-  └── monitoring
+clusters/local/platform/monitoring.yaml
 ```
 
-## Prometheus Scrape Configuration
+## demo-api Metrics
 
-The Prometheus configuration is stored in:
-
-```text
-platform/monitoring/prometheus/configmap.yaml
-```
-
-The demo-api scrape target is:
-
-```text
-demo-api.startup-apps.svc.cluster.local:80
-```
-
-The metrics path is:
+The demo API exposes Prometheus metrics at:
 
 ```text
 /metrics
 ```
 
-## Deploy Monitoring
-
-After applying this patch, commit and push the changes to the Git repository watched by Argo CD:
-
-```bash
-git status
-git add .
-git commit -m "feat: add basic prometheus monitoring"
-git push
-```
-
-Refresh the root application if needed:
-
-```bash
-kubectl -n argocd annotate application startup-devops-root \
-  argocd.argoproj.io/refresh=hard --overwrite
-```
-
-Check Argo CD applications:
-
-```bash
-kubectl get applications -n argocd
-```
-
-Expected result:
+Example metrics:
 
 ```text
-NAME                  SYNC STATUS   HEALTH STATUS
-demo-api              Synced        Healthy
-ingress-nginx         Synced        Healthy
-monitoring            Synced        Healthy
-startup-devops-root   Synced        Healthy
+demo_api_requests_total
+demo_api_request_duration_seconds
+process_open_fds
+process_max_fds
+python_info
 ```
 
-## Validate Prometheus
-
-Check the monitoring namespace:
+## Check Monitoring Resources
 
 ```bash
 kubectl get pods -n monitoring
 kubectl get svc -n monitoring
+kubectl get application monitoring -n argocd
 ```
+
+Expected Application status:
+
+```text
+monitoring   Synced   Healthy
+```
+
+## Query Prometheus Manually
 
 Port-forward Prometheus:
 
 ```bash
-kubectl -n monitoring port-forward svc/prometheus 9090:9090
-```
-
-In another terminal, check readiness:
-
-```bash
-curl http://localhost:9090/-/ready
-```
-
-Query demo-api metrics:
-
-```bash
-curl 'http://localhost:9090/api/v1/query?query=demo_api_requests_total'
-```
-
-You can also open Prometheus in a browser:
-
-```text
-http://localhost:9090
+kubectl -n monitoring port-forward svc/prometheus 19090:9090
 ```
 
 Then query:
 
-```promql
-demo_api_requests_total
-```
-
-## Run Full Validation
-
-The validation script includes monitoring checks:
-
 ```bash
-./scripts/validate.sh
+curl http://localhost:19090/-/ready
+curl 'http://localhost:19090/api/v1/query?query=demo_api_requests_total'
 ```
 
-It checks:
-
-- Argo CD applications.
-- demo-api workload.
-- ingress access.
-- Prometheus deployment.
-- Prometheus readiness.
-- demo-api metrics query through Prometheus.
-
-## Troubleshooting
-
-If the `monitoring` application does not appear, refresh the root application:
-
-```bash
-kubectl -n argocd annotate application startup-devops-root \
-  argocd.argoproj.io/refresh=hard --overwrite
-```
-
-If Prometheus is not ready, check the pod logs:
-
-```bash
-kubectl logs -n monitoring deploy/prometheus
-```
-
-If Prometheus is running but the demo-api query returns no data, generate demo-api traffic first:
+Generate demo-api traffic if the metric is not visible yet:
 
 ```bash
 curl -H "Host: demo-api.local" http://localhost/health
@@ -191,8 +81,43 @@ curl -H "Host: demo-api.local" http://localhost/ready
 curl -H "Host: demo-api.local" http://localhost/version
 ```
 
-Wait for at least one scrape interval, then query again:
+Wait for the next Prometheus scrape interval, then query again.
+
+## validate.sh Behavior
+
+The validation script automatically creates a temporary port-forward for Prometheus checks. It does not rely on fixed `localhost:9090`, because that port may already be used by another local Prometheus.
+
+Run:
 
 ```bash
-curl 'http://localhost:9090/api/v1/query?query=demo_api_requests_total'
+./scripts/validate.sh
 ```
+
+Skip Prometheus HTTP checks:
+
+```bash
+SKIP_PROMETHEUS_HTTP=true ./scripts/validate.sh
+```
+
+Use an external Prometheus endpoint explicitly:
+
+```bash
+PROMETHEUS_HTTP_MODE=external \
+PROMETHEUS_BASE_URL=http://localhost:9090 \
+./scripts/validate.sh
+```
+
+## Current Limitations
+
+v0.1 does not include:
+
+- Grafana dashboards.
+- Alertmanager.
+- Prometheus Operator.
+- ServiceMonitor CRDs.
+- kube-state-metrics.
+- node-exporter.
+- Loki or log aggregation.
+- Alert routing.
+
+These can be added in future versions.

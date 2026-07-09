@@ -83,8 +83,6 @@ This directory will later contain Argo CD `Application` manifests for platform c
 - monitoring
 - demo-api
 
-At this stage, the directory only contains a README placeholder so that the GitOps structure is prepared without deploying additional workloads yet.
-
 ## 4. GitOps Flow
 
 The intended GitOps flow is:
@@ -111,22 +109,6 @@ Example:
 REPO_URL=https://github.com/<your-user>/startup-devops-baseline.git \
   ./scripts/deploy-root-app.sh
 ```
-
-## Current Boundaries
-
-The current architecture intentionally does not include:
-
-- demo API deployment
-- Helm chart
-- ingress-nginx
-- monitoring
-- CI/CD
-- cloud infrastructure
-- AWS EKS
-- Karpenter
-- CloudNativePG
-
-These will be added incrementally after the kind + Argo CD control-plane loop is stable.
 
 ## Future Architecture Direction
 

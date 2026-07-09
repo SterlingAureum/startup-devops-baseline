@@ -1,186 +1,190 @@
 # startup-devops-baseline
 
-A production-like DevOps and GitOps baseline for early-stage teams.
+A local-first DevOps and GitOps baseline for early-stage teams.
 
-This repository demonstrates how to build a small but practical Kubernetes delivery baseline using local infrastructure first. The initial version focuses on a reproducible local Kubernetes environment with GitOps deployment, ingress, a demo API service, basic observability, validation scripts, and operational documentation.
+This repository demonstrates a small but practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, a demo FastAPI service, Prometheus, and validation scripts.
 
-The long-term goal is to evolve this baseline from a local GitOps demo into a cloud-ready startup platform blueprint that can later extend to AWS EKS, Terraform, Karpenter, CloudNativePG, AI infrastructure workloads, and AIOps-style operations.
+The current version focuses on a reproducible local environment. It is intentionally not a full production platform, but it follows a structure that can later evolve toward AWS EKS, Terraform, Karpenter, CloudNativePG, CI/CD, AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-startup-devops-baseline v0.1
-= kind
-+ Argo CD
-+ app-of-apps root application
-+ local GitOps entrypoint
+v0.1-local-gitops-baseline
 ```
 
-It does not deploy the demo API yet. The demo API, ingress, Helm chart, monitoring, and validation script will be added in later batches.
+Current capabilities:
 
-## Goals
+- Local Kubernetes cluster with kind.
+- Argo CD GitOps control plane.
+- App-of-apps root application.
+- demo-api deployed through Helm.
+- ingress-nginx managed by Argo CD.
+- Local ingress access through `demo-api.local`.
+- Basic Prometheus monitoring.
+- One-command validation with `scripts/validate.sh`.
 
-- Bootstrap a local Kubernetes cluster with kind.
-- Install Argo CD into the local cluster.
-- Create an Argo CD root application.
-- Prepare the repository for an app-of-apps GitOps workflow.
-- Keep the structure simple enough to run locally and extend later.
+## Architecture
+
+```text
+GitHub Repository
+   |
+   | watched by Argo CD
+   v
+startup-devops-root Application
+   |
+   +-- ingress-nginx Application
+   +-- demo-api Application
+   +-- monitoring Application
+          |
+          v
+Local kind Kubernetes Cluster
+```
+
+The root application is the GitOps entry point. It syncs platform-level Argo CD Applications from `clusters/local/platform/`.
 
 ## Repository Structure
 
 ```text
 startup-devops-baseline/
-├── README.md
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── DEPLOYMENT.md
-│   ├── GITOPS_WORKFLOW.md
-│   ├── OBSERVABILITY.md
-│   ├── ROLLBACK.md
-│   ├── TROUBLESHOOTING.md
-│   └── ROADMAP.md
-│
-├── scripts/
-│   ├── bootstrap-kind.sh
-│   ├── install-argocd.sh
-│   ├── deploy-root-app.sh
-│   └── cleanup.sh
-│
+├── apps/
+│   └── demo-api/
+│       ├── Dockerfile
+│       ├── requirements.txt
+│       ├── src/
+│       └── helm/
+├── ci/
 ├── clusters/
 │   └── local/
 │       ├── root-app.yaml
-│       ├── platform/
-│       │   └── README.md
-│       └── values/
-│           └── .gitkeep
-│
+│       └── platform/
+├── docs/
+├── examples/
 ├── platform/
-│   ├── argocd/
-│   ├── ingress-nginx/
+│   ├── argocd
+│   ├── ingress-nginx
 │   └── monitoring/
-│
-├── apps/
-│   └── demo-api/
-│       ├── src/
-│       ├── helm/
-│       │   └── templates/
-│       └── README.md
-│
-├── ci/
-│   └── github-actions/
-└── examples/
-```
-
-## Architecture
-
-```text
-Developer
-   |
-   | update manifests
-   v
-Git Repository
-   |
-   | watched by Argo CD
-   v
-Argo CD
-   |
-   | sync desired state
-   v
-Local kind Cluster
+└── scripts/
 ```
 
 ## Quick Start
 
-Prerequisites:
-
-- Docker
-- kubectl
-- kind
-
-From the repository root:
+### 1. Create the local cluster
 
 ```bash
-chmod +x scripts/*.sh
-
 ./scripts/bootstrap-kind.sh
+```
+
+### 2. Install Argo CD
+
+```bash
 ./scripts/install-argocd.sh
-./scripts/deploy-root-app.sh
 ```
 
-Check the cluster:
+### 3. Build and load the demo-api image into kind
 
 ```bash
-kubectl get nodes
-kubectl get pods -n argocd
-kubectl get applications -n argocd
+./scripts/build-load-demo-api-image.sh
 ```
 
-Port-forward the Argo CD UI:
+### 4. Deploy the root application
 
-```bash
-kubectl -n argocd port-forward svc/argocd-server 8080:443
-```
-
-Open:
-
-```text
-https://localhost:8080
-```
-
-Get the initial admin password:
-
-```bash
-kubectl -n argocd get secret argocd-initial-admin-secret \
-  -o jsonpath='{.data.password}' | base64 -d; echo
-```
-
-Username:
-
-```text
-admin
-```
-
-## GitOps Repository URL
-
-The default `clusters/local/root-app.yaml` uses a placeholder repository URL:
-
-```text
-https://github.com/YOUR_GITHUB_USERNAME/startup-devops-baseline.git
-```
-
-After pushing this repository to GitHub, run:
+Use your real GitHub repository URL:
 
 ```bash
 REPO_URL=https://github.com/<your-user>/startup-devops-baseline.git \
   ./scripts/deploy-root-app.sh
 ```
 
-If `REPO_URL` is not provided, the script applies the placeholder manifest. That is enough to create the root app object, but Argo CD will not be able to sync until the repository URL is corrected.
+### 5. Validate the baseline
 
-## Current Scope
+## Local Access
 
-Included in this batch:
+The demo API is exposed through ingress using the host:
 
-- kind bootstrap script.
-- Argo CD install script.
-- Argo CD root application manifest.
-- root app deployment script.
-- cleanup script.
-- deployment documentation.
+```text
+demo-api.local
+```
 
-Not included yet:
+Add it to `/etc/hosts` if needed:
 
-- demo API.
-- Helm chart.
-- ingress-nginx installation.
-- monitoring stack.
-- validate.sh.
-- CI workflow.
+```bash
+echo "127.0.0.1 demo-api.local" | sudo tee -a /etc/hosts
+```
+
+Then test:
+
+```bash
+curl http://demo-api.local/health
+curl http://demo-api.local/ready
+curl http://demo-api.local/version
+curl http://demo-api.local/metrics
+```
+
+You can also test without editing `/etc/hosts`:
+
+```bash
+curl -H "Host: demo-api.local" http://localhost/health
+```
+
+## Validation
+
+Run:
+
+```bash
+./scripts/validate.sh
+```
+
+The script automatically creates a temporary port-forward for Prometheus checks, so it does not rely on a fixed local `localhost:9090` port.
+
+To skip Prometheus HTTP checks:
+
+```bash
+SKIP_PROMETHEUS_HTTP=true ./scripts/validate.sh
+```
+
+## What v0.1 Does Not Include
+
+The current version does not include:
+
+- CI/CD image build workflow.
+- GitHub Actions deployment pipeline.
+- Argo Rollouts.
+- Grafana dashboards.
+- Alertmanager.
 - AWS EKS.
-- Terraform.
-- Karpenter.
-- CloudNativePG.
+- Terraform/OpenTofu infrastructure.
+- Karpenter autoscaling.
+- CloudNativePG/Postgres.
+- GPU workloads.
+- vLLM or AI inference workloads.
 
-## Next Step
+These are planned as future extensions.
 
-The next batch should add the demo API service and Dockerfile. After that, the demo API can be deployed through Helm and connected to Argo CD.
+## Documentation
+
+Start with:
+
+- `docs/ARCHITECTURE.md`
+- `docs/DEPLOYMENT.md`
+- `docs/GITOPS_WORKFLOW.md`
+- `docs/INGRESS.md`
+- `docs/OBSERVABILITY.md`
+- `docs/TROUBLESHOOTING.md`
+- `docs/ROADMAP.md`
+
+## Roadmap
+
+The next planned phase is:
+
+```text
+v0.2-ci-security-baseline
+```
+
+Planned focus:
+
+- GitHub Actions image build.
+- Docker image tagging strategy.
+- Helm linting.
+- Basic image vulnerability scanning.
+- CI validation before GitOps deployment.
+

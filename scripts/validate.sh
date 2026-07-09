@@ -5,11 +5,19 @@ ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
 ROOT_APP_NAME="${ROOT_APP_NAME:-startup-devops-root}"
 DEMO_APP_NAME="${DEMO_APP_NAME:-demo-api}"
+INGRESS_APP_NAME="${INGRESS_APP_NAME:-ingress-nginx}"
 INGRESS_NAMESPACE="${INGRESS_NAMESPACE:-ingress-nginx}"
 INGRESS_CONTROLLER_DEPLOYMENT="${INGRESS_CONTROLLER_DEPLOYMENT:-ingress-nginx-controller}"
 INGRESS_HOST="${INGRESS_HOST:-demo-api.local}"
 INGRESS_BASE_URL="${INGRESS_BASE_URL:-http://localhost}"
+MONITORING_APP_NAME="${MONITORING_APP_NAME:-monitoring}"
+MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-monitoring}"
+PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-prometheus}"
+PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-9090}"
+PROMETHEUS_BASE_URL="${PROMETHEUS_BASE_URL:-http://localhost:${PROMETHEUS_LOCAL_PORT}}"
+PROMETHEUS_QUERY="${PROMETHEUS_QUERY:-demo_api_requests_total}"
 TIMEOUT="${TIMEOUT:-180s}"
+SKIP_PROMETHEUS_HTTP="${SKIP_PROMETHEUS_HTTP:-false}"
 
 PASS_COUNT=0
 WARN_COUNT=0
@@ -140,6 +148,34 @@ check_http_endpoint() {
   fi
 }
 
+check_prometheus_http() {
+  if [ "$SKIP_PROMETHEUS_HTTP" = "true" ]; then
+    warn "skipping Prometheus HTTP checks because SKIP_PROMETHEUS_HTTP=true"
+    return 0
+  fi
+
+  local ready_output
+  if ready_output="$(curl -fsS "${PROMETHEUS_BASE_URL}/-/ready" 2>/dev/null)"; then
+    pass "Prometheus readiness endpoint is reachable"
+  else
+    warn "Prometheus readiness endpoint is not reachable at ${PROMETHEUS_BASE_URL}/-/ready"
+    warn "Run: kubectl -n ${MONITORING_NAMESPACE} port-forward svc/${PROMETHEUS_SERVICE} ${PROMETHEUS_LOCAL_PORT}:9090"
+    return 0
+  fi
+
+  local response
+  if response="$(curl -fsS --get "${PROMETHEUS_BASE_URL}/api/v1/query" --data-urlencode "query=${PROMETHEUS_QUERY}" 2>/dev/null)"; then
+    if printf '%s' "$response" | grep -q '"status":"success"' && printf '%s' "$response" | grep -q 'demo_api_requests_total'; then
+      pass "Prometheus can query demo-api metrics: ${PROMETHEUS_QUERY}"
+    else
+      warn "Prometheus query succeeded but demo-api metric was not found yet: ${PROMETHEUS_QUERY}"
+      warn "Generate demo-api traffic and wait for the next scrape interval."
+    fi
+  else
+    warn "Prometheus query failed at ${PROMETHEUS_BASE_URL}/api/v1/query"
+  fi
+}
+
 print_section() {
   printf '\n== %s ==\n' "$*"
 }
@@ -149,6 +185,8 @@ info "Argo CD namespace: $ARGOCD_NAMESPACE"
 info "Application namespace: $APP_NAMESPACE"
 info "Ingress host: $INGRESS_HOST"
 info "Ingress base URL: $INGRESS_BASE_URL"
+info "Monitoring namespace: $MONITORING_NAMESPACE"
+info "Prometheus base URL: $PROMETHEUS_BASE_URL"
 info "Timeout: $TIMEOUT"
 
 print_section "Command checks"
@@ -184,6 +222,8 @@ wait_deployment_ready "$ARGOCD_NAMESPACE" argocd-repo-server "argocd-repo-server
 wait_deployment_ready "$ARGOCD_NAMESPACE" argocd-redis "argocd-redis"
 check_application "$ARGOCD_NAMESPACE" "$ROOT_APP_NAME"
 check_application "$ARGOCD_NAMESPACE" "$DEMO_APP_NAME"
+check_application "$ARGOCD_NAMESPACE" "$INGRESS_APP_NAME"
+check_application "$ARGOCD_NAMESPACE" "$MONITORING_APP_NAME"
 
 print_section "demo-api workload checks"
 check_namespace "$APP_NAMESPACE"
@@ -213,6 +253,19 @@ check_http_endpoint "/health" '"status":"ok"' "health"
 check_http_endpoint "/ready" '"status":"ready"' "readiness"
 check_http_endpoint "/version" '"name":"demo-api"' "version"
 check_http_endpoint "/metrics" "demo_api_requests_total" "metrics"
+
+print_section "Monitoring checks"
+check_namespace "$MONITORING_NAMESPACE"
+wait_deployment_ready "$MONITORING_NAMESPACE" prometheus "Prometheus"
+
+if kubectl -n "$MONITORING_NAMESPACE" get service "$PROMETHEUS_SERVICE" >/dev/null 2>&1; then
+  pass "service exists: ${MONITORING_NAMESPACE}/${PROMETHEUS_SERVICE}"
+else
+  fail "service not found: ${MONITORING_NAMESPACE}/${PROMETHEUS_SERVICE}"
+  exit 1
+fi
+
+check_prometheus_http
 
 print_section "Summary"
 printf 'PASS: %s\n' "$PASS_COUNT"

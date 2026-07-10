@@ -19,7 +19,7 @@ Scope:
 - One-command validation script.
 - Deployment, GitOps, ingress, observability, and troubleshooting documentation.
 
-## v0.2 - CI and Image Workflow
+## v0.2 - CI and Image Validation Baseline
 
 Status: Planned
 

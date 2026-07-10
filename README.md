@@ -177,7 +177,7 @@ Start with:
 The next planned phase is:
 
 ```text
-v0.2-ci-security-baseline
+v0.2-ci-image-validation-baseline
 ```
 
 Planned focus:

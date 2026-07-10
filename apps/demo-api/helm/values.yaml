@@ -74,7 +74,7 @@ readinessProbe:
 env:
   APP_NAME: demo-api
   APP_VERSION: "0.1.0"
-  ENVIRONMENT: local
+  APP_ENV: local
 
 nodeSelector: {}
 tolerations: []

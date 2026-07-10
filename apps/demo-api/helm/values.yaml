@@ -54,18 +54,16 @@ resources:
     memory: 256Mi
 
 livenessProbe:
-  httpGet:
-    path: /health
-    port: http
+  enabled: true
+  path: /health
   initialDelaySeconds: 10
   periodSeconds: 10
   timeoutSeconds: 2
   failureThreshold: 3
 
 readinessProbe:
-  httpGet:
-    path: /ready
-    port: http
+  enabled: true
+  path: /ready
   initialDelaySeconds: 5
   periodSeconds: 5
   timeoutSeconds: 2

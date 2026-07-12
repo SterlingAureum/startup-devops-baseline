@@ -16,6 +16,13 @@ spec:
     canary:
       maxSurge: {{ .Values.rollout.strategy.canary.maxSurge }}
       maxUnavailable: {{ .Values.rollout.strategy.canary.maxUnavailable }}
+      {{- if .Values.rollout.strategy.canary.trafficRouting.nginx.enabled }}
+      stableService: {{ .Values.rollout.strategy.canary.stableService }}
+      canaryService: {{ .Values.rollout.strategy.canary.canaryService }}
+      trafficRouting:
+        nginx:
+          stableIngress: {{ .Values.rollout.strategy.canary.trafficRouting.nginx.stableIngress }}
+      {{- end }}
       steps:
         {{- toYaml .Values.rollout.strategy.canary.steps | nindent 8 }}
   template:

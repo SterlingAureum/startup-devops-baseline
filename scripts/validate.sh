@@ -21,6 +21,8 @@ ARGO_ROLLOUTS_APP_NAME="${ARGO_ROLLOUTS_APP_NAME:-argo-rollouts}"
 ARGO_ROLLOUTS_NAMESPACE="${ARGO_ROLLOUTS_NAMESPACE:-argo-rollouts}"
 ARGO_ROLLOUTS_CONTROLLER_DEPLOYMENT="${ARGO_ROLLOUTS_CONTROLLER_DEPLOYMENT:-argo-rollouts}"
 ROLLOUT_NAME="${ROLLOUT_NAME:-$DEMO_APP_NAME}"
+STABLE_SERVICE_NAME="${STABLE_SERVICE_NAME:-demo-api-stable}"
+CANARY_SERVICE_NAME="${CANARY_SERVICE_NAME:-demo-api-canary}"
 TIMEOUT="${TIMEOUT:-180s}"
 SKIP_PROMETHEUS_HTTP="${SKIP_PROMETHEUS_HTTP:-false}"
 
@@ -215,6 +217,52 @@ wait_rollout_or_deployment_ready() {
 
   warn "$description Rollout not found; falling back to Deployment check"
   wait_deployment_ready "$namespace" "$name" "$description"
+}
+
+check_service_exists() {
+  local namespace="$1"
+  local service_name="$2"
+  local description="$3"
+
+  if kubectl -n "$namespace" get service "$service_name" >/dev/null 2>&1; then
+    pass "$description service exists: ${namespace}/${service_name}"
+  else
+    fail "$description service not found: ${namespace}/${service_name}"
+    return 1
+  fi
+}
+
+get_rollout_nginx_stable_ingress() {
+  local namespace="$1"
+  local rollout="$2"
+  kubectl -n "$namespace" get rollout "$rollout" \
+    -o jsonpath='{.spec.strategy.canary.trafficRouting.nginx.stableIngress}' 2>/dev/null || true
+}
+
+check_rollout_nginx_traffic_routing() {
+  local namespace="$1"
+  local rollout="$2"
+  local expected_stable_ingress="$3"
+
+  if ! api_resource_exists "rollouts" || ! rollout_exists "$namespace" "$rollout"; then
+    warn "Rollout not found; skipping nginx traffic routing check"
+    return 0
+  fi
+
+  local stable_ingress
+  stable_ingress="$(get_rollout_nginx_stable_ingress "$namespace" "$rollout")"
+
+  if [ "$stable_ingress" = "$expected_stable_ingress" ]; then
+    pass "Rollout uses nginx traffic routing with stableIngress=${stable_ingress}"
+    check_service_exists "$namespace" "$STABLE_SERVICE_NAME" "stable"
+    check_service_exists "$namespace" "$CANARY_SERVICE_NAME" "canary"
+  elif [ -z "$stable_ingress" ]; then
+    warn "Rollout nginx traffic routing is not configured; checking legacy service instead"
+    check_service_exists "$namespace" "$DEMO_APP_NAME" "demo-api"
+  else
+    fail "Rollout nginx traffic routing stableIngress mismatch: expected=${expected_stable_ingress} actual=${stable_ingress}"
+    return 1
+  fi
 }
 
 check_http_endpoint() {
@@ -414,12 +462,7 @@ print_section "demo-api workload checks"
 check_namespace "$APP_NAMESPACE"
 wait_rollout_or_deployment_ready "$APP_NAMESPACE" "$ROLLOUT_NAME" "$DEMO_APP_NAME"
 
-if kubectl -n "$APP_NAMESPACE" get service "$DEMO_APP_NAME" >/dev/null 2>&1; then
-  pass "service exists: ${APP_NAMESPACE}/${DEMO_APP_NAME}"
-else
-  fail "service not found: ${APP_NAMESPACE}/${DEMO_APP_NAME}"
-  exit 1
-fi
+check_rollout_nginx_traffic_routing "$APP_NAMESPACE" "$ROLLOUT_NAME" "$DEMO_APP_NAME"
 
 print_section "Ingress checks"
 check_namespace "$INGRESS_NAMESPACE"

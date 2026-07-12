@@ -1,5 +1,10 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "demo-api.fullname" . -}}
+{{- $trafficRoutingEnabled := and .Values.rollout.enabled .Values.rollout.strategy.canary.trafficRouting.nginx.enabled -}}
+{{- $backendService := $fullName -}}
+{{- if $trafficRoutingEnabled -}}
+{{- $backendService = .Values.rollout.strategy.canary.stableService -}}
+{{- end -}}
 {{- $svcPort := .Values.service.port -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -35,7 +40,7 @@ spec:
             pathType: {{ .pathType }}
             backend:
               service:
-                name: {{ $fullName }}
+                name: {{ $backendService }}
                 port:
                   number: {{ $svcPort }}
           {{- end }}

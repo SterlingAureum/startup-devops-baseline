@@ -25,3 +25,15 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - SkipDryRunOnMissingResource=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      name: demo-api-stable
+      jsonPointers:
+        - /spec/selector
+    - group: ""
+      kind: Service
+      name: demo-api-canary
+      jsonPointers:
+        - /spec/selector

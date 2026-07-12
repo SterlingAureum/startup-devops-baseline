@@ -17,6 +17,10 @@ PROMETHEUS_QUERY="${PROMETHEUS_QUERY:-demo_api_requests_total}"
 PROMETHEUS_HTTP_MODE="${PROMETHEUS_HTTP_MODE:-port-forward}"
 PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19090}"
 PROMETHEUS_BASE_URL="${PROMETHEUS_BASE_URL:-http://127.0.0.1:${PROMETHEUS_LOCAL_PORT}}"
+ARGO_ROLLOUTS_APP_NAME="${ARGO_ROLLOUTS_APP_NAME:-argo-rollouts}"
+ARGO_ROLLOUTS_NAMESPACE="${ARGO_ROLLOUTS_NAMESPACE:-argo-rollouts}"
+ARGO_ROLLOUTS_CONTROLLER_DEPLOYMENT="${ARGO_ROLLOUTS_CONTROLLER_DEPLOYMENT:-argo-rollouts}"
+ROLLOUT_NAME="${ROLLOUT_NAME:-$DEMO_APP_NAME}"
 TIMEOUT="${TIMEOUT:-180s}"
 SKIP_PROMETHEUS_HTTP="${SKIP_PROMETHEUS_HTTP:-false}"
 
@@ -26,24 +30,10 @@ FAIL_COUNT=0
 PROMETHEUS_PF_PID=""
 PROMETHEUS_PF_LOG=""
 
-info() {
-  printf 'INFO: %s\n' "$*"
-}
-
-pass() {
-  PASS_COUNT=$((PASS_COUNT + 1))
-  printf 'PASS: %s\n' "$*"
-}
-
-warn() {
-  WARN_COUNT=$((WARN_COUNT + 1))
-  printf 'WARN: %s\n' "$*"
-}
-
-fail() {
-  FAIL_COUNT=$((FAIL_COUNT + 1))
-  printf 'FAIL: %s\n' "$*" >&2
-}
+info() { printf 'INFO: %s\n' "$*"; }
+pass() { PASS_COUNT=$((PASS_COUNT + 1)); printf 'PASS: %s\n' "$*"; }
+warn() { WARN_COUNT=$((WARN_COUNT + 1)); printf 'WARN: %s\n' "$*"; }
+fail() { FAIL_COUNT=$((FAIL_COUNT + 1)); printf 'FAIL: %s\n' "$*" >&2; }
 
 cleanup() {
   if [ -n "${PROMETHEUS_PF_PID:-}" ] && kill -0 "$PROMETHEUS_PF_PID" >/dev/null 2>&1; then
@@ -144,6 +134,89 @@ check_application() {
   fi
 }
 
+check_application_if_exists() {
+  local namespace="$1"
+  local app_name="$2"
+  local description="$3"
+
+  if kubectl -n "$namespace" get application "$app_name" >/dev/null 2>&1; then
+    check_application "$namespace" "$app_name"
+  else
+    warn "$description application not found: $app_name; skipping"
+  fi
+}
+
+api_resource_exists() {
+  local resource="$1"
+  kubectl api-resources --no-headers 2>/dev/null | awk '{print $1}' | grep -qx "$resource"
+}
+
+rollout_exists() {
+  local namespace="$1"
+  local rollout="$2"
+  kubectl -n "$namespace" get rollout "$rollout" >/dev/null 2>&1
+}
+
+get_rollout_phase() {
+  local namespace="$1"
+  local rollout="$2"
+  kubectl -n "$namespace" get rollout "$rollout" -o jsonpath='{.status.phase}' 2>/dev/null || true
+}
+
+wait_rollout_or_deployment_ready() {
+  local namespace="$1"
+  local name="$2"
+  local description="$3"
+
+  if api_resource_exists "rollouts" && rollout_exists "$namespace" "$name"; then
+    pass "$description Rollout exists: ${namespace}/${name}"
+
+    if kubectl argo rollouts version >/dev/null 2>&1; then
+      if kubectl argo rollouts status "$name" -n "$namespace" --timeout "$TIMEOUT" >/dev/null 2>&1; then
+        pass "$description Rollout status is healthy"
+        return 0
+      fi
+
+      fail "$description Rollout did not become healthy"
+      kubectl argo rollouts get rollout "$name" -n "$namespace" || true
+      return 1
+    fi
+
+    warn "kubectl argo rollouts plugin not found; using kubectl polling fallback"
+
+    local timeout_seconds="${TIMEOUT%s}"
+    if ! [[ "$timeout_seconds" =~ ^[0-9]+$ ]]; then
+      timeout_seconds=180
+    fi
+
+    local elapsed=0
+    local phase=""
+    while [ "$elapsed" -lt "$timeout_seconds" ]; do
+      phase="$(get_rollout_phase "$namespace" "$name")"
+      if [ "$phase" = "Healthy" ]; then
+        pass "$description Rollout phase is Healthy"
+        return 0
+      fi
+
+      if [ "$phase" = "Degraded" ]; then
+        fail "$description Rollout phase is Degraded"
+        kubectl -n "$namespace" describe rollout "$name" || true
+        return 1
+      fi
+
+      sleep 5
+      elapsed=$((elapsed + 5))
+    done
+
+    fail "$description Rollout did not reach Healthy phase within ${TIMEOUT}; last phase=${phase:-unknown}"
+    kubectl -n "$namespace" get rollout "$name" -o wide || true
+    return 1
+  fi
+
+  warn "$description Rollout not found; falling back to Deployment check"
+  wait_deployment_ready "$namespace" "$name" "$description"
+}
+
 check_http_endpoint() {
   local path="$1"
   local expected_pattern="$2"
@@ -167,7 +240,7 @@ port_in_use() {
   local port="$1"
 
   if command -v ss >/dev/null 2>&1; then
-    ss -ltn | awk '{print $4}' | grep -Eq "(^|:|\\])${port}$"
+    ss -ltn | awk '{print $4}' | grep -Eq "(^|:|\])${port}$"
     return $?
   fi
 
@@ -285,6 +358,7 @@ info "Ingress base URL: $INGRESS_BASE_URL"
 info "Monitoring namespace: $MONITORING_NAMESPACE"
 info "Prometheus HTTP mode: $PROMETHEUS_HTTP_MODE"
 info "Prometheus local port start: $PROMETHEUS_LOCAL_PORT"
+info "Argo Rollouts namespace: $ARGO_ROLLOUTS_NAMESPACE"
 info "Timeout: $TIMEOUT"
 
 print_section "Command checks"
@@ -322,10 +396,23 @@ check_application "$ARGOCD_NAMESPACE" "$ROOT_APP_NAME"
 check_application "$ARGOCD_NAMESPACE" "$DEMO_APP_NAME"
 check_application "$ARGOCD_NAMESPACE" "$INGRESS_APP_NAME"
 check_application "$ARGOCD_NAMESPACE" "$MONITORING_APP_NAME"
+check_application_if_exists "$ARGOCD_NAMESPACE" "$ARGO_ROLLOUTS_APP_NAME" "Argo Rollouts"
+
+print_section "Argo Rollouts controller checks"
+if kubectl get namespace "$ARGO_ROLLOUTS_NAMESPACE" >/dev/null 2>&1; then
+  pass "namespace exists: $ARGO_ROLLOUTS_NAMESPACE"
+  if kubectl -n "$ARGO_ROLLOUTS_NAMESPACE" get deployment "$ARGO_ROLLOUTS_CONTROLLER_DEPLOYMENT" >/dev/null 2>&1; then
+    wait_deployment_ready "$ARGO_ROLLOUTS_NAMESPACE" "$ARGO_ROLLOUTS_CONTROLLER_DEPLOYMENT" "argo-rollouts controller"
+  else
+    warn "argo-rollouts controller deployment not found; expected only before v0.3"
+  fi
+else
+  warn "namespace not found: $ARGO_ROLLOUTS_NAMESPACE; expected only before v0.3"
+fi
 
 print_section "demo-api workload checks"
 check_namespace "$APP_NAMESPACE"
-wait_deployment_ready "$APP_NAMESPACE" "$DEMO_APP_NAME" "$DEMO_APP_NAME"
+wait_rollout_or_deployment_ready "$APP_NAMESPACE" "$ROLLOUT_NAME" "$DEMO_APP_NAME"
 
 if kubectl -n "$APP_NAMESPACE" get service "$DEMO_APP_NAME" >/dev/null 2>&1; then
   pass "service exists: ${APP_NAMESPACE}/${DEMO_APP_NAME}"

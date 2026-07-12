@@ -2,7 +2,7 @@ replicaCount: 3
 
 image:
   repository: startup-devops-baseline/demo-api
-  tag: "0.1.0"
+  tag: "0.1.1"
   pullPolicy: Never
 
 imagePullSecrets: []
@@ -93,7 +93,7 @@ readinessProbe:
 
 env:
   APP_NAME: demo-api
-  APP_VERSION: "0.1.0"
+  APP_VERSION: "0.1.1"
   APP_ENV: local
 
 nodeSelector: {}

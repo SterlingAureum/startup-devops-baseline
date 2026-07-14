@@ -4,7 +4,7 @@ This roadmap describes the intended evolution of the repository. It is not a fix
 
 ## v0.1 - Local GitOps Baseline
 
-Status: Completed / validation stage
+Status: Completed
 
 Scope:
 
@@ -21,7 +21,7 @@ Scope:
 
 ## v0.2 - CI and Image Validation Baseline
 
-Status: Planned
+Status: Completed
 
 Goal:
 

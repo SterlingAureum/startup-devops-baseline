@@ -1,0 +1,17 @@
+# Optional GHCR override values for v0.3.2.
+#
+# Keep the default values.yaml local-kind friendly.
+# Use this file as a reference when switching demo-api to a registry image.
+#
+# Example:
+#   helm template demo-api apps/demo-api/helm -f apps/demo-api/helm/values.yaml -f apps/demo-api/helm/values-ghcr.yaml
+
+image:
+  repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
+  tag: "sha-REPLACE_WITH_SHORT_COMMIT"
+  pullPolicy: IfNotPresent
+
+env:
+  APP_NAME: demo-api
+  APP_VERSION: "sha-REPLACE_WITH_SHORT_COMMIT"
+  APP_ENV: local

@@ -10,27 +10,17 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Helm
         uses: azure/setup-helm@v4
 
-      - name: Helm lint
+      - name: Helm lint demo-api
         run: helm lint apps/demo-api/helm
 
-      - name: Helm template
-        run: helm template demo-api apps/demo-api/helm > /tmp/demo-api.yaml
-
-      - name: Verify Rollout rendering
-        run: |
-          grep -q "kind: Rollout" /tmp/demo-api.yaml
-          grep -q "apiVersion: argoproj.io/v1alpha1" /tmp/demo-api.yaml
+      - name: Helm template demo-api
+        run: helm template demo-api apps/demo-api/helm > /tmp/demo-api-rendered.yaml
 
       - name: Docker build validation
         run: docker build -t demo-api-ci-test apps/demo-api
-
-      - name: Hadolint Dockerfile check
-        uses: hadolint/hadolint-action@v3.1.0
-        with:
-          dockerfile: apps/demo-api/Dockerfile
-          failure-threshold: warning

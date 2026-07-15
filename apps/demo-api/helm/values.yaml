@@ -1,9 +1,9 @@
 replicaCount: 3
 
 image:
-  repository: startup-devops-baseline/demo-api
-  tag: "0.1.1"
-  pullPolicy: Never
+  repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
+  tag: "sha-61b5677"
+  pullPolicy: IfNotPresent
 
 imagePullSecrets: []
 nameOverride: ""
@@ -93,7 +93,7 @@ readinessProbe:
 
 env:
   APP_NAME: demo-api
-  APP_VERSION: "0.1.1"
+  APP_VERSION: "sha-61b5677"
   APP_ENV: local
 
 nodeSelector: {}

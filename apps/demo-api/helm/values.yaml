@@ -25,12 +25,14 @@ rollout:
           stableIngress: demo-api
       steps:
         - setWeight: 20
-        - pause: {}
-        - setWeight: 50
         - pause:
-            duration: 30s
+            duration: 60s
+        - analysis:
+            templates:
+              - templateName: demo-api-canary-health
+        - setWeight: 50
+        - pause: {}
         - setWeight: 100
-
 serviceAccount:
   create: true
   annotations: {}
@@ -99,3 +101,14 @@ env:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+
+analysis:
+  enabled: true
+  prometheus:
+    address: http://prometheus.monitoring.svc.cluster.local:9090
+  metrics:
+    canaryTargetUp:
+      interval: 15s
+      count: 2
+      failureLimit: 1
+

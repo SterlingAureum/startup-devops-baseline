@@ -1,0 +1,24 @@
+{{- $analysis := .Values.analysis | default dict }}
+{{- if ($analysis.enabled | default false) }}
+{{- $prometheus := $analysis.prometheus | default dict }}
+{{- $metrics := $analysis.metrics | default dict }}
+{{- $canaryTargetUp := $metrics.canaryTargetUp | default dict }}
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: {{ include "demo-api.fullname" . }}-canary-health
+  labels:
+    {{- include "demo-api.labels" . | nindent 4 }}
+spec:
+  metrics:
+    - name: canary-prometheus-target-up
+      interval: {{ $canaryTargetUp.interval | default "15s" }}
+      count: {{ $canaryTargetUp.count | default 2 }}
+      failureLimit: {{ $canaryTargetUp.failureLimit | default 1 }}
+      successCondition: result[0] >= 1
+      provider:
+        prometheus:
+          address: {{ $prometheus.address | default "http://prometheus.monitoring.svc.cluster.local:9090" | quote }}
+          query: |
+            sum(up{job="demo-api-canary"})
+{{- end }}

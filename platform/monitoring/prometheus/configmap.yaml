@@ -19,8 +19,14 @@ data:
           - targets:
               - localhost:9090
 
-      - job_name: demo-api
+      - job_name: demo-api-stable
         metrics_path: /metrics
         static_configs:
           - targets:
               - demo-api-stable.startup-apps.svc.cluster.local:80
+
+      - job_name: demo-api-canary
+        metrics_path: /metrics
+        static_configs:
+          - targets:
+              - demo-api-canary.startup-apps.svc.cluster.local:80

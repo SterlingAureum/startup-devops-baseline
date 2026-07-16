@@ -1,0 +1,26 @@
+# Merge this snippet into apps/demo-api/helm/values.yaml.
+# The helper script scripts/enable-demo-api-analysis.sh applies the same change automatically.
+
+rollout:
+  strategy:
+    canary:
+      steps:
+        - setWeight: 20
+        - pause:
+            duration: 60s
+        - analysis:
+            templates:
+              - templateName: demo-api-canary-health
+        - setWeight: 50
+        - pause: {}
+        - setWeight: 100
+
+analysis:
+  enabled: true
+  prometheus:
+    address: http://prometheus.monitoring.svc.cluster.local:9090
+  metrics:
+    canaryTargetUp:
+      interval: 15s
+      count: 2
+      failureLimit: 1

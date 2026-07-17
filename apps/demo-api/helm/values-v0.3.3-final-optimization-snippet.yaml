@@ -1,0 +1,11 @@
+# v0.3.3 final optimization snippet.
+# Merge the maxSurge / maxUnavailable fields into apps/demo-api/helm/values.yaml
+# under rollout.strategy.canary.
+
+rollout:
+  strategy:
+    canary:
+      # Keep canary resource overhead bounded for the local baseline.
+      # This mirrors production thinking for memory-heavy or GPU workloads.
+      maxSurge: 1
+      maxUnavailable: 0

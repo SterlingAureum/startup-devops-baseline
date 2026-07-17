@@ -1,34 +1,44 @@
 # Architecture
 
-This document describes the current architecture of the startup-devops-baseline repository.
+This document describes the current local architecture of the `startup-devops-baseline` repository at v0.3.5.
 
-The current implementation focuses on the minimum kind + Argo CD loop. The goal is to build a local GitOps control-plane baseline before adding application workloads, ingress, monitoring, CI/CD, and cloud infrastructure.
+The repository now provides a complete local GitOps and progressive delivery baseline. It combines CI image publishing, Argo CD application reconciliation, Argo Rollouts canary delivery, ingress-nginx traffic routing, and Prometheus-based rollout analysis.
 
 ## Current Architecture
 
 ```text
 Developer
    |
-   | update GitOps manifests
+   | push application or GitOps changes
    v
-Git Repository
+GitHub Repository
+   |
+   +-- GitHub Actions validates Helm and builds demo-api
+   +-- GHCR stores versioned demo-api images
    |
    | watched by Argo CD
    v
-Argo CD
+startup-devops-root Application
    |
-   | sync desired state
-   v
-Local kind Cluster
+   +-- ingress-nginx Application
+   +-- argo-rollouts Application
+   +-- monitoring Application
+   +-- demo-api Application
+          |
+          +-- Rollout/demo-api
+          +-- Service/demo-api-stable
+          +-- Service/demo-api-canary
+          +-- Ingress/demo-api
+          +-- AnalysisTemplate/demo-api-canary-health
+          v
+Local kind Kubernetes Cluster
 ```
 
-## Components
+## 1. Local Kubernetes Cluster
 
-## 1. kind Cluster
+kind provides the local Kubernetes environment used for development and validation.
 
-kind provides a local Kubernetes cluster for development and validation.
-
-The cluster is created by:
+The cluster is created with:
 
 ```bash
 ./scripts/bootstrap-kind.sh
@@ -40,106 +50,126 @@ The cluster name is:
 startup-devops-baseline
 ```
 
-The kind configuration includes local port mappings for future ingress support:
+The kind configuration maps host ports 80 and 443 to the ingress-ready control-plane node so `demo-api.local` can be reached from the workstation.
 
-```text
-host port 80  -> container port 80
-host port 443 -> container port 443
-```
+## 2. Argo CD Control Plane
 
-These mappings are prepared now, even though ingress-nginx is not installed until a later batch.
-
-## 2. Argo CD
-
-Argo CD is installed into the `argocd` namespace.
-
-Installation script:
+Argo CD is installed in the `argocd` namespace:
 
 ```bash
 ./scripts/install-argocd.sh
 ```
 
-The script installs Argo CD using the upstream install manifest and waits for the main Argo CD deployments to become available.
-
-## 3. Root Application
-
-The repository uses an app-of-apps style entrypoint.
-
-Root application manifest:
+The root Application is defined in:
 
 ```text
 clusters/local/root-app.yaml
 ```
 
-The root application points to:
+It watches:
 
 ```text
-clusters/local/platform
+clusters/local/platform/
 ```
 
-This directory will later contain Argo CD `Application` manifests for platform components such as:
+That directory contains child Application definitions for ingress-nginx, Argo Rollouts, monitoring, and demo-api.
 
-- ingress-nginx
-- monitoring
-- demo-api
+## 3. Application Delivery
 
-## 4. GitOps Flow
-
-The intended GitOps flow is:
+The demo API is packaged as a Helm chart under:
 
 ```text
-1. Update manifests in Git.
-2. Push changes to the remote repository.
-3. Argo CD detects the change.
-4. Argo CD syncs the desired state into Kubernetes.
-5. Operators inspect status using kubectl or Argo CD UI.
+apps/demo-api/helm/
 ```
 
-The current root application is deployed by:
+The chart renders:
 
-```bash
-./scripts/deploy-root-app.sh
-```
+- a demo-api `Rollout`;
+- stable and canary Services;
+- an ingress-nginx Ingress;
+- an Argo Rollouts `AnalysisTemplate`;
+- supporting ServiceAccount and chart metadata.
 
-For real sync behavior, the repository must be pushed to a remote Git repository and `REPO_URL` must be provided.
+The current release process uses immutable GHCR image tags and manual GitOps promotion through Helm values.
 
-Example:
+## 4. Progressive Delivery
 
-```bash
-REPO_URL=https://github.com/<your-user>/startup-devops-baseline.git \
-  ./scripts/deploy-root-app.sh
-```
+Argo Rollouts manages the demo-api canary release.
 
-## Future Architecture Direction
-
-The local architecture is designed to evolve toward the following structure:
+The delivery flow is:
 
 ```text
-Git Repository
-   |
-   +-- platform components
-   |     +-- ingress-nginx
-   |     +-- monitoring
-   |     +-- database operators
-   |
-   +-- application workloads
-   |     +-- demo-api
-   |     +-- future AI workloads
-   |
-   +-- cluster definitions
-         +-- local
-         +-- aws-eks
+new image tag committed to Git
+  -> Argo CD sync
+  -> new ReplicaSet created
+  -> ingress-nginx shifts canary traffic
+  -> AnalysisRun queries Prometheus
+  -> operator promotes or aborts
+  -> stable revision updated or previous revision retained
 ```
 
-The long-term direction is:
+The rollout strategy includes explicit `maxSurge` and `maxUnavailable` settings so temporary capacity growth is visible and controlled.
+
+## 5. Traffic Routing
+
+The local environment uses ingress-nginx for HTTP routing and canary traffic splitting.
+
+The primary hostname is:
 
 ```text
-local GitOps baseline
--> CI/image workflow
--> progressive delivery
--> AWS EKS baseline
--> Karpenter autoscaling
--> CloudNativePG data baseline
--> AI infrastructure workload
--> AIOps extension
+demo-api.local
 ```
+
+Stable and canary Services allow Argo Rollouts to direct traffic to separate ReplicaSets during a release.
+
+## 6. Monitoring and Analysis
+
+A lightweight Prometheus deployment is stored under:
+
+```text
+platform/monitoring/prometheus/
+```
+
+Prometheus scrapes stable and canary demo-api targets. The current AnalysisTemplate verifies that the canary target is available to Prometheus.
+
+This is intentionally a baseline health gate. Error-rate, latency, saturation, and business-level signals are deferred until richer application metrics are available.
+
+## 7. CI and Image Publishing
+
+GitHub Actions workflows are stored in:
+
+```text
+.github/workflows/
+```
+
+They provide:
+
+- repository and Helm validation;
+- demo-api container image build;
+- GHCR image publication;
+- commit-derived image tags.
+
+CI builds artifacts, while Git remains the source of truth for deployment state.
+
+## 8. Operational Boundaries
+
+The current version intentionally remains local-first. It does not yet include AWS networking, EKS, cloud load balancing, workload IAM, autoscaling, managed data services, or production-grade security controls.
+
+Those capabilities begin in v0.4.
+
+## Next Architecture Stage
+
+The next stage extends the same GitOps model to AWS:
+
+```text
+Terraform / OpenTofu
+  -> AWS VPC
+  -> EKS control plane
+  -> managed node group
+  -> EKS add-ons and workload IAM
+  -> Argo CD bootstrap
+  -> aws-dev root Application
+  -> demo-api exposed through AWS-native ingress
+```
+
+The local environment remains useful as the fast validation path, while `aws-dev` becomes the cloud infrastructure and integration environment.

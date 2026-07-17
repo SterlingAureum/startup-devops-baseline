@@ -9,7 +9,7 @@ The current stage focuses on a reproducible local environment. It is intentional
 ## Current Version
 
 ```text
-v0.3.3-prometheus-canary-analysis
+v0.3.5-local-progressive-delivery-baseline
 ```
 
 Current capabilities:
@@ -104,7 +104,6 @@ startup-devops-baseline/
 ├── examples/
 ├── platform/
 │   ├── argocd/
-│   ├── argo-rollouts/
 │   ├── ingress-nginx/
 │   └── monitoring/
 └── scripts/
@@ -237,6 +236,8 @@ This is a lightweight canary health gate. Real error-rate or latency-based analy
 | v0.3.1 | Completed | ingress-nginx canary traffic routing |
 | v0.3.2 | Completed | GHCR image publishing and manual GitOps image promotion |
 | v0.3.3 | Completed | Prometheus-based canary analysis and rollout capacity notes |
+| v0.3.4 | Completed | Rollout stabilization and README refinement |
+| v0.3.5 | Completed | Local baseline documentation and repository cleanup |
 
 ## What This Repository Is
 
@@ -290,7 +291,7 @@ Start with:
 
 ## Roadmap
 
-The next major planned phase is:
+The local baseline is complete. The next major planned phase is:
 
 ```text
 v0.4-aws-eks-baseline

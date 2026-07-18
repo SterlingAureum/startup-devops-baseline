@@ -1,0 +1,8 @@
+aws_region   = "us-east-1"
+project_name = "startup-devops-baseline"
+environment  = "dev"
+
+additional_tags = {
+  Owner      = "replace-me"
+  Repository = "startup-devops-baseline"
+}

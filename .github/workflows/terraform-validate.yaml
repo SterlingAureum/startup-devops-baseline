@@ -1,0 +1,50 @@
+name: terraform validate
+
+on:
+  pull_request:
+    paths:
+      - "infra/terraform/**"
+      - "scripts/validate-terraform.sh"
+      - ".github/workflows/terraform-validate.yaml"
+  push:
+    branches:
+      - main
+      - feature/v0.4-aws-eks-baseline
+    paths:
+      - "infra/terraform/**"
+      - "scripts/validate-terraform.sh"
+      - ".github/workflows/terraform-validate.yaml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terraform-validate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform format
+        run: terraform -chdir=infra/terraform/aws/environments/dev fmt -check -recursive
+
+      - name: Terraform init
+        run: terraform -chdir=infra/terraform/aws/environments/dev init -backend=false -input=false
+
+      - name: Terraform validate
+        run: terraform -chdir=infra/terraform/aws/environments/dev validate

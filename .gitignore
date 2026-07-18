@@ -68,8 +68,10 @@ argocd-context
 docker-compose.override.yml
 
 # Terraform / OpenTofu reserved for future versions
-.terraform/
-terraform.tfvars
+**/.terraform/*
+*.tfplan
+.terraformrc
+terraform.rc
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*

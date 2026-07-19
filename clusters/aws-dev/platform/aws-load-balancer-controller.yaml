@@ -18,6 +18,8 @@ spec:
       values: |
         clusterName: startup-devops-baseline-dev
         region: us-east-1
+        # Environment-specific infrastructure identifier.
+        # Keep this synchronized with Terraform output `vpc_id`.
         vpcId: "vpc-0674ad314656bfb2b"
         serviceAccount:
           create: false

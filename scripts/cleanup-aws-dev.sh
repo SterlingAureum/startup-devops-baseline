@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+WAIT_TIMEOUT="${WAIT_TIMEOUT:-15m}"
+ROOT_APP="startup-devops-aws-dev-root"
+
+command -v kubectl >/dev/null 2>&1 || {
+  echo "Required command not found: kubectl" >&2
+  exit 1
+}
+
+if kubectl get application "${ROOT_APP}" -n argocd >/dev/null 2>&1; then
+  echo "==> Deleting aws-dev root application with cascading cleanup"
+  kubectl delete application "${ROOT_APP}" -n argocd --wait=false
+else
+  echo "==> Root application is already absent"
+fi
+
+echo "==> Waiting for demo-api ingress to disappear"
+end=$((SECONDS + 900))
+while kubectl get ingress demo-api -n startup-apps >/dev/null 2>&1; do
+  if (( SECONDS >= end )); then
+    echo "Timed out waiting for the demo-api Ingress to be deleted." >&2
+    echo "Check the AWS Load Balancer Controller and ALB finalizers before terraform destroy." >&2
+    exit 1
+  fi
+  sleep 10
+done
+
+echo "==> Application resources removed"
+echo "Verify the ALB is gone in AWS, then run:"
+echo "terraform -chdir=infra/terraform/aws/environments/dev destroy"

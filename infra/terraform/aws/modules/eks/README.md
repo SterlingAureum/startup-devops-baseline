@@ -34,3 +34,9 @@ CIDR before keeping the environment online.
 The default managed node group uses two `t3.medium` On-Demand nodes with a
 minimum of one and maximum of three. Karpenter and Spot capacity remain out of
 scope until v0.5.
+
+## AWS Load Balancer Controller IAM
+
+The module creates a dedicated IRSA role and customer-managed policy for the `kube-system/aws-load-balancer-controller` ServiceAccount. The policy is based on the upstream AWS Load Balancer Controller v2.14.1 installation policy.
+
+The Kubernetes ServiceAccount is intentionally created and annotated by `scripts/bootstrap-eks-argocd.sh`, because its role ARN contains the AWS account ID and must not be hardcoded in Git.

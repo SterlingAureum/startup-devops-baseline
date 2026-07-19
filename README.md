@@ -1,15 +1,15 @@
 # startup-devops-baseline
 
-A local-first DevOps, GitOps, and progressive delivery baseline for early-stage teams.
+A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
-The current stage focuses on a reproducible local environment. It is intentionally not a full production platform yet, but the repository is structured to evolve toward AWS EKS, Terraform/OpenTofu, Karpenter, CloudNativePG, observability, security controls, AI infrastructure workloads, and AIOps workflows.
+The repository now contains both the completed local progressive-delivery baseline and an AWS EKS development baseline managed with Terraform and Argo CD. It remains intentionally smaller than a full production platform and will continue toward Karpenter, CloudNativePG, security controls, observability, AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.3.5-local-progressive-delivery-baseline
+v0.4.3-eks-gitops-bootstrap
 ```
 
 Current capabilities:
@@ -29,6 +29,13 @@ Current capabilities:
 - Manual promote / abort workflow for controlled releases.
 - Rollout capacity guardrails with `maxSurge` and `maxUnavailable`.
 - One-command validation with `scripts/validate.sh`.
+- Terraform-managed AWS VPC and EKS baseline.
+- On-Demand EKS managed node group in private subnets.
+- EKS managed add-ons and workload-specific IRSA roles.
+- Argo CD bootstrap on EKS.
+- AWS Load Balancer Controller managed through Argo CD.
+- `aws-dev` demo-api Deployment exposed through an internet-facing ALB.
+- AWS validation with `scripts/validate-aws-dev.sh`.
 
 ## Architecture
 
@@ -97,9 +104,14 @@ startup-devops-baseline/
 │       └── helm/
 ├── ci/
 ├── clusters/
-│   └── local/
+│   ├── local/
+│   │   ├── root-app.yaml
+│   │   └── platform/
+│   └── aws-dev/
 │       ├── root-app.yaml
 │       └── platform/
+├── infra/
+│   └── terraform/aws/
 ├── docs/
 ├── examples/
 ├── platform/

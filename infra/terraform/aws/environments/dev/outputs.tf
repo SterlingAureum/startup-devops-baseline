@@ -67,3 +67,8 @@ output "eks_addon_names" {
   description = "EKS managed add-ons installed by Terraform."
   value       = module.eks.addon_names
 }
+
+output "aws_load_balancer_controller_role_arn" {
+  description = "IAM role ARN used by the AWS Load Balancer Controller service account."
+  value       = module.eks.aws_load_balancer_controller_role_arn
+}

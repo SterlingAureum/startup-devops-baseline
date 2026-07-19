@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-api-aws-dev
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
+    targetRevision: feature/v0.4-aws-eks-baseline
+    path: apps/demo-api/helm
+    helm:
+      releaseName: demo-api
+      valueFiles:
+        - values-aws-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: startup-apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

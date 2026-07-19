@@ -67,3 +67,89 @@ variable "single_nat_gateway" {
   type        = bool
   default     = true
 }
+
+variable "eks_cluster_version" {
+  description = "Kubernetes version for EKS. Set null to use the current EKS default at creation time."
+  type        = string
+  default     = null
+  nullable    = true
+}
+
+variable "eks_endpoint_public_access" {
+  description = "Enable public access to the EKS Kubernetes API endpoint."
+  type        = bool
+  default     = true
+}
+
+variable "eks_endpoint_private_access" {
+  description = "Enable private access to the EKS Kubernetes API endpoint."
+  type        = bool
+  default     = true
+}
+
+variable "eks_public_access_cidrs" {
+  description = "CIDRs allowed to reach the public EKS API endpoint."
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "eks_enabled_cluster_log_types" {
+  description = "EKS control-plane log types sent to CloudWatch."
+  type        = list(string)
+  default     = []
+}
+
+variable "eks_node_group_name" {
+  description = "Name suffix for the baseline EKS managed node group."
+  type        = string
+  default     = "general"
+}
+
+variable "eks_node_instance_types" {
+  description = "EC2 instance types for the EKS managed node group."
+  type        = list(string)
+  default     = ["t3.medium"]
+}
+
+variable "eks_node_capacity_type" {
+  description = "Capacity type for the EKS managed node group."
+  type        = string
+  default     = "ON_DEMAND"
+}
+
+variable "eks_node_ami_type" {
+  description = "AMI type used by EKS managed nodes."
+  type        = string
+  default     = "AL2023_x86_64_STANDARD"
+}
+
+variable "eks_node_disk_size" {
+  description = "Root disk size in GiB for EKS managed nodes."
+  type        = number
+  default     = 30
+}
+
+variable "eks_node_desired_size" {
+  description = "Desired number of EKS managed nodes."
+  type        = number
+  default     = 2
+}
+
+variable "eks_node_min_size" {
+  description = "Minimum number of EKS managed nodes."
+  type        = number
+  default     = 1
+}
+
+variable "eks_node_max_size" {
+  description = "Maximum number of EKS managed nodes."
+  type        = number
+  default     = 3
+}
+
+variable "eks_cluster_admin_principal_arn" {
+  description = "Optional long-lived IAM role or user ARN granted cluster-admin through an EKS access entry."
+  type        = string
+  default     = null
+  nullable    = true
+}

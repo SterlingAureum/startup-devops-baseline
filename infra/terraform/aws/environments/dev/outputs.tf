@@ -4,7 +4,7 @@ output "environment_name" {
 }
 
 output "cluster_name" {
-  description = "Name reserved for the future EKS cluster."
+  description = "Configured EKS cluster name."
   value       = local.cluster_name
 }
 
@@ -33,7 +33,37 @@ output "nat_gateway_ids" {
   value       = module.vpc.nat_gateway_ids
 }
 
-output "eks_module_status" {
-  description = "Current implementation status of the EKS module."
-  value       = module.eks.status
+output "eks_cluster_name" {
+  description = "Name of the EKS cluster."
+  value       = module.eks.cluster_name
+}
+
+output "eks_cluster_endpoint" {
+  description = "Kubernetes API endpoint of the EKS cluster."
+  value       = module.eks.cluster_endpoint
+}
+
+output "eks_cluster_version" {
+  description = "Kubernetes version running on the EKS cluster."
+  value       = module.eks.cluster_version
+}
+
+output "eks_cluster_security_group_id" {
+  description = "EKS-managed cluster security group ID."
+  value       = module.eks.cluster_security_group_id
+}
+
+output "eks_oidc_provider_arn" {
+  description = "IAM OIDC provider ARN for EKS workload identities."
+  value       = module.eks.oidc_provider_arn
+}
+
+output "eks_node_group_name" {
+  description = "Name of the baseline EKS managed node group."
+  value       = module.eks.node_group_name
+}
+
+output "eks_addon_names" {
+  description = "EKS managed add-ons installed by Terraform."
+  value       = module.eks.addon_names
 }

@@ -26,3 +26,27 @@ additional_tags = {
   Owner      = "replace-me"
   Repository = "startup-devops-baseline"
 }
+
+# Set a supported EKS Kubernetes version explicitly for repeatable environments.
+# Leave null only when intentionally accepting the current EKS default.
+eks_cluster_version = null
+
+# Restrict this to your public IP in CIDR form before keeping the cluster online.
+eks_endpoint_public_access  = true
+eks_endpoint_private_access = true
+eks_public_access_cidrs     = ["0.0.0.0/0"]
+
+# Disabled by default to limit CloudWatch ingestion cost in the lab.
+eks_enabled_cluster_log_types = []
+
+eks_node_group_name     = "general"
+eks_node_instance_types = ["t3.medium"]
+eks_node_capacity_type  = "ON_DEMAND"
+eks_node_ami_type       = "AL2023_x86_64_STANDARD"
+eks_node_disk_size      = 30
+eks_node_desired_size   = 2
+eks_node_min_size       = 1
+eks_node_max_size       = 3
+
+# Optional: use a persistent IAM role/user ARN, not an STS assumed-role session ARN.
+eks_cluster_admin_principal_arn = null

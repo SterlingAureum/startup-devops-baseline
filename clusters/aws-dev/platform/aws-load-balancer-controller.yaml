@@ -18,7 +18,7 @@ spec:
       values: |
         clusterName: startup-devops-baseline-dev
         region: us-east-1
-        vpcId: ""
+        vpcId: "vpc-0674ad314656bfb2b"
         serviceAccount:
           create: false
           name: aws-load-balancer-controller

@@ -9,7 +9,7 @@ The repository now contains both the completed local progressive-delivery baseli
 ## Current Version
 
 ```text
-v0.4.3-eks-gitops-bootstrap
+v0.4.4-eks-baseline-hardening
 ```
 
 Current capabilities:
@@ -36,6 +36,9 @@ Current capabilities:
 - AWS Load Balancer Controller managed through Argo CD.
 - `aws-dev` demo-api Deployment exposed through an internet-facing ALB.
 - AWS validation with `scripts/validate-aws-dev.sh`.
+- Unified AWS validation workflow with `scripts/validate-all.sh`.
+- AWS environment teardown workflow with dependency-aware cleanup.
+- AWS EKS operational documentation and troubleshooting runbooks.
 
 ## Architecture
 
@@ -63,6 +66,35 @@ Local kind Kubernetes Cluster
 The root application is the GitOps entry point. It syncs platform-level Argo CD Applications from `clusters/local/platform/`.
 
 Argo CD is responsible for synchronizing desired state from Git. Argo Rollouts is responsible for canary rollout behavior, traffic shifting, AnalysisRun execution, and promotion/abort workflows.
+
+
+## AWS EKS Baseline Architecture
+
+The repository now supports an AWS development environment in addition to the
+local GitOps environment.
+
+```text
+Terraform
+  ├── VPC
+  ├── Public and private subnets
+  ├── NAT Gateway
+  ├── Amazon EKS
+  ├── Managed Node Group
+  ├── EKS managed add-ons
+  └── IAM and IRSA
+        ↓
+Argo CD bootstrap
+        ↓
+aws-dev App of Apps
+  ├── AWS Load Balancer Controller
+  └── demo-api
+        ↓
+Application Load Balancer
+```
+
+The AWS environment focuses on reproducible infrastructure, private worker
+nodes, IAM boundaries, GitOps bootstrap, AWS-native ingress exposure,
+validation, and safe teardown.
 
 ## Release Flow
 
@@ -271,19 +303,15 @@ The current version does not yet include:
 - Fully automated image tag promotion.
 - Argo CD Image Updater.
 - Separate app and GitOps repositories.
-- AWS EKS.
-- Terraform/OpenTofu infrastructure.
-- AWS Load Balancer Controller.
-- AWS ECR.
 - Karpenter autoscaling.
-- CloudNativePG/Postgres.
+- CloudNativePG/Postgres baseline.
 - Grafana dashboards.
 - Alertmanager.
 - Production-grade security policy.
 - GPU workloads.
 - vLLM or AI inference workloads.
 
-These are planned as future extensions.
+These remain planned future extensions.
 
 ## Documentation
 
@@ -303,27 +331,45 @@ Start with:
 
 ## Roadmap
 
-The local baseline is complete. The next major planned phase is:
+The AWS EKS baseline is complete.
 
 ```text
-v0.4-aws-eks-baseline
+v0.4.0 Terraform skeleton          ✅
+v0.4.1 VPC baseline                ✅
+v0.4.2 EKS baseline                ✅
+v0.4.3 EKS GitOps bootstrap        ✅
+v0.4.4 Validation and hardening    ✅
+```
+
+Current capabilities:
+
+- Terraform-managed AWS infrastructure.
+- Amazon EKS cluster lifecycle.
+- Managed node groups.
+- IAM and IRSA integration.
+- Argo CD bootstrap.
+- AWS Load Balancer Controller.
+- ALB-based application exposure.
+- Validation and teardown workflows.
+
+Next phase:
+
+```text
+v0.5 Karpenter Autoscaling Baseline
 ```
 
 Planned focus:
 
-- Terraform/OpenTofu based AWS infrastructure.
-- VPC and EKS baseline.
-- Managed node groups.
-- Argo CD bootstrap on EKS.
-- ingress exposure through AWS-native components.
-- GHCR or ECR image pull strategy.
-- Reusing the current demo-api GitOps and Rollouts flow on EKS.
+- Karpenter installation.
+- NodePool and EC2NodeClass design.
+- Spot workload scheduling.
+- Cost optimization.
+- Node consolidation.
 
 Later phases may include:
 
-- Karpenter autoscaling.
 - CloudNativePG/Postgres baseline.
-- production observability stack.
-- policy and security controls.
+- Production observability stack.
+- Security and policy controls.
 - AI infrastructure extension.
-- AIOps-oriented operational workflows.
+- AIOps operational workflows.

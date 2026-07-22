@@ -2,27 +2,131 @@
 
 ## Purpose
 
-The `aws-dev` environment is a reproducible AWS EKS baseline that can be created with Terraform, bootstrapped with Argo CD, validated, exposed through ALB, and destroyed cleanly.
+This document describes the runtime architecture of the AWS EKS environment.
 
 ## Architecture
 
+### GitOps Management Architecture
+
 ```text
-                               GitHub
-                                 │
-                                 ▼
-                              Argo CD
-                                 │
-                  ┌──────────────┴──────────────┐
-                  ▼                             ▼
-   AWS Load Balancer Controller             demo-api
-                  │                             │
-                  └──────────────┬──────────────┘
-                                 ▼
-                       Kubernetes Ingress
-                                 ▼
-                    Application Load Balancer
-                                 ▼
-                              Internet
+                         GitHub Repository
+
+                                |
+                                v
+
+                             Argo CD
+
+                                |
+                                v
+
+                    aws-dev-root Application
+
+                                |
+                +---------------+---------------+
+                |                               |
+                v                               v
+
+
+ aws-load-balancer-controller               demo-api
+
+           Application                     Application
+
+
+                |                               |
+                v                               v
+
+
+     Kubernetes Deployment             Kubernetes Rollout
+
+ (aws-load-balancer-controller)            (demo-api)
+
+
+                |                               |
+                v                               v
+
+
+ AWS Load Balancer Controller Pods        demo-api Pods Pods
+
+```
+
+### Runtime Traffic Flow
+
+```text
+                         Users
+
+                           |
+                           v
+
+                  AWS Application Load Balancer
+
+                           |
+                           v
+
+                 Kubernetes Ingress
+
+                           |
+                           v
+
+                 Kubernetes Service
+
+                           |
+                           v
+
+                    demo-api Pods
+
+
+
+
+               AWS Load Balancer Controller Pods
+
+                           |
+                           |
+                           | watches
+                           v
+
+                 Kubernetes Ingress
+
+                           |
+                           |
+                           v
+
+                        AWS API
+
+                           |
+                           |
+                           v
+
+               ALB lifecycle management
+
+
+Notes: AWS Load Balancer Controller watches Ingress resources and manages ALB lifecycle.
+
+```
+
+### Infrastructure
+
+```text
+Terraform
+
+    |
+    v
+
+AWS VPC
+
+    |
+    v
+
+Amazon EKS
+
+    |
+    v
+
+Managed Node Group
+
+    |
+    v
+
+Kubernetes Workloads
 ```
 
 Infrastructure ownership:

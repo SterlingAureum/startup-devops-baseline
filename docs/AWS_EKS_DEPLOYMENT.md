@@ -1,5 +1,93 @@
 # AWS EKS Deployment
 
+## Deployment Flow
+
+```text
+                             Developer
+
+                                  |
+                                  v
+
+                          Terraform Apply
+
+                                  |
+                                  v
+
+                        AWS Infrastructure
+
+                                  |
+                                  |
+                                  |
+                                  v
+
+                                 VPC
+
+                                  |
+                                  v
+
+                            EKS Cluster
+
+                                  |
+                                  v
+
+                        Managed Node Group
+
+
+                                  |
+                                  v
+
+
+                        Configure kubeconfig
+
+
+                                  |
+                                  v
+
+
+                         Bootstrap Argo CD
+
+
+                                  |
+                                  v
+
+
+                    Deploy AWS Root Application
+
+
+                                  |
+                                  |
+                                  |
+                                  |
+                                  v
+
+                 Argo CD creates Kubernetes Applications
+
+                                  |
+                 +----------------+----------------+
+                 |                                 |
+                 v                                 v
+
+
+    AWS Load Balancer Controller                demo-api
+
+          Application                          Application
+
+
+                 |
+                 |
+                 v
+
+
+    Kubernetes Resources Ready
+
+
+                 |
+                 v
+
+
+          ALB Available
+```
+
 ## Prerequisites
 
 ```text
@@ -26,7 +114,7 @@ cp infra/terraform/aws/environments/dev/terraform.tfvars.example \
 
 Review region, Availability Zones, Kubernetes version, API CIDRs, and tags.
 
-## 2. Validate
+## 2. Validate Terraform
 
 ```bash
 ./scripts/validate-terraform.sh

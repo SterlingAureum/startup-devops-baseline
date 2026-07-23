@@ -10,10 +10,23 @@ command -v kubectl >/dev/null 2>&1 || {
 }
 
 if kubectl get application "${ROOT_APP}" -n argocd >/dev/null 2>&1; then
-  echo "==> Deleting aws-dev root application with cascading cleanup"
-  kubectl delete application "${ROOT_APP}" -n argocd --wait=false
+  echo "==> Suspending root Application automation"
+  kubectl patch application "${ROOT_APP}" \
+    --namespace argocd \
+    --type merge \
+    --patch '{"spec":{"syncPolicy":{"automated":null}}}'
 else
   echo "==> Root application is already absent"
+fi
+
+if kubectl get crd ec2nodeclasses.karpenter.k8s.aws >/dev/null 2>&1; then
+  echo "==> Deleting EC2NodeClasses and generated instance profiles"
+  kubectl delete ec2nodeclass --all --wait=true --timeout="${WAIT_TIMEOUT}"
+fi
+
+if kubectl get application "${ROOT_APP}" -n argocd >/dev/null 2>&1; then
+  echo "==> Deleting aws-dev root application with cascading cleanup"
+  kubectl delete application "${ROOT_APP}" -n argocd --wait=false
 fi
 
 echo "==> Waiting for demo-api ingress to disappear"

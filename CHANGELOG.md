@@ -2,6 +2,24 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.5.2
+
+### Added
+
+- GitOps-managed `application` EC2NodeClass for future Karpenter NodePools.
+- AL2023 AMI, private-subnet, cluster-security-group, and node-role discovery.
+- Explicit IMDSv2, encrypted gp3 root volume, private-addressing, and EC2 tag
+  settings for future application nodes.
+- EC2NodeClass readiness, Terraform role-contract, discovery, and no-provisioning
+  validation.
+- Dependency-aware EC2NodeClass and generated instance-profile cleanup.
+
+### Changed
+
+- Extended unified validation with the EC2NodeClass discovery baseline.
+- Updated Karpenter architecture, deployment, environment, output, and roadmap
+  documentation.
+
 ## v0.5.1
 
 ### Added

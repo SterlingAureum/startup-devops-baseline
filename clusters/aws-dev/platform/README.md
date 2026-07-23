@@ -17,5 +17,10 @@ Karpenter is split into two Applications:
 - `karpenter.yaml` installs the controller with CRD installation disabled.
 
 The controller runs only on the stable Managed Node Group nodes labeled
-`workload=system`. `EC2NodeClass` and `NodePool` resources are intentionally
-deferred to a later v0.5 increment.
+`workload=system`.
+
+`karpenter-ec2nodeclass.yaml` defines the reusable AWS launch and discovery
+configuration for future application NodePools. It can resolve its IAM instance
+profile, private subnets, cluster security group, and AL2023 AMIs without
+launching an instance. `NodePool` resources are intentionally deferred to a
+later v0.5 increment.

@@ -37,6 +37,14 @@ This document describes the runtime architecture of the AWS EKS environment.
 
  AWS LBC `vpcId` is rendered by bootstrap and preserved by the root Application.
 
+ Karpenter controller
+          |
+          v
+ application EC2NodeClass
+          |
+          v
+ AWS launch and discovery configuration
+
 ```
 
 ### Runtime Traffic Flow
@@ -152,6 +160,7 @@ Argo CD
 ├── AWS Load Balancer Controller
 ├── Karpenter CRDs
 ├── Karpenter controller
+├── Karpenter application EC2NodeClass
 └── demo-api
 ```
 
@@ -179,8 +188,10 @@ Karpenter node → dedicated EC2 node role and EKS access entry
 ```
 
 The Karpenter controller is installed in v0.5.1 and constrained to the stable
-Managed Node Group labeled `workload=system`. `EC2NodeClass` and `NodePool` are
-not installed yet, so Karpenter cannot provision EC2 nodes in this increment.
+Managed Node Group labeled `workload=system`. v0.5.2 adds the application
+EC2NodeClass for IAM instance-profile, private-subnet, security-group, and AMI
+discovery. No `NodePool` exists yet, so Karpenter cannot provision EC2 nodes in
+this increment.
 
 ## IMDS and VPC Discovery
 

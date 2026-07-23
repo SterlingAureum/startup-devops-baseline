@@ -159,8 +159,9 @@ TARGET_REVISION=feature/v0.5-karpenter-autoscaling \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 
-The root Application installs the Karpenter CRDs first and the controller
-afterward. v0.5.1 does not create an `EC2NodeClass` or `NodePool`.
+The root Application installs the Karpenter CRDs first, the controller
+afterward, and then the `application` EC2NodeClass. v0.5.2 does not create a
+`NodePool`.
 
 ## 7. Validate Everything
 
@@ -175,10 +176,12 @@ kubectl get nodes
 kubectl get applications -n argocd
 kubectl get pods -A
 kubectl get ingress -n startup-apps
+kubectl get ec2nodeclass application
 kubectl get nodepools,nodeclaims
 ```
 
-An empty NodePool and NodeClaim listing is expected in v0.5.1.
+The EC2NodeClass should report `Ready=True`. An empty NodePool and NodeClaim
+listing is expected in v0.5.2.
 
 ## 8. Destroy
 

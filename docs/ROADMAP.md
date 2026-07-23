@@ -81,7 +81,7 @@ Planned scope:
 - AWS IAM, interruption handling, and discovery foundation - delivered in v0.5.0
 - Karpenter CRD and controller installation - delivered in v0.5.1
 - controller IRSA and stable system-node placement - delivered in v0.5.1
-- EC2NodeClass configuration
+- application EC2NodeClass and AWS resource discovery - delivered in v0.5.2
 - NodePool design
 - system and application workload separation
 - scheduling constraints

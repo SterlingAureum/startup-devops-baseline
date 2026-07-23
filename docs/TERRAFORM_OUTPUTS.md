@@ -33,7 +33,8 @@ terraform -chdir=infra/terraform/aws/environments/dev output
 - `karpenter_controller_role_arn`: read by `bootstrap-eks-argocd.sh` to
   annotate the Karpenter ServiceAccount.
 - `karpenter_node_role_arn`: identity authorized to join EKS as an EC2 Linux node.
-- `karpenter_node_role_name`: future `EC2NodeClass.spec.role` value.
+- `karpenter_node_role_name`: `EC2NodeClass.spec.role` contract, checked by
+  `validate-karpenter-nodeclass.sh`.
 - `karpenter_interruption_queue_name`: Karpenter Helm
   `settings.interruptionQueue` value.
 - `karpenter_event_rule_names`: interruption rules managed by Terraform.

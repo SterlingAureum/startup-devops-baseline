@@ -44,14 +44,16 @@ Argo CD
 AWS Load Balancer Controller
 Karpenter AWS foundation
 Karpenter CRDs and controller
+Karpenter application EC2NodeClass
 demo-api
 Application Load Balancer
 ```
 
 The v0.5.0 Karpenter foundation includes IAM, node authorization, interruption
 handling, and discovery tags. v0.5.1 adds the GitOps-managed CRDs and controller
-on the stable system Managed Node Group. Dynamic nodes are not created until an
-`EC2NodeClass` and `NodePool` are introduced.
+on the stable system Managed Node Group. v0.5.2 adds an `EC2NodeClass` that
+validates AWS launch configuration and discovery. Dynamic nodes are not created
+until a `NodePool` is introduced.
 
 ## Deliberate Differences
 

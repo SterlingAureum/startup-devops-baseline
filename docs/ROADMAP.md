@@ -7,24 +7,24 @@ not a fixed delivery schedule.
 
 Status: Completed
 
-Delivered: 
+Delivered:
 
-- kind local Kubernetes cluster 
-- Argo CD GitOps control plane 
-- app-of-apps root Application 
-- demo-api workload 
-- Helm-based deployment 
-- ingress-nginx managed by Argo CD 
-- local ingress access 
+- kind local Kubernetes cluster
+- Argo CD GitOps control plane
+- app-of-apps root Application
+- demo-api workload
+- Helm-based deployment
+- ingress-nginx managed by Argo CD
+- local ingress access
 - lightweight Prometheus monitoring
 
 ## v0.2 - CI and Image Validation Baseline
 
 Status: Completed
 
-Delivered: 
+Delivered:
 
-- GitHub Actions validation 
+- GitHub Actions validation
 - Docker image build checks
 - Helm lint and template validation
 - GHCR image publishing foundation
@@ -86,8 +86,9 @@ Planned scope:
 - system and application workload separation - delivered in v0.5.3
 - scheduling constraints and bounded capacity - delivered in v0.5.3
 - controlled scale-out and consolidation-driven scale-in - delivered in v0.5.3
-- Spot capacity optimization
-- interruption handling
+- isolated Spot application capacity and scale validation - delivered in v0.5.4
+- controller, SQS, and EventBridge interruption readiness - delivered in v0.5.4
+- controlled AWS FIS interruption and replacement drill
 
 ## v0.6 - CloudNativePG Data Platform
 

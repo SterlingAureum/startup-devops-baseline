@@ -5,7 +5,7 @@
 ```text
 Suspend aws-dev Root Application automation
         ↓
-Delete the temporary scale-test workload
+Delete the On-Demand and Spot scale-test workloads
         ↓
 Delete NodePool
         ↓

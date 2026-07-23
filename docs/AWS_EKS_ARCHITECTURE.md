@@ -43,10 +43,13 @@ This document describes the runtime architecture of the AWS EKS environment.
  application EC2NodeClass
           |
           v
- application-ondemand NodePool
-          |
-          v
- NodeClaim and temporary On-Demand application node
+ application capacity tiers
+    |                 |
+    v                 v
+ On-Demand         Spot NodePool
+ NodePool               |
+    |                    v
+    +----------> NodeClaims and temporary application nodes
 
 ```
 
@@ -165,6 +168,7 @@ Argo CD
 ├── Karpenter controller
 ├── Karpenter application EC2NodeClass
 ├── Karpenter On-Demand application NodePool
+├── Karpenter Spot application NodePool
 └── demo-api
 ```
 
@@ -194,10 +198,14 @@ Karpenter node → dedicated EC2 node role and EKS access entry
 The Karpenter controller is constrained to the stable Managed Node Group
 labeled `workload=system`. The application EC2NodeClass supplies IAM
 instance-profile, private-subnet, security-group, and AMI discovery.
-`application-ondemand` provisions only On-Demand Linux/amd64 nodes for pods
-that select `workload=application` and tolerate
-`dedicated=application:NoSchedule`. CPU, memory, and node-count limits bound the
-development environment, while consolidation removes empty capacity.
+`application-ondemand` and `application-spot` provision Linux/amd64 capacity.
+Their different `NoSchedule` taints make the pools mutually exclusive unless a
+workload explicitly tolerates both. CPU, memory, and node-count limits bound
+the development environment, while consolidation removes empty capacity.
+
+The Karpenter controller receives interruption events through the encrypted SQS
+queue populated by EventBridge. For a Spot interruption warning, Karpenter can
+taint and drain the affected node while requesting replacement capacity.
 
 ## IMDS and VPC Discovery
 

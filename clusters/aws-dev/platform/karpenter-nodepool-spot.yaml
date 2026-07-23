@@ -1,7 +1,7 @@
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
-  name: application-ondemand
+  name: application-spot
   annotations:
     argocd.argoproj.io/sync-wave: "15"
     argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
@@ -11,7 +11,7 @@ spec:
       labels:
         workload: application
         capacity-owner: karpenter
-        capacity-tier: on-demand
+        capacity-tier: spot
     spec:
       nodeClassRef:
         group: karpenter.k8s.aws
@@ -19,10 +19,10 @@ spec:
         name: application
       taints:
         - key: dedicated
-          value: application
+          value: application-spot
           effect: NoSchedule
       expireAfter: 168h
-      terminationGracePeriod: 10m
+      terminationGracePeriod: 2m
       requirements:
         - key: kubernetes.io/arch
           operator: In
@@ -35,7 +35,7 @@ spec:
         - key: karpenter.sh/capacity-type
           operator: In
           values:
-            - on-demand
+            - spot
         - key: karpenter.k8s.aws/instance-category
           operator: In
           values:
@@ -60,4 +60,4 @@ spec:
     cpu: "4"
     memory: 16Gi
     nodes: 2
-  weight: 10
+  weight: 20

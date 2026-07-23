@@ -25,7 +25,8 @@ run_step "EKS infrastructure baseline" "${ROOT_DIR}/scripts/validate-eks-baselin
 run_step "Karpenter AWS foundation" "${ROOT_DIR}/scripts/validate-karpenter-foundation.sh"
 run_step "Karpenter controller" "${ROOT_DIR}/scripts/validate-karpenter-controller.sh"
 run_step "Karpenter EC2NodeClass" "${ROOT_DIR}/scripts/validate-karpenter-nodeclass.sh"
-run_step "Karpenter On-Demand NodePool" "${ROOT_DIR}/scripts/validate-karpenter-nodepool.sh"
+run_step "Karpenter NodePools" "${ROOT_DIR}/scripts/validate-karpenter-nodepool.sh"
+run_step "Karpenter interruption readiness" "${ROOT_DIR}/scripts/validate-karpenter-interruption.sh"
 run_step "AWS GitOps and application baseline" "${ROOT_DIR}/scripts/validate-aws-dev.sh"
 
 printf '

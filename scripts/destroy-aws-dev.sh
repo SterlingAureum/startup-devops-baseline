@@ -53,9 +53,11 @@ if kubectl get application "${ROOT_APPLICATION}" -n "${ARGOCD_NAMESPACE}" >/dev/
     --patch '{"spec":{"syncPolicy":{"automated":null}}}'
 fi
 
-kubectl delete namespace karpenter-smoke \
-  --ignore-not-found=true \
-  --wait=false
+for smoke_namespace in karpenter-smoke karpenter-spot-smoke; do
+  kubectl delete namespace "${smoke_namespace}" \
+    --ignore-not-found=true \
+    --wait=false
+done
 
 if kubectl get crd nodepools.karpenter.sh >/dev/null 2>&1; then
   echo "==> Deleting NodePools and Karpenter-provisioned capacity"

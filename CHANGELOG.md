@@ -2,6 +2,28 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.5.4
+
+### Added
+
+- GitOps-managed `application-spot` NodePool with a dedicated workload taint.
+- Broad Spot instance-category, generation, and vCPU constraints with bounded
+  CPU, memory, and node count.
+- Controlled Spot scale test that verifies both Kubernetes capacity labels and
+  the EC2 `InstanceLifecycle` value.
+- Runtime interruption-readiness validation for the Karpenter controller,
+  encrypted SQS queue, Spot EventBridge rule, and queue target.
+
+### Changed
+
+- Added explicit `capacity-tier=on-demand` labeling to the existing On-Demand
+  NodePool.
+- Extended unified validation to cover both NodePools and the interruption
+  event path without provisioning capacity.
+- Updated cleanup and destroy workflows for both Karpenter smoke namespaces.
+- Updated Karpenter architecture, deployment, environment, and roadmap
+  documentation.
+
 ## v0.5.3
 
 ### Added

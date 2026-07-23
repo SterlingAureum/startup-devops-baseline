@@ -24,9 +24,11 @@ configuration for future application NodePools. It can resolve its IAM instance
 profile, private subnets, cluster security group, and AL2023 AMIs without
 launching an instance.
 
-`karpenter-nodepool-ondemand.yaml` adds a dynamic application NodePool. It is
-isolated by `workload=application` and `dedicated=application:NoSchedule`,
-accepts only explicit workloads with matching scheduling rules, and is limited
-to small On-Demand capacity. The scale-test workload under
-`examples/karpenter/` is not GitOps-managed and is applied only during a
-controlled validation.
+`karpenter-nodepool-ondemand.yaml` and `karpenter-nodepool-spot.yaml` define
+separate application capacity tiers. Both use `workload=application`, but each
+has a distinct `NoSchedule` taint so a workload opts in to exactly one tier.
+Both pools are limited to small development capacity.
+
+The scale-test workloads under `examples/karpenter/` are not GitOps-managed.
+They are applied only during controlled validation and removed before the test
+returns.

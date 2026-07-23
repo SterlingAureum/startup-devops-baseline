@@ -161,7 +161,7 @@ TARGET_REVISION=feature/v0.5-karpenter-autoscaling \
 
 The root Application installs the Karpenter CRDs first, the controller
 afterward, the `application` EC2NodeClass, and finally the
-`application-ondemand` NodePool.
+`application-ondemand` and `application-spot` NodePools.
 
 ## 7. Validate Everything
 
@@ -180,8 +180,10 @@ kubectl get ec2nodeclass application
 kubectl get nodepools,nodeclaims
 ```
 
-The EC2NodeClass and NodePool should report `Ready=True`. No NodeClaims or
-Karpenter-provisioned nodes should exist in the idle baseline.
+The EC2NodeClass and both NodePools should report `Ready=True`. The interruption
+validator should confirm that the controller, SQS queue, and Spot EventBridge
+rule use the same queue. No NodeClaims or Karpenter-provisioned nodes should
+exist in the idle baseline.
 
 ## 8. Run the Controlled Scale Test
 
@@ -211,7 +213,31 @@ kubectl get nodes -l karpenter.sh/nodepool
 
 Both commands should return no Karpenter capacity.
 
-## 9. Destroy
+## 9. Run the Controlled Spot Test
+
+The Spot test validates interruption-path readiness, creates one temporary Spot
+node, confirms the EC2 purchase option, deletes the workload, and waits for
+scale-in:
+
+```bash
+./scripts/run-karpenter-spot-test.sh
+```
+
+Spot availability is not guaranteed. If compatible capacity is unavailable,
+the script prints the pod, NodeClaim, and namespace event diagnostics and exits
+without falling back to On-Demand.
+
+This test incurs a small temporary EC2 and EBS charge. It does not synthesize
+an interruption warning or terminate the node forcibly. A full interruption
+and replacement drill should use AWS Fault Injection Service.
+
+Expected final output:
+
+```text
+Karpenter Spot scale-out and scale-in validation passed.
+```
+
+## 10. Destroy
 
 ```bash
 ./scripts/destroy-aws-dev.sh

@@ -72,6 +72,10 @@ CAPACITY_TYPE="$(
   kubectl get node "${POD_NODE}" \
     --output jsonpath='{.metadata.labels.karpenter\.sh/capacity-type}'
 )"
+CAPACITY_TIER="$(
+  kubectl get node "${POD_NODE}" \
+    --output jsonpath='{.metadata.labels.capacity-tier}'
+)"
 WORKLOAD_LABEL="$(
   kubectl get node "${POD_NODE}" \
     --output jsonpath='{.metadata.labels.workload}'
@@ -82,8 +86,9 @@ if [[ "${NODE_POOL_LABEL}" != "${NODE_POOL_NAME}" ]]; then
   exit 1
 fi
 
-if [[ "${CAPACITY_TYPE}" != "on-demand" ]]; then
-  echo "Scale-test node is not On-Demand capacity." >&2
+if [[ "${CAPACITY_TYPE}" != "on-demand" || \
+      "${CAPACITY_TIER}" != "on-demand" ]]; then
+  echo "Scale-test node is not labeled as On-Demand capacity." >&2
   exit 1
 fi
 
@@ -99,7 +104,7 @@ fi
 
 echo "==> Scale-out validated on ${POD_NODE}"
 kubectl get node "${POD_NODE}" \
-  --label-columns karpenter.sh/nodepool,karpenter.sh/capacity-type,workload
+  --label-columns karpenter.sh/nodepool,karpenter.sh/capacity-type,capacity-tier,workload
 kubectl get nodeclaims
 
 echo "==> Removing temporary scale-test workload"

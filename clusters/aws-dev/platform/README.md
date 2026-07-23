@@ -22,5 +22,11 @@ The controller runs only on the stable Managed Node Group nodes labeled
 `karpenter-ec2nodeclass.yaml` defines the reusable AWS launch and discovery
 configuration for future application NodePools. It can resolve its IAM instance
 profile, private subnets, cluster security group, and AL2023 AMIs without
-launching an instance. `NodePool` resources are intentionally deferred to a
-later v0.5 increment.
+launching an instance.
+
+`karpenter-nodepool-ondemand.yaml` adds a dynamic application NodePool. It is
+isolated by `workload=application` and `dedicated=application:NoSchedule`,
+accepts only explicit workloads with matching scheduling rules, and is limited
+to small On-Demand capacity. The scale-test workload under
+`examples/karpenter/` is not GitOps-managed and is applied only during a
+controlled validation.

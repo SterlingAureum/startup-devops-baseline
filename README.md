@@ -4,17 +4,21 @@ A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure b
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
-The repository now contains the completed local progressive-delivery and AWS EKS baselines, plus the AWS foundation, GitOps-managed controller, and EC2NodeClass discovery baseline for Karpenter node autoscaling. It remains intentionally smaller than a full production platform and will continue toward Karpenter NodePools and node provisioning, CloudNativePG, security controls, observability, AI infrastructure workloads, and AIOps workflows.
+The repository now contains the completed local progressive-delivery and AWS
+EKS baselines, plus a controlled On-Demand application NodePool for Karpenter
+node autoscaling. It remains intentionally smaller than a full production
+platform and will continue toward Spot capacity, CloudNativePG, security
+controls, observability, AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.5.2-karpenter-ec2nodeclass
+v0.5.3-karpenter-ondemand-nodepool
 ```
 The local GitOps, progressive-delivery, and AWS EKS baselines are complete.
-Karpenter AWS prerequisites, controller installation, and EC2NodeClass
-discovery are implemented. `NodePool` and dynamic node provisioning continue
-in the next v0.5 increments.
+Karpenter AWS prerequisites, controller installation, EC2NodeClass discovery,
+and an isolated On-Demand application NodePool are implemented. A separate
+smoke test verifies temporary scale-out and consolidation-driven scale-in.
 
 ## Platform Architecture
 

@@ -5,6 +5,12 @@
 ```text
 Suspend aws-dev Root Application automation
         ↓
+Delete the temporary scale-test workload
+        ↓
+Delete NodePool
+        ↓
+Karpenter deletes NodeClaims and EC2 nodes
+        ↓
 Delete EC2NodeClass
         ↓
 Karpenter deletes the generated IAM instance profile
@@ -32,6 +38,8 @@ The script requires typing `destroy` before continuing.
 
 ```bash
 kubectl get applications -n argocd
+kubectl get nodepools,nodeclaims
+kubectl get nodes -l karpenter.sh/nodepool
 kubectl get ec2nodeclass
 kubectl get ingress -A
 kubectl get service -A
@@ -53,13 +61,16 @@ Application Load Balancer
 Target Group
 Load Balancer security group
 Elastic network interface
+Karpenter-provisioned EC2 node
 Karpenter-generated IAM instance profile
 NAT Gateway
 Elastic IP
 ```
 
 Terraform cannot delete the Karpenter node IAM role while it remains attached
-to a generated instance profile. Keep the controller running until every
-EC2NodeClass has completed finalizer cleanup.
+to a generated instance profile. Delete NodePools while the controller is
+running, wait until NodeClaims and Karpenter nodes are gone, and then delete the
+EC2NodeClass. Keep the controller running until the EC2NodeClass has completed
+finalizer cleanup.
 
 Do not delete local Terraform state until destruction completes.

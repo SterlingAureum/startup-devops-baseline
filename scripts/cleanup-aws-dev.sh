@@ -19,6 +19,21 @@ else
   echo "==> Root application is already absent"
 fi
 
+kubectl delete namespace karpenter-smoke \
+  --ignore-not-found=true \
+  --wait=false
+
+if kubectl get crd nodepools.karpenter.sh >/dev/null 2>&1; then
+  echo "==> Deleting NodePools and Karpenter-provisioned capacity"
+  kubectl delete nodepool --all --wait=true --timeout="${WAIT_TIMEOUT}"
+  kubectl delete nodeclaim --all --wait=true --timeout="${WAIT_TIMEOUT}"
+  if [[ -n "$(kubectl get nodes --selector karpenter.sh/nodepool --output name)" ]]; then
+    kubectl wait --for=delete node \
+      --selector karpenter.sh/nodepool \
+      --timeout="${WAIT_TIMEOUT}"
+  fi
+fi
+
 if kubectl get crd ec2nodeclasses.karpenter.k8s.aws >/dev/null 2>&1; then
   echo "==> Deleting EC2NodeClasses and generated instance profiles"
   kubectl delete ec2nodeclass --all --wait=true --timeout="${WAIT_TIMEOUT}"

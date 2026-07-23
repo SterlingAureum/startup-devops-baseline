@@ -2,6 +2,29 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.5.3
+
+### Added
+
+- GitOps-managed `application-ondemand` NodePool for isolated application
+  capacity.
+- On-Demand, architecture, operating-system, instance-family, generation, and
+  vCPU scheduling constraints.
+- CPU, memory, and node-count safety limits with consolidation enabled.
+- Controlled scale test that provisions one temporary application node,
+  validates NodeClaim and node labels, removes the workload, and waits for
+  scale-in.
+- Dedicated NodePool readiness and idle-capacity validation.
+
+### Changed
+
+- Extended unified validation with the On-Demand NodePool baseline without
+  creating EC2 capacity.
+- Updated cleanup and destroy workflows to remove NodePools, NodeClaims, and
+  Karpenter nodes before the EC2NodeClass and controller.
+- Updated Karpenter architecture, deployment, environment, and roadmap
+  documentation.
+
 ## v0.5.2
 
 ### Added

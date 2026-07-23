@@ -45,6 +45,7 @@ AWS Load Balancer Controller
 Karpenter AWS foundation
 Karpenter CRDs and controller
 Karpenter application EC2NodeClass
+Karpenter On-Demand application NodePool
 demo-api
 Application Load Balancer
 ```
@@ -52,8 +53,10 @@ Application Load Balancer
 The v0.5.0 Karpenter foundation includes IAM, node authorization, interruption
 handling, and discovery tags. v0.5.1 adds the GitOps-managed CRDs and controller
 on the stable system Managed Node Group. v0.5.2 adds an `EC2NodeClass` that
-validates AWS launch configuration and discovery. Dynamic nodes are not created
-until a `NodePool` is introduced.
+validates AWS launch configuration and discovery. v0.5.3 adds a bounded
+On-Demand `NodePool` for explicitly opted-in application workloads. The normal
+validation path keeps the NodePool idle; the separate scale test creates and
+then removes temporary capacity.
 
 ## Deliberate Differences
 
@@ -65,6 +68,6 @@ until a `NodePool` is introduced.
 | Progressive delivery | Enabled | Deferred |
 | Exposure | Local hostname | ALB DNS |
 | IAM | N/A | IAM and IRSA |
-| Node capacity | kind nodes | system Managed Node Group; Karpenter provisioning deferred |
+| Node capacity | kind nodes | system Managed Node Group plus isolated On-Demand Karpenter application capacity |
 
 The environments share GitOps principles but are not required to use identical traffic-routing implementations.

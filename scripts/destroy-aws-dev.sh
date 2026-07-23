@@ -53,6 +53,27 @@ if kubectl get application "${ROOT_APPLICATION}" -n "${ARGOCD_NAMESPACE}" >/dev/
     --patch '{"spec":{"syncPolicy":{"automated":null}}}'
 fi
 
+kubectl delete namespace karpenter-smoke \
+  --ignore-not-found=true \
+  --wait=false
+
+if kubectl get crd nodepools.karpenter.sh >/dev/null 2>&1; then
+  echo "==> Deleting NodePools and Karpenter-provisioned capacity"
+  kubectl delete nodepool --all --wait=false
+
+  deadline=$((SECONDS + KARPENTER_WAIT_SECONDS))
+  while kubectl get nodepool -o name 2>/dev/null | grep -q . || \
+        kubectl get nodeclaim -o name 2>/dev/null | grep -q . || \
+        kubectl get nodes --selector karpenter.sh/nodepool -o name 2>/dev/null | grep -q .; do
+    if (( SECONDS >= deadline )); then
+      echo "ERROR: timed out waiting for Karpenter node cleanup." >&2
+      exit 1
+    fi
+    kubectl get nodepools,nodeclaims || true
+    sleep 15
+  done
+fi
+
 if kubectl get crd ec2nodeclasses.karpenter.k8s.aws >/dev/null 2>&1; then
   echo "==> Deleting EC2NodeClasses before the Karpenter controller"
   kubectl delete ec2nodeclass --all --wait=false

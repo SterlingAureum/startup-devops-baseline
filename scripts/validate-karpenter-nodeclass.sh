@@ -93,19 +93,14 @@ if [[ " ${DISCOVERED_SECURITY_GROUPS} " != *" ${EXPECTED_CLUSTER_SECURITY_GROUP}
   exit 1
 fi
 
-echo "==> Confirming that provisioning policy is still absent"
-if [[ -n "$(kubectl get nodepools --output name)" ]]; then
-  echo "NodePool resources exist before the NodePool increment." >&2
-  exit 1
-fi
-
+echo "==> Confirming idle Karpenter capacity"
 if [[ -n "$(kubectl get nodeclaims --output name)" ]]; then
-  echo "NodeClaim resources exist before the NodePool increment." >&2
+  echo "NodeClaim resources exist outside the controlled scale test." >&2
   exit 1
 fi
 
 if [[ -n "$(kubectl get nodes --selector karpenter.sh/nodepool --output name)" ]]; then
-  echo "Karpenter-provisioned nodes exist before the NodePool increment." >&2
+  echo "Karpenter-provisioned nodes exist outside the controlled scale test." >&2
   exit 1
 fi
 

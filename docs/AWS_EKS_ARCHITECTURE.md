@@ -43,7 +43,10 @@ This document describes the runtime architecture of the AWS EKS environment.
  application EC2NodeClass
           |
           v
- AWS launch and discovery configuration
+ application-ondemand NodePool
+          |
+          v
+ NodeClaim and temporary On-Demand application node
 
 ```
 
@@ -161,6 +164,7 @@ Argo CD
 ├── Karpenter CRDs
 ├── Karpenter controller
 ├── Karpenter application EC2NodeClass
+├── Karpenter On-Demand application NodePool
 └── demo-api
 ```
 
@@ -187,11 +191,13 @@ Karpenter controller → IRSA role
 Karpenter node → dedicated EC2 node role and EKS access entry
 ```
 
-The Karpenter controller is installed in v0.5.1 and constrained to the stable
-Managed Node Group labeled `workload=system`. v0.5.2 adds the application
-EC2NodeClass for IAM instance-profile, private-subnet, security-group, and AMI
-discovery. No `NodePool` exists yet, so Karpenter cannot provision EC2 nodes in
-this increment.
+The Karpenter controller is constrained to the stable Managed Node Group
+labeled `workload=system`. The application EC2NodeClass supplies IAM
+instance-profile, private-subnet, security-group, and AMI discovery.
+`application-ondemand` provisions only On-Demand Linux/amd64 nodes for pods
+that select `workload=application` and tolerate
+`dedicated=application:NoSchedule`. CPU, memory, and node-count limits bound the
+development environment, while consolidation removes empty capacity.
 
 ## IMDS and VPC Discovery
 

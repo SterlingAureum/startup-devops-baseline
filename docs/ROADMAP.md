@@ -82,10 +82,10 @@ Planned scope:
 - Karpenter CRD and controller installation - delivered in v0.5.1
 - controller IRSA and stable system-node placement - delivered in v0.5.1
 - application EC2NodeClass and AWS resource discovery - delivered in v0.5.2
-- NodePool design
-- system and application workload separation
-- scheduling constraints
-- node consolidation
+- On-Demand application NodePool design - delivered in v0.5.3
+- system and application workload separation - delivered in v0.5.3
+- scheduling constraints and bounded capacity - delivered in v0.5.3
+- controlled scale-out and consolidation-driven scale-in - delivered in v0.5.3
 - Spot capacity optimization
 - interruption handling
 

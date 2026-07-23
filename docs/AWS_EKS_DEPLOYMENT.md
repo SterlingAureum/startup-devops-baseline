@@ -160,8 +160,8 @@ TARGET_REVISION=feature/v0.5-karpenter-autoscaling \
 ```
 
 The root Application installs the Karpenter CRDs first, the controller
-afterward, and then the `application` EC2NodeClass. v0.5.2 does not create a
-`NodePool`.
+afterward, the `application` EC2NodeClass, and finally the
+`application-ondemand` NodePool.
 
 ## 7. Validate Everything
 
@@ -180,10 +180,38 @@ kubectl get ec2nodeclass application
 kubectl get nodepools,nodeclaims
 ```
 
-The EC2NodeClass should report `Ready=True`. An empty NodePool and NodeClaim
-listing is expected in v0.5.2.
+The EC2NodeClass and NodePool should report `Ready=True`. No NodeClaims or
+Karpenter-provisioned nodes should exist in the idle baseline.
 
-## 8. Destroy
+## 8. Run the Controlled Scale Test
+
+The following command creates a temporary workload and one small On-Demand
+application node. It validates scale-out, deletes the workload, and waits for
+consolidation-driven scale-in:
+
+```bash
+./scripts/run-karpenter-scale-test.sh
+```
+
+This test can incur a small temporary EC2 and EBS charge. Run it intentionally;
+it is not part of `validate-all.sh`.
+
+Expected final output:
+
+```text
+Karpenter On-Demand scale-out and scale-in validation passed.
+```
+
+After the test:
+
+```bash
+kubectl get nodeclaims
+kubectl get nodes -l karpenter.sh/nodepool
+```
+
+Both commands should return no Karpenter capacity.
+
+## 9. Destroy
 
 ```bash
 ./scripts/destroy-aws-dev.sh

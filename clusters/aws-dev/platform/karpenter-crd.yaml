@@ -1,28 +1,27 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: demo-api-aws-dev
+  name: karpenter-crd
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/sync-wave: "0"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
-    targetRevision: feature/v0.5-karpenter-autoscaling
-    path: apps/demo-api/helm
+    repoURL: public.ecr.aws/karpenter
+    chart: karpenter-crd
+    targetRevision: 1.14.0
     helm:
-      releaseName: demo-api
-      valueFiles:
-        - values-aws-dev.yaml
+      releaseName: karpenter-crd
   destination:
     server: https://kubernetes.default.svc
-    namespace: startup-apps
+    namespace: kube-system
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true

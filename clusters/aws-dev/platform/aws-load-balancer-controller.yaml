@@ -15,12 +15,12 @@ spec:
     targetRevision: 1.14.0
     helm:
       releaseName: aws-load-balancer-controller
-      values: |
+      valuesObject:
         clusterName: startup-devops-baseline-dev
         region: us-east-1
-        # Environment-specific infrastructure identifier.
-        # Keep this synchronized with Terraform output `vpc_id`.
-        vpcId: "vpc-0674ad314656bfb2b"
+        # Rendered by scripts/bootstrap-eks-argocd.sh from Terraform output.
+        # The root Application preserves only this live child-Application value.
+        vpcId: "__VPC_ID__"
         serviceAccount:
           create: false
           name: aws-load-balancer-controller

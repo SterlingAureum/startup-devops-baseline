@@ -2,6 +2,27 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.5.1
+
+### Added
+
+- Argo CD Applications for the Karpenter 1.14.0 CRDs and controller.
+- Karpenter controller IRSA ServiceAccount bootstrap.
+- Dedicated validation for Karpenter Applications, CRDs, IRSA, rollout, and
+  controller placement.
+- GitOps ownership notes for environment-specific Application rendering.
+
+### Changed
+
+- Rendered the AWS Load Balancer Controller VPC ID from Terraform output during
+  bootstrap instead of committing a real VPC ID.
+- Pinned Karpenter controller pods to the stable `workload=system` Managed Node
+  Group.
+- Updated the aws-dev Git revisions and deployment script to
+  `feature/v0.5-karpenter-autoscaling`.
+- Extended the unified AWS validation workflow with Karpenter controller
+  validation.
+
 ## v0.5.0
 
 ### Added

@@ -22,30 +22,20 @@ This document describes the runtime architecture of the AWS EKS environment.
                     aws-dev-root Application
 
                                 |
-                +---------------+---------------+
-                |                               |
-                v                               v
+       +-------------+-------------+-------------+-------------+
+       |             |             |             |
+       v             v             v             v
 
+      AWS LBC    Karpenter CRDs   Karpenter      demo-api
 
- aws-load-balancer-controller               demo-api
+    Application     Application    Application   Application
 
-           Application                     Application
+       |             |             |             |
+       v             v             v             v
 
+ Controller Pods    CRDs      Controller Pods  demo-api Pods
 
-                |                               |
-                v                               v
-
-
-     Kubernetes Deployment             Kubernetes Rollout
-
- (aws-load-balancer-controller)            (demo-api)
-
-
-                |                               |
-                v                               v
-
-
- AWS Load Balancer Controller Pods        demo-api Pods Pods
+ AWS LBC `vpcId` is rendered by bootstrap and preserved by the root Application.
 
 ```
 
@@ -155,10 +145,13 @@ Terraform
 Bootstrap scripts
 ├── kubeconfig
 ├── Argo CD installation
-└── IRSA ServiceAccount annotation
+├── IRSA ServiceAccount annotation
+└── environment-specific ALB Application rendering
 
 Argo CD
 ├── AWS Load Balancer Controller
+├── Karpenter CRDs
+├── Karpenter controller
 └── demo-api
 ```
 
@@ -185,8 +178,9 @@ Karpenter controller → IRSA role
 Karpenter node → dedicated EC2 node role and EKS access entry
 ```
 
-The Karpenter controller, `EC2NodeClass`, and `NodePool` are not installed in
-v0.5.0. This increment establishes only their AWS prerequisites.
+The Karpenter controller is installed in v0.5.1 and constrained to the stable
+Managed Node Group labeled `workload=system`. `EC2NodeClass` and `NodePool` are
+not installed yet, so Karpenter cannot provision EC2 nodes in this increment.
 
 ## IMDS and VPC Discovery
 
@@ -197,10 +191,13 @@ region: us-east-1
 vpcId: vpc-xxxxxxxxxxxxxxxxx
 ```
 
-Get the current value with:
+The repository stores `__VPC_ID__`, not a real VPC identifier. During
+bootstrap, the script gets the current value with:
 
 ```bash
 terraform -chdir=infra/terraform/aws/environments/dev output -raw vpc_id
 ```
 
-The VPC ID is environment-specific but not secret.
+It renders the value into a temporary copy of the Application and applies that
+copy to Argo CD. The VPC ID is environment-specific but not secret; keeping it
+out of Git prevents stale environment coupling.

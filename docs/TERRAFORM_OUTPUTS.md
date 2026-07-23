@@ -8,7 +8,8 @@ terraform -chdir=infra/terraform/aws/environments/dev output
 
 ## Network
 
-- `vpc_id`: configured in AWS Load Balancer Controller values.
+- `vpc_id`: rendered into the AWS Load Balancer Controller Application by
+  `bootstrap-eks-argocd.sh`.
 - `public_subnet_ids`: internet-facing load balancer discovery.
 - `private_subnet_ids`: EKS worker-node placement.
 - `nat_gateway_ids`: cost and teardown verification.
@@ -29,12 +30,16 @@ terraform -chdir=infra/terraform/aws/environments/dev output
 
 ## Karpenter Foundation
 
-- `karpenter_controller_role_arn`: controller ServiceAccount IRSA role.
+- `karpenter_controller_role_arn`: read by `bootstrap-eks-argocd.sh` to
+  annotate the Karpenter ServiceAccount.
 - `karpenter_node_role_arn`: identity authorized to join EKS as an EC2 Linux node.
 - `karpenter_node_role_name`: future `EC2NodeClass.spec.role` value.
-- `karpenter_interruption_queue_name`: future Helm `settings.interruptionQueue` value.
+- `karpenter_interruption_queue_name`: Karpenter Helm
+  `settings.interruptionQueue` value.
 - `karpenter_event_rule_names`: interruption rules managed by Terraform.
 
 ## Operational Rule
 
-Terraform outputs are not automatically committed to Git. After recreating the VPC, update the controller `vpcId` before Argo CD syncs it.
+Terraform outputs are not committed to Git. Run `bootstrap-eks-argocd.sh`
+after infrastructure creation or recreation; it reads the current VPC ID and
+IRSA role ARNs, then applies the environment-specific bootstrap resources.

@@ -9,16 +9,26 @@ spec:
   project: default
   source:
     repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
-    targetRevision: feature/v0.4-aws-eks-baseline
+    targetRevision: feature/v0.5-karpenter-autoscaling
     path: clusters/aws-dev/platform
     directory:
       recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
+  # bootstrap-eks-argocd.sh creates this child Application with a Terraform-
+  # derived VPC ID before the root sync. Preserve only that live Helm value.
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      name: aws-load-balancer-controller
+      namespace: argocd
+      jsonPointers:
+        - /spec/source/helm/valuesObject/vpcId
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - RespectIgnoreDifferences=true

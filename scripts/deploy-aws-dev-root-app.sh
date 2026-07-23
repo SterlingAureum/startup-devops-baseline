@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_URL="${REPO_URL:-https://github.com/SterlingAureum/startup-devops-baseline.git}"
-TARGET_REVISION="${TARGET_REVISION:-feature/v0.4-aws-eks-baseline}"
-SOURCE_FILE="clusters/aws-dev/root-app.yaml"
+TARGET_REVISION="${TARGET_REVISION:-feature/v0.5-karpenter-autoscaling}"
+SOURCE_FILE="${SOURCE_FILE:-${ROOT_DIR}/clusters/aws-dev/root-app.yaml}"
 
 command -v kubectl >/dev/null 2>&1 || {
   echo "Required command not found: kubectl" >&2

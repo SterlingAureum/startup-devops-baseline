@@ -79,7 +79,8 @@ management.
 Planned scope:
 
 - AWS IAM, interruption handling, and discovery foundation - delivered in v0.5.0
-- Karpenter installation
+- Karpenter CRD and controller installation - delivered in v0.5.1
+- controller IRSA and stable system-node placement - delivered in v0.5.1
 - EC2NodeClass configuration
 - NodePool design
 - system and application workload separation

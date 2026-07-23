@@ -63,14 +63,14 @@
                  Argo CD creates Kubernetes Applications
 
                                   |
-                 +----------------+----------------+
-                 |                                 |
-                 v                                 v
+             +--------------------+--------------------+
+             |                    |                    |
+             v                    v                    v
 
 
-    AWS Load Balancer Controller                demo-api
+ AWS Load Balancer Controller              Karpenter              demo-api
 
-          Application                          Application
+       Application                        Applications           Application
 
 
                  |
@@ -138,29 +138,31 @@ Do not apply an old plan after changing Terraform files.
 ./scripts/validate-karpenter-foundation.sh
 ```
 
-## 5. Synchronize VPC ID
-
-```bash
-terraform -chdir=infra/terraform/aws/environments/dev output -raw vpc_id
-```
-
-Ensure the same value exists in `clusters/aws-dev/platform/aws-load-balancer-controller.yaml` before deploying the root Application.
-
-## 6. Bootstrap GitOps
+## 5. Bootstrap GitOps
 
 ```bash
 ./scripts/bootstrap-eks-argocd.sh
 ```
 
-## 7. Deploy Root Application
+The script creates the AWS Load Balancer Controller and Karpenter IRSA
+ServiceAccounts, installs Argo CD, reads the current Terraform `vpc_id`, and
+applies the rendered AWS Load Balancer Controller Application.
+
+The repository keeps only the `__VPC_ID__` template marker. Do not commit a
+real `vpc-*` value.
+
+## 6. Deploy Root Application
 
 ```bash
 REPO_URL=https://github.com/SterlingAureum/startup-devops-baseline.git \
-TARGET_REVISION=feature/v0.4-aws-eks-baseline \
+TARGET_REVISION=feature/v0.5-karpenter-autoscaling \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 
-## 8. Validate Everything
+The root Application installs the Karpenter CRDs first and the controller
+afterward. v0.5.1 does not create an `EC2NodeClass` or `NodePool`.
+
+## 7. Validate Everything
 
 ```bash
 ./scripts/validate-all.sh
@@ -173,9 +175,12 @@ kubectl get nodes
 kubectl get applications -n argocd
 kubectl get pods -A
 kubectl get ingress -n startup-apps
+kubectl get nodepools,nodeclaims
 ```
 
-## 9. Destroy
+An empty NodePool and NodeClaim listing is expected in v0.5.1.
+
+## 8. Destroy
 
 ```bash
 ./scripts/destroy-aws-dev.sh

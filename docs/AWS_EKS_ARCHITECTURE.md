@@ -121,12 +121,19 @@ Amazon EKS
     |
     v
 
-Managed Node Group
+On-Demand System Managed Node Group
 
     |
     v
 
-Kubernetes Workloads
+Platform Controllers
+
+
+Terraform also prepares
+
+Karpenter IAM + EKS Access Entry
+SQS Interruption Queue + EventBridge
+Subnet + Security Group Discovery Tags
 ```
 
 Infrastructure ownership:
@@ -136,8 +143,12 @@ Terraform
 ├── VPC and subnets
 ├── Internet Gateway and NAT Gateway
 ├── Amazon EKS
-├── Managed Node Group
 ├── EKS managed add-ons
+├── stable system Managed Node Group
+├── Karpenter IAM roles and policies
+├── Karpenter node EKS access entry
+├── SQS interruption queue and EventBridge rules
+├── Karpenter discovery tags
 ├── IAM roles and policies
 └── OIDC provider
 
@@ -170,7 +181,12 @@ Human operator → AWS IAM → EKS access
 Managed node → Node IAM role
 EBS CSI controller → IRSA role
 AWS Load Balancer Controller → IRSA role
+Karpenter controller → IRSA role
+Karpenter node → dedicated EC2 node role and EKS access entry
 ```
+
+The Karpenter controller, `EC2NodeClass`, and `NodePool` are not installed in
+v0.5.0. This increment establishes only their AWS prerequisites.
 
 ## IMDS and VPC Discovery
 

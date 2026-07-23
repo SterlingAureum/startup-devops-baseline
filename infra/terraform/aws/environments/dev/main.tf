@@ -39,3 +39,17 @@ module "eks" {
   node_max_size               = var.eks_node_max_size
   cluster_admin_principal_arn = var.eks_cluster_admin_principal_arn
 }
+
+module "karpenter" {
+  source = "../../modules/karpenter"
+
+  project_name              = var.project_name
+  environment               = var.environment
+  aws_region                = var.aws_region
+  cluster_name              = module.eks.cluster_name
+  cluster_arn               = module.eks.cluster_arn
+  cluster_security_group_id = module.eks.cluster_security_group_id
+  oidc_provider_arn         = module.eks.oidc_provider_arn
+  oidc_provider_url         = module.eks.oidc_provider_url
+  tags                      = var.additional_tags
+}

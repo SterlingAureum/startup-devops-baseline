@@ -69,10 +69,9 @@ variable "single_nat_gateway" {
 }
 
 variable "eks_cluster_version" {
-  description = "Kubernetes version for EKS. Set null to use the current EKS default at creation time."
+  description = "Pinned Kubernetes version for the EKS development environment."
   type        = string
-  default     = null
-  nullable    = true
+  default     = "1.36"
 }
 
 variable "eks_endpoint_public_access" {
@@ -136,9 +135,9 @@ variable "eks_node_desired_size" {
 }
 
 variable "eks_node_min_size" {
-  description = "Minimum number of EKS managed nodes."
+  description = "Minimum number of stable system nodes that host platform controllers."
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "eks_node_max_size" {

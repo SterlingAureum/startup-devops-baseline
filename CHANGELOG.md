@@ -2,6 +2,24 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.5.0
+
+### Added
+
+- Dedicated Terraform module for the Karpenter AWS foundation.
+- Karpenter controller and node IAM roles.
+- Six scoped Karpenter 1.14 controller IAM policies.
+- EKS access entry for Karpenter-provisioned Linux nodes.
+- Encrypted SQS interruption queue and five EventBridge rules.
+- Discovery tags for private subnets and the EKS cluster security group.
+- Terraform outputs and AWS foundation validation script.
+
+### Changed
+
+- Pinned the EKS development environment to Kubernetes 1.36.
+- Reserved two On-Demand Managed Node Group nodes for system controllers.
+- Changed the Managed Node Group workload label from `general` to `system`.
+
 ## v0.4.4
 
 ### Added

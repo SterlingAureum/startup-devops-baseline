@@ -3,16 +3,16 @@ locals {
 
   public_subnets = {
     for index, az in var.availability_zones : az => {
-      cidr = var.public_subnet_cidrs[index]
-      az   = az
+      cidr  = var.public_subnet_cidrs[index]
+      az    = az
       index = index
     }
   }
 
   private_subnets = {
     for index, az in var.availability_zones : az => {
-      cidr = var.private_subnet_cidrs[index]
-      az   = az
+      cidr  = var.private_subnet_cidrs[index]
+      az    = az
       index = index
     }
   }
@@ -49,8 +49,8 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name                                      = "${local.name_prefix}-public-${each.value.az}"
-    "kubernetes.io/role/elb"                  = "1"
+    Name                                        = "${local.name_prefix}-public-${each.value.az}"
+    "kubernetes.io/role/elb"                    = "1"
     "kubernetes.io/cluster/${var.cluster_name}" = "shared"
   }
 }
@@ -64,9 +64,10 @@ resource "aws_subnet" "private" {
   map_public_ip_on_launch = false
 
   tags = {
-    Name                                           = "${local.name_prefix}-private-${each.value.az}"
-    "kubernetes.io/role/internal-elb"              = "1"
-    "kubernetes.io/cluster/${var.cluster_name}"    = "shared"
+    Name                                        = "${local.name_prefix}-private-${each.value.az}"
+    "kubernetes.io/role/internal-elb"           = "1"
+    "kubernetes.io/cluster/${var.cluster_name}" = "shared"
+    "karpenter.sh/discovery"                    = var.cluster_name
   }
 }
 

@@ -1,8 +1,9 @@
 # AWS Terraform baseline
 
-This directory contains the AWS infrastructure code introduced in v0.4.
+This directory contains the AWS infrastructure code introduced in v0.4 and
+the Karpenter AWS foundation introduced in v0.5.0.
 
-## Current scope: v0.4.2
+## Current scope: v0.5.0
 
 The development environment now creates:
 
@@ -14,9 +15,13 @@ The development environment now creates:
 - an IRSA role for the EBS CSI controller;
 - EKS managed VPC CNI, CoreDNS, kube-proxy, and EBS CSI add-ons;
 - an optional EKS access entry for a long-lived administrator principal.
+- a dedicated Karpenter controller IRSA role and scoped policies;
+- a dedicated Karpenter node role and EKS access entry;
+- an encrypted interruption queue and EventBridge rules;
+- subnet and security-group discovery tags.
 
-Karpenter, Spot worker pools, AWS Load Balancer Controller, Argo CD, and the
-application deployment remain outside this phase.
+Karpenter controller installation, `EC2NodeClass`, `NodePool`, and dynamic EC2
+nodes remain outside v0.5.0 and are introduced by the next GitOps increments.
 
 ## Cost profile
 
@@ -41,9 +46,9 @@ terraform -chdir=infra/terraform/aws/environments/dev init
 terraform -chdir=infra/terraform/aws/environments/dev plan
 ```
 
-Before applying, restrict `eks_public_access_cidrs` and decide whether to pin
-`eks_cluster_version`. Review the complete plan because this phase creates
-billable EKS and EC2 resources.
+Before applying, restrict `eks_public_access_cidrs`. EKS is pinned to 1.36 for
+compatibility with Karpenter 1.14.x. Review the complete plan because this
+phase creates billable EKS and EC2 resources.
 
 ## Configure kubectl after apply
 
@@ -60,6 +65,7 @@ kubectl get pods -n kube-system
 
 ```bash
 ./scripts/validate-eks-baseline.sh
+./scripts/validate-karpenter-foundation.sh
 ```
 
 Override `AWS_REGION` and `CLUSTER_NAME` when the environment uses different

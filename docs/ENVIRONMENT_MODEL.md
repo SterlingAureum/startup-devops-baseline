@@ -42,9 +42,14 @@ Managed Node Group
 EKS managed add-ons
 Argo CD
 AWS Load Balancer Controller
+Karpenter AWS foundation
 demo-api
 Application Load Balancer
 ```
+
+The v0.5.0 Karpenter foundation includes IAM, node authorization,
+interruption handling, and discovery tags. Dynamic nodes are not created until
+the Karpenter GitOps components are introduced.
 
 ## Deliberate Differences
 

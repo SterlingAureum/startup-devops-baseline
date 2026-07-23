@@ -58,6 +58,31 @@ output "eks_oidc_provider_arn" {
   value       = module.eks.oidc_provider_arn
 }
 
+output "karpenter_controller_role_arn" {
+  description = "IAM role ARN to annotate on the Karpenter controller service account."
+  value       = module.karpenter.controller_role_arn
+}
+
+output "karpenter_node_role_arn" {
+  description = "IAM role ARN used by nodes provisioned through Karpenter."
+  value       = module.karpenter.node_role_arn
+}
+
+output "karpenter_node_role_name" {
+  description = "IAM role name referenced by the future EC2NodeClass."
+  value       = module.karpenter.node_role_name
+}
+
+output "karpenter_interruption_queue_name" {
+  description = "SQS queue name configured in the future Karpenter Helm release."
+  value       = module.karpenter.interruption_queue_name
+}
+
+output "karpenter_event_rule_names" {
+  description = "EventBridge rules that publish interruption events to Karpenter."
+  value       = module.karpenter.event_rule_names
+}
+
 output "eks_node_group_name" {
   description = "Name of the baseline EKS managed node group."
   value       = module.eks.node_group_name

@@ -1,6 +1,6 @@
 # EKS module
 
-This module implements the v0.4.2 EKS control-plane and managed-node baseline.
+This module implements the EKS control-plane and stable managed-node baseline.
 
 ## Resources
 
@@ -31,9 +31,9 @@ CIDR before keeping the environment online.
 
 ## Node baseline
 
-The default managed node group uses two `t3.medium` On-Demand nodes with a
-minimum of one and maximum of three. Karpenter and Spot capacity remain out of
-scope until v0.5.
+The default managed node group uses two `t3.medium` On-Demand system nodes with
+a minimum of two and maximum of three. Nodes are labeled `workload=system` so
+platform controllers remain separate from future Karpenter application nodes.
 
 ## AWS Load Balancer Controller IAM
 

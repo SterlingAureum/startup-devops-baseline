@@ -135,6 +135,7 @@ Do not apply an old plan after changing Terraform files.
 
 ```bash
 ./scripts/validate-eks-baseline.sh
+./scripts/validate-karpenter-foundation.sh
 ```
 
 ## 5. Synchronize VPC ID

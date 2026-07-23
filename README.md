@@ -4,14 +4,16 @@ A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure b
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
-The repository now contains both the completed local progressive-delivery baseline and an AWS EKS development baseline managed with Terraform and Argo CD. It remains intentionally smaller than a full production platform and will continue toward Karpenter, CloudNativePG, security controls, observability, AI infrastructure workloads, and AIOps workflows.
+The repository now contains the completed local progressive-delivery and AWS EKS baselines, plus the AWS-side foundation for Karpenter node autoscaling. It remains intentionally smaller than a full production platform and will continue toward Karpenter GitOps installation, CloudNativePG, security controls, observability, AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.4.4-eks-baseline-hardening
+v0.5.0-karpenter-aws-foundation
 ```
 The local GitOps, progressive-delivery, and AWS EKS baselines are complete.
+Karpenter AWS prerequisites are implemented; controller installation and
+dynamic node provisioning continue in the next v0.5 increments.
 
 ## Platform Architecture
 

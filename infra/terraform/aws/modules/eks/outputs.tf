@@ -34,6 +34,11 @@ output "oidc_provider_arn" {
   value       = aws_iam_openid_connect_provider.cluster.arn
 }
 
+output "oidc_provider_url" {
+  description = "Issuer URL used by IAM roles for service accounts."
+  value       = aws_iam_openid_connect_provider.cluster.url
+}
+
 output "node_group_name" {
   description = "Name of the baseline managed node group."
   value       = aws_eks_node_group.general.node_group_name

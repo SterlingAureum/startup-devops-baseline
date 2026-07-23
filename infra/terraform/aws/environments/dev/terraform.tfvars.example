@@ -27,9 +27,9 @@ additional_tags = {
   Repository = "startup-devops-baseline"
 }
 
-# Set a supported EKS Kubernetes version explicitly for repeatable environments.
-# Leave null only when intentionally accepting the current EKS default.
-eks_cluster_version = null
+# EKS 1.36 requires Karpenter 1.13 or newer. The GitOps increment pins
+# Karpenter 1.14.x, so keep this version explicit and upgrade deliberately.
+eks_cluster_version = "1.36"
 
 # Restrict this to your public IP in CIDR form before keeping the cluster online.
 eks_endpoint_public_access  = true
@@ -45,7 +45,7 @@ eks_node_capacity_type  = "ON_DEMAND"
 eks_node_ami_type       = "AL2023_x86_64_STANDARD"
 eks_node_disk_size      = 30
 eks_node_desired_size   = 2
-eks_node_min_size       = 1
+eks_node_min_size       = 2
 eks_node_max_size       = 3
 
 # Optional: use a persistent IAM role/user ARN, not an STS assumed-role session ARN.

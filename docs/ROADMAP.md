@@ -69,7 +69,7 @@ Delivered across v0.4.0 through v0.4.4:
 
 ## v0.5 - Karpenter Autoscaling Baseline
 
-Status: Planned
+Status: In Progress
 
 Goal:
 
@@ -78,6 +78,7 @@ management.
 
 Planned scope:
 
+- AWS IAM, interruption handling, and discovery foundation - delivered in v0.5.0
 - Karpenter installation
 - EC2NodeClass configuration
 - NodePool design

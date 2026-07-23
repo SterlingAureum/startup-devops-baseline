@@ -135,7 +135,7 @@ resource "aws_eks_node_group" "general" {
   }
 
   labels = {
-    workload = "general"
+    workload = "system"
   }
 
   depends_on = [

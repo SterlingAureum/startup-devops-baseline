@@ -27,6 +27,14 @@ terraform -chdir=infra/terraform/aws/environments/dev output
 - `eks_oidc_provider_arn`: IRSA trust provider.
 - `aws_load_balancer_controller_role_arn`: read by `bootstrap-eks-argocd.sh` to annotate the controller ServiceAccount.
 
+## Karpenter Foundation
+
+- `karpenter_controller_role_arn`: controller ServiceAccount IRSA role.
+- `karpenter_node_role_arn`: identity authorized to join EKS as an EC2 Linux node.
+- `karpenter_node_role_name`: future `EC2NodeClass.spec.role` value.
+- `karpenter_interruption_queue_name`: future Helm `settings.interruptionQueue` value.
+- `karpenter_event_rule_names`: interruption rules managed by Terraform.
+
 ## Operational Rule
 
 Terraform outputs are not automatically committed to Git. After recreating the VPC, update the controller `vpcId` before Argo CD syncs it.

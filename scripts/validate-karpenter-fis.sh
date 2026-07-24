@@ -96,20 +96,14 @@ ATTACHED_POLICY_COUNT="$(
     --query 'length(AttachedPolicies)' \
     --output text
 )"
-POLICY_ACTIONS="$(
+mapfile -t POLICY_ACTIONS < <(
   aws iam get-role-policy \
     --role-name "${ROLE_NAME}" \
     --policy-name "${INLINE_POLICIES[0]}" \
     --query 'PolicyDocument.Statement[].Action' \
-    --output text
-)"
-POLICY_ACTION_COUNT="$(
-  aws iam get-role-policy \
-    --role-name "${ROLE_NAME}" \
-    --policy-name "${INLINE_POLICIES[0]}" \
-    --query 'length(PolicyDocument.Statement[].Action)' \
-    --output text
-)"
+    --output text |
+    tr '\t' '\n'
+)
 INTERRUPTION_RESOURCE="$(
   aws iam get-role-policy \
     --role-name "${ROLE_NAME}" \
@@ -121,14 +115,22 @@ INTERRUPTION_RESOURCE="$(
 for expected_action in \
   "ec2:DescribeInstances" \
   "ec2:SendSpotInstanceInterruptions"; do
-  if [[ " ${POLICY_ACTIONS} " != *" ${expected_action} "* ]]; then
+  ACTION_FOUND=false
+  for policy_action in "${POLICY_ACTIONS[@]}"; do
+    if [[ "${policy_action}" == "${expected_action}" ]]; then
+      ACTION_FOUND=true
+      break
+    fi
+  done
+
+  if [[ "${ACTION_FOUND}" != "true" ]]; then
     echo "The FIS role is missing ${expected_action}." >&2
     exit 1
   fi
 done
 
 if [[ "${ATTACHED_POLICY_COUNT}" != "0" || \
-      "${POLICY_ACTION_COUNT}" != "2" || \
+      "${#POLICY_ACTIONS[@]}" -ne 2 || \
       "${INTERRUPTION_RESOURCE}" != "arn:${AWS_PARTITION}:ec2:${AWS_REGION}:${ACCOUNT_ID}:instance/*" ]]; then
   echo "The FIS role permission scope does not match the expected two-action policy." >&2
   exit 1

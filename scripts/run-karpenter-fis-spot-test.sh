@@ -155,18 +155,35 @@ ORIGINAL_NODE="$(
     --namespace "${TEST_NAMESPACE}" \
     --output jsonpath='{.spec.nodeName}'
 )"
-ORIGINAL_NODECLAIM="$(
-  kubectl get node "${ORIGINAL_NODE}" \
-    --output jsonpath='{.metadata.labels.karpenter\.sh/nodeclaim}'
-)"
 ORIGINAL_PROVIDER_ID="$(
   kubectl get node "${ORIGINAL_NODE}" \
     --output jsonpath='{.spec.providerID}'
 )"
 ORIGINAL_INSTANCE_ID="${ORIGINAL_PROVIDER_ID##*/}"
 
-if [[ "${ORIGINAL_INSTANCE_ID}" != i-* || -z "${ORIGINAL_NODECLAIM}" ]]; then
-  echo "Could not resolve the original EC2 instance or NodeClaim." >&2
+if [[ "${ORIGINAL_INSTANCE_ID}" != i-* ]]; then
+  echo "Could not resolve the original EC2 instance from the node providerID." >&2
+  exit 1
+fi
+
+ORIGINAL_NODECLAIM=""
+MATCHED_NODECLAIM_COUNT=0
+while IFS='|' read -r nodeclaim_name node_name provider_id; do
+  if [[ "${node_name}" == "${ORIGINAL_NODE}" && \
+        "${provider_id}" == "${ORIGINAL_PROVIDER_ID}" ]]; then
+    ORIGINAL_NODECLAIM="${nodeclaim_name}"
+    ((MATCHED_NODECLAIM_COUNT += 1))
+  fi
+done < <(
+  kubectl get nodeclaims \
+    --selector "karpenter.sh/nodepool=${NODE_POOL_NAME}" \
+    --output jsonpath='{range .items[*]}{.metadata.name}{"|"}{.status.nodeName}{"|"}{.status.providerID}{"\n"}{end}'
+)
+
+if (( MATCHED_NODECLAIM_COUNT != 1 )); then
+  kubectl get nodeclaims \
+    --selector "karpenter.sh/nodepool=${NODE_POOL_NAME}" || true
+  echo "Expected one NodeClaim matching the original node and providerID; found ${MATCHED_NODECLAIM_COUNT}." >&2
   exit 1
 fi
 

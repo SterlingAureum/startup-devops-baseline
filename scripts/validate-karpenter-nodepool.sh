@@ -5,6 +5,7 @@ AWS_REGION="${AWS_REGION:-us-east-1}"
 CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
 ON_DEMAND_NODE_POOL_NAME="${ON_DEMAND_NODE_POOL_NAME:-application-ondemand}"
 SPOT_NODE_POOL_NAME="${SPOT_NODE_POOL_NAME:-application-spot}"
+FIS_NODE_POOL_NAME="${FIS_NODE_POOL_NAME:-application-spot-fis}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-10m}"
 
 for command in aws kubectl; do
@@ -22,6 +23,8 @@ validate_nodepool() {
   local capacity_type="$2"
   local capacity_tier="$3"
   local expected_taint="$4"
+  local expected_node_class="$5"
+  local expected_memory_limit="$6"
 
   echo "==> Waiting for NodePool ${nodepool_name}"
   kubectl wait \
@@ -56,8 +59,8 @@ validate_nodepool() {
       --output jsonpath='{.spec.template.spec.taints[0].key}={.spec.template.spec.taints[0].value}:{.spec.template.spec.taints[0].effect}'
   )"
 
-  if [[ "${node_class_name}" != "application" ]]; then
-    echo "NodePool ${nodepool_name} does not reference EC2NodeClass application." >&2
+  if [[ "${node_class_name}" != "${expected_node_class}" ]]; then
+    echo "NodePool ${nodepool_name} does not reference EC2NodeClass ${expected_node_class}." >&2
     exit 1
   fi
 
@@ -106,7 +109,7 @@ validate_nodepool() {
   )"
 
   if [[ "${cpu_limit}" != "4" || \
-        "${memory_limit}" != "16Gi" || \
+        "${memory_limit}" != "${expected_memory_limit}" || \
         "${node_limit}" != "2" ]]; then
     echo "NodePool ${nodepool_name} safety limits are incorrect." >&2
     exit 1
@@ -117,13 +120,25 @@ validate_nodepool \
   "${ON_DEMAND_NODE_POOL_NAME}" \
   "on-demand" \
   "on-demand" \
-  "dedicated=application:NoSchedule"
+  "dedicated=application:NoSchedule" \
+  "application" \
+  "16Gi"
 
 validate_nodepool \
   "${SPOT_NODE_POOL_NAME}" \
   "spot" \
   "spot" \
-  "dedicated=application-spot:NoSchedule"
+  "dedicated=application-spot:NoSchedule" \
+  "application" \
+  "16Gi"
+
+validate_nodepool \
+  "${FIS_NODE_POOL_NAME}" \
+  "spot" \
+  "spot-fis" \
+  "dedicated=application-spot-fis:NoSchedule" \
+  "application-fis" \
+  "32Gi"
 
 echo "==> Confirming idle baseline"
 if [[ -n "$(kubectl get nodeclaims --output name)" ]]; then

@@ -88,7 +88,8 @@ Planned scope:
 - controlled scale-out and consolidation-driven scale-in - delivered in v0.5.3
 - isolated Spot application capacity and scale validation - delivered in v0.5.4
 - controller, SQS, and EventBridge interruption readiness - delivered in v0.5.4
-- controlled AWS FIS interruption and replacement drill
+- tag-isolated AWS FIS foundation and dedicated test capacity - implemented in v0.5.5
+- controlled AWS FIS interruption and replacement drill - implemented in v0.5.5; runtime validation pending
 
 ## v0.6 - CloudNativePG Data Platform
 

@@ -44,12 +44,12 @@ This document describes the runtime architecture of the AWS EKS environment.
           |
           v
  application capacity tiers
-    |                 |
-    v                 v
- On-Demand         Spot NodePool
- NodePool               |
-    |                    v
-    +----------> NodeClaims and temporary application nodes
+    |                 |                 |
+    v                 v                 v
+ On-Demand         Spot NodePool   FIS-only Spot NodePool
+ NodePool               |                 |
+    |                    |                 v
+    +--------------------+------> NodeClaims and temporary application nodes
 
 ```
 
@@ -138,6 +138,7 @@ Terraform also prepares
 Karpenter IAM + EKS Access Entry
 SQS Interruption Queue + EventBridge
 Subnet + Security Group Discovery Tags
+AWS FIS Role + Spot Interruption Template
 ```
 
 Infrastructure ownership:
@@ -153,6 +154,7 @@ Terraform
 ├── Karpenter node EKS access entry
 ├── SQS interruption queue and EventBridge rules
 ├── Karpenter discovery tags
+├── AWS FIS experiment role and template
 ├── IAM roles and policies
 └── OIDC provider
 
@@ -167,8 +169,10 @@ Argo CD
 ├── Karpenter CRDs
 ├── Karpenter controller
 ├── Karpenter application EC2NodeClass
+├── Karpenter FIS-only EC2NodeClass
 ├── Karpenter On-Demand application NodePool
 ├── Karpenter Spot application NodePool
+├── Karpenter FIS-only Spot NodePool
 └── demo-api
 ```
 
@@ -193,6 +197,7 @@ EBS CSI controller → IRSA role
 AWS Load Balancer Controller → IRSA role
 Karpenter controller → IRSA role
 Karpenter node → dedicated EC2 node role and EKS access entry
+AWS FIS → dedicated Spot interruption role
 ```
 
 The Karpenter controller is constrained to the stable Managed Node Group
@@ -206,6 +211,11 @@ the development environment, while consolidation removes empty capacity.
 The Karpenter controller receives interruption events through the encrypted SQS
 queue populated by EventBridge. For a Spot interruption warning, Karpenter can
 taint and drain the affected node while requesting replacement capacity.
+
+The FIS template targets `COUNT(1)` running Spot instance with the unique
+`KarpenterFISTest` EC2 tag. Only the test-only EC2NodeClass propagates that tag,
+so normal On-Demand and Spot application capacity remains outside the
+experiment blast radius.
 
 ## IMDS and VPC Discovery
 

@@ -53,3 +53,14 @@ module "karpenter" {
   oidc_provider_url         = module.eks.oidc_provider_url
   tags                      = var.additional_tags
 }
+
+module "fis" {
+  source = "../../modules/fis"
+
+  project_name     = var.project_name
+  environment      = var.environment
+  aws_region       = var.aws_region
+  target_tag_key   = "KarpenterFISTest"
+  target_tag_value = "${local.cluster_name}-spot-interruption"
+  tags             = var.additional_tags
+}

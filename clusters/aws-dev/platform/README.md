@@ -25,10 +25,16 @@ profile, private subnets, cluster security group, and AL2023 AMIs without
 launching an instance.
 
 `karpenter-nodepool-ondemand.yaml` and `karpenter-nodepool-spot.yaml` define
-separate application capacity tiers. Both use `workload=application`, but each
-has a distinct `NoSchedule` taint so a workload opts in to exactly one tier.
-Both pools are limited to small development capacity.
+the normal application capacity tiers. Both use `workload=application`, but
+each has a distinct `NoSchedule` taint so a workload opts in to exactly one
+tier. Both pools are limited to small development capacity.
 
-The scale-test workloads under `examples/karpenter/` are not GitOps-managed.
-They are applied only during controlled validation and removed before the test
-returns.
+`karpenter-ec2nodeclass-fis.yaml` and
+`karpenter-nodepool-spot-fis.yaml` provide a third, test-only capacity
+contract. Its EC2 instances receive the unique `KarpenterFISTest` tag consumed
+by the Terraform-managed AWS FIS template. Normal application nodes never
+receive this tag.
+
+The scale and interruption workloads under `examples/karpenter/` are not
+GitOps-managed. They are applied only during controlled validation and removed
+before the test returns.

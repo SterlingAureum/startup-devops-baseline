@@ -47,6 +47,8 @@ Karpenter CRDs and controller
 Karpenter application EC2NodeClass
 Karpenter On-Demand application NodePool
 Karpenter Spot application NodePool
+AWS FIS Spot interruption foundation
+Karpenter FIS-only EC2NodeClass and Spot NodePool
 demo-api
 Application Load Balancer
 ```
@@ -59,7 +61,9 @@ On-Demand `NodePool` for explicitly opted-in application workloads. The normal
 validation path keeps the NodePool idle; the separate scale test creates and
 then removes temporary capacity. v0.5.4 adds a separately tainted Spot
 `NodePool`, validates its EC2 purchase option, and checks the controller-to-SQS
-interruption path.
+interruption path. v0.5.5 adds a tag-isolated FIS-only Spot pool and an AWS FIS
+experiment that can issue a real interruption notice to exactly one temporary
+test node.
 
 ## Deliberate Differences
 
@@ -71,6 +75,6 @@ interruption path.
 | Progressive delivery | Enabled | Deferred |
 | Exposure | Local hostname | ALB DNS |
 | IAM | N/A | IAM and IRSA |
-| Node capacity | kind nodes | system Managed Node Group plus isolated On-Demand and Spot Karpenter application capacity |
+| Node capacity | kind nodes | system Managed Node Group plus isolated On-Demand, Spot, and FIS-only Karpenter application capacity |
 
 The environments share GitOps principles but are not required to use identical traffic-routing implementations.

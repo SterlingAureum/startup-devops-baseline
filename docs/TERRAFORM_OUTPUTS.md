@@ -39,6 +39,16 @@ terraform -chdir=infra/terraform/aws/environments/dev output
   `settings.interruptionQueue` value.
 - `karpenter_event_rule_names`: interruption rules managed by Terraform.
 
+## AWS FIS Spot Drill
+
+- `karpenter_fis_role_arn`: role assumed by AWS FIS for the interruption
+  action.
+- `karpenter_fis_experiment_template_id`: template read and started by the FIS
+  validation scripts.
+- `karpenter_fis_target_tag_key`: EC2 target tag key shared with the dedicated
+  FIS EC2NodeClass.
+- `karpenter_fis_target_tag_value`: environment-specific EC2 target tag value.
+
 ## Operational Rule
 
 Terraform outputs are not committed to Git. Run `bootstrap-eks-argocd.sh`

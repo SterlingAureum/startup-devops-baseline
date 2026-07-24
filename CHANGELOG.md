@@ -2,6 +2,32 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.5.5
+
+### Added
+
+- Terraform-managed AWS FIS experiment role and tag-scoped Spot interruption
+  template.
+- Dedicated `application-fis` EC2NodeClass whose EC2 tags isolate the
+  experiment target from normal application nodes.
+- Dedicated `application-spot-fis` NodePool with a distinct taint and a
+  two-node ceiling that permits proactive replacement.
+- Runtime validation for the FIS IAM trust, least-privilege actions, experiment
+  template, target tag, and Kubernetes capacity contract.
+- Guarded real-interruption drill that validates target cardinality before
+  starting FIS, replacement Spot capacity, Pod rescheduling, original-instance
+  termination, NodeClaim cleanup, and consolidation-driven scale-in.
+
+### Changed
+
+- Extended unified validation to cover the AWS FIS foundation without starting
+  an experiment.
+- Extended aws-dev cleanup for the FIS smoke namespace.
+- Added precise Terraform ignore rules for `tfplan` and `*.tfplan` without
+  using a broad plan-name pattern.
+- Updated Karpenter architecture, deployment, environment, output, destroy, and
+  roadmap documentation.
+
 ## v0.5.4
 
 ### Added

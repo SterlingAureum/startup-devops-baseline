@@ -1,9 +1,10 @@
 # AWS Terraform baseline
 
-This directory contains the AWS infrastructure code introduced in v0.4 and
-the Karpenter AWS foundation introduced in v0.5.0.
+This directory contains the AWS infrastructure code introduced in v0.4, the
+Karpenter AWS foundation introduced in v0.5.0, and the AWS FIS Spot
+interruption foundation introduced in v0.5.5.
 
-## Current scope: v0.5.0
+## Current scope: v0.5.5
 
 The development environment now creates:
 
@@ -18,10 +19,13 @@ The development environment now creates:
 - a dedicated Karpenter controller IRSA role and scoped policies;
 - a dedicated Karpenter node role and EKS access entry;
 - an encrypted interruption queue and EventBridge rules;
-- subnet and security-group discovery tags.
+- subnet and security-group discovery tags;
+- an AWS FIS experiment role with only the Spot interruption permissions;
+- a tag-scoped, single-target Spot interruption experiment template.
 
 Karpenter controller installation, `EC2NodeClass`, `NodePool`, and dynamic EC2
-nodes remain outside v0.5.0 and are introduced by the next GitOps increments.
+nodes remain GitOps-managed. Terraform owns the AWS identity and experiment
+template used by the real interruption drill.
 
 ## Cost profile
 
@@ -48,7 +52,8 @@ terraform -chdir=infra/terraform/aws/environments/dev plan
 
 Before applying, restrict `eks_public_access_cidrs`. EKS is pinned to 1.36 for
 compatibility with Karpenter 1.14.x. Review the complete plan because this
-phase creates billable EKS and EC2 resources.
+environment creates billable EKS and EC2 resources. Creating the FIS template
+does not start an experiment.
 
 ## Configure kubectl after apply
 
@@ -66,6 +71,7 @@ kubectl get pods -n kube-system
 ```bash
 ./scripts/validate-eks-baseline.sh
 ./scripts/validate-karpenter-foundation.sh
+./scripts/validate-karpenter-fis.sh
 ```
 
 Override `AWS_REGION` and `CLUSTER_NAME` when the environment uses different

@@ -83,6 +83,26 @@ output "karpenter_event_rule_names" {
   value       = module.karpenter.event_rule_names
 }
 
+output "karpenter_fis_role_arn" {
+  description = "IAM role assumed by AWS FIS for the Karpenter Spot interruption drill."
+  value       = module.fis.experiment_role_arn
+}
+
+output "karpenter_fis_experiment_template_id" {
+  description = "AWS FIS experiment template ID for the Karpenter Spot interruption drill."
+  value       = module.fis.experiment_template_id
+}
+
+output "karpenter_fis_target_tag_key" {
+  description = "EC2 tag key used to isolate the FIS Spot interruption target."
+  value       = module.fis.target_tag_key
+}
+
+output "karpenter_fis_target_tag_value" {
+  description = "EC2 tag value used to isolate the FIS Spot interruption target."
+  value       = module.fis.target_tag_value
+}
+
 output "eks_node_group_name" {
   description = "Name of the baseline EKS managed node group."
   value       = module.eks.node_group_name

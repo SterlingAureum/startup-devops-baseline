@@ -5,7 +5,7 @@
 ```text
 Suspend aws-dev Root Application automation
         ↓
-Delete the On-Demand and Spot scale-test workloads
+Delete the On-Demand, Spot, and FIS test workloads
         ↓
 Delete NodePool
         ↓
@@ -33,6 +33,10 @@ Terraform destroy
 ```
 
 The script requires typing `destroy` before continuing.
+
+Do not start a new FIS experiment while destroy is running. If an experiment is
+already active, wait for it to reach a terminal state and confirm the targeted
+instance has terminated before starting teardown.
 
 ## Manual Checks
 

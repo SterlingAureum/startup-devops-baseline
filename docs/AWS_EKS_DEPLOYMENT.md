@@ -160,8 +160,9 @@ TARGET_REVISION=feature/v0.5-karpenter-autoscaling \
 ```
 
 The root Application installs the Karpenter CRDs first, the controller
-afterward, the `application` EC2NodeClass, and finally the
-`application-ondemand` and `application-spot` NodePools.
+afterward, the normal and FIS-only EC2NodeClasses, and finally the
+`application-ondemand`, `application-spot`, and `application-spot-fis`
+NodePools.
 
 ## 7. Validate Everything
 
@@ -180,10 +181,11 @@ kubectl get ec2nodeclass application
 kubectl get nodepools,nodeclaims
 ```
 
-The EC2NodeClass and both NodePools should report `Ready=True`. The interruption
-validator should confirm that the controller, SQS queue, and Spot EventBridge
-rule use the same queue. No NodeClaims or Karpenter-provisioned nodes should
-exist in the idle baseline.
+Both EC2NodeClasses and all three NodePools should report `Ready=True`. The
+interruption validator should confirm that the controller, SQS queue, and Spot
+EventBridge rule use the same queue. The FIS validator should confirm the role,
+experiment template, and unique EC2 target tag. No NodeClaims or
+Karpenter-provisioned nodes should exist in the idle baseline.
 
 ## 8. Run the Controlled Scale Test
 
@@ -237,7 +239,30 @@ Expected final output:
 Karpenter Spot scale-out and scale-in validation passed.
 ```
 
-## 10. Destroy
+## 10. Run the Real AWS FIS Interruption Drill
+
+This drill creates an isolated Spot node and starts a real AWS FIS experiment:
+
+```bash
+./scripts/run-karpenter-fis-spot-test.sh
+```
+
+The script requires typing `interrupt`. Before starting FIS, it proves that the
+experiment tag resolves to exactly the EC2 instance hosting the temporary test
+Pod. It then validates a replacement Pod on a different Spot instance,
+original-instance termination, NodeClaim removal, and final scale-in.
+
+The interruption cannot be undone after EC2 accepts it. This drill incurs
+temporary EC2, EBS, and AWS FIS charges and is not part of
+`validate-all.sh`.
+
+Expected final output:
+
+```text
+Karpenter AWS FIS Spot interruption and replacement validation passed.
+```
+
+## 11. Destroy
 
 ```bash
 ./scripts/destroy-aws-dev.sh

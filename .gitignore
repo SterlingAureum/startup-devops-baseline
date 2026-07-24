@@ -69,12 +69,8 @@ docker-compose.override.yml
 
 # Terraform / OpenTofu reserved for future versions
 **/.terraform/*
-*.tfplan
-*.tfplan.*
-tfplan
+**/*.tfplan
 **/tfplan
-terraform.tfplan
-**/terraform.tfplan
 .terraformrc
 terraform.rc
 .terraform.lock.hcl

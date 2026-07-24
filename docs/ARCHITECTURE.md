@@ -1,6 +1,6 @@
 # Architecture
 
-This document describes the current local architecture of the `startup-devops-baseline` repository at v0.3.5.
+This document describes the local GitOps architecture.
 
 The repository now provides a complete local GitOps and progressive delivery baseline. It combines CI image publishing, Argo CD application reconciliation, Argo Rollouts canary delivery, ingress-nginx traffic routing, and Prometheus-based rollout analysis.
 

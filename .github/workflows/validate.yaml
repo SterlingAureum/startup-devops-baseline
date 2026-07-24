@@ -19,8 +19,14 @@ jobs:
       - name: Helm lint demo-api
         run: helm lint apps/demo-api/helm
 
-      - name: Helm template demo-api
+      - name: Helm template demo-api local
         run: helm template demo-api apps/demo-api/helm > /tmp/demo-api-rendered.yaml
+
+      - name: Helm lint demo-api aws-dev
+        run: helm lint apps/demo-api/helm -f apps/demo-api/helm/values-aws-dev.yaml
+
+      - name: Helm template demo-api aws-dev
+        run: helm template demo-api apps/demo-api/helm -f apps/demo-api/helm/values-aws-dev.yaml > /tmp/demo-api-aws-dev-rendered.yaml
 
       - name: Docker build validation
         run: docker build -t demo-api-ci-test apps/demo-api

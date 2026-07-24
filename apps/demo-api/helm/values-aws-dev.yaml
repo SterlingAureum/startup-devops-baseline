@@ -1,0 +1,48 @@
+replicaCount: 2
+
+image:
+  repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
+  tag: "sha-3e50802"
+  pullPolicy: IfNotPresent
+
+rollout:
+  enabled: false
+
+analysis:
+  enabled: false
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+env:
+  APP_NAME: demo-api
+  APP_VERSION: "sha-3e50802"
+  APP_ENV: aws-dev

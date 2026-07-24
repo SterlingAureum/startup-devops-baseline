@@ -1,0 +1,38 @@
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: application-fis
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+spec:
+  role: startup-devops-baseline-dev-karpenter-node-role
+  amiSelectorTerms:
+    - alias: al2023@latest
+  subnetSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: startup-devops-baseline-dev
+  securityGroupSelectorTerms:
+    - tags:
+        karpenter.sh/discovery: startup-devops-baseline-dev
+  metadataOptions:
+    httpEndpoint: enabled
+    httpProtocolIPv6: disabled
+    httpPutResponseHopLimit: 1
+    httpTokens: required
+  blockDeviceMappings:
+    - deviceName: /dev/xvda
+      ebs:
+        volumeSize: 30Gi
+        volumeType: gp3
+        iops: 3000
+        throughput: 125
+        encrypted: true
+        deleteOnTermination: true
+  associatePublicIPAddress: false
+  tags:
+    Name: startup-devops-baseline-dev-karpenter-application-fis
+    Project: startup-devops-baseline
+    Environment: dev
+    ManagedBy: karpenter
+    KarpenterFISTest: startup-devops-baseline-dev-spot-interruption

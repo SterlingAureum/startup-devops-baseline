@@ -35,6 +35,16 @@ This document describes the runtime architecture of the AWS EKS environment.
 
  Controller Pods  CRDs + Controller  CRDs + Operator  demo-api Pods
 
+                                       |
+                                       v
+
+                              PostgreSQL Application
+
+                                       |
+                                       v
+
+                            Cluster + PVC + gp3 EBS
+
  AWS LBC `vpcId` is rendered by bootstrap and preserved by the root Application.
 
  Karpenter controller
@@ -169,6 +179,7 @@ Argo CD
 ├── Karpenter CRDs
 ├── Karpenter controller
 ├── CloudNativePG operator and CRDs
+├── PostgreSQL Cluster and gp3 StorageClass
 ├── Karpenter application EC2NodeClass
 ├── Karpenter FIS-only EC2NodeClass
 ├── Karpenter On-Demand application NodePool
@@ -213,8 +224,20 @@ CloudNativePG `1.30.0` is installed from the official Helm chart through an
 Argo CD Application. Its two operator replicas use the same stable
 `workload=system` Managed Node Group and required hostname anti-affinity. The
 operator is cluster-wide so later v0.6 increments can manage database
-namespaces. v0.6.0 creates the control plane and CRDs only: there is no
-PostgreSQL `Cluster`, database PVC, backup bucket, or additional AWS IAM role.
+namespaces.
+
+v0.6.1 adds `postgresql-baseline`, a single PostgreSQL `17.10` instance in the
+`data-platform` namespace. It temporarily uses the same stable system Managed
+Node Group with Guaranteed 500m CPU and 1Gi memory. Its 20Gi data PVC is
+dynamically provisioned from the `gp3-cnpg` StorageClass as an encrypted gp3
+EBS volume. The existing EBS CSI controller IRSA role performs provisioning,
+so this increment adds no IAM role or Terraform change.
+
+The database Application self-heals but does not automatically prune, and the
+Namespace, StorageClass, and Cluster each carry `Prune=false`. This protects
+stateful resources from ordinary Git deletion. The explicit destroy workflow
+remains destructive and deletes the Cluster, PVC, and EBS volume. v0.6.1 is not
+highly available and has no S3 backup or restore path.
 
 The Karpenter controller receives interruption events through the encrypted SQS
 queue populated by EventBridge. For a Spot interruption warning, Karpenter can

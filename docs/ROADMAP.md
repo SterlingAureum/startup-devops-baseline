@@ -103,7 +103,8 @@ Incremental scope:
 
 - v0.6.0 - CloudNativePG operator, CRDs, webhooks, GitOps lifecycle, and stable
   system-node placement - delivered
-- v0.6.1 - gp3 persistence baseline and a single PostgreSQL instance
+- v0.6.1 - gp3 persistence baseline and a single PostgreSQL instance -
+  delivered
 - v0.6.2 - dedicated On-Demand database capacity and a three-instance,
   cross-AZ high-availability cluster
 - v0.6.3 - S3 backup and WAL archiving through the Barman Cloud CNPG-I plugin

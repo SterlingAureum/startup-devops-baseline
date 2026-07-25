@@ -134,15 +134,4 @@ if [[ "${SYNC_STATUS}" != "Synced" || "${HEALTH_STATUS}" != "Healthy" ]]; then
   exit 1
 fi
 
-echo "==> Confirming the operator-only v0.6.0 boundary"
-CLUSTERS="$(
-  kubectl get clusters.postgresql.cnpg.io \
-    --all-namespaces \
-    --no-headers 2>/dev/null || true
-)"
-if [[ -n "${CLUSTERS}" ]]; then
-  echo "PostgreSQL Cluster resources already exist; v0.6.0 expects an operator-only baseline." >&2
-  exit 1
-fi
-
 echo "CloudNativePG operator validation passed."

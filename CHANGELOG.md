@@ -2,6 +2,31 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.6.1
+
+### Added
+
+- GitOps-managed single-instance CloudNativePG `Cluster` pinned to PostgreSQL
+  `17.10` by immutable image digest.
+- Dedicated `data-platform` namespace and encrypted `gp3-cnpg` StorageClass
+  with a 20Gi EBS data volume, volume expansion, and delayed binding.
+- Explicit 500m CPU and 1Gi memory Guaranteed resource contract on stable
+  `workload=system` nodes.
+- Non-disruptive runtime validation for the Application, Cluster, generated
+  credential Secret, Pod placement, PVC, PV, EBS encryption, and database
+  connection.
+- Guarded Pod-recreation test that writes a marker and proves reuse of the same
+  PVC, PV, and EBS volume.
+
+### Changed
+
+- Extended unified validation to include the PostgreSQL persistence baseline
+  without restarting the database.
+- Disabled automated pruning for database-owned resources and added
+  dependency-aware PostgreSQL storage cleanup before EKS destruction.
+- Updated AWS architecture, deployment, environment, rollback, destroy, and
+  roadmap documentation for the first stateful workload.
+
 ## v0.6.0
 
 ### Added

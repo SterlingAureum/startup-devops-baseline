@@ -50,6 +50,8 @@ Karpenter Spot application NodePool
 AWS FIS Spot interruption foundation
 Karpenter FIS-only EC2NodeClass and Spot NodePool
 CloudNativePG operator and CRDs
+Single-instance PostgreSQL 17.10 Cluster
+Encrypted 20Gi gp3 EBS persistence
 demo-api
 Application Load Balancer
 ```
@@ -66,7 +68,9 @@ interruption path. v0.5.5 adds a tag-isolated FIS-only Spot pool and an AWS FIS
 experiment that can issue a real interruption notice to exactly one temporary
 test node. v0.6.0 adds the cluster-wide CloudNativePG operator, admission
 webhooks, and CRDs through Argo CD. Its two replicas run on separate stable
-system nodes; no PostgreSQL cluster or persistent volume exists yet.
+system nodes. v0.6.1 adds one PostgreSQL 17.10 instance on a stable system node
+and one encrypted 20Gi gp3 EBS data volume. This first persistence baseline is
+not highly available and has no backup or restore workflow.
 
 ## Deliberate Differences
 
@@ -79,5 +83,6 @@ system nodes; no PostgreSQL cluster or persistent volume exists yet.
 | Exposure | Local hostname | ALB DNS |
 | IAM | N/A | IAM and IRSA |
 | Node capacity | kind nodes | system Managed Node Group plus isolated On-Demand, Spot, and FIS-only Karpenter application capacity |
+| Database | N/A | single PostgreSQL instance with encrypted gp3 persistence |
 
 The environments share GitOps principles but are not required to use identical traffic-routing implementations.

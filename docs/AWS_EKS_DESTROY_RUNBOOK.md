@@ -5,6 +5,12 @@
 ```text
 Suspend aws-dev Root Application automation
         ↓
+Suspend PostgreSQL Application automation
+        ↓
+Delete PostgreSQL Cluster, PVC, namespace, and StorageClass
+        ↓
+Wait for the gp3 EBS volume to be released
+        ↓
 Delete the On-Demand, Spot, and FIS test workloads
         ↓
 Delete NodePool
@@ -38,10 +44,19 @@ Do not start a new FIS experiment while destroy is running. If an experiment is
 already active, wait for it to reach a terminal state and confirm the targeted
 instance has terminated before starting teardown.
 
+The workflow intentionally deletes the PostgreSQL data PVC. Because
+`gp3-cnpg` uses reclaim policy `Delete`, its EBS volume is also deleted. v0.6.1
+has no backup or restore path, so export any required data before confirming
+destroy.
+
 ## Manual Checks
 
 ```bash
 kubectl get applications -n argocd
+kubectl get clusters.postgresql.cnpg.io -A
+kubectl get pvc -n data-platform
+kubectl get pv
+kubectl get storageclass gp3-cnpg
 kubectl get nodepools,nodeclaims
 kubectl get nodes -l karpenter.sh/nodepool
 kubectl get ec2nodeclass
@@ -67,6 +82,7 @@ Load Balancer security group
 Elastic network interface
 Karpenter-provisioned EC2 node
 Karpenter-generated IAM instance profile
+PostgreSQL gp3 EBS volume
 NAT Gateway
 Elastic IP
 ```
@@ -78,3 +94,7 @@ EC2NodeClass. Keep the controller running until the EC2NodeClass has completed
 finalizer cleanup.
 
 Do not delete local Terraform state until destruction completes.
+
+Before Terraform destroy, verify that the PostgreSQL PV is gone and that its
+`vol-*` identifier no longer appears in `aws ec2 describe-volumes`. A residual
+EBS volume does not block VPC deletion, but it continues to incur cost.

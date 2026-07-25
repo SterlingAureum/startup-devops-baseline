@@ -160,9 +160,10 @@ TARGET_REVISION=feature/v0.6-cloudnativepg-data-platform \
 ```
 
 The root Application installs the Karpenter CRDs and controller, the normal and
-FIS-only EC2NodeClasses and NodePools, CloudNativePG, and demo-api. CloudNativePG
-v0.6.0 installs only the operator control plane; it does not create a database
-or persistent volume and requires no additional Terraform apply.
+FIS-only EC2NodeClasses and NodePools, CloudNativePG, the PostgreSQL persistence
+baseline, and demo-api. v0.6.1 requires no additional Terraform apply, but it
+does dynamically provision one 20Gi gp3 EBS volume and therefore adds storage
+cost.
 
 ## 7. Validate Everything
 
@@ -181,6 +182,9 @@ kubectl get ec2nodeclass application
 kubectl get nodepools,nodeclaims
 kubectl get application cloudnative-pg -n argocd
 kubectl get pods -n cnpg-system
+kubectl get application postgresql-baseline -n argocd
+kubectl get cluster,pods,pvc -n data-platform
+kubectl get storageclass gp3-cnpg
 ```
 
 Both EC2NodeClasses and all three NodePools should report `Ready=True`. The
@@ -189,11 +193,39 @@ EventBridge rule use the same queue. The FIS validator should confirm the role,
 experiment template, and unique EC2 target tag. No NodeClaims or
 Karpenter-provisioned nodes should exist in the idle baseline.
 
-The CloudNativePG validator should report two healthy operator replicas on two
-different `workload=system` nodes, healthy admission webhooks, the core CRDs,
-and no PostgreSQL `Cluster` resources.
+The CloudNativePG validators should report two healthy operator replicas on two
+different `workload=system` nodes, one ready PostgreSQL 17.10 instance, one
+bound 20Gi PVC, and an encrypted gp3 EBS volume. `validate-all.sh` does not
+restart the database.
 
-## 8. Run the Controlled Scale Test
+## 8. Run the PostgreSQL Persistence Test
+
+First run the non-disruptive validator directly when focused database
+diagnostics are useful:
+
+```bash
+./scripts/validate-cloudnative-pg-persistence.sh
+```
+
+Then run the guarded persistence test:
+
+```bash
+./scripts/run-cloudnative-pg-persistence-test.sh
+```
+
+The script requires typing `restart`. It writes a marker into the `app`
+database, deletes the only PostgreSQL Pod, waits for CloudNativePG to recreate
+it, and verifies that the same PVC, PV, and EBS volume contain the marker.
+Expect brief database downtime. This test is intentionally excluded from
+`validate-all.sh`.
+
+Expected final output:
+
+```text
+CloudNativePG PostgreSQL Pod recreation and data persistence validation passed.
+```
+
+## 9. Run the Controlled Scale Test
 
 The following command creates a temporary workload and one small On-Demand
 application node. It validates scale-out, deletes the workload, and waits for
@@ -221,7 +253,7 @@ kubectl get nodes -l karpenter.sh/nodepool
 
 Both commands should return no Karpenter capacity.
 
-## 9. Run the Controlled Spot Test
+## 10. Run the Controlled Spot Test
 
 The Spot test validates interruption-path readiness, creates one temporary Spot
 node, confirms the EC2 purchase option, deletes the workload, and waits for
@@ -245,7 +277,7 @@ Expected final output:
 Karpenter Spot scale-out and scale-in validation passed.
 ```
 
-## 10. Run the Real AWS FIS Interruption Drill
+## 11. Run the Real AWS FIS Interruption Drill
 
 This drill creates an isolated Spot node and starts a real AWS FIS experiment:
 
@@ -268,7 +300,7 @@ Expected final output:
 Karpenter AWS FIS Spot interruption and replacement validation passed.
 ```
 
-## 11. Destroy
+## 12. Destroy
 
 ```bash
 ./scripts/destroy-aws-dev.sh

@@ -22,8 +22,13 @@ The controller runs only on the stable Managed Node Group nodes labeled
 `cloudnative-pg.yaml` installs the CloudNativePG operator and its CRDs through
 the official Helm chart. Two operator replicas run only on the stable
 `workload=system` Managed Node Group and are spread across different nodes.
-v0.6.0 intentionally does not create a PostgreSQL `Cluster`, persistent
-volumes, or backup resources.
+
+`postgresql-baseline.yaml` creates a separate Argo CD Application for the
+stateful resources under `clusters/aws-dev/data-platform/postgresql/`. v0.6.1
+adds one PostgreSQL 17.10 instance and one encrypted 20Gi gp3 data volume.
+Automated prune is disabled and the stateful resources carry `Prune=false`;
+database deletion is handled only by the explicit cleanup and destroy
+workflows. High availability and backup resources are deferred.
 
 `karpenter-ec2nodeclass.yaml` defines the reusable AWS launch and discovery
 configuration for future application NodePools. It can resolve its IAM instance

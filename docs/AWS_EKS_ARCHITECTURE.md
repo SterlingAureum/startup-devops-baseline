@@ -26,14 +26,14 @@ This document describes the runtime architecture of the AWS EKS environment.
        |             |             |             |
        v             v             v             v
 
-      AWS LBC    Karpenter CRDs   Karpenter      demo-api
+      AWS LBC       Karpenter       CloudNativePG      demo-api
 
-    Application     Application    Application   Application
+    Application    Applications      Application      Application
 
-       |             |             |             |
-       v             v             v             v
+       |             |                 |                 |
+       v             v                 v                 v
 
- Controller Pods    CRDs      Controller Pods  demo-api Pods
+ Controller Pods  CRDs + Controller  CRDs + Operator  demo-api Pods
 
  AWS LBC `vpcId` is rendered by bootstrap and preserved by the root Application.
 
@@ -168,6 +168,7 @@ Argo CD
 ├── AWS Load Balancer Controller
 ├── Karpenter CRDs
 ├── Karpenter controller
+├── CloudNativePG operator and CRDs
 ├── Karpenter application EC2NodeClass
 ├── Karpenter FIS-only EC2NodeClass
 ├── Karpenter On-Demand application NodePool
@@ -207,6 +208,13 @@ instance-profile, private-subnet, security-group, and AMI discovery.
 Their different `NoSchedule` taints make the pools mutually exclusive unless a
 workload explicitly tolerates both. CPU, memory, and node-count limits bound
 the development environment, while consolidation removes empty capacity.
+
+CloudNativePG `1.30.0` is installed from the official Helm chart through an
+Argo CD Application. Its two operator replicas use the same stable
+`workload=system` Managed Node Group and required hostname anti-affinity. The
+operator is cluster-wide so later v0.6 increments can manage database
+namespaces. v0.6.0 creates the control plane and CRDs only: there is no
+PostgreSQL `Cluster`, database PVC, backup bucket, or additional AWS IAM role.
 
 The Karpenter controller receives interruption events through the encrypted SQS
 queue populated by EventBridge. For a Spot interruption warning, Karpenter can

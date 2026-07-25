@@ -28,6 +28,7 @@ run_step "Karpenter EC2NodeClass" "${ROOT_DIR}/scripts/validate-karpenter-nodecl
 run_step "Karpenter NodePools" "${ROOT_DIR}/scripts/validate-karpenter-nodepool.sh"
 run_step "Karpenter interruption readiness" "${ROOT_DIR}/scripts/validate-karpenter-interruption.sh"
 run_step "AWS FIS Spot interruption foundation" "${ROOT_DIR}/scripts/validate-karpenter-fis.sh"
+run_step "CloudNativePG operator" "${ROOT_DIR}/scripts/validate-cloudnative-pg-operator.sh"
 run_step "AWS GitOps and application baseline" "${ROOT_DIR}/scripts/validate-aws-dev.sh"
 
 printf '

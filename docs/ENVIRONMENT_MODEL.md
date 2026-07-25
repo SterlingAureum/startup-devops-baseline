@@ -49,6 +49,7 @@ Karpenter On-Demand application NodePool
 Karpenter Spot application NodePool
 AWS FIS Spot interruption foundation
 Karpenter FIS-only EC2NodeClass and Spot NodePool
+CloudNativePG operator and CRDs
 demo-api
 Application Load Balancer
 ```
@@ -63,7 +64,9 @@ then removes temporary capacity. v0.5.4 adds a separately tainted Spot
 `NodePool`, validates its EC2 purchase option, and checks the controller-to-SQS
 interruption path. v0.5.5 adds a tag-isolated FIS-only Spot pool and an AWS FIS
 experiment that can issue a real interruption notice to exactly one temporary
-test node.
+test node. v0.6.0 adds the cluster-wide CloudNativePG operator, admission
+webhooks, and CRDs through Argo CD. Its two replicas run on separate stable
+system nodes; no PostgreSQL cluster or persistent volume exists yet.
 
 ## Deliberate Differences
 

@@ -5,23 +5,21 @@ A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure b
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
 The repository now contains the completed local progressive-delivery and AWS
-EKS baselines, isolated On-Demand and Spot application NodePools, and a
-tag-scoped AWS FIS drill for validating Karpenter Spot interruption recovery.
-It remains intentionally smaller than a full production platform and will
-continue toward CloudNativePG, security controls, observability, AI
-infrastructure workloads, and AIOps workflows.
+EKS baselines, isolated On-Demand and Spot application NodePools, a tag-scoped
+AWS FIS drill, and a GitOps-managed CloudNativePG operator foundation. It
+remains intentionally smaller than a full production platform and will
+continue toward PostgreSQL persistence and recovery, security controls,
+observability, AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.5.5-karpenter-fis-spot-interruption
+v0.6.0-cloudnativepg-operator
 ```
-The local GitOps, progressive-delivery, and AWS EKS baselines are complete.
-Karpenter AWS prerequisites, controller installation, EC2NodeClass discovery,
-isolated On-Demand and Spot application NodePools, interruption-path readiness,
-and a dedicated AWS FIS Spot interruption experiment are implemented. The FIS
-drill verifies a real interruption notice, replacement Spot capacity, Pod
-rescheduling, original-instance termination, and final scale-in.
+The v0.5 Karpenter autoscaling baseline is complete. CloudNativePG 1.30.0 is
+now installed through Argo CD with two operator replicas on stable system
+nodes. This version installs only the operator, webhooks, RBAC, and CRDs; it
+does not create a PostgreSQL cluster or persistent storage.
 
 ## Platform Architecture
 
@@ -84,8 +82,8 @@ rescheduling, original-instance termination, and final scale-in.
 
 Both environments use Git and Argo CD as the desired-state control plane.
 The local environment focuses on progressive delivery, while the AWS
-environment focuses on cloud infrastructure and AWS-native application
-delivery.
+environment covers cloud infrastructure, AWS-native application delivery,
+dynamic capacity, and the CloudNativePG database control plane.
 
 ## Deployment Options
 

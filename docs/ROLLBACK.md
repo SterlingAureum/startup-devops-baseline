@@ -1,13 +1,15 @@
 # Rollback
 
-Rollback scenarios are not implemented in the current batch.
+Rollback is implemented for the local progressive-delivery baseline.
 
-The current repository only prepares the kind + Argo CD baseline.
+Use `docs/ROLLBACK_RUNBOOK.md` for the current operator workflow, including:
 
-Future rollback documentation will cover:
+- aborting an active canary rollout;
+- promoting a healthy rollout;
+- reverting a GitOps image change;
+- validating the stable revision after recovery.
 
-- reverting Git commits
-- Argo CD sync behavior
-- Helm chart rollback patterns
-- failed demo API deployment scenario
-- progressive delivery rollback with Argo Rollouts in a later version
+For the AWS environment, revert the Git commit and allow Argo CD to reconcile
+the previous desired state. Database-specific rollback, restore, and
+point-in-time recovery procedures will be added with the PostgreSQL resources
+in later v0.6 increments.

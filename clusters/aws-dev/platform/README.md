@@ -19,6 +19,12 @@ Karpenter is split into two Applications:
 The controller runs only on the stable Managed Node Group nodes labeled
 `workload=system`.
 
+`cloudnative-pg.yaml` installs the CloudNativePG operator and its CRDs through
+the official Helm chart. Two operator replicas run only on the stable
+`workload=system` Managed Node Group and are spread across different nodes.
+v0.6.0 intentionally does not create a PostgreSQL `Cluster`, persistent
+volumes, or backup resources.
+
 `karpenter-ec2nodeclass.yaml` defines the reusable AWS launch and discovery
 configuration for future application NodePools. It can resolve its IAM instance
 profile, private subnets, cluster security group, and AL2023 AMIs without

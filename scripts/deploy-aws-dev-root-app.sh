@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_URL="${REPO_URL:-https://github.com/SterlingAureum/startup-devops-baseline.git}"
-TARGET_REVISION="${TARGET_REVISION:-feature/v0.5-karpenter-autoscaling}"
+TARGET_REVISION="${TARGET_REVISION:-feature/v0.6-cloudnativepg-data-platform}"
 SOURCE_FILE="${SOURCE_FILE:-${ROOT_DIR}/clusters/aws-dev/root-app.yaml}"
 
 command -v kubectl >/dev/null 2>&1 || {

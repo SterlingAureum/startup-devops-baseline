@@ -69,7 +69,7 @@ Delivered across v0.4.0 through v0.4.4:
 
 ## v0.5 - Karpenter Autoscaling Baseline
 
-Status: In Progress
+Status: Completed
 
 Goal:
 
@@ -88,26 +88,27 @@ Planned scope:
 - controlled scale-out and consolidation-driven scale-in - delivered in v0.5.3
 - isolated Spot application capacity and scale validation - delivered in v0.5.4
 - controller, SQS, and EventBridge interruption readiness - delivered in v0.5.4
-- tag-isolated AWS FIS foundation and dedicated test capacity - implemented in v0.5.5
-- controlled AWS FIS interruption and replacement drill - implemented in v0.5.5; runtime validation pending
+- tag-isolated AWS FIS foundation and dedicated test capacity - delivered in v0.5.5
+- controlled AWS FIS interruption and replacement drill - delivered and runtime-validated in v0.5.5
 
 ## v0.6 - CloudNativePG Data Platform
 
-Status: Planned
+Status: In Progress
 
 Goal:
 
 Introduce Kubernetes-native database operations.
 
-Planned scope:
+Incremental scope:
 
-- CloudNativePG operator lifecycle
-- PostgreSQL cluster deployment
-- high availability configuration
-- persistent storage
-- backup and restore validation
-- failover testing
-- application database integration
+- v0.6.0 - CloudNativePG operator, CRDs, webhooks, GitOps lifecycle, and stable
+  system-node placement - delivered
+- v0.6.1 - gp3 persistence baseline and a single PostgreSQL instance
+- v0.6.2 - dedicated On-Demand database capacity and a three-instance,
+  cross-AZ high-availability cluster
+- v0.6.3 - S3 backup and WAL archiving through the Barman Cloud CNPG-I plugin
+- v0.6.4 - restore and point-in-time recovery validation
+- v0.6.5 - failover validation, demo-api integration, and version finalization
 
 ## v0.7 - Production Security Baseline
 

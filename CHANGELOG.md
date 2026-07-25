@@ -2,6 +2,29 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.6.0
+
+### Added
+
+- Argo CD Application for the official CloudNativePG Helm chart, pinned to
+  chart `0.29.0` and CloudNativePG `1.30.0`.
+- Two operator replicas constrained to the stable `workload=system` Managed
+  Node Group and spread across different nodes.
+- Runtime validation for the Argo CD Application, core CRDs, admission
+  webhooks, operator rollout, replica count, node placement, and operator-only
+  release boundary.
+- CloudNativePG operator architecture, deployment, environment, and version
+  documentation.
+
+### Changed
+
+- Advanced active aws-dev Git revisions to
+  `feature/v0.6-cloudnativepg-data-platform`.
+- Marked the v0.5 roadmap complete after the validated AWS FIS interruption
+  drill.
+- Corrected stale local architecture and rollback descriptions.
+- Included the FIS smoke namespace in the standalone aws-dev cleanup workflow.
+
 ## v0.5.5
 
 ### Added

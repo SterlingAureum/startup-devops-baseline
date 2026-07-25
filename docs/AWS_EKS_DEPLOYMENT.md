@@ -68,7 +68,7 @@
              v                    v                    v
 
 
- AWS Load Balancer Controller              Karpenter              demo-api
+ AWS Load Balancer Controller       Karpenter + CloudNativePG     demo-api
 
        Application                        Applications           Application
 
@@ -155,14 +155,14 @@ real `vpc-*` value.
 
 ```bash
 REPO_URL=https://github.com/SterlingAureum/startup-devops-baseline.git \
-TARGET_REVISION=feature/v0.5-karpenter-autoscaling \
+TARGET_REVISION=feature/v0.6-cloudnativepg-data-platform \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 
-The root Application installs the Karpenter CRDs first, the controller
-afterward, the normal and FIS-only EC2NodeClasses, and finally the
-`application-ondemand`, `application-spot`, and `application-spot-fis`
-NodePools.
+The root Application installs the Karpenter CRDs and controller, the normal and
+FIS-only EC2NodeClasses and NodePools, CloudNativePG, and demo-api. CloudNativePG
+v0.6.0 installs only the operator control plane; it does not create a database
+or persistent volume and requires no additional Terraform apply.
 
 ## 7. Validate Everything
 
@@ -179,6 +179,8 @@ kubectl get pods -A
 kubectl get ingress -n startup-apps
 kubectl get ec2nodeclass application
 kubectl get nodepools,nodeclaims
+kubectl get application cloudnative-pg -n argocd
+kubectl get pods -n cnpg-system
 ```
 
 Both EC2NodeClasses and all three NodePools should report `Ready=True`. The
@@ -186,6 +188,10 @@ interruption validator should confirm that the controller, SQS queue, and Spot
 EventBridge rule use the same queue. The FIS validator should confirm the role,
 experiment template, and unique EC2 target tag. No NodeClaims or
 Karpenter-provisioned nodes should exist in the idle baseline.
+
+The CloudNativePG validator should report two healthy operator replicas on two
+different `workload=system` nodes, healthy admission webhooks, the core CRDs,
+and no PostgreSQL `Cluster` resources.
 
 ## 8. Run the Controlled Scale Test
 

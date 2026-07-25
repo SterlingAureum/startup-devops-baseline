@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
-    targetRevision: feature/v0.5-karpenter-autoscaling
+    targetRevision: feature/v0.6-cloudnativepg-data-platform
     path: clusters/aws-dev/platform
     directory:
       recurse: true

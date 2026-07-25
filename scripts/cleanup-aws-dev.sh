@@ -19,7 +19,10 @@ else
   echo "==> Root application is already absent"
 fi
 
-for smoke_namespace in karpenter-smoke karpenter-spot-smoke; do
+for smoke_namespace in \
+  karpenter-smoke \
+  karpenter-spot-smoke \
+  karpenter-fis-smoke; do
   kubectl delete namespace "${smoke_namespace}" \
     --ignore-not-found=true \
     --wait=false

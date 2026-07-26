@@ -114,18 +114,23 @@ kubectl rollout status deployment/cert-manager \
 kubectl rollout status deployment/cert-manager-webhook \
   --namespace cert-manager \
   --timeout="${WAIT_TIMEOUT}"
-kubectl rollout status deployment/barman-cloud \
+kubectl rollout status deployment/barman-cloud-plugin-barman-cloud \
   --namespace cnpg-system \
   --timeout="${WAIT_TIMEOUT}"
 kubectl get crd objectstores.barmancloud.cnpg.io >/dev/null
 
+EXPECTED_BARMAN_IMAGE="ghcr.io/cloudnative-pg/plugin-barman-cloud:v0.13.0"
+
 BARMAN_IMAGE="$(
-  kubectl get deployment barman-cloud \
+  kubectl get deployment barman-cloud-plugin-barman-cloud \
     --namespace cnpg-system \
     --output jsonpath='{.spec.template.spec.containers[0].image}'
 )"
-if [[ "${BARMAN_IMAGE}" != *":0.13.0"* && "${BARMAN_IMAGE}" != *"@sha256:"* ]]; then
-  echo "The Barman Cloud plugin image is not pinned to the expected release." >&2
+
+if [[ "${BARMAN_IMAGE}" != "${EXPECTED_BARMAN_IMAGE}" ]]; then
+  echo "Unexpected Barman Cloud plugin image." >&2
+  echo "Expected: ${EXPECTED_BARMAN_IMAGE}" >&2
+  echo "Actual:   ${BARMAN_IMAGE}" >&2
   exit 1
 fi
 

@@ -22,14 +22,14 @@ spec:
       maxParallel: 2
     data:
       compression: lz4
-      jobs: 2
+      jobs: 1
   retentionPolicy: "7d"
   instanceSidecarConfiguration:
     retentionPolicyIntervalSeconds: 1800
     resources:
       requests:
         cpu: 100m
-        memory: 128Mi
+        memory: 256Mi
       limits:
-        cpu: 100m
-        memory: 128Mi
+        cpu: 500m
+        memory: 512Mi

@@ -148,8 +148,8 @@ SIDECAR_RESOURCES="$(
 
 if [[ "${LIVE_DESTINATION}" != "${EXPECTED_DESTINATION}" || \
       "${LIVE_DESTINATION}" == *"__CNPG_BACKUP_BUCKET__"* || \
-      "${OBJECT_STORE_CONTRACT}" != "true:lz4:2:lz4:2:7d" || \
-      "${SIDECAR_RESOURCES}" != "100m:100m:128Mi:128Mi" ]]; then
+      "${OBJECT_STORE_CONTRACT}" != "true:lz4:2:lz4:1:7d" || \
+      "${SIDECAR_RESOURCES}" != "100m:500m:256Mi:512Mi" ]]; then
   echo "The live ObjectStore does not match the v0.6.3 contract." >&2
   exit 1
 fi

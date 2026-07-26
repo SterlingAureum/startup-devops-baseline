@@ -6,22 +6,24 @@ This repository demonstrates a practical Kubernetes platform baseline built arou
 
 The repository now contains the completed local progressive-delivery and AWS
 EKS baselines, isolated On-Demand and Spot application NodePools, a tag-scoped
-AWS FIS drill, and a GitOps-managed CloudNativePG PostgreSQL persistence
-and high-availability baseline. It remains intentionally smaller than a full
-production platform and will continue toward database backup and recovery,
+AWS FIS drill, and a GitOps-managed CloudNativePG PostgreSQL persistence,
+high-availability, and S3 backup baseline. It remains intentionally smaller
+than a full production platform and will continue toward database recovery,
 security controls, observability, AI infrastructure workloads, and AIOps
 workflows.
 
 ## Current Version
 
 ```text
-v0.6.2-postgresql-ha
+v0.6.3-postgresql-backup
 ```
 CloudNativePG 1.30.0 now manages one PostgreSQL 17.10 primary and two
 synchronous-capable replicas on three dedicated Karpenter On-Demand nodes.
 Instances use Guaranteed resources, encrypted gp3 persistence, and a balanced
-`2+1` distribution across the two development Availability Zones. S3 backup,
-restore, failover drills, and application integration remain future v0.6
+`2+1` distribution across the two development Availability Zones. The Barman
+Cloud CNPG-I plugin continuously archives WAL files and writes physical base
+backups to a Terraform-managed, versioned, encrypted S3 bucket through IRSA.
+Restore, PITR, failover drills, and application integration remain future v0.6
 increments.
 
 ## Platform Architecture

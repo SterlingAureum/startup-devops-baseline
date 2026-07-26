@@ -223,6 +223,7 @@ AWS Load Balancer Controller → IRSA role
 Karpenter controller → IRSA role
 Karpenter node → dedicated EC2 node role and EKS access entry
 AWS FIS → dedicated Spot interruption role
+CloudNativePG cluster → dedicated S3 backup IRSA role
 ```
 
 The Karpenter controller is constrained to the stable Managed Node Group
@@ -265,7 +266,22 @@ Namespace, StorageClass, and Cluster each carry `Prune=false`. This protects
 stateful resources from ordinary Git deletion. The explicit destroy workflow
 remains destructive and deletes the Cluster, all three PVCs, and their EBS
 volumes. v0.6.2 is highly available at the database-instance and node level but
-still has no S3 backup or restore path.
+does not protect against deletion or corruption of the EBS data set.
+
+v0.6.3 adds cert-manager and the Barman Cloud `0.13.0` CNPG-I plugin in the
+same `cnpg-system` namespace as the CloudNativePG operator. The plugin injects
+a bounded sidecar into each PostgreSQL Pod. A Terraform-managed S3 bucket
+blocks public access, requires TLS, enables versioning, and uses Amazon S3
+managed encryption. The `postgresql-baseline` ServiceAccount assumes a
+database-specific IRSA role; no static AWS access key is stored in Kubernetes
+or Git.
+
+The `ObjectStore` continuously archives WAL files and retains a seven-day
+recovery window. Daily physical base backups prefer a standby to reduce I/O on
+the primary. The environment-specific S3 bucket name is rendered only into the
+live ObjectStore and protected by Argo CD `RespectIgnoreDifferences`; the rest
+of the backup configuration remains GitOps-managed. Restore and PITR are not
+claimed until v0.6.4 executes them against a separate recovery Cluster.
 
 The Karpenter controller receives interruption events through the encrypted SQS
 queue populated by EventBridge. For a Spot interruption warning, Karpenter can

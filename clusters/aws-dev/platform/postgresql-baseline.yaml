@@ -17,6 +17,16 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: data-platform
+  # deploy-aws-dev-root-app.sh replaces only this live ObjectStore field with
+  # the Terraform-created bucket. All other backup configuration remains GitOps
+  # managed and self-healed.
+  ignoreDifferences:
+    - group: barmancloud.cnpg.io
+      kind: ObjectStore
+      name: postgresql-baseline-backup
+      namespace: data-platform
+      jsonPointers:
+        - /spec/configuration/destinationPath
   syncPolicy:
     automated:
       prune: false
@@ -29,4 +39,5 @@ spec:
         maxDuration: 3m
     syncOptions:
       - SkipDryRunOnMissingResource=true
+      - RespectIgnoreDifferences=true
       - ServerSideApply=true

@@ -75,7 +75,9 @@ dedicated Karpenter On-Demand NodePool and expands it to one primary and two
 replicas. Required hostname anti-affinity gives each instance a different node,
 while topology spreading balances them `2+1` across the two development
 Availability Zones. One synchronous standby acknowledgement is required. The
-cluster still has no backup or restore workflow.
+v0.6.3 Barman Cloud plugin archives WAL files continuously and creates daily
+physical base backups in a versioned, encrypted S3 bucket through a dedicated
+IRSA role. Recovery and PITR remain unverified until v0.6.4.
 
 ## Deliberate Differences
 
@@ -88,6 +90,6 @@ cluster still has no backup or restore workflow.
 | Exposure | Local hostname | ALB DNS |
 | IAM | N/A | IAM and IRSA |
 | Node capacity | kind nodes | system Managed Node Group plus isolated application and database Karpenter capacity |
-| Database | N/A | three PostgreSQL instances on dedicated On-Demand nodes with encrypted gp3 persistence |
+| Database | N/A | three PostgreSQL instances on dedicated On-Demand nodes with encrypted gp3 persistence and S3 physical backups |
 
 The environments share GitOps principles but are not required to use identical traffic-routing implementations.

@@ -2,6 +2,32 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.6.3
+
+### Added
+
+- Terraform-managed, versioned, encrypted, public-access-blocked S3 bucket for
+  PostgreSQL physical backups and WAL archives.
+- Least-privilege IRSA role scoped to the CloudNativePG cluster
+  ServiceAccount and the database-specific S3 prefix.
+- GitOps-managed cert-manager `v1.21.0` and Barman Cloud CNPG-I plugin
+  `0.13.0` through official pinned Helm charts.
+- Barman `ObjectStore` with IRSA authentication, lz4 compression, bounded
+  parallelism, sidecar resources, and a seven-day recovery window.
+- Daily plugin-based `ScheduledBackup` and continuous WAL archiving from the
+  existing three-instance PostgreSQL cluster.
+- Runtime backup test and validation for IAM, S3 security, plugin health,
+  ObjectStore configuration, completed base backups, and S3 WAL objects.
+
+### Changed
+
+- `deploy-aws-dev-root-app.sh` now annotates the database ServiceAccount with
+  the Terraform role and renders the live S3 destination without committing
+  environment-specific values.
+- Added explicit backup deletion confirmation to the full AWS destroy path.
+- Updated architecture, deployment, outputs, cleanup, rollback, and roadmap
+  documentation for the v0.6.3 backup lifecycle.
+
 ## v0.6.2
 
 ### Added

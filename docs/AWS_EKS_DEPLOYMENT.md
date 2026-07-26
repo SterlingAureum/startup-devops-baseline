@@ -153,6 +153,17 @@ real `vpc-*` value.
 
 ## 6. Deploy Root Application
 
+After applying the v0.6.3 Terraform plan, prepare IRSA before pushing the
+GitOps commit. This ensures the EKS admission webhook injects web-identity
+credentials when CloudNativePG first rolls the PostgreSQL Pods for the plugin:
+
+```bash
+./scripts/prepare-cloudnative-pg-backup.sh
+git push origin feature/v0.6-cloudnativepg-data-platform
+```
+
+Then deploy or refresh the root Application:
+
 ```bash
 REPO_URL=https://github.com/SterlingAureum/startup-devops-baseline.git \
 TARGET_REVISION=feature/v0.6-cloudnativepg-data-platform \
@@ -160,15 +171,24 @@ TARGET_REVISION=feature/v0.6-cloudnativepg-data-platform \
 ```
 
 The root Application installs the Karpenter CRDs and controller, application,
-FIS, and database capacity definitions, CloudNativePG, the PostgreSQL HA
-baseline, and demo-api. v0.6.2 requires no additional Terraform apply. It
-dynamically provisions three On-Demand database nodes, their root volumes, and
+FIS, and database capacity definitions, CloudNativePG, cert-manager, the
+Barman Cloud plugin, the PostgreSQL HA and backup baseline, and demo-api.
+v0.6.3 requires a new Terraform apply before this step to create the S3 bucket
+and backup IRSA role. The deploy script annotates the PostgreSQL ServiceAccount
+and renders the Terraform bucket name into only the live ObjectStore.
+
+The database dynamically provisions three On-Demand database nodes, their root
+volumes, and
 three 20Gi gp3 PostgreSQL data volumes, so leave the environment running only
 when needed.
 
 ## 7. Validate Everything
 
+Create the v0.6.3 acceptance backup before running the unified validator:
+
 ```bash
+./scripts/run-cloudnative-pg-backup-test.sh
+./scripts/validate-cloudnative-pg-backup.sh
 ./scripts/validate-all.sh
 ```
 
@@ -185,6 +205,7 @@ kubectl get application cloudnative-pg -n argocd
 kubectl get pods -n cnpg-system
 kubectl get application postgresql-baseline -n argocd
 kubectl get cluster,pods,pvc -n data-platform
+kubectl get objectstore,scheduledbackup,backup -n data-platform
 kubectl get storageclass gp3-cnpg
 ```
 
@@ -201,6 +222,10 @@ primary and two streaming replicas. The database instances should occupy three
 different `database-ondemand` nodes, span both Availability Zones, and own
 three encrypted 20Gi gp3 volumes. `validate-all.sh` does not restart a database
 instance.
+
+The test forces WAL switches, creates one plugin-based `Backup`, waits for it
+to complete, and verifies both base-backup and WAL objects in S3. It does not
+delete the PostgreSQL Cluster or restart the primary.
 
 ## 8. Run the PostgreSQL Replica Persistence Test
 

@@ -64,3 +64,17 @@ module "fis" {
   target_tag_value = "${local.cluster_name}-spot-interruption"
   tags             = var.additional_tags
 }
+
+module "cnpg_backup" {
+  source = "../../modules/cnpg-backup"
+
+  project_name              = var.project_name
+  environment               = var.environment
+  aws_region                = var.aws_region
+  oidc_provider_arn         = module.eks.oidc_provider_arn
+  oidc_provider_url         = module.eks.oidc_provider_url
+  force_destroy             = var.cnpg_backup_force_destroy
+  service_account_name      = "postgresql-baseline"
+  service_account_namespace = "data-platform"
+  tags                      = var.additional_tags
+}

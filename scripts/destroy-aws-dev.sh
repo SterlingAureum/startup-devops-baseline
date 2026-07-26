@@ -35,13 +35,18 @@ Cluster: ${CLUSTER_NAME}
 Region: ${AWS_REGION}
 Terraform directory: ${TF_DIR}
 
-Expected resources include EKS, EC2 nodes, NAT Gateway, VPC, ALB-related resources, and applications.
+Expected resources include EKS, EC2 nodes, NAT Gateway, VPC, ALB-related
+resources, applications, and the CloudNativePG S3 backup bucket.
 
-Type 'destroy' to continue:
+The aws-dev backup bucket uses force_destroy=true. Terraform will permanently
+delete all base backups, WAL archives, current objects, and noncurrent object
+versions.
+
+Type 'destroy-with-backups' to continue:
 EOF
 
 read -r confirmation
-if [[ "${confirmation}" != "destroy" ]]; then
+if [[ "${confirmation}" != "destroy-with-backups" ]]; then
   echo "Destroy cancelled."
   exit 0
 fi

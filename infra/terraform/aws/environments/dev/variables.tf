@@ -152,3 +152,9 @@ variable "eks_cluster_admin_principal_arn" {
   default     = null
   nullable    = true
 }
+
+variable "cnpg_backup_force_destroy" {
+  description = "Allow Terraform destroy to remove all objects and versions from the aws-dev CloudNativePG backup bucket."
+  type        = bool
+  default     = true
+}

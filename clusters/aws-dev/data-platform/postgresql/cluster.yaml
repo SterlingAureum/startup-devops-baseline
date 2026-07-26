@@ -26,6 +26,13 @@ spec:
       method: any
       number: 1
       dataDurability: required
+  backup:
+    target: prefer-standby
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: postgresql-baseline-backup
   resources:
     requests:
       cpu: 500m

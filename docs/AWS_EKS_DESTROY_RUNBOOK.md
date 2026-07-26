@@ -29,7 +29,9 @@ AWS Load Balancer Controller deletes ALB resources
         ↓
 Confirm ALB is gone
         ↓
-Terraform destroy
+Terraform permanently deletes the versioned S3 backup bucket
+        ↓
+Terraform destroys the remaining AWS infrastructure
 ```
 
 ## Automated Entry Point
@@ -38,7 +40,7 @@ Terraform destroy
 ./scripts/destroy-aws-dev.sh
 ```
 
-The script requires typing `destroy` before continuing.
+The script requires typing `destroy-with-backups` before continuing.
 
 Do not start a new FIS experiment while destroy is running. If an experiment is
 already active, wait for it to reach a terminal state and confirm the targeted
@@ -46,8 +48,10 @@ instance has terminated before starting teardown.
 
 The workflow intentionally deletes all PostgreSQL data PVCs. Because
 `gp3-cnpg` uses reclaim policy `Delete`, all three data EBS volumes are also
-deleted. v0.6.2 has no backup or restore path, so export any required data
-before confirming destroy.
+deleted. The aws-dev S3 bucket uses `force_destroy=true`; Terraform destroy
+permanently removes all base backups, WAL archives, delete markers, and
+noncurrent versions. Copy required backups to storage outside this Terraform
+environment before confirming destruction.
 
 ## Manual Checks
 
@@ -63,6 +67,7 @@ kubectl get ec2nodeclass
 kubectl get ingress -A
 kubectl get service -A
 aws elbv2 describe-load-balancers --region us-east-1
+terraform -chdir=infra/terraform/aws/environments/dev output -raw cnpg_backup_bucket_name
 ```
 
 Then:
@@ -83,6 +88,7 @@ Elastic network interface
 Karpenter-provisioned EC2 node
 Karpenter-generated IAM instance profile
 PostgreSQL gp3 EBS data volumes
+CloudNativePG S3 backup bucket
 NAT Gateway
 Elastic IP
 ```

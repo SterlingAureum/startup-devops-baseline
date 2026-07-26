@@ -30,6 +30,7 @@ spec:
     target: prefer-standby
   plugins:
     - name: barman-cloud.cloudnative-pg.io
+      enabled: true
       isWALArchiver: true
       parameters:
         barmanObjectName: postgresql-baseline-backup

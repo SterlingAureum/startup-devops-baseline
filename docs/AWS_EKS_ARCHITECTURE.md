@@ -43,7 +43,7 @@ This document describes the runtime architecture of the AWS EKS environment.
                                        |
                                        v
 
-                            Cluster + PVC + gp3 EBS
+                       HA Cluster + 3 PVCs + gp3 EBS
 
  AWS LBC `vpcId` is rendered by bootstrap and preserved by the root Application.
 
@@ -60,6 +60,17 @@ This document describes the runtime architecture of the AWS EKS environment.
  NodePool               |                 |
     |                    |                 v
     +--------------------+------> NodeClaims and temporary application nodes
+
+ database EC2NodeClass
+          |
+          v
+ database-ondemand NodePool
+          |
+          v
+ 3 persistent On-Demand nodes
+          |
+          v
+ PostgreSQL primary + 2 replicas
 
 ```
 
@@ -182,9 +193,11 @@ Argo CD
 ├── PostgreSQL Cluster and gp3 StorageClass
 ├── Karpenter application EC2NodeClass
 ├── Karpenter FIS-only EC2NodeClass
+├── Karpenter database EC2NodeClass
 ├── Karpenter On-Demand application NodePool
 ├── Karpenter Spot application NodePool
 ├── Karpenter FIS-only Spot NodePool
+├── Karpenter On-Demand database NodePool
 └── demo-api
 ```
 
@@ -220,6 +233,13 @@ Their different `NoSchedule` taints make the pools mutually exclusive unless a
 workload explicitly tolerates both. CPU, memory, and node-count limits bound
 the development environment, while consolidation removes empty capacity.
 
+The separate `database` EC2NodeClass and `database-ondemand` NodePool reuse the
+existing Karpenter node IAM role and private-subnet discovery. A
+`dedicated=database:NoSchedule` taint isolates database nodes from normal
+applications. The pool allows three 2-vCPU On-Demand nodes and consolidates
+only empty nodes, avoiding underutilization-driven replacement of active
+database capacity.
+
 CloudNativePG `1.30.0` is installed from the official Helm chart through an
 Argo CD Application. Its two operator replicas use the same stable
 `workload=system` Managed Node Group and required hostname anti-affinity. The
@@ -233,11 +253,19 @@ dynamically provisioned from the `gp3-cnpg` StorageClass as an encrypted gp3
 EBS volume. The existing EBS CSI controller IRSA role performs provisioning,
 so this increment adds no IAM role or Terraform change.
 
+v0.6.2 expands the same Cluster to one primary and two replicas. Required
+hostname anti-affinity places the instances on three different EC2 nodes.
+Required zone affinity matches the database NodePool's two eligible AZs, and
+Kubernetes topology spreading balances the instances `2+1` with a maximum skew
+of one. PostgreSQL requires one synchronous standby acknowledgement,
+strengthening durability during a single instance failure.
+
 The database Application self-heals but does not automatically prune, and the
 Namespace, StorageClass, and Cluster each carry `Prune=false`. This protects
 stateful resources from ordinary Git deletion. The explicit destroy workflow
-remains destructive and deletes the Cluster, PVC, and EBS volume. v0.6.1 is not
-highly available and has no S3 backup or restore path.
+remains destructive and deletes the Cluster, all three PVCs, and their EBS
+volumes. v0.6.2 is highly available at the database-instance and node level but
+still has no S3 backup or restore path.
 
 The Karpenter controller receives interruption events through the encrypted SQS
 queue populated by EventBridge. For a Spot interruption warning, Karpenter can

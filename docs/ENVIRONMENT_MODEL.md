@@ -49,9 +49,10 @@ Karpenter On-Demand application NodePool
 Karpenter Spot application NodePool
 AWS FIS Spot interruption foundation
 Karpenter FIS-only EC2NodeClass and Spot NodePool
+Karpenter database EC2NodeClass and On-Demand NodePool
 CloudNativePG operator and CRDs
-Single-instance PostgreSQL 17.10 Cluster
-Encrypted 20Gi gp3 EBS persistence
+Three-instance PostgreSQL 17.10 HA Cluster
+Three encrypted 20Gi gp3 EBS data volumes
 demo-api
 Application Load Balancer
 ```
@@ -69,8 +70,12 @@ experiment that can issue a real interruption notice to exactly one temporary
 test node. v0.6.0 adds the cluster-wide CloudNativePG operator, admission
 webhooks, and CRDs through Argo CD. Its two replicas run on separate stable
 system nodes. v0.6.1 adds one PostgreSQL 17.10 instance on a stable system node
-and one encrypted 20Gi gp3 EBS data volume. This first persistence baseline is
-not highly available and has no backup or restore workflow.
+and one encrypted 20Gi gp3 EBS data volume. v0.6.2 moves PostgreSQL onto a
+dedicated Karpenter On-Demand NodePool and expands it to one primary and two
+replicas. Required hostname anti-affinity gives each instance a different node,
+while topology spreading balances them `2+1` across the two development
+Availability Zones. One synchronous standby acknowledgement is required. The
+cluster still has no backup or restore workflow.
 
 ## Deliberate Differences
 
@@ -82,7 +87,7 @@ not highly available and has no backup or restore workflow.
 | Progressive delivery | Enabled | Deferred |
 | Exposure | Local hostname | ALB DNS |
 | IAM | N/A | IAM and IRSA |
-| Node capacity | kind nodes | system Managed Node Group plus isolated On-Demand, Spot, and FIS-only Karpenter application capacity |
-| Database | N/A | single PostgreSQL instance with encrypted gp3 persistence |
+| Node capacity | kind nodes | system Managed Node Group plus isolated application and database Karpenter capacity |
+| Database | N/A | three PostgreSQL instances on dedicated On-Demand nodes with encrypted gp3 persistence |
 
 The environments share GitOps principles but are not required to use identical traffic-routing implementations.

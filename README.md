@@ -7,20 +7,22 @@ This repository demonstrates a practical Kubernetes platform baseline built arou
 The repository now contains the completed local progressive-delivery and AWS
 EKS baselines, isolated On-Demand and Spot application NodePools, a tag-scoped
 AWS FIS drill, and a GitOps-managed CloudNativePG PostgreSQL persistence
-baseline. It remains intentionally smaller than a full production platform and
-will continue toward database high availability and recovery, security
-controls, observability, AI infrastructure workloads, and AIOps workflows.
+and high-availability baseline. It remains intentionally smaller than a full
+production platform and will continue toward database backup and recovery,
+security controls, observability, AI infrastructure workloads, and AIOps
+workflows.
 
 ## Current Version
 
 ```text
-v0.6.1-postgresql-persistence
+v0.6.2-postgresql-ha
 ```
-CloudNativePG 1.30.0 now manages one PostgreSQL 17.10 instance with explicit
-Guaranteed resources and a 20Gi encrypted gp3 EBS volume. The application
-database credentials are generated inside the cluster and are not committed to
-Git. High availability, S3 backup, restore, and application integration remain
-future v0.6 increments.
+CloudNativePG 1.30.0 now manages one PostgreSQL 17.10 primary and two
+synchronous-capable replicas on three dedicated Karpenter On-Demand nodes.
+Instances use Guaranteed resources, encrypted gp3 persistence, and a balanced
+`2+1` distribution across the two development Availability Zones. S3 backup,
+restore, failover drills, and application integration remain future v0.6
+increments.
 
 ## Platform Architecture
 

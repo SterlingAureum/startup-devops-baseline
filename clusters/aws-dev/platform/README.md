@@ -24,16 +24,23 @@ the official Helm chart. Two operator replicas run only on the stable
 `workload=system` Managed Node Group and are spread across different nodes.
 
 `postgresql-baseline.yaml` creates a separate Argo CD Application for the
-stateful resources under `clusters/aws-dev/data-platform/postgresql/`. v0.6.1
-adds one PostgreSQL 17.10 instance and one encrypted 20Gi gp3 data volume.
+stateful resources under `clusters/aws-dev/data-platform/postgresql/`. v0.6.2
+runs one PostgreSQL 17.10 primary and two replicas on three dedicated On-Demand
+database nodes. Each instance owns one encrypted 20Gi gp3 data volume.
 Automated prune is disabled and the stateful resources carry `Prune=false`;
 database deletion is handled only by the explicit cleanup and destroy
-workflows. High availability and backup resources are deferred.
+workflows. Backup resources remain deferred.
 
 `karpenter-ec2nodeclass.yaml` defines the reusable AWS launch and discovery
 configuration for future application NodePools. It can resolve its IAM instance
 profile, private subnets, cluster security group, and AL2023 AMIs without
 launching an instance.
+
+`karpenter-ec2nodeclass-database.yaml` and
+`karpenter-nodepool-database.yaml` define persistent database capacity. The
+NodePool uses only On-Demand instances, a database-only taint, a three-node
+ceiling, and `WhenEmpty` consolidation. It spans the two aws-dev Availability
+Zones but keeps every PostgreSQL instance on a different node.
 
 `karpenter-nodepool-ondemand.yaml` and `karpenter-nodepool-spot.yaml` define
 the normal application capacity tiers. Both use `workload=application`, but
@@ -48,4 +55,5 @@ receive this tag.
 
 The scale and interruption workloads under `examples/karpenter/` are not
 GitOps-managed. They are applied only during controlled validation and removed
-before the test returns.
+before the test returns. Their scripts scope cleanup to the selected application
+NodePool and never delete the persistent database NodeClaims.

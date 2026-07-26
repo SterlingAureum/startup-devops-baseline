@@ -2,6 +2,31 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.6.2
+
+### Added
+
+- Dedicated `database` EC2NodeClass with private networking, IMDSv2, encrypted
+  gp3 root storage, and the existing Karpenter node role.
+- Bounded `database-ondemand` NodePool with a database-only taint, three-node
+  ceiling, two-AZ constraints, and empty-node-only consolidation.
+- Three-instance CloudNativePG topology with one primary, two replicas,
+  required hostname anti-affinity, and balanced two-AZ spreading.
+- Quorum-style synchronous replication requiring one standby acknowledgement
+  for committed transactions.
+- Runtime validation for database NodeClaims, instance roles, node and AZ
+  placement, three PVC/PV/EBS chains, services, and live replication state.
+- Guarded replica-recreation test that proves the primary remains stable while
+  the replica reuses its PVC, PV, and EBS volume.
+
+### Changed
+
+- Scoped application scale tests and idle-capacity validation by NodePool so
+  persistent database NodeClaims are not mistaken for leaked test capacity.
+- Extended Karpenter validation to the database EC2NodeClass and NodePool.
+- Updated cleanup warnings, architecture, deployment, environment, destroy,
+  rollback, and roadmap documentation for the HA database topology.
+
 ## v0.6.1
 
 ### Added

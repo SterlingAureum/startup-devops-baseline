@@ -11,7 +11,7 @@ metadata:
     app.kubernetes.io/part-of: startup-devops-baseline
     platform.startup.dev/environment: aws-dev
 spec:
-  instances: 1
+  instances: 3
   imageName: ghcr.io/cloudnative-pg/postgresql:17.10-202607200905-system-bookworm@sha256:4c1e15c27bb33361d847db66e6516a9432a7388f8a5404e06eaa2d665f5836f6
   enableSuperuserAccess: false
   bootstrap:
@@ -22,6 +22,10 @@ spec:
   postgresql:
     parameters:
       shared_buffers: 256MB
+    synchronous:
+      method: any
+      number: 1
+      dataDurability: required
   resources:
     requests:
       cpu: 500m
@@ -30,8 +34,33 @@ spec:
       cpu: 500m
       memory: 1Gi
   affinity:
+    enablePodAntiAffinity: true
+    podAntiAffinityType: required
+    topologyKey: kubernetes.io/hostname
     nodeSelector:
-      workload: system
+      workload: database
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+          - matchExpressions:
+              - key: topology.kubernetes.io/zone
+                operator: In
+                values:
+                  - us-east-1a
+                  - us-east-1b
+    tolerations:
+      - key: dedicated
+        operator: Equal
+        value: database
+        effect: NoSchedule
+  topologySpreadConstraints:
+    - maxSkew: 1
+      minDomains: 2
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: DoNotSchedule
+      labelSelector:
+        matchLabels:
+          cnpg.io/cluster: postgresql-baseline
   storage:
     storageClass: gp3-cnpg
     size: 20Gi

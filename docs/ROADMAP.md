@@ -106,7 +106,7 @@ Incremental scope:
 - v0.6.1 - gp3 persistence baseline and a single PostgreSQL instance -
   delivered
 - v0.6.2 - dedicated On-Demand database capacity and a three-instance,
-  cross-AZ high-availability cluster
+  cross-AZ high-availability cluster - delivered
 - v0.6.3 - S3 backup and WAL archiving through the Barman Cloud CNPG-I plugin
 - v0.6.4 - restore and point-in-time recovery validation
 - v0.6.5 - failover validation, demo-api integration, and version finalization

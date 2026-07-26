@@ -14,10 +14,10 @@ command -v kubectl >/dev/null 2>&1 || {
 }
 
 cat <<EOF
-WARNING: this cleanup deletes the v0.6.1 PostgreSQL Cluster and its data PVC.
+WARNING: this cleanup deletes the v0.6.2 PostgreSQL Cluster and all data PVCs.
 
-The gp3 StorageClass uses reclaim policy Delete, so the backing EBS volume is
-also deleted. v0.6.1 has no backup or restore path.
+The gp3 StorageClass uses reclaim policy Delete, so all three backing EBS
+volumes are also deleted. v0.6.2 has no backup or restore path.
 
 Type 'delete-data' to continue:
 EOF

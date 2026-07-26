@@ -7,9 +7,9 @@ Suspend aws-dev Root Application automation
         ↓
 Suspend PostgreSQL Application automation
         ↓
-Delete PostgreSQL Cluster, PVC, namespace, and StorageClass
+Delete PostgreSQL Cluster, three PVCs, namespace, and StorageClass
         ↓
-Wait for the gp3 EBS volume to be released
+Wait for all PostgreSQL gp3 EBS volumes to be released
         ↓
 Delete the On-Demand, Spot, and FIS test workloads
         ↓
@@ -44,10 +44,10 @@ Do not start a new FIS experiment while destroy is running. If an experiment is
 already active, wait for it to reach a terminal state and confirm the targeted
 instance has terminated before starting teardown.
 
-The workflow intentionally deletes the PostgreSQL data PVC. Because
-`gp3-cnpg` uses reclaim policy `Delete`, its EBS volume is also deleted. v0.6.1
-has no backup or restore path, so export any required data before confirming
-destroy.
+The workflow intentionally deletes all PostgreSQL data PVCs. Because
+`gp3-cnpg` uses reclaim policy `Delete`, all three data EBS volumes are also
+deleted. v0.6.2 has no backup or restore path, so export any required data
+before confirming destroy.
 
 ## Manual Checks
 
@@ -82,7 +82,7 @@ Load Balancer security group
 Elastic network interface
 Karpenter-provisioned EC2 node
 Karpenter-generated IAM instance profile
-PostgreSQL gp3 EBS volume
+PostgreSQL gp3 EBS data volumes
 NAT Gateway
 Elastic IP
 ```
@@ -95,6 +95,7 @@ finalizer cleanup.
 
 Do not delete local Terraform state until destruction completes.
 
-Before Terraform destroy, verify that the PostgreSQL PV is gone and that its
-`vol-*` identifier no longer appears in `aws ec2 describe-volumes`. A residual
-EBS volume does not block VPC deletion, but it continues to incur cost.
+Before Terraform destroy, verify that all PostgreSQL PVs are gone and that
+their `vol-*` identifiers no longer appear in `aws ec2 describe-volumes`.
+Residual EBS volumes do not block VPC deletion, but they continue to incur
+cost.

@@ -159,11 +159,12 @@ TARGET_REVISION=feature/v0.6-cloudnativepg-data-platform \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 
-The root Application installs the Karpenter CRDs and controller, the normal and
-FIS-only EC2NodeClasses and NodePools, CloudNativePG, the PostgreSQL persistence
-baseline, and demo-api. v0.6.1 requires no additional Terraform apply, but it
-does dynamically provision one 20Gi gp3 EBS volume and therefore adds storage
-cost.
+The root Application installs the Karpenter CRDs and controller, application,
+FIS, and database capacity definitions, CloudNativePG, the PostgreSQL HA
+baseline, and demo-api. v0.6.2 requires no additional Terraform apply. It
+dynamically provisions three On-Demand database nodes, their root volumes, and
+three 20Gi gp3 PostgreSQL data volumes, so leave the environment running only
+when needed.
 
 ## 7. Validate Everything
 
@@ -178,7 +179,7 @@ kubectl get nodes
 kubectl get applications -n argocd
 kubectl get pods -A
 kubectl get ingress -n startup-apps
-kubectl get ec2nodeclass application
+kubectl get ec2nodeclass
 kubectl get nodepools,nodeclaims
 kubectl get application cloudnative-pg -n argocd
 kubectl get pods -n cnpg-system
@@ -187,18 +188,21 @@ kubectl get cluster,pods,pvc -n data-platform
 kubectl get storageclass gp3-cnpg
 ```
 
-Both EC2NodeClasses and all three NodePools should report `Ready=True`. The
+All three EC2NodeClasses and all four NodePools should report `Ready=True`. The
 interruption validator should confirm that the controller, SQS queue, and Spot
 EventBridge rule use the same queue. The FIS validator should confirm the role,
-experiment template, and unique EC2 target tag. No NodeClaims or
-Karpenter-provisioned nodes should exist in the idle baseline.
+experiment template, and unique EC2 target tag. Three persistent NodeClaims
+should belong to `database-ondemand`; the three temporary application NodePools
+should remain idle.
 
 The CloudNativePG validators should report two healthy operator replicas on two
-different `workload=system` nodes, one ready PostgreSQL 17.10 instance, one
-bound 20Gi PVC, and an encrypted gp3 EBS volume. `validate-all.sh` does not
-restart the database.
+different `workload=system` nodes and a PostgreSQL topology containing one
+primary and two streaming replicas. The database instances should occupy three
+different `database-ondemand` nodes, span both Availability Zones, and own
+three encrypted 20Gi gp3 volumes. `validate-all.sh` does not restart a database
+instance.
 
-## 8. Run the PostgreSQL Persistence Test
+## 8. Run the PostgreSQL Replica Persistence Test
 
 First run the non-disruptive validator directly when focused database
 diagnostics are useful:
@@ -213,16 +217,16 @@ Then run the guarded persistence test:
 ./scripts/run-cloudnative-pg-persistence-test.sh
 ```
 
-The script requires typing `restart`. It writes a marker into the `app`
-database, deletes the only PostgreSQL Pod, waits for CloudNativePG to recreate
-it, and verifies that the same PVC, PV, and EBS volume contain the marker.
-Expect brief database downtime. This test is intentionally excluded from
-`validate-all.sh`.
+The script requires typing `restart-replica`. It writes a marker through the
+primary, deletes one replica Pod, waits for CloudNativePG to recreate it, and
+verifies that the replica reuses the same PVC, PV, and EBS volume. The primary
+and second replica remain available. This is not a primary failover test and is
+intentionally excluded from `validate-all.sh`.
 
 Expected final output:
 
 ```text
-CloudNativePG PostgreSQL Pod recreation and data persistence validation passed.
+CloudNativePG replica recreation and persistent-volume reuse validation passed.
 ```
 
 ## 9. Run the Controlled Scale Test
@@ -251,7 +255,17 @@ kubectl get nodeclaims
 kubectl get nodes -l karpenter.sh/nodepool
 ```
 
-Both commands should return no Karpenter capacity.
+The three database NodeClaims and nodes remain. Confirm only that the temporary
+application pool returned to zero:
+
+```bash
+kubectl get nodeclaims \
+  -l karpenter.sh/nodepool=application-ondemand
+kubectl get nodes \
+  -l karpenter.sh/nodepool=application-ondemand
+```
+
+Both scoped commands should return no resources.
 
 ## 10. Run the Controlled Spot Test
 

@@ -14,11 +14,12 @@ command -v kubectl >/dev/null 2>&1 || {
 }
 
 cat <<EOF
-WARNING: this cleanup deletes the v0.6.3 PostgreSQL Cluster and all data PVCs.
+WARNING: this cleanup deletes the v0.6.4 PostgreSQL source and recovery
+resources and all data-platform PVCs.
 
 The gp3 StorageClass uses reclaim policy Delete, so all three backing EBS
 volumes are also deleted. S3 backups are preserved because this script does not
-run Terraform destroy, but restore validation is deferred to v0.6.4.
+run Terraform destroy.
 
 Type 'delete-data' to continue:
 EOF

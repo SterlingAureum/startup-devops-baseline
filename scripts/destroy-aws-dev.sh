@@ -93,7 +93,7 @@ if kubectl get namespace "${POSTGRES_NAMESPACE}" >/dev/null 2>&1; then
   done < <(
     kubectl get pvc \
       --namespace "${POSTGRES_NAMESPACE}" \
-      --selector "cnpg.io/cluster=${POSTGRES_CLUSTER}" \
+      --selector "cnpg.io/cluster" \
       --output name
   )
 fi

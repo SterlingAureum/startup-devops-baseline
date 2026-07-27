@@ -50,9 +50,11 @@ Karpenter Spot application NodePool
 AWS FIS Spot interruption foundation
 Karpenter FIS-only EC2NodeClass and Spot NodePool
 Karpenter database EC2NodeClass and On-Demand NodePool
+Karpenter isolated On-Demand database recovery NodePool
 CloudNativePG operator and CRDs
 Three-instance PostgreSQL 17.10 HA Cluster
 Three encrypted 20Gi gp3 EBS data volumes
+S3 physical backups, WAL archiving, and PITR validation
 demo-api
 Application Load Balancer
 ```
@@ -77,7 +79,10 @@ while topology spreading balances them `2+1` across the two development
 Availability Zones. One synchronous standby acknowledgement is required. The
 v0.6.3 Barman Cloud plugin archives WAL files continuously and creates daily
 physical base backups in a versioned, encrypted S3 bucket through a dedicated
-IRSA role. Recovery and PITR remain unverified until v0.6.4.
+IRSA role. v0.6.4 uses a one-node isolated recovery pool to validate both
+latest-state restore and timestamp-based PITR in independent clusters, then
+removes their temporary PVC, EBS, NodeClaim, and EC2 resources without
+changing the source cluster.
 
 ## Deliberate Differences
 
@@ -90,6 +95,6 @@ IRSA role. Recovery and PITR remain unverified until v0.6.4.
 | Exposure | Local hostname | ALB DNS |
 | IAM | N/A | IAM and IRSA |
 | Node capacity | kind nodes | system Managed Node Group plus isolated application and database Karpenter capacity |
-| Database | N/A | three PostgreSQL instances on dedicated On-Demand nodes with encrypted gp3 persistence and S3 physical backups |
+| Database | N/A | three PostgreSQL instances on dedicated On-Demand nodes with encrypted gp3 persistence, S3 physical backups, and isolated PITR validation |
 
 The environments share GitOps principles but are not required to use identical traffic-routing implementations.

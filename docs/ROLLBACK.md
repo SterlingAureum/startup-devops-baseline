@@ -12,14 +12,15 @@ Use `docs/ROLLBACK_RUNBOOK.md` for the current operator workflow, including:
 For the AWS environment, revert the Git commit and allow Argo CD to reconcile
 the previous desired state.
 
-For the v0.6.3 database baseline, Git rollback can reconcile non-destructive
+For the v0.6.4 database baseline, Git rollback can reconcile non-destructive
 configuration changes but is not a data restore mechanism. Automated prune is
 disabled for the database Application, and the stateful resources carry
 `Prune=false`; do not delete the Cluster or PVC to roll back an application
 change. Reducing `instances` removes a database instance and its PVC, so do not
 roll back from three instances to one without an explicit data and capacity
-plan. Base backups and WAL archives now exist in S3, but restore and
-point-in-time recovery are not proven until v0.6.4 creates a separate recovery
-Cluster. Do not remove
-the Barman plugin, ObjectStore, ServiceAccount annotation, or backup IAM role
-while WAL archiving or a base backup is active.
+plan. Latest-state restore and point-in-time recovery are validated only by
+bootstrapping separate recovery Clusters; they do not overwrite the source
+Cluster. Do not remove the Barman plugin, ObjectStore, shared ServiceAccount
+annotation, backup IAM role, or archived recovery window while a restore is
+running. Treat the guarded recovery script as a disaster-recovery test, not as
+a substitute for reverting an application manifest.

@@ -120,13 +120,11 @@ kubectl rollout status deployment/barman-cloud-plugin-barman-cloud \
 kubectl get crd objectstores.barmancloud.cnpg.io >/dev/null
 
 EXPECTED_BARMAN_IMAGE="ghcr.io/cloudnative-pg/plugin-barman-cloud:v0.13.0"
-
 BARMAN_IMAGE="$(
   kubectl get deployment barman-cloud-plugin-barman-cloud \
     --namespace cnpg-system \
     --output jsonpath='{.spec.template.spec.containers[0].image}'
 )"
-
 if [[ "${BARMAN_IMAGE}" != "${EXPECTED_BARMAN_IMAGE}" ]]; then
   echo "Unexpected Barman Cloud plugin image." >&2
   echo "Expected: ${EXPECTED_BARMAN_IMAGE}" >&2
@@ -173,10 +171,10 @@ fi
 CLUSTER_PLUGIN="$(
   kubectl get cluster "${POSTGRES_CLUSTER}" \
     --namespace "${POSTGRES_NAMESPACE}" \
-    --output jsonpath='{.spec.plugins[0].name}:{.spec.plugins[0].isWALArchiver}:{.spec.plugins[0].parameters.barmanObjectName}:{.spec.backup.target}'
+    --output jsonpath='{.spec.plugins[0].name}:{.spec.plugins[0].enabled}:{.spec.plugins[0].isWALArchiver}:{.spec.plugins[0].parameters.barmanObjectName}:{.spec.backup.target}'
 )"
 if [[ "${CLUSTER_PLUGIN}" != \
-      "barman-cloud.cloudnative-pg.io:true:${OBJECT_STORE}:prefer-standby" ]]; then
+      "barman-cloud.cloudnative-pg.io:true:true:${OBJECT_STORE}:prefer-standby" ]]; then
   echo "The PostgreSQL Cluster is not configured for plugin-based WAL archiving." >&2
   exit 1
 fi

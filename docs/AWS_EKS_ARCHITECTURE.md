@@ -280,8 +280,23 @@ The `ObjectStore` continuously archives WAL files and retains a seven-day
 recovery window. Daily physical base backups prefer a standby to reduce I/O on
 the primary. The environment-specific S3 bucket name is rendered only into the
 live ObjectStore and protected by Argo CD `RespectIgnoreDifferences`; the rest
-of the backup configuration remains GitOps-managed. Restore and PITR are not
-claimed until v0.6.4 executes them against a separate recovery Cluster.
+of the backup configuration remains GitOps-managed.
+
+v0.6.4 adds the isolated `database-recovery-ondemand` NodePool. It reuses the
+database EC2NodeClass but has a distinct taint, one-node ceiling, and
+empty-node consolidation, so a recovery drill cannot consume application
+capacity or alter the three persistent database nodes. Recovery clusters use
+CloudNativePG 1.30's shared `serviceAccountName` support to reuse the existing
+IRSA ServiceAccount without broadening the IAM trust policy.
+
+The guarded recovery drill writes deterministic markers around a new physical
+base backup and captured timestamp. It first bootstraps an independent cluster
+to the latest archived state, then bootstraps a second cluster with
+`recoveryTarget.targetTime`. The first must contain every marker; the PITR
+cluster must contain both pre-target markers and exclude the post-target
+marker. Each recovery Cluster, PVC, EBS volume, NodeClaim, and EC2 node is
+deleted before the next stage. The source Cluster UID and all three source
+PVC/PV/EBS mappings must remain unchanged.
 
 The Karpenter controller receives interruption events through the encrypted SQS
 queue populated by EventBridge. For a Spot interruption warning, Karpenter can

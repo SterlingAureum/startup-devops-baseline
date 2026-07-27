@@ -5,7 +5,11 @@ Karpenter AWS foundation introduced in v0.5.0, the AWS FIS Spot interruption
 foundation introduced in v0.5.5, and the CloudNativePG S3 backup foundation
 introduced in v0.6.3.
 
-## Current scope: v0.6.3
+## Current repository scope: v0.6.4
+
+v0.6.4 adds no Terraform resources. Recovery clusters reuse the existing
+backup bucket and shared database IRSA ServiceAccount, while an ephemeral
+GitOps-managed Karpenter NodePool supplies isolated On-Demand capacity.
 
 The development environment now creates:
 
@@ -77,6 +81,7 @@ kubectl get pods -n kube-system
 ./scripts/validate-karpenter-foundation.sh
 ./scripts/validate-karpenter-fis.sh
 ./scripts/validate-cloudnative-pg-backup.sh
+./scripts/validate-cloudnative-pg-recovery.sh
 ```
 
 Override `AWS_REGION` and `CLUSTER_NAME` when the environment uses different

@@ -2,6 +2,32 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.6.4
+
+### Added
+
+- Isolated `database-recovery-ondemand` NodePool with a one-node On-Demand
+  ceiling, database recovery taint, and empty-node consolidation.
+- Guarded latest-state restore and point-in-time recovery drill using the
+  Barman Cloud CNPG-I plugin and the existing S3 backup archive.
+- Deterministic marker workflow that proves the latest restore contains all
+  archived writes while PITR preserves pre-target data and excludes a
+  post-target transaction.
+- Recovery cleanup validation for temporary CloudNativePG Clusters, PVCs, EBS
+  volumes, NodeClaims, and EC2 nodes.
+- Non-disruptive readiness validator for the source cluster, completed
+  backups, shared IRSA ServiceAccount, recovery NodePool, and clean idle state.
+
+### Changed
+
+- Recovery clusters use CloudNativePG 1.30 shared `serviceAccountName` support
+  to reuse the existing narrowly scoped IRSA role without widening IAM trust.
+- Applied the validated v0.6.3 Barman sidecar memory, concurrency, plugin
+  enabled-state, Deployment-name, and image-version corrections to the
+  version baseline.
+- Extended unified validation, Karpenter NodePool checks, architecture,
+  deployment, cleanup, and roadmap documentation for the recovery lifecycle.
+
 ## v0.6.3
 
 ### Added

@@ -31,6 +31,7 @@ run_step "AWS FIS Spot interruption foundation" "${ROOT_DIR}/scripts/validate-ka
 run_step "CloudNativePG operator" "${ROOT_DIR}/scripts/validate-cloudnative-pg-operator.sh"
 run_step "CloudNativePG PostgreSQL HA and persistence" "${ROOT_DIR}/scripts/validate-cloudnative-pg-persistence.sh"
 run_step "CloudNativePG S3 backup and WAL archiving" "${ROOT_DIR}/scripts/validate-cloudnative-pg-backup.sh"
+run_step "CloudNativePG recovery and PITR readiness" "${ROOT_DIR}/scripts/validate-cloudnative-pg-recovery.sh"
 run_step "AWS GitOps and application baseline" "${ROOT_DIR}/scripts/validate-aws-dev.sh"
 
 printf '

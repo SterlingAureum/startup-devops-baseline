@@ -109,7 +109,8 @@ Incremental scope:
   cross-AZ high-availability cluster - delivered
 - v0.6.3 - S3 backup and WAL archiving through the Barman Cloud CNPG-I
   plugin - delivered
-- v0.6.4 - restore and point-in-time recovery validation
+- v0.6.4 - isolated latest-state restore, point-in-time recovery, data
+  integrity, and recovery-resource cleanup validation - delivered
 - v0.6.5 - failover validation, demo-api integration, and version finalization
 
 ## v0.7 - Production Security Baseline

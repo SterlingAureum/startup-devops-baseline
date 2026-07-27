@@ -7,6 +7,7 @@ ON_DEMAND_NODE_POOL_NAME="${ON_DEMAND_NODE_POOL_NAME:-application-ondemand}"
 SPOT_NODE_POOL_NAME="${SPOT_NODE_POOL_NAME:-application-spot}"
 FIS_NODE_POOL_NAME="${FIS_NODE_POOL_NAME:-application-spot-fis}"
 DATABASE_NODE_POOL_NAME="${DATABASE_NODE_POOL_NAME:-database-ondemand}"
+DATABASE_RECOVERY_NODE_POOL_NAME="${DATABASE_RECOVERY_NODE_POOL_NAME:-database-recovery-ondemand}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-10m}"
 
 for command in aws kubectl; do
@@ -150,6 +151,17 @@ validate_nodepool \
   "24Gi" \
   "3"
 
+validate_nodepool \
+  "${DATABASE_RECOVERY_NODE_POOL_NAME}" \
+  "on-demand" \
+  "recovery" \
+  "database-recovery" \
+  "dedicated=database-recovery:NoSchedule" \
+  "database" \
+  "2" \
+  "8Gi" \
+  "1"
+
 DATABASE_REQUIREMENTS="$(
   kubectl get nodepool "${DATABASE_NODE_POOL_NAME}" \
     --output jsonpath='{range .spec.template.spec.requirements[*]}{.key}={.values[*]}{"\n"}{end}'
@@ -173,11 +185,35 @@ if [[ "${DATABASE_DISRUPTION}" != "Never:WhenEmpty:10m" ]]; then
   exit 1
 fi
 
-echo "==> Confirming temporary application capacity tiers remain idle"
+RECOVERY_REQUIREMENTS="$(
+  kubectl get nodepool "${DATABASE_RECOVERY_NODE_POOL_NAME}" \
+    --output jsonpath='{range .spec.template.spec.requirements[*]}{.key}={.values[*]}{"\n"}{end}'
+)"
+for expected_requirement in \
+  "topology.kubernetes.io/zone=us-east-1a us-east-1b" \
+  "karpenter.k8s.aws/instance-category=c m" \
+  "karpenter.k8s.aws/instance-cpu=2"; do
+  if ! grep -qx "${expected_requirement}" <<< "${RECOVERY_REQUIREMENTS}"; then
+    echo "Database recovery NodePool is missing ${expected_requirement}." >&2
+    exit 1
+  fi
+done
+
+RECOVERY_DISRUPTION="$(
+  kubectl get nodepool "${DATABASE_RECOVERY_NODE_POOL_NAME}" \
+    --output jsonpath='{.spec.template.spec.expireAfter}:{.spec.disruption.consolidationPolicy}:{.spec.disruption.consolidateAfter}'
+)"
+if [[ "${RECOVERY_DISRUPTION}" != "Never:WhenEmpty:1m" ]]; then
+  echo "Database recovery NodePool disruption policy is incorrect." >&2
+  exit 1
+fi
+
+echo "==> Confirming temporary application and recovery capacity tiers remain idle"
 for nodepool_name in \
   "${ON_DEMAND_NODE_POOL_NAME}" \
   "${SPOT_NODE_POOL_NAME}" \
-  "${FIS_NODE_POOL_NAME}"; do
+  "${FIS_NODE_POOL_NAME}" \
+  "${DATABASE_RECOVERY_NODE_POOL_NAME}"; do
   if [[ -n "$(
     kubectl get nodeclaims \
       --selector "karpenter.sh/nodepool=${nodepool_name}" \

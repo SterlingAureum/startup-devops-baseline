@@ -153,16 +153,13 @@ real `vpc-*` value.
 
 ## 6. Deploy Root Application
 
-After applying the v0.6.3 Terraform plan, prepare IRSA before pushing the
-GitOps commit. This ensures the EKS admission webhook injects web-identity
-credentials when CloudNativePG first rolls the PostgreSQL Pods for the plugin:
+Prepare the CloudNativePG backup integration:
 
 ```bash
 ./scripts/prepare-cloudnative-pg-backup.sh
-git push origin feature/v0.6-cloudnativepg-data-platform
 ```
 
-Then deploy or refresh the root Application:
+Then deploy or refresh the AWS root Application:
 
 ```bash
 REPO_URL=https://github.com/SterlingAureum/startup-devops-baseline.git \
@@ -170,25 +167,34 @@ TARGET_REVISION=feature/v0.6-cloudnativepg-data-platform \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 
-The root Application installs the Karpenter CRDs and controller, application,
-FIS, and database capacity definitions, CloudNativePG, cert-manager, the
-Barman Cloud plugin, the PostgreSQL HA and backup baseline, and demo-api.
-v0.6.3 requires a new Terraform apply before this step to create the S3 bucket
-and backup IRSA role. The deploy script annotates the PostgreSQL ServiceAccount
-and renders the Terraform bucket name into only the live ObjectStore.
+The preparation script configures the PostgreSQL ServiceAccount to use the
+backup IRSA role and renders the Terraform-managed S3 bucket name into the live
+CloudNativePG ObjectStore.
 
-The database dynamically provisions three On-Demand database nodes, their root
-volumes, and
-three 20Gi gp3 PostgreSQL data volumes, so leave the environment running only
-when needed.
+The root Application manages the AWS platform and data-platform components,
+including:
+
+- AWS Load Balancer Controller
+- Karpenter
+- CloudNativePG
+- cert-manager
+- Barman Cloud plugin
+- PostgreSQL HA and backup resources
+- demo-api
+
+The PostgreSQL cluster dynamically provisions three On-Demand database nodes,
+three root volumes, and three 20Gi gp3 data volumes. Leave the AWS environment
+running only when needed to avoid unnecessary EC2 and EBS charges.
+
 
 ## 7. Validate Everything
-
-Create the v0.6.3 acceptance backup before running the unified validator:
+Run the backup test and validate the backup, recovery prerequisites, and
+overall environment:
 
 ```bash
 ./scripts/run-cloudnative-pg-backup-test.sh
 ./scripts/validate-cloudnative-pg-backup.sh
+./scripts/validate-cloudnative-pg-recovery.sh
 ./scripts/validate-all.sh
 ```
 
@@ -206,15 +212,16 @@ kubectl get pods -n cnpg-system
 kubectl get application postgresql-baseline -n argocd
 kubectl get cluster,pods,pvc -n data-platform
 kubectl get objectstore,scheduledbackup,backup -n data-platform
+kubectl get nodepool database-recovery-ondemand
 kubectl get storageclass gp3-cnpg
 ```
 
-All three EC2NodeClasses and all four NodePools should report `Ready=True`. The
+All three EC2NodeClasses and all five NodePools should report `Ready=True`. The
 interruption validator should confirm that the controller, SQS queue, and Spot
 EventBridge rule use the same queue. The FIS validator should confirm the role,
 experiment template, and unique EC2 target tag. Three persistent NodeClaims
 should belong to `database-ondemand`; the three temporary application NodePools
-should remain idle.
+and `database-recovery-ondemand` should remain idle outside controlled tests.
 
 The CloudNativePG validators should report two healthy operator replicas on two
 different `workload=system` nodes and a PostgreSQL topology containing one
@@ -254,7 +261,49 @@ Expected final output:
 CloudNativePG replica recreation and persistent-volume reuse validation passed.
 ```
 
-## 9. Run the Controlled Scale Test
+## 9. Run the PostgreSQL Recovery and PITR Test
+
+Run the guarded restore drill only after a successful base-backup and WAL
+validation:
+
+```bash
+./scripts/run-cloudnative-pg-recovery-test.sh
+```
+
+Type:
+
+```text
+restore-and-cleanup
+```
+
+The test writes uniquely named markers to the source database and creates a
+new physical base backup. It restores one independent cluster to the latest
+archived state, then restores a second cluster to a captured timestamp. The
+latest cluster must contain all three markers. The PITR cluster must contain
+the base and pre-target markers but exclude the post-target marker.
+
+Both recovery clusters use the existing backup IRSA ServiceAccount and the
+isolated `database-recovery-ondemand` NodePool. Each temporary Cluster, PVC,
+EBS volume, NodeClaim, and EC2 node is removed before the test completes. The
+source Cluster UID and all three source PVC/PV/EBS mappings must remain
+unchanged.
+
+This drill incurs temporary On-Demand EC2 and EBS charges and is intentionally
+excluded from `validate-all.sh`.
+
+Expected final output:
+
+```text
+CloudNativePG latest recovery, PITR, data integrity, and cleanup validation passed.
+```
+
+Then confirm the source remains healthy and no recovery resources remain:
+
+```bash
+./scripts/validate-cloudnative-pg-recovery.sh
+```
+
+## 10. Run the Controlled Scale Test
 
 The following command creates a temporary workload and one small On-Demand
 application node. It validates scale-out, deletes the workload, and waits for
@@ -292,7 +341,7 @@ kubectl get nodes \
 
 Both scoped commands should return no resources.
 
-## 10. Run the Controlled Spot Test
+## 11. Run the Controlled Spot Test
 
 The Spot test validates interruption-path readiness, creates one temporary Spot
 node, confirms the EC2 purchase option, deletes the workload, and waits for
@@ -316,7 +365,7 @@ Expected final output:
 Karpenter Spot scale-out and scale-in validation passed.
 ```
 
-## 11. Run the Real AWS FIS Interruption Drill
+## 12. Run the Real AWS FIS Interruption Drill
 
 This drill creates an isolated Spot node and starts a real AWS FIS experiment:
 
@@ -339,7 +388,7 @@ Expected final output:
 Karpenter AWS FIS Spot interruption and replacement validation passed.
 ```
 
-## 12. Destroy
+## 13. Destroy
 
 ```bash
 ./scripts/destroy-aws-dev.sh

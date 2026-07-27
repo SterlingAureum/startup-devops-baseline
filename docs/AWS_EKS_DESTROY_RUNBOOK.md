@@ -7,7 +7,8 @@ Suspend aws-dev Root Application automation
         ↓
 Suspend PostgreSQL Application automation
         ↓
-Delete PostgreSQL Cluster, three PVCs, namespace, and StorageClass
+Delete source/recovery PostgreSQL Clusters, all data-platform PVCs,
+namespace, and StorageClass
         ↓
 Wait for all PostgreSQL gp3 EBS volumes to be released
         ↓
@@ -47,8 +48,9 @@ already active, wait for it to reach a terminal state and confirm the targeted
 instance has terminated before starting teardown.
 
 The workflow intentionally deletes all PostgreSQL data PVCs. Because
-`gp3-cnpg` uses reclaim policy `Delete`, all three data EBS volumes are also
-deleted. The aws-dev S3 bucket uses `force_destroy=true`; Terraform destroy
+`gp3-cnpg` uses reclaim policy `Delete`, the three source data EBS volumes and
+any residual recovery volume are also deleted. The aws-dev S3 bucket uses
+`force_destroy=true`; Terraform destroy
 permanently removes all base backups, WAL archives, delete markers, and
 noncurrent versions. Copy required backups to storage outside this Terraform
 environment before confirming destruction.

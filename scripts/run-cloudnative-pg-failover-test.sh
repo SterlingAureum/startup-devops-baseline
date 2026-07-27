@@ -238,7 +238,7 @@ while true; do
         .status // "",
         .database // "",
         .user // "",
-        .server_address // "",
+	((.server_address // "") | split("/")[0]),
         (.in_recovery | tostring)
       ] | join(":")
     ' <<< "${HEALTH_RESULT:-{}}" 2>/dev/null || true

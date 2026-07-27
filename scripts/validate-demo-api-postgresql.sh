@@ -179,7 +179,7 @@ for demo_pod in "${DEMO_PODS[@]}"; do
           .status // "",
           .database // "",
           .user // "",
-          .server_address // "",
+	  ((.server_address // "") | split("/")[0]),
           (.server_port // "" | tostring),
           (.in_recovery | tostring)
         ] | join(":")

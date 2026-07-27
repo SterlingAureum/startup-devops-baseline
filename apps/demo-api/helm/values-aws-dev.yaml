@@ -2,7 +2,7 @@ replicaCount: 2
 
 image:
   repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
-  tag: "sha-3e50802"
+  tag: "sha-ed4e9ef"
   pullPolicy: IfNotPresent
 
 rollout:
@@ -47,7 +47,7 @@ readinessProbe:
 
 env:
   APP_NAME: demo-api
-  APP_VERSION: "sha-3e50802"
+  APP_VERSION: "sha-ed4e9ef"
   APP_ENV: aws-dev
 
 database:

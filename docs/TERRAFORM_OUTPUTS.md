@@ -61,6 +61,7 @@ terraform -chdir=infra/terraform/aws/environments/dev output
 
 Terraform outputs are not committed to Git. Run `bootstrap-eks-argocd.sh`
 after infrastructure creation or recreation; it reads the current VPC ID and
-controller IRSA role ARNs. Run `deploy-aws-dev-root-app.sh` after the v0.6.3
-Terraform apply; it reads the backup bucket and database IRSA role and applies
-only the environment-specific live values.
+controller IRSA role ARNs. Run `deploy-aws-dev-root-app.sh` after the
+CloudNativePG backup Terraform apply; it reads the backup bucket and database
+IRSA role, applies only the environment-specific live values, and synchronizes
+the minimum runtime application credential after the source Secret exists.

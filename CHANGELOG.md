@@ -2,6 +2,32 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.6.5
+
+### Added
+
+- PostgreSQL integration for demo-api through the CloudNativePG-generated
+  application identity and `postgresql-baseline-rw` Service.
+- Sanitized `/db/health` endpoint, database-aware readiness, bounded connection
+  retries, and an internal marker CLI without a public database write endpoint.
+- Minimum cross-namespace Secret synchronization that copies only `fqdn-uri`
+  into `startup-apps/demo-api-postgresql` without printing or committing the
+  credential.
+- Non-disruptive validation for the Secret contract, Deployment environment,
+  RW Service endpoint, current primary, and every demo-api replica.
+- Guarded primary-Pod failover drill covering replica promotion, RW Service
+  movement, application reconnection, committed-data preservation,
+  post-failover writes, and former-primary PVC/PV/EBS reuse.
+
+### Changed
+
+- Moved the aws-dev demo-api Argo CD Application after the PostgreSQL
+  Application with sync wave `30`.
+- Extended AWS deployment, validation, cleanup, architecture, environment, and
+  roadmap documentation for the application database lifecycle.
+- Corrected the backup preparation script's stray Markdown fences and removed
+  the duplicate deployment-document sentence.
+
 ## v0.6.4
 
 ### Added

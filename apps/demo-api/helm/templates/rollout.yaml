@@ -55,6 +55,21 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            - name: DATABASE_ENABLED
+              value: {{ .Values.database.enabled | quote }}
+            - name: DATABASE_CONNECT_TIMEOUT_SECONDS
+              value: {{ .Values.database.connectTimeoutSeconds | quote }}
+            - name: DATABASE_RETRY_ATTEMPTS
+              value: {{ .Values.database.retryAttempts | quote }}
+            - name: DATABASE_RETRY_DELAY_SECONDS
+              value: {{ .Values.database.retryDelaySeconds | quote }}
+            {{- if .Values.database.enabled }}
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "database.secretName is required when database.enabled=true" .Values.database.secretName }}
+                  key: {{ .Values.database.secretKey }}
+            {{- end }}
           {{- if .Values.livenessProbe.enabled }}
           livenessProbe:
             httpGet:

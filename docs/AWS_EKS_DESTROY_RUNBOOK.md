@@ -26,6 +26,8 @@ Delete aws-dev Root Application
         ↓
 Delete child Applications and Ingress
         ↓
+Delete the runtime demo-api PostgreSQL Secret
+        ↓
 AWS Load Balancer Controller deletes ALB resources
         ↓
 Confirm ALB is gone
@@ -54,6 +56,9 @@ any residual recovery volume are also deleted. The aws-dev S3 bucket uses
 permanently removes all base backups, WAL archives, delete markers, and
 noncurrent versions. Copy required backups to storage outside this Terraform
 environment before confirming destruction.
+
+The workflow also deletes `startup-apps/demo-api-postgresql`. That runtime
+Secret is not stored in Git and must not remain after the database is removed.
 
 ## Manual Checks
 

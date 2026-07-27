@@ -12,6 +12,7 @@ POSTGRES_APPLICATION="${POSTGRES_APPLICATION:-postgresql-baseline}"
 POSTGRES_CLUSTER="${POSTGRES_CLUSTER:-postgresql-baseline}"
 POSTGRES_NAMESPACE="${POSTGRES_NAMESPACE:-data-platform}"
 POSTGRES_STORAGE_CLASS="${POSTGRES_STORAGE_CLASS:-gp3-cnpg}"
+DEMO_DATABASE_SECRET="${DEMO_DATABASE_SECRET:-demo-api-postgresql}"
 ALB_WAIT_SECONDS="${ALB_WAIT_SECONDS:-600}"
 KARPENTER_WAIT_SECONDS="${KARPENTER_WAIT_SECONDS:-600}"
 EBS_WAIT_SECONDS="${EBS_WAIT_SECONDS:-600}"
@@ -184,6 +185,9 @@ fi
 
 if kubectl get namespace "${APP_NAMESPACE}" >/dev/null 2>&1; then
   kubectl delete ingress --all -n "${APP_NAMESPACE}" --ignore-not-found=true --wait=false
+  kubectl delete secret "${DEMO_DATABASE_SECRET}" \
+    --namespace "${APP_NAMESPACE}" \
+    --ignore-not-found=true
 fi
 
 deadline=$((SECONDS + ALB_WAIT_SECONDS))

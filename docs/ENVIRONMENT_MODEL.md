@@ -55,7 +55,7 @@ CloudNativePG operator and CRDs
 Three-instance PostgreSQL 17.10 HA Cluster
 Three encrypted 20Gi gp3 EBS data volumes
 S3 physical backups, WAL archiving, and PITR validation
-demo-api
+demo-api with PostgreSQL readiness and failover validation
 Application Load Balancer
 ```
 
@@ -82,7 +82,10 @@ physical base backups in a versioned, encrypted S3 bucket through a dedicated
 IRSA role. v0.6.4 uses a one-node isolated recovery pool to validate both
 latest-state restore and timestamp-based PITR in independent clusters, then
 removes their temporary PVC, EBS, NodeClaim, and EC2 resources without
-changing the source cluster.
+changing the source cluster. v0.6.5 connects demo-api to the operator-managed
+RW Service using the generated application identity, then validates primary-Pod
+failover, RW Service movement, application reconnection, and committed-data
+preservation.
 
 ## Deliberate Differences
 
@@ -95,6 +98,6 @@ changing the source cluster.
 | Exposure | Local hostname | ALB DNS |
 | IAM | N/A | IAM and IRSA |
 | Node capacity | kind nodes | system Managed Node Group plus isolated application and database Karpenter capacity |
-| Database | N/A | three PostgreSQL instances on dedicated On-Demand nodes with encrypted gp3 persistence, S3 physical backups, and isolated PITR validation |
+| Database | Disabled | three PostgreSQL instances on dedicated On-Demand nodes with encrypted gp3 persistence, S3 physical backups, isolated PITR, and demo-api failover validation |
 
 The environments share GitOps principles but are not required to use identical traffic-routing implementations.

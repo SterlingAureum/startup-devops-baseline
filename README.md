@@ -7,15 +7,15 @@ This repository demonstrates a practical Kubernetes platform baseline built arou
 The repository now contains the completed local progressive-delivery and AWS
 EKS baselines, isolated On-Demand and Spot application NodePools, a tag-scoped
 AWS FIS drill, and a GitOps-managed CloudNativePG PostgreSQL persistence,
-high-availability, S3 backup, and point-in-time recovery baseline. It remains
-intentionally smaller than a full production platform and will continue toward
-application database integration, security controls, observability, AI
-infrastructure workloads, and AIOps workflows.
+high-availability, S3 backup, point-in-time recovery, application integration,
+and primary-failover baseline. It remains intentionally smaller than a full
+production platform and will continue toward security controls, observability,
+AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.6.4-postgresql-recovery
+v0.6.5-postgresql-application-failover
 ```
 CloudNativePG 1.30.0 now manages one PostgreSQL 17.10 primary and two
 synchronous-capable replicas on three dedicated Karpenter On-Demand nodes.
@@ -26,7 +26,11 @@ backups to a Terraform-managed, versioned, encrypted S3 bucket through IRSA.
 An isolated one-node On-Demand recovery tier validates both latest-state
 recovery and PITR into independent clusters, verifies marker-level data
 integrity, and removes all temporary Cluster, PVC, EBS, and EC2 resources.
-Primary failover and demo-api integration remain for v0.6.5.
+In the AWS environment, demo-api uses the CloudNativePG application identity
+through `postgresql-baseline-rw`. A guarded Pod-level primary-failover drill
+validates replica promotion, RW Service movement, application reconnection,
+committed-data preservation, post-failover writes, and former-primary volume
+reuse.
 
 ## Platform Architecture
 

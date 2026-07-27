@@ -93,7 +93,7 @@ Planned scope:
 
 ## v0.6 - CloudNativePG Data Platform
 
-Status: In Progress
+Status: Completed
 
 Goal:
 
@@ -111,7 +111,9 @@ Incremental scope:
   plugin - delivered
 - v0.6.4 - isolated latest-state restore, point-in-time recovery, data
   integrity, and recovery-resource cleanup validation - delivered
-- v0.6.5 - failover validation, demo-api integration, and version finalization
+- v0.6.5 - demo-api application credentials, RW Service integration,
+  primary-Pod failover, application reconnection, and version finalization -
+  delivered
 
 ## v0.7 - Production Security Baseline
 

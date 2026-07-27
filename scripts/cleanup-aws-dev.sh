@@ -7,6 +7,8 @@ POSTGRES_APP="postgresql-baseline"
 POSTGRES_CLUSTER="postgresql-baseline"
 POSTGRES_NAMESPACE="data-platform"
 POSTGRES_STORAGE_CLASS="gp3-cnpg"
+APP_NAMESPACE="startup-apps"
+DEMO_DATABASE_SECRET="demo-api-postgresql"
 
 command -v kubectl >/dev/null 2>&1 || {
   echo "Required command not found: kubectl" >&2
@@ -14,7 +16,7 @@ command -v kubectl >/dev/null 2>&1 || {
 }
 
 cat <<EOF
-WARNING: this cleanup deletes the v0.6.4 PostgreSQL source and recovery
+WARNING: this cleanup deletes the v0.6.5 PostgreSQL source and recovery
 resources and all data-platform PVCs.
 
 The gp3 StorageClass uses reclaim policy Delete, so all three backing EBS
@@ -115,6 +117,10 @@ while kubectl get ingress demo-api -n startup-apps >/dev/null 2>&1; do
   fi
   sleep 10
 done
+
+kubectl delete secret "${DEMO_DATABASE_SECRET}" \
+  --namespace "${APP_NAMESPACE}" \
+  --ignore-not-found=true
 
 echo "==> Application resources removed"
 echo "Verify the ALB is gone in AWS, then run:"

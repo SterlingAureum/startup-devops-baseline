@@ -21,7 +21,7 @@ WARNING: this test restarts one PostgreSQL replica.
 
 The primary and the second replica remain available. The recreated replica
 must reuse its existing PVC and EBS volume and recover the replicated marker.
-This is not the primary failover drill planned for v0.6.5.
+This does not replace the separate v0.6.5 primary failover drill.
 
 Type 'restart-replica' to continue:
 EOF

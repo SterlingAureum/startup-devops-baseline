@@ -1,6 +1,8 @@
 # demo-api Helm Chart
 
-This chart deploys the `demo-api` service for the local GitOps baseline.
+This chart deploys `demo-api` in both the local and aws-dev GitOps
+environments. Database integration is disabled by default and enabled only by
+`values-aws-dev.yaml`.
 
 ## Local Render Test
 
@@ -24,6 +26,7 @@ curl http://localhost:8080/health
 curl http://localhost:8080/ready
 curl http://localhost:8080/version
 curl http://localhost:8080/metrics
+curl http://localhost:8080/db/health
 ```
 
 ## Image Note
@@ -34,8 +37,15 @@ For the local kind workflow, build the image and load it into the kind cluster b
 ./scripts/build-load-demo-api-image.sh
 ```
 
-The default image is:
+The committed default is an immutable GHCR image. Promote a newly published
+AWS image with:
 
-```text
-startup-devops-baseline/demo-api:0.1.0
+```bash
+VALUES_FILE=apps/demo-api/helm/values-aws-dev.yaml \
+IMAGE_TAG=sha-<short-commit> \
+./scripts/set-demo-api-image.sh
 ```
+
+The AWS values reference `startup-apps/demo-api-postgresql`. Create or refresh
+that runtime Secret with `scripts/sync-demo-api-postgresql-secret.sh`; never
+commit its value.

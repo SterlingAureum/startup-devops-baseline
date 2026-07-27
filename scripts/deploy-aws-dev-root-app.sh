@@ -11,8 +11,16 @@ POSTGRES_NAMESPACE="${POSTGRES_NAMESPACE:-data-platform}"
 POSTGRES_SERVICE_ACCOUNT="${POSTGRES_SERVICE_ACCOUNT:-postgresql-baseline}"
 BACKUP_OBJECT_STORE="${BACKUP_OBJECT_STORE:-postgresql-baseline-backup}"
 BACKUP_WAIT_SECONDS="${BACKUP_WAIT_SECONDS:-900}"
+DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-dev}"
+DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
+DEMO_DATABASE_SECRET="${DEMO_DATABASE_SECRET:-demo-api-postgresql}"
+DEMO_WAIT_SECONDS="${DEMO_WAIT_SECONDS:-900}"
+SYNC_DATABASE_SECRET_SCRIPT="$(
+  cd "$(dirname "${BASH_SOURCE[0]}")" &&
+    pwd
+)/sync-demo-api-postgresql-secret.sh"
 
-for command in kubectl terraform; do
+for command in kubectl terraform jq; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -60,6 +68,12 @@ kubectl annotate serviceaccount "${POSTGRES_SERVICE_ACCOUNT}" \
   eks.amazonaws.com/role-arn="${BACKUP_ROLE_ARN}" \
   --overwrite
 
+if kubectl get secret "${POSTGRES_APPLICATION}-app" \
+  --namespace "${POSTGRES_NAMESPACE}" >/dev/null 2>&1; then
+  echo "==> Refreshing the existing demo-api database credential before GitOps sync"
+  "${SYNC_DATABASE_SECRET_SCRIPT}"
+fi
+
 TEMP_FILE="$(mktemp)"
 trap 'rm -f "${TEMP_FILE}"' EXIT
 
@@ -104,12 +118,53 @@ kubectl annotate serviceaccount "${POSTGRES_SERVICE_ACCOUNT}" \
   eks.amazonaws.com/role-arn="${BACKUP_ROLE_ARN}" \
   --overwrite
 
+echo "==> Waiting for the CloudNativePG application credential"
+deadline=$((SECONDS + DEMO_WAIT_SECONDS))
+while ! kubectl get secret "${POSTGRES_APPLICATION}-app" \
+  --namespace "${POSTGRES_NAMESPACE}" >/dev/null 2>&1; do
+  if (( SECONDS >= deadline )); then
+    echo "Timed out waiting for the CloudNativePG application credential." >&2
+    exit 1
+  fi
+  sleep 10
+done
+
+"${SYNC_DATABASE_SECRET_SCRIPT}"
+
+echo "==> Waiting for the demo-api Argo CD Application"
+deadline=$((SECONDS + DEMO_WAIT_SECONDS))
+while ! kubectl get application "${DEMO_APPLICATION}" \
+  --namespace argocd >/dev/null 2>&1; do
+  if (( SECONDS >= deadline )); then
+    echo "Timed out waiting for the demo-api Argo CD Application." >&2
+    exit 1
+  fi
+  sleep 10
+done
+
 kubectl annotate application "${POSTGRES_APPLICATION}" \
   --namespace argocd \
   argocd.argoproj.io/refresh=hard \
   --overwrite
 
+kubectl annotate application "${DEMO_APPLICATION}" \
+  --namespace argocd \
+  argocd.argoproj.io/refresh=hard \
+  --overwrite
+
+kubectl wait \
+  --for=jsonpath='{.status.sync.status}'=Synced \
+  "application/${DEMO_APPLICATION}" \
+  --namespace argocd \
+  --timeout="${DEMO_WAIT_SECONDS}s"
+kubectl wait \
+  --for=jsonpath='{.status.health.status}'=Healthy \
+  "application/${DEMO_APPLICATION}" \
+  --namespace argocd \
+  --timeout="${DEMO_WAIT_SECONDS}s"
+
 echo "Applied aws-dev root application"
 echo "Repository: ${REPO_URL}"
 echo "Revision:   ${TARGET_REVISION}"
 echo "Backup S3:  s3://${BACKUP_BUCKET}/postgresql-baseline"
+echo "Database:   ${DEMO_NAMESPACE}/${DEMO_DATABASE_SECRET}"

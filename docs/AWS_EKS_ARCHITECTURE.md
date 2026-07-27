@@ -99,6 +99,17 @@ This document describes the runtime architecture of the AWS EKS environment.
 
                     demo-api Pods
 
+                           |
+                           | application credential
+                           v
+
+              postgresql-baseline-rw Service
+
+                           |
+                           v
+
+                 Current PostgreSQL primary
+
 
 
 
@@ -183,7 +194,8 @@ Bootstrap scripts
 ├── kubeconfig
 ├── Argo CD installation
 ├── IRSA ServiceAccount annotation
-└── environment-specific ALB Application rendering
+├── environment-specific ALB Application rendering
+└── minimum cross-namespace application Secret synchronization
 
 Argo CD
 ├── AWS Load Balancer Controller
@@ -297,6 +309,20 @@ cluster must contain both pre-target markers and exclude the post-target
 marker. Each recovery Cluster, PVC, EBS volume, NodeClaim, and EC2 node is
 deleted before the next stage. The source Cluster UID and all three source
 PVC/PV/EBS mappings must remain unchanged.
+
+v0.6.5 connects demo-api to `postgresql-baseline-rw` with the generated
+`postgresql-baseline-app` identity. Kubernetes Secrets are namespace-scoped, so
+the deployment workflow copies only the base64-encoded `fqdn-uri` field into
+`startup-apps/demo-api-postgresql` as `DATABASE_URL`. The value is never stored
+in Git or printed. This runtime bridge is an explicit development-stage
+boundary until external secret management is introduced in v0.7.
+
+The guarded primary-failover drill deletes only the current primary Pod.
+CloudNativePG promotes the most up-to-date standby, updates the `-rw` Service,
+and returns the former primary as a replica using its existing PVC. The drill
+proves application reconnection and data integrity through demo-api. It is a
+Pod-level high-availability test, not an EC2 node, Availability Zone, or region
+failure simulation.
 
 The Karpenter controller receives interruption events through the encrypted SQS
 queue populated by EventBridge. For a Spot interruption warning, Karpenter can

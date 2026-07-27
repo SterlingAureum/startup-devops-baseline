@@ -42,7 +42,7 @@ fi
 
 echo "==> ALB hostname: ${ALB_HOSTNAME}"
 
-for path in health ready version; do
+for path in health ready version db/health; do
   echo "==> GET /${path}"
   curl --fail --show-error --silent --retry 12 --retry-delay 10 \
     "http://${ALB_HOSTNAME}/${path}"

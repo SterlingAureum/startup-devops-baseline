@@ -42,7 +42,18 @@ resources:
     cpu: 250m
     memory: 256Mi
 
+readinessProbe:
+  timeoutSeconds: 10
+
 env:
   APP_NAME: demo-api
   APP_VERSION: "sha-3e50802"
   APP_ENV: aws-dev
+
+database:
+  enabled: true
+  secretName: demo-api-postgresql
+  secretKey: DATABASE_URL
+  connectTimeoutSeconds: 2
+  retryAttempts: 3
+  retryDelaySeconds: 1

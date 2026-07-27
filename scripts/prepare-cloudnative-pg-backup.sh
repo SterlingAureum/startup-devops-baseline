@@ -41,5 +41,8 @@ kubectl annotate serviceaccount "${POSTGRES_SERVICE_ACCOUNT}" \
   eks.amazonaws.com/role-arn="${BACKUP_ROLE_ARN}" \
   --overwrite
 
+```bash
 echo "CloudNativePG backup IRSA preparation passed."
-echo "It is now safe to push the v0.6.3 GitOps changes."
+echo "The PostgreSQL ServiceAccount is ready. Deploy or refresh the AWS root Application next."
+```
+

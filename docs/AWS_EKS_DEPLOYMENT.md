@@ -153,7 +153,7 @@ real `vpc-*` value.
 
 ## 6. Deploy Root Application
 
-Prepare the CloudNativePG backup integration:
+Prepare the PostgreSQL ServiceAccount for CloudNativePG backup access:
 
 ```bash
 ./scripts/prepare-cloudnative-pg-backup.sh

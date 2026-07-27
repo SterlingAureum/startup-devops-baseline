@@ -167,7 +167,13 @@ TARGET_REVISION=feature/v0.6-cloudnativepg-data-platform \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 
-The preparation script configures the PostgreSQL ServiceAccount to use the
+The preparation script creates and annotates the PostgreSQL ServiceAccount
+with the Terraform-managed backup IRSA role.
+
+The deployment script applies or refreshes the AWS root Application, waits for
+the CloudNativePG ObjectStore, and patches its live S3 destination from the
+Terraform-managed backup bucket.
+
 backup IRSA role and renders the Terraform-managed S3 bucket name into the live
 CloudNativePG ObjectStore.
 
@@ -229,6 +235,9 @@ primary and two streaming replicas. The database instances should occupy three
 different `database-ondemand` nodes, span both Availability Zones, and own
 three encrypted 20Gi gp3 volumes. `validate-all.sh` does not restart a database
 instance.
+
+Changes to the ObjectStore instance-sidecar resources may require a controlled
+CloudNativePG rolling restart; see `docs/TROUBLESHOOTING_V0.6.4.md`.
 
 The test forces WAL switches, creates one plugin-based `Backup`, waits for it
 to complete, and verifies both base-backup and WAL objects in S3. It does not

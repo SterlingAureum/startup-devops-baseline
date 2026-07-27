@@ -9,7 +9,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
-    targetRevision: feature/v0.6-cloudnativepg-data-platform
+    targetRevision: main
     path: clusters/aws-dev/platform
     directory:
       recurse: true

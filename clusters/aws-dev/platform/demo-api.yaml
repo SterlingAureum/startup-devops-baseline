@@ -11,7 +11,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
-    targetRevision: feature/v0.6-cloudnativepg-data-platform
+    targetRevision: main
     path: apps/demo-api/helm
     helm:
       releaseName: demo-api

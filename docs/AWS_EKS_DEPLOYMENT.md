@@ -179,7 +179,7 @@ IMAGE_TAG="${IMAGE_TAG}" \
 
 git add apps/demo-api/helm/values-aws-dev.yaml
 git commit -m "release: update aws-dev demo-api image to ${IMAGE_TAG}"
-git push origin feature/v0.6-cloudnativepg-data-platform
+git push origin main
 ```
 
 Prepare the PostgreSQL ServiceAccount for CloudNativePG backup access:
@@ -192,7 +192,7 @@ Then deploy or refresh the AWS root Application:
 
 ```bash
 REPO_URL=https://github.com/SterlingAureum/startup-devops-baseline.git \
-TARGET_REVISION=feature/v0.6-cloudnativepg-data-platform \
+TARGET_REVISION=main \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 

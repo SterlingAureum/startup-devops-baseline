@@ -27,6 +27,14 @@ terraform -chdir=infra/terraform/aws/environments/dev output
 
 - `eks_oidc_provider_arn`: IRSA trust provider.
 - `aws_load_balancer_controller_role_arn`: read by `bootstrap-eks-argocd.sh` to annotate the controller ServiceAccount.
+- `cnpg_backup_role_arn`: read by `deploy-aws-dev-root-app.sh` to annotate the
+  `data-platform/postgresql-baseline` ServiceAccount.
+
+## CloudNativePG Backup
+
+- `cnpg_backup_bucket_name`: rendered into the live Barman Cloud ObjectStore by
+  `deploy-aws-dev-root-app.sh`.
+- `cnpg_backup_bucket_arn`: S3 security and teardown verification.
 
 ## Karpenter Foundation
 
@@ -53,4 +61,7 @@ terraform -chdir=infra/terraform/aws/environments/dev output
 
 Terraform outputs are not committed to Git. Run `bootstrap-eks-argocd.sh`
 after infrastructure creation or recreation; it reads the current VPC ID and
-IRSA role ARNs, then applies the environment-specific bootstrap resources.
+controller IRSA role ARNs. Run `deploy-aws-dev-root-app.sh` after the
+CloudNativePG backup Terraform apply; it reads the backup bucket and database
+IRSA role, applies only the environment-specific live values, and synchronizes
+the minimum runtime application credential after the source Secret exists.

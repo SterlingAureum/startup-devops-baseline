@@ -3,11 +3,39 @@ set -euo pipefail
 
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-15m}"
 ROOT_APP="startup-devops-aws-dev-root"
+POSTGRES_APP="postgresql-baseline"
+POSTGRES_CLUSTER="postgresql-baseline"
+POSTGRES_NAMESPACE="data-platform"
+POSTGRES_STORAGE_CLASS="gp3-cnpg"
+APP_NAMESPACE="startup-apps"
+DEMO_DATABASE_SECRET="demo-api-postgresql"
 
 command -v kubectl >/dev/null 2>&1 || {
   echo "Required command not found: kubectl" >&2
   exit 1
 }
+
+cat <<EOF
+WARNING: this cleanup deletes the v0.6.5 PostgreSQL source and recovery
+resources and all data-platform PVCs.
+
+The gp3 StorageClass uses reclaim policy Delete, so all three backing EBS
+volumes are also deleted. S3 backups are preserved because this script does not
+run Terraform destroy.
+
+Type 'delete-data' to continue:
+EOF
+
+if [[ "${CONFIRM_AWS_DEV_CLEANUP:-}" == "delete-data" ]]; then
+  confirmation="delete-data"
+else
+  read -r confirmation
+fi
+
+if [[ "${confirmation}" != "delete-data" ]]; then
+  echo "Cleanup cancelled."
+  exit 0
+fi
 
 if kubectl get application "${ROOT_APP}" -n argocd >/dev/null 2>&1; then
   echo "==> Suspending root Application automation"
@@ -19,7 +47,40 @@ else
   echo "==> Root application is already absent"
 fi
 
-for smoke_namespace in karpenter-smoke karpenter-spot-smoke; do
+if kubectl get application "${POSTGRES_APP}" -n argocd >/dev/null 2>&1; then
+  echo "==> Suspending PostgreSQL Application automation"
+  kubectl patch application "${POSTGRES_APP}" \
+    --namespace argocd \
+    --type merge \
+    --patch '{"spec":{"syncPolicy":{"automated":null}}}'
+fi
+
+if kubectl get cluster "${POSTGRES_CLUSTER}" \
+  --namespace "${POSTGRES_NAMESPACE}" >/dev/null 2>&1; then
+  echo "==> Deleting PostgreSQL Cluster before EKS teardown"
+  kubectl delete cluster "${POSTGRES_CLUSTER}" \
+    --namespace "${POSTGRES_NAMESPACE}" \
+    --wait=true \
+    --timeout="${WAIT_TIMEOUT}"
+fi
+
+kubectl delete pvc \
+  --namespace "${POSTGRES_NAMESPACE}" \
+  --selector "cnpg.io/cluster=${POSTGRES_CLUSTER}" \
+  --ignore-not-found=true \
+  --wait=true \
+  --timeout="${WAIT_TIMEOUT}" 2>/dev/null || true
+kubectl delete namespace "${POSTGRES_NAMESPACE}" \
+  --ignore-not-found=true \
+  --wait=true \
+  --timeout="${WAIT_TIMEOUT}"
+kubectl delete storageclass "${POSTGRES_STORAGE_CLASS}" \
+  --ignore-not-found=true
+
+for smoke_namespace in \
+  karpenter-smoke \
+  karpenter-spot-smoke \
+  karpenter-fis-smoke; do
   kubectl delete namespace "${smoke_namespace}" \
     --ignore-not-found=true \
     --wait=false
@@ -56,6 +117,10 @@ while kubectl get ingress demo-api -n startup-apps >/dev/null 2>&1; do
   fi
   sleep 10
 done
+
+kubectl delete secret "${DEMO_DATABASE_SECRET}" \
+  --namespace "${APP_NAMESPACE}" \
+  --ignore-not-found=true
 
 echo "==> Application resources removed"
 echo "Verify the ALB is gone in AWS, then run:"

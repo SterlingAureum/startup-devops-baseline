@@ -1,10 +1,15 @@
 # AWS Terraform baseline
 
 This directory contains the AWS infrastructure code introduced in v0.4, the
-Karpenter AWS foundation introduced in v0.5.0, and the AWS FIS Spot
-interruption foundation introduced in v0.5.5.
+Karpenter AWS foundation introduced in v0.5.0, the AWS FIS Spot interruption
+foundation introduced in v0.5.5, and the CloudNativePG S3 backup foundation
+introduced in v0.6.3.
 
-## Current scope: v0.5.5
+## Current repository scope: v0.6.4
+
+v0.6.4 adds no Terraform resources. Recovery clusters reuse the existing
+backup bucket and shared database IRSA ServiceAccount, while an ephemeral
+GitOps-managed Karpenter NodePool supplies isolated On-Demand capacity.
 
 The development environment now creates:
 
@@ -22,6 +27,8 @@ The development environment now creates:
 - subnet and security-group discovery tags;
 - an AWS FIS experiment role with only the Spot interruption permissions;
 - a tag-scoped, single-target Spot interruption experiment template.
+- a versioned, encrypted, public-access-blocked S3 backup bucket;
+- a least-privilege IRSA role for PostgreSQL base backups and WAL archives.
 
 Karpenter controller installation, `EC2NodeClass`, `NodePool`, and dynamic EC2
 nodes remain GitOps-managed. Terraform owns the AWS identity and experiment
@@ -30,7 +37,8 @@ template used by the real interruption drill.
 ## Cost profile
 
 After `terraform apply`, the main continuing costs are the EKS control plane,
-EC2 managed nodes, NAT Gateway, EBS root volumes, and related network traffic.
+EC2 managed nodes, NAT Gateway, EBS root volumes, S3 backup storage and
+requests, and related network traffic.
 Control-plane logging is disabled by default in the development environment to
 avoid unnecessary CloudWatch ingestion charges.
 
@@ -72,6 +80,8 @@ kubectl get pods -n kube-system
 ./scripts/validate-eks-baseline.sh
 ./scripts/validate-karpenter-foundation.sh
 ./scripts/validate-karpenter-fis.sh
+./scripts/validate-cloudnative-pg-backup.sh
+./scripts/validate-cloudnative-pg-recovery.sh
 ```
 
 Override `AWS_REGION` and `CLUSTER_NAME` when the environment uses different

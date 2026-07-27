@@ -68,7 +68,7 @@
              v                    v                    v
 
 
- AWS Load Balancer Controller              Karpenter              demo-api
+ AWS Load Balancer Controller       Karpenter + CloudNativePG     demo-api
 
        Application                        Applications           Application
 
@@ -153,20 +153,90 @@ real `vpc-*` value.
 
 ## 6. Deploy Root Application
 
+When upgrading a running v0.6.4 environment, create the target runtime Secret
+before pushing the Helm values that reference it:
+
+```bash
+./scripts/sync-demo-api-postgresql-secret.sh
+```
+
+For a clean environment, `deploy-aws-dev-root-app.sh` performs this step after
+CloudNativePG creates the source Secret.
+
+Publish the demo-api image containing the v0.6.5 database module before
+promoting its immutable tag. After the application commit has been built by the
+existing GHCR workflow:
+
+```bash
+IMAGE_TAG="sha-$(git rev-parse --short HEAD)"
+
+IMAGE_TAG="${IMAGE_TAG}" \
+./scripts/check-ghcr-demo-api-image.sh
+
+VALUES_FILE=apps/demo-api/helm/values-aws-dev.yaml \
+IMAGE_TAG="${IMAGE_TAG}" \
+./scripts/set-demo-api-image.sh
+
+git add apps/demo-api/helm/values-aws-dev.yaml
+git commit -m "release: update aws-dev demo-api image to ${IMAGE_TAG}"
+git push origin feature/v0.6-cloudnativepg-data-platform
+```
+
+Prepare the PostgreSQL ServiceAccount for CloudNativePG backup access:
+
+```bash
+./scripts/prepare-cloudnative-pg-backup.sh
+```
+
+Then deploy or refresh the AWS root Application:
+
 ```bash
 REPO_URL=https://github.com/SterlingAureum/startup-devops-baseline.git \
-TARGET_REVISION=feature/v0.5-karpenter-autoscaling \
+TARGET_REVISION=feature/v0.6-cloudnativepg-data-platform \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 
-The root Application installs the Karpenter CRDs first, the controller
-afterward, the normal and FIS-only EC2NodeClasses, and finally the
-`application-ondemand`, `application-spot`, and `application-spot-fis`
-NodePools.
+The preparation script creates and annotates the PostgreSQL ServiceAccount
+with the Terraform-managed backup IRSA role.
 
-## 7. Validate Everything
+The deployment script applies or refreshes the AWS root Application, waits for
+the CloudNativePG ObjectStore, and patches its live S3 destination from the
+Terraform-managed backup bucket. It also waits for the generated
+`postgresql-baseline-app` credential and synchronizes only its `fqdn-uri` into
+`startup-apps/demo-api-postgresql` as `DATABASE_URL`.
+
+The synchronized Secret is runtime state and is not committed to Git. Re-run
+the following command after application credential rotation:
 
 ```bash
+./scripts/sync-demo-api-postgresql-secret.sh
+```
+
+The root Application manages the AWS platform and data-platform components,
+including:
+
+- AWS Load Balancer Controller
+- Karpenter
+- CloudNativePG
+- cert-manager
+- Barman Cloud plugin
+- PostgreSQL HA and backup resources
+- demo-api
+
+The PostgreSQL cluster dynamically provisions three On-Demand database nodes,
+three root volumes, and three 20Gi gp3 data volumes. Leave the AWS environment
+running only when needed to avoid unnecessary EC2 and EBS charges.
+
+
+## 7. Validate Everything
+Run the backup test and validate the backup, recovery prerequisites, and
+overall environment:
+
+```bash
+./scripts/run-cloudnative-pg-backup-test.sh
+./scripts/validate-cloudnative-pg-backup.sh
+./scripts/validate-cloudnative-pg-recovery.sh
+./scripts/validate-demo-api-postgresql.sh
 ./scripts/validate-all.sh
 ```
 
@@ -177,17 +247,146 @@ kubectl get nodes
 kubectl get applications -n argocd
 kubectl get pods -A
 kubectl get ingress -n startup-apps
-kubectl get ec2nodeclass application
+kubectl get ec2nodeclass
 kubectl get nodepools,nodeclaims
+kubectl get application cloudnative-pg -n argocd
+kubectl get pods -n cnpg-system
+kubectl get application postgresql-baseline -n argocd
+kubectl get cluster,pods,pvc -n data-platform
+kubectl get objectstore,scheduledbackup,backup -n data-platform
+kubectl get nodepool database-recovery-ondemand
+kubectl get storageclass gp3-cnpg
+kubectl get secret demo-api-postgresql -n startup-apps
 ```
 
-Both EC2NodeClasses and all three NodePools should report `Ready=True`. The
+All three EC2NodeClasses and all five NodePools should report `Ready=True`. The
 interruption validator should confirm that the controller, SQS queue, and Spot
 EventBridge rule use the same queue. The FIS validator should confirm the role,
-experiment template, and unique EC2 target tag. No NodeClaims or
-Karpenter-provisioned nodes should exist in the idle baseline.
+experiment template, and unique EC2 target tag. Three persistent NodeClaims
+should belong to `database-ondemand`; the three temporary application NodePools
+and `database-recovery-ondemand` should remain idle outside controlled tests.
 
-## 8. Run the Controlled Scale Test
+The CloudNativePG validators should report two healthy operator replicas on two
+different `workload=system` nodes and a PostgreSQL topology containing one
+primary and two streaming replicas. The database instances should occupy three
+different `database-ondemand` nodes, span both Availability Zones, and own
+three encrypted 20Gi gp3 volumes. `validate-all.sh` does not restart a database
+instance.
+
+The demo-api validator should confirm that both replicas use the minimum
+runtime Secret, reach the current primary through `postgresql-baseline-rw`, and
+return a sanitized `/db/health` response. It compares credentials without
+printing or decoding them.
+
+Changes to the ObjectStore instance-sidecar resources may require a controlled
+CloudNativePG rolling restart; see `docs/TROUBLESHOOTING_V0.6.4.md`.
+
+The test forces WAL switches, creates one plugin-based `Backup`, waits for it
+to complete, and verifies both base-backup and WAL objects in S3. It does not
+delete the PostgreSQL Cluster or restart the primary.
+
+## 8. Run the PostgreSQL Replica Persistence Test
+
+First run the non-disruptive validator directly when focused database
+diagnostics are useful:
+
+```bash
+./scripts/validate-cloudnative-pg-persistence.sh
+```
+
+Then run the guarded persistence test:
+
+```bash
+./scripts/run-cloudnative-pg-persistence-test.sh
+```
+
+The script requires typing `restart-replica`. It writes a marker through the
+primary, deletes one replica Pod, waits for CloudNativePG to recreate it, and
+verifies that the replica reuses the same PVC, PV, and EBS volume. The primary
+and second replica remain available. This is not a primary failover test and is
+intentionally excluded from `validate-all.sh`.
+
+Expected final output:
+
+```text
+CloudNativePG replica recreation and persistent-volume reuse validation passed.
+```
+
+## 9. Run the PostgreSQL Recovery and PITR Test
+
+Run the guarded restore drill only after a successful base-backup and WAL
+validation:
+
+```bash
+./scripts/run-cloudnative-pg-recovery-test.sh
+```
+
+Type:
+
+```text
+restore-and-cleanup
+```
+
+The test writes uniquely named markers to the source database and creates a
+new physical base backup. It restores one independent cluster to the latest
+archived state, then restores a second cluster to a captured timestamp. The
+latest cluster must contain all three markers. The PITR cluster must contain
+the base and pre-target markers but exclude the post-target marker.
+
+Both recovery clusters use the existing backup IRSA ServiceAccount and the
+isolated `database-recovery-ondemand` NodePool. Each temporary Cluster, PVC,
+EBS volume, NodeClaim, and EC2 node is removed before the test completes. The
+source Cluster UID and all three source PVC/PV/EBS mappings must remain
+unchanged.
+
+This drill incurs temporary On-Demand EC2 and EBS charges and is intentionally
+excluded from `validate-all.sh`.
+
+Expected final output:
+
+```text
+CloudNativePG latest recovery, PITR, data integrity, and cleanup validation passed.
+```
+
+Then confirm the source remains healthy and no recovery resources remain:
+
+```bash
+./scripts/validate-cloudnative-pg-recovery.sh
+```
+
+## 10. Run the PostgreSQL Primary Failover Test
+
+Run the guarded Pod-level failover drill only after the non-disruptive
+validators succeed:
+
+```bash
+./scripts/run-cloudnative-pg-failover-test.sh
+```
+
+Type:
+
+```text
+failover-primary
+```
+
+The test writes a committed marker through demo-api, deletes the current
+primary Pod, waits for a replica to be promoted, and verifies that the RW
+Service and demo-api move to the new primary. It then proves both pre-failover
+data preservation and a new post-failover write. The former primary must return
+as a replica with its original PVC, PV, and EBS volume.
+
+The script reports observed database promotion and application recovery times.
+These are measurements, not production SLOs. The test does not terminate an
+EC2 instance or simulate an Availability Zone failure and is intentionally
+excluded from `validate-all.sh`.
+
+Expected final output:
+
+```text
+CloudNativePG primary failover and demo-api reconnect validation passed.
+```
+
+## 11. Run the Controlled Scale Test
 
 The following command creates a temporary workload and one small On-Demand
 application node. It validates scale-out, deletes the workload, and waits for
@@ -213,9 +412,19 @@ kubectl get nodeclaims
 kubectl get nodes -l karpenter.sh/nodepool
 ```
 
-Both commands should return no Karpenter capacity.
+The three database NodeClaims and nodes remain. Confirm only that the temporary
+application pool returned to zero:
 
-## 9. Run the Controlled Spot Test
+```bash
+kubectl get nodeclaims \
+  -l karpenter.sh/nodepool=application-ondemand
+kubectl get nodes \
+  -l karpenter.sh/nodepool=application-ondemand
+```
+
+Both scoped commands should return no resources.
+
+## 12. Run the Controlled Spot Test
 
 The Spot test validates interruption-path readiness, creates one temporary Spot
 node, confirms the EC2 purchase option, deletes the workload, and waits for
@@ -239,7 +448,7 @@ Expected final output:
 Karpenter Spot scale-out and scale-in validation passed.
 ```
 
-## 10. Run the Real AWS FIS Interruption Drill
+## 13. Run the Real AWS FIS Interruption Drill
 
 This drill creates an isolated Spot node and starts a real AWS FIS experiment:
 
@@ -262,7 +471,7 @@ Expected final output:
 Karpenter AWS FIS Spot interruption and replacement validation passed.
 ```
 
-## 11. Destroy
+## 14. Destroy
 
 ```bash
 ./scripts/destroy-aws-dev.sh

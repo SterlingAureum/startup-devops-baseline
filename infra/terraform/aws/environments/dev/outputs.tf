@@ -117,3 +117,18 @@ output "aws_load_balancer_controller_role_arn" {
   description = "IAM role ARN used by the AWS Load Balancer Controller service account."
   value       = module.eks.aws_load_balancer_controller_role_arn
 }
+
+output "cnpg_backup_bucket_name" {
+  description = "S3 bucket used for CloudNativePG physical backups and WAL archives."
+  value       = module.cnpg_backup.bucket_name
+}
+
+output "cnpg_backup_bucket_arn" {
+  description = "ARN of the CloudNativePG backup bucket."
+  value       = module.cnpg_backup.bucket_arn
+}
+
+output "cnpg_backup_role_arn" {
+  description = "IRSA role ARN used by the CloudNativePG cluster ServiceAccount."
+  value       = module.cnpg_backup.role_arn
+}

@@ -1,0 +1,23 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: postgresql-baseline-daily
+  namespace: data-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: "15"
+    argocd.argoproj.io/sync-options: Prune=false
+  labels:
+    app.kubernetes.io/name: postgresql
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: aws-dev
+spec:
+  schedule: "0 0 2 * * *"
+  backupOwnerReference: cluster
+  cluster:
+    name: postgresql-baseline
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io
+  target: prefer-standby
+  immediate: false
+  suspend: false

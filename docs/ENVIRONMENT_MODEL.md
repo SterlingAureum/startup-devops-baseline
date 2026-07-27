@@ -49,7 +49,13 @@ Karpenter On-Demand application NodePool
 Karpenter Spot application NodePool
 AWS FIS Spot interruption foundation
 Karpenter FIS-only EC2NodeClass and Spot NodePool
-demo-api
+Karpenter database EC2NodeClass and On-Demand NodePool
+Karpenter isolated On-Demand database recovery NodePool
+CloudNativePG operator and CRDs
+Three-instance PostgreSQL 17.10 HA Cluster
+Three encrypted 20Gi gp3 EBS data volumes
+S3 physical backups, WAL archiving, and PITR validation
+demo-api with PostgreSQL readiness and failover validation
 Application Load Balancer
 ```
 
@@ -63,7 +69,23 @@ then removes temporary capacity. v0.5.4 adds a separately tainted Spot
 `NodePool`, validates its EC2 purchase option, and checks the controller-to-SQS
 interruption path. v0.5.5 adds a tag-isolated FIS-only Spot pool and an AWS FIS
 experiment that can issue a real interruption notice to exactly one temporary
-test node.
+test node. v0.6.0 adds the cluster-wide CloudNativePG operator, admission
+webhooks, and CRDs through Argo CD. Its two replicas run on separate stable
+system nodes. v0.6.1 adds one PostgreSQL 17.10 instance on a stable system node
+and one encrypted 20Gi gp3 EBS data volume. v0.6.2 moves PostgreSQL onto a
+dedicated Karpenter On-Demand NodePool and expands it to one primary and two
+replicas. Required hostname anti-affinity gives each instance a different node,
+while topology spreading balances them `2+1` across the two development
+Availability Zones. One synchronous standby acknowledgement is required. The
+v0.6.3 Barman Cloud plugin archives WAL files continuously and creates daily
+physical base backups in a versioned, encrypted S3 bucket through a dedicated
+IRSA role. v0.6.4 uses a one-node isolated recovery pool to validate both
+latest-state restore and timestamp-based PITR in independent clusters, then
+removes their temporary PVC, EBS, NodeClaim, and EC2 resources without
+changing the source cluster. v0.6.5 connects demo-api to the operator-managed
+RW Service using the generated application identity, then validates primary-Pod
+failover, RW Service movement, application reconnection, and committed-data
+preservation.
 
 ## Deliberate Differences
 
@@ -75,6 +97,7 @@ test node.
 | Progressive delivery | Enabled | Deferred |
 | Exposure | Local hostname | ALB DNS |
 | IAM | N/A | IAM and IRSA |
-| Node capacity | kind nodes | system Managed Node Group plus isolated On-Demand, Spot, and FIS-only Karpenter application capacity |
+| Node capacity | kind nodes | system Managed Node Group plus isolated application and database Karpenter capacity |
+| Database | Disabled | three PostgreSQL instances on dedicated On-Demand nodes with encrypted gp3 persistence, S3 physical backups, isolated PITR, and demo-api failover validation |
 
 The environments share GitOps principles but are not required to use identical traffic-routing implementations.

@@ -5,23 +5,32 @@ A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure b
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
 The repository now contains the completed local progressive-delivery and AWS
-EKS baselines, isolated On-Demand and Spot application NodePools, and a
-tag-scoped AWS FIS drill for validating Karpenter Spot interruption recovery.
-It remains intentionally smaller than a full production platform and will
-continue toward CloudNativePG, security controls, observability, AI
-infrastructure workloads, and AIOps workflows.
+EKS baselines, isolated On-Demand and Spot application NodePools, a tag-scoped
+AWS FIS drill, and a GitOps-managed CloudNativePG PostgreSQL persistence,
+high-availability, S3 backup, point-in-time recovery, application integration,
+and primary-failover baseline. It remains intentionally smaller than a full
+production platform and will continue toward security controls, observability,
+AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.5.5-karpenter-fis-spot-interruption
+v0.6.5-postgresql-application-failover
 ```
-The local GitOps, progressive-delivery, and AWS EKS baselines are complete.
-Karpenter AWS prerequisites, controller installation, EC2NodeClass discovery,
-isolated On-Demand and Spot application NodePools, interruption-path readiness,
-and a dedicated AWS FIS Spot interruption experiment are implemented. The FIS
-drill verifies a real interruption notice, replacement Spot capacity, Pod
-rescheduling, original-instance termination, and final scale-in.
+CloudNativePG 1.30.0 now manages one PostgreSQL 17.10 primary and two
+synchronous-capable replicas on three dedicated Karpenter On-Demand nodes.
+Instances use Guaranteed resources, encrypted gp3 persistence, and a balanced
+`2+1` distribution across the two development Availability Zones. The Barman
+Cloud CNPG-I plugin continuously archives WAL files and writes physical base
+backups to a Terraform-managed, versioned, encrypted S3 bucket through IRSA.
+An isolated one-node On-Demand recovery tier validates both latest-state
+recovery and PITR into independent clusters, verifies marker-level data
+integrity, and removes all temporary Cluster, PVC, EBS, and EC2 resources.
+In the AWS environment, demo-api uses the CloudNativePG application identity
+through `postgresql-baseline-rw`. A guarded Pod-level primary-failover drill
+validates replica promotion, RW Service movement, application reconnection,
+committed-data preservation, post-failover writes, and former-primary volume
+reuse.
 
 ## Platform Architecture
 
@@ -84,8 +93,8 @@ rescheduling, original-instance termination, and final scale-in.
 
 Both environments use Git and Argo CD as the desired-state control plane.
 The local environment focuses on progressive delivery, while the AWS
-environment focuses on cloud infrastructure and AWS-native application
-delivery.
+environment covers cloud infrastructure, AWS-native application delivery,
+dynamic capacity, and the CloudNativePG database control plane.
 
 ## Deployment Options
 

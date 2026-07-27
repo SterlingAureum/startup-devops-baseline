@@ -12,6 +12,18 @@ WAIT_TIMEOUT="${WAIT_TIMEOUT:-15m}"
 SCALE_IN_TIMEOUT_SECONDS="${SCALE_IN_TIMEOUT_SECONDS:-1200}"
 TEST_APPLIED=false
 
+application_nodeclaims() {
+  kubectl get nodeclaims \
+    --selector "karpenter.sh/nodepool=${NODE_POOL_NAME}" \
+    --output name
+}
+
+application_nodes() {
+  kubectl get nodes \
+    --selector "karpenter.sh/nodepool=${NODE_POOL_NAME}" \
+    --output name
+}
+
 for command in aws kubectl; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
@@ -25,9 +37,8 @@ cleanup_on_exit() {
     kubectl delete -f "${TEST_MANIFEST}" \
       --ignore-not-found=true \
       --wait=false >/dev/null 2>&1 || true
-    # The script requires an empty baseline, so any NodeClaim here belongs to
-    # this test. Request deletion immediately if validation exits early.
-    kubectl delete nodeclaim --all \
+    kubectl delete nodeclaim \
+      --selector "karpenter.sh/nodepool=${NODE_POOL_NAME}" \
       --ignore-not-found=true \
       --wait=false >/dev/null 2>&1 || true
   fi
@@ -43,9 +54,9 @@ kubectl wait --for=condition=Ready \
 kubectl wait --for=condition=Ready \
   "nodepool/${NODE_POOL_NAME}" --timeout="${WAIT_TIMEOUT}"
 
-if [[ -n "$(kubectl get nodeclaims --output name)" ]] || \
-   [[ -n "$(kubectl get nodes --selector karpenter.sh/nodepool --output name)" ]]; then
-  echo "The scale test requires an empty Karpenter capacity baseline." >&2
+if [[ -n "$(application_nodeclaims)" ]] || \
+   [[ -n "$(application_nodes)" ]]; then
+  echo "The scale test requires an idle ${NODE_POOL_NAME} baseline." >&2
   exit 1
 fi
 
@@ -97,7 +108,7 @@ if [[ "${WORKLOAD_LABEL}" != "application" ]]; then
   exit 1
 fi
 
-if [[ -z "$(kubectl get nodeclaims --output name)" ]]; then
+if [[ -z "$(application_nodeclaims)" ]]; then
   echo "No NodeClaim was created for the scale test." >&2
   exit 1
 fi
@@ -105,7 +116,8 @@ fi
 echo "==> Scale-out validated on ${POD_NODE}"
 kubectl get node "${POD_NODE}" \
   --label-columns karpenter.sh/nodepool,karpenter.sh/capacity-type,capacity-tier,workload
-kubectl get nodeclaims
+kubectl get nodeclaims \
+  --selector "karpenter.sh/nodepool=${NODE_POOL_NAME}"
 
 echo "==> Removing temporary scale-test workload"
 kubectl delete -f "${TEST_MANIFEST}" \
@@ -116,14 +128,18 @@ TEST_APPLIED=false
 
 echo "==> Waiting for consolidation and scale-in"
 deadline=$((SECONDS + SCALE_IN_TIMEOUT_SECONDS))
-while [[ -n "$(kubectl get nodeclaims --output name)" ]] || \
-      [[ -n "$(kubectl get nodes --selector karpenter.sh/nodepool --output name)" ]]; do
+while [[ -n "$(application_nodeclaims)" ]] || \
+      [[ -n "$(application_nodes)" ]]; do
   if (( SECONDS >= deadline )); then
     echo "Scale-in timed out; forcing deletion of test NodeClaims." >&2
-    kubectl delete nodeclaim --all --wait=true --timeout="${WAIT_TIMEOUT}" || true
+    kubectl delete nodeclaim \
+      --selector "karpenter.sh/nodepool=${NODE_POOL_NAME}" \
+      --wait=true \
+      --timeout="${WAIT_TIMEOUT}" || true
     exit 1
   fi
-  kubectl get nodeclaims || true
+  kubectl get nodeclaims \
+    --selector "karpenter.sh/nodepool=${NODE_POOL_NAME}" || true
   sleep 15
 done
 

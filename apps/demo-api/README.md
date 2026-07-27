@@ -2,7 +2,10 @@
 
 `demo-api` is a minimal FastAPI workload for the `startup-devops-baseline` repository.
 
-It exists to validate the local DevOps and GitOps baseline. The application is intentionally small so the repository can focus on platform workflow, Kubernetes deployment, ingress, observability, validation, and rollback scenarios.
+It validates the local DevOps and GitOps baseline and, in the AWS environment,
+the application-to-PostgreSQL path and reconnection behavior during a
+CloudNativePG primary failover. The application remains intentionally small so
+the repository can focus on platform workflows.
 
 ## Endpoints
 
@@ -11,8 +14,12 @@ It exists to validate the local DevOps and GitOps baseline. The application is i
 | `/` | Basic service information |
 | `/health` | Liveness check |
 | `/ready` | Readiness check |
+| `/db/health` | Sanitized PostgreSQL dependency status |
 | `/version` | Version and environment information |
 | `/metrics` | Prometheus-style metrics |
+
+`/health` is process-only. `/ready` includes PostgreSQL when
+`DATABASE_ENABLED=true`. `/db/health` never returns a password, URI, or DSN.
 
 ## Local Development
 
@@ -63,7 +70,22 @@ curl http://localhost:8080/health
 | `APP_NAME` | `demo-api` | Service name |
 | `APP_VERSION` | `0.1.0` | Application version |
 | `APP_ENV` | `local` | Runtime environment |
+| `DATABASE_ENABLED` | `false` | Enable PostgreSQL readiness and health checks |
+| `DATABASE_URL` | none | PostgreSQL URI supplied from a Kubernetes Secret |
+| `DATABASE_CONNECT_TIMEOUT_SECONDS` | `3` | Timeout for one connection attempt |
+| `DATABASE_RETRY_ATTEMPTS` | `3` | Bounded retry count |
+| `DATABASE_RETRY_DELAY_SECONDS` | `1` | Delay between retries |
 
-## Next Step
+The local environment leaves database integration disabled. The AWS Helm values
+enable it and reference `startup-apps/demo-api-postgresql`.
 
-The next repository stage will add a Helm chart and Argo CD application definition so this service can be deployed through GitOps.
+## Internal Marker CLI
+
+The primary-failover test writes and reads validation markers through the same
+application database module without exposing a public write endpoint:
+
+```bash
+python -m src.database health
+python -m src.database write-marker --id example --value verified
+python -m src.database read-marker --id example
+```

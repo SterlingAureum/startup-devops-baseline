@@ -50,3 +50,7 @@ eks_node_max_size       = 3
 
 # Optional: use a persistent IAM role/user ARN, not an STS assumed-role session ARN.
 eks_cluster_admin_principal_arn = null
+
+# The aws-dev environment is disposable. Set false before using this pattern
+# for backups that must survive an infrastructure destroy.
+cnpg_backup_force_destroy = true

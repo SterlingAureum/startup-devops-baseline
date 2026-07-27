@@ -2,8 +2,10 @@ import os
 import time
 from typing import Dict, Any
 
-from fastapi import FastAPI, Response
+from fastapi import FastAPI, HTTPException, Response
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+
+from .database import database_enabled, database_health
 
 APP_NAME = os.getenv("APP_NAME", "demo-api")
 APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
@@ -64,12 +66,43 @@ def health() -> Dict[str, str]:
 
 
 @app.get("/ready")
-def ready() -> Dict[str, str]:
+def ready() -> Dict[str, Any]:
     path = "/ready"
     start = time.time()
     try:
         REQUEST_COUNT.labels(path=path).inc()
-        return {"status": "ready"}
+        if not database_enabled():
+            return {"status": "ready", "database": "disabled"}
+
+        try:
+            database = database_health()
+        except RuntimeError as error:
+            raise HTTPException(
+                status_code=503,
+                detail="PostgreSQL dependency is unavailable",
+            ) from error
+
+        return {"status": "ready", "database": database["status"]}
+    finally:
+        REQUEST_LATENCY.labels(path=path).observe(time.time() - start)
+
+
+@app.get("/db/health")
+def db_health() -> Dict[str, Any]:
+    path = "/db/health"
+    start = time.time()
+    try:
+        REQUEST_COUNT.labels(path=path).inc()
+        if not database_enabled():
+            return {"status": "disabled"}
+
+        try:
+            return database_health()
+        except RuntimeError as error:
+            raise HTTPException(
+                status_code=503,
+                detail="PostgreSQL dependency is unavailable",
+            ) from error
     finally:
         REQUEST_LATENCY.labels(path=path).observe(time.time() - start)
 

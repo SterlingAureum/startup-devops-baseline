@@ -2,6 +2,157 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.6.5
+
+### Added
+
+- PostgreSQL integration for demo-api through the CloudNativePG-generated
+  application identity and `postgresql-baseline-rw` Service.
+- Sanitized `/db/health` endpoint, database-aware readiness, bounded connection
+  retries, and an internal marker CLI without a public database write endpoint.
+- Minimum cross-namespace Secret synchronization that copies only `fqdn-uri`
+  into `startup-apps/demo-api-postgresql` without printing or committing the
+  credential.
+- Non-disruptive validation for the Secret contract, Deployment environment,
+  RW Service endpoint, current primary, and every demo-api replica.
+- Guarded primary-Pod failover drill covering replica promotion, RW Service
+  movement, application reconnection, committed-data preservation,
+  post-failover writes, and former-primary PVC/PV/EBS reuse.
+
+### Changed
+
+- Moved the aws-dev demo-api Argo CD Application after the PostgreSQL
+  Application with sync wave `30`.
+- Extended AWS deployment, validation, cleanup, architecture, environment, and
+  roadmap documentation for the application database lifecycle.
+- Corrected the backup preparation script's stray Markdown fences and removed
+  the duplicate deployment-document sentence.
+
+## v0.6.4
+
+### Added
+
+- Isolated `database-recovery-ondemand` NodePool with a one-node On-Demand
+  ceiling, database recovery taint, and empty-node consolidation.
+- Guarded latest-state restore and point-in-time recovery drill using the
+  Barman Cloud CNPG-I plugin and the existing S3 backup archive.
+- Deterministic marker workflow that proves the latest restore contains all
+  archived writes while PITR preserves pre-target data and excludes a
+  post-target transaction.
+- Recovery cleanup validation for temporary CloudNativePG Clusters, PVCs, EBS
+  volumes, NodeClaims, and EC2 nodes.
+- Non-disruptive readiness validator for the source cluster, completed
+  backups, shared IRSA ServiceAccount, recovery NodePool, and clean idle state.
+
+### Changed
+
+- Recovery clusters use CloudNativePG 1.30 shared `serviceAccountName` support
+  to reuse the existing narrowly scoped IRSA role without widening IAM trust.
+- Applied the validated v0.6.3 Barman sidecar memory, concurrency, plugin
+  enabled-state, Deployment-name, and image-version corrections to the
+  version baseline.
+- Extended unified validation, Karpenter NodePool checks, architecture,
+  deployment, cleanup, and roadmap documentation for the recovery lifecycle.
+
+## v0.6.3
+
+### Added
+
+- Terraform-managed, versioned, encrypted, public-access-blocked S3 bucket for
+  PostgreSQL physical backups and WAL archives.
+- Least-privilege IRSA role scoped to the CloudNativePG cluster
+  ServiceAccount and the database-specific S3 prefix.
+- GitOps-managed cert-manager `v1.21.0` and Barman Cloud CNPG-I plugin
+  `0.13.0` through official pinned Helm charts.
+- Barman `ObjectStore` with IRSA authentication, lz4 compression, bounded
+  parallelism, sidecar resources, and a seven-day recovery window.
+- Daily plugin-based `ScheduledBackup` and continuous WAL archiving from the
+  existing three-instance PostgreSQL cluster.
+- Runtime backup test and validation for IAM, S3 security, plugin health,
+  ObjectStore configuration, completed base backups, and S3 WAL objects.
+
+### Changed
+
+- `deploy-aws-dev-root-app.sh` now annotates the database ServiceAccount with
+  the Terraform role and renders the live S3 destination without committing
+  environment-specific values.
+- Added explicit backup deletion confirmation to the full AWS destroy path.
+- Updated architecture, deployment, outputs, cleanup, rollback, and roadmap
+  documentation for the v0.6.3 backup lifecycle.
+
+## v0.6.2
+
+### Added
+
+- Dedicated `database` EC2NodeClass with private networking, IMDSv2, encrypted
+  gp3 root storage, and the existing Karpenter node role.
+- Bounded `database-ondemand` NodePool with a database-only taint, three-node
+  ceiling, two-AZ constraints, and empty-node-only consolidation.
+- Three-instance CloudNativePG topology with one primary, two replicas,
+  required hostname anti-affinity, and balanced two-AZ spreading.
+- Quorum-style synchronous replication requiring one standby acknowledgement
+  for committed transactions.
+- Runtime validation for database NodeClaims, instance roles, node and AZ
+  placement, three PVC/PV/EBS chains, services, and live replication state.
+- Guarded replica-recreation test that proves the primary remains stable while
+  the replica reuses its PVC, PV, and EBS volume.
+
+### Changed
+
+- Scoped application scale tests and idle-capacity validation by NodePool so
+  persistent database NodeClaims are not mistaken for leaked test capacity.
+- Extended Karpenter validation to the database EC2NodeClass and NodePool.
+- Updated cleanup warnings, architecture, deployment, environment, destroy,
+  rollback, and roadmap documentation for the HA database topology.
+
+## v0.6.1
+
+### Added
+
+- GitOps-managed single-instance CloudNativePG `Cluster` pinned to PostgreSQL
+  `17.10` by immutable image digest.
+- Dedicated `data-platform` namespace and encrypted `gp3-cnpg` StorageClass
+  with a 20Gi EBS data volume, volume expansion, and delayed binding.
+- Explicit 500m CPU and 1Gi memory Guaranteed resource contract on stable
+  `workload=system` nodes.
+- Non-disruptive runtime validation for the Application, Cluster, generated
+  credential Secret, Pod placement, PVC, PV, EBS encryption, and database
+  connection.
+- Guarded Pod-recreation test that writes a marker and proves reuse of the same
+  PVC, PV, and EBS volume.
+
+### Changed
+
+- Extended unified validation to include the PostgreSQL persistence baseline
+  without restarting the database.
+- Disabled automated pruning for database-owned resources and added
+  dependency-aware PostgreSQL storage cleanup before EKS destruction.
+- Updated AWS architecture, deployment, environment, rollback, destroy, and
+  roadmap documentation for the first stateful workload.
+
+## v0.6.0
+
+### Added
+
+- Argo CD Application for the official CloudNativePG Helm chart, pinned to
+  chart `0.29.0` and CloudNativePG `1.30.0`.
+- Two operator replicas constrained to the stable `workload=system` Managed
+  Node Group and spread across different nodes.
+- Runtime validation for the Argo CD Application, core CRDs, admission
+  webhooks, operator rollout, replica count, node placement, and operator-only
+  release boundary.
+- CloudNativePG operator architecture, deployment, environment, and version
+  documentation.
+
+### Changed
+
+- Advanced active aws-dev Git revisions to
+  `feature/v0.6-cloudnativepg-data-platform`.
+- Marked the v0.5 roadmap complete after the validated AWS FIS interruption
+  drill.
+- Corrected stale local architecture and rollback descriptions.
+- Included the FIS smoke namespace in the standalone aws-dev cleanup workflow.
+
 ## v0.5.5
 
 ### Added

@@ -1,4 +1,4 @@
-# Architecture
+# Local Kubernetes Architecture
 
 This document describes the local GitOps architecture.
 
@@ -151,25 +151,12 @@ They provide:
 
 CI builds artifacts, while Git remains the source of truth for deployment state.
 
-## 8. Operational Boundaries
+## 8. Scope
 
-The current version intentionally remains local-first. It does not yet include AWS networking, EKS, cloud load balancing, workload IAM, autoscaling, managed data services, or production-grade security controls.
+This document covers only the local kind environment. The AWS networking, EKS,
+workload IAM, Karpenter, AWS FIS, and CloudNativePG operator architecture is
+documented in `docs/AWS_EKS_ARCHITECTURE.md`.
 
-Those capabilities begin in v0.4.
-
-## Next Architecture Stage
-
-The next stage extends the same GitOps model to AWS:
-
-```text
-Terraform / OpenTofu
-  -> AWS VPC
-  -> EKS control plane
-  -> managed node group
-  -> EKS add-ons and workload IAM
-  -> Argo CD bootstrap
-  -> aws-dev root Application
-  -> demo-api exposed through AWS-native ingress
-```
-
-The local environment remains useful as the fast validation path, while `aws-dev` becomes the cloud infrastructure and integration environment.
+The local environment remains the fast GitOps and progressive-delivery
+validation path. The `aws-dev` environment is the cloud infrastructure,
+capacity, application-delivery, and data-platform integration environment.

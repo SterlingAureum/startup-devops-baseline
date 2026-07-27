@@ -106,7 +106,15 @@ After GitHub Actions publishes an image, update Helm values with:
 IMAGE_TAG=sha-<short-commit> ./scripts/set-demo-api-image.sh
 ```
 
-This updates:
+For the aws-dev Deployment, target the environment values explicitly:
+
+```bash
+VALUES_FILE=apps/demo-api/helm/values-aws-dev.yaml \
+IMAGE_TAG=sha-<short-commit> \
+./scripts/set-demo-api-image.sh
+```
+
+The default command updates:
 
 ```text
 apps/demo-api/helm/values.yaml
@@ -133,6 +141,8 @@ git push
 ```
 
 Argo CD will sync the Helm values update and Argo Rollouts will perform the canary rollout.
+The aws-dev command updates the Deployment image; aws-dev does not enable Argo
+Rollouts.
 
 ## Local fallback
 

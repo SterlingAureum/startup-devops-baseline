@@ -2,8 +2,8 @@ replicaCount: 2
 
 image:
   repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
-  tag: "sha-e721d13"
-  digest: "sha256:c1e4e90c46401e3a328a919326d4b7388fa3d2b1af0cddebe6db89dc2bbf0d6d"
+  tag: "sha-983167a"
+  digest: "sha256:2de53fd2371377019cc608bb65a5187e327798b7e9fe36db1f8273f1fcb5bd54"
   pullPolicy: IfNotPresent
 
 rollout:
@@ -48,7 +48,7 @@ readinessProbe:
 
 env:
   APP_NAME: demo-api
-  APP_VERSION: "sha-e721d13"
+  APP_VERSION: "sha-983167a"
   APP_ENV: aws-dev
 
 database:
@@ -58,3 +58,8 @@ database:
   connectTimeoutSeconds: 2
   retryAttempts: 3
   retryDelaySeconds: 1
+
+delivery:
+  sourceRepository: "SterlingAureum/startup-devops-baseline"
+  sourceCommit: "983167adcae0d9b0397825027091b4a0a1c57532"
+  workflowRunId: "30356690212"

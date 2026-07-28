@@ -1,0 +1,20 @@
+name: reusable quality gates
+
+on:
+  workflow_call:
+
+jobs:
+  quality-gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Run CI quality gates
+        run: ./scripts/validate-ci-quality-gates.sh

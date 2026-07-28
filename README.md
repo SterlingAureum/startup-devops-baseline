@@ -8,29 +8,25 @@ The repository now contains the completed local progressive-delivery and AWS
 EKS baselines, isolated On-Demand and Spot application NodePools, a tag-scoped
 AWS FIS drill, and a GitOps-managed CloudNativePG PostgreSQL persistence,
 high-availability, S3 backup, point-in-time recovery, application integration,
-and primary-failover baseline. It remains intentionally smaller than a full
-production platform and will continue toward security controls, observability,
-AI infrastructure workloads, and AIOps workflows.
+and primary-failover baseline. A reusable CI quality gate now protects both
+pull-request validation and GHCR image publishing. The repository remains
+intentionally smaller than a full production platform and will continue toward
+GitOps promotion automation, security controls, observability, AI
+infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.6.5-postgresql-application-failover
+v0.7.0-ci-quality-gates
 ```
-CloudNativePG 1.30.0 now manages one PostgreSQL 17.10 primary and two
-synchronous-capable replicas on three dedicated Karpenter On-Demand nodes.
-Instances use Guaranteed resources, encrypted gp3 persistence, and a balanced
-`2+1` distribution across the two development Availability Zones. The Barman
-Cloud CNPG-I plugin continuously archives WAL files and writes physical base
-backups to a Terraform-managed, versioned, encrypted S3 bucket through IRSA.
-An isolated one-node On-Demand recovery tier validates both latest-state
-recovery and PITR into independent clusters, verifies marker-level data
-integrity, and removes all temporary Cluster, PVC, EBS, and EC2 resources.
-In the AWS environment, demo-api uses the CloudNativePG application identity
-through `postgresql-baseline-rw`. A guarded Pod-level primary-failover drill
-validates replica promotion, RW Service movement, application reconnection,
-committed-data preservation, post-failover writes, and former-primary volume
-reuse.
+Pull requests and GHCR image publishing now share the same reusable quality
+gate. The gate checks every repository shell script for Bash syntax, lints and
+renders both local and aws-dev Helm configurations, runs isolated demo-api unit
+tests in a Docker test stage, and builds the final runtime image. Image
+publishing is blocked until these checks succeed. This is the first increment
+of the v0.7 CI/CD and GitOps promotion baseline; immutable image digests,
+promotion pull requests, and runtime deployment traceability follow in later
+v0.7 increments.
 
 ## Platform Architecture
 
@@ -148,6 +144,7 @@ startup-devops-baseline/
 
 ### GitOps and Delivery
 
+- `docs/CI_IMAGE_WORKFLOW.md`
 - `docs/GITOPS_WORKFLOW.md`
 - `docs/GHCR_IMAGE_WORKFLOW.md`
 - `docs/ARGO_ROLLOUTS_ANALYSIS_FLOW.md`

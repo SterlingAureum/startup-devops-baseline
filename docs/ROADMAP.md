@@ -115,25 +115,49 @@ Incremental scope:
   primary-Pod failover, application reconnection, and version finalization -
   delivered
 
-## v0.7 - Production Security Baseline
+## v0.7 - CI/CD and GitOps Promotion Baseline
+
+Status: In Progress
+
+Goal:
+
+Close the delivery loop from validated source changes to immutable images,
+reviewable GitOps promotion, Argo CD reconciliation, and runtime identity
+verification.
+
+Incremental scope:
+
+- v0.7.0 - reusable CI quality gates, isolated demo-api unit tests, Helm
+  rendering, shell syntax validation, and publish-job dependency - delivered
+- v0.7.1 - immutable image digest, build provenance, and artifact identity -
+  planned
+- v0.7.2 - automated, reviewable aws-dev GitOps promotion pull request -
+  planned
+- v0.7.3 - desired-state, Argo CD revision, Pod image ID, and application
+  version traceability - planned
+- v0.7.4 - Git-based image rollback and end-to-end delivery validation -
+  planned
+
+## v0.8 - Production Security Baseline
 
 Status: Planned
 
 Goal:
 
-Add production-oriented security controls.
+Add production-oriented secret, network, workload, and admission controls.
 
 Planned scope:
 
 - external secret management
 - AWS Secrets Manager integration
+- application credential rotation
 - TLS and DNS workflow
 - NetworkPolicy
 - Pod Security controls
 - ResourceQuota and LimitRange
 - admission policy validation
 
-## v0.8 - Observability Platform
+## v0.9 - Observability and SRE Baseline
 
 Status: Planned
 
@@ -150,7 +174,24 @@ Planned scope:
 - application SLI/SLO metrics
 - platform health monitoring
 
-## v0.9 - AI Infrastructure Extension
+## v1.0 - Production Readiness Baseline
+
+Status: Planned
+
+Goal:
+
+Finalize the reusable DevOps and platform-engineering baseline.
+
+Planned scope:
+
+- production-like environment and promotion model
+- remote Terraform state bootstrap and locking
+- platform upgrade and dependency lifecycle
+- clean-room infrastructure and GitOps rebuild
+- recovery objectives and operational readiness review
+- end-to-end security, observability, delivery, and cost validation
+
+## v1.1 - AI Infrastructure Extension
 
 Status: Planned
 
@@ -168,7 +209,7 @@ Planned scope:
 - OpenAI-compatible API serving
 - model storage workflow
 
-## v1.0 - AIOps Operations Platform
+## v1.2 - AIOps Operations Extension
 
 Status: Planned
 

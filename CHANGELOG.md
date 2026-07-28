@@ -2,6 +2,30 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.7.0
+
+### Added
+
+- Reusable GitHub Actions quality-gate workflow shared by pull-request
+  validation and demo-api image publishing.
+- Containerized demo-api unit-test stage covering process health, service
+  identity, database-aware readiness, sanitized dependency failures, metrics,
+  environment parsing, and bounded retry behavior.
+- Local `validate-ci-quality-gates.sh` entry point for shell syntax, local and
+  aws-dev Helm rendering, unit tests, and final image build validation.
+- Per-workflow concurrency, least-privilege read permissions, and bounded job
+  timeouts for the CI validation path.
+
+### Changed
+
+- Made GHCR image publishing depend explicitly on the reusable quality gates.
+- Converted the demo-api Dockerfile to test and runtime stages while preserving
+  the same final runtime command and image behavior.
+- Removed the completed `feature/v0.4-aws-eks-baseline` branch from Terraform
+  workflow triggers.
+- Reordered the roadmap so GitOps promotion follows quality gates before the
+  production security, observability, AI infrastructure, and AIOps stages.
+
 ## v0.6.5
 
 ### Added

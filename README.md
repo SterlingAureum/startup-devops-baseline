@@ -8,29 +8,30 @@ The repository now contains the completed local progressive-delivery and AWS
 EKS baselines, isolated On-Demand and Spot application NodePools, a tag-scoped
 AWS FIS drill, and a GitOps-managed CloudNativePG PostgreSQL persistence,
 high-availability, S3 backup, point-in-time recovery, application integration,
-and primary-failover baseline. It remains intentionally smaller than a full
-production platform and will continue toward security controls, observability,
-AI infrastructure workloads, and AIOps workflows.
+and primary-failover baseline. Reusable CI quality gates protect both
+pull-request validation and GHCR image publishing. Published application
+images now carry a SHA tag, immutable OCI digest, structured source identity,
+and GitHub build-provenance attestation. Successful main-branch builds now
+turn that identity into a reviewable aws-dev GitOps promotion pull request.
+Promoted values and live workloads now retain enough delivery metadata to
+correlate source, build, Git promotion, Argo CD reconciliation, Pod image ID,
+and the application-reported version. A manual rollback workflow can now
+restore a previously reviewed, metadata-aware desired state through another
+values-only pull request. The repository remains intentionally smaller than a
+full production platform and will continue toward security controls,
+observability, AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.6.5-postgresql-application-failover
+v0.7.4-cicd-gitops-promotion
 ```
-CloudNativePG 1.30.0 now manages one PostgreSQL 17.10 primary and two
-synchronous-capable replicas on three dedicated Karpenter On-Demand nodes.
-Instances use Guaranteed resources, encrypted gp3 persistence, and a balanced
-`2+1` distribution across the two development Availability Zones. The Barman
-Cloud CNPG-I plugin continuously archives WAL files and writes physical base
-backups to a Terraform-managed, versioned, encrypted S3 bucket through IRSA.
-An isolated one-node On-Demand recovery tier validates both latest-state
-recovery and PITR into independent clusters, verifies marker-level data
-integrity, and removes all temporary Cluster, PVC, EBS, and EC2 resources.
-In the AWS environment, demo-api uses the CloudNativePG application identity
-through `postgresql-baseline-rw`. A guarded Pod-level primary-failover drill
-validates replica promotion, RW Service movement, application reconnection,
-committed-data preservation, post-failover writes, and former-primary volume
-reuse.
+The delivery loop now supports both forward promotion and history-based
+rollback. GitHub Actions validates a historical values-only release and opens
+a rollback pull request that restores only `values-aws-dev.yaml`; it does not
+merge, contact EKS, or invoke Argo CD. After human approval and Argo CD
+reconciliation, the same trace validator proves the restored source, digest,
+desired-state commit, live Pod image ID, and `/version` identity.
 
 ## Platform Architecture
 
@@ -148,7 +149,11 @@ startup-devops-baseline/
 
 ### GitOps and Delivery
 
+- `docs/CI_IMAGE_WORKFLOW.md`
+- `docs/DELIVERY_TRACEABILITY.md`
+- `docs/GITOPS_ROLLBACK.md`
 - `docs/GITOPS_WORKFLOW.md`
+- `docs/V0.7_FINAL_VALIDATION.md`
 - `docs/GHCR_IMAGE_WORKFLOW.md`
 - `docs/ARGO_ROLLOUTS_ANALYSIS_FLOW.md`
 

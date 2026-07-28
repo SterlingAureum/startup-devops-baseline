@@ -25,7 +25,7 @@ annotation, backup IAM role, or archived recovery window while a restore is
 running. Treat the guarded recovery script as a disaster-recovery test, not as
 a substitute for reverting an application manifest.
 
-To roll back demo-api, restore the previous immutable image tag and Helm values
+To roll back demo-api, restore the previous image tag, digest, and Helm values
 through Git. Do not roll back by deleting the PostgreSQL Cluster, generated
 application Secret, or PVCs. `startup-apps/demo-api-postgresql` is runtime state
 outside Git; when database integration remains enabled, refresh it with

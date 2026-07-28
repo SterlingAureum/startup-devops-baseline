@@ -68,7 +68,7 @@ This checks whether Prometheus can scrape the canary service.
 The current intended flow is:
 
 ```text
-1. new image tag is committed to values.yaml
+1. new image tag and immutable digest are committed to values.yaml
 2. Argo CD syncs the demo-api Application
 3. Argo Rollouts creates a new ReplicaSet
 4. 20% canary traffic is routed to the new ReplicaSet

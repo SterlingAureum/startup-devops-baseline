@@ -42,6 +42,12 @@ curl http://localhost:8080/version
 curl http://localhost:8080/metrics
 ```
 
+Run the unit tests with the same isolated Docker stage used by CI:
+
+```bash
+docker build --target test -t demo-api-ci-test:unit .
+```
+
 ## Docker Build
 
 Build the image:

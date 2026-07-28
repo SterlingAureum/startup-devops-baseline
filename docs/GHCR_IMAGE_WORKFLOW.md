@@ -1,174 +1,175 @@
 # GHCR Image Workflow
 
-v0.3.2 introduces a registry-based image workflow for `demo-api` using GitHub Container Registry (GHCR).
+The repository publishes demo-api images to GitHub Container Registry through
+`.github/workflows/demo-api-image-publish.yaml`.
 
-## Why this exists
+## Delivery Identity
 
-Earlier local versions used this flow:
-
-```text
-docker build locally
-  -> kind load docker-image
-  -> imagePullPolicy: Never
-  -> Argo CD sync
-  -> Argo Rollouts canary
-```
-
-That is useful for local kind testing, but it is not close enough to a production release workflow.
-
-v0.3.2 adds this flow:
-
-```text
-git push
-  -> GitHub Actions
-  -> docker build
-  -> push image to GHCR
-  -> manually update Helm image tag
-  -> Argo CD sync
-  -> Argo Rollouts canary
-```
-
-This version intentionally does not auto-commit image tags back to Git. Image promotion remains manual and auditable.
-
-## Image repository
-
-Default GHCR repository:
-
-```text
-ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
-```
-
-GitHub Actions derives the image name from the repository:
-
-```text
-ghcr.io/${{ github.repository }}/demo-api
-```
-
-For `SterlingAureum/startup-devops-baseline`, that becomes:
-
-```text
-ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
-```
-
-## Tags
-
-The image publishing workflow creates tags such as:
+Each successful build has two complementary identifiers:
 
 ```text
 sha-<short-commit>
-latest
-v0.3.2
+sha256:<64-character-digest>
 ```
 
-The preferred deployment tag is the immutable SHA tag:
+The SHA tag is readable and maps the artifact to its source commit. The digest
+is the immutable OCI content identity used by Kubernetes.
 
-```text
-sha-82aa684
-```
-
-Avoid deploying `latest` through GitOps because it is mutable and makes rollback harder to reason about.
-
-## Publishing image
-
-The workflow runs on:
-
-- pushes to `main` that change `apps/demo-api/**`
-- version tags matching `v*`
-- manual `workflow_dispatch`
-
-Workflow file:
-
-```text
-.github/workflows/demo-api-image-publish.yaml
-```
-
-It requires:
-
-```yaml
-permissions:
-  contents: read
-  packages: write
-```
-
-No custom token is required for publishing to GHCR from the same repository; it uses `GITHUB_TOKEN`.
-
-## GHCR visibility
-
-For a local kind cluster to pull from GHCR without an image pull secret, the package must be public.
-
-If the GHCR package is private, create an image pull secret and configure `imagePullSecrets` in Helm values.
-
-## Switching demo-api to a GHCR image
-
-After GitHub Actions publishes an image, update Helm values with:
-
-```bash
-IMAGE_TAG=sha-<short-commit> ./scripts/set-demo-api-image.sh
-```
-
-For the aws-dev Deployment, target the environment values explicitly:
-
-```bash
-VALUES_FILE=apps/demo-api/helm/values-aws-dev.yaml \
-IMAGE_TAG=sha-<short-commit> \
-./scripts/set-demo-api-image.sh
-```
-
-The default command updates:
-
-```text
-apps/demo-api/helm/values.yaml
-```
-
-Fields changed:
+GitOps values retain both:
 
 ```yaml
 image:
   repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
   tag: "sha-<short-commit>"
+  digest: "sha256:<64-character-digest>"
   pullPolicy: IfNotPresent
-
-env:
-  APP_VERSION: "sha-<short-commit>"
 ```
 
-Then commit and push:
+The Helm chart renders:
+
+```text
+ghcr.io/sterlingaureum/startup-devops-baseline/demo-api@sha256:<digest>
+```
+
+`env.APP_VERSION` continues to use the SHA tag so `/version` remains easy to
+read.
+
+## Publishing
+
+The workflow runs for:
+
+- pushes to `main` that change demo-api source, tests, image-build inputs, or
+  the image workflow;
+- version tags matching `v*`;
+- manual `workflow_dispatch`.
+
+Helm values-only changes do not publish an image. This prevents a merged
+promotion PR from recursively creating another image and promotion PR.
+
+The publish job starts only after the reusable v0.7.0 quality gates pass. It
+then:
+
+1. builds and pushes the image;
+2. captures the digest returned by `docker/build-push-action`;
+3. writes `demo-api-image-metadata.json`;
+4. uploads that metadata as a 30-day workflow artifact;
+5. creates GitHub build-provenance attestation for the GHCR digest;
+6. prints the tag, digest, and source commit in the workflow summary.
+
+The build job requires:
+
+```yaml
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+```
+
+No custom registry token is stored. GHCR publishing and attestation use the
+workflow's short-lived `GITHUB_TOKEN` and OIDC identity.
+
+The promotion job separately requests:
+
+```yaml
+permissions:
+  actions: read
+  contents: write
+  pull-requests: write
+```
+
+Those permissions can create the release branch and PR but do not approve or
+merge it.
+
+## Image Metadata
+
+The uploaded JSON artifact records:
+
+```text
+schema version
+image repository
+SHA tag
+OCI digest
+digest-pinned image reference
+source repository
+full source commit
+workflow run ID
+```
+
+This artifact is intentionally machine-readable. The v0.7.2 promotion job
+consumes the exact build output without scraping console logs.
+
+## Verify a Published Image
+
+Copy the SHA tag and digest from the successful workflow summary, then run:
 
 ```bash
-git add apps/demo-api/helm/values.yaml
-git commit -m "release: update demo-api image to sha-<short-commit>"
-git push
+IMAGE_TAG="sha-<short-commit>" \
+IMAGE_DIGEST="sha256:<64-character-digest>" \
+./scripts/check-ghcr-demo-api-image.sh
 ```
 
-Argo CD will sync the Helm values update and Argo Rollouts will perform the canary rollout.
-The aws-dev command updates the Deployment image; aws-dev does not enable Argo
-Rollouts.
+The script verifies that the tag resolves to the expected digest and that the
+digest-pinned manifest exists.
 
-## Local fallback
+For a public repository, GitHub CLI can also verify build provenance:
 
-To switch back to the local kind image mode:
+```bash
+gh attestation verify \
+  "oci://ghcr.io/sterlingaureum/startup-devops-baseline/demo-api@sha256:<digest>" \
+  --repo SterlingAureum/startup-devops-baseline
+```
+
+GitHub artifact attestations are available for public repositories on current
+plans. Private and internal repositories require an eligible GitHub Enterprise
+Cloud plan.
+
+## GitOps Promotion Pull Request
+
+For a successful `main` push, the workflow:
+
+1. downloads the metadata from the completed build job;
+2. verifies the metadata repository and source commit against the workflow;
+3. updates `values-aws-dev.yaml` by tag and digest and records the full source
+   commit and workflow run ID;
+4. validates the promoted Helm rendering;
+5. creates or reuses `release/demo-api-sha-<short-commit>`;
+6. creates or reuses a pull request into `main`.
+
+The workflow never merges the pull request. Review and merge are the explicit
+aws-dev promotion decision, after which Argo CD reconciles the approved Git
+state.
+
+To validate the PR flow before merging a feature branch, manually dispatch
+the workflow from that feature branch with:
+
+```text
+create_promotion_pr = true
+promotion_base_branch = feature/v0.7-cicd-gitops-promotion
+```
+
+The published commit must be contained in the selected base branch.
+
+## Local Image Fallback
+
+To return to a tag-only image loaded directly into kind:
 
 ```bash
 IMAGE_TAG=0.1.1 ./scripts/set-demo-api-local-image.sh
 ```
 
-This restores:
+This clears `image.digest`, restores `imagePullPolicy: Never`, and renders the
+local `repository:tag` reference.
 
-```yaml
-image:
-  repository: startup-devops-baseline/demo-api
-  pullPolicy: Never
-```
+## Promotion and Rollback Boundary
 
-Use local mode when testing without a registry.
+The image workflow creates the forward Promotion PR. The separate v0.7.4
+rollback workflow restores an earlier metadata-aware values file through
+another PR; it does not rebuild, retag, or mutate the historical GHCR image.
 
-## Current boundary
-
-v0.3.2 does not include:
-
-- automatic GitOps tag updates
-- Argo CD Image Updater
-- ECR integration
-- EKS image pull secret / IAM integration
-
-Those are future production-hardening topics.
+Neither workflow approves or merges its PR, connects GitHub Actions directly
+to EKS, or replaces Argo CD as the deployment controller. The retained
+metadata enables the same read-only delivery trace for forward and rollback
+states. See `docs/GITOPS_ROLLBACK.md` and
+`docs/DELIVERY_TRACEABILITY.md`.

@@ -1,0 +1,341 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+WORK_DIR="$(mktemp -d)"
+
+cleanup() {
+  rm -rf -- "${WORK_DIR}"
+}
+trap cleanup EXIT
+
+for command in bash cmp docker git helm jq python3; do
+  command -v "${command}" >/dev/null 2>&1 || {
+    echo "Required command not found: ${command}" >&2
+    exit 1
+  }
+done
+
+echo "==> Checking shell script syntax"
+while IFS= read -r script; do
+  bash -n "${script}"
+done < <(find "${ROOT_DIR}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
+
+echo "==> Validating GitHub Actions runtime and delivery trigger contracts"
+PUBLISH_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-image-publish.yaml"
+ROLLBACK_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-rollback.yaml"
+for action in \
+  "actions/checkout@v7" \
+  "actions/upload-artifact@v6" \
+  "actions/download-artifact@v7" \
+  "azure/setup-helm@v5" \
+  "docker/setup-buildx-action@v4" \
+  "docker/login-action@v4" \
+  "docker/metadata-action@v6" \
+  "docker/build-push-action@v7"; do
+  grep -F "uses: ${action}" "${PUBLISH_WORKFLOW}" >/dev/null || {
+    echo "Expected Node.js 24 Action is missing: ${action}" >&2
+    exit 1
+  }
+done
+
+for action in \
+  "actions/checkout@v7" \
+  "azure/setup-helm@v5"; do
+  grep -F "uses: ${action}" "${ROLLBACK_WORKFLOW}" >/dev/null || {
+    echo "Expected Node.js 24 rollback Action is missing: ${action}" >&2
+    exit 1
+  }
+done
+
+if grep -RE \
+  'uses: (actions/checkout@v4|azure/setup-helm@v4|actions/upload-artifact@v4|docker/build-push-action@v6|docker/login-action@v3|docker/metadata-action@v5|docker/setup-buildx-action@v3)' \
+  "${ROOT_DIR}/.github/workflows" >/dev/null; then
+  echo "A reported Node.js 20 Action version is still active." >&2
+  exit 1
+fi
+
+python3 - "${PUBLISH_WORKFLOW}" <<'PY'
+from pathlib import Path
+import sys
+
+lines = Path(sys.argv[1]).read_text().splitlines()
+paths_start = lines.index("    paths:")
+trigger_paths = []
+for line in lines[paths_start + 1:]:
+    if line.startswith("      - "):
+        trigger_paths.append(line.strip().removeprefix("- ").strip("'\""))
+        continue
+    if line and not line.startswith("      "):
+        break
+
+if "apps/demo-api/helm/values-aws-dev.yaml" in trigger_paths:
+    raise SystemExit(
+        "aws-dev promotion values must not trigger another image publish"
+    )
+if "apps/demo-api/src/**" not in trigger_paths:
+    raise SystemExit("demo-api source changes must trigger image publishing")
+if "scripts/set-demo-api-delivery-metadata.sh" not in trigger_paths:
+    raise SystemExit("delivery metadata promotion changes must trigger publishing")
+PY
+
+python3 - "${ROLLBACK_WORKFLOW}" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+workflow = Path(sys.argv[1]).read_text()
+if "\n  workflow_dispatch:\n" not in workflow:
+    raise SystemExit("rollback workflow must support manual dispatch")
+if re.search(r"(?m)^  (push|pull_request|schedule):", workflow):
+    raise SystemExit("rollback workflow must be manual-only")
+if re.search(
+    r"(?im)\b(kubectl|aws\s+eks|update-kubeconfig|configure-aws-credentials)\b",
+    workflow,
+):
+    raise SystemExit("rollback workflow must not access Kubernetes or EKS")
+if "apps/demo-api/helm/values-aws-dev.yaml" not in workflow:
+    raise SystemExit("rollback workflow must target the aws-dev values file")
+if "pull-requests: write" not in workflow:
+    raise SystemExit("rollback workflow must prepare a reviewable pull request")
+PY
+
+echo "==> Linting and rendering the local Helm release"
+helm lint "${ROOT_DIR}/apps/demo-api/helm"
+helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
+  >"${WORK_DIR}/demo-api-local.yaml"
+
+echo "==> Linting and rendering the aws-dev Helm release"
+helm lint "${ROOT_DIR}/apps/demo-api/helm" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml"
+helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml" \
+  >"${WORK_DIR}/demo-api-aws-dev.yaml"
+
+TEST_IMAGE_DIGEST="sha256:$(printf 'a%.0s' {1..64})"
+TEST_IMAGE_REFERENCE="ghcr.io/sterlingaureum/startup-devops-baseline/demo-api@${TEST_IMAGE_DIGEST}"
+
+echo "==> Validating digest-pinned Helm rendering"
+helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
+  --set "image.digest=${TEST_IMAGE_DIGEST}" \
+  >"${WORK_DIR}/demo-api-local-digest.yaml"
+helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml" \
+  --set "image.digest=${TEST_IMAGE_DIGEST}" \
+  >"${WORK_DIR}/demo-api-aws-dev-digest.yaml"
+
+for manifest in \
+  "${WORK_DIR}/demo-api-local-digest.yaml" \
+  "${WORK_DIR}/demo-api-aws-dev-digest.yaml"; do
+  grep -F "image: \"${TEST_IMAGE_REFERENCE}\"" "${manifest}" >/dev/null || {
+    echo "Digest-pinned image reference is missing from ${manifest}." >&2
+    exit 1
+  }
+done
+
+if helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
+  --set "image.digest=sha256:invalid" \
+  >"${WORK_DIR}/demo-api-invalid-digest.yaml" 2>/dev/null; then
+  echo "Helm accepted an invalid image digest." >&2
+  exit 1
+fi
+
+echo "==> Validating image identity metadata"
+IMAGE_REPOSITORY="ghcr.io/sterlingaureum/startup-devops-baseline/demo-api" \
+IMAGE_TAG="sha-0123456" \
+IMAGE_DIGEST="${TEST_IMAGE_DIGEST}" \
+SOURCE_REPOSITORY="SterlingAureum/startup-devops-baseline" \
+SOURCE_COMMIT="0123456789abcdef0123456789abcdef01234567" \
+WORKFLOW_RUN_ID="local-validation" \
+OUTPUT_FILE="${WORK_DIR}/demo-api-image-metadata.json" \
+  "${ROOT_DIR}/scripts/write-demo-api-image-metadata.sh"
+
+jq --exit-status \
+  --arg digest "${TEST_IMAGE_DIGEST}" \
+  --arg reference "${TEST_IMAGE_REFERENCE}" \
+  '
+    .schemaVersion == "v0.7.1" and
+    .image.digest == $digest and
+    .image.reference == $reference and
+    .source.commit == "0123456789abcdef0123456789abcdef01234567"
+  ' "${WORK_DIR}/demo-api-image-metadata.json" >/dev/null
+
+echo "==> Validating metadata-driven aws-dev promotion"
+cp \
+  "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml" \
+  "${WORK_DIR}/values-aws-dev.yaml"
+EXPECTED_IMAGE_REPOSITORY="ghcr.io/sterlingaureum/startup-devops-baseline/demo-api" \
+EXPECTED_SOURCE_REPOSITORY="SterlingAureum/startup-devops-baseline" \
+EXPECTED_SOURCE_COMMIT="0123456789abcdef0123456789abcdef01234567" \
+METADATA_FILE="${WORK_DIR}/demo-api-image-metadata.json" \
+VALUES_FILE="${WORK_DIR}/values-aws-dev.yaml" \
+  "${ROOT_DIR}/scripts/promote-demo-api-image.sh" >/dev/null
+
+grep -F 'tag: "sha-0123456"' "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+grep -F "digest: \"${TEST_IMAGE_DIGEST}\"" \
+  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+grep -F 'APP_VERSION: "sha-0123456"' \
+  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+grep -F 'sourceRepository: "SterlingAureum/startup-devops-baseline"' \
+  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+grep -F 'sourceCommit: "0123456789abcdef0123456789abcdef01234567"' \
+  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+grep -F 'workflowRunId: "local-validation"' \
+  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+
+VALUES_FILE="${WORK_DIR}/values-aws-dev.yaml" \
+SOURCE_REPOSITORY="SterlingAureum/startup-devops-baseline" \
+SOURCE_COMMIT="0123456789abcdef0123456789abcdef01234567" \
+WORKFLOW_RUN_ID="local-validation" \
+  "${ROOT_DIR}/scripts/set-demo-api-delivery-metadata.sh" >/dev/null
+if [[ "$(grep -c '^delivery:$' "${WORK_DIR}/values-aws-dev.yaml")" != "1" ]]; then
+  echo "Delivery metadata update is not idempotent." >&2
+  exit 1
+fi
+
+helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
+  --values "${WORK_DIR}/values-aws-dev.yaml" \
+  >"${WORK_DIR}/demo-api-promoted-aws-dev.yaml"
+grep -F "image: \"${TEST_IMAGE_REFERENCE}\"" \
+  "${WORK_DIR}/demo-api-promoted-aws-dev.yaml" >/dev/null
+
+for annotation in \
+  'platform.startup.dev/image-tag: "sha-0123456"' \
+  "platform.startup.dev/image-digest: \"${TEST_IMAGE_DIGEST}\"" \
+  'platform.startup.dev/application-version: "sha-0123456"' \
+  'platform.startup.dev/source-repository: "SterlingAureum/startup-devops-baseline"' \
+  'platform.startup.dev/source-commit: "0123456789abcdef0123456789abcdef01234567"' \
+  'platform.startup.dev/workflow-run-id: "local-validation"'; do
+  annotation_count="$(
+    grep -Fc "${annotation}" \
+      "${WORK_DIR}/demo-api-promoted-aws-dev.yaml" || true
+  )"
+  if (( annotation_count < 2 )); then
+    echo "Delivery annotation is missing from the workload or Pod template: ${annotation}" >&2
+    exit 1
+  fi
+done
+
+grep -F 'app.kubernetes.io/version: "sha-0123456"' \
+  "${WORK_DIR}/demo-api-promoted-aws-dev.yaml" >/dev/null
+
+if EXPECTED_SOURCE_COMMIT="ffffffffffffffffffffffffffffffffffffffff" \
+  METADATA_FILE="${WORK_DIR}/demo-api-image-metadata.json" \
+  VALUES_FILE="${WORK_DIR}/values-aws-dev.yaml" \
+    "${ROOT_DIR}/scripts/promote-demo-api-image.sh" >/dev/null 2>&1; then
+  echo "Promotion accepted metadata for an unexpected source commit." >&2
+  exit 1
+fi
+
+if EXPECTED_IMAGE_REPOSITORY="ghcr.io/example/other/demo-api" \
+  METADATA_FILE="${WORK_DIR}/demo-api-image-metadata.json" \
+  VALUES_FILE="${WORK_DIR}/values-aws-dev.yaml" \
+    "${ROOT_DIR}/scripts/promote-demo-api-image.sh" >/dev/null 2>&1; then
+  echo "Promotion accepted metadata for an unexpected image repository." >&2
+  exit 1
+fi
+
+echo "==> Validating history-based GitOps rollback"
+ROLLBACK_REPOSITORY="${WORK_DIR}/rollback-repository"
+ROLLBACK_VALUES_PATH="apps/demo-api/helm/values-aws-dev.yaml"
+ROLLBACK_VALUES_FILE="${ROLLBACK_REPOSITORY}/${ROLLBACK_VALUES_PATH}"
+mkdir -p "$(dirname "${ROLLBACK_VALUES_FILE}")"
+cp \
+  "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml" \
+  "${ROLLBACK_VALUES_FILE}"
+
+git -C "${ROLLBACK_REPOSITORY}" init --quiet --initial-branch=main
+git -C "${ROLLBACK_REPOSITORY}" config user.name "quality-gates"
+git -C "${ROLLBACK_REPOSITORY}" config user.email "quality-gates@example.invalid"
+git -C "${ROLLBACK_REPOSITORY}" add "${ROLLBACK_VALUES_PATH}"
+git -C "${ROLLBACK_REPOSITORY}" commit --quiet -m "test: baseline values"
+SOURCE_COMMIT_A="$(git -C "${ROLLBACK_REPOSITORY}" rev-parse HEAD)"
+DIGEST_A="sha256:$(printf '1%.0s' {1..64})"
+
+VALUES_FILE="${ROLLBACK_VALUES_FILE}" \
+IMAGE_REPOSITORY="ghcr.io/sterlingaureum/startup-devops-baseline/demo-api" \
+IMAGE_TAG="sha-${SOURCE_COMMIT_A:0:7}" \
+IMAGE_DIGEST="${DIGEST_A}" \
+APP_VERSION="sha-${SOURCE_COMMIT_A:0:7}" \
+  "${ROOT_DIR}/scripts/set-demo-api-image.sh" >/dev/null
+VALUES_FILE="${ROLLBACK_VALUES_FILE}" \
+SOURCE_REPOSITORY="SterlingAureum/startup-devops-baseline" \
+SOURCE_COMMIT="${SOURCE_COMMIT_A}" \
+WORKFLOW_RUN_ID="rollback-fixture-a" \
+  "${ROOT_DIR}/scripts/set-demo-api-delivery-metadata.sh" >/dev/null
+git -C "${ROLLBACK_REPOSITORY}" add "${ROLLBACK_VALUES_PATH}"
+git -C "${ROLLBACK_REPOSITORY}" commit --quiet -m "release: fixture A"
+ROLLBACK_TARGET="$(git -C "${ROLLBACK_REPOSITORY}" rev-parse HEAD)"
+
+SOURCE_COMMIT_B="${ROLLBACK_TARGET}"
+DIGEST_B="sha256:$(printf '2%.0s' {1..64})"
+VALUES_FILE="${ROLLBACK_VALUES_FILE}" \
+IMAGE_REPOSITORY="ghcr.io/sterlingaureum/startup-devops-baseline/demo-api" \
+IMAGE_TAG="sha-${SOURCE_COMMIT_B:0:7}" \
+IMAGE_DIGEST="${DIGEST_B}" \
+APP_VERSION="sha-${SOURCE_COMMIT_B:0:7}" \
+  "${ROOT_DIR}/scripts/set-demo-api-image.sh" >/dev/null
+VALUES_FILE="${ROLLBACK_VALUES_FILE}" \
+SOURCE_REPOSITORY="SterlingAureum/startup-devops-baseline" \
+SOURCE_COMMIT="${SOURCE_COMMIT_B}" \
+WORKFLOW_RUN_ID="rollback-fixture-b" \
+  "${ROOT_DIR}/scripts/set-demo-api-delivery-metadata.sh" >/dev/null
+git -C "${ROLLBACK_REPOSITORY}" add "${ROLLBACK_VALUES_PATH}"
+git -C "${ROLLBACK_REPOSITORY}" commit --quiet -m "release: fixture B"
+
+REPOSITORY_DIR="${ROLLBACK_REPOSITORY}" \
+ROLLBACK_TO_REVISION="${ROLLBACK_TARGET}" \
+VALUES_PATH="${ROLLBACK_VALUES_PATH}" \
+  "${ROOT_DIR}/scripts/prepare-demo-api-rollback.sh" >/dev/null
+
+git -C "${ROLLBACK_REPOSITORY}" show \
+  "${ROLLBACK_TARGET}:${ROLLBACK_VALUES_PATH}" |
+  cmp --silent - "${ROLLBACK_VALUES_FILE}" || {
+  echo "Rollback did not restore the exact historical values file." >&2
+  exit 1
+}
+
+mapfile -t ROLLBACK_FILES < <(
+  git -C "${ROLLBACK_REPOSITORY}" diff --name-only
+)
+if (( ${#ROLLBACK_FILES[@]} != 1 )) || \
+   [[ "${ROLLBACK_FILES[0]}" != "${ROLLBACK_VALUES_PATH}" ]]; then
+  echo "Rollback changed files outside ${ROLLBACK_VALUES_PATH}." >&2
+  printf 'Rollback file: %s\n' "${ROLLBACK_FILES[@]}" >&2
+  exit 1
+fi
+
+ROLLBACK_DIFF="$(
+  git -C "${ROLLBACK_REPOSITORY}" diff -- "${ROLLBACK_VALUES_PATH}"
+)"
+REPOSITORY_DIR="${ROLLBACK_REPOSITORY}" \
+ROLLBACK_TO_REVISION="${ROLLBACK_TARGET}" \
+VALUES_PATH="${ROLLBACK_VALUES_PATH}" \
+  "${ROOT_DIR}/scripts/prepare-demo-api-rollback.sh" >/dev/null
+if [[ "$(
+  git -C "${ROLLBACK_REPOSITORY}" diff -- "${ROLLBACK_VALUES_PATH}"
+)" != "${ROLLBACK_DIFF}" ]]; then
+  echo "Rollback preparation is not idempotent." >&2
+  exit 1
+fi
+
+if REPOSITORY_DIR="${ROLLBACK_REPOSITORY}" \
+  ROLLBACK_TO_REVISION="${SOURCE_COMMIT_A}" \
+  VALUES_PATH="${ROLLBACK_VALUES_PATH}" \
+    "${ROOT_DIR}/scripts/prepare-demo-api-rollback.sh" >/dev/null 2>&1; then
+  echo "Rollback accepted a commit that is not a values-only release." >&2
+  exit 1
+fi
+
+echo "==> Running demo-api unit tests in the test image stage"
+docker build \
+  --target test \
+  --tag demo-api-ci-test:unit \
+  "${ROOT_DIR}/apps/demo-api"
+
+echo "==> Building the final demo-api runtime image"
+docker build \
+  --tag demo-api-ci-test:runtime \
+  "${ROOT_DIR}/apps/demo-api"
+
+echo "CI quality gates passed."

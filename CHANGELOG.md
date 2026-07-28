@@ -2,6 +2,123 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.7.4
+
+### Added
+
+- Manual demo-api GitOps rollback workflow that restores a selected historical
+  aws-dev release through a reviewable values-only pull request.
+- Historical desired-state validator requiring an ancestor commit, a
+  values-only release diff, immutable image digest, matching SHA tag and
+  application version, full source commit, and build workflow identity.
+- CI rollback fixtures covering exact historical restoration, idempotency,
+  change isolation, invalid-target rejection, manual-only workflow triggering,
+  and the no-EKS-access boundary.
+- Final promotion and rollback exercise that verifies Git, Argo CD, Deployment,
+  Pod image ID, and `/version` all converge on the selected release.
+
+### Changed
+
+- Generalized the live trace input from `PROMOTION_REVISION` to
+  `DESIRED_REVISION` so the same read-only validator covers promotion and
+  rollback commits. The former variable remains a compatibility alias.
+- Finalized the v0.7 CI/CD and GitOps promotion baseline while retaining human
+  approval and Argo CD as the environment-change boundaries.
+
+## v0.7.3
+
+### Added
+
+- Delivery metadata values for the source repository, full source commit, and
+  image-build workflow run ID.
+- Workload and Pod annotations that expose the readable image tag, immutable
+  digest, application version, source identity, and build run without exposing
+  credentials.
+- Read-only delivery trace validator covering source commit, image tag and
+  digest, values-only promotion commit, Argo CD sync revision, Deployment
+  identity, every Pod image ID, and every `/version` response.
+- CI checks for delivery-metadata insertion, idempotent updates, and rendered
+  Deployment/Pod trace annotations.
+
+### Changed
+
+- Extended metadata-driven Promotion PRs to retain build origin in the same
+  `values-aws-dev.yaml` change.
+- Made `app.kubernetes.io/version` reflect `env.APP_VERSION` instead of the
+  static chart application version.
+
+## v0.7.2
+
+### Added
+
+- Metadata-driven aws-dev promotion that validates the source repository,
+  source commit, readable SHA tag, immutable OCI digest, and reference before
+  changing Git desired state.
+- Automatic `release/demo-api-sha-*` branch and pull-request creation after a
+  successful main-branch image publish, with idempotent reuse on workflow
+  reruns.
+- Manual feature-branch validation inputs for explicitly requesting a
+  promotion PR against the selected feature branch.
+- CI checks for metadata-to-values promotion, digest-pinned Helm rendering,
+  and rejection of metadata from an unexpected source commit.
+
+### Changed
+
+- Upgraded checkout, Helm setup, artifact transfer, and Docker Actions to
+  Node.js 24 runtime major versions.
+- Restricted image-publish path filters to source and build inputs so merging
+  a values-only promotion cannot create a recursive publish/promotion loop.
+- Scoped build and promotion `GITHUB_TOKEN` permissions per job; promotion can
+  write a release branch and pull request but cannot merge or access EKS.
+
+## v0.7.1
+
+### Added
+
+- Helm image-reference helper that renders a registry image by immutable OCI
+  digest and rejects malformed digest values.
+- Structured demo-api image identity artifact containing the repository, SHA
+  tag, digest, source repository, full source commit, and workflow run ID.
+- GitHub build-provenance attestation for each published demo-api image,
+  attached to the GHCR digest through short-lived OIDC identity.
+- CI contract checks for digest-pinned local Rollout and aws-dev Deployment
+  rendering and deterministic image identity metadata.
+
+### Changed
+
+- Extended all active demo-api Helm values with an explicit `image.digest`
+  field while preserving tag-only local-image fallback.
+- Made registry-image promotion require both the human-readable SHA tag and
+  immutable digest.
+- Extended GHCR image verification to prove that the supplied tag resolves to
+  the expected digest.
+- Recorded the published image identity as a retained GitHub Actions artifact
+  and workflow summary for the future promotion workflow.
+
+## v0.7.0
+
+### Added
+
+- Reusable GitHub Actions quality-gate workflow shared by pull-request
+  validation and demo-api image publishing.
+- Containerized demo-api unit-test stage covering process health, service
+  identity, database-aware readiness, sanitized dependency failures, metrics,
+  environment parsing, and bounded retry behavior.
+- Local `validate-ci-quality-gates.sh` entry point for shell syntax, local and
+  aws-dev Helm rendering, unit tests, and final image build validation.
+- Per-workflow concurrency, least-privilege read permissions, and bounded job
+  timeouts for the CI validation path.
+
+### Changed
+
+- Made GHCR image publishing depend explicitly on the reusable quality gates.
+- Converted the demo-api Dockerfile to test and runtime stages while preserving
+  the same final runtime command and image behavior.
+- Removed the completed `feature/v0.4-aws-eks-baseline` branch from Terraform
+  workflow triggers.
+- Reordered the roadmap so GitOps promotion follows quality gates before the
+  production security, observability, AI infrastructure, and AIOps stages.
+
 ## v0.6.5
 
 ### Added

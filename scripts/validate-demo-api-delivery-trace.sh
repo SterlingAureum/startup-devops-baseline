@@ -10,7 +10,7 @@ ARGO_APPLICATION="${ARGO_APPLICATION:-demo-api-aws-dev}"
 DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
 DEMO_DEPLOYMENT="${DEMO_DEPLOYMENT:-demo-api}"
 VALUES_PATH="${VALUES_PATH:-apps/demo-api/helm/values-aws-dev.yaml}"
-PROMOTION_REVISION="${PROMOTION_REVISION:-HEAD}"
+DESIRED_REVISION="${DESIRED_REVISION:-${PROMOTION_REVISION:-HEAD}}"
 EXPECTED_SOURCE_REPOSITORY="${EXPECTED_SOURCE_REPOSITORY:-SterlingAureum/startup-devops-baseline}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-10m}"
 
@@ -33,46 +33,46 @@ if [[ "${CONFIGURE_KUBECONFIG}" == "true" ]]; then
     --name "${EKS_CLUSTER_NAME}" >/dev/null
 fi
 
-PROMOTION_REVISION="$(
-  git -C "${ROOT_DIR}" rev-parse "${PROMOTION_REVISION}^{commit}"
+DESIRED_REVISION="$(
+  git -C "${ROOT_DIR}" rev-parse "${DESIRED_REVISION}^{commit}"
 )" || {
-  echo "Could not resolve the promotion Git revision." >&2
+  echo "Could not resolve the desired-state Git revision." >&2
   exit 1
 }
 
-if [[ ! "${PROMOTION_REVISION}" =~ ^[0-9a-f]{40}$ ]]; then
-  echo "Promotion revision must resolve to a full Git commit SHA." >&2
+if [[ ! "${DESIRED_REVISION}" =~ ^[0-9a-f]{40}$ ]]; then
+  echo "Desired-state revision must resolve to a full Git commit SHA." >&2
   exit 1
 fi
 
 git -C "${ROOT_DIR}" cat-file -e \
-  "${PROMOTION_REVISION}:${VALUES_PATH}" 2>/dev/null || {
-  echo "${VALUES_PATH} is missing from promotion revision ${PROMOTION_REVISION}." >&2
+  "${DESIRED_REVISION}:${VALUES_PATH}" 2>/dev/null || {
+  echo "${VALUES_PATH} is missing from desired-state revision ${DESIRED_REVISION}." >&2
   exit 1
 }
 
-PROMOTION_PARENT="$(
-  git -C "${ROOT_DIR}" rev-parse "${PROMOTION_REVISION}^1"
+DESIRED_PARENT="$(
+  git -C "${ROOT_DIR}" rev-parse "${DESIRED_REVISION}^1"
 )" || {
-  echo "Promotion revision does not have a parent commit." >&2
+  echo "Desired-state revision does not have a parent commit." >&2
   exit 1
 }
 
-mapfile -t PROMOTION_FILES < <(
+mapfile -t DESIRED_FILES < <(
   git -C "${ROOT_DIR}" diff \
     --name-only \
-    "${PROMOTION_PARENT}" \
-    "${PROMOTION_REVISION}"
+    "${DESIRED_PARENT}" \
+    "${DESIRED_REVISION}"
 )
-if (( ${#PROMOTION_FILES[@]} != 1 )) || \
-   [[ "${PROMOTION_FILES[0]}" != "${VALUES_PATH}" ]]; then
-  echo "Promotion revision must change only ${VALUES_PATH}." >&2
-  printf 'Promotion file: %s\n' "${PROMOTION_FILES[@]}" >&2
+if (( ${#DESIRED_FILES[@]} != 1 )) || \
+   [[ "${DESIRED_FILES[0]}" != "${VALUES_PATH}" ]]; then
+  echo "Desired-state revision must change only ${VALUES_PATH}." >&2
+  printf 'Desired-state file: %s\n' "${DESIRED_FILES[@]}" >&2
   exit 1
 fi
 
 mapfile -t TRACE_VALUES < <(
-  git -C "${ROOT_DIR}" show "${PROMOTION_REVISION}:${VALUES_PATH}" |
+  git -C "${ROOT_DIR}" show "${DESIRED_REVISION}:${VALUES_PATH}" |
     python3 -c '
 import json
 import sys
@@ -161,8 +161,8 @@ ARGO_JSON="$(
 )"
 ARGO_REVISION="$(jq -r '.status.sync.revision // empty' <<< "${ARGO_JSON}")"
 
-if [[ "${ARGO_REVISION}" != "${PROMOTION_REVISION}" ]]; then
-  echo "Argo CD is not synced to promotion revision ${PROMOTION_REVISION}." >&2
+if [[ "${ARGO_REVISION}" != "${DESIRED_REVISION}" ]]; then
+  echo "Argo CD is not synced to desired-state revision ${DESIRED_REVISION}." >&2
   echo "Current Argo CD revision: ${ARGO_REVISION:-<empty>}" >&2
   exit 1
 fi
@@ -307,7 +307,7 @@ echo "  source_commit=${SOURCE_COMMIT}"
 echo "  image_tag=${IMAGE_TAG}"
 echo "  image_digest=${IMAGE_DIGEST}"
 echo "  workflow_run_id=${WORKFLOW_RUN_ID}"
-echo "  promotion_commit=${PROMOTION_REVISION}"
+echo "  desired_state_commit=${DESIRED_REVISION}"
 echo "  argocd_revision=${ARGO_REVISION}"
 echo "  pod_image=${IMAGE_REFERENCE}"
 echo "  application_version=${APP_VERSION}"

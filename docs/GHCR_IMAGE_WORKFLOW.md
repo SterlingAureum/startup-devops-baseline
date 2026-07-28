@@ -162,9 +162,14 @@ IMAGE_TAG=0.1.1 ./scripts/set-demo-api-local-image.sh
 This clears `image.digest`, restores `imagePullPolicy: Never`, and renders the
 local `repository:tag` reference.
 
-## Current Boundary
+## Promotion and Rollback Boundary
 
-v0.7.3 creates the promotion branch and PR but does not approve or merge it,
-connect GitHub Actions directly to EKS, or replace Argo CD as the deployment
-controller. The retained metadata enables the read-only delivery trace
-validation in `docs/DELIVERY_TRACEABILITY.md`.
+The image workflow creates the forward Promotion PR. The separate v0.7.4
+rollback workflow restores an earlier metadata-aware values file through
+another PR; it does not rebuild, retag, or mutate the historical GHCR image.
+
+Neither workflow approves or merges its PR, connects GitHub Actions directly
+to EKS, or replaces Argo CD as the deployment controller. The retained
+metadata enables the same read-only delivery trace for forward and rollback
+states. See `docs/GITOPS_ROLLBACK.md` and
+`docs/DELIVERY_TRACEABILITY.md`.

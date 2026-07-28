@@ -5,6 +5,7 @@ and demo-api image publishing. v0.7.1 extended that contract to immutable image
 identity. v0.7.2 consumes the verified identity as the only input to a
 reviewable aws-dev promotion pull request. v0.7.3 retains the build origin in
 Git and projects it into the live workload for end-to-end identity checks.
+v0.7.4 reuses that reviewed identity to prepare history-based rollback PRs.
 
 ## Quality Gate
 
@@ -24,6 +25,8 @@ It performs:
 6. Metadata-driven aws-dev values promotion and source-mismatch rejection.
 7. Demo-api unit tests in the Dockerfile `test` stage.
 8. A final build of the production runtime image.
+9. Historical rollback restoration, idempotency, diff isolation, and invalid
+   target rejection.
 
 The unit tests do not require AWS, Kubernetes, or a live PostgreSQL cluster.
 Database success and failure behavior is isolated with mocks, and tests never
@@ -99,6 +102,24 @@ v0.7.2 automates preparation, not approval:
 Promotion commits are excluded from image-publish path filters. Merging a
 values-only promotion therefore cannot start another image build and cannot
 form a publish/promotion loop.
+
+## Rollback Boundary
+
+`.github/workflows/demo-api-rollback.yaml` is manual-only. It accepts a full
+historical desired-state commit, verifies that it is an eligible values-only
+release contained in the selected base branch, restores the historical
+`values-aws-dev.yaml`, and opens a pull request.
+
+The rollback job has only:
+
+```text
+contents: write
+pull-requests: write
+```
+
+It has no AWS, package-registry, Kubernetes, or Argo CD permission. It cannot
+merge the PR. The selected historical state is still subject to normal review,
+and Argo CD acts only after the PR reaches the tracked branch.
 
 The repository must allow GitHub Actions to create pull requests under
 **Settings → Actions → General → Workflow permissions**. A manual feature

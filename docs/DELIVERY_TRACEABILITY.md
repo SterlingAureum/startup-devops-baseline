@@ -9,7 +9,7 @@ reviewed in Git and the same image running in aws-dev.
 source commit
   -> SHA image tag and OCI digest
   -> image-build workflow run
-  -> values-only promotion commit
+  -> values-only desired-state commit
   -> Argo CD synced revision
   -> Deployment and Pod annotations
   -> Pod imageID
@@ -59,8 +59,8 @@ tag is retained for operators and `/version`.
 
 ## Validation
 
-Run from a repository checkout containing the promotion commit that Argo CD is
-expected to have synced:
+Run from a repository checkout containing the promotion or rollback commit
+that Argo CD is expected to have synced:
 
 ```bash
 git switch main
@@ -82,22 +82,23 @@ python3
 Useful overrides:
 
 ```bash
-PROMOTION_REVISION=<full-promotion-commit> \
+DESIRED_REVISION=<full-promotion-or-rollback-commit> \
 CONFIGURE_KUBECONFIG=false \
 ./scripts/validate-demo-api-delivery-trace.sh
 ```
 
-`PROMOTION_REVISION` defaults to `HEAD`. The resolved commit must change only
-`apps/demo-api/helm/values-aws-dev.yaml`, and Argo CD must report that exact
-full commit as its synced revision.
+`DESIRED_REVISION` defaults to `HEAD`. `PROMOTION_REVISION` remains accepted as
+a compatibility alias. The resolved commit must change only
+`apps/demo-api/helm/values-aws-dev.yaml` relative to its first parent, and Argo
+CD must report that exact full commit as its synced revision.
 
 The check then verifies:
 
 1. the SHA tag matches the first seven characters of the full source commit;
 2. the digest is a valid immutable `sha256` identity;
 3. `APP_VERSION` matches the readable image tag;
-4. the promotion commit changes only the aws-dev values file;
-5. Argo CD is `Synced` and `Healthy` at the promotion commit;
+4. the desired-state commit changes only the aws-dev values file;
+5. Argo CD is `Synced` and `Healthy` at the desired-state commit;
 6. Deployment and Pod annotations match Git;
 7. the Deployment and every Pod use the digest-pinned image;
 8. every container runtime `imageID` ends with the expected digest;
@@ -112,5 +113,6 @@ rendering. Do not expect the live trace script to pass until the metadata-aware
 promotion commit is on the branch tracked by the aws-dev Argo CD Application,
 which is currently `main`.
 
-The final v0.7 end-to-end validation uses this script after the main-branch
-promotion and Argo CD reconciliation.
+The final v0.7 exercise uses this script twice on `main`: once after a forward
+Promotion PR and once after a history-based Rollback PR. See
+`docs/V0.7_FINAL_VALIDATION.md`.

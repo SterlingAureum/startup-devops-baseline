@@ -2,6 +2,29 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.7.4
+
+### Added
+
+- Manual demo-api GitOps rollback workflow that restores a selected historical
+  aws-dev release through a reviewable values-only pull request.
+- Historical desired-state validator requiring an ancestor commit, a
+  values-only release diff, immutable image digest, matching SHA tag and
+  application version, full source commit, and build workflow identity.
+- CI rollback fixtures covering exact historical restoration, idempotency,
+  change isolation, invalid-target rejection, manual-only workflow triggering,
+  and the no-EKS-access boundary.
+- Final promotion and rollback exercise that verifies Git, Argo CD, Deployment,
+  Pod image ID, and `/version` all converge on the selected release.
+
+### Changed
+
+- Generalized the live trace input from `PROMOTION_REVISION` to
+  `DESIRED_REVISION` so the same read-only validator covers promotion and
+  rollback commits. The former variable remains a compatibility alias.
+- Finalized the v0.7 CI/CD and GitOps promotion baseline while retaining human
+  approval and Argo CD as the environment-change boundaries.
+
 ## v0.7.3
 
 ### Added

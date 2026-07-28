@@ -117,7 +117,7 @@ Incremental scope:
 
 ## v0.7 - CI/CD and GitOps Promotion Baseline
 
-Status: In Progress
+Status: Completed
 
 Goal:
 
@@ -136,7 +136,7 @@ Incremental scope:
 - v0.7.3 - desired-state, Argo CD revision, Pod image ID, and application
   version traceability - delivered
 - v0.7.4 - Git-based image rollback and end-to-end delivery validation -
-  planned
+  delivered
 
 ## v0.8 - Production Security Baseline
 

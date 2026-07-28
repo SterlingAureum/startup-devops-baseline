@@ -9,7 +9,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for command in bash docker helm jq python3; do
+for command in bash cmp docker git helm jq python3; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -21,8 +21,9 @@ while IFS= read -r script; do
   bash -n "${script}"
 done < <(find "${ROOT_DIR}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
 
-echo "==> Validating GitHub Actions runtime and promotion trigger contracts"
+echo "==> Validating GitHub Actions runtime and delivery trigger contracts"
 PUBLISH_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-image-publish.yaml"
+ROLLBACK_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-rollback.yaml"
 for action in \
   "actions/checkout@v7" \
   "actions/upload-artifact@v6" \
@@ -34,6 +35,15 @@ for action in \
   "docker/build-push-action@v7"; do
   grep -F "uses: ${action}" "${PUBLISH_WORKFLOW}" >/dev/null || {
     echo "Expected Node.js 24 Action is missing: ${action}" >&2
+    exit 1
+  }
+done
+
+for action in \
+  "actions/checkout@v7" \
+  "azure/setup-helm@v5"; do
+  grep -F "uses: ${action}" "${ROLLBACK_WORKFLOW}" >/dev/null || {
+    echo "Expected Node.js 24 rollback Action is missing: ${action}" >&2
     exit 1
   }
 done
@@ -67,6 +77,27 @@ if "apps/demo-api/src/**" not in trigger_paths:
     raise SystemExit("demo-api source changes must trigger image publishing")
 if "scripts/set-demo-api-delivery-metadata.sh" not in trigger_paths:
     raise SystemExit("delivery metadata promotion changes must trigger publishing")
+PY
+
+python3 - "${ROLLBACK_WORKFLOW}" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+workflow = Path(sys.argv[1]).read_text()
+if "\n  workflow_dispatch:\n" not in workflow:
+    raise SystemExit("rollback workflow must support manual dispatch")
+if re.search(r"(?m)^  (push|pull_request|schedule):", workflow):
+    raise SystemExit("rollback workflow must be manual-only")
+if re.search(
+    r"(?im)\b(kubectl|aws\s+eks|update-kubeconfig|configure-aws-credentials)\b",
+    workflow,
+):
+    raise SystemExit("rollback workflow must not access Kubernetes or EKS")
+if "apps/demo-api/helm/values-aws-dev.yaml" not in workflow:
+    raise SystemExit("rollback workflow must target the aws-dev values file")
+if "pull-requests: write" not in workflow:
+    raise SystemExit("rollback workflow must prepare a reviewable pull request")
 PY
 
 echo "==> Linting and rendering the local Helm release"
@@ -201,6 +232,98 @@ if EXPECTED_IMAGE_REPOSITORY="ghcr.io/example/other/demo-api" \
   VALUES_FILE="${WORK_DIR}/values-aws-dev.yaml" \
     "${ROOT_DIR}/scripts/promote-demo-api-image.sh" >/dev/null 2>&1; then
   echo "Promotion accepted metadata for an unexpected image repository." >&2
+  exit 1
+fi
+
+echo "==> Validating history-based GitOps rollback"
+ROLLBACK_REPOSITORY="${WORK_DIR}/rollback-repository"
+ROLLBACK_VALUES_PATH="apps/demo-api/helm/values-aws-dev.yaml"
+ROLLBACK_VALUES_FILE="${ROLLBACK_REPOSITORY}/${ROLLBACK_VALUES_PATH}"
+mkdir -p "$(dirname "${ROLLBACK_VALUES_FILE}")"
+cp \
+  "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml" \
+  "${ROLLBACK_VALUES_FILE}"
+
+git -C "${ROLLBACK_REPOSITORY}" init --quiet --initial-branch=main
+git -C "${ROLLBACK_REPOSITORY}" config user.name "quality-gates"
+git -C "${ROLLBACK_REPOSITORY}" config user.email "quality-gates@example.invalid"
+git -C "${ROLLBACK_REPOSITORY}" add "${ROLLBACK_VALUES_PATH}"
+git -C "${ROLLBACK_REPOSITORY}" commit --quiet -m "test: baseline values"
+SOURCE_COMMIT_A="$(git -C "${ROLLBACK_REPOSITORY}" rev-parse HEAD)"
+DIGEST_A="sha256:$(printf '1%.0s' {1..64})"
+
+VALUES_FILE="${ROLLBACK_VALUES_FILE}" \
+IMAGE_REPOSITORY="ghcr.io/sterlingaureum/startup-devops-baseline/demo-api" \
+IMAGE_TAG="sha-${SOURCE_COMMIT_A:0:7}" \
+IMAGE_DIGEST="${DIGEST_A}" \
+APP_VERSION="sha-${SOURCE_COMMIT_A:0:7}" \
+  "${ROOT_DIR}/scripts/set-demo-api-image.sh" >/dev/null
+VALUES_FILE="${ROLLBACK_VALUES_FILE}" \
+SOURCE_REPOSITORY="SterlingAureum/startup-devops-baseline" \
+SOURCE_COMMIT="${SOURCE_COMMIT_A}" \
+WORKFLOW_RUN_ID="rollback-fixture-a" \
+  "${ROOT_DIR}/scripts/set-demo-api-delivery-metadata.sh" >/dev/null
+git -C "${ROLLBACK_REPOSITORY}" add "${ROLLBACK_VALUES_PATH}"
+git -C "${ROLLBACK_REPOSITORY}" commit --quiet -m "release: fixture A"
+ROLLBACK_TARGET="$(git -C "${ROLLBACK_REPOSITORY}" rev-parse HEAD)"
+
+SOURCE_COMMIT_B="${ROLLBACK_TARGET}"
+DIGEST_B="sha256:$(printf '2%.0s' {1..64})"
+VALUES_FILE="${ROLLBACK_VALUES_FILE}" \
+IMAGE_REPOSITORY="ghcr.io/sterlingaureum/startup-devops-baseline/demo-api" \
+IMAGE_TAG="sha-${SOURCE_COMMIT_B:0:7}" \
+IMAGE_DIGEST="${DIGEST_B}" \
+APP_VERSION="sha-${SOURCE_COMMIT_B:0:7}" \
+  "${ROOT_DIR}/scripts/set-demo-api-image.sh" >/dev/null
+VALUES_FILE="${ROLLBACK_VALUES_FILE}" \
+SOURCE_REPOSITORY="SterlingAureum/startup-devops-baseline" \
+SOURCE_COMMIT="${SOURCE_COMMIT_B}" \
+WORKFLOW_RUN_ID="rollback-fixture-b" \
+  "${ROOT_DIR}/scripts/set-demo-api-delivery-metadata.sh" >/dev/null
+git -C "${ROLLBACK_REPOSITORY}" add "${ROLLBACK_VALUES_PATH}"
+git -C "${ROLLBACK_REPOSITORY}" commit --quiet -m "release: fixture B"
+
+REPOSITORY_DIR="${ROLLBACK_REPOSITORY}" \
+ROLLBACK_TO_REVISION="${ROLLBACK_TARGET}" \
+VALUES_PATH="${ROLLBACK_VALUES_PATH}" \
+  "${ROOT_DIR}/scripts/prepare-demo-api-rollback.sh" >/dev/null
+
+git -C "${ROLLBACK_REPOSITORY}" show \
+  "${ROLLBACK_TARGET}:${ROLLBACK_VALUES_PATH}" |
+  cmp --silent - "${ROLLBACK_VALUES_FILE}" || {
+  echo "Rollback did not restore the exact historical values file." >&2
+  exit 1
+}
+
+mapfile -t ROLLBACK_FILES < <(
+  git -C "${ROLLBACK_REPOSITORY}" diff --name-only
+)
+if (( ${#ROLLBACK_FILES[@]} != 1 )) || \
+   [[ "${ROLLBACK_FILES[0]}" != "${ROLLBACK_VALUES_PATH}" ]]; then
+  echo "Rollback changed files outside ${ROLLBACK_VALUES_PATH}." >&2
+  printf 'Rollback file: %s\n' "${ROLLBACK_FILES[@]}" >&2
+  exit 1
+fi
+
+ROLLBACK_DIFF="$(
+  git -C "${ROLLBACK_REPOSITORY}" diff -- "${ROLLBACK_VALUES_PATH}"
+)"
+REPOSITORY_DIR="${ROLLBACK_REPOSITORY}" \
+ROLLBACK_TO_REVISION="${ROLLBACK_TARGET}" \
+VALUES_PATH="${ROLLBACK_VALUES_PATH}" \
+  "${ROOT_DIR}/scripts/prepare-demo-api-rollback.sh" >/dev/null
+if [[ "$(
+  git -C "${ROLLBACK_REPOSITORY}" diff -- "${ROLLBACK_VALUES_PATH}"
+)" != "${ROLLBACK_DIFF}" ]]; then
+  echo "Rollback preparation is not idempotent." >&2
+  exit 1
+fi
+
+if REPOSITORY_DIR="${ROLLBACK_REPOSITORY}" \
+  ROLLBACK_TO_REVISION="${SOURCE_COMMIT_A}" \
+  VALUES_PATH="${ROLLBACK_VALUES_PATH}" \
+    "${ROOT_DIR}/scripts/prepare-demo-api-rollback.sh" >/dev/null 2>&1; then
+  echo "Rollback accepted a commit that is not a values-only release." >&2
   exit 1
 fi
 

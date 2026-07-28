@@ -15,22 +15,23 @@ and GitHub build-provenance attestation. Successful main-branch builds now
 turn that identity into a reviewable aws-dev GitOps promotion pull request.
 Promoted values and live workloads now retain enough delivery metadata to
 correlate source, build, Git promotion, Argo CD reconciliation, Pod image ID,
-and the application-reported version. The repository remains intentionally
-smaller than a full production platform and will continue toward Git rollback,
-security controls, observability, AI infrastructure workloads, and AIOps
-workflows.
+and the application-reported version. A manual rollback workflow can now
+restore a previously reviewed, metadata-aware desired state through another
+values-only pull request. The repository remains intentionally smaller than a
+full production platform and will continue toward security controls,
+observability, AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.7.3-delivery-traceability
+v0.7.4-cicd-gitops-promotion
 ```
-The Promotion PR now stores the full source commit and workflow run ID beside
-the image tag and digest. Helm projects that identity into Deployment and Pod
-annotations, while `validate-demo-api-delivery-trace.sh` proves that the
-promotion commit, Argo CD revision, live Pod image ID, and `/version` response
-all identify the same release. Human review and Argo CD remain the environment
-promotion and deployment boundaries.
+The delivery loop now supports both forward promotion and history-based
+rollback. GitHub Actions validates a historical values-only release and opens
+a rollback pull request that restores only `values-aws-dev.yaml`; it does not
+merge, contact EKS, or invoke Argo CD. After human approval and Argo CD
+reconciliation, the same trace validator proves the restored source, digest,
+desired-state commit, live Pod image ID, and `/version` identity.
 
 ## Platform Architecture
 
@@ -150,7 +151,9 @@ startup-devops-baseline/
 
 - `docs/CI_IMAGE_WORKFLOW.md`
 - `docs/DELIVERY_TRACEABILITY.md`
+- `docs/GITOPS_ROLLBACK.md`
 - `docs/GITOPS_WORKFLOW.md`
+- `docs/V0.7_FINAL_VALIDATION.md`
 - `docs/GHCR_IMAGE_WORKFLOW.md`
 - `docs/ARGO_ROLLOUTS_ANALYSIS_FLOW.md`
 

@@ -26,6 +26,20 @@ commit B:
 
 This is expected.
 
+A rollback creates a third desired-state commit:
+
+```text
+commit C:
+  is prepared from a selected historical values-only release
+  restores its complete image and delivery identity
+  changes only apps/demo-api/helm/values-aws-dev.yaml
+  is reviewed and merged through a pull request
+  is reconciled by Argo CD after approval
+```
+
+Commit C references the existing immutable digest. It does not rebuild or
+retag the old artifact.
+
 `commit B` is a release promotion commit. It promotes an already-published
 image into aws-dev after human review.
 
@@ -104,9 +118,10 @@ Argo CD syncs the new desired state
 
 This is more automated but adds another component.
 
-## Current recommendation
+## Implemented rollback model
 
 Keep promotion review-gated. Do not add Argo CD Image Updater in v0.7 and do
-not grant the image workflow direct EKS access. The next increment should
-correlate the approved Git revision, Argo CD revision, Pod image ID, and
-application version.
+not grant the image or rollback workflow direct EKS access. v0.7.4 completes
+the model by creating a values-only Rollback PR from a validated historical
+desired state, then applying the same Argo CD and runtime trace contract after
+human approval.

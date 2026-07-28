@@ -70,24 +70,29 @@ git rev-parse <candidate-commit>
 
 ## Create the Rollback PR
 
+### Default-Branch Prerequisite
+
+GitHub accepts `workflow_dispatch` only when the workflow file exists on the
+repository's default branch. While
+`.github/workflows/demo-api-rollback.yaml` exists only on
+`feature/v0.7-cicd-gitops-promotion`, it will not appear in the Actions
+workflow list and cannot be dispatched from that branch. See
+[Manually running a workflow](https://docs.github.com/actions/managing-workflow-runs/manually-running-a-workflow).
+
+Validate the feature implementation through `quality-gates`, then merge the
+feature pull request into `main` with **Create a merge commit**. Do not squash
+the v0.7 feature history: eligible historical desired-state commits must remain
+ancestors of `main` for rollback selection.
+
 In GitHub:
 
 1. Open **Actions**.
 2. Select **demo-api GitOps rollback**.
 3. Choose **Run workflow**.
-4. Select the branch containing the v0.7.4 workflow.
+4. Select `main` under **Use workflow from**.
 5. Enter the full SHA in `rollback_to_revision`.
-6. Set `rollback_base_branch` to the branch that should receive the PR.
+6. Set `rollback_base_branch` to `main`.
 7. Run the workflow.
-
-For feature-branch validation, both the workflow branch and
-`rollback_base_branch` should be:
-
-```text
-feature/v0.7-cicd-gitops-promotion
-```
-
-For the final live exercise, both should be `main`.
 
 The generated branch is deterministic for the selected target and base head.
 Rerunning the same request reuses the branch and open PR. If the selected

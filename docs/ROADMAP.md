@@ -132,7 +132,7 @@ Incremental scope:
 - v0.7.1 - immutable image digest, build provenance, and artifact identity -
   delivered
 - v0.7.2 - automated, reviewable aws-dev GitOps promotion pull request -
-  planned
+  delivered
 - v0.7.3 - desired-state, Argo CD revision, Pod image ID, and application
   version traceability - planned
 - v0.7.4 - Git-based image rollback and end-to-end delivery validation -

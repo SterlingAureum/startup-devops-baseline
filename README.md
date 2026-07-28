@@ -11,24 +11,24 @@ high-availability, S3 backup, point-in-time recovery, application integration,
 and primary-failover baseline. Reusable CI quality gates protect both
 pull-request validation and GHCR image publishing. Published application
 images now carry a SHA tag, immutable OCI digest, structured source identity,
-and GitHub build-provenance attestation. The repository remains intentionally
-smaller than a full production platform and will continue toward GitOps
-promotion automation, security controls, observability, AI infrastructure
-workloads, and AIOps workflows.
+and GitHub build-provenance attestation. Successful main-branch builds now
+turn that identity into a reviewable aws-dev GitOps promotion pull request.
+The repository remains intentionally smaller than a full production platform
+and will continue toward delivery traceability, security controls,
+observability, AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.7.1-immutable-image-identity
+v0.7.2-gitops-promotion-pr
 ```
-The demo-api Helm chart now deploys registry images by immutable
-`repository@sha256:digest` identity while retaining the SHA tag as a readable
-application version. The publish workflow records the tag, digest, full source
-commit, and workflow run in a structured artifact and creates signed build
-provenance for the GHCR image. The reusable quality gate validates both local
-Rollout and aws-dev Deployment digest rendering. Image promotion remains a
-manual Git commit in this increment; automatic promotion pull requests follow
-in v0.7.2.
+After a validated demo-api image is published, the workflow downloads its
+structured identity artifact, verifies the repository, source commit, SHA tag,
+and OCI digest, updates only `values-aws-dev.yaml`, and creates or reuses a
+`release/demo-api-sha-*` pull request. Human review remains the promotion gate;
+GitHub Actions does not merge the PR or access EKS. All JavaScript-based
+Actions that emitted the Node.js 20 deprecation warning now run on Node.js 24
+compatible major versions.
 
 ## Platform Architecture
 

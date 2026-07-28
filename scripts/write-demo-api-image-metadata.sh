@@ -8,6 +8,7 @@ SOURCE_REPOSITORY="${SOURCE_REPOSITORY:-${GITHUB_REPOSITORY:-}}"
 SOURCE_COMMIT="${SOURCE_COMMIT:-${GITHUB_SHA:-}}"
 WORKFLOW_RUN_ID="${WORKFLOW_RUN_ID:-${GITHUB_RUN_ID:-}}"
 OUTPUT_FILE="${OUTPUT_FILE:-demo-api-image-metadata.json}"
+ARTIFACT_NAME="${ARTIFACT_NAME:-demo-api-image-metadata-${SOURCE_COMMIT}}"
 
 command -v jq >/dev/null 2>&1 || {
   echo "Required command not found: jq" >&2
@@ -62,3 +63,13 @@ echo "Image identity metadata written:"
 echo "  file=${OUTPUT_FILE}"
 echo "  tag=${IMAGE_TAG}"
 echo "  digest=${IMAGE_DIGEST}"
+
+if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
+  {
+    echo "image-repository=${IMAGE_REPOSITORY}"
+    echo "image-tag=${IMAGE_TAG}"
+    echo "image-digest=${IMAGE_DIGEST}"
+    echo "metadata-file=${OUTPUT_FILE}"
+    echo "artifact-name=${ARTIFACT_NAME}"
+  } >> "${GITHUB_OUTPUT}"
+fi

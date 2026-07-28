@@ -38,9 +38,13 @@ read.
 
 The workflow runs for:
 
-- pushes to `main` that change `apps/demo-api/**`;
+- pushes to `main` that change demo-api source, tests, image-build inputs, or
+  the image workflow;
 - version tags matching `v*`;
 - manual `workflow_dispatch`.
+
+Helm values-only changes do not publish an image. This prevents a merged
+promotion PR from recursively creating another image and promotion PR.
 
 The publish job starts only after the reusable v0.7.0 quality gates pass. It
 then:
@@ -52,7 +56,7 @@ then:
 5. creates GitHub build-provenance attestation for the GHCR digest;
 6. prints the tag, digest, and source commit in the workflow summary.
 
-The workflow requires:
+The build job requires:
 
 ```yaml
 permissions:
@@ -65,6 +69,18 @@ permissions:
 
 No custom registry token is stored. GHCR publishing and attestation use the
 workflow's short-lived `GITHUB_TOKEN` and OIDC identity.
+
+The promotion job separately requests:
+
+```yaml
+permissions:
+  actions: read
+  contents: write
+  pull-requests: write
+```
+
+Those permissions can create the release branch and PR but do not approve or
+merge it.
 
 ## Image Metadata
 
@@ -81,8 +97,8 @@ full source commit
 workflow run ID
 ```
 
-This artifact is intentionally machine-readable so v0.7.2 can consume the
-exact build output without scraping console logs.
+This artifact is intentionally machine-readable. The v0.7.2 promotion job
+consumes the exact build output without scraping console logs.
 
 ## Verify a Published Image
 
@@ -109,22 +125,30 @@ GitHub artifact attestations are available for public repositories on current
 plans. Private and internal repositories require an eligible GitHub Enterprise
 Cloud plan.
 
-## Manual GitOps Promotion
+## GitOps Promotion Pull Request
 
-v0.7.1 still uses an explicit release commit:
+For a successful `main` push, the workflow:
 
-```bash
-VALUES_FILE=apps/demo-api/helm/values-aws-dev.yaml \
-IMAGE_TAG="sha-<short-commit>" \
-IMAGE_DIGEST="sha256:<64-character-digest>" \
-./scripts/set-demo-api-image.sh
+1. downloads the metadata from the completed build job;
+2. verifies the metadata repository and source commit against the workflow;
+3. updates `values-aws-dev.yaml` by tag and digest;
+4. validates the promoted Helm rendering;
+5. creates or reuses `release/demo-api-sha-<short-commit>`;
+6. creates or reuses a pull request into `main`.
 
-git add apps/demo-api/helm/values-aws-dev.yaml
-git commit -m "release: promote aws-dev demo-api sha-<short-commit>"
-git push
+The workflow never merges the pull request. Review and merge are the explicit
+aws-dev promotion decision, after which Argo CD reconciles the approved Git
+state.
+
+To validate the PR flow before merging a feature branch, manually dispatch
+the workflow from that feature branch with:
+
+```text
+create_promotion_pr = true
+promotion_base_branch = feature/v0.7-cicd-gitops-promotion
 ```
 
-For the local GitOps values, omit `VALUES_FILE`.
+The published commit must be contained in the selected base branch.
 
 ## Local Image Fallback
 
@@ -139,7 +163,7 @@ local `repository:tag` reference.
 
 ## Current Boundary
 
-v0.7.1 records and verifies immutable artifact identity. It does not create a
-promotion branch, modify Helm values automatically, merge changes, or connect
-GitHub Actions directly to EKS. Reviewable promotion automation begins in
-v0.7.2.
+v0.7.2 creates the promotion branch and PR but does not approve or merge it,
+connect GitHub Actions directly to EKS, or replace Argo CD as the deployment
+controller. End-to-end desired-state and runtime identity correlation follows
+in v0.7.3.

@@ -1,8 +1,9 @@
 # CI Quality Gate and Image Workflow
 
 v0.7.0 introduced one reusable quality gate for both pull-request validation
-and demo-api image publishing. v0.7.1 extends that contract to immutable image
-identity.
+and demo-api image publishing. v0.7.1 extended that contract to immutable image
+identity. v0.7.2 consumes the verified identity as the only input to a
+reviewable aws-dev promotion pull request.
 
 ## Quality Gate
 
@@ -19,8 +20,9 @@ It performs:
 3. Helm lint and template rendering with `values-aws-dev.yaml`.
 4. Digest-pinned rendering for the local Rollout and aws-dev Deployment.
 5. Structured image identity metadata validation.
-6. Demo-api unit tests in the Dockerfile `test` stage.
-7. A final build of the production runtime image.
+6. Metadata-driven aws-dev values promotion and source-mismatch rejection.
+7. Demo-api unit tests in the Dockerfile `test` stage.
+8. A final build of the production runtime image.
 
 The unit tests do not require AWS, Kubernetes, or a live PostgreSQL cluster.
 Database success and failure behavior is isolated with mocks, and tests never
@@ -43,6 +45,7 @@ The publish workflow has an explicit dependency:
 ```text
 quality-gates
   -> build-and-push
+  -> promote-aws-dev
 ```
 
 If any shell, Helm, test, or runtime-image build check fails, the GHCR publish
@@ -50,7 +53,10 @@ job does not start.
 
 After a successful build, the publishing job captures the digest output,
 uploads structured identity metadata, and attaches signed build provenance to
-the GHCR image.
+the GHCR image. For a `main` push, the promotion job downloads that exact
+artifact, validates its source and digest contract, creates a release branch,
+and opens or reuses a pull request that changes only
+`apps/demo-api/helm/values-aws-dev.yaml`.
 
 ## Container Test Boundary
 
@@ -66,14 +72,26 @@ The `test` stage adds the test suite and executes it. The final `runtime` stage
 inherits only the installed dependencies and application source from `base`;
 the test files are not included in the deployed image.
 
-## Current Boundary
+## Promotion Boundary
 
-v0.7.1 validates and records image digest identity. It does not yet:
+v0.7.2 automates preparation, not approval:
 
-- create GitOps promotion pull requests;
-- update Helm values automatically;
-- connect GitHub Actions directly to the EKS cluster;
-- bypass human review before environment promotion.
+- the build artifact is the promotion input;
+- GitHub Actions creates `release/demo-api-sha-*`;
+- the PR updates only aws-dev image repository, tag, digest, and application
+  version;
+- a human still reviews and merges;
+- Argo CD reconciles Git after approval;
+- GitHub Actions does not connect directly to EKS.
 
-Those delivery-chain capabilities are introduced incrementally in later v0.7
-releases.
+Promotion commits are excluded from image-publish path filters. Merging a
+values-only promotion therefore cannot start another image build and cannot
+form a publish/promotion loop.
+
+The repository must allow GitHub Actions to create pull requests under
+**Settings → Actions → General → Workflow permissions**. A manual feature
+branch test can set `create_promotion_pr=true` and use that same feature branch
+as `promotion_base_branch`.
+
+GitHub-hosted runners already satisfy the Node.js 24 Action runtime
+requirement. Self-hosted runners must be at least `2.327.1`.

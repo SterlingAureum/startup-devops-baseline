@@ -91,7 +91,8 @@ The chart renders:
 - supporting ServiceAccount and chart metadata.
 
 The current release process uses readable commit-derived GHCR tags, immutable
-OCI digests, build provenance, and manual GitOps promotion through Helm values.
+OCI digests, build provenance, and reviewable GitOps promotion pull requests
+that update the aws-dev Helm values without writing directly to `main`.
 
 ## 4. Progressive Delivery
 

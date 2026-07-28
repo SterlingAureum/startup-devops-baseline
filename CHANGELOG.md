@@ -2,6 +2,30 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.7.2
+
+### Added
+
+- Metadata-driven aws-dev promotion that validates the source repository,
+  source commit, readable SHA tag, immutable OCI digest, and reference before
+  changing Git desired state.
+- Automatic `release/demo-api-sha-*` branch and pull-request creation after a
+  successful main-branch image publish, with idempotent reuse on workflow
+  reruns.
+- Manual feature-branch validation inputs for explicitly requesting a
+  promotion PR against the selected feature branch.
+- CI checks for metadata-to-values promotion, digest-pinned Helm rendering,
+  and rejection of metadata from an unexpected source commit.
+
+### Changed
+
+- Upgraded checkout, Helm setup, artifact transfer, and Docker Actions to
+  Node.js 24 runtime major versions.
+- Restricted image-publish path filters to source and build inputs so merging
+  a values-only promotion cannot create a recursive publish/promotion loop.
+- Scoped build and promotion `GITHUB_TOKEN` permissions per job; promotion can
+  write a release branch and pull request but cannot merge or access EKS.
+
 ## v0.7.1
 
 ### Added

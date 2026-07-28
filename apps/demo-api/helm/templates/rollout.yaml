@@ -5,6 +5,8 @@ metadata:
   name: {{ include "demo-api.fullname" . }}
   labels:
     {{- include "demo-api.labels" . | nindent 4 }}
+  annotations:
+    {{- include "demo-api.deliveryAnnotations" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   revisionHistoryLimit: {{ .Values.rollout.revisionHistoryLimit }}
@@ -32,10 +34,11 @@ spec:
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- with .Values.podAnnotations }}
       annotations:
+        {{- include "demo-api.deliveryAnnotations" . | nindent 8 }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
     spec:
       serviceAccountName: {{ include "demo-api.serviceAccountName" . }}
       securityContext:

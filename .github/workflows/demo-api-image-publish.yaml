@@ -14,6 +14,7 @@ on:
       - '.github/workflows/demo-api-image-publish.yaml'
       - 'scripts/write-demo-api-image-metadata.sh'
       - 'scripts/promote-demo-api-image.sh'
+      - 'scripts/set-demo-api-delivery-metadata.sh'
   workflow_dispatch:
     inputs:
       create_promotion_pr:

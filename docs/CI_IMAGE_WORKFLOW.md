@@ -3,7 +3,8 @@
 v0.7.0 introduced one reusable quality gate for both pull-request validation
 and demo-api image publishing. v0.7.1 extended that contract to immutable image
 identity. v0.7.2 consumes the verified identity as the only input to a
-reviewable aws-dev promotion pull request.
+reviewable aws-dev promotion pull request. v0.7.3 retains the build origin in
+Git and projects it into the live workload for end-to-end identity checks.
 
 ## Quality Gate
 
@@ -58,6 +59,18 @@ artifact, validates its source and digest contract, creates a release branch,
 and opens or reuses a pull request that changes only
 `apps/demo-api/helm/values-aws-dev.yaml`.
 
+That values change contains:
+
+```text
+image repository
+readable SHA tag
+immutable image digest
+application version
+source repository
+full source commit
+workflow run ID
+```
+
 ## Container Test Boundary
 
 The demo-api Dockerfile has three stages:
@@ -78,8 +91,7 @@ v0.7.2 automates preparation, not approval:
 
 - the build artifact is the promotion input;
 - GitHub Actions creates `release/demo-api-sha-*`;
-- the PR updates only aws-dev image repository, tag, digest, and application
-  version;
+- the PR updates only aws-dev image and delivery identity;
 - a human still reviews and merges;
 - Argo CD reconciles Git after approval;
 - GitHub Actions does not connect directly to EKS.

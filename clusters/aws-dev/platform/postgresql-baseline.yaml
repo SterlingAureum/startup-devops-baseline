@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
-    targetRevision: main
+    targetRevision: feature/v0.7-cicd-gitops-promotion
     path: clusters/aws-dev/data-platform/postgresql
     directory:
       recurse: true

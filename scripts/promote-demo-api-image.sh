@@ -74,6 +74,12 @@ IMAGE_DIGEST="${IMAGE_DIGEST}" \
 APP_VERSION="${IMAGE_TAG}" \
   "${ROOT_DIR}/scripts/set-demo-api-image.sh"
 
+VALUES_FILE="${VALUES_FILE}" \
+SOURCE_REPOSITORY="${SOURCE_REPOSITORY}" \
+SOURCE_COMMIT="${SOURCE_COMMIT}" \
+WORKFLOW_RUN_ID="${WORKFLOW_RUN_ID}" \
+  "${ROOT_DIR}/scripts/set-demo-api-delivery-metadata.sh"
+
 if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
   {
     echo "image-repository=${IMAGE_REPOSITORY}"

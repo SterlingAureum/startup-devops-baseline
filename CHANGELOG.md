@@ -2,6 +2,28 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.7.3
+
+### Added
+
+- Delivery metadata values for the source repository, full source commit, and
+  image-build workflow run ID.
+- Workload and Pod annotations that expose the readable image tag, immutable
+  digest, application version, source identity, and build run without exposing
+  credentials.
+- Read-only delivery trace validator covering source commit, image tag and
+  digest, values-only promotion commit, Argo CD sync revision, Deployment
+  identity, every Pod image ID, and every `/version` response.
+- CI checks for delivery-metadata insertion, idempotent updates, and rendered
+  Deployment/Pod trace annotations.
+
+### Changed
+
+- Extended metadata-driven Promotion PRs to retain build origin in the same
+  `values-aws-dev.yaml` change.
+- Made `app.kubernetes.io/version` reflect `env.APP_VERSION` instead of the
+  static chart application version.
+
 ## v0.7.2
 
 ### Added

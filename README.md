@@ -13,22 +13,24 @@ pull-request validation and GHCR image publishing. Published application
 images now carry a SHA tag, immutable OCI digest, structured source identity,
 and GitHub build-provenance attestation. Successful main-branch builds now
 turn that identity into a reviewable aws-dev GitOps promotion pull request.
-The repository remains intentionally smaller than a full production platform
-and will continue toward delivery traceability, security controls,
-observability, AI infrastructure workloads, and AIOps workflows.
+Promoted values and live workloads now retain enough delivery metadata to
+correlate source, build, Git promotion, Argo CD reconciliation, Pod image ID,
+and the application-reported version. The repository remains intentionally
+smaller than a full production platform and will continue toward Git rollback,
+security controls, observability, AI infrastructure workloads, and AIOps
+workflows.
 
 ## Current Version
 
 ```text
-v0.7.2-gitops-promotion-pr
+v0.7.3-delivery-traceability
 ```
-After a validated demo-api image is published, the workflow downloads its
-structured identity artifact, verifies the repository, source commit, SHA tag,
-and OCI digest, updates only `values-aws-dev.yaml`, and creates or reuses a
-`release/demo-api-sha-*` pull request. Human review remains the promotion gate;
-GitHub Actions does not merge the PR or access EKS. All JavaScript-based
-Actions that emitted the Node.js 20 deprecation warning now run on Node.js 24
-compatible major versions.
+The Promotion PR now stores the full source commit and workflow run ID beside
+the image tag and digest. Helm projects that identity into Deployment and Pod
+annotations, while `validate-demo-api-delivery-trace.sh` proves that the
+promotion commit, Argo CD revision, live Pod image ID, and `/version` response
+all identify the same release. Human review and Argo CD remain the environment
+promotion and deployment boundaries.
 
 ## Platform Architecture
 
@@ -147,6 +149,7 @@ startup-devops-baseline/
 ### GitOps and Delivery
 
 - `docs/CI_IMAGE_WORKFLOW.md`
+- `docs/DELIVERY_TRACEABILITY.md`
 - `docs/GITOPS_WORKFLOW.md`
 - `docs/GHCR_IMAGE_WORKFLOW.md`
 - `docs/ARGO_ROLLOUTS_ANALYSIS_FLOW.md`

@@ -22,13 +22,30 @@
 {{- define "demo-api.labels" -}}
 helm.sh/chart: {{ include "demo-api.chart" . }}
 {{ include "demo-api.selectorLabels" . }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+app.kubernetes.io/version: {{ default .Chart.AppVersion .Values.env.APP_VERSION | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
 {{- define "demo-api.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "demo-api.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end -}}
+
+{{- define "demo-api.deliveryAnnotations" -}}
+platform.startup.dev/image-tag: {{ required "image.tag is required" .Values.image.tag | quote }}
+platform.startup.dev/application-version: {{ required "env.APP_VERSION is required" .Values.env.APP_VERSION | quote }}
+{{- with .Values.image.digest }}
+platform.startup.dev/image-digest: {{ . | quote }}
+{{- end }}
+{{- with .Values.delivery.sourceRepository }}
+platform.startup.dev/source-repository: {{ . | quote }}
+{{- end }}
+{{- with .Values.delivery.sourceCommit }}
+platform.startup.dev/source-commit: {{ . | quote }}
+{{- end }}
+{{- with .Values.delivery.workflowRunId }}
+platform.startup.dev/workflow-run-id: {{ . | quote }}
+{{- end }}
 {{- end -}}
 
 {{- define "demo-api.serviceAccountName" -}}

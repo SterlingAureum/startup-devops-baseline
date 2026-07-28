@@ -131,7 +131,8 @@ For a successful `main` push, the workflow:
 
 1. downloads the metadata from the completed build job;
 2. verifies the metadata repository and source commit against the workflow;
-3. updates `values-aws-dev.yaml` by tag and digest;
+3. updates `values-aws-dev.yaml` by tag and digest and records the full source
+   commit and workflow run ID;
 4. validates the promoted Helm rendering;
 5. creates or reuses `release/demo-api-sha-<short-commit>`;
 6. creates or reuses a pull request into `main`.
@@ -163,7 +164,7 @@ local `repository:tag` reference.
 
 ## Current Boundary
 
-v0.7.2 creates the promotion branch and PR but does not approve or merge it,
+v0.7.3 creates the promotion branch and PR but does not approve or merge it,
 connect GitHub Actions directly to EKS, or replace Argo CD as the deployment
-controller. End-to-end desired-state and runtime identity correlation follows
-in v0.7.3.
+controller. The retained metadata enables the read-only delivery trace
+validation in `docs/DELIVERY_TRACEABILITY.md`.

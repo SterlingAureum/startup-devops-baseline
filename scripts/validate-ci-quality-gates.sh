@@ -65,6 +65,8 @@ if "apps/demo-api/helm/values-aws-dev.yaml" in trigger_paths:
     )
 if "apps/demo-api/src/**" not in trigger_paths:
     raise SystemExit("demo-api source changes must trigger image publishing")
+if "scripts/set-demo-api-delivery-metadata.sh" not in trigger_paths:
+    raise SystemExit("delivery metadata promotion changes must trigger publishing")
 PY
 
 echo "==> Linting and rendering the local Helm release"
@@ -143,11 +145,47 @@ grep -F "digest: \"${TEST_IMAGE_DIGEST}\"" \
   "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
 grep -F 'APP_VERSION: "sha-0123456"' \
   "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+grep -F 'sourceRepository: "SterlingAureum/startup-devops-baseline"' \
+  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+grep -F 'sourceCommit: "0123456789abcdef0123456789abcdef01234567"' \
+  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+grep -F 'workflowRunId: "local-validation"' \
+  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+
+VALUES_FILE="${WORK_DIR}/values-aws-dev.yaml" \
+SOURCE_REPOSITORY="SterlingAureum/startup-devops-baseline" \
+SOURCE_COMMIT="0123456789abcdef0123456789abcdef01234567" \
+WORKFLOW_RUN_ID="local-validation" \
+  "${ROOT_DIR}/scripts/set-demo-api-delivery-metadata.sh" >/dev/null
+if [[ "$(grep -c '^delivery:$' "${WORK_DIR}/values-aws-dev.yaml")" != "1" ]]; then
+  echo "Delivery metadata update is not idempotent." >&2
+  exit 1
+fi
 
 helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
   --values "${WORK_DIR}/values-aws-dev.yaml" \
   >"${WORK_DIR}/demo-api-promoted-aws-dev.yaml"
 grep -F "image: \"${TEST_IMAGE_REFERENCE}\"" \
+  "${WORK_DIR}/demo-api-promoted-aws-dev.yaml" >/dev/null
+
+for annotation in \
+  'platform.startup.dev/image-tag: "sha-0123456"' \
+  "platform.startup.dev/image-digest: \"${TEST_IMAGE_DIGEST}\"" \
+  'platform.startup.dev/application-version: "sha-0123456"' \
+  'platform.startup.dev/source-repository: "SterlingAureum/startup-devops-baseline"' \
+  'platform.startup.dev/source-commit: "0123456789abcdef0123456789abcdef01234567"' \
+  'platform.startup.dev/workflow-run-id: "local-validation"'; do
+  annotation_count="$(
+    grep -Fc "${annotation}" \
+      "${WORK_DIR}/demo-api-promoted-aws-dev.yaml" || true
+  )"
+  if (( annotation_count < 2 )); then
+    echo "Delivery annotation is missing from the workload or Pod template: ${annotation}" >&2
+    exit 1
+  fi
+done
+
+grep -F 'app.kubernetes.io/version: "sha-0123456"' \
   "${WORK_DIR}/demo-api-promoted-aws-dev.yaml" >/dev/null
 
 if EXPECTED_SOURCE_COMMIT="ffffffffffffffffffffffffffffffffffffffff" \

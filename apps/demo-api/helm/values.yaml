@@ -6,6 +6,11 @@ image:
   digest: ""
   pullPolicy: IfNotPresent
 
+delivery:
+  sourceRepository: ""
+  sourceCommit: ""
+  workflowRunId: ""
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""

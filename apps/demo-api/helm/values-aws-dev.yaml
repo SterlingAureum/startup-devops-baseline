@@ -3,6 +3,7 @@ replicaCount: 2
 image:
   repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
   tag: "sha-ed4e9ef"
+  digest: ""
   pullPolicy: IfNotPresent
 
 rollout:

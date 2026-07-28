@@ -8,25 +8,27 @@ The repository now contains the completed local progressive-delivery and AWS
 EKS baselines, isolated On-Demand and Spot application NodePools, a tag-scoped
 AWS FIS drill, and a GitOps-managed CloudNativePG PostgreSQL persistence,
 high-availability, S3 backup, point-in-time recovery, application integration,
-and primary-failover baseline. A reusable CI quality gate now protects both
-pull-request validation and GHCR image publishing. The repository remains
-intentionally smaller than a full production platform and will continue toward
-GitOps promotion automation, security controls, observability, AI
-infrastructure workloads, and AIOps workflows.
+and primary-failover baseline. Reusable CI quality gates protect both
+pull-request validation and GHCR image publishing. Published application
+images now carry a SHA tag, immutable OCI digest, structured source identity,
+and GitHub build-provenance attestation. The repository remains intentionally
+smaller than a full production platform and will continue toward GitOps
+promotion automation, security controls, observability, AI infrastructure
+workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.7.0-ci-quality-gates
+v0.7.1-immutable-image-identity
 ```
-Pull requests and GHCR image publishing now share the same reusable quality
-gate. The gate checks every repository shell script for Bash syntax, lints and
-renders both local and aws-dev Helm configurations, runs isolated demo-api unit
-tests in a Docker test stage, and builds the final runtime image. Image
-publishing is blocked until these checks succeed. This is the first increment
-of the v0.7 CI/CD and GitOps promotion baseline; immutable image digests,
-promotion pull requests, and runtime deployment traceability follow in later
-v0.7 increments.
+The demo-api Helm chart now deploys registry images by immutable
+`repository@sha256:digest` identity while retaining the SHA tag as a readable
+application version. The publish workflow records the tag, digest, full source
+commit, and workflow run in a structured artifact and creates signed build
+provenance for the GHCR image. The reusable quality gate validates both local
+Rollout and aws-dev Deployment digest rendering. Image promotion remains a
+manual Git commit in this increment; automatic promotion pull requests follow
+in v0.7.2.
 
 ## Platform Architecture
 

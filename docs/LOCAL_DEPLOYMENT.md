@@ -20,10 +20,13 @@ For the original local-only flow:
 ./scripts/build-load-demo-api-image.sh
 ```
 
-For the GHCR-based flow, publish an image through GitHub Actions and then update the Helm image tag:
+For the GHCR-based flow, publish an image through GitHub Actions and then
+update the Helm image identity:
 
 ```bash
-IMAGE_TAG="sha-<short-commit>" ./scripts/set-demo-api-image.sh
+IMAGE_TAG="sha-<short-commit>" \
+IMAGE_DIGEST="sha256:<64-character-digest>" \
+./scripts/set-demo-api-image.sh
 ```
 
 ### 4. Deploy the root application
@@ -97,7 +100,8 @@ Useful rollout checks:
 
 ## Canary Release Workflow
 
-After updating the demo-api image tag, Argo Rollouts creates a new ReplicaSet and routes canary traffic through ingress-nginx.
+After updating the demo-api image tag and digest, Argo Rollouts creates a new
+ReplicaSet and routes canary traffic through ingress-nginx.
 
 Typical commands:
 

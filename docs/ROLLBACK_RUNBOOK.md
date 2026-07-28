@@ -32,7 +32,8 @@ kubectl argo rollouts history demo-api -n startup-apps
 
 ## Roll Back Through GitOps
 
-The preferred GitOps rollback method is to revert the Git commit that changed the Helm values or image tag.
+The preferred GitOps rollback method is to revert the Git commit that changed
+the Helm values, image tag, and image digest.
 
 ```bash
 git revert <commit-sha>

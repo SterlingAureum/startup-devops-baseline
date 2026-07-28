@@ -130,7 +130,7 @@ Incremental scope:
 - v0.7.0 - reusable CI quality gates, isolated demo-api unit tests, Helm
   rendering, shell syntax validation, and publish-job dependency - delivered
 - v0.7.1 - immutable image digest, build provenance, and artifact identity -
-  planned
+  delivered
 - v0.7.2 - automated, reviewable aws-dev GitOps promotion pull request -
   planned
 - v0.7.3 - desired-state, Argo CD revision, Pod image ID, and application

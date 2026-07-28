@@ -1,7 +1,8 @@
 # CI Quality Gate and Image Workflow
 
-v0.7.0 introduces one reusable quality gate for both pull-request validation
-and demo-api image publishing.
+v0.7.0 introduced one reusable quality gate for both pull-request validation
+and demo-api image publishing. v0.7.1 extends that contract to immutable image
+identity.
 
 ## Quality Gate
 
@@ -16,8 +17,10 @@ It performs:
 1. Bash syntax validation for every script in `scripts/`.
 2. Helm lint and template rendering with the default local values.
 3. Helm lint and template rendering with `values-aws-dev.yaml`.
-4. Demo-api unit tests in the Dockerfile `test` stage.
-5. A final build of the production runtime image.
+4. Digest-pinned rendering for the local Rollout and aws-dev Deployment.
+5. Structured image identity metadata validation.
+6. Demo-api unit tests in the Dockerfile `test` stage.
+7. A final build of the production runtime image.
 
 The unit tests do not require AWS, Kubernetes, or a live PostgreSQL cluster.
 Database success and failure behavior is isolated with mocks, and tests never
@@ -45,6 +48,10 @@ quality-gates
 If any shell, Helm, test, or runtime-image build check fails, the GHCR publish
 job does not start.
 
+After a successful build, the publishing job captures the digest output,
+uploads structured identity metadata, and attaches signed build provenance to
+the GHCR image.
+
 ## Container Test Boundary
 
 The demo-api Dockerfile has three stages:
@@ -61,10 +68,8 @@ the test files are not included in the deployed image.
 
 ## Current Boundary
 
-v0.7.0 establishes quality gates only. It does not yet:
+v0.7.1 validates and records image digest identity. It does not yet:
 
-- deploy by image digest;
-- generate build attestations;
 - create GitOps promotion pull requests;
 - update Helm values automatically;
 - connect GitHub Actions directly to the EKS cluster;

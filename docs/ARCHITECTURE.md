@@ -90,7 +90,8 @@ The chart renders:
 - an Argo Rollouts `AnalysisTemplate`;
 - supporting ServiceAccount and chart metadata.
 
-The current release process uses immutable GHCR image tags and manual GitOps promotion through Helm values.
+The current release process uses readable commit-derived GHCR tags, immutable
+OCI digests, build provenance, and manual GitOps promotion through Helm values.
 
 ## 4. Progressive Delivery
 
@@ -99,7 +100,7 @@ Argo Rollouts manages the demo-api canary release.
 The delivery flow is:
 
 ```text
-new image tag committed to Git
+new image tag and digest committed to Git
   -> Argo CD sync
   -> new ReplicaSet created
   -> ingress-nginx shifts canary traffic
@@ -147,7 +148,8 @@ They provide:
 - repository and Helm validation;
 - demo-api container image build;
 - GHCR image publication;
-- commit-derived image tags.
+- commit-derived image tags;
+- immutable digest identity and build provenance.
 
 CI builds artifacts, while Git remains the source of truth for deployment state.
 

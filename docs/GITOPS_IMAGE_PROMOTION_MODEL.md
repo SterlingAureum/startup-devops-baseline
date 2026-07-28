@@ -11,12 +11,14 @@ commit A:
   changes source code or triggers image publishing
   GitHub Actions builds and pushes:
   ghcr.io/sterlingaureum/startup-devops-baseline/demo-api:sha-A
+  and records digest sha256:D
 
 commit B:
   updates apps/demo-api/helm/values.yaml
   image.tag = sha-A
+  image.digest = sha256:D
   Argo CD syncs commit B
-  Argo Rollouts deploys image sha-A
+  Argo Rollouts deploys image repository@sha256:D
 ```
 
 This is expected.
@@ -25,7 +27,8 @@ This is expected.
 
 ## Why the image tag may not match the values commit
 
-If `values.yaml` is updated in commit B, the image tag inside that commit usually points to commit A.
+If `values.yaml` is updated in commit B, the image tag and digest inside that
+commit usually identify the artifact produced from commit A.
 
 This is not a bug.
 
@@ -46,9 +49,9 @@ environment promotion
 The purpose of the current version is to demonstrate:
 
 ```text
-- GitHub Actions can build and publish an immutable image
+- GitHub Actions can build and publish a digest-addressed image
 - GHCR can store the image
-- Helm values explicitly declare the promoted image
+- Helm values explicitly declare the promoted tag and digest
 - Argo CD syncs desired state from Git
 - Argo Rollouts performs canary release
 ```
@@ -62,11 +65,12 @@ It is intentionally not fully automatic yet.
 ```text
 app repo:
   source commit A
-  image sha-A
+  image sha-A / sha256:D
 
 gitops repo:
   release commit B
   image.tag = sha-A
+  image.digest = sha256:D
 ```
 
 This is a common production model.
@@ -95,6 +99,6 @@ This is more automated but adds another component.
 
 ## Current recommendation
 
-Keep manual image promotion for v0.3.3.
-
-Consider automated image promotion in a later version after the local progressive delivery baseline is complete.
+Keep the v0.7.1 promotion commit manual while validating digest deployment and
+attestation. v0.7.2 will generate the same values change as a reviewable pull
+request without bypassing Git.

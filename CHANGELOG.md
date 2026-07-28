@@ -2,6 +2,30 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.7.1
+
+### Added
+
+- Helm image-reference helper that renders a registry image by immutable OCI
+  digest and rejects malformed digest values.
+- Structured demo-api image identity artifact containing the repository, SHA
+  tag, digest, source repository, full source commit, and workflow run ID.
+- GitHub build-provenance attestation for each published demo-api image,
+  attached to the GHCR digest through short-lived OIDC identity.
+- CI contract checks for digest-pinned local Rollout and aws-dev Deployment
+  rendering and deterministic image identity metadata.
+
+### Changed
+
+- Extended all active demo-api Helm values with an explicit `image.digest`
+  field while preserving tag-only local-image fallback.
+- Made registry-image promotion require both the human-readable SHA tag and
+  immutable digest.
+- Extended GHCR image verification to prove that the supplied tag resolves to
+  the expected digest.
+- Recorded the published image identity as a retained GitHub Actions artifact
+  and workflow summary for the future promotion workflow.
+
 ## v0.7.0
 
 ### Added

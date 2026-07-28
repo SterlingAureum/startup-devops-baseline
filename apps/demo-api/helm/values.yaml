@@ -3,6 +3,7 @@ replicaCount: 3
 image:
   repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
   tag: "sha-3e50802"
+  digest: ""
   pullPolicy: IfNotPresent
 
 imagePullSecrets: []

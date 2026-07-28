@@ -9,6 +9,7 @@
 image:
   repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
   tag: "sha-REPLACE_WITH_SHORT_COMMIT"
+  digest: "sha256:REPLACE_WITH_64_CHARACTER_DIGEST"
   pullPolicy: IfNotPresent
 
 env:

@@ -163,18 +163,21 @@ before pushing the Helm values that reference it:
 For a clean environment, `deploy-aws-dev-root-app.sh` performs this step after
 CloudNativePG creates the source Secret.
 
-Publish the demo-api image containing the v0.6.5 database module before
-promoting its immutable tag. After the application commit has been built by the
-existing GHCR workflow:
+Publish the demo-api image before promoting it. After the application commit
+has been built by the GHCR workflow, copy `IMAGE_DIGEST` from the workflow
+summary:
 
 ```bash
 IMAGE_TAG="sha-$(git rev-parse --short HEAD)"
+IMAGE_DIGEST="sha256:<64-character-digest>"
 
 IMAGE_TAG="${IMAGE_TAG}" \
+IMAGE_DIGEST="${IMAGE_DIGEST}" \
 ./scripts/check-ghcr-demo-api-image.sh
 
 VALUES_FILE=apps/demo-api/helm/values-aws-dev.yaml \
 IMAGE_TAG="${IMAGE_TAG}" \
+IMAGE_DIGEST="${IMAGE_DIGEST}" \
 ./scripts/set-demo-api-image.sh
 
 git add apps/demo-api/helm/values-aws-dev.yaml

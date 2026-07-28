@@ -43,8 +43,13 @@ AWS image with:
 ```bash
 VALUES_FILE=apps/demo-api/helm/values-aws-dev.yaml \
 IMAGE_TAG=sha-<short-commit> \
+IMAGE_DIGEST=sha256:<64-character-digest> \
 ./scripts/set-demo-api-image.sh
 ```
+
+When `image.digest` is set, the chart renders `repository@sha256:digest`.
+`image.tag` remains the readable application version. The local image helper
+clears the digest and restores tag-based kind loading.
 
 The AWS values reference `startup-apps/demo-api-postgresql`. Create or refresh
 that runtime Secret with `scripts/sync-demo-api-postgresql-secret.sh`; never

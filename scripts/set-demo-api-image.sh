@@ -4,13 +4,28 @@ set -euo pipefail
 VALUES_FILE="${VALUES_FILE:-apps/demo-api/helm/values.yaml}"
 IMAGE_REPOSITORY="${IMAGE_REPOSITORY:-ghcr.io/sterlingaureum/startup-devops-baseline/demo-api}"
 IMAGE_TAG="${IMAGE_TAG:-}"
+IMAGE_DIGEST="${IMAGE_DIGEST:-}"
 IMAGE_PULL_POLICY="${IMAGE_PULL_POLICY:-IfNotPresent}"
 APP_VERSION="${APP_VERSION:-$IMAGE_TAG}"
+REQUIRE_IMAGE_DIGEST="${REQUIRE_IMAGE_DIGEST:-true}"
 
 if [ -z "$IMAGE_TAG" ]; then
   echo "ERROR: IMAGE_TAG is required." >&2
   echo "Example:" >&2
-  echo "  IMAGE_TAG=sha-82aa684 ./scripts/set-demo-api-image.sh" >&2
+  echo "  IMAGE_TAG=sha-82aa684 \\" >&2
+  echo "  IMAGE_DIGEST=sha256:<64-hex-characters> \\" >&2
+  echo "    ./scripts/set-demo-api-image.sh" >&2
+  exit 1
+fi
+
+if [[ "${REQUIRE_IMAGE_DIGEST}" == "true" && -z "${IMAGE_DIGEST}" ]]; then
+  echo "ERROR: IMAGE_DIGEST is required for a registry image." >&2
+  exit 1
+fi
+
+if [[ -n "${IMAGE_DIGEST}" && \
+      ! "${IMAGE_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]; then
+  echo "ERROR: IMAGE_DIGEST must be a lowercase sha256 digest." >&2
   exit 1
 fi
 
@@ -20,19 +35,27 @@ if [ ! -f "$VALUES_FILE" ]; then
   exit 1
 fi
 
-python3 - "$VALUES_FILE" "$IMAGE_REPOSITORY" "$IMAGE_TAG" "$IMAGE_PULL_POLICY" "$APP_VERSION" <<'PY'
+python3 - \
+  "$VALUES_FILE" \
+  "$IMAGE_REPOSITORY" \
+  "$IMAGE_TAG" \
+  "$IMAGE_DIGEST" \
+  "$IMAGE_PULL_POLICY" \
+  "$APP_VERSION" <<'PY'
 from pathlib import Path
 import sys
 
 path = Path(sys.argv[1])
 repo = sys.argv[2]
 tag = sys.argv[3]
-pull_policy = sys.argv[4]
-app_version = sys.argv[5]
+digest = sys.argv[4]
+pull_policy = sys.argv[5]
+app_version = sys.argv[6]
 
 lines = path.read_text().splitlines()
 out = []
 section = None
+digest_updated = False
 for line in lines:
     stripped = line.strip()
     if line and not line.startswith(" ") and stripped.endswith(":"):
@@ -47,6 +70,11 @@ for line in lines:
             indent = line[: len(line) - len(line.lstrip())]
             out.append(f'{indent}tag: "{tag}"')
             continue
+        if stripped.startswith("digest:"):
+            indent = line[: len(line) - len(line.lstrip())]
+            out.append(f'{indent}digest: "{digest}"')
+            digest_updated = True
+            continue
         if stripped.startswith("pullPolicy:"):
             indent = line[: len(line) - len(line.lstrip())]
             out.append(f'{indent}pullPolicy: {pull_policy}')
@@ -59,12 +87,16 @@ for line in lines:
 
     out.append(line)
 
+if not digest_updated:
+    raise SystemExit("image.digest is missing from the values file")
+
 path.write_text("\n".join(out) + "\n")
 PY
 
 echo "Updated ${VALUES_FILE}:"
 echo "  image.repository=${IMAGE_REPOSITORY}"
 echo "  image.tag=${IMAGE_TAG}"
+echo "  image.digest=${IMAGE_DIGEST:-<empty>}"
 echo "  image.pullPolicy=${IMAGE_PULL_POLICY}"
 echo "  env.APP_VERSION=${APP_VERSION}"
 echo

@@ -150,8 +150,8 @@ Incremental scope:
 
 - v0.8.0 - workload runtime hardening, secret and configuration scanning,
   pre-publication image vulnerability gates, immutable GitHub Action pins,
-  SPDX SBOM generation, and digest-bound attestations - implementation
-  complete; GitHub runtime validation pending
+  SPDX SBOM generation, and digest-bound attestations - implementation and 
+  GitHub runtime validation complete
 - v0.8.1 - Namespace, Pod Security Admission, ResourceQuota, LimitRange, and
   native admission-policy guardrails - planned
 - v0.8.2 - EKS NetworkPolicy enablement and application/data-platform network

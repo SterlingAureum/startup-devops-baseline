@@ -140,22 +140,28 @@ Incremental scope:
 
 ## v0.8 - Production Security Baseline
 
-Status: Planned
+Status: In progress
 
 Goal:
 
 Add production-oriented secret, network, workload, and admission controls.
 
-Planned scope:
+Incremental scope:
 
-- external secret management
-- AWS Secrets Manager integration
-- application credential rotation
-- TLS and DNS workflow
-- NetworkPolicy
-- Pod Security controls
-- ResourceQuota and LimitRange
-- admission policy validation
+- v0.8.0 - workload runtime hardening, secret and configuration scanning,
+  pre-publication image vulnerability gates, immutable GitHub Action pins,
+  SPDX SBOM generation, and digest-bound attestations - implementation
+  complete; GitHub runtime validation pending
+- v0.8.1 - Namespace, Pod Security Admission, ResourceQuota, LimitRange, and
+  native admission-policy guardrails - planned
+- v0.8.2 - EKS NetworkPolicy enablement and application/data-platform network
+  isolation - planned
+- v0.8.3 - External Secrets Operator, IRSA, and AWS Secrets Manager
+  integration - planned
+- v0.8.4 - PostgreSQL application credential rotation and workload reload
+  validation - planned
+- v0.8.5 - Route 53 DNS, ACM/ALB HTTPS, EKS endpoint and control-plane logging
+  hardening, and final security validation - planned
 
 ## v0.9 - Observability and SRE Baseline
 

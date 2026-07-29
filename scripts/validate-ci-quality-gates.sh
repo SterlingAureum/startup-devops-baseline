@@ -21,39 +21,12 @@ while IFS= read -r script; do
   bash -n "${script}"
 done < <(find "${ROOT_DIR}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
 
-echo "==> Validating GitHub Actions runtime and delivery trigger contracts"
+echo "==> Validating security supply-chain contracts"
+"${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
+
+echo "==> Validating delivery trigger contracts"
 PUBLISH_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-image-publish.yaml"
 ROLLBACK_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-rollback.yaml"
-for action in \
-  "actions/checkout@v7" \
-  "actions/upload-artifact@v6" \
-  "actions/download-artifact@v7" \
-  "azure/setup-helm@v5" \
-  "docker/setup-buildx-action@v4" \
-  "docker/login-action@v4" \
-  "docker/metadata-action@v6" \
-  "docker/build-push-action@v7"; do
-  grep -F "uses: ${action}" "${PUBLISH_WORKFLOW}" >/dev/null || {
-    echo "Expected Node.js 24 Action is missing: ${action}" >&2
-    exit 1
-  }
-done
-
-for action in \
-  "actions/checkout@v7" \
-  "azure/setup-helm@v5"; do
-  grep -F "uses: ${action}" "${ROLLBACK_WORKFLOW}" >/dev/null || {
-    echo "Expected Node.js 24 rollback Action is missing: ${action}" >&2
-    exit 1
-  }
-done
-
-if grep -RE \
-  'uses: (actions/checkout@v4|azure/setup-helm@v4|actions/upload-artifact@v4|docker/build-push-action@v6|docker/login-action@v3|docker/metadata-action@v5|docker/setup-buildx-action@v3)' \
-  "${ROOT_DIR}/.github/workflows" >/dev/null; then
-  echo "A reported Node.js 20 Action version is still active." >&2
-  exit 1
-fi
 
 python3 - "${PUBLISH_WORKFLOW}" <<'PY'
 from pathlib import Path

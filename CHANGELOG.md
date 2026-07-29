@@ -2,6 +2,36 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.8.0
+
+### Added
+
+- Gitleaks full-history secret scanning in the reusable pull-request and
+  publishing quality gates.
+- Trivy HIGH/CRITICAL misconfiguration gate for the demo-api Docker and Helm
+  configuration.
+- Pre-publication Trivy image gate that blocks fixable HIGH/CRITICAL operating
+  system and application-library vulnerabilities.
+- SPDX JSON SBOM generation, retained workflow artifact, and digest-bound
+  registry attestation for every published demo-api image.
+- Supply-chain contract validation covering immutable Action pins, scan
+  thresholds, pre-push ordering, digest resolution, attestations, and Promotion
+  PR dependencies.
+
+### Changed
+
+- Hardened the demo-api image and Kubernetes workload for non-root execution,
+  a read-only root filesystem, dropped capabilities, RuntimeDefault seccomp,
+  disabled ServiceAccount token automounting, and a bounded memory-backed
+  `/tmp`.
+- Pinned every external GitHub Action to a reviewed full commit SHA while
+  retaining readable release-version comments.
+- Changed image publishing to build and load a local security candidate first;
+  GHCR login and push occur only after the image scan and SBOM generation
+  succeed.
+- Made build provenance, SBOM attestation, and the complete scanned-image job
+  mandatory predecessors of the aws-dev Promotion PR.
+
 ## v0.7.4
 
 ### Added

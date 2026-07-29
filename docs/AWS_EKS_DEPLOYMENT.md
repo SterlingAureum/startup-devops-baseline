@@ -3,89 +3,19 @@
 ## Deployment Flow
 
 ```text
-                             Developer
-
-                                  |
-                                  v
-
-                          Terraform Apply
-
-                                  |
-                                  v
-
-                        AWS Infrastructure
-
-                                  |
-                                  |
-                                  |
-                                  v
-
-                                 VPC
-
-                                  |
-                                  v
-
-                            EKS Cluster
-
-                                  |
-                                  v
-
-                        Managed Node Group
-
-
-                                  |
-                                  v
-
-
-                        Configure kubeconfig
-
-
-                                  |
-                                  v
-
-
-                         Bootstrap Argo CD
-
-
-                                  |
-                                  v
-
-
-                    Deploy AWS Root Application
-
-
-                                  |
-                                  |
-                                  |
-                                  |
-                                  v
-
-                 Argo CD creates Kubernetes Applications
-
-                                  |
-             +--------------------+--------------------+
-             |                    |                    |
-             v                    v                    v
-
-
- AWS Load Balancer Controller       Karpenter + CloudNativePG     demo-api
-
-       Application                        Applications           Application
-
-
-                 |
-                 |
-                 v
-
-
-    Kubernetes Resources Ready
-
-
-                 |
-                 v
-
-
-          ALB Available
+Developer
+  -> Terraform apply
+  -> VPC, EKS control plane, and Managed Node Group
+  -> kubeconfig
+  -> Argo CD bootstrap
+  -> AWS Root Application
+  -> sync wave 0: AWS Load Balancer Controller and Karpenter CRDs
+  -> sync waves 5-7: Karpenter, cert-manager, CloudNativePG, and Barman
+  -> sync waves 10-15: EC2NodeClasses and NodePools
+  -> sync wave 20: PostgreSQL HA and backup resources
+  -> sync wave 30: demo-api
+  -> Kubernetes resources healthy
+  -> internet-facing ALB available
 ```
 
 ## Prerequisites
@@ -97,6 +27,7 @@ kubectl
 helm
 git
 curl
+jq
 ```
 
 Confirm identity:
@@ -153,45 +84,20 @@ real `vpc-*` value.
 
 ## 6. Deploy Root Application
 
-When upgrading a running v0.6.4 environment, create the target runtime Secret
-before pushing the Helm values that reference it:
+Before deploying the AWS environment, ensure that the current `main` branch
+contains an approved, digest-pinned demo-api desired state produced by a
+Promotion PR or Rollback PR. The normal forward-delivery flow is:
 
-```bash
-./scripts/sync-demo-api-postgresql-secret.sh
-```
+1. GitHub Actions validates the source and publishes a digest-addressed image.
+2. The image workflow creates an aws-dev Promotion PR.
+3. A human reviews and merges the values-only PR.
+4. Argo CD reconciles the approved desired state.
 
-For a clean environment, `deploy-aws-dev-root-app.sh` performs this step after
-CloudNativePG creates the source Secret.
+Do not routinely copy an image digest into the values file or push an image
+update directly to `main`.
 
-Publish the demo-api image before promoting it. After the application commit
-has been built by the GHCR workflow, copy `IMAGE_DIGEST` from the workflow
-summary:
-
-```bash
-IMAGE_TAG="sha-$(git rev-parse --short HEAD)"
-IMAGE_DIGEST="sha256:<64-character-digest>"
-
-IMAGE_TAG="${IMAGE_TAG}" \
-IMAGE_DIGEST="${IMAGE_DIGEST}" \
-./scripts/check-ghcr-demo-api-image.sh
-
-VALUES_FILE=apps/demo-api/helm/values-aws-dev.yaml \
-IMAGE_TAG="${IMAGE_TAG}" \
-IMAGE_DIGEST="${IMAGE_DIGEST}" \
-./scripts/set-demo-api-image.sh
-
-git add apps/demo-api/helm/values-aws-dev.yaml
-git commit -m "release: update aws-dev demo-api image to ${IMAGE_TAG}"
-git push origin main
-```
-
-Prepare the PostgreSQL ServiceAccount for CloudNativePG backup access:
-
-```bash
-./scripts/prepare-cloudnative-pg-backup.sh
-```
-
-Then deploy or refresh the AWS root Application:
+Deploy or refresh the AWS root Application from the approved `main`
+desired state:
 
 ```bash
 REPO_URL=https://github.com/SterlingAureum/startup-devops-baseline.git \
@@ -199,17 +105,15 @@ TARGET_REVISION=main \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 
-The preparation script creates and annotates the PostgreSQL ServiceAccount
-with the Terraform-managed backup IRSA role.
-
-The deployment script applies or refreshes the AWS root Application, waits for
-the CloudNativePG ObjectStore, and patches its live S3 destination from the
-Terraform-managed backup bucket. It also waits for the generated
-`postgresql-baseline-app` credential and synchronizes only its `fqdn-uri` into
-`startup-apps/demo-api-postgresql` as `DATABASE_URL`.
+The deployment script creates and annotates the PostgreSQL ServiceAccount with
+the Terraform-managed backup IRSA role, applies or refreshes the AWS root
+Application, waits for the CloudNativePG ObjectStore, and patches its live S3
+destination from the Terraform-managed backup bucket. It then waits for the
+generated `postgresql-baseline-app` credential and synchronizes only its
+`fqdn-uri` into `startup-apps/demo-api-postgresql` as `DATABASE_URL`.
 
 The synchronized Secret is runtime state and is not committed to Git. Re-run
-the following command after application credential rotation:
+the following command only after application credential rotation:
 
 ```bash
 ./scripts/sync-demo-api-postgresql-secret.sh
@@ -230,17 +134,28 @@ The PostgreSQL cluster dynamically provisions three On-Demand database nodes,
 three root volumes, and three 20Gi gp3 data volumes. Leave the AWS environment
 running only when needed to avoid unnecessary EC2 and EBS charges.
 
+## 7. Validate the Baseline
 
-## 7. Validate Everything
-Run the backup test and validate the backup, recovery prerequisites, and
-overall environment:
+The backup validator requires at least one completed base backup. On a clean
+environment, intentionally create and verify one backup first:
 
 ```bash
 ./scripts/run-cloudnative-pg-backup-test.sh
+```
+
+Then run the unified non-disruptive baseline validation:
+
+```bash
+./scripts/validate-all.sh
+```
+
+When diagnosing a specific layer, the corresponding validators can also be
+run independently:
+
+```bash
 ./scripts/validate-cloudnative-pg-backup.sh
 ./scripts/validate-cloudnative-pg-recovery.sh
 ./scripts/validate-demo-api-postgresql.sh
-./scripts/validate-all.sh
 ```
 
 Manual checks:
@@ -287,6 +202,12 @@ CloudNativePG rolling restart; see `docs/TROUBLESHOOTING_V0.6.4.md`.
 The test forces WAL switches, creates one plugin-based `Backup`, waits for it
 to complete, and verifies both base-backup and WAL objects in S3. It does not
 delete the PostgreSQL Cluster or restart the primary.
+
+For the v0.7 delivery identity and Git-based rollback validation, see:
+
+- `docs/DELIVERY_TRACEABILITY.md`
+- `docs/GITOPS_ROLLBACK.md`
+- `docs/V0.7_FINAL_VALIDATION.md`
 
 ## 8. Run the PostgreSQL Replica Persistence Test
 
@@ -476,8 +397,22 @@ Karpenter AWS FIS Spot interruption and replacement validation passed.
 
 ## 14. Destroy
 
+Review `docs/AWS_EKS_DESTROY_RUNBOOK.md` before destroying the environment.
+The destroy script removes Kubernetes-managed AWS resources before Terraform
+destroys the VPC. It also permanently deletes the CloudNativePG S3 bucket,
+including base backups, WAL archives, current objects, and noncurrent object
+versions.
+
 ```bash
 ./scripts/destroy-aws-dev.sh
 ```
 
-Delete Kubernetes-managed AWS resources before Terraform destroys the VPC.
+The script prints the resolved cluster, region, and Terraform directory and
+requires the following explicit confirmation:
+
+```text
+destroy-with-backups
+```
+
+After completion, review AWS for unexpected residual load balancers, NAT
+Gateways, Elastic IPs, EC2 instances, and EBS volumes.

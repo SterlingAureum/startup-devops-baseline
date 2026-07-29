@@ -26,6 +26,7 @@ spec:
         {{- end }}
     spec:
       serviceAccountName: {{ include "demo-api.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
@@ -80,6 +81,18 @@ spec:
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          {{- if .Values.writableTmp.enabled }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+          {{- end }}
+      {{- if .Values.writableTmp.enabled }}
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: {{ .Values.writableTmp.medium | quote }}
+            sizeLimit: {{ .Values.writableTmp.sizeLimit }}
+      {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

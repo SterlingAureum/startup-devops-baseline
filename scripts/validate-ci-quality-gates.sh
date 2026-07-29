@@ -327,15 +327,8 @@ if REPOSITORY_DIR="${ROLLBACK_REPOSITORY}" \
   exit 1
 fi
 
-echo "==> Running demo-api unit tests in the test image stage"
-docker build \
-  --target test \
-  --tag demo-api-ci-test:unit \
-  "${ROOT_DIR}/apps/demo-api"
-
-echo "==> Building the final demo-api runtime image"
-docker build \
-  --tag demo-api-ci-test:runtime \
-  "${ROOT_DIR}/apps/demo-api"
+echo "==> Validating demo-api workload security"
+IMAGE_NAME="demo-api-ci-test:runtime" \
+  "${ROOT_DIR}/scripts/validate-demo-api-workload-security.sh"
 
 echo "CI quality gates passed."

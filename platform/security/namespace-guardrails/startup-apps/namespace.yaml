@@ -1,15 +1,14 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: data-platform
+  name: startup-apps
   annotations:
-    argocd.argoproj.io/sync-wave: "0"
-    argocd.argoproj.io/sync-options: Prune=false
+    argocd.argoproj.io/sync-wave: "-10"
   labels:
     app.kubernetes.io/part-of: startup-devops-baseline
-    platform.startup.dev/tier: data
+    platform.startup.dev/tier: application
     security.startup.dev/admission-guardrails: enabled
-    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/enforce-version: v1.30
     pod-security.kubernetes.io/warn: restricted
     pod-security.kubernetes.io/warn-version: v1.30

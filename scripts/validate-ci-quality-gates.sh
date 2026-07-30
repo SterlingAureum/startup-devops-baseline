@@ -27,6 +27,9 @@ echo "==> Validating security supply-chain contracts"
 echo "==> Validating namespace guardrail contracts"
 "${ROOT_DIR}/scripts/validate-namespace-guardrails.sh"
 
+echo "==> Validating application admission-policy contracts"
+"${ROOT_DIR}/scripts/validate-application-admission-policies.sh"
+
 echo "==> Validating delivery trigger contracts"
 PUBLISH_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-image-publish.yaml"
 ROLLBACK_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-rollback.yaml"

@@ -11,7 +11,8 @@ This module implements the EKS control-plane and stable managed-node baseline.
 - managed-node IAM role;
 - IAM OIDC provider for workload identities;
 - IRSA role for the Amazon EBS CSI driver;
-- EKS managed add-ons: VPC CNI, CoreDNS, kube-proxy, and EBS CSI;
+- EKS managed add-ons: VPC CNI with standard Kubernetes NetworkPolicy
+  enforcement, CoreDNS, kube-proxy, and EBS CSI;
 - optional EKS access entry and cluster-admin policy association.
 
 ## Access model
@@ -34,6 +35,14 @@ CIDR before keeping the environment online.
 The default managed node group uses two `t3.medium` On-Demand system nodes with
 a minimum of two and maximum of three. Nodes are labeled `workload=system` so
 platform controllers remain separate from future Karpenter application nodes.
+
+## Network policy enforcement
+
+The VPC CNI managed add-on explicitly enables standard Kubernetes
+`NetworkPolicy` enforcement. The node agent remains in standard mode, so new
+Pods start with default-allow networking until their applicable policies have
+been programmed. Application and data-platform policies are introduced
+separately after enforcement is validated in an isolated namespace.
 
 ## AWS Load Balancer Controller IAM
 

@@ -30,6 +30,12 @@ echo "==> Validating namespace guardrail contracts"
 echo "==> Validating application admission-policy contracts"
 "${ROOT_DIR}/scripts/validate-application-admission-policies.sh"
 
+echo "==> Validating EKS network-policy enforcement contracts"
+"${ROOT_DIR}/scripts/validate-eks-network-policy.sh"
+
+echo "==> Validating startup-apps NetworkPolicy contracts"
+"${ROOT_DIR}/scripts/validate-startup-apps-network-policy.sh"
+
 echo "==> Validating delivery trigger contracts"
 PUBLISH_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-image-publish.yaml"
 ROLLBACK_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-rollback.yaml"

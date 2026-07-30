@@ -141,6 +141,28 @@ require(
     "aws-dev admission-policy Application",
 )
 
+require(
+    runtime_validation,
+    [
+        "startup-apps-containers",
+        "argocd.argoproj.io/refresh=hard",
+        "status.sync.revision",
+        "EXPECTED_REVISION",
+        "Verifying direct Pods receive LimitRange resource defaults",
+        "assert_admitted_with_resource_defaults",
+        "A direct Pod without resources",
+        "Verifying workload templates with missing resources are rejected",
+        "A Deployment without requests",
+        "A Deployment without limits",
+    ],
+    "LimitRange-aware runtime validation matrix",
+)
+if 'assert_rejected "A Pod without requests"' in runtime_validation.read_text():
+    raise SystemExit(
+        f"{runtime_validation.relative_to(root)}: direct Pods must be validated "
+        "after LimitRange default injection, not rejected as undeclared templates."
+    )
+
 local_platform = root / "clusters" / "local" / "platform"
 if any(
     path.name == "application-admission-policies.yaml"

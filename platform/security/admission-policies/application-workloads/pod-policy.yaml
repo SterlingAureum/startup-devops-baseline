@@ -15,45 +15,46 @@ spec:
         apiVersions: ["v1"]
         operations: ["CREATE", "UPDATE"]
         resources: ["pods"]
+  variables:
+    - name: containers
+      expression: object.spec.containers
+    - name: initContainers
+      expression: object.spec.?initContainers.orValue([])
+    - name: containerResources
+      expression: variables.containers.map(container, container.?resources)
+    - name: initContainerResources
+      expression: variables.initContainers.map(container, container.?resources)
   validations:
     - expression: >-
-        object.spec.containers.all(container,
+        variables.containers.all(container,
           container.image.matches('^.+@sha256:[0-9a-f]{64}$'))
       message: >-
         Every application container must use an immutable sha256 digest image
         reference.
       reason: Invalid
     - expression: >-
-        !has(object.spec.initContainers) ||
-        object.spec.initContainers.all(container,
+        variables.initContainers.all(container,
           container.image.matches('^.+@sha256:[0-9a-f]{64}$'))
       message: >-
         Every application init container must use an immutable sha256 digest
         image reference.
       reason: Invalid
     - expression: >-
-        object.spec.containers.all(container,
-          has(container.resources) &&
-          has(container.resources.requests) &&
-          'cpu' in container.resources.requests &&
-          'memory' in container.resources.requests &&
-          has(container.resources.limits) &&
-          'cpu' in container.resources.limits &&
-          'memory' in container.resources.limits)
+        variables.containerResources.all(resources,
+          resources.?requests[?'cpu'].hasValue() &&
+          resources.?requests[?'memory'].hasValue() &&
+          resources.?limits[?'cpu'].hasValue() &&
+          resources.?limits[?'memory'].hasValue())
       message: >-
         Every application container must define cpu and memory requests and
         limits.
       reason: Invalid
     - expression: >-
-        !has(object.spec.initContainers) ||
-        object.spec.initContainers.all(container,
-          has(container.resources) &&
-          has(container.resources.requests) &&
-          'cpu' in container.resources.requests &&
-          'memory' in container.resources.requests &&
-          has(container.resources.limits) &&
-          'cpu' in container.resources.limits &&
-          'memory' in container.resources.limits)
+        variables.initContainerResources.all(resources,
+          resources.?requests[?'cpu'].hasValue() &&
+          resources.?requests[?'memory'].hasValue() &&
+          resources.?limits[?'cpu'].hasValue() &&
+          resources.?limits[?'memory'].hasValue())
       message: >-
         Every application init container must define cpu and memory requests
         and limits.

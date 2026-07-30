@@ -150,10 +150,9 @@ Incremental scope:
 
 - v0.8.0 - workload runtime hardening, secret and configuration scanning,
   pre-publication image vulnerability gates, immutable GitHub Action pins,
-  SPDX SBOM generation, and digest-bound attestations - implementation and 
-  GitHub runtime validation complete
+  SPDX SBOM generation, and digest-bound attestations - delivered
 - v0.8.1 - Namespace, Pod Security Admission, ResourceQuota, LimitRange, and
-  native admission-policy guardrails - planned
+  native admission-policy guardrails - delivered
 - v0.8.2 - EKS NetworkPolicy enablement and application/data-platform network
   isolation - planned
 - v0.8.3 - External Secrets Operator, IRSA, and AWS Secrets Manager

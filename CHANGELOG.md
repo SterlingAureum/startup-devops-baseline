@@ -2,6 +2,34 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.8.1
+
+### Added
+
+- GitOps-managed namespace guardrails for `startup-apps` and `data-platform`,
+  including Pod Security Admission, ResourceQuota, and LimitRange controls.
+- Kubernetes-native ValidatingAdmissionPolicy and CEL enforcement for
+  application Pods and common workload-controller Pod templates.
+- Immutable `sha256` image-digest requirements for containers and init
+  containers in protected application namespaces.
+- Explicit CPU and memory request and limit requirements for
+  workload-controller Pod templates, with LimitRange defaults retained as a
+  safety fallback for directly created Pods.
+- Repository contract checks and AWS runtime admission tests covering
+  compliant requests, privileged Pods, mutable image tags, missing resource
+  declarations, LimitRange default injection, and namespace-scope isolation.
+
+### Changed
+
+- Enforced the `restricted` Pod Security Standard for `startup-apps` and staged
+  `data-platform` with `baseline` enforcement plus `restricted` warnings and
+  audit records.
+- Scoped application admission-policy bindings to namespaces labeled
+  `platform.startup.dev/tier=application`, keeping operator-managed
+  CloudNativePG workloads outside the generic application policy.
+- Hardened AWS admission validation to refresh the Argo CD Application and
+  wait for the intended Git revision before evaluating live policy behavior.
+
 ## v0.8.0
 
 ### Added

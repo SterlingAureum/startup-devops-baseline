@@ -91,7 +91,7 @@ policy_egress_cidrs() {
   kubectl get networkpolicy "${policy_name}" \
     --namespace "${DATA_NAMESPACE}" \
     --output json |
-    jq -c '[.spec.egress[].to[]?.ipBlock.cidr] | sort'
+    jq -c '[.spec.egress[]?.to[]? | .ipBlock.cidr? // empty] | sort'
 }
 
 echo "==> Configuring kubeconfig for ${CLUSTER_NAME}"
@@ -413,7 +413,13 @@ WAL_SEGMENT="$(
     "${PRIMARY_POD}" \
     --container postgres -- \
     psql -U postgres -d postgres -Atqc \
-      "SELECT pg_walfile_name(pg_current_wal_lsn());"
+      "SELECT pg_walfile_name(
+         pg_logical_emit_message(
+           false,
+           'v082-network-policy',
+           clock_timestamp()::text
+         )
+       );"
 )"
 if [[ ! "${WAL_SEGMENT}" =~ ^[0-9A-F]{24}$ ]]; then
   echo "Unexpected WAL segment name: ${WAL_SEGMENT}" >&2

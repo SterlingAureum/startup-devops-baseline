@@ -11,9 +11,11 @@ POSTGRES_CLUSTER="${POSTGRES_CLUSTER:-postgresql-baseline}"
 OPERATOR_NAMESPACE="${OPERATOR_NAMESPACE:-cnpg-system}"
 OPERATOR_DEPLOYMENT="${OPERATOR_DEPLOYMENT:-cnpg-cloudnative-pg}"
 BARMAN_DEPLOYMENT="${BARMAN_DEPLOYMENT:-barman-cloud-plugin-barman-cloud}"
+BARMAN_SERVICE_NAME="${BARMAN_SERVICE_NAME:-barman-cloud}"
 BARMAN_SERVICE="${BARMAN_SERVICE:-barman-cloud.cnpg-system.svc.cluster.local}"
 APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-20m}"
+REPLICATION_TIMEOUT_SECONDS="${REPLICATION_TIMEOUT_SECONDS:-300}"
 WAL_TIMEOUT_SECONDS="${WAL_TIMEOUT_SECONDS:-600}"
 TEST_IMAGE="${TEST_IMAGE:-public.ecr.aws/docker/library/busybox:1.36.1}"
 TEST_NAMESPACE="${TEST_NAMESPACE:-v082-data-platform-netpol-test-$$}"
@@ -83,6 +85,15 @@ tcp_check_from_postgres() {
       "timeout 8 bash -c '</dev/tcp/${host}/${port}'"
 }
 
+policy_egress_cidrs() {
+  local policy_name="$1"
+
+  kubectl get networkpolicy "${policy_name}" \
+    --namespace "${DATA_NAMESPACE}" \
+    --output json |
+    jq -c '[.spec.egress[].to[]?.ipBlock.cidr] | sort'
+}
+
 echo "==> Configuring kubeconfig for ${CLUSTER_NAME}"
 aws eks update-kubeconfig \
   --region "${AWS_REGION}" \
@@ -104,6 +115,7 @@ for policy in \
   allow-demo-api-to-postgresql-baseline \
   allow-cnpg-operator-to-instances \
   allow-cnpg-instance-traffic \
+  allow-cnpg-to-postgresql-rw-service \
   allow-kubernetes-api-to-cnpg-status \
   allow-cnpg-to-barman-plugin \
   allow-cnpg-to-kubernetes-api \
@@ -111,6 +123,13 @@ for policy in \
   kubectl get networkpolicy "${policy}" \
     --namespace "${DATA_NAMESPACE}" >/dev/null
 done
+
+if kubectl get networkpolicy temporary-allow-cnpg-rw-service \
+  --namespace "${DATA_NAMESPACE}" >/dev/null 2>&1; then
+  echo "Temporary PostgreSQL rw Service policy is still installed." >&2
+  echo "Delete temporary-allow-cnpg-rw-service before validation." >&2
+  exit 1
+fi
 
 if ! kubectl get policyendpoints.networking.k8s.aws \
   --namespace "${DATA_NAMESPACE}" \
@@ -139,6 +158,67 @@ KUBERNETES_SERVICE_IP="$(
 )"
 if [[ -z "${KUBERNETES_SERVICE_IP}" ]]; then
   echo "The default/kubernetes Service does not have a ClusterIP." >&2
+  exit 1
+fi
+
+DNS_SERVICE_IP="$(
+  kubectl get service kube-dns \
+    --namespace kube-system \
+    --output jsonpath='{.spec.clusterIP}'
+)"
+BARMAN_SERVICE_IP="$(
+  kubectl get service "${BARMAN_SERVICE_NAME}" \
+    --namespace "${OPERATOR_NAMESPACE}" \
+    --output jsonpath='{.spec.clusterIP}'
+)"
+POSTGRES_RW_SERVICE_IP="$(
+  kubectl get service "${POSTGRES_CLUSTER}-rw" \
+    --namespace "${DATA_NAMESPACE}" \
+    --output jsonpath='{.spec.clusterIP}'
+)"
+for service_mapping in \
+  "kube-system/kube-dns:${DNS_SERVICE_IP}" \
+  "${OPERATOR_NAMESPACE}/${BARMAN_SERVICE_NAME}:${BARMAN_SERVICE_IP}" \
+  "${DATA_NAMESPACE}/${POSTGRES_CLUSTER}-rw:${POSTGRES_RW_SERVICE_IP}"; do
+  if [[ "${service_mapping}" == *: || "${service_mapping}" == *:None ]]; then
+    echo "A required Service does not have a usable ClusterIP." >&2
+    echo "Service mapping: ${service_mapping}" >&2
+    exit 1
+  fi
+done
+
+echo "==> Verifying Service ClusterIP policy alignment"
+EXPECTED_DNS_CIDRS="$(jq -cn --arg cidr "${DNS_SERVICE_IP}/32" '[$cidr]')"
+POLICY_DNS_CIDRS="$(policy_egress_cidrs allow-dns-egress)"
+if [[ "${POLICY_DNS_CIDRS}" != "${EXPECTED_DNS_CIDRS}" ]]; then
+  echo "The DNS egress CIDRs do not match the live kube-dns Service." >&2
+  echo "Live:   ${EXPECTED_DNS_CIDRS}" >&2
+  echo "Policy: ${POLICY_DNS_CIDRS}" >&2
+  exit 1
+fi
+
+EXPECTED_BARMAN_CIDRS="$(
+  jq -cn --arg cidr "${BARMAN_SERVICE_IP}/32" '[$cidr]'
+)"
+POLICY_BARMAN_CIDRS="$(policy_egress_cidrs allow-cnpg-to-barman-plugin)"
+if [[ "${POLICY_BARMAN_CIDRS}" != "${EXPECTED_BARMAN_CIDRS}" ]]; then
+  echo "The Barman egress CIDRs do not match the live Service." >&2
+  echo "Live:   ${EXPECTED_BARMAN_CIDRS}" >&2
+  echo "Policy: ${POLICY_BARMAN_CIDRS}" >&2
+  exit 1
+fi
+
+EXPECTED_POSTGRES_RW_CIDRS="$(
+  jq -cn --arg cidr "${POSTGRES_RW_SERVICE_IP}/32" '[$cidr]'
+)"
+POLICY_POSTGRES_RW_CIDRS="$(
+  policy_egress_cidrs allow-cnpg-to-postgresql-rw-service
+)"
+if [[ "${POLICY_POSTGRES_RW_CIDRS}" != \
+      "${EXPECTED_POSTGRES_RW_CIDRS}" ]]; then
+  echo "The PostgreSQL rw egress CIDRs do not match the live Service." >&2
+  echo "Live:   ${EXPECTED_POSTGRES_RW_CIDRS}" >&2
+  echo "Policy: ${POLICY_POSTGRES_RW_CIDRS}" >&2
   exit 1
 fi
 
@@ -252,20 +332,48 @@ kubectl exec \
   --container postgres -- \
   bash -c 'command -v bash >/dev/null && command -v getent >/dev/null && command -v timeout >/dev/null'
 
-STREAMING_REPLICAS="$(
-  kubectl exec \
+EXPECTED_STREAMING_REPLICAS="$((EXPECTED_INSTANCES - 1))"
+STREAMING_REPLICAS="0"
+deadline=$((SECONDS + REPLICATION_TIMEOUT_SECONDS))
+while true; do
+  if ! STREAMING_REPLICAS="$(
+    kubectl exec \
+      --namespace "${DATA_NAMESPACE}" \
+      "${PRIMARY_POD}" \
+      --container postgres -- \
+      psql -U postgres -d postgres -Atqc \
+        "SELECT count(*) FROM pg_stat_replication WHERE state = 'streaming';" \
+      2>/dev/null
+  )"; then
+    STREAMING_REPLICAS="0"
+  fi
+  if [[ "${STREAMING_REPLICAS}" == "${EXPECTED_STREAMING_REPLICAS}" ]]; then
+    break
+  fi
+  if (( SECONDS >= deadline )); then
+    echo "Timed out waiting for every PostgreSQL replica to stream." >&2
+    echo "Expected: ${EXPECTED_STREAMING_REPLICAS}" >&2
+    echo "Actual:   ${STREAMING_REPLICAS}" >&2
+    exit 1
+  fi
+  sleep 10
+done
+
+REPLICA_POD="$(
+  kubectl get pods \
     --namespace "${DATA_NAMESPACE}" \
-    "${PRIMARY_POD}" \
-    --container postgres -- \
-    psql -U postgres -d postgres -Atqc \
-      "SELECT count(*) FROM pg_stat_replication WHERE state = 'streaming';"
+    --selector "cnpg.io/cluster=${POSTGRES_CLUSTER},cnpg.io/instanceRole=replica" \
+    --field-selector status.phase=Running \
+    --output jsonpath='{.items[0].metadata.name}'
 )"
-if [[ "${STREAMING_REPLICAS}" != "$((EXPECTED_INSTANCES - 1))" ]]; then
-  echo "Not every PostgreSQL replica is streaming." >&2
-  echo "Expected: $((EXPECTED_INSTANCES - 1))" >&2
-  echo "Actual:   ${STREAMING_REPLICAS}" >&2
+if [[ -z "${REPLICA_POD}" ]]; then
+  echo "Unable to resolve a running PostgreSQL replica Pod." >&2
   exit 1
 fi
+tcp_check_from_postgres \
+  "${REPLICA_POD}" \
+  "${POSTGRES_RW_SERVICE_IP}" \
+  5432
 
 "${ROOT_DIR}/scripts/validate-demo-api-postgresql.sh"
 

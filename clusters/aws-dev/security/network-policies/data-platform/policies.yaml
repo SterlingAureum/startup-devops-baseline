@@ -26,6 +26,10 @@ spec:
           podSelector:
             matchLabels:
               k8s-app: kube-dns
+        # Amazon VPC CNI can evaluate Service traffic before destination NAT.
+        # Keep the kube-dns Service address alongside the Pod selector.
+        - ipBlock:
+            cidr: 172.20.0.10/32
       ports:
         - protocol: UDP
           port: 53
@@ -120,6 +124,27 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  name: allow-cnpg-to-postgresql-rw-service
+  namespace: data-platform
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/podRole: instance
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        # CNPG replicas connect through the stable baseline rw Service.
+        # The runtime validation fails if this ClusterIP drifts.
+        - ipBlock:
+            cidr: 172.20.104.64/32
+      ports:
+        - protocol: TCP
+          port: 5432
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
   name: allow-kubernetes-api-to-cnpg-status
   namespace: data-platform
 spec:
@@ -160,6 +185,10 @@ spec:
             matchLabels:
               app.kubernetes.io/instance: barman-cloud
               app.kubernetes.io/name: plugin-barman-cloud
+        # Keep the Barman Service address alongside the Pod selector because
+        # Amazon VPC CNI can evaluate the pre-DNAT destination.
+        - ipBlock:
+            cidr: 172.20.14.237/32
       ports:
         - protocol: TCP
           port: 9090

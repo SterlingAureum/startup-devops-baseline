@@ -61,11 +61,15 @@ require(
         "name: allow-cnpg-operator-to-instances",
         "app.kubernetes.io/name: cloudnative-pg",
         "name: allow-cnpg-instance-traffic",
+        "name: allow-cnpg-to-postgresql-rw-service",
         "cnpg.io/podRole: instance",
         "name: allow-kubernetes-api-to-cnpg-status",
         "name: allow-cnpg-to-barman-plugin",
         "app.kubernetes.io/name: plugin-barman-cloud",
         "name: allow-cnpg-to-kubernetes-api",
+        "cidr: 172.20.0.10/32",
+        "cidr: 172.20.14.237/32",
+        "cidr: 172.20.104.64/32",
         "cidr: 172.20.0.1/32",
         "cidr: 10.20.10.230/32",
         "cidr: 10.20.11.76/32",
@@ -86,9 +90,9 @@ require(
 )
 
 policy_content = policy.read_text()
-if policy_content.count("kind: NetworkPolicy") != 9:
+if policy_content.count("kind: NetworkPolicy") != 10:
     raise SystemExit(
-        f"{policy.relative_to(root)}: expected exactly nine NetworkPolicy objects."
+        f"{policy.relative_to(root)}: expected exactly ten NetworkPolicy objects."
     )
 if "cidr: 10.20.0.0/16" in policy_content:
     raise SystemExit(
@@ -119,7 +123,11 @@ require(
         'APPLICATION_NAME="${APPLICATION_NAME:-data-platform-network-policy-aws-dev}"',
         'EXPECTED_REVISION="${EXPECTED_REVISION:-$(git -C "${ROOT_DIR}" rev-parse HEAD)}"',
         "Verifying private Kubernetes API endpoint alignment",
+        "Verifying Service ClusterIP policy alignment",
         "Verifying CloudNativePG control and replication paths",
+        "temporary-allow-cnpg-rw-service",
+        'REPLICATION_TIMEOUT_SECONDS="${REPLICATION_TIMEOUT_SECONDS:-300}"',
+        "Timed out waiting for every PostgreSQL replica to stream.",
         "Verifying Barman, Kubernetes API, S3, and STS egress",
         "Verifying fresh WAL archival after isolation",
         "Verifying unauthorized PostgreSQL ingress is denied",

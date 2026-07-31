@@ -17,21 +17,23 @@ Promoted values and live workloads now retain enough delivery metadata to
 correlate source, build, Git promotion, Argo CD reconciliation, Pod image ID,
 and the application-reported version. A manual rollback workflow can now
 restore a previously reviewed, metadata-aware desired state through another
-values-only pull request. The repository remains intentionally smaller than a
-full production platform and will continue toward security controls,
-observability, AI infrastructure workloads, and AIOps workflows.
+values-only pull request. The AWS environment now also enforces namespace and
+admission guardrails plus default-deny NetworkPolicy isolation for application
+and CloudNativePG data workloads, with explicit runtime-validated traffic
+paths. The repository remains intentionally smaller than a full production
+platform and will continue toward secrets integration, HTTPS and control-plane
+hardening, observability, AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.7.4-cicd-gitops-promotion
+v0.8.2-network-policy-enforcement
 ```
-The delivery loop now supports both forward promotion and history-based
-rollback. GitHub Actions validates a historical values-only release and opens
-a rollback pull request that restores only `values-aws-dev.yaml`; it does not
-merge, contact EKS, or invoke Argo CD. After human approval and Argo CD
-reconciliation, the same trace validator proves the restored source, digest,
-desired-state commit, live Pod image ID, and `/version` identity.
+The AWS EKS environment now enables standard Amazon VPC CNI NetworkPolicy
+enforcement and applies explicit default-deny policies to both `startup-apps`
+and `data-platform`. Runtime matrices prove required ALB, demo-api,
+CloudNativePG, Barman, Kubernetes API, S3, STS, backup, failover, recovery, and
+PITR paths while rejecting unauthorized ingress and egress.
 
 ## Platform Architecture
 

@@ -2,6 +2,35 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.8.2
+
+### Added
+
+- Amazon VPC CNI NetworkPolicy enforcement with managed add-on, node-agent,
+  PolicyEndpoint, and isolated allow/deny/allow runtime validation.
+- GitOps-managed default-deny and explicit allow policies for `startup-apps`,
+  covering DNS, public-ALB ingress, and demo-api access to the baseline
+  PostgreSQL cluster.
+- GitOps-managed default-deny and explicit CloudNativePG policies for
+  `data-platform`, covering operator control, replication, PostgreSQL Service,
+  Barman plugin, Kubernetes API, S3, STS, and recovery Job traffic.
+- Static policy-contract checks and AWS runtime matrices for live subnet,
+  Service ClusterIP, Kubernetes API endpoint, database, WAL archival, and
+  unauthorized-traffic behavior.
+
+### Changed
+
+- Restricted ALB ingress to the live ELB-tagged public subnet CIDRs and
+  validated policy alignment against the deployed load balancer.
+- Restricted internal Service paths to live `/32` addresses instead of opening
+  the entire Kubernetes Service CIDR.
+- Extended the CloudNativePG recovery drill to detect failed recovery Jobs,
+  preserve diagnostics before cleanup, and wait only for database instance
+  Pods when evaluating readiness.
+- Revalidated backup, primary failover, latest-state recovery, PITR, data
+  integrity, and recovery-resource cleanup while default-deny enforcement was
+  active.
+
 ## v0.8.1
 
 ### Added

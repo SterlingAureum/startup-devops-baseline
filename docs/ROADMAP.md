@@ -154,7 +154,7 @@ Incremental scope:
 - v0.8.1 - Namespace, Pod Security Admission, ResourceQuota, LimitRange, and
   native admission-policy guardrails - delivered
 - v0.8.2 - EKS NetworkPolicy enablement and application/data-platform network
-  isolation - planned
+  isolation - delivered
 - v0.8.3 - External Secrets Operator, IRSA, and AWS Secrets Manager
   integration - planned
 - v0.8.4 - PostgreSQL application credential rotation and workload reload

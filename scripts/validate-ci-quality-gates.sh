@@ -39,6 +39,9 @@ echo "==> Validating startup-apps NetworkPolicy contracts"
 echo "==> Validating data-platform NetworkPolicy contracts"
 "${ROOT_DIR}/scripts/validate-data-platform-network-policy.sh"
 
+echo "==> Validating External Secrets AWS foundation contracts"
+"${ROOT_DIR}/scripts/validate-external-secrets-foundation.sh"
+
 echo "==> Validating delivery trigger contracts"
 PUBLISH_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-image-publish.yaml"
 ROLLBACK_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-rollback.yaml"

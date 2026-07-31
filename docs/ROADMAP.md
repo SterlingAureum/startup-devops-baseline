@@ -156,7 +156,8 @@ Incremental scope:
 - v0.8.2 - EKS NetworkPolicy enablement and application/data-platform network
   isolation - delivered
 - v0.8.3 - External Secrets Operator, IRSA, and AWS Secrets Manager
-  integration - planned
+  integration - in progress (checkpoint 1 implementation complete; AWS runtime
+  validation pending)
 - v0.8.4 - PostgreSQL application credential rotation and workload reload
   validation - planned
 - v0.8.5 - Route 53 DNS, ACM/ALB HTTPS, EKS endpoint and control-plane logging

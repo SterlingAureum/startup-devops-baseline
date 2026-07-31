@@ -78,3 +78,16 @@ module "cnpg_backup" {
   service_account_namespace = "data-platform"
   tags                      = var.additional_tags
 }
+
+module "external_secrets" {
+  source = "../../modules/external-secrets"
+
+  project_name              = var.project_name
+  environment               = var.environment
+  oidc_provider_arn         = module.eks.oidc_provider_arn
+  oidc_provider_url         = module.eks.oidc_provider_url
+  service_account_name      = "external-secrets"
+  service_account_namespace = "external-secrets"
+  recovery_window_in_days   = var.external_secrets_recovery_window_in_days
+  tags                      = var.additional_tags
+}

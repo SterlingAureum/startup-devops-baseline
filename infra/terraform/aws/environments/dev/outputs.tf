@@ -132,3 +132,28 @@ output "cnpg_backup_role_arn" {
   description = "IRSA role ARN used by the CloudNativePG cluster ServiceAccount."
   value       = module.cnpg_backup.role_arn
 }
+
+output "external_secrets_secret_name" {
+  description = "Name of the Secrets Manager secret reserved for demo-api PostgreSQL material."
+  value       = module.external_secrets.secret_name
+}
+
+output "external_secrets_secret_arn" {
+  description = "ARN of the Secrets Manager secret reserved for demo-api PostgreSQL material."
+  value       = module.external_secrets.secret_arn
+}
+
+output "external_secrets_role_arn" {
+  description = "IRSA role ARN used by the External Secrets Operator ServiceAccount."
+  value       = module.external_secrets.role_arn
+}
+
+output "external_secrets_role_name" {
+  description = "Name of the External Secrets Operator IRSA role."
+  value       = module.external_secrets.role_name
+}
+
+output "external_secrets_policy_arn" {
+  description = "ARN of the least-privilege External Secrets read policy."
+  value       = module.external_secrets.policy_arn
+}

@@ -158,3 +158,20 @@ variable "cnpg_backup_force_destroy" {
   type        = bool
   default     = true
 }
+
+variable "external_secrets_recovery_window_in_days" {
+  description = "Secrets Manager recovery window. Use 0 only for the disposable aws-dev environment."
+  type        = number
+  default     = 0
+
+  validation {
+    condition = (
+      var.external_secrets_recovery_window_in_days == 0 ||
+      (
+        var.external_secrets_recovery_window_in_days >= 7 &&
+        var.external_secrets_recovery_window_in_days <= 30
+      )
+    )
+    error_message = "external_secrets_recovery_window_in_days must be 0 or between 7 and 30."
+  }
+}

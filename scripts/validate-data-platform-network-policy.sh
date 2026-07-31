@@ -30,9 +30,10 @@ application = (
     / "data-platform-network-policy.yaml"
 )
 runtime = root / "scripts" / "validate-data-platform-network-policy-aws.sh"
+recovery = root / "scripts" / "run-cloudnative-pg-recovery-test.sh"
 archive = root / "docs" / "archive" / "V0.8.2_NETWORK_POLICY_ENFORCEMENT.md"
 
-required_files = [policy, application, runtime, archive]
+required_files = [policy, application, runtime, recovery, archive]
 missing = [str(path.relative_to(root)) for path in required_files if not path.is_file()]
 if missing:
     raise SystemExit(
@@ -74,6 +75,8 @@ require(
         "cidr: 10.20.10.230/32",
         "cidr: 10.20.11.76/32",
         "name: allow-cnpg-public-https-egress",
+        "name: allow-cnpg-full-recovery-egress",
+        "cnpg.io/jobRole: full-recovery",
         "cidr: 0.0.0.0/0",
         "- 10.0.0.0/8",
         "- 100.64.0.0/10",
@@ -90,9 +93,9 @@ require(
 )
 
 policy_content = policy.read_text()
-if policy_content.count("kind: NetworkPolicy") != 10:
+if policy_content.count("kind: NetworkPolicy") != 11:
     raise SystemExit(
-        f"{policy.relative_to(root)}: expected exactly ten NetworkPolicy objects."
+        f"{policy.relative_to(root)}: expected exactly eleven NetworkPolicy objects."
     )
 if "cidr: 10.20.0.0/16" in policy_content:
     raise SystemExit(
@@ -124,12 +127,15 @@ require(
         'EXPECTED_REVISION="${EXPECTED_REVISION:-$(git -C "${ROOT_DIR}" rev-parse HEAD)}"',
         "Verifying private Kubernetes API endpoint alignment",
         "Verifying Service ClusterIP policy alignment",
+        "The full-recovery API CIDRs do not match the live endpoints.",
+        "The full-recovery public HTTPS contract is not least privilege.",
         "Verifying CloudNativePG control and replication paths",
         "temporary-allow-cnpg-rw-service",
         'REPLICATION_TIMEOUT_SECONDS="${REPLICATION_TIMEOUT_SECONDS:-300}"',
         "Timed out waiting for every PostgreSQL replica to stream.",
         "Verifying Barman, Kubernetes API, S3, and STS egress",
         "Verifying fresh WAL archival after isolation",
+        "pg_logical_emit_message",
         "Verifying unauthorized PostgreSQL ingress is denied",
         "Verifying unauthorized data-platform egress is denied",
         "data-platform NetworkPolicy aws-dev runtime validation passed.",
@@ -138,13 +144,28 @@ require(
 )
 
 require(
+    recovery,
+    [
+        "diagnose_recovery_cluster()",
+        "recovery_job_failed()",
+        "entered a terminal failure state",
+        'cnpg.io/podRole=instance',
+        "pg_logical_emit_message",
+        "--all-containers",
+        "--show-labels",
+    ],
+    "recovery failure diagnostics and instance selection",
+)
+
+require(
     archive,
     [
         "Checkpoint 2 validated",
-        "Checkpoint 3 implemented",
+        "Checkpoint 3 runtime matrix validated",
         "private Kubernetes API endpoint",
         "RFC1918",
         "fresh WAL",
+        "full-recovery",
         "recovery and PITR",
     ],
     "checkpoint status and operating model",

@@ -119,7 +119,8 @@ for policy in \
   allow-kubernetes-api-to-cnpg-status \
   allow-cnpg-to-barman-plugin \
   allow-cnpg-to-kubernetes-api \
-  allow-cnpg-public-https-egress; do
+  allow-cnpg-public-https-egress \
+  allow-cnpg-full-recovery-egress; do
   kubectl get networkpolicy "${policy}" \
     --namespace "${DATA_NAMESPACE}" >/dev/null
 done
@@ -251,6 +252,72 @@ if [[ "${POLICY_API_EGRESS_CIDRS}" != "${EXPECTED_API_EGRESS_CIDRS}" ]]; then
   echo "The Kubernetes API egress CIDRs do not match the live endpoints." >&2
   echo "Live:   ${EXPECTED_API_EGRESS_CIDRS}" >&2
   echo "Policy: ${POLICY_API_EGRESS_CIDRS}" >&2
+  exit 1
+fi
+
+RECOVERY_JOB_ROLE="$(
+  kubectl get networkpolicy allow-cnpg-full-recovery-egress \
+    --namespace "${DATA_NAMESPACE}" \
+    --output jsonpath='{.spec.podSelector.matchLabels.cnpg\.io/jobRole}'
+)"
+if [[ "${RECOVERY_JOB_ROLE}" != "full-recovery" ]]; then
+  echo "The recovery egress policy does not select full-recovery Jobs." >&2
+  exit 1
+fi
+
+POLICY_RECOVERY_API_CIDRS="$(
+  kubectl get networkpolicy allow-cnpg-full-recovery-egress \
+    --namespace "${DATA_NAMESPACE}" \
+    --output json |
+    jq -c '[
+      .spec.egress[]?.to[]?
+      | .ipBlock.cidr? // empty
+      | select(. != "0.0.0.0/0")
+    ] | sort'
+)"
+if [[ "${POLICY_RECOVERY_API_CIDRS}" != "${EXPECTED_API_EGRESS_CIDRS}" ]]; then
+  echo "The full-recovery API CIDRs do not match the live endpoints." >&2
+  echo "Live:   ${EXPECTED_API_EGRESS_CIDRS}" >&2
+  echo "Policy: ${POLICY_RECOVERY_API_CIDRS}" >&2
+  exit 1
+fi
+
+RECOVERY_PUBLIC_HTTPS_CONTRACT="$(
+  kubectl get networkpolicy allow-cnpg-full-recovery-egress \
+    --namespace "${DATA_NAMESPACE}" \
+    --output json |
+    jq -c '[
+      .spec.egress[]
+      | select(any(.to[]?; .ipBlock.cidr? == "0.0.0.0/0"))
+      | {
+          ports: [.ports[] | "\(.protocol)/\(.port)"] | sort,
+          except: [
+            .to[]?
+            | select(.ipBlock.cidr? == "0.0.0.0/0")
+            | .ipBlock.except[]
+          ] | sort
+        }
+    ]'
+)"
+EXPECTED_RECOVERY_PUBLIC_HTTPS_CONTRACT="$(
+  jq -cn '[
+    {
+      ports: ["TCP/443"],
+      except: [
+        "10.0.0.0/8",
+        "100.64.0.0/10",
+        "169.254.0.0/16",
+        "172.16.0.0/12",
+        "192.168.0.0/16"
+      ]
+    }
+  ]'
+)"
+if [[ "${RECOVERY_PUBLIC_HTTPS_CONTRACT}" != \
+      "${EXPECTED_RECOVERY_PUBLIC_HTTPS_CONTRACT}" ]]; then
+  echo "The full-recovery public HTTPS contract is not least privilege." >&2
+  echo "Expected: ${EXPECTED_RECOVERY_PUBLIC_HTTPS_CONTRACT}" >&2
+  echo "Actual:   ${RECOVERY_PUBLIC_HTTPS_CONTRACT}" >&2
   exit 1
 fi
 

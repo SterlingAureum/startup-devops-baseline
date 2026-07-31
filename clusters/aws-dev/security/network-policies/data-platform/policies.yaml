@@ -243,3 +243,41 @@ spec:
       ports:
         - protocol: TCP
           port: 443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-cnpg-full-recovery-egress
+  namespace: data-platform
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/jobRole: full-recovery
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        # The recovery manager watches its Cluster through the Kubernetes API.
+        # Include the Service address and current private endpoint addresses.
+        - ipBlock:
+            cidr: 172.20.0.1/32
+        - ipBlock:
+            cidr: 10.20.10.230/32
+        - ipBlock:
+            cidr: 10.20.11.76/32
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        # The injected Barman recovery sidecar uses IRSA to read S3 directly.
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+              - 100.64.0.0/10
+              - 169.254.0.0/16
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443

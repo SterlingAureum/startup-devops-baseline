@@ -117,7 +117,7 @@ require(
     archive,
     [
         "Checkpoint 1 validated",
-        "Checkpoint 2 implemented",
+        "Checkpoint 2 validated",
         "ELB-tagged public subnet CIDRs",
         "TCP/5432",
         "data-platform default-deny is deferred",

@@ -15,6 +15,12 @@ DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-dev}"
 DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
 DEMO_DATABASE_SECRET="${DEMO_DATABASE_SECRET:-demo-api-postgresql}"
 DEMO_WAIT_SECONDS="${DEMO_WAIT_SECONDS:-900}"
+EXTERNAL_SECRETS_NAMESPACE="${EXTERNAL_SECRETS_NAMESPACE:-external-secrets}"
+EXTERNAL_SECRETS_SERVICE_ACCOUNT="${EXTERNAL_SECRETS_SERVICE_ACCOUNT:-external-secrets}"
+EXTERNAL_SECRETS_APPLICATION="${EXTERNAL_SECRETS_APPLICATION:-external-secrets}"
+EXTERNAL_SECRETS_RESOURCES_APPLICATION="${EXTERNAL_SECRETS_RESOURCES_APPLICATION:-external-secrets-startup-apps}"
+EXTERNAL_SECRETS_STORE="${EXTERNAL_SECRETS_STORE:-aws-secrets-manager}"
+EXTERNAL_SECRETS_WAIT_SECONDS="${EXTERNAL_SECRETS_WAIT_SECONDS:-900}"
 SYNC_DATABASE_SECRET_SCRIPT="$(
   cd "$(dirname "${BASH_SOURCE[0]}")" &&
     pwd
@@ -44,6 +50,7 @@ terraform_output() {
 
 BACKUP_BUCKET="$(terraform_output cnpg_backup_bucket_name)"
 BACKUP_ROLE_ARN="$(terraform_output cnpg_backup_role_arn)"
+EXTERNAL_SECRETS_ROLE_ARN="$(terraform_output external_secrets_role_arn)"
 
 if [[ ! "${BACKUP_BUCKET}" =~ ^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$ ]]; then
   echo "Terraform output cnpg_backup_bucket_name is not a valid S3 bucket name." >&2
@@ -54,6 +61,30 @@ if [[ ! "${BACKUP_ROLE_ARN}" =~ ^arn:[^:]+:iam::[0-9]{12}:role/.+ ]]; then
   echo "Terraform output cnpg_backup_role_arn is not a valid IAM role ARN." >&2
   exit 1
 fi
+
+if [[ ! "${EXTERNAL_SECRETS_ROLE_ARN}" =~ ^arn:[^:]+:iam::[0-9]{12}:role/.+ ]]; then
+  echo "Terraform output external_secrets_role_arn is not a valid IAM role ARN." >&2
+  exit 1
+fi
+
+echo "==> Configuring the External Secrets Operator ServiceAccount"
+kubectl create namespace "${EXTERNAL_SECRETS_NAMESPACE}" \
+  --dry-run=client \
+  --output yaml | kubectl apply -f -
+kubectl label namespace "${EXTERNAL_SECRETS_NAMESPACE}" \
+  pod-security.kubernetes.io/enforce=restricted \
+  pod-security.kubernetes.io/enforce-version=v1.30 \
+  pod-security.kubernetes.io/warn=restricted \
+  pod-security.kubernetes.io/audit=restricted \
+  --overwrite
+kubectl create serviceaccount "${EXTERNAL_SECRETS_SERVICE_ACCOUNT}" \
+  --namespace "${EXTERNAL_SECRETS_NAMESPACE}" \
+  --dry-run=client \
+  --output yaml | kubectl apply -f -
+kubectl annotate serviceaccount "${EXTERNAL_SECRETS_SERVICE_ACCOUNT}" \
+  --namespace "${EXTERNAL_SECRETS_NAMESPACE}" \
+  eks.amazonaws.com/role-arn="${EXTERNAL_SECRETS_ROLE_ARN}" \
+  --overwrite
 
 echo "==> Configuring the CloudNativePG backup ServiceAccount"
 kubectl create namespace "${POSTGRES_NAMESPACE}" \
@@ -83,6 +114,44 @@ sed \
   "${SOURCE_FILE}" > "${TEMP_FILE}"
 
 kubectl apply -f "${TEMP_FILE}"
+
+echo "==> Waiting for the External Secrets Operator GitOps applications"
+deadline=$((SECONDS + EXTERNAL_SECRETS_WAIT_SECONDS))
+for application in \
+  "${EXTERNAL_SECRETS_APPLICATION}" \
+  "${EXTERNAL_SECRETS_RESOURCES_APPLICATION}"; do
+  while ! kubectl get application "${application}" \
+    --namespace argocd >/dev/null 2>&1; do
+    if (( SECONDS >= deadline )); then
+      echo "Timed out waiting for Argo CD Application ${application}." >&2
+      exit 1
+    fi
+    sleep 10
+  done
+
+  kubectl annotate application "${application}" \
+    --namespace argocd \
+    argocd.argoproj.io/refresh=hard \
+    --overwrite
+
+  kubectl wait \
+    --for=jsonpath='{.status.sync.status}'=Synced \
+    "application/${application}" \
+    --namespace argocd \
+    --timeout="${EXTERNAL_SECRETS_WAIT_SECONDS}s"
+done
+
+kubectl wait \
+  --for=jsonpath='{.status.health.status}'=Healthy \
+  "application/${EXTERNAL_SECRETS_APPLICATION}" \
+  --namespace argocd \
+  --timeout="${EXTERNAL_SECRETS_WAIT_SECONDS}s"
+
+kubectl wait \
+  --for=condition=Ready \
+  "SecretStore/${EXTERNAL_SECRETS_STORE}" \
+  --namespace "${DEMO_NAMESPACE}" \
+  --timeout="${EXTERNAL_SECRETS_WAIT_SECONDS}s"
 
 echo "==> Waiting for the GitOps backup destination contract"
 deadline=$((SECONDS + BACKUP_WAIT_SECONDS))
@@ -168,3 +237,4 @@ echo "Repository: ${REPO_URL}"
 echo "Revision:   ${TARGET_REVISION}"
 echo "Backup S3:  s3://${BACKUP_BUCKET}/postgresql-baseline"
 echo "Database:   ${DEMO_NAMESPACE}/${DEMO_DATABASE_SECRET}"
+echo "SecretStore:${DEMO_NAMESPACE}/${EXTERNAL_SECRETS_STORE}"

@@ -207,9 +207,9 @@ for output_name in (
     )
 
 for marker in (
-    "Checkpoint 1 implementation complete; AWS runtime validation pending.",
+    "Checkpoint 1 validated.",
     "Secret values never enter Git or Terraform state.",
-    "Checkpoint 2 must not begin until the AWS runtime validation passes.",
+    "External Secrets AWS foundation runtime validation passed.",
 ):
     require(archive, marker, "v0.8.3 checkpoint status and boundary")
 PY

@@ -47,10 +47,19 @@ kubeconfig.*
 *.kubeconfig
 .kube/
 .kubeconfig/
+
+# Ignore manifests that may contain real secret values
 *secret*.yaml
 *secret*.yml
+
+# Allow sanitized examples
 !*secret*.example.yaml
 !*secret*.example.yml
+
+# Allow declarative External Secrets GitOps manifests
+!clusters/aws-dev/platform/external-secrets.yaml
+!clusters/aws-dev/platform/external-secrets-startup-apps.yaml
+!clusters/aws-dev/security/external-secrets/**/*.yaml
 
 # Helm packages and dependencies
 *.tgz

@@ -1,0 +1,32 @@
+# Staged only: this directory is not referenced by an Argo CD Application.
+# Checkpoint 3 writes the first Secrets Manager value before enabling this object.
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: demo-api-postgresql
+  namespace: startup-apps
+  labels:
+    app.kubernetes.io/part-of: demo-api
+    platform.startup.dev/environment: aws-dev
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    name: aws-secrets-manager
+    kind: SecretStore
+  target:
+    name: demo-api-postgresql
+    creationPolicy: CreateOrMerge
+    deletionPolicy: Retain
+    template:
+      type: Opaque
+      metadata:
+        labels:
+          app.kubernetes.io/part-of: demo-api
+          platform.startup.dev/credential-purpose: postgresql
+          platform.startup.dev/managed-by: external-secrets
+  data:
+    - secretKey: DATABASE_URL
+      remoteRef:
+        key: startup-devops-baseline-dev/demo-api/postgresql
+        property: DATABASE_URL
+        version: AWSCURRENT

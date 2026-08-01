@@ -2,6 +2,26 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.8.5 (Unreleased)
+
+### Added
+
+- Guarded generation of a high-entropy PostgreSQL credential candidate stored
+  only under the Secrets Manager `AWSPENDING` stage.
+- Read-only AWS validation proving that the candidate differs only by password
+  while `AWSCURRENT`, the CNPG source Secret, the ESO target Secret, and the
+  active ExternalSecret contract remain unchanged.
+- Guarded candidate discard that removes only the `AWSPENDING` label without
+  deleting the Secret container or moving `AWSCURRENT`.
+- Static rotation contracts that prohibit database mutation, External Secrets
+  refresh, and workload restart during candidate staging.
+
+### Changed
+
+- Split credential rotation into a no-impact candidate-staging checkpoint and
+  an atomic cutover checkpoint so an environment-variable consumer is never
+  left between a password change and its required Pod reload.
+
 ## v0.8.4
 
 ### Added

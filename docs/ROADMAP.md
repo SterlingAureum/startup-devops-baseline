@@ -160,7 +160,8 @@ Incremental scope:
 - v0.8.4 - PostgreSQL credential migration into AWS Secrets Manager and
   ExternalSecret cutover - delivered
 - v0.8.5 - PostgreSQL application credential rotation and workload reload
-  validation - planned
+  validation - in progress; candidate staging delivered, with guarded database
+  cutover, External Secrets activation, and compensation validation remaining
 - v0.8.6 - Route 53 DNS, ACM/ALB HTTPS, EKS endpoint and control-plane logging
   hardening, and final security validation - planned
 

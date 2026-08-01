@@ -48,6 +48,9 @@ echo "==> Validating External Secrets GitOps contracts"
 echo "==> Validating External Secrets migration contracts"
 "${ROOT_DIR}/scripts/validate-external-secrets-migration.sh"
 
+echo "==> Validating PostgreSQL credential rotation contracts"
+"${ROOT_DIR}/scripts/validate-postgresql-credential-rotation.sh"
+
 echo "==> Validating delivery trigger contracts"
 PUBLISH_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-image-publish.yaml"
 ROLLBACK_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-rollback.yaml"

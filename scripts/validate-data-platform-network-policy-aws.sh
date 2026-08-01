@@ -649,8 +649,8 @@ spec:
       command: ["sh", "-c", "sleep 3600"]
       resources:
         requests:
-          cpu: 5m
-          memory: 8Mi
+          cpu: 10m
+          memory: 32Mi
         limits:
           cpu: 25m
           memory: 32Mi
@@ -834,8 +834,8 @@ spec:
           command: ["sh", "-c", "sleep 3600"]
           resources:
             requests:
-              cpu: 5m
-              memory: 8Mi
+              cpu: 10m
+              memory: 32Mi
             limits:
               cpu: 25m
               memory: 32Mi

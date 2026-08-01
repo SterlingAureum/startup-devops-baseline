@@ -20,6 +20,16 @@ variable "cluster_version" {
   nullable    = true
 }
 
+variable "service_ipv4_cidr" {
+  description = "Stable IPv4 Service CIDR used by EKS and GitOps NetworkPolicy rules."
+  type        = string
+
+  validation {
+    condition     = can(cidrnetmask(var.service_ipv4_cidr))
+    error_message = "service_ipv4_cidr must be a valid IPv4 CIDR block."
+  }
+}
+
 variable "vpc_id" {
   description = "ID of the VPC hosting the EKS cluster."
   type        = string

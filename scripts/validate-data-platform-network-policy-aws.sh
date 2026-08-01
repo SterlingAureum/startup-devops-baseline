@@ -14,14 +14,18 @@ BARMAN_DEPLOYMENT="${BARMAN_DEPLOYMENT:-barman-cloud-plugin-barman-cloud}"
 BARMAN_SERVICE_NAME="${BARMAN_SERVICE_NAME:-barman-cloud}"
 BARMAN_SERVICE="${BARMAN_SERVICE:-barman-cloud.cnpg-system.svc.cluster.local}"
 APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
+EXPECTED_SERVICE_IPV4_CIDR="${EXPECTED_SERVICE_IPV4_CIDR:-172.20.0.0/16}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-20m}"
 REPLICATION_TIMEOUT_SECONDS="${REPLICATION_TIMEOUT_SECONDS:-300}"
 WAL_TIMEOUT_SECONDS="${WAL_TIMEOUT_SECONDS:-600}"
+JOIN_PROBE_TIMEOUT_SECONDS="${JOIN_PROBE_TIMEOUT_SECONDS:-90}"
 TEST_IMAGE="${TEST_IMAGE:-public.ecr.aws/docker/library/busybox:1.36.1}"
 TEST_NAMESPACE="${TEST_NAMESPACE:-v082-data-platform-netpol-test-$$}"
 TEST_NAMESPACE_CREATED="false"
+JOIN_PROBE_NAME="${JOIN_PROBE_NAME:-v082-cnpg-join-policy-probe}"
+JOIN_PROBE_CREATED="false"
 
-for command in aws git grep jq kubectl terraform; do
+for command in aws git grep jq kubectl python3 terraform; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -34,8 +38,19 @@ if [[ ! "${TEST_NAMESPACE}" =~ ^v082-data-platform-netpol-test-[a-z0-9-]+$ ]]; t
   echo "TEST_NAMESPACE must use the v082-data-platform-netpol-test- prefix." >&2
   exit 1
 fi
+if [[ ! "${JOIN_PROBE_NAME}" =~ ^v082-cnpg-join-policy-probe-[a-z0-9-]+$ &&
+      "${JOIN_PROBE_NAME}" != "v082-cnpg-join-policy-probe" ]]; then
+  echo "JOIN_PROBE_NAME must use the v082-cnpg-join-policy-probe prefix." >&2
+  exit 1
+fi
 
 cleanup() {
+  if [[ "${JOIN_PROBE_CREATED}" == "true" ]]; then
+    kubectl delete pod "${JOIN_PROBE_NAME}" \
+      --namespace "${DATA_NAMESPACE}" \
+      --ignore-not-found \
+      --wait=false >/dev/null 2>&1 || true
+  fi
   if [[ "${TEST_NAMESPACE_CREATED}" == "true" ]]; then
     kubectl delete namespace "${TEST_NAMESPACE}" \
       --ignore-not-found \
@@ -85,6 +100,27 @@ tcp_check_from_postgres() {
       "timeout 8 bash -c '</dev/tcp/${host}/${port}'"
 }
 
+wait_for_tcp_from_pod() {
+  local pod="$1"
+  local host="$2"
+  local port="$3"
+  local deadline=$((SECONDS + JOIN_PROBE_TIMEOUT_SECONDS))
+
+  while true; do
+    if kubectl exec \
+      --namespace "${DATA_NAMESPACE}" \
+      "${pod}" -- \
+      nc -w 5 "${host}" "${port}" </dev/null >/dev/null 2>&1; then
+      return 0
+    fi
+    if (( SECONDS >= deadline )); then
+      echo "Timed out waiting for ${pod} to reach ${host}:${port}." >&2
+      return 1
+    fi
+    sleep 5
+  done
+}
+
 policy_egress_cidrs() {
   local policy_name="$1"
 
@@ -92,6 +128,31 @@ policy_egress_cidrs() {
     --namespace "${DATA_NAMESPACE}" \
     --output json |
     jq -c '[.spec.egress[]?.to[]? | .ipBlock.cidr? // empty] | sort'
+}
+
+ip_in_cidr() {
+  local ip_address="$1"
+  local cidr="$2"
+
+  python3 - "${ip_address}" "${cidr}" <<'PY'
+from ipaddress import ip_address, ip_network
+import sys
+
+raise SystemExit(0 if ip_address(sys.argv[1]) in ip_network(sys.argv[2]) else 1)
+PY
+}
+
+ip_in_any_cidr() {
+  local ip_address="$1"
+  shift
+
+  local cidr
+  for cidr in "$@"; do
+    if ip_in_cidr "${ip_address}" "${cidr}"; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 echo "==> Configuring kubeconfig for ${CLUSTER_NAME}"
@@ -115,6 +176,8 @@ for policy in \
   allow-demo-api-to-postgresql-baseline \
   allow-cnpg-operator-to-instances \
   allow-cnpg-instance-traffic \
+  allow-postgresql-baseline-join-bootstrap \
+  allow-postgresql-baseline-join-egress \
   allow-cnpg-to-postgresql-rw-service \
   allow-kubernetes-api-to-cnpg-status \
   allow-cnpg-to-barman-plugin \
@@ -125,12 +188,17 @@ for policy in \
     --namespace "${DATA_NAMESPACE}" >/dev/null
 done
 
-if kubectl get networkpolicy temporary-allow-cnpg-rw-service \
-  --namespace "${DATA_NAMESPACE}" >/dev/null 2>&1; then
-  echo "Temporary PostgreSQL rw Service policy is still installed." >&2
-  echo "Delete temporary-allow-cnpg-rw-service before validation." >&2
-  exit 1
-fi
+for temporary_policy in \
+  temporary-allow-cnpg-rw-service \
+  temporary-cnpg-bootstrap-egress \
+  temporary-cnpg-bootstrap-ingress; do
+  if kubectl get networkpolicy "${temporary_policy}" \
+    --namespace "${DATA_NAMESPACE}" >/dev/null 2>&1; then
+    echo "Temporary NetworkPolicy ${temporary_policy} is still installed." >&2
+    echo "Delete temporary bootstrap policies before validation." >&2
+    exit 1
+  fi
+done
 
 if ! kubectl get policyendpoints.networking.k8s.aws \
   --namespace "${DATA_NAMESPACE}" \
@@ -149,6 +217,39 @@ CLUSTER_JSON="$(
 if [[ "$(jq -r '.cluster.resourcesVpcConfig.endpointPrivateAccess' \
   <<<"${CLUSTER_JSON}")" != "true" ]]; then
   echo "The EKS private Kubernetes API endpoint is not enabled." >&2
+  exit 1
+fi
+
+LIVE_SERVICE_IPV4_CIDR="$(
+  jq -r '.cluster.kubernetesNetworkConfig.serviceIpv4Cidr // empty' \
+    <<<"${CLUSTER_JSON}"
+)"
+if [[ "${LIVE_SERVICE_IPV4_CIDR}" != "${EXPECTED_SERVICE_IPV4_CIDR}" ]]; then
+  echo "The live EKS Service CIDR does not match the declared baseline." >&2
+  echo "Expected: ${EXPECTED_SERVICE_IPV4_CIDR}" >&2
+  echo "Live:     ${LIVE_SERVICE_IPV4_CIDR:-missing}" >&2
+  exit 1
+fi
+
+mapfile -t CONTROL_PLANE_SUBNET_IDS < <(
+  jq -r '.cluster.resourcesVpcConfig.subnetIds[]' <<<"${CLUSTER_JSON}" | sort -u
+)
+if (( ${#CONTROL_PLANE_SUBNET_IDS[@]} == 0 )); then
+  echo "The EKS cluster does not report control-plane subnets." >&2
+  exit 1
+fi
+
+SUBNET_JSON="$(
+  aws ec2 describe-subnets \
+    --region "${AWS_REGION}" \
+    --subnet-ids "${CONTROL_PLANE_SUBNET_IDS[@]}" \
+    --output json
+)"
+mapfile -t CONTROL_PLANE_SUBNET_CIDRS < <(
+  jq -r '.Subnets[].CidrBlock' <<<"${SUBNET_JSON}" | sort -u
+)
+if (( ${#CONTROL_PLANE_SUBNET_CIDRS[@]} == 0 )); then
+  echo "Unable to resolve EKS control-plane subnet CIDRs." >&2
   exit 1
 fi
 
@@ -178,6 +279,7 @@ POSTGRES_RW_SERVICE_IP="$(
     --output jsonpath='{.spec.clusterIP}'
 )"
 for service_mapping in \
+  "default/kubernetes:${KUBERNETES_SERVICE_IP}" \
   "kube-system/kube-dns:${DNS_SERVICE_IP}" \
   "${OPERATOR_NAMESPACE}/${BARMAN_SERVICE_NAME}:${BARMAN_SERVICE_IP}" \
   "${DATA_NAMESPACE}/${POSTGRES_CLUSTER}-rw:${POSTGRES_RW_SERVICE_IP}"; do
@@ -188,7 +290,18 @@ for service_mapping in \
   fi
 done
 
-echo "==> Verifying Service ClusterIP policy alignment"
+for service_ip in \
+  "${KUBERNETES_SERVICE_IP}" \
+  "${DNS_SERVICE_IP}" \
+  "${BARMAN_SERVICE_IP}" \
+  "${POSTGRES_RW_SERVICE_IP}"; do
+  if ! ip_in_cidr "${service_ip}" "${LIVE_SERVICE_IPV4_CIDR}"; then
+    echo "Service address ${service_ip} is outside ${LIVE_SERVICE_IPV4_CIDR}." >&2
+    exit 1
+  fi
+done
+
+echo "==> Verifying rebuild-stable network ranges"
 EXPECTED_DNS_CIDRS="$(jq -cn --arg cidr "${DNS_SERVICE_IP}/32" '[$cidr]')"
 POLICY_DNS_CIDRS="$(policy_egress_cidrs allow-dns-egress)"
 if [[ "${POLICY_DNS_CIDRS}" != "${EXPECTED_DNS_CIDRS}" ]]; then
@@ -199,26 +312,26 @@ if [[ "${POLICY_DNS_CIDRS}" != "${EXPECTED_DNS_CIDRS}" ]]; then
 fi
 
 EXPECTED_BARMAN_CIDRS="$(
-  jq -cn --arg cidr "${BARMAN_SERVICE_IP}/32" '[$cidr]'
+  jq -cn --arg cidr "${LIVE_SERVICE_IPV4_CIDR}" '[$cidr]'
 )"
 POLICY_BARMAN_CIDRS="$(policy_egress_cidrs allow-cnpg-to-barman-plugin)"
 if [[ "${POLICY_BARMAN_CIDRS}" != "${EXPECTED_BARMAN_CIDRS}" ]]; then
-  echo "The Barman egress CIDRs do not match the live Service." >&2
-  echo "Live:   ${EXPECTED_BARMAN_CIDRS}" >&2
+  echo "The Barman egress CIDRs do not match the declared Service CIDR." >&2
+  echo "Expected: ${EXPECTED_BARMAN_CIDRS}" >&2
   echo "Policy: ${POLICY_BARMAN_CIDRS}" >&2
   exit 1
 fi
 
 EXPECTED_POSTGRES_RW_CIDRS="$(
-  jq -cn --arg cidr "${POSTGRES_RW_SERVICE_IP}/32" '[$cidr]'
+  jq -cn --arg cidr "${LIVE_SERVICE_IPV4_CIDR}" '[$cidr]'
 )"
 POLICY_POSTGRES_RW_CIDRS="$(
   policy_egress_cidrs allow-cnpg-to-postgresql-rw-service
 )"
 if [[ "${POLICY_POSTGRES_RW_CIDRS}" != \
       "${EXPECTED_POSTGRES_RW_CIDRS}" ]]; then
-  echo "The PostgreSQL rw egress CIDRs do not match the live Service." >&2
-  echo "Live:   ${EXPECTED_POSTGRES_RW_CIDRS}" >&2
+  echo "The PostgreSQL rw egress CIDRs do not match the declared Service CIDR." >&2
+  echo "Expected: ${EXPECTED_POSTGRES_RW_CIDRS}" >&2
   echo "Policy: ${POLICY_POSTGRES_RW_CIDRS}" >&2
   exit 1
 fi
@@ -236,10 +349,17 @@ if (( ${#API_ENDPOINT_IPS[@]} == 0 )); then
   exit 1
 fi
 
+for endpoint_ip in "${API_ENDPOINT_IPS[@]}"; do
+  if ! ip_in_any_cidr "${endpoint_ip}" "${CONTROL_PLANE_SUBNET_CIDRS[@]}"; then
+    echo "Kubernetes API endpoint ${endpoint_ip} is outside the EKS subnets." >&2
+    exit 1
+  fi
+done
+
 EXPECTED_API_EGRESS_CIDRS="$(
   {
     printf '%s/32\n' "${KUBERNETES_SERVICE_IP}"
-    printf '%s/32\n' "${API_ENDPOINT_IPS[@]}"
+    printf '%s\n' "${CONTROL_PLANE_SUBNET_CIDRS[@]}"
   } | jq -Rsc 'split("\n") | map(select(length > 0)) | sort'
 )"
 POLICY_API_EGRESS_CIDRS="$(
@@ -249,8 +369,8 @@ POLICY_API_EGRESS_CIDRS="$(
     jq -c '[.spec.egress[].to[]?.ipBlock.cidr] | sort'
 )"
 if [[ "${POLICY_API_EGRESS_CIDRS}" != "${EXPECTED_API_EGRESS_CIDRS}" ]]; then
-  echo "The Kubernetes API egress CIDRs do not match the live endpoints." >&2
-  echo "Live:   ${EXPECTED_API_EGRESS_CIDRS}" >&2
+  echo "The Kubernetes API egress CIDRs do not match the declared network ranges." >&2
+  echo "Expected: ${EXPECTED_API_EGRESS_CIDRS}" >&2
   echo "Policy: ${POLICY_API_EGRESS_CIDRS}" >&2
   exit 1
 fi
@@ -265,6 +385,70 @@ if [[ "${RECOVERY_JOB_ROLE}" != "full-recovery" ]]; then
   exit 1
 fi
 
+JOIN_JOB_ROLE="$(
+  kubectl get networkpolicy allow-postgresql-baseline-join-egress \
+    --namespace "${DATA_NAMESPACE}" \
+    --output jsonpath='{.spec.podSelector.matchLabels.cnpg\.io/jobRole}'
+)"
+JOIN_CLUSTER="$(
+  kubectl get networkpolicy allow-postgresql-baseline-join-egress \
+    --namespace "${DATA_NAMESPACE}" \
+    --output jsonpath='{.spec.podSelector.matchLabels.cnpg\.io/cluster}'
+)"
+if [[ "${JOIN_JOB_ROLE}" != "join" || \
+      "${JOIN_CLUSTER}" != "${POSTGRES_CLUSTER}" ]]; then
+  echo "The join egress policy does not select the baseline join Job." >&2
+  exit 1
+fi
+
+JOIN_INGRESS_CONTRACT="$(
+  kubectl get networkpolicy allow-postgresql-baseline-join-bootstrap \
+    --namespace "${DATA_NAMESPACE}" \
+    --output json |
+    jq -S -c '{
+      destination: .spec.podSelector.matchLabels,
+      source: .spec.ingress[0].from[0].podSelector.matchLabels,
+      ports: [.spec.ingress[0].ports[] | "\(.protocol)/\(.port)"] | sort
+    }'
+)"
+EXPECTED_JOIN_INGRESS_CONTRACT="$(
+  jq -S -cn --arg cluster "${POSTGRES_CLUSTER}" '{
+    destination: {
+      "cnpg.io/cluster": $cluster,
+      "cnpg.io/podRole": "instance"
+    },
+    source: {
+      "cnpg.io/cluster": $cluster,
+      "cnpg.io/jobRole": "join"
+    },
+    ports: ["TCP/5432", "TCP/8000"]
+  }'
+)"
+if [[ "${JOIN_INGRESS_CONTRACT}" != \
+      "${EXPECTED_JOIN_INGRESS_CONTRACT}" ]]; then
+  echo "The join ingress policy is not restricted to baseline instances." >&2
+  echo "Expected: ${EXPECTED_JOIN_INGRESS_CONTRACT}" >&2
+  echo "Policy:   ${JOIN_INGRESS_CONTRACT}" >&2
+  exit 1
+fi
+
+EXPECTED_JOIN_CIDRS="$(
+  {
+    printf '%s/32\n' "${KUBERNETES_SERVICE_IP}"
+    printf '%s\n' "${CONTROL_PLANE_SUBNET_CIDRS[@]}"
+    printf '%s\n' "${LIVE_SERVICE_IPV4_CIDR}"
+  } | jq -Rsc 'split("\n") | map(select(length > 0)) | sort'
+)"
+POLICY_JOIN_CIDRS="$(
+  policy_egress_cidrs allow-postgresql-baseline-join-egress
+)"
+if [[ "${POLICY_JOIN_CIDRS}" != "${EXPECTED_JOIN_CIDRS}" ]]; then
+  echo "The join egress CIDRs do not match the declared network ranges." >&2
+  echo "Expected: ${EXPECTED_JOIN_CIDRS}" >&2
+  echo "Policy:   ${POLICY_JOIN_CIDRS}" >&2
+  exit 1
+fi
+
 POLICY_RECOVERY_API_CIDRS="$(
   kubectl get networkpolicy allow-cnpg-full-recovery-egress \
     --namespace "${DATA_NAMESPACE}" \
@@ -276,8 +460,8 @@ POLICY_RECOVERY_API_CIDRS="$(
     ] | sort'
 )"
 if [[ "${POLICY_RECOVERY_API_CIDRS}" != "${EXPECTED_API_EGRESS_CIDRS}" ]]; then
-  echo "The full-recovery API CIDRs do not match the live endpoints." >&2
-  echo "Live:   ${EXPECTED_API_EGRESS_CIDRS}" >&2
+  echo "The full-recovery API CIDRs do not match the declared network ranges." >&2
+  echo "Expected: ${EXPECTED_API_EGRESS_CIDRS}" >&2
   echo "Policy: ${POLICY_RECOVERY_API_CIDRS}" >&2
   exit 1
 fi
@@ -322,7 +506,7 @@ if [[ "${RECOVERY_PUBLIC_HTTPS_CONTRACT}" != \
 fi
 
 EXPECTED_API_INGRESS_CIDRS="$(
-  printf '%s/32\n' "${API_ENDPOINT_IPS[@]}" |
+  printf '%s\n' "${CONTROL_PLANE_SUBNET_CIDRS[@]}" |
     jq -Rsc 'split("\n") | map(select(length > 0)) | sort'
 )"
 POLICY_API_INGRESS_CIDRS="$(
@@ -332,8 +516,8 @@ POLICY_API_INGRESS_CIDRS="$(
     jq -c '[.spec.ingress[].from[]?.ipBlock.cidr] | sort'
 )"
 if [[ "${POLICY_API_INGRESS_CIDRS}" != "${EXPECTED_API_INGRESS_CIDRS}" ]]; then
-  echo "The Kubernetes API ingress CIDRs do not match the live endpoints." >&2
-  echo "Live:   ${EXPECTED_API_INGRESS_CIDRS}" >&2
+  echo "The Kubernetes API ingress CIDRs do not match the control-plane subnets." >&2
+  echo "Expected: ${EXPECTED_API_INGRESS_CIDRS}" >&2
   echo "Policy: ${POLICY_API_INGRESS_CIDRS}" >&2
   exit 1
 fi
@@ -441,6 +625,57 @@ tcp_check_from_postgres \
   "${REPLICA_POD}" \
   "${POSTGRES_RW_SERVICE_IP}" \
   5432
+
+echo "==> Verifying the baseline join policy with a labeled probe"
+kubectl delete pod "${JOIN_PROBE_NAME}" \
+  --namespace "${DATA_NAMESPACE}" \
+  --ignore-not-found \
+  --wait=true >/dev/null
+
+kubectl apply --namespace "${DATA_NAMESPACE}" -f - >/dev/null <<EOF
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${JOIN_PROBE_NAME}
+  labels:
+    cnpg.io/cluster: ${POSTGRES_CLUSTER}
+    cnpg.io/jobRole: join
+spec:
+  automountServiceAccountToken: false
+  restartPolicy: Never
+  containers:
+    - name: probe
+      image: ${TEST_IMAGE}
+      command: ["sh", "-c", "sleep 3600"]
+      resources:
+        requests:
+          cpu: 5m
+          memory: 8Mi
+        limits:
+          cpu: 25m
+          memory: 32Mi
+EOF
+JOIN_PROBE_CREATED="true"
+
+kubectl wait \
+  --for=condition=Ready \
+  "pod/${JOIN_PROBE_NAME}" \
+  --namespace "${DATA_NAMESPACE}" \
+  --timeout="${WAIT_TIMEOUT}"
+
+wait_for_tcp_from_pod "${JOIN_PROBE_NAME}" "${KUBERNETES_SERVICE_IP}" 443
+wait_for_tcp_from_pod "${JOIN_PROBE_NAME}" "${POSTGRES_RW_SERVICE_IP}" 5432
+assert_request_denied \
+  "Baseline join probe access to the Barman plugin" \
+  kubectl exec \
+    --namespace "${DATA_NAMESPACE}" \
+    "${JOIN_PROBE_NAME}" -- \
+    nc -w 5 "${BARMAN_SERVICE_IP}" 9090
+
+kubectl delete pod "${JOIN_PROBE_NAME}" \
+  --namespace "${DATA_NAMESPACE}" \
+  --wait=true >/dev/null
+JOIN_PROBE_CREATED="false"
 
 "${ROOT_DIR}/scripts/validate-demo-api-postgresql.sh"
 

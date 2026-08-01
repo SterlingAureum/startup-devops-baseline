@@ -18,6 +18,11 @@ output "cluster_version" {
   value       = aws_eks_cluster.this.version
 }
 
+output "service_ipv4_cidr" {
+  description = "IPv4 Service CIDR assigned to the EKS cluster."
+  value       = aws_eks_cluster.this.kubernetes_network_config[0].service_ipv4_cidr
+}
+
 output "cluster_certificate_authority_data" {
   description = "Base64-encoded certificate authority data for the EKS cluster."
   value       = aws_eks_cluster.this.certificate_authority[0].data

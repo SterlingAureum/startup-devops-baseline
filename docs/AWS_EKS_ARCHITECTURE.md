@@ -180,6 +180,7 @@ Terraform
 ├── VPC and subnets
 ├── Internet Gateway and NAT Gateway
 ├── Amazon EKS
+├── stable EKS IPv4 Service CIDR
 ├── EKS managed add-ons
 ├── stable system Managed Node Group
 ├── Karpenter IAM roles and policies
@@ -222,6 +223,13 @@ VPC 10.20.0.0/16
 ├── Private subnet AZ-A 10.20.10.0/24
 └── Private subnet AZ-B 10.20.11.0/24
 ```
+
+The disposable EKS environment explicitly reserves `172.20.0.0/16` as its
+IPv4 Service CIDR. Data-platform NetworkPolicy rules use this declared range on
+only TCP/5432 and TCP/9090 for pre-DNAT access to operator-managed Services;
+they do not embed PostgreSQL or Barman ClusterIPs that change after a cluster
+rebuild. Kubernetes API post-DNAT fallback is bounded to the declared private
+control-plane subnets.
 
 Managed nodes run in private subnets. The development environment uses one shared NAT Gateway to reduce cost.
 

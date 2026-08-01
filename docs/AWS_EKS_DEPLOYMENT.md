@@ -43,7 +43,9 @@ cp infra/terraform/aws/environments/dev/terraform.tfvars.example \
   infra/terraform/aws/environments/dev/terraform.tfvars
 ```
 
-Review region, Availability Zones, Kubernetes version, API CIDRs, and tags.
+Review region, Availability Zones, Kubernetes version, Service CIDR, API CIDRs,
+and tags. Keep `eks_service_ipv4_cidr = "172.20.0.0/16"` aligned with the
+data-platform NetworkPolicy contract.
 
 ## 2. Validate Terraform
 
@@ -61,6 +63,10 @@ terraform -chdir=infra/terraform/aws/environments/dev apply tfplan
 ```
 
 Do not apply an old plan after changing Terraform files.
+
+When introducing the explicit Service CIDR to an existing cluster, first
+confirm that EKS already reports `172.20.0.0/16`. The Terraform plan must not
+replace the cluster; stop and investigate if replacement is proposed.
 
 ## 4. Validate EKS
 

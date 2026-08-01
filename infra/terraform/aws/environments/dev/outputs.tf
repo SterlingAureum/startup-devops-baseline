@@ -48,6 +48,11 @@ output "eks_cluster_version" {
   value       = module.eks.cluster_version
 }
 
+output "eks_service_ipv4_cidr" {
+  description = "Stable IPv4 Service CIDR assigned to the EKS cluster."
+  value       = module.eks.service_ipv4_cidr
+}
+
 output "eks_cluster_security_group_id" {
   description = "EKS-managed cluster security group ID."
   value       = module.eks.cluster_security_group_id

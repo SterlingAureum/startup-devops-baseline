@@ -23,6 +23,7 @@ module "eks" {
   environment                 = var.environment
   cluster_name                = local.cluster_name
   cluster_version             = var.eks_cluster_version
+  service_ipv4_cidr           = var.eks_service_ipv4_cidr
   vpc_id                      = module.vpc.vpc_id
   private_subnet_ids          = module.vpc.private_subnet_ids
   endpoint_public_access      = var.eks_endpoint_public_access

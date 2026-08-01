@@ -31,6 +31,10 @@ additional_tags = {
 # Karpenter 1.14.x, so keep this version explicit and upgrade deliberately.
 eks_cluster_version = "1.36"
 
+# Keep this stable across disposable cluster rebuilds. The data-platform
+# NetworkPolicy uses it for pre-DNAT access to operator-managed Services.
+eks_service_ipv4_cidr = "172.20.0.0/16"
+
 # Restrict this to your public IP in CIDR form before keeping the cluster online.
 eks_endpoint_public_access  = true
 eks_endpoint_private_access = true

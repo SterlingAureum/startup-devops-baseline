@@ -124,6 +124,77 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  name: allow-postgresql-baseline-join-bootstrap
+  namespace: data-platform
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: postgresql-baseline
+      cnpg.io/podRole: instance
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgresql-baseline
+              cnpg.io/jobRole: join
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-postgresql-baseline-join-egress
+  namespace: data-platform
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: postgresql-baseline
+      cnpg.io/jobRole: join
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        # EKS reserves the first address of the declared Service CIDR for the
+        # default/kubernetes Service.
+        - ipBlock:
+            cidr: 172.20.0.1/32
+        # Keep a post-DNAT fallback limited to the two declared control-plane
+        # subnets. Their CIDRs survive EKS destroy/recreate cycles.
+        - ipBlock:
+            cidr: 10.20.10.0/24
+        - ipBlock:
+            cidr: 10.20.11.0/24
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        # Amazon VPC CNI can enforce before Service DNAT. The EKS Service CIDR
+        # is declared by Terraform and is stable across cluster rebuilds.
+        - ipBlock:
+            cidr: 172.20.0.0/16
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        # Keep the post-DNAT path restricted to baseline database instances.
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: postgresql-baseline
+              cnpg.io/podRole: instance
+      ports:
+        - protocol: TCP
+          port: 5432
+        - protocol: TCP
+          port: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
   name: allow-cnpg-to-postgresql-rw-service
   namespace: data-platform
 spec:
@@ -134,10 +205,11 @@ spec:
     - Egress
   egress:
     - to:
-        # CNPG replicas connect through the stable baseline rw Service.
-        # The runtime validation fails if this ClusterIP drifts.
+        # CNPG replicas connect through operator-managed rw Services. Their
+        # individual ClusterIPs change when EKS is rebuilt, so select the
+        # Terraform-declared Service CIDR and keep TCP/5432 as the only port.
         - ipBlock:
-            cidr: 172.20.104.64/32
+            cidr: 172.20.0.0/16
       ports:
         - protocol: TCP
           port: 5432
@@ -155,12 +227,13 @@ spec:
     - Ingress
   ingress:
     - from:
-        # EKS private control-plane endpoint addresses. The aws-dev runtime
-        # validation fails if the default/kubernetes endpoints drift.
+        # EKS control-plane ENIs are recreated with the cluster. Select only
+        # the two Terraform-declared private control-plane subnets instead of
+        # embedding transient endpoint addresses.
         - ipBlock:
-            cidr: 10.20.10.230/32
+            cidr: 10.20.10.0/24
         - ipBlock:
-            cidr: 10.20.11.76/32
+            cidr: 10.20.11.0/24
       ports:
         - protocol: TCP
           port: 8000
@@ -185,10 +258,10 @@ spec:
             matchLabels:
               app.kubernetes.io/instance: barman-cloud
               app.kubernetes.io/name: plugin-barman-cloud
-        # Keep the Barman Service address alongside the Pod selector because
-        # Amazon VPC CNI can evaluate the pre-DNAT destination.
+        # Keep a pre-DNAT Service path alongside the Pod selector. The Service
+        # CIDR is stable even though the Helm-managed ClusterIP is not.
         - ipBlock:
-            cidr: 172.20.14.237/32
+            cidr: 172.20.0.0/16
       ports:
         - protocol: TCP
           port: 9090
@@ -206,15 +279,14 @@ spec:
     - Egress
   egress:
     - to:
-        # Include both the Service address and the current private endpoint
-        # addresses because NetworkPolicy implementations can evaluate traffic
-        # before or after Service destination NAT.
+        # Include the stable Service address and declared private control-plane
+        # subnets because enforcement can occur before or after Service DNAT.
         - ipBlock:
             cidr: 172.20.0.1/32
         - ipBlock:
-            cidr: 10.20.10.230/32
+            cidr: 10.20.10.0/24
         - ipBlock:
-            cidr: 10.20.11.76/32
+            cidr: 10.20.11.0/24
       ports:
         - protocol: TCP
           port: 443
@@ -258,13 +330,13 @@ spec:
   egress:
     - to:
         # The recovery manager watches its Cluster through the Kubernetes API.
-        # Include the Service address and current private endpoint addresses.
+        # Include the Service address and declared control-plane subnets.
         - ipBlock:
             cidr: 172.20.0.1/32
         - ipBlock:
-            cidr: 10.20.10.230/32
+            cidr: 10.20.10.0/24
         - ipBlock:
-            cidr: 10.20.11.76/32
+            cidr: 10.20.11.0/24
       ports:
         - protocol: TCP
           port: 443

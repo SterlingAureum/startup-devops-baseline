@@ -47,6 +47,11 @@ resource "aws_eks_cluster" "this" {
 
   enabled_cluster_log_types = var.enabled_cluster_log_types
 
+  kubernetes_network_config {
+    ip_family         = "ipv4"
+    service_ipv4_cidr = var.service_ipv4_cidr
+  }
+
   access_config {
     authentication_mode                         = "API_AND_CONFIG_MAP"
     bootstrap_cluster_creator_admin_permissions = true

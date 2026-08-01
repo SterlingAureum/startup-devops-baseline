@@ -74,6 +74,17 @@ variable "eks_cluster_version" {
   default     = "1.36"
 }
 
+variable "eks_service_ipv4_cidr" {
+  description = "Stable EKS Service CIDR referenced by rebuild-safe NetworkPolicy rules."
+  type        = string
+  default     = "172.20.0.0/16"
+
+  validation {
+    condition     = can(cidrnetmask(var.eks_service_ipv4_cidr))
+    error_message = "eks_service_ipv4_cidr must be a valid IPv4 CIDR block."
+  }
+}
+
 variable "eks_endpoint_public_access" {
   description = "Enable public access to the EKS Kubernetes API endpoint."
   type        = bool

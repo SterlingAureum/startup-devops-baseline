@@ -20,13 +20,14 @@ EXTERNAL_SECRETS_SERVICE_ACCOUNT="${EXTERNAL_SECRETS_SERVICE_ACCOUNT:-external-s
 EXTERNAL_SECRETS_APPLICATION="${EXTERNAL_SECRETS_APPLICATION:-external-secrets}"
 EXTERNAL_SECRETS_RESOURCES_APPLICATION="${EXTERNAL_SECRETS_RESOURCES_APPLICATION:-external-secrets-startup-apps}"
 EXTERNAL_SECRETS_STORE="${EXTERNAL_SECRETS_STORE:-aws-secrets-manager}"
+EXTERNAL_SECRET="${EXTERNAL_SECRET:-demo-api-postgresql}"
 EXTERNAL_SECRETS_WAIT_SECONDS="${EXTERNAL_SECRETS_WAIT_SECONDS:-900}"
-SYNC_DATABASE_SECRET_SCRIPT="$(
+MIGRATE_DATABASE_SECRET_SCRIPT="$(
   cd "$(dirname "${BASH_SOURCE[0]}")" &&
     pwd
-)/sync-demo-api-postgresql-secret.sh"
+)/migrate-demo-api-postgresql-secret.sh"
 
-for command in kubectl terraform jq; do
+for command in aws kubectl terraform jq; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -98,12 +99,6 @@ kubectl annotate serviceaccount "${POSTGRES_SERVICE_ACCOUNT}" \
   --namespace "${POSTGRES_NAMESPACE}" \
   eks.amazonaws.com/role-arn="${BACKUP_ROLE_ARN}" \
   --overwrite
-
-if kubectl get secret "${POSTGRES_APPLICATION}-app" \
-  --namespace "${POSTGRES_NAMESPACE}" >/dev/null 2>&1; then
-  echo "==> Refreshing the existing demo-api database credential before GitOps sync"
-  "${SYNC_DATABASE_SECRET_SCRIPT}"
-fi
 
 TEMP_FILE="$(mktemp)"
 trap 'rm -f "${TEMP_FILE}"' EXIT
@@ -198,7 +193,22 @@ while ! kubectl get secret "${POSTGRES_APPLICATION}-app" \
   sleep 10
 done
 
-"${SYNC_DATABASE_SECRET_SCRIPT}"
+echo "==> Ensuring the database credential is present in AWS Secrets Manager"
+CONFIRM_EXTERNAL_SECRETS_MIGRATION=seed-from-cnpg \
+  "${MIGRATE_DATABASE_SECRET_SCRIPT}"
+
+echo "==> Waiting for ExternalSecret/${EXTERNAL_SECRET}"
+kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
+  --namespace "${DEMO_NAMESPACE}" \
+  force-sync="$(date +%s)" \
+  --overwrite
+kubectl wait \
+  --for=condition=Ready \
+  "ExternalSecret/${EXTERNAL_SECRET}" \
+  --namespace "${DEMO_NAMESPACE}" \
+  --timeout="${EXTERNAL_SECRETS_WAIT_SECONDS}s"
+kubectl get secret "${DEMO_DATABASE_SECRET}" \
+  --namespace "${DEMO_NAMESPACE}" >/dev/null
 
 echo "==> Waiting for the demo-api Argo CD Application"
 deadline=$((SECONDS + DEMO_WAIT_SECONDS))

@@ -7,6 +7,7 @@ SOURCE_KEY="${SOURCE_KEY:-fqdn-uri}"
 TARGET_NAMESPACE="${TARGET_NAMESPACE:-startup-apps}"
 TARGET_SECRET="${TARGET_SECRET:-demo-api-postgresql}"
 TARGET_KEY="${TARGET_KEY:-DATABASE_URL}"
+EXTERNAL_SECRET="${EXTERNAL_SECRET:-demo-api-postgresql}"
 
 for command in kubectl jq; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -14,6 +15,23 @@ for command in kubectl jq; do
     exit 1
   }
 done
+
+if [[ "${CONFIRM_LEGACY_SECRET_SYNC:-}" != "external-secret-suspended" ]]; then
+  cat >&2 <<'EOF'
+This legacy cross-namespace synchronization path is retired by v0.8.4.
+
+For emergency rollback only, first suspend or delete the ExternalSecret, then
+re-run with CONFIRM_LEGACY_SECRET_SYNC=external-secret-suspended.
+EOF
+  exit 1
+fi
+
+if kubectl get externalsecret "${EXTERNAL_SECRET}" \
+  --namespace "${TARGET_NAMESPACE}" >/dev/null 2>&1; then
+  echo "ExternalSecret ${TARGET_NAMESPACE}/${EXTERNAL_SECRET} is still active." >&2
+  echo "Refusing to create a second writer for ${TARGET_SECRET}." >&2
+  exit 1
+fi
 
 echo "==> Checking the CloudNativePG application credential"
 kubectl get secret "${SOURCE_SECRET}" \
@@ -115,5 +133,5 @@ if [[ "${TARGET_VALUE}" != "${SOURCE_VALUE}" || \
   exit 1
 fi
 
-echo "demo-api PostgreSQL credential synchronization passed."
+echo "Break-glass demo-api PostgreSQL credential synchronization passed."
 echo "The credential value was not printed or committed to Git."

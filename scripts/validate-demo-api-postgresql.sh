@@ -10,6 +10,7 @@ SOURCE_SECRET="${SOURCE_SECRET:-postgresql-baseline-app}"
 DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
 DEMO_DEPLOYMENT="${DEMO_DEPLOYMENT:-demo-api}"
 TARGET_SECRET="${TARGET_SECRET:-demo-api-postgresql}"
+EXTERNAL_SECRET="${EXTERNAL_SECRET:-demo-api-postgresql}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-20m}"
 READY_TIMEOUT_SECONDS="${READY_TIMEOUT_SECONDS:-1200}"
 
@@ -39,6 +40,12 @@ kubectl wait \
   --timeout="${WAIT_TIMEOUT}"
 
 echo "==> Checking the minimum cross-namespace credential"
+kubectl wait \
+  --for=condition=Ready \
+  "ExternalSecret/${EXTERNAL_SECRET}" \
+  --namespace "${DEMO_NAMESPACE}" \
+  --timeout="${WAIT_TIMEOUT}"
+
 SOURCE_JSON="$(
   kubectl get secret "${SOURCE_SECRET}" \
     --namespace "${POSTGRES_NAMESPACE}" \
@@ -51,28 +58,17 @@ TARGET_JSON="$(
 )"
 
 SOURCE_VALUE="$(jq -r '.data["fqdn-uri"] // empty' <<< "${SOURCE_JSON}")"
-SOURCE_UID="$(jq -r '.metadata.uid // empty' <<< "${SOURCE_JSON}")"
 TARGET_VALUE="$(jq -r '.data.DATABASE_URL // empty' <<< "${TARGET_JSON}")"
 TARGET_KEYS="$(jq -r '.data | keys | join(",")' <<< "${TARGET_JSON}")"
-TARGET_SOURCE_NAMESPACE="$(
-  jq -r '.metadata.annotations["platform.startup.dev/source-namespace"] // empty' \
-    <<< "${TARGET_JSON}"
-)"
-TARGET_SOURCE_SECRET="$(
-  jq -r '.metadata.annotations["platform.startup.dev/source-secret"] // empty' \
-    <<< "${TARGET_JSON}"
-)"
-TARGET_SOURCE_UID="$(
-  jq -r '.metadata.annotations["platform.startup.dev/source-secret-uid"] // empty' \
+TARGET_MANAGER="$(
+  jq -r '.metadata.labels["platform.startup.dev/managed-by"] // empty' \
     <<< "${TARGET_JSON}"
 )"
 
 if [[ -z "${SOURCE_VALUE}" || "${TARGET_VALUE}" != "${SOURCE_VALUE}" || \
       "${TARGET_KEYS}" != "DATABASE_URL" || \
-      "${TARGET_SOURCE_NAMESPACE}" != "${POSTGRES_NAMESPACE}" || \
-      "${TARGET_SOURCE_SECRET}" != "${SOURCE_SECRET}" || \
-      "${TARGET_SOURCE_UID}" != "${SOURCE_UID}" ]]; then
-  echo "The demo-api credential does not match the minimum synchronization contract." >&2
+      "${TARGET_MANAGER}" != "external-secrets" ]]; then
+  echo "The demo-api credential does not match the External Secrets contract." >&2
   exit 1
 fi
 

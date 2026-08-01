@@ -45,6 +45,9 @@ echo "==> Validating External Secrets AWS foundation contracts"
 echo "==> Validating External Secrets GitOps contracts"
 "${ROOT_DIR}/scripts/validate-external-secrets-gitops.sh"
 
+echo "==> Validating External Secrets migration contracts"
+"${ROOT_DIR}/scripts/validate-external-secrets-migration.sh"
+
 echo "==> Validating delivery trigger contracts"
 PUBLISH_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-image-publish.yaml"
 ROLLBACK_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-rollback.yaml"

@@ -155,12 +155,14 @@ Incremental scope:
   native admission-policy guardrails - delivered
 - v0.8.2 - EKS NetworkPolicy enablement and application/data-platform network
   isolation - delivered
-- v0.8.3 - External Secrets Operator, IRSA, and AWS Secrets Manager
-  integration - in progress (checkpoint 1 validated; checkpoint 2 GitOps
-  implementation complete and EKS runtime validation pending)
-- v0.8.4 - PostgreSQL application credential rotation and workload reload
+- v0.8.3 - External Secrets Operator, exact-secret IRSA, namespaced AWS
+  SecretStore foundation, and NetworkPolicy rebuild portability - delivered
+- v0.8.4 - PostgreSQL credential migration into AWS Secrets Manager and
+  ExternalSecret cutover - in progress (implementation complete; EKS runtime
+  validation pending)
+- v0.8.5 - PostgreSQL application credential rotation and workload reload
   validation - planned
-- v0.8.5 - Route 53 DNS, ACM/ALB HTTPS, EKS endpoint and control-plane logging
+- v0.8.6 - Route 53 DNS, ACM/ALB HTTPS, EKS endpoint and control-plane logging
   hardening, and final security validation - planned
 
 ## v0.9 - Observability and SRE Baseline

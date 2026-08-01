@@ -6,7 +6,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly OPERATOR_APP="${ROOT_DIR}/clusters/aws-dev/platform/external-secrets.yaml"
 readonly RESOURCES_APP="${ROOT_DIR}/clusters/aws-dev/platform/external-secrets-startup-apps.yaml"
 readonly STORE="${ROOT_DIR}/clusters/aws-dev/security/external-secrets/startup-apps/secret-store.yaml"
-readonly STAGED_EXTERNAL_SECRET="${ROOT_DIR}/clusters/aws-dev/security/external-secrets/staged/demo-api-postgresql.yaml"
 readonly DEPLOY_SCRIPT="${ROOT_DIR}/scripts/deploy-aws-dev-root-app.sh"
 readonly RUNTIME_SCRIPT="${ROOT_DIR}/scripts/validate-external-secrets-gitops-aws.sh"
 readonly ARCHIVE_DOC="${ROOT_DIR}/docs/archive/V0.8.3_EXTERNAL_SECRETS_GITOPS.md"
@@ -15,7 +14,6 @@ for path in \
   "${OPERATOR_APP}" \
   "${RESOURCES_APP}" \
   "${STORE}" \
-  "${STAGED_EXTERNAL_SECRET}" \
   "${DEPLOY_SCRIPT}" \
   "${RUNTIME_SCRIPT}" \
   "${ARCHIVE_DOC}"; do
@@ -29,7 +27,6 @@ python3 - \
   "${OPERATOR_APP}" \
   "${RESOURCES_APP}" \
   "${STORE}" \
-  "${STAGED_EXTERNAL_SECRET}" \
   "${DEPLOY_SCRIPT}" \
   "${RUNTIME_SCRIPT}" \
   "${ARCHIVE_DOC}" <<'PY'
@@ -40,7 +37,6 @@ import sys
     operator_path,
     resources_app_path,
     store_path,
-    staged_path,
     deploy_path,
     runtime_path,
     archive_path,
@@ -49,7 +45,6 @@ import sys
 operator = operator_path.read_text()
 resources_app = resources_app_path.read_text()
 store = store_path.read_text()
-staged = staged_path.read_text()
 deploy = deploy_path.read_text()
 runtime = runtime_path.read_text()
 archive = archive_path.read_text()
@@ -119,25 +114,6 @@ for forbidden in ("ClusterSecretStore", "accessKeyIDSecretRef", "secretAccessKey
         raise SystemExit(f"SecretStore contains forbidden broad/static auth field: {forbidden}")
 
 for marker in (
-    "Staged only",
-    "apiVersion: external-secrets.io/v1",
-    "kind: ExternalSecret",
-    "name: demo-api-postgresql",
-    "creationPolicy: CreateOrMerge",
-    "deletionPolicy: Retain",
-    "secretKey: DATABASE_URL",
-    "key: startup-devops-baseline-dev/demo-api/postgresql",
-    "property: DATABASE_URL",
-    "version: AWSCURRENT",
-):
-    require(staged, marker, "staged ExternalSecret cutover contract")
-
-if "kind: ExternalSecret" in store_path.parent.joinpath("secret-store.yaml").read_text():
-    raise SystemExit("Checkpoint 2 must not activate an ExternalSecret before a remote value exists.")
-if "clusters/aws-dev/security/external-secrets/staged" in resources_app:
-    raise SystemExit("The staged ExternalSecret directory must remain outside Argo CD scope.")
-
-for marker in (
     "external_secrets_role_arn",
     'EXTERNAL_SECRETS_NAMESPACE="${EXTERNAL_SECRETS_NAMESPACE:-external-secrets}"',
     'EXTERNAL_SECRETS_SERVICE_ACCOUNT="${EXTERNAL_SECRETS_SERVICE_ACCOUNT:-external-secrets}"',
@@ -155,11 +131,11 @@ for marker in (
     require(runtime, marker, "ESO AWS runtime matrix")
 
 for marker in (
-    "Checkpoint 2 implementation complete; EKS runtime validation pending.",
-    "The staged ExternalSecret is not applied by Argo CD.",
-    "Checkpoint 3 must not begin until the runtime validation passes.",
+    "Checkpoint 2 validated.",
+    "External Secrets GitOps runtime validation passed.",
+    "Checkpoint 3 may now activate the staged ExternalSecret",
 ):
-    require(archive, marker, "v0.8.3 checkpoint 2 status and boundary")
+    require(archive, marker, "v0.8.3 checkpoint 2 validated status")
 PY
 
 echo "External Secrets GitOps contract validation passed."

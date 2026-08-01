@@ -318,12 +318,14 @@ marker. Each recovery Cluster, PVC, EBS volume, NodeClaim, and EC2 node is
 deleted before the next stage. The source Cluster UID and all three source
 PVC/PV/EBS mappings must remain unchanged.
 
-v0.6.5 connects demo-api to `postgresql-baseline-rw` with the generated
-`postgresql-baseline-app` identity. Kubernetes Secrets are namespace-scoped, so
-the deployment workflow copies only the base64-encoded `fqdn-uri` field into
-`startup-apps/demo-api-postgresql` as `DATABASE_URL`. The value is never stored
-in Git or printed. This runtime bridge is an explicit development-stage
-boundary until external secret management is introduced in v0.7.
+demo-api connects to `postgresql-baseline-rw` with the CloudNativePG-generated
+`postgresql-baseline-app` identity. v0.8.4 migrates its `fqdn-uri` once into the
+Terraform-managed AWS Secrets Manager container as the `DATABASE_URL` JSON
+property. External Secrets Operator reads only that Secret through a
+ServiceAccount-scoped IRSA role and reconciles
+`startup-apps/demo-api-postgresql`. The value is never stored in Git, printed,
+or written to Terraform state. The former cross-namespace copy remains only as
+an explicitly guarded break-glass rollback path.
 
 The guarded primary-failover drill deletes only the current primary Pod.
 CloudNativePG promotes the most up-to-date standby, updates the `-rw` Service,

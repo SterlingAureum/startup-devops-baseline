@@ -28,7 +28,20 @@ a substitute for reverting an application manifest.
 To roll back demo-api, restore the previous image tag, digest, and Helm values
 through Git. Do not roll back by deleting the PostgreSQL Cluster, generated
 application Secret, or PVCs. `startup-apps/demo-api-postgresql` is runtime state
-outside Git; when database integration remains enabled, refresh it with
-`scripts/sync-demo-api-postgresql-secret.sh`. If database integration is
-intentionally disabled, first deploy values with `database.enabled=false`, then
-remove the runtime Secret.
+reconciled by External Secrets Operator. Reverting or deleting the
+ExternalSecret does not delete that target because `CreateOrMerge` does not add
+an owner reference. `Retain` also preserves the target if the provider value is
+temporarily unavailable.
+
+For an ESO-specific break-glass rollback, first suspend or delete
+`ExternalSecret/demo-api-postgresql`, confirm the target Secret remains, and
+only then run:
+
+```bash
+CONFIRM_LEGACY_SECRET_SYNC=external-secret-suspended \
+  ./scripts/sync-demo-api-postgresql-secret.sh
+```
+
+The legacy script refuses to run while the ExternalSecret exists, preventing
+two writers. If database integration is intentionally disabled, first deploy
+values with `database.enabled=false`, then remove the runtime Secret.

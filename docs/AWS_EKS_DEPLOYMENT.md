@@ -111,18 +111,23 @@ TARGET_REVISION=main \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 
-The deployment script creates and annotates the PostgreSQL ServiceAccount with
-the Terraform-managed backup IRSA role, applies or refreshes the AWS root
-Application, waits for the CloudNativePG ObjectStore, and patches its live S3
-destination from the Terraform-managed backup bucket. It then waits for the
-generated `postgresql-baseline-app` credential and synchronizes only its
-`fqdn-uri` into `startup-apps/demo-api-postgresql` as `DATABASE_URL`.
+The deployment script creates and annotates the PostgreSQL and External Secrets
+ServiceAccounts with their Terraform-managed IRSA roles, applies or refreshes
+the AWS root Application, waits for the CloudNativePG ObjectStore, and patches
+its live S3 destination from the Terraform-managed backup bucket. It then waits
+for the generated `postgresql-baseline-app` credential, idempotently seeds the
+Terraform-managed Secrets Manager container, and waits for
+`ExternalSecret/demo-api-postgresql` to reconcile `DATABASE_URL` into
+`startup-apps/demo-api-postgresql`.
 
-The synchronized Secret is runtime state and is not committed to Git. Re-run
-the following command only after application credential rotation:
+The synchronized Secret is runtime state and is not committed to Git. The
+normal deployment path no longer copies a Kubernetes Secret across namespaces.
+The following command is guarded and retained only for break-glass rollback
+after the ExternalSecret has been suspended or deleted:
 
 ```bash
-./scripts/sync-demo-api-postgresql-secret.sh
+CONFIRM_LEGACY_SECRET_SYNC=external-secret-suspended \
+  ./scripts/sync-demo-api-postgresql-secret.sh
 ```
 
 The root Application manages the AWS platform and data-platform components,
@@ -181,6 +186,7 @@ kubectl get objectstore,scheduledbackup,backup -n data-platform
 kubectl get nodepool database-recovery-ondemand
 kubectl get storageclass gp3-cnpg
 kubectl get secret demo-api-postgresql -n startup-apps
+kubectl get secretstore,externalsecret -n startup-apps
 ```
 
 All three EC2NodeClasses and all five NodePools should report `Ready=True`. The
@@ -197,10 +203,10 @@ different `database-ondemand` nodes, span both Availability Zones, and own
 three encrypted 20Gi gp3 volumes. `validate-all.sh` does not restart a database
 instance.
 
-The demo-api validator should confirm that both replicas use the minimum
-runtime Secret, reach the current primary through `postgresql-baseline-rw`, and
-return a sanitized `/db/health` response. It compares credentials without
-printing or decoding them.
+The demo-api validator should confirm that the ExternalSecret is ready, the
+ESO-managed target contains only `DATABASE_URL`, both replicas reach the current
+primary through `postgresql-baseline-rw`, and `/db/health` remains sanitized.
+It compares credentials without printing or decoding them.
 
 Changes to the ObjectStore instance-sidecar resources may require a controlled
 CloudNativePG rolling restart; see `docs/TROUBLESHOOTING_V0.6.4.md`.

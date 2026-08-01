@@ -2,6 +2,42 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.8.4
+
+### Added
+
+- Guarded, idempotent migration of the CloudNativePG application URI into the
+  `DATABASE_URL` property of the Terraform-managed AWS Secrets Manager Secret.
+- Active namespaced ExternalSecret reconciliation for the existing
+  `startup-apps/demo-api-postgresql` contract.
+- Runtime validation for exact-secret IAM denial, protected-value equality,
+  target Secret deletion and automatic reconstruction, and application
+  connectivity through the current PostgreSQL primary.
+
+### Changed
+
+- Retired cross-namespace Kubernetes Secret copying from the normal deployment
+  path and retained it only as an explicitly guarded break-glass workflow.
+- Declared ExternalSecret CRD defaults explicitly to keep Argo CD
+  `Synced / Healthy` after API-server normalization.
+- Migrated PostgreSQL Service validation and failover diagnostics from the
+  deprecated core `v1 Endpoints` API to `discovery.k8s.io/v1` EndpointSlice.
+
+## v0.8.3
+
+### Added
+
+- Terraform-managed AWS Secrets Manager container without a Secret version,
+  plus an exact-secret IRSA role for External Secrets Operator.
+- Argo CD-managed External Secrets Operator `2.8.0`, namespace-scoped RBAC, and
+  the namespaced `startup-apps/aws-secrets-manager` SecretStore.
+
+### Changed
+
+- Made the data-platform NetworkPolicy rebuild-portable with an explicit EKS
+  Service CIDR, permanent CloudNativePG join policies, and live endpoint
+  validation after disposable cluster recreation.
+
 ## v0.8.2
 
 ### Added

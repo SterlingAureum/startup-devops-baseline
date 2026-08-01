@@ -11,6 +11,7 @@ readonly LEGACY_SCRIPT="${ROOT_DIR}/scripts/sync-demo-api-postgresql-secret.sh"
 readonly DATABASE_VALIDATOR="${ROOT_DIR}/scripts/validate-demo-api-postgresql.sh"
 readonly RUNTIME_SCRIPT="${ROOT_DIR}/scripts/validate-external-secrets-migration-aws.sh"
 readonly ARCHIVE_DOC="${ROOT_DIR}/docs/archive/V0.8.4_EXTERNAL_SECRETS_MIGRATION.md"
+readonly ROADMAP="${ROOT_DIR}/docs/ROADMAP.md"
 readonly GITIGNORE="${ROOT_DIR}/.gitignore"
 
 for path in \
@@ -21,6 +22,7 @@ for path in \
   "${DATABASE_VALIDATOR}" \
   "${RUNTIME_SCRIPT}" \
   "${ARCHIVE_DOC}" \
+  "${ROADMAP}" \
   "${GITIGNORE}"; do
   [[ -f "${path}" ]] || {
     echo "Required External Secrets migration file is missing: ${path}" >&2
@@ -41,6 +43,7 @@ python3 - \
   "${DATABASE_VALIDATOR}" \
   "${RUNTIME_SCRIPT}" \
   "${ARCHIVE_DOC}" \
+  "${ROADMAP}" \
   "${GITIGNORE}" <<'PY'
 from pathlib import Path
 import sys
@@ -53,6 +56,7 @@ import sys
     database_validator_path,
     runtime_path,
     archive_path,
+    roadmap_path,
     gitignore_path,
 ) = map(Path, sys.argv[1:])
 
@@ -63,6 +67,7 @@ legacy = legacy_path.read_text()
 database_validator = database_validator_path.read_text()
 runtime = runtime_path.read_text()
 archive = archive_path.read_text()
+roadmap = roadmap_path.read_text()
 gitignore = gitignore_path.read_text()
 
 
@@ -146,8 +151,15 @@ for marker in (
     "ExternalSecret/${EXTERNAL_SECRET}",
     "platform.startup.dev/managed-by",
     '"external-secrets"',
+    "kubectl get endpointslice",
+    "kubernetes.io/service-name=${POSTGRES_CLUSTER}-rw",
+    "select(.conditions.ready != false)",
 ):
     require(database_validator, marker, "database ExternalSecret consumption contract")
+
+deprecated_endpoints_command = "kubectl get " + 'endpoints "'
+if deprecated_endpoints_command in database_validator:
+    raise SystemExit("The database validator must not use the deprecated Endpoints API.")
 
 for marker in (
     "CONFIRM_EXTERNAL_SECRET_REBUILD",
@@ -155,16 +167,28 @@ for marker in (
     "simulate-principal-policy",
     "implicitDeny",
     "force-sync=",
+    '.spec.target.template.engineVersion == "v2"',
+    '.spec.target.template.mergePolicy == "Replace"',
+    '.spec.data[0].remoteRef.conversionStrategy == "Default"',
+    '.spec.data[0].remoteRef.decodingStrategy == "None"',
+    '.spec.data[0].remoteRef.metadataPolicy == "None"',
     "External Secrets migration runtime validation passed.",
 ):
     require(runtime, marker, "External Secrets runtime migration matrix")
 
 for marker in (
-    "Checkpoint 3 implementation complete; EKS runtime validation pending.",
+    "Checkpoint 3 validated. v0.8.4 is ready for release.",
     "No plaintext credential enters Git, logs, command arguments, or Terraform state.",
+    "The EKS runtime validation completed successfully on 2026-08-01.",
     "External Secrets migration runtime validation passed.",
 ):
     require(archive, marker, "v0.8.4 checkpoint 3 status and operating model")
+
+for marker in (
+    "ExternalSecret cutover - delivered",
+    "v0.8.5 - PostgreSQL application credential rotation and workload reload",
+):
+    require(roadmap, marker, "v0.8 roadmap status")
 
 for marker in (
     "!clusters/aws-dev/platform/external-secrets.yaml",

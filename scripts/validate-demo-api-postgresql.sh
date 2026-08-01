@@ -146,9 +146,18 @@ PRIMARY_IP="$(
     --output jsonpath='{.status.podIP}'
 )"
 mapfile -t RW_ENDPOINTS < <(
-  kubectl get endpoints "${POSTGRES_CLUSTER}-rw" \
+  kubectl get endpointslice \
     --namespace "${POSTGRES_NAMESPACE}" \
-    --output jsonpath='{range .subsets[*].addresses[*]}{.ip}{"\n"}{end}'
+    --selector "kubernetes.io/service-name=${POSTGRES_CLUSTER}-rw" \
+    --output json |
+    jq -r '
+      .items[]
+      | select(.addressType == "IPv4")
+      | .endpoints[]
+      | select(.conditions.ready != false)
+      | .addresses[]
+    ' |
+    sort -u
 )
 if (( ${#RW_ENDPOINTS[@]} != 1 )) || \
    [[ "${RW_ENDPOINTS[0]}" != "${PRIMARY_IP}" ]]; then

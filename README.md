@@ -20,20 +20,24 @@ restore a previously reviewed, metadata-aware desired state through another
 values-only pull request. The AWS environment now also enforces namespace and
 admission guardrails plus default-deny NetworkPolicy isolation for application
 and CloudNativePG data workloads, with explicit runtime-validated traffic
-paths. The repository remains intentionally smaller than a full production
-platform and will continue toward secrets integration, HTTPS and control-plane
+paths. AWS Secrets Manager, exact-secret IRSA, a namespaced External Secrets
+Operator deployment, and an active ExternalSecret now provide the demo-api
+PostgreSQL credential without committing the value to Git or Terraform state.
+The repository remains intentionally smaller than a full production platform
+and will continue toward credential rotation, HTTPS and control-plane
 hardening, observability, AI infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.8.2-network-policy-enforcement
+v0.8.4-external-secrets-migration
 ```
-The AWS EKS environment now enables standard Amazon VPC CNI NetworkPolicy
-enforcement and applies explicit default-deny policies to both `startup-apps`
-and `data-platform`. Runtime matrices prove required ALB, demo-api,
-CloudNativePG, Barman, Kubernetes API, S3, STS, backup, failover, recovery, and
-PITR paths while rejecting unauthorized ingress and egress.
+The AWS EKS environment now migrates the CloudNativePG-generated demo-api
+database URI into AWS Secrets Manager and reconciles it through a namespaced
+ExternalSecret. Runtime validation proves exact-secret IAM isolation, safe
+target Secret deletion and reconstruction, credential equality without
+plaintext output, and continued connectivity from both demo-api replicas to
+the current PostgreSQL primary.
 
 ## Platform Architecture
 

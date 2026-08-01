@@ -158,8 +158,7 @@ Incremental scope:
 - v0.8.3 - External Secrets Operator, exact-secret IRSA, namespaced AWS
   SecretStore foundation, and NetworkPolicy rebuild portability - delivered
 - v0.8.4 - PostgreSQL credential migration into AWS Secrets Manager and
-  ExternalSecret cutover - in progress (implementation complete; EKS runtime
-  validation pending)
+  ExternalSecret cutover - delivered
 - v0.8.5 - PostgreSQL application credential rotation and workload reload
   validation - planned
 - v0.8.6 - Route 53 DNS, ACM/ALB HTTPS, EKS endpoint and control-plane logging

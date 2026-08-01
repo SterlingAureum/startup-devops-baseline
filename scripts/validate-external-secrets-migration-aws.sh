@@ -66,11 +66,16 @@ jq --exit-status '
   .spec.target.name == "demo-api-postgresql" and
   .spec.target.creationPolicy == "CreateOrMerge" and
   .spec.target.deletionPolicy == "Retain" and
+  .spec.target.template.engineVersion == "v2" and
+  .spec.target.template.mergePolicy == "Replace" and
   (.spec.data | length) == 1 and
   .spec.data[0].secretKey == "DATABASE_URL" and
   .spec.data[0].remoteRef.key == "startup-devops-baseline-dev/demo-api/postgresql" and
   .spec.data[0].remoteRef.property == "DATABASE_URL" and
   .spec.data[0].remoteRef.version == "AWSCURRENT" and
+  .spec.data[0].remoteRef.conversionStrategy == "Default" and
+  .spec.data[0].remoteRef.decodingStrategy == "None" and
+  .spec.data[0].remoteRef.metadataPolicy == "None" and
   any(.status.conditions[]?; .type == "Ready" and .status == "True") and
   ((.status.refreshTime // "") | length > 0) and
   ((.status.syncedResourceVersion // "") | length > 0)

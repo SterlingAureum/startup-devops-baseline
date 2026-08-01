@@ -17,6 +17,8 @@ spec:
     deletionPolicy: Retain
     template:
       type: Opaque
+      engineVersion: v2
+      mergePolicy: Replace
       metadata:
         labels:
           app.kubernetes.io/part-of: demo-api
@@ -28,3 +30,6 @@ spec:
         key: startup-devops-baseline-dev/demo-api/postgresql
         property: DATABASE_URL
         version: AWSCURRENT
+        conversionStrategy: Default
+        decodingStrategy: None
+        metadataPolicy: None

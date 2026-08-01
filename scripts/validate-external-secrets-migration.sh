@@ -81,11 +81,16 @@ for marker in (
     "kind: SecretStore",
     "creationPolicy: CreateOrMerge",
     "deletionPolicy: Retain",
+    "engineVersion: v2",
+    "mergePolicy: Replace",
     "platform.startup.dev/managed-by: external-secrets",
     "secretKey: DATABASE_URL",
     "key: startup-devops-baseline-dev/demo-api/postgresql",
     "property: DATABASE_URL",
     "version: AWSCURRENT",
+    "conversionStrategy: Default",
+    "decodingStrategy: None",
+    "metadataPolicy: None",
 ):
     require(external_secret, marker, "active ExternalSecret contract")
 

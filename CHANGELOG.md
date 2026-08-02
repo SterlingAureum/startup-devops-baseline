@@ -29,6 +29,12 @@ All notable changes to this repository are documented in this file.
 
 ### Changed
 
+- Allowed guarded activation and compensation reloads to accept original Pods
+  that remain Running but become NotReady after the single PostgreSQL password
+  changes, while preserving strict Ready, credential-digest, and database
+  health checks for every replacement Pod.
+- Aligned the Checkpoint 1 AWS validator with activation by rejecting a stale
+  ExternalSecret `force-sync` annotation before any database mutation.
 - Split credential rotation into a no-impact candidate-staging checkpoint and
   a guarded, automatically compensated cutover checkpoint so the unavoidable
   single-password transition remains bounded and observable.

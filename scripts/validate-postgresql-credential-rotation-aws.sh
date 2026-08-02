@@ -142,9 +142,10 @@ EXTERNAL_SECRET_JSON="$(
 )"
 jq --exit-status '
   .spec.data[0].remoteRef.version == "AWSCURRENT" and
+  (.metadata.annotations["force-sync"] == null) and
   any(.status.conditions[]?; .type == "Ready" and .status == "True")
 ' <<<"${EXTERNAL_SECRET_JSON}" >/dev/null || {
-  echo "ExternalSecret does not satisfy the Checkpoint 1 isolation contract." >&2
+  echo "ExternalSecret is not Ready, clean, and pinned to AWSCURRENT." >&2
   exit 1
 }
 

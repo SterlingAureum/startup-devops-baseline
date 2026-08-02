@@ -109,12 +109,16 @@ for marker in (
     '--version-stage AWSPENDING',
     'sync_external_secret_to_digest "${PENDING_DIGEST}"',
     'EXPECTED_DATABASE_URL_SHA256="${PENDING_DIGEST}"',
+    'POSTGRESQL_WORKLOAD_RELOAD_MODE=credential-transition',
     'compensate_cutover',
     'restore_version_stages',
     'EXPECTED_DATABASE_URL_SHA256="${CURRENT_DIGEST}"',
     'The candidate is AWSCURRENT; the original version is retained as AWSPREVIOUS.',
 ):
     require(activate, marker, "guarded credential-activation contract")
+
+if activate.count('POSTGRESQL_WORKLOAD_RELOAD_MODE=credential-transition') != 2:
+    raise SystemExit("Activation and compensation must both use credential-transition reload mode.")
 
 for forbidden in (
     "put-secret-value",
@@ -139,7 +143,13 @@ if activate.rfind('sync_external_secret_to_digest "${PENDING_DIGEST}"') > activa
 for marker in (
     'CONFIRM_POSTGRESQL_WORKLOAD_RELOAD:-}" != "reload-current-secret"',
     'EXPECTED_DATABASE_URL_SHA256',
+    'RELOAD_MODE="${POSTGRESQL_WORKLOAD_RELOAD_MODE:-healthy}"',
+    'healthy|credential-transition',
     'select(. >= 2)',
+    'updated_replicas != desired_replicas',
+    'RELOAD_MODE}" == "healthy"',
+    'verified_replacement_uids',
+    'A previously verified replacement Pod lost readiness during credential transition.',
     'kubectl delete pod "${old_pod}"',
     '--wait=false',
     'current_available < desired_replicas - 1',
@@ -163,6 +173,7 @@ for marker in (
     'Expected distinct, singular AWSCURRENT and AWSPENDING versions.',
     'len(pending_password) < 48',
     '.spec.data[0].remoteRef.version == "AWSCURRENT"',
+    '.metadata.annotations["force-sync"] == null',
     'PostgreSQL credential rotation Checkpoint 1 AWS validation passed.',
 ):
     require(staging_runtime, marker, "AWS candidate-isolation validation")

@@ -310,6 +310,7 @@ compensate_cutover() {
 
   CONFIRM_POSTGRESQL_WORKLOAD_RELOAD=reload-current-secret \
   EXPECTED_DATABASE_URL_SHA256="${CURRENT_DIGEST}" \
+  POSTGRESQL_WORKLOAD_RELOAD_MODE=credential-transition \
     "${RELOAD_SCRIPT}" || compensation_failed=1
 
   application_ready "${DEMO_APPLICATION}" || compensation_failed=1
@@ -522,6 +523,7 @@ sync_external_secret_to_digest "${PENDING_DIGEST}"
 echo "==> Reloading every demo-api Pod through the current Secret"
 CONFIRM_POSTGRESQL_WORKLOAD_RELOAD=reload-current-secret \
 EXPECTED_DATABASE_URL_SHA256="${PENDING_DIGEST}" \
+POSTGRESQL_WORKLOAD_RELOAD_MODE=credential-transition \
   "${RELOAD_SCRIPT}"
 
 echo "==> Confirming final GitOps health"

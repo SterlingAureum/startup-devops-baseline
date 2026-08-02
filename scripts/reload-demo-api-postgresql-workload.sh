@@ -9,6 +9,7 @@ POSTGRES_NAMESPACE="${POSTGRES_NAMESPACE:-data-platform}"
 POSTGRES_CLUSTER="${POSTGRES_CLUSTER:-postgresql-baseline}"
 WAIT_TIMEOUT_SECONDS="${WAIT_TIMEOUT_SECONDS:-1200}"
 POLL_SECONDS="${POLL_SECONDS:-5}"
+RELOAD_MODE="${POSTGRESQL_WORKLOAD_RELOAD_MODE:-healthy}"
 
 for command in aws jq kubectl python3; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -39,6 +40,15 @@ if [[ ! "${EXPECTED_DATABASE_URL_SHA256:-}" =~ ^[[:xdigit:]]{64}$ ]]; then
   echo "EXPECTED_DATABASE_URL_SHA256 must be a 64-character SHA-256 digest." >&2
   exit 1
 fi
+
+case "${RELOAD_MODE}" in
+  healthy|credential-transition)
+    ;;
+  *)
+    echo "POSTGRESQL_WORKLOAD_RELOAD_MODE must be healthy or credential-transition." >&2
+    exit 1
+    ;;
+esac
 
 echo "==> Configuring kubeconfig for ${EKS_CLUSTER_NAME}"
 aws eks update-kubeconfig \
@@ -112,7 +122,13 @@ desired_replicas="$(jq -er '.spec.replicas | select(. >= 2)' <<<"${deployment_js
 }
 ready_replicas="$(jq -r '.status.readyReplicas // 0' <<<"${deployment_json}")"
 available_replicas="$(jq -r '.status.availableReplicas // 0' <<<"${deployment_json}")"
-if (( ready_replicas != desired_replicas || available_replicas != desired_replicas )); then
+updated_replicas="$(jq -r '.status.updatedReplicas // 0' <<<"${deployment_json}")"
+if (( updated_replicas != desired_replicas )); then
+  echo "demo-api does not have the complete current Deployment revision." >&2
+  exit 1
+fi
+if [[ "${RELOAD_MODE}" == "healthy" ]] && \
+   (( ready_replicas != desired_replicas || available_replicas != desired_replicas )); then
   echo "demo-api is not fully Ready and Available before credential reload." >&2
   exit 1
 fi
@@ -164,17 +180,24 @@ if (( ${#original_pods[@]} != desired_replicas )); then
   exit 1
 fi
 if ! jq -e --argjson count "${desired_replicas}" '
-  (.items | length) == $count and all(.items[]; (
-    .status.phase == "Running" and
-    any(.status.conditions[]?; .type == "Ready" and .status == "True")
-  ))
+  (.items | length) == $count and
+  all(.items[]; .status.phase == "Running" and (.metadata.deletionTimestamp == null))
 ' <<<"${pods_json}" >/dev/null; then
-  echo "Every original demo-api Pod must be Running and Ready." >&2
+  echo "Every original demo-api Pod must exist, be Running, and not be terminating." >&2
+  exit 1
+fi
+if [[ "${RELOAD_MODE}" == "healthy" ]] && ! jq -e '
+  all(.items[];
+    any(.status.conditions[]?; .type == "Ready" and .status == "True")
+  )
+' <<<"${pods_json}" >/dev/null; then
+  echo "Every original demo-api Pod must be Ready in healthy reload mode." >&2
   exit 1
 fi
 
 echo "==> Replacing demo-api Pods one at a time"
 declare -A known_uids=()
+declare -A verified_replacement_uids=()
 while IFS=$'\t' read -r pod_name pod_uid; do
   known_uids["${pod_uid}"]="${pod_name}"
 done < <(jq -r '.items[] | [.metadata.name, .metadata.uid] | @tsv' <<<"${pods_json}")
@@ -201,15 +224,28 @@ for old_pod in "${original_pods[@]}"; do
         --output json
     )"
 
-    current_available="$(
-      kubectl get deployment "${DEMO_DEPLOYMENT}" \
-        --namespace "${DEMO_NAMESPACE}" \
-        --output jsonpath='{.status.availableReplicas}'
-    )"
-    current_available="${current_available:-0}"
-    if (( current_available < desired_replicas - 1 )); then
-      echo "demo-api availability fell below the one-at-a-time reload contract." >&2
-      exit 1
+    if [[ "${RELOAD_MODE}" == "healthy" ]]; then
+      current_available="$(
+        kubectl get deployment "${DEMO_DEPLOYMENT}" \
+          --namespace "${DEMO_NAMESPACE}" \
+          --output jsonpath='{.status.availableReplicas}'
+      )"
+      current_available="${current_available:-0}"
+      if (( current_available < desired_replicas - 1 )); then
+        echo "demo-api availability fell below the healthy one-at-a-time reload contract." >&2
+        exit 1
+      fi
+    else
+      for verified_uid in "${!verified_replacement_uids[@]}"; do
+        verified_json="$(
+          jq -c --arg uid "${verified_uid}" \
+            '.items[] | select(.metadata.uid == $uid)' <<<"${pods_json}"
+        )"
+        if [[ -z "${verified_json}" ]] || ! is_ready <<<"${verified_json}"; then
+          echo "A previously verified replacement Pod lost readiness during credential transition." >&2
+          exit 1
+        fi
+      done
     fi
 
     while IFS=$'\t' read -r candidate_name candidate_uid; do
@@ -245,6 +281,7 @@ for old_pod in "${original_pods[@]}"; do
   fi
   pod_database_health "${replacement_pod}" "${primary_ip}"
   known_uids["${replacement_uid}"]="${replacement_pod}"
+  verified_replacement_uids["${replacement_uid}"]="${replacement_pod}"
   unset "known_uids[${old_uid}]"
 done
 

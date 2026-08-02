@@ -15,12 +15,29 @@ All notable changes to this repository are documented in this file.
   deleting the Secret container or moving `AWSCURRENT`.
 - Static rotation contracts that prohibit database mutation, External Secrets
   refresh, and workload restart during candidate staging.
+- Guarded candidate activation that changes the PostgreSQL role through
+  protected standard input, promotes version stages, forces ESO convergence,
+  and removes its temporary reconciliation annotation.
+- One-at-a-time Deployment Pod replacement with per-Pod credential-digest and
+  PostgreSQL primary-connectivity checks.
+- Automatic partial-cutover compensation that restores the original database
+  password, `AWSCURRENT`, ESO target Secret, and workload credential while
+  retaining the candidate under `AWSPENDING` for investigation or retry.
+- Read-only Checkpoint 2 AWS validation for `AWSCURRENT`/`AWSPREVIOUS` stage
+  isolation, authentication behavior, Pod environment convergence, GitOps
+  health, and application connectivity.
 
 ### Changed
 
 - Split credential rotation into a no-impact candidate-staging checkpoint and
-  an atomic cutover checkpoint so an environment-variable consumer is never
-  left between a password change and its required Pod reload.
+  a guarded, automatically compensated cutover checkpoint so the unavoidable
+  single-password transition remains bounded and observable.
+- Made AWS Secrets Manager `AWSCURRENT` plus the ESO target Secret the active
+  credential chain after initial migration; the CloudNativePG-generated Secret
+  remains a legacy bootstrap artifact after the first external rotation.
+- Aligned PostgreSQL application validation and future candidate staging with
+  the active external credential chain instead of requiring equality with the
+  now-historical CNPG Secret.
 
 ## v0.8.4
 

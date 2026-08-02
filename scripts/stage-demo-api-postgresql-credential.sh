@@ -5,9 +5,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/dev}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 EKS_CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
-SOURCE_NAMESPACE="${SOURCE_NAMESPACE:-data-platform}"
-SOURCE_SECRET="${SOURCE_SECRET:-postgresql-baseline-app}"
-SOURCE_KEY="${SOURCE_KEY:-fqdn-uri}"
 TARGET_NAMESPACE="${TARGET_NAMESPACE:-startup-apps}"
 TARGET_SECRET="${TARGET_SECRET:-demo-api-postgresql}"
 TARGET_KEY="${TARGET_KEY:-DATABASE_URL}"
@@ -132,11 +129,9 @@ EOF
 fi
 
 CURRENT_DIGEST="$(remote_digest "${SECRET_ARN}" AWSCURRENT)"
-SOURCE_DIGEST="$(kubernetes_digest "${SOURCE_NAMESPACE}" "${SOURCE_SECRET}" "${SOURCE_KEY}")"
 TARGET_DIGEST="$(kubernetes_digest "${TARGET_NAMESPACE}" "${TARGET_SECRET}" "${TARGET_KEY}")"
-if [[ "${CURRENT_DIGEST}" != "${SOURCE_DIGEST}" || \
-      "${CURRENT_DIGEST}" != "${TARGET_DIGEST}" ]]; then
-  echo "AWSCURRENT, the CNPG source Secret, and the ESO target Secret differ." >&2
+if [[ "${CURRENT_DIGEST}" != "${TARGET_DIGEST}" ]]; then
+  echo "AWSCURRENT and the ESO target Secret differ." >&2
   exit 1
 fi
 
@@ -271,7 +266,7 @@ if [[ "${PENDING_DIGEST}" == "${CURRENT_DIGEST}" || \
   exit 1
 fi
 
-unset CURRENT_DIGEST SOURCE_DIGEST TARGET_DIGEST TARGET_DIGEST_AFTER PENDING_DIGEST
+unset CURRENT_DIGEST TARGET_DIGEST TARGET_DIGEST_AFTER PENDING_DIGEST
 
 echo "PostgreSQL credential candidate staging passed."
 echo "AWSPENDING version: ${NEW_PENDING_VERSION_ID}"

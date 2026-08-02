@@ -6,7 +6,6 @@ EKS_CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
 APPLICATION_NAME="${APPLICATION_NAME:-demo-api-aws-dev}"
 POSTGRES_CLUSTER="${POSTGRES_CLUSTER:-postgresql-baseline}"
 POSTGRES_NAMESPACE="${POSTGRES_NAMESPACE:-data-platform}"
-SOURCE_SECRET="${SOURCE_SECRET:-postgresql-baseline-app}"
 DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
 DEMO_DEPLOYMENT="${DEMO_DEPLOYMENT:-demo-api}"
 TARGET_SECRET="${TARGET_SECRET:-demo-api-postgresql}"
@@ -39,25 +38,19 @@ kubectl wait \
   --namespace argocd \
   --timeout="${WAIT_TIMEOUT}"
 
-echo "==> Checking the minimum cross-namespace credential"
+echo "==> Checking the External Secrets credential"
 kubectl wait \
   --for=condition=Ready \
   "ExternalSecret/${EXTERNAL_SECRET}" \
   --namespace "${DEMO_NAMESPACE}" \
   --timeout="${WAIT_TIMEOUT}"
 
-SOURCE_JSON="$(
-  kubectl get secret "${SOURCE_SECRET}" \
-    --namespace "${POSTGRES_NAMESPACE}" \
-    --output json
-)"
 TARGET_JSON="$(
   kubectl get secret "${TARGET_SECRET}" \
     --namespace "${DEMO_NAMESPACE}" \
     --output json
 )"
 
-SOURCE_VALUE="$(jq -r '.data["fqdn-uri"] // empty' <<< "${SOURCE_JSON}")"
 TARGET_VALUE="$(jq -r '.data.DATABASE_URL // empty' <<< "${TARGET_JSON}")"
 TARGET_KEYS="$(jq -r '.data | keys | join(",")' <<< "${TARGET_JSON}")"
 TARGET_MANAGER="$(
@@ -65,8 +58,7 @@ TARGET_MANAGER="$(
     <<< "${TARGET_JSON}"
 )"
 
-if [[ -z "${SOURCE_VALUE}" || "${TARGET_VALUE}" != "${SOURCE_VALUE}" || \
-      "${TARGET_KEYS}" != "DATABASE_URL" || \
+if [[ -z "${TARGET_VALUE}" || "${TARGET_KEYS}" != "DATABASE_URL" || \
       "${TARGET_MANAGER}" != "external-secrets" ]]; then
   echo "The demo-api credential does not match the External Secrets contract." >&2
   exit 1

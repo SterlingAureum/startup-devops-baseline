@@ -5,8 +5,6 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/dev}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 EKS_CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
-SOURCE_NAMESPACE="${SOURCE_NAMESPACE:-data-platform}"
-SOURCE_SECRET="${SOURCE_SECRET:-postgresql-baseline-app}"
 TARGET_NAMESPACE="${TARGET_NAMESPACE:-startup-apps}"
 TARGET_SECRET="${TARGET_SECRET:-demo-api-postgresql}"
 EXTERNAL_SECRET="${EXTERNAL_SECRET:-demo-api-postgresql}"
@@ -129,10 +127,8 @@ kubernetes_digest() {
 
 CURRENT_DIGEST="$(secret_digest AWSCURRENT)"
 PENDING_DIGEST="$(secret_digest AWSPENDING)"
-SOURCE_DIGEST="$(kubernetes_digest "${SOURCE_NAMESPACE}" "${SOURCE_SECRET}" fqdn-uri)"
 TARGET_DIGEST="$(kubernetes_digest "${TARGET_NAMESPACE}" "${TARGET_SECRET}" DATABASE_URL)"
 if [[ "${CURRENT_DIGEST}" == "${PENDING_DIGEST}" || \
-      "${CURRENT_DIGEST}" != "${SOURCE_DIGEST}" || \
       "${CURRENT_DIGEST}" != "${TARGET_DIGEST}" ]]; then
   echo "Candidate isolation or current credential-chain equality failed." >&2
   exit 1
@@ -152,7 +148,7 @@ jq --exit-status '
   exit 1
 }
 
-unset CURRENT_DIGEST PENDING_DIGEST SOURCE_DIGEST TARGET_DIGEST
+unset CURRENT_DIGEST PENDING_DIGEST TARGET_DIGEST
 
 echo "PostgreSQL credential rotation Checkpoint 1 AWS validation passed."
 echo "AWSPENDING is isolated; AWSCURRENT and the live Kubernetes credential remain unchanged."

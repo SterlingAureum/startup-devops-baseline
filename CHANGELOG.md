@@ -26,6 +26,17 @@ All notable changes to this repository are documented in this file.
 - Read-only Checkpoint 2 AWS validation for `AWSCURRENT`/`AWSPREVIOUS` stage
   isolation, authentication behavior, Pod environment convergence, GitOps
   health, and application connectivity.
+- Guarded `AWSPREVIOUS` rollback and forward-recovery drill that changes the
+  real PostgreSQL role, moves Secrets Manager stages, converges ESO, and reloads
+  each demo-api Pod in both directions before restoring the Checkpoint 2 state.
+- Intermediate rollback validation proving that only the restored credential
+  authenticates and every Pod loaded it before forward recovery begins.
+- Automatic drill recovery that restores the starting PostgreSQL password,
+  version stages, ESO target, and workload Pods after a failed rollback or
+  forward transition.
+- Read-only Checkpoint 3 final-state validation that reuses the full Checkpoint
+  2 invariant set after the transient rollback evidence has been produced by
+  the guarded drill.
 
 ### Changed
 

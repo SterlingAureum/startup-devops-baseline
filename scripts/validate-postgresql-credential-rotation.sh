@@ -10,6 +10,8 @@ python3 - \
   "${ROOT_DIR}/scripts/reload-demo-api-postgresql-workload.sh" \
   "${ROOT_DIR}/scripts/validate-postgresql-credential-rotation-aws.sh" \
   "${ROOT_DIR}/scripts/validate-postgresql-credential-activation-aws.sh" \
+  "${ROOT_DIR}/scripts/run-demo-api-postgresql-credential-rollback-drill.sh" \
+  "${ROOT_DIR}/scripts/validate-postgresql-credential-rollback-aws.sh" \
   "${ROOT_DIR}/scripts/validate-demo-api-postgresql.sh" \
   "${ROOT_DIR}/docs/archive/V0.8.5_POSTGRESQL_CREDENTIAL_ROTATION.md" \
   "${ROOT_DIR}/docs/ROADMAP.md" \
@@ -24,6 +26,8 @@ import sys
     reload_path,
     staging_runtime_path,
     activation_runtime_path,
+    rollback_path,
+    rollback_runtime_path,
     database_runtime_path,
     doc_path,
     roadmap_path,
@@ -37,6 +41,8 @@ paths = (
     reload_path,
     staging_runtime_path,
     activation_runtime_path,
+    rollback_path,
+    rollback_runtime_path,
     database_runtime_path,
     doc_path,
     roadmap_path,
@@ -52,6 +58,8 @@ activate = activate_path.read_text()
 reload = reload_path.read_text()
 staging_runtime = staging_runtime_path.read_text()
 activation_runtime = activation_runtime_path.read_text()
+rollback = rollback_path.read_text()
+rollback_runtime = rollback_runtime_path.read_text()
 database_runtime = database_runtime_path.read_text()
 doc = doc_path.read_text()
 roadmap = roadmap_path.read_text()
@@ -192,6 +200,57 @@ for marker in (
 ):
     require(activation_runtime, marker, "AWS activation validation")
 
+for marker in (
+    'CONFIRM_POSTGRESQL_CREDENTIAL_ROLLBACK_DRILL:-}" !=',
+    '"run-awsprevious-round-trip"',
+    '"${PRECHECK_SCRIPT}"',
+    'transition_to_version',
+    '"${ORIGINAL_PREVIOUS_VERSION_ID}"',
+    '"${ORIGINAL_CURRENT_VERSION_ID}"',
+    'AWSPREVIOUS rollback validation passed.',
+    '"forward recovery"',
+    'restore_checkpoint2_state',
+    'if credential_connects "${ORIGINAL_CURRENT_VERSION_ID}"; then',
+    'database_recovered == 1 && stages_recovered == 1',
+    'Skipping ESO and workload recovery until database and version stages are both restored.',
+    'Automatic forward recovery passed; the original Checkpoint 2 state is active again.',
+    'AUTOMATIC FORWARD RECOVERY DID NOT COMPLETE.',
+    'POSTGRESQL_WORKLOAD_RELOAD_MODE=credential-transition',
+    'validate_phase',
+    'PostgreSQL credential rollback and forward-recovery drill passed.',
+    'No AWSPENDING stage or temporary force-sync annotation remains.',
+):
+    require(rollback, marker, "guarded AWSPREVIOUS round-trip contract")
+
+if rollback.count('transition_to_version \\') != 2:
+    raise SystemExit("Rollback drill must perform exactly one rollback and one forward transition.")
+if rollback.find('"${ORIGINAL_PREVIOUS_VERSION_ID}"') > rollback.find(
+    '"forward recovery"'
+):
+    raise SystemExit("AWSPREVIOUS rollback must occur before forward recovery.")
+if rollback.rfind('RESTORE_REQUIRED=0') < rollback.rfind('"forward recovery"'):
+    raise SystemExit("Automatic recovery protection must remain armed through forward recovery.")
+
+for forbidden in (
+    "put-secret-value",
+    "delete-secret",
+    "secrets.token_urlsafe",
+    "kubectl rollout restart",
+    "kubectl patch deployment",
+    "kubectl set env",
+    "set -x",
+    "--version-stage AWSPENDING",
+):
+    if forbidden in rollback:
+        raise SystemExit(f"Rollback drill contains forbidden mutation or logging action: {forbidden}")
+
+for marker in (
+    'validate-postgresql-credential-activation-aws.sh',
+    'PostgreSQL credential rotation Checkpoint 3 final-state validation passed.',
+    'The forward recovery target is AWSCURRENT',
+):
+    require(rollback_runtime, marker, "Checkpoint 3 final-state validation")
+
 for forbidden in ("SOURCE_VALUE", "SOURCE_JSON", '"${TARGET_VALUE}" != "${SOURCE_VALUE}"'):
     if forbidden in database_runtime:
         raise SystemExit(f"Active database validation still requires the legacy CNPG Secret: {forbidden}")
@@ -203,18 +262,23 @@ for marker in (
     "bounded cutover, not a zero-downtime rotation claim",
     "Automatic compensation passed",
     "AUTOMATIC COMPENSATION DID NOT COMPLETE",
-    "Checkpoint 3",
+    "Run the AWSPREVIOUS Rollback Drill",
+    "AWSPREVIOUS rollback validation passed.",
+    "PostgreSQL credential rollback and forward-recovery drill passed.",
+    "AUTOMATIC FORWARD RECOVERY DID NOT COMPLETE",
+    "Validate the Post-Drill State",
     "Never enable shell xtrace",
 ):
-    require(doc, marker, "v0.8.5 Checkpoint 2 operating model")
+    require(doc, marker, "v0.8.5 credential-rotation operating model")
 
 require(
     roadmap,
-    "candidate staging and guarded cutover implementation",
+    "rollback and forward-recovery implementation",
     "v0.8.5 roadmap status",
 )
 require(changelog, "## v0.8.5 (Unreleased)", "unreleased v0.8.5 changelog")
 require(changelog, "Automatic partial-cutover compensation", "Checkpoint 2 changelog")
+require(changelog, "Guarded `AWSPREVIOUS` rollback and forward-recovery drill", "Checkpoint 3 changelog")
 PY
 
-echo "PostgreSQL credential rotation Checkpoint 2 contract validation passed."
+echo "PostgreSQL credential rotation Checkpoint 3 contract validation passed."

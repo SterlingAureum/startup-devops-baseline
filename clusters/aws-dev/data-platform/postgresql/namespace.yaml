@@ -8,3 +8,10 @@ metadata:
   labels:
     app.kubernetes.io/part-of: startup-devops-baseline
     platform.startup.dev/tier: data
+    security.startup.dev/admission-guardrails: enabled
+    pod-security.kubernetes.io/enforce: baseline
+    pod-security.kubernetes.io/enforce-version: v1.30
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: v1.30
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: v1.30

@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
-    targetRevision: main
+    targetRevision: feature/v0.8-production-security-baseline
     path: clusters/aws-dev/data-platform/postgresql
     directory:
       recurse: true

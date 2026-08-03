@@ -13,9 +13,19 @@ output "cluster_endpoint" {
   value       = aws_eks_cluster.this.endpoint
 }
 
+output "cluster_log_group_name" {
+  description = "CloudWatch log group used by EKS control-plane logging."
+  value       = aws_cloudwatch_log_group.cluster.name
+}
+
 output "cluster_version" {
   description = "Kubernetes version running on the EKS control plane."
   value       = aws_eks_cluster.this.version
+}
+
+output "service_ipv4_cidr" {
+  description = "IPv4 Service CIDR assigned to the EKS cluster."
+  value       = aws_eks_cluster.this.kubernetes_network_config[0].service_ipv4_cidr
 }
 
 output "cluster_certificate_authority_data" {

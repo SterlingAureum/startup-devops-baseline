@@ -82,7 +82,13 @@ This document describes the runtime architecture of the AWS EKS environment.
                            |
                            v
 
-                  AWS Application Load Balancer
+              demo.dev.aureumstack.com (Route 53)
+
+                           |
+                           v
+
+              AWS Application Load Balancer
+                HTTP 301 / HTTPS + ACM
 
                            |
                            v
@@ -171,6 +177,8 @@ Karpenter IAM + EKS Access Entry
 SQS Interruption Queue + EventBridge
 Subnet + Security Group Discovery Tags
 AWS FIS Role + Spot Interruption Template
+ACM Certificate + DNS Validation
+EKS CloudWatch Security Log Group
 ```
 
 Infrastructure ownership:
@@ -180,6 +188,9 @@ Terraform
 ├── VPC and subnets
 ├── Internet Gateway and NAT Gateway
 ├── Amazon EKS
+├── restricted public and enabled private API endpoints
+├── bounded EKS control-plane security logs
+├── stable EKS IPv4 Service CIDR
 ├── EKS managed add-ons
 ├── stable system Managed Node Group
 ├── Karpenter IAM roles and policies
@@ -187,6 +198,7 @@ Terraform
 ├── SQS interruption queue and EventBridge rules
 ├── Karpenter discovery tags
 ├── AWS FIS experiment role and template
+├── ACM certificate and Route 53 validation record
 ├── IAM roles and policies
 └── OIDC provider
 
@@ -195,7 +207,7 @@ Bootstrap scripts
 ├── Argo CD installation
 ├── IRSA ServiceAccount annotation
 ├── environment-specific ALB Application rendering
-└── minimum cross-namespace application Secret synchronization
+└── runtime External Secrets and Route 53 reconciliation
 
 Argo CD
 ├── AWS Load Balancer Controller
@@ -222,6 +234,13 @@ VPC 10.20.0.0/16
 ├── Private subnet AZ-A 10.20.10.0/24
 └── Private subnet AZ-B 10.20.11.0/24
 ```
+
+The disposable EKS environment explicitly reserves `172.20.0.0/16` as its
+IPv4 Service CIDR. Data-platform NetworkPolicy rules use this declared range on
+only TCP/5432 and TCP/9090 for pre-DNAT access to operator-managed Services;
+they do not embed PostgreSQL or Barman ClusterIPs that change after a cluster
+rebuild. Kubernetes API post-DNAT fallback is bounded to the declared private
+control-plane subnets.
 
 Managed nodes run in private subnets. The development environment uses one shared NAT Gateway to reduce cost.
 
@@ -310,12 +329,14 @@ marker. Each recovery Cluster, PVC, EBS volume, NodeClaim, and EC2 node is
 deleted before the next stage. The source Cluster UID and all three source
 PVC/PV/EBS mappings must remain unchanged.
 
-v0.6.5 connects demo-api to `postgresql-baseline-rw` with the generated
-`postgresql-baseline-app` identity. Kubernetes Secrets are namespace-scoped, so
-the deployment workflow copies only the base64-encoded `fqdn-uri` field into
-`startup-apps/demo-api-postgresql` as `DATABASE_URL`. The value is never stored
-in Git or printed. This runtime bridge is an explicit development-stage
-boundary until external secret management is introduced in v0.7.
+demo-api connects to `postgresql-baseline-rw` with the CloudNativePG-generated
+`postgresql-baseline-app` identity. v0.8.4 migrates its `fqdn-uri` once into the
+Terraform-managed AWS Secrets Manager container as the `DATABASE_URL` JSON
+property. External Secrets Operator reads only that Secret through a
+ServiceAccount-scoped IRSA role and reconciles
+`startup-apps/demo-api-postgresql`. The value is never stored in Git, printed,
+or written to Terraform state. The former cross-namespace copy remains only as
+an explicitly guarded break-glass rollback path.
 
 The guarded primary-failover drill deletes only the current primary Pod.
 CloudNativePG promotes the most up-to-date standby, updates the `-rw` Service,

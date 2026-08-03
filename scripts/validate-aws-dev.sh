@@ -3,6 +3,7 @@ set -euo pipefail
 
 AWS_REGION="${AWS_REGION:-us-east-1}"
 CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
+DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.dev.aureumstack.com}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-10m}"
 
 for command in aws kubectl curl; do
@@ -41,11 +42,23 @@ if [[ -z "${ALB_HOSTNAME}" ]]; then
 fi
 
 echo "==> ALB hostname: ${ALB_HOSTNAME}"
+echo "==> Public hostname: ${DEMO_HOSTNAME}"
+
+HTTP_STATUS="$(
+  curl --output /dev/null --silent --show-error \
+    --connect-timeout 10 --max-time 30 \
+    --write-out '%{http_code}' \
+    "http://${DEMO_HOSTNAME}/health"
+)"
+if [[ "${HTTP_STATUS}" != "301" ]]; then
+  echo "Expected HTTP 301 redirect, received ${HTTP_STATUS}." >&2
+  exit 1
+fi
 
 for path in health ready version db/health; do
   echo "==> GET /${path}"
   curl --fail --show-error --silent --retry 12 --retry-delay 10 \
-    "http://${ALB_HOSTNAME}/${path}"
+    "https://${DEMO_HOSTNAME}/${path}"
   echo
  done
 

@@ -20,6 +20,16 @@ variable "cluster_version" {
   nullable    = true
 }
 
+variable "service_ipv4_cidr" {
+  description = "Stable IPv4 Service CIDR used by EKS and GitOps NetworkPolicy rules."
+  type        = string
+
+  validation {
+    condition     = can(cidrnetmask(var.service_ipv4_cidr))
+    error_message = "service_ipv4_cidr must be a valid IPv4 CIDR block."
+  }
+}
+
 variable "vpc_id" {
   description = "ID of the VPC hosting the EKS cluster."
   type        = string
@@ -48,15 +58,29 @@ variable "endpoint_private_access" {
 }
 
 variable "public_access_cidrs" {
-  description = "CIDR blocks permitted to reach the public EKS API endpoint. Restrict this for persistent environments."
+  description = "Restricted CIDR blocks permitted to reach the public EKS API endpoint."
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = []
+
+  validation {
+    condition = (
+      alltrue([for cidr in var.public_access_cidrs : can(cidrnetmask(cidr))]) &&
+      !contains(var.public_access_cidrs, "0.0.0.0/0")
+    )
+    error_message = "public_access_cidrs must contain only valid restricted CIDRs and must not contain 0.0.0.0/0."
+  }
 }
 
 variable "enabled_cluster_log_types" {
   description = "EKS control-plane log types sent to CloudWatch. Empty by default to control lab cost."
   type        = list(string)
   default     = []
+}
+
+variable "cluster_log_retention_days" {
+  description = "CloudWatch retention period for the EKS control-plane log group."
+  type        = number
+  default     = 14
 }
 
 variable "node_group_name" {

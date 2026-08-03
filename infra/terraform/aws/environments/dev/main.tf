@@ -23,12 +23,14 @@ module "eks" {
   environment                 = var.environment
   cluster_name                = local.cluster_name
   cluster_version             = var.eks_cluster_version
+  service_ipv4_cidr           = var.eks_service_ipv4_cidr
   vpc_id                      = module.vpc.vpc_id
   private_subnet_ids          = module.vpc.private_subnet_ids
   endpoint_public_access      = var.eks_endpoint_public_access
   endpoint_private_access     = var.eks_endpoint_private_access
   public_access_cidrs         = var.eks_public_access_cidrs
   enabled_cluster_log_types   = var.eks_enabled_cluster_log_types
+  cluster_log_retention_days  = var.eks_cluster_log_retention_days
   node_group_name             = var.eks_node_group_name
   node_instance_types         = var.eks_node_instance_types
   node_capacity_type          = var.eks_node_capacity_type
@@ -38,6 +40,14 @@ module "eks" {
   node_min_size               = var.eks_node_min_size
   node_max_size               = var.eks_node_max_size
   cluster_admin_principal_arn = var.eks_cluster_admin_principal_arn
+}
+
+module "tls_dns" {
+  source = "../../modules/tls-dns"
+
+  hosted_zone_name = var.route53_hosted_zone_name
+  demo_hostname    = var.demo_api_hostname
+  tags             = var.additional_tags
 }
 
 module "karpenter" {
@@ -76,5 +86,18 @@ module "cnpg_backup" {
   force_destroy             = var.cnpg_backup_force_destroy
   service_account_name      = "postgresql-baseline"
   service_account_namespace = "data-platform"
+  tags                      = var.additional_tags
+}
+
+module "external_secrets" {
+  source = "../../modules/external-secrets"
+
+  project_name              = var.project_name
+  environment               = var.environment
+  oidc_provider_arn         = module.eks.oidc_provider_arn
+  oidc_provider_url         = module.eks.oidc_provider_url
+  service_account_name      = "external-secrets"
+  service_account_namespace = "external-secrets"
+  recovery_window_in_days   = var.external_secrets_recovery_window_in_days
   tags                      = var.additional_tags
 }

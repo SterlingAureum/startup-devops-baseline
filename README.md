@@ -17,21 +17,29 @@ Promoted values and live workloads now retain enough delivery metadata to
 correlate source, build, Git promotion, Argo CD reconciliation, Pod image ID,
 and the application-reported version. A manual rollback workflow can now
 restore a previously reviewed, metadata-aware desired state through another
-values-only pull request. The repository remains intentionally smaller than a
-full production platform and will continue toward security controls,
-observability, AI infrastructure workloads, and AIOps workflows.
+values-only pull request. The AWS environment now also enforces namespace and
+admission guardrails plus default-deny NetworkPolicy isolation for application
+and CloudNativePG data workloads, with explicit runtime-validated traffic
+paths. AWS Secrets Manager, exact-secret IRSA, a namespaced External Secrets
+Operator deployment, and an active ExternalSecret now provide the demo-api
+PostgreSQL credential without committing the value to Git or Terraform state.
+The repository remains intentionally smaller than a full production platform.
+The v0.8 finalization adds the `demo.dev.aureumstack.com` Route 53 endpoint,
+ACM-backed HTTPS, HTTP redirection, a runtime-only EKS management `/32`, and
+bounded security logging before the roadmap advances to observability, AI
+infrastructure workloads, and AIOps workflows.
 
 ## Current Version
 
 ```text
-v0.7.4-cicd-gitops-promotion
+v0.8.6-tls-dns-security-finalization
 ```
-The delivery loop now supports both forward promotion and history-based
-rollback. GitHub Actions validates a historical values-only release and opens
-a rollback pull request that restores only `values-aws-dev.yaml`; it does not
-merge, contact EKS, or invoke Argo CD. After human approval and Argo CD
-reconciliation, the same trace validator proves the restored source, digest,
-desired-state commit, live Pod image ID, and `/version` identity.
+The AWS EKS environment now exposes demo-api through
+`https://demo.dev.aureumstack.com`, with an ACM certificate, Route 53 Alias,
+HTTP-to-HTTPS redirect, restricted public control-plane access, and 14-day
+security-log retention. PostgreSQL credentials remain managed through AWS
+Secrets Manager and External Secrets, with guarded rotation, rollback, and
+forward recovery already validated.
 
 ## Platform Architecture
 

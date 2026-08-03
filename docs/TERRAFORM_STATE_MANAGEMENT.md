@@ -6,6 +6,13 @@ The `aws-dev` environment currently uses local state. This is acceptable for per
 
 State files are excluded from Git. Keep them until the environment has been destroyed.
 
+The saved plan created by `apply-eks-api-access-cidr.sh` is different from
+state: it is a disposable, owner-readable execution artifact under `/tmp`, is
+applied immediately, and is removed when the script exits. Losing that plan
+before apply only fails the current run; it does not lose the deployed-resource
+inventory. The local `terraform.tfstate` remains the authoritative artifact
+that must be retained for this single-operator environment.
+
 ## Limitations
 
 Local state does not provide centralized backup, locking, team access, controlled CI usage, or audit-friendly permissions.
@@ -41,4 +48,6 @@ The backend must exist before the main configuration can use it. A future design
 - Treat state as sensitive.
 - Do not delete state before destroy completes.
 - Do not apply obsolete saved plans.
+- Keep saved plans short-lived and owner-readable because they can contain
+  sensitive values even when terminal output redacts them.
 - Back up state before risky refactoring.

@@ -31,13 +31,22 @@ additional_tags = {
 # Karpenter 1.14.x, so keep this version explicit and upgrade deliberately.
 eks_cluster_version = "1.36"
 
-# Restrict this to your public IP in CIDR form before keeping the cluster online.
+# Keep this stable across disposable cluster rebuilds. The data-platform
+# NetworkPolicy uses it for pre-DNAT access to operator-managed Services.
+eks_service_ipv4_cidr = "172.20.0.0/16"
+
+# Public access fails closed unless a restricted CIDR is supplied at runtime.
+# Do not place a workstation public IP in this file. Use:
+# ./scripts/apply-eks-api-access-cidr.sh
 eks_endpoint_public_access  = true
 eks_endpoint_private_access = true
-eks_public_access_cidrs     = ["0.0.0.0/0"]
 
-# Disabled by default to limit CloudWatch ingestion cost in the lab.
-eks_enabled_cluster_log_types = []
+# Security-relevant control-plane logs use a bounded retention period.
+eks_enabled_cluster_log_types  = ["api", "audit", "authenticator"]
+eks_cluster_log_retention_days = 14
+
+route53_hosted_zone_name = "aureumstack.com"
+demo_api_hostname        = "demo.dev.aureumstack.com"
 
 eks_node_group_name     = "general"
 eks_node_instance_types = ["t3.medium"]
@@ -54,3 +63,7 @@ eks_cluster_admin_principal_arn = null
 # The aws-dev environment is disposable. Set false before using this pattern
 # for backups that must survive an infrastructure destroy.
 cnpg_backup_force_destroy = true
+
+# Immediate deletion supports repeatable teardown of the disposable aws-dev
+# environment. Use 7-30 days for persistent environments.
+external_secrets_recovery_window_in_days = 0

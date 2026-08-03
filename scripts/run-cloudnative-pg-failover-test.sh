@@ -22,6 +22,21 @@ for command in aws kubectl jq; do
   }
 done
 
+get_rw_endpoint_ips() {
+  kubectl get endpointslice \
+    --namespace "${POSTGRES_NAMESPACE}" \
+    --selector "kubernetes.io/service-name=${POSTGRES_CLUSTER}-rw" \
+    --output json |
+    jq -r '
+      .items[]
+      | select(.addressType == "IPv4")
+      | .endpoints[]
+      | select(.conditions.ready != false)
+      | .addresses[]
+    ' |
+    sort -u
+}
+
 diagnostics() {
   local exit_code=$?
   if (( exit_code == 0 )); then
@@ -32,8 +47,9 @@ diagnostics() {
   kubectl get cluster,pods,pvc \
     --namespace "${POSTGRES_NAMESPACE}" \
     --output wide >&2 || true
-  kubectl get endpoints "${POSTGRES_CLUSTER}-rw" \
+  kubectl get endpointslice \
     --namespace "${POSTGRES_NAMESPACE}" \
+    --selector "kubernetes.io/service-name=${POSTGRES_CLUSTER}-rw" \
     --output wide >&2 || true
   kubectl get pods \
     --namespace "${DEMO_NAMESPACE}" \
@@ -211,10 +227,7 @@ echo "==> Waiting for the RW Service to point to the new primary"
 deadline=$((SECONDS + FAILOVER_TIMEOUT_SECONDS))
 while true; do
   mapfile -t RW_ENDPOINTS < <(
-    kubectl get endpoints "${POSTGRES_CLUSTER}-rw" \
-      --namespace "${POSTGRES_NAMESPACE}" \
-      --output jsonpath='{range .subsets[*].addresses[*]}{.ip}{"\n"}{end}' \
-      2>/dev/null || true
+    get_rw_endpoint_ips 2>/dev/null || true
   )
   if (( ${#RW_ENDPOINTS[@]} == 1 )) && \
      [[ "${RW_ENDPOINTS[0]}" == "${NEW_PRIMARY_IP}" ]]; then

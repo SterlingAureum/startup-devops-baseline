@@ -21,39 +21,42 @@ while IFS= read -r script; do
   bash -n "${script}"
 done < <(find "${ROOT_DIR}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
 
-echo "==> Validating GitHub Actions runtime and delivery trigger contracts"
+echo "==> Validating security supply-chain contracts"
+"${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
+
+echo "==> Validating namespace guardrail contracts"
+"${ROOT_DIR}/scripts/validate-namespace-guardrails.sh"
+
+echo "==> Validating application admission-policy contracts"
+"${ROOT_DIR}/scripts/validate-application-admission-policies.sh"
+
+echo "==> Validating EKS network-policy enforcement contracts"
+"${ROOT_DIR}/scripts/validate-eks-network-policy.sh"
+
+echo "==> Validating startup-apps NetworkPolicy contracts"
+"${ROOT_DIR}/scripts/validate-startup-apps-network-policy.sh"
+
+echo "==> Validating data-platform NetworkPolicy contracts"
+"${ROOT_DIR}/scripts/validate-data-platform-network-policy.sh"
+
+echo "==> Validating External Secrets AWS foundation contracts"
+"${ROOT_DIR}/scripts/validate-external-secrets-foundation.sh"
+
+echo "==> Validating External Secrets GitOps contracts"
+"${ROOT_DIR}/scripts/validate-external-secrets-gitops.sh"
+
+echo "==> Validating External Secrets migration contracts"
+"${ROOT_DIR}/scripts/validate-external-secrets-migration.sh"
+
+echo "==> Validating PostgreSQL credential rotation contracts"
+"${ROOT_DIR}/scripts/validate-postgresql-credential-rotation.sh"
+
+echo "==> Validating TLS, DNS, EKS endpoint, logging, and IP privacy contracts"
+"${ROOT_DIR}/scripts/validate-tls-dns-security.sh"
+
+echo "==> Validating delivery trigger contracts"
 PUBLISH_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-image-publish.yaml"
 ROLLBACK_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-rollback.yaml"
-for action in \
-  "actions/checkout@v7" \
-  "actions/upload-artifact@v6" \
-  "actions/download-artifact@v7" \
-  "azure/setup-helm@v5" \
-  "docker/setup-buildx-action@v4" \
-  "docker/login-action@v4" \
-  "docker/metadata-action@v6" \
-  "docker/build-push-action@v7"; do
-  grep -F "uses: ${action}" "${PUBLISH_WORKFLOW}" >/dev/null || {
-    echo "Expected Node.js 24 Action is missing: ${action}" >&2
-    exit 1
-  }
-done
-
-for action in \
-  "actions/checkout@v7" \
-  "azure/setup-helm@v5"; do
-  grep -F "uses: ${action}" "${ROLLBACK_WORKFLOW}" >/dev/null || {
-    echo "Expected Node.js 24 rollback Action is missing: ${action}" >&2
-    exit 1
-  }
-done
-
-if grep -RE \
-  'uses: (actions/checkout@v4|azure/setup-helm@v4|actions/upload-artifact@v4|docker/build-push-action@v6|docker/login-action@v3|docker/metadata-action@v5|docker/setup-buildx-action@v3)' \
-  "${ROOT_DIR}/.github/workflows" >/dev/null; then
-  echo "A reported Node.js 20 Action version is still active." >&2
-  exit 1
-fi
 
 python3 - "${PUBLISH_WORKFLOW}" <<'PY'
 from pathlib import Path
@@ -327,15 +330,8 @@ if REPOSITORY_DIR="${ROLLBACK_REPOSITORY}" \
   exit 1
 fi
 
-echo "==> Running demo-api unit tests in the test image stage"
-docker build \
-  --target test \
-  --tag demo-api-ci-test:unit \
-  "${ROOT_DIR}/apps/demo-api"
-
-echo "==> Building the final demo-api runtime image"
-docker build \
-  --tag demo-api-ci-test:runtime \
-  "${ROOT_DIR}/apps/demo-api"
+echo "==> Validating demo-api workload security"
+IMAGE_NAME="demo-api-ci-test:runtime" \
+  "${ROOT_DIR}/scripts/validate-demo-api-workload-security.sh"
 
 echo "CI quality gates passed."

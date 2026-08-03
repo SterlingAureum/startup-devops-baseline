@@ -43,9 +43,34 @@ output "eks_cluster_endpoint" {
   value       = module.eks.cluster_endpoint
 }
 
+output "eks_cluster_log_group_name" {
+  description = "CloudWatch log group used by EKS control-plane logging."
+  value       = module.eks.cluster_log_group_name
+}
+
+output "demo_api_hostname" {
+  description = "Public HTTPS hostname for demo-api."
+  value       = module.tls_dns.demo_hostname
+}
+
+output "demo_api_acm_certificate_arn" {
+  description = "ARN of the issued ACM certificate used by demo-api."
+  value       = module.tls_dns.certificate_arn
+}
+
+output "route53_hosted_zone_id" {
+  description = "ID of the public Route 53 hosted zone used by demo-api."
+  value       = module.tls_dns.hosted_zone_id
+}
+
 output "eks_cluster_version" {
   description = "Kubernetes version running on the EKS cluster."
   value       = module.eks.cluster_version
+}
+
+output "eks_service_ipv4_cidr" {
+  description = "Stable IPv4 Service CIDR assigned to the EKS cluster."
+  value       = module.eks.service_ipv4_cidr
 }
 
 output "eks_cluster_security_group_id" {
@@ -131,4 +156,29 @@ output "cnpg_backup_bucket_arn" {
 output "cnpg_backup_role_arn" {
   description = "IRSA role ARN used by the CloudNativePG cluster ServiceAccount."
   value       = module.cnpg_backup.role_arn
+}
+
+output "external_secrets_secret_name" {
+  description = "Name of the Secrets Manager secret reserved for demo-api PostgreSQL material."
+  value       = module.external_secrets.secret_name
+}
+
+output "external_secrets_secret_arn" {
+  description = "ARN of the Secrets Manager secret reserved for demo-api PostgreSQL material."
+  value       = module.external_secrets.secret_arn
+}
+
+output "external_secrets_role_arn" {
+  description = "IRSA role ARN used by the External Secrets Operator ServiceAccount."
+  value       = module.external_secrets.role_arn
+}
+
+output "external_secrets_role_name" {
+  description = "Name of the External Secrets Operator IRSA role."
+  value       = module.external_secrets.role_name
+}
+
+output "external_secrets_policy_arn" {
+  description = "ARN of the least-privilege External Secrets read policy."
+  value       = module.external_secrets.policy_arn
 }

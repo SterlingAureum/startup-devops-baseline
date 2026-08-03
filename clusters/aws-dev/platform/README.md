@@ -30,6 +30,19 @@ client and server certificates required by the Barman plugin.
 from official chart `0.7.0` in the same namespace as the CloudNativePG
 operator.
 
+`external-secrets.yaml` installs External Secrets Operator `2.8.0` from its
+official Helm repository. The controller uses a Terraform-created IRSA role,
+is restricted to reconciling `startup-apps`, and does not receive cluster-store,
+push-secret, or arbitrary ServiceAccount token-creation capabilities.
+
+`external-secrets-startup-apps.yaml` manages the namespaced AWS Secrets Manager
+`SecretStore` and the active demo-api `ExternalSecret` under
+`clusters/aws-dev/security/external-secrets/startup-apps/`. The ExternalSecret
+maps only the `DATABASE_URL` JSON property from the Terraform-managed AWS
+Secret into `startup-apps/demo-api-postgresql`. `CreateOrMerge` enables the
+initial no-gap handoff without adding an owner reference. `Retain` preserves
+the Kubernetes Secret if the provider value is temporarily unavailable.
+
 `postgresql-baseline.yaml` creates a separate Argo CD Application for the
 stateful resources under `clusters/aws-dev/data-platform/postgresql/`. v0.6.3
 runs one PostgreSQL 17.10 primary and two replicas on three dedicated On-Demand

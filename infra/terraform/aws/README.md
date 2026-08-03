@@ -2,14 +2,16 @@
 
 This directory contains the AWS infrastructure code introduced in v0.4, the
 Karpenter AWS foundation introduced in v0.5.0, the AWS FIS Spot interruption
-foundation introduced in v0.5.5, and the CloudNativePG S3 backup foundation
-introduced in v0.6.3.
+foundation introduced in v0.5.5, the CloudNativePG S3 backup foundation
+introduced in v0.6.3, the External Secrets AWS foundation introduced in
+v0.8.3, and the ACM/control-plane hardening foundation introduced in v0.8.6.
 
-## Current repository scope: v0.6.4
+## Current repository scope: v0.8.6
 
-v0.6.4 adds no Terraform resources. Recovery clusters reuse the existing
-backup bucket and shared database IRSA ServiceAccount, while an ephemeral
-GitOps-managed Karpenter NodePool supplies isolated On-Demand capacity.
+Terraform owns stable AWS infrastructure and identity. Argo CD owns the
+Kubernetes controllers and application resources, while guarded scripts
+coordinate runtime-only values such as the management `/32`, the ALB Alias,
+and database credential transitions.
 
 The development environment now creates:
 
@@ -20,45 +22,55 @@ The development environment now creates:
 - an IAM OIDC provider;
 - an IRSA role for the EBS CSI controller;
 - EKS managed VPC CNI, CoreDNS, kube-proxy, and EBS CSI add-ons;
-- an optional EKS access entry for a long-lived administrator principal.
+- an optional EKS access entry for a long-lived administrator principal;
 - a dedicated Karpenter controller IRSA role and scoped policies;
 - a dedicated Karpenter node role and EKS access entry;
 - an encrypted interruption queue and EventBridge rules;
 - subnet and security-group discovery tags;
 - an AWS FIS experiment role with only the Spot interruption permissions;
-- a tag-scoped, single-target Spot interruption experiment template.
+- a tag-scoped, single-target Spot interruption experiment template;
 - a versioned, encrypted, public-access-blocked S3 backup bucket;
-- a least-privilege IRSA role for PostgreSQL base backups and WAL archives.
+- a least-privilege IRSA role for PostgreSQL base backups and WAL archives;
+- a Secrets Manager Secret container with no Terraform-managed value; and
+- an External Secrets IRSA role scoped to read only that Secret;
+- a DNS-validated ACM certificate for `demo.dev.aureumstack.com`;
+- a fail-closed EKS public endpoint allowlist supplied only at runtime; and
+- security-relevant EKS control-plane logs with 14-day retention.
 
 Karpenter controller installation, `EC2NodeClass`, `NodePool`, and dynamic EC2
 nodes remain GitOps-managed. Terraform owns the AWS identity and experiment
-template used by the real interruption drill.
+template used by the real interruption drill. Terraform owns only the External
+Secrets AWS foundation; the operator and secret synchronization remain
+GitOps-managed.
 
 ## Cost profile
 
 After `terraform apply`, the main continuing costs are the EKS control plane,
 EC2 managed nodes, NAT Gateway, EBS root volumes, S3 backup storage and
-requests, and related network traffic.
-Control-plane logging is disabled by default in the development environment to
-avoid unnecessary CloudWatch ingestion charges.
+requests, Secrets Manager storage and API calls, and related network traffic.
+Security-relevant control-plane logging is enabled and retained for 14 days.
+This adds CloudWatch ingestion and storage cost; bounded retention prevents the
+disposable lab from keeping logs indefinitely.
 
 ## Validate locally
 
 ```bash
 ./scripts/validate-terraform.sh
+./scripts/validate-external-secrets-foundation.sh
 ```
 
 ## Plan
 
-```bash
-cp infra/terraform/aws/environments/dev/terraform.tfvars.example \
-  infra/terraform/aws/environments/dev/terraform.tfvars
+Do not put a workstation address in `terraform.tfvars`. Apply through the
+guarded entrypoint:
 
-terraform -chdir=infra/terraform/aws/environments/dev init
-terraform -chdir=infra/terraform/aws/environments/dev plan
+```bash
+CONFIRM_EKS_API_CIDR_UPDATE=restrict-current-ip \
+  ./scripts/apply-eks-api-access-cidr.sh
 ```
 
-Before applying, restrict `eks_public_access_cidrs`. EKS is pinned to 1.36 for
+It supplies the current `/32` only for the Terraform execution. EKS is pinned
+to 1.36 for
 compatibility with Karpenter 1.14.x. Review the complete plan because this
 environment creates billable EKS and EC2 resources. Creating the FIS template
 does not start an experiment.
@@ -82,6 +94,7 @@ kubectl get pods -n kube-system
 ./scripts/validate-karpenter-fis.sh
 ./scripts/validate-cloudnative-pg-backup.sh
 ./scripts/validate-cloudnative-pg-recovery.sh
+./scripts/validate-external-secrets-foundation-aws.sh
 ```
 
 Override `AWS_REGION` and `CLUSTER_NAME` when the environment uses different

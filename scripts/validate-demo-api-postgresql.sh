@@ -6,10 +6,10 @@ EKS_CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
 APPLICATION_NAME="${APPLICATION_NAME:-demo-api-aws-dev}"
 POSTGRES_CLUSTER="${POSTGRES_CLUSTER:-postgresql-baseline}"
 POSTGRES_NAMESPACE="${POSTGRES_NAMESPACE:-data-platform}"
-SOURCE_SECRET="${SOURCE_SECRET:-postgresql-baseline-app}"
 DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
 DEMO_DEPLOYMENT="${DEMO_DEPLOYMENT:-demo-api}"
 TARGET_SECRET="${TARGET_SECRET:-demo-api-postgresql}"
+EXTERNAL_SECRET="${EXTERNAL_SECRET:-demo-api-postgresql}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-20m}"
 READY_TIMEOUT_SECONDS="${READY_TIMEOUT_SECONDS:-1200}"
 
@@ -38,41 +38,29 @@ kubectl wait \
   --namespace argocd \
   --timeout="${WAIT_TIMEOUT}"
 
-echo "==> Checking the minimum cross-namespace credential"
-SOURCE_JSON="$(
-  kubectl get secret "${SOURCE_SECRET}" \
-    --namespace "${POSTGRES_NAMESPACE}" \
-    --output json
-)"
+echo "==> Checking the External Secrets credential"
+kubectl wait \
+  --for=condition=Ready \
+  "ExternalSecret/${EXTERNAL_SECRET}" \
+  --namespace "${DEMO_NAMESPACE}" \
+  --timeout="${WAIT_TIMEOUT}"
+
 TARGET_JSON="$(
   kubectl get secret "${TARGET_SECRET}" \
     --namespace "${DEMO_NAMESPACE}" \
     --output json
 )"
 
-SOURCE_VALUE="$(jq -r '.data["fqdn-uri"] // empty' <<< "${SOURCE_JSON}")"
-SOURCE_UID="$(jq -r '.metadata.uid // empty' <<< "${SOURCE_JSON}")"
 TARGET_VALUE="$(jq -r '.data.DATABASE_URL // empty' <<< "${TARGET_JSON}")"
 TARGET_KEYS="$(jq -r '.data | keys | join(",")' <<< "${TARGET_JSON}")"
-TARGET_SOURCE_NAMESPACE="$(
-  jq -r '.metadata.annotations["platform.startup.dev/source-namespace"] // empty' \
-    <<< "${TARGET_JSON}"
-)"
-TARGET_SOURCE_SECRET="$(
-  jq -r '.metadata.annotations["platform.startup.dev/source-secret"] // empty' \
-    <<< "${TARGET_JSON}"
-)"
-TARGET_SOURCE_UID="$(
-  jq -r '.metadata.annotations["platform.startup.dev/source-secret-uid"] // empty' \
+TARGET_MANAGER="$(
+  jq -r '.metadata.labels["platform.startup.dev/managed-by"] // empty' \
     <<< "${TARGET_JSON}"
 )"
 
-if [[ -z "${SOURCE_VALUE}" || "${TARGET_VALUE}" != "${SOURCE_VALUE}" || \
-      "${TARGET_KEYS}" != "DATABASE_URL" || \
-      "${TARGET_SOURCE_NAMESPACE}" != "${POSTGRES_NAMESPACE}" || \
-      "${TARGET_SOURCE_SECRET}" != "${SOURCE_SECRET}" || \
-      "${TARGET_SOURCE_UID}" != "${SOURCE_UID}" ]]; then
-  echo "The demo-api credential does not match the minimum synchronization contract." >&2
+if [[ -z "${TARGET_VALUE}" || "${TARGET_KEYS}" != "DATABASE_URL" || \
+      "${TARGET_MANAGER}" != "external-secrets" ]]; then
+  echo "The demo-api credential does not match the External Secrets contract." >&2
   exit 1
 fi
 
@@ -150,9 +138,18 @@ PRIMARY_IP="$(
     --output jsonpath='{.status.podIP}'
 )"
 mapfile -t RW_ENDPOINTS < <(
-  kubectl get endpoints "${POSTGRES_CLUSTER}-rw" \
+  kubectl get endpointslice \
     --namespace "${POSTGRES_NAMESPACE}" \
-    --output jsonpath='{range .subsets[*].addresses[*]}{.ip}{"\n"}{end}'
+    --selector "kubernetes.io/service-name=${POSTGRES_CLUSTER}-rw" \
+    --output json |
+    jq -r '
+      .items[]
+      | select(.addressType == "IPv4")
+      | .endpoints[]
+      | select(.conditions.ready != false)
+      | .addresses[]
+    ' |
+    sort -u
 )
 if (( ${#RW_ENDPOINTS[@]} != 1 )) || \
    [[ "${RW_ENDPOINTS[0]}" != "${PRIMARY_IP}" ]]; then

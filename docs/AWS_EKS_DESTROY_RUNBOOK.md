@@ -22,6 +22,8 @@ Delete EC2NodeClass
         ↓
 Karpenter deletes the generated IAM instance profile
         ↓
+Delete demo.dev.aureumstack.com Route 53 Alias
+        ↓
 Delete aws-dev Root Application
         ↓
 Delete child Applications and Ingress
@@ -59,6 +61,8 @@ environment before confirming destruction.
 
 The workflow also deletes `startup-apps/demo-api-postgresql`. That runtime
 Secret is not stored in Git and must not remain after the database is removed.
+It also removes the demo-api Alias before deleting the ALB. Domain registration
+and the public `aureumstack.com` hosted zone remain intact.
 
 ## Manual Checks
 
@@ -74,6 +78,7 @@ kubectl get ec2nodeclass
 kubectl get ingress -A
 kubectl get service -A
 aws elbv2 describe-load-balancers --region us-east-1
+aws route53 list-resource-record-sets --hosted-zone-id <zone-id>
 terraform -chdir=infra/terraform/aws/environments/dev output -raw cnpg_backup_bucket_name
 ```
 
@@ -96,6 +101,9 @@ Karpenter-provisioned EC2 node
 Karpenter-generated IAM instance profile
 PostgreSQL gp3 EBS data volumes
 CloudNativePG S3 backup bucket
+Route 53 demo-api Alias
+ACM certificate and validation record
+EKS CloudWatch control-plane log group
 NAT Gateway
 Elastic IP
 ```

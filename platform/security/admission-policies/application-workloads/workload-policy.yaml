@@ -1,0 +1,65 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: startup-application-workloads.security.startup.dev
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+  labels:
+    app.kubernetes.io/part-of: startup-devops-baseline
+    app.kubernetes.io/component: admission-guardrails
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+      - apiGroups: ["apps"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["deployments", "statefulsets", "daemonsets"]
+      - apiGroups: ["batch"]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["jobs"]
+  variables:
+    - name: containers
+      expression: object.spec.template.spec.containers
+    - name: initContainers
+      expression: object.spec.template.spec.?initContainers.orValue([])
+    - name: containerResources
+      expression: variables.containers.map(container, container.?resources)
+    - name: initContainerResources
+      expression: variables.initContainers.map(container, container.?resources)
+  validations:
+    - expression: >-
+        variables.containers.all(container,
+          container.image.matches('^.+@sha256:[0-9a-f]{64}$'))
+      message: >-
+        Every application workload container must use an immutable sha256
+        digest image reference.
+      reason: Invalid
+    - expression: >-
+        variables.initContainers.all(container,
+          container.image.matches('^.+@sha256:[0-9a-f]{64}$'))
+      message: >-
+        Every application workload init container must use an immutable sha256
+        digest image reference.
+      reason: Invalid
+    - expression: >-
+        variables.containerResources.all(resources,
+          resources.?requests[?'cpu'].hasValue() &&
+          resources.?requests[?'memory'].hasValue() &&
+          resources.?limits[?'cpu'].hasValue() &&
+          resources.?limits[?'memory'].hasValue())
+      message: >-
+        Every application workload container must define cpu and memory
+        requests and limits.
+      reason: Invalid
+    - expression: >-
+        variables.initContainerResources.all(resources,
+          resources.?requests[?'cpu'].hasValue() &&
+          resources.?requests[?'memory'].hasValue() &&
+          resources.?limits[?'cpu'].hasValue() &&
+          resources.?limits[?'memory'].hasValue())
+      message: >-
+        Every application workload init container must define cpu and memory
+        requests and limits.
+      reason: Invalid

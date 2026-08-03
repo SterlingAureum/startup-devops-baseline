@@ -4,8 +4,8 @@
 
 ```text
 Developer
-  -> Terraform apply
-  -> VPC, EKS control plane, and Managed Node Group
+  -> guarded Terraform apply with runtime-only management /32
+  -> VPC, EKS control plane, Managed Node Group, ACM, and security logs
   -> kubeconfig
   -> Argo CD bootstrap
   -> AWS Root Application
@@ -16,6 +16,8 @@ Developer
   -> sync wave 30: demo-api
   -> Kubernetes resources healthy
   -> internet-facing ALB available
+  -> Route 53 Alias reconciliation
+  -> HTTPS final validation
 ```
 
 ## Prerequisites
@@ -43,7 +45,10 @@ cp infra/terraform/aws/environments/dev/terraform.tfvars.example \
   infra/terraform/aws/environments/dev/terraform.tfvars
 ```
 
-Review region, Availability Zones, Kubernetes version, API CIDRs, and tags.
+Review region, Availability Zones, Kubernetes version, Service CIDR, domain,
+and tags. Keep `eks_service_ipv4_cidr = "172.20.0.0/16"` aligned with the
+data-platform NetworkPolicy contract. Do not add the workstation public IP to
+this file.
 
 ## 2. Validate Terraform
 
@@ -53,14 +58,27 @@ Review region, Availability Zones, Kubernetes version, API CIDRs, and tags.
 
 ## 3. Plan and Apply
 
+Use the guarded entrypoint so the current public `/32` is passed directly to
+Terraform without being written to Git or a local repository file:
+
 ```bash
-terraform -chdir=infra/terraform/aws/environments/dev init
-terraform -chdir=infra/terraform/aws/environments/dev plan -out=tfplan
-terraform -chdir=infra/terraform/aws/environments/dev show tfplan
-terraform -chdir=infra/terraform/aws/environments/dev apply tfplan
+CONFIRM_EKS_API_CIDR_UPDATE=restrict-current-ip \
+  ./scripts/apply-eks-api-access-cidr.sh
 ```
 
+The same apply creates and validates the ACM certificate and enables EKS
+`api`, `audit`, and `authenticator` logs with 14-day retention. Re-run this
+entrypoint whenever the workstation public IP changes. It still works while
+the old EKS allowlist blocks `kubectl`, because it updates EKS through the AWS
+API. Its saved plan is an owner-readable, disposable `/tmp` artifact rather
+than Terraform state. After apply, the script refreshes kubeconfig and proves
+Kubernetes API readiness from the same terminal.
+
 Do not apply an old plan after changing Terraform files.
+
+When introducing the explicit Service CIDR to an existing cluster, first
+confirm that EKS already reports `172.20.0.0/16`. The Terraform plan must not
+replace the cluster; stop and investigate if replacement is proposed.
 
 ## 4. Validate EKS
 
@@ -105,18 +123,26 @@ TARGET_REVISION=main \
 ./scripts/deploy-aws-dev-root-app.sh
 ```
 
-The deployment script creates and annotates the PostgreSQL ServiceAccount with
-the Terraform-managed backup IRSA role, applies or refreshes the AWS root
-Application, waits for the CloudNativePG ObjectStore, and patches its live S3
-destination from the Terraform-managed backup bucket. It then waits for the
-generated `postgresql-baseline-app` credential and synchronizes only its
-`fqdn-uri` into `startup-apps/demo-api-postgresql` as `DATABASE_URL`.
+The deployment script creates and annotates the PostgreSQL and External Secrets
+ServiceAccounts with their Terraform-managed IRSA roles, applies or refreshes
+the AWS root Application, waits for the CloudNativePG ObjectStore, and patches
+its live S3 destination from the Terraform-managed backup bucket. It then waits
+for the generated `postgresql-baseline-app` credential, idempotently seeds the
+Terraform-managed Secrets Manager container, and waits for
+`ExternalSecret/demo-api-postgresql` to reconcile `DATABASE_URL` into
+`startup-apps/demo-api-postgresql`. Before its first Kubernetes operation it
+refreshes kubeconfig and verifies API readiness. After the application becomes
+healthy, it waits for the live ALB and idempotently reconciles the Route 53
+Alias, including after a disposable cluster rebuild.
 
-The synchronized Secret is runtime state and is not committed to Git. Re-run
-the following command only after application credential rotation:
+The synchronized Secret is runtime state and is not committed to Git. The
+normal deployment path no longer copies a Kubernetes Secret across namespaces.
+The following command is guarded and retained only for break-glass rollback
+after the ExternalSecret has been suspended or deleted:
 
 ```bash
-./scripts/sync-demo-api-postgresql-secret.sh
+CONFIRM_LEGACY_SECRET_SYNC=external-secret-suspended \
+  ./scripts/sync-demo-api-postgresql-secret.sh
 ```
 
 The root Application manages the AWS platform and data-platform components,
@@ -133,6 +159,16 @@ including:
 The PostgreSQL cluster dynamically provisions three On-Demand database nodes,
 three root volumes, and three 20Gi gp3 data volumes. Leave the AWS environment
 running only when needed to avoid unnecessary EC2 and EBS charges.
+
+The deployment performs DNS reconciliation automatically. The same idempotent
+command remains available for independent repair or verification:
+
+```bash
+./scripts/reconcile-demo-api-dns.sh
+```
+
+The public endpoint is `https://demo.dev.aureumstack.com`. Port 80 must return
+301 and redirect to HTTPS.
 
 ## 7. Validate the Baseline
 
@@ -156,6 +192,8 @@ run independently:
 ./scripts/validate-cloudnative-pg-backup.sh
 ./scripts/validate-cloudnative-pg-recovery.sh
 ./scripts/validate-demo-api-postgresql.sh
+./scripts/validate-tls-dns-security-aws.sh
+./scripts/validate-v0.8-final.sh
 ```
 
 Manual checks:
@@ -175,6 +213,7 @@ kubectl get objectstore,scheduledbackup,backup -n data-platform
 kubectl get nodepool database-recovery-ondemand
 kubectl get storageclass gp3-cnpg
 kubectl get secret demo-api-postgresql -n startup-apps
+kubectl get secretstore,externalsecret -n startup-apps
 ```
 
 All three EC2NodeClasses and all five NodePools should report `Ready=True`. The
@@ -191,10 +230,16 @@ different `database-ondemand` nodes, span both Availability Zones, and own
 three encrypted 20Gi gp3 volumes. `validate-all.sh` does not restart a database
 instance.
 
-The demo-api validator should confirm that both replicas use the minimum
-runtime Secret, reach the current primary through `postgresql-baseline-rw`, and
-return a sanitized `/db/health` response. It compares credentials without
-printing or decoding them.
+The demo-api validator should confirm that the ExternalSecret is ready, the
+ESO-managed target contains only `DATABASE_URL`, both replicas reach the current
+primary through `postgresql-baseline-rw`, and `/db/health` remains sanitized.
+It compares credentials without printing or decoding them.
+
+A rebuilt Secrets Manager container initially has only `AWSCURRENT`. Before the
+v0.8 final validator can prove the completed rotation state, repeat the guarded
+v0.8.5 staging, activation, and rollback/forward-recovery workflow documented
+in `docs/archive/V0.8.5_POSTGRESQL_CREDENTIAL_ROTATION.md`. Root deployment does
+not run credential drills automatically.
 
 Changes to the ObjectStore instance-sidecar resources may require a controlled
 CloudNativePG rolling restart; see `docs/TROUBLESHOOTING_V0.6.4.md`.

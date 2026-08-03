@@ -23,7 +23,7 @@ BASE_MARKER="v0.6.4-${RUN_ID}-base"
 KEEP_MARKER="v0.6.4-${RUN_ID}-keep"
 EXCLUDE_MARKER="v0.6.4-${RUN_ID}-exclude"
 
-for command in aws kubectl terraform; do
+for command in aws grep kubectl terraform; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -97,7 +97,17 @@ wait_for_archived_wal() {
   local deadline
   local s3_keys
 
-  wal_segment="$(source_sql "SELECT pg_walfile_name(pg_current_wal_lsn());")"
+  wal_segment="$(
+    source_sql "
+      SELECT pg_walfile_name(
+        pg_logical_emit_message(
+          false,
+          'v064-recovery',
+          clock_timestamp()::text
+        )
+      );
+    "
+  )"
   if [[ ! "${wal_segment}" =~ ^[0-9A-F]{24}$ ]]; then
     echo "Unexpected WAL segment name: ${wal_segment}" >&2
     return 1
@@ -193,6 +203,59 @@ wait_for_recovery_capacity_cleanup() {
     fi
     sleep 10
   done
+}
+
+diagnose_recovery_cluster() {
+  local cluster_name="$1"
+  local pod_resource
+
+  echo "==> Recovery diagnostics for ${cluster_name}" >&2
+  kubectl get jobs,pods,pvc \
+    --namespace "${POSTGRES_NAMESPACE}" \
+    --selector "cnpg.io/cluster=${cluster_name}" \
+    --output wide \
+    --show-labels >&2 || true
+  kubectl describe cluster "${cluster_name}" \
+    --namespace "${POSTGRES_NAMESPACE}" >&2 || true
+  kubectl describe jobs \
+    --namespace "${POSTGRES_NAMESPACE}" \
+    --selector "cnpg.io/cluster=${cluster_name}" >&2 || true
+
+  while IFS= read -r pod_resource; do
+    [[ -n "${pod_resource}" ]] || continue
+    echo "==> Logs for ${pod_resource}" >&2
+    kubectl logs "${pod_resource}" \
+      --namespace "${POSTGRES_NAMESPACE}" \
+      --all-containers \
+      --prefix \
+      --timestamps \
+      --tail=-1 >&2 || true
+  done < <(
+    kubectl get pods \
+      --namespace "${POSTGRES_NAMESPACE}" \
+      --selector "cnpg.io/cluster=${cluster_name}" \
+      --output name 2>/dev/null || true
+  )
+
+  echo "==> Recent ${POSTGRES_NAMESPACE} events" >&2
+  kubectl get events \
+    --namespace "${POSTGRES_NAMESPACE}" \
+    --sort-by='.lastTimestamp' 2>/dev/null |
+    tail -n 100 >&2 || true
+}
+
+recovery_job_failed() {
+  local cluster_name="$1"
+  local job_conditions
+
+  job_conditions="$(
+    kubectl get jobs \
+      --namespace "${POSTGRES_NAMESPACE}" \
+      --selector "cnpg.io/cluster=${cluster_name}" \
+      --output jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.status.conditions[?(@.type=="Failed")].status}{"\n"}{end}' \
+      2>/dev/null || true
+  )"
+  grep -q $'\tTrue$' <<<"${job_conditions}"
 }
 
 cleanup_recovery_cluster() {
@@ -459,25 +522,46 @@ EOF
 wait_for_recovery_cluster() {
   local cluster_name="$1"
   local started_at="$2"
+  local deadline=$((SECONDS + RECOVERY_TIMEOUT_SECONDS))
+  local phase
+  local ready_status
 
-  if ! kubectl wait \
-    --for=condition=Ready \
-    "cluster/${cluster_name}" \
-    --namespace "${POSTGRES_NAMESPACE}" \
-    --timeout="${RECOVERY_TIMEOUT_SECONDS}s"; then
-    kubectl get cluster,pods,pvc \
-      --namespace "${POSTGRES_NAMESPACE}" \
-      --selector "cnpg.io/cluster=${cluster_name}" || true
-    kubectl describe cluster "${cluster_name}" \
-      --namespace "${POSTGRES_NAMESPACE}" || true
-    echo "Timed out waiting for recovery Cluster ${cluster_name}." >&2
-    exit 1
-  fi
+  while true; do
+    ready_status="$(
+      kubectl get cluster "${cluster_name}" \
+        --namespace "${POSTGRES_NAMESPACE}" \
+        --output jsonpath='{.status.conditions[?(@.type=="Ready")].status}' \
+        2>/dev/null || true
+    )"
+    if [[ "${ready_status}" == "True" ]]; then
+      break
+    fi
+
+    phase="$(
+      kubectl get cluster "${cluster_name}" \
+        --namespace "${POSTGRES_NAMESPACE}" \
+        --output jsonpath='{.status.phase}' 2>/dev/null || true
+    )"
+    if recovery_job_failed "${cluster_name}" || \
+       [[ "${phase}" == *unrecoverable* ]]; then
+      diagnose_recovery_cluster "${cluster_name}"
+      echo "Recovery Cluster ${cluster_name} entered a terminal failure state." >&2
+      return 1
+    fi
+
+    if (( SECONDS >= deadline )); then
+      diagnose_recovery_cluster "${cluster_name}"
+      echo "Timed out waiting for recovery Cluster ${cluster_name}." >&2
+      return 1
+    fi
+    sleep 10
+  done
+
   kubectl wait \
     --for=condition=Ready \
     pod \
     --namespace "${POSTGRES_NAMESPACE}" \
-    --selector "cnpg.io/cluster=${cluster_name}" \
+    --selector "cnpg.io/cluster=${cluster_name},cnpg.io/podRole=instance" \
     --timeout=20m
 
   recovery_seconds=$(( $(date +%s) - started_at ))
@@ -516,7 +600,7 @@ validate_recovery_placement() {
   pod_name="$(
     kubectl get pods \
       --namespace "${POSTGRES_NAMESPACE}" \
-      --selector "cnpg.io/cluster=${cluster_name}" \
+      --selector "cnpg.io/cluster=${cluster_name},cnpg.io/podRole=instance" \
       --output jsonpath='{.items[0].metadata.name}'
   )"
   node_name="$(

@@ -18,10 +18,19 @@ terraform -chdir=infra/terraform/aws/environments/dev output
 
 - `eks_cluster_name`: kubeconfig and bootstrap scripts.
 - `eks_cluster_endpoint`: Kubernetes API endpoint.
+- `eks_cluster_log_group_name`: bounded-retention EKS control-plane log group.
 - `eks_cluster_version`: EKS Kubernetes minor version.
 - `eks_cluster_security_group_id`: EKS-managed security group.
 - `eks_node_group_name`: default On-Demand node group.
 - `eks_addon_names`: Terraform-managed EKS add-ons.
+
+## TLS and DNS
+
+- `demo_api_hostname`: stable public application hostname.
+- `demo_api_acm_certificate_arn`: DNS-validated ACM certificate discovered by
+  AWS Load Balancer Controller.
+- `route53_hosted_zone_id`: existing public hosted zone used by the ACM
+  validation record and runtime Alias reconciler.
 
 ## Identity
 
@@ -65,3 +74,7 @@ controller IRSA role ARNs. Run `deploy-aws-dev-root-app.sh` after the
 CloudNativePG backup Terraform apply; it reads the backup bucket and database
 IRSA role, applies only the environment-specific live values, and synchronizes
 the minimum runtime application credential after the source Secret exists.
+
+The operator public IP is intentionally not a Terraform output or repository
+value. `apply-eks-api-access-cidr.sh` supplies it only for the current
+Terraform execution.

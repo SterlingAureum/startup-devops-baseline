@@ -2,6 +2,227 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.8.6 (Unreleased)
+
+### Added
+
+- Terraform-managed DNS-validated ACM certificate for
+  `demo.dev.aureumstack.com` in the existing public `aureumstack.com` Route 53
+  hosted zone.
+- HTTPS ALB listener, TLS 1.2/1.3 security policy, stable host routing, and
+  HTTP-to-HTTPS redirect for the aws-dev demo-api Ingress.
+- Guarded dynamic management-IP updater that passes the current public `/32`
+  directly to Terraform without writing it to a tracked or local repository
+  file.
+- Idempotent Route 53 Alias reconciliation from the live Kubernetes Ingress and
+  ALB canonical hosted-zone identity.
+- Security-relevant EKS `api`, `audit`, and `authenticator` control-plane logs
+  with Terraform-managed 14-day CloudWatch retention.
+- Static public-IP privacy and TLS/DNS security contracts plus a live final
+  validator for EKS endpoint access, logging, ACM, Route 53, redirect, TLS
+  identity, HTTPS application health, Argo CD convergence, and the completed
+  PostgreSQL credential rollback state.
+
+### Changed
+
+- Removed the temporary ExternalSecret `force-sync` annotation after successful
+  deployment and migration-rebuild convergence, with exit-time best-effort
+  cleanup and static ordering contracts preventing the annotation from blocking
+  later PostgreSQL credential activation.
+- Made the public EKS endpoint allowlist fail closed by default and rejected
+  `0.0.0.0/0` in both environment validation and the EKS resource lifecycle.
+- Made the guarded endpoint updater create its disposable saved plan with
+  owner-only permissions, refresh kubeconfig after the EKS update, and prove
+  Kubernetes API readiness before reporting success.
+- Made the aws-dev root deployment refresh and verify kubeconfig before its
+  first Kubernetes operation, wait for a replacement ALB, and idempotently
+  reconcile the stable Route 53 Alias after every deployment.
+- Moved live AWS TLS/DNS validation ahead of credential-drill final-state
+  validation so stale post-rebuild Alias state is reported directly, and added
+  an explicit diagnostic for a rebuilt Secret that still has only
+  `AWSCURRENT`.
+- Changed aws-dev application and NetworkPolicy health checks from direct ALB
+  HTTP access to the stable verified HTTPS hostname.
+- Added Route 53 Alias cleanup before ALB deletion while retaining domain
+  registration and the public hosted zone outside the disposable environment.
+
+## v0.8.5
+
+### Added
+
+- Guarded generation of a high-entropy PostgreSQL credential candidate stored
+  only under the Secrets Manager `AWSPENDING` stage.
+- Read-only AWS validation proving that the candidate differs only by password
+  while `AWSCURRENT`, the CNPG source Secret, the ESO target Secret, and the
+  active ExternalSecret contract remain unchanged.
+- Guarded candidate discard that removes only the `AWSPENDING` label without
+  deleting the Secret container or moving `AWSCURRENT`.
+- Static rotation contracts that prohibit database mutation, External Secrets
+  refresh, and workload restart during candidate staging.
+- Guarded candidate activation that changes the PostgreSQL role through
+  protected standard input, promotes version stages, forces ESO convergence,
+  and removes its temporary reconciliation annotation.
+- One-at-a-time Deployment Pod replacement with per-Pod credential-digest and
+  PostgreSQL primary-connectivity checks.
+- Automatic partial-cutover compensation that restores the original database
+  password, `AWSCURRENT`, ESO target Secret, and workload credential while
+  retaining the candidate under `AWSPENDING` for investigation or retry.
+- Read-only Checkpoint 2 AWS validation for `AWSCURRENT`/`AWSPREVIOUS` stage
+  isolation, authentication behavior, Pod environment convergence, GitOps
+  health, and application connectivity.
+- Guarded `AWSPREVIOUS` rollback and forward-recovery drill that changes the
+  real PostgreSQL role, moves Secrets Manager stages, converges ESO, and reloads
+  each demo-api Pod in both directions before restoring the Checkpoint 2 state.
+- Intermediate rollback validation proving that only the restored credential
+  authenticates and every Pod loaded it before forward recovery begins.
+- Automatic drill recovery that restores the starting PostgreSQL password,
+  version stages, ESO target, and workload Pods after a failed rollback or
+  forward transition.
+- Read-only Checkpoint 3 final-state validation that reuses the full Checkpoint
+  2 invariant set after the transient rollback evidence has been produced by
+  the guarded drill.
+
+### Changed
+
+- Allowed guarded activation and compensation reloads to accept original Pods
+  that remain Running but become NotReady after the single PostgreSQL password
+  changes, while preserving strict Ready, credential-digest, and database
+  health checks for every replacement Pod.
+- Aligned the Checkpoint 1 AWS validator with activation by rejecting a stale
+  ExternalSecret `force-sync` annotation before any database mutation.
+- Split credential rotation into a no-impact candidate-staging checkpoint and
+  a guarded, automatically compensated cutover checkpoint so the unavoidable
+  single-password transition remains bounded and observable.
+- Made AWS Secrets Manager `AWSCURRENT` plus the ESO target Secret the active
+  credential chain after initial migration; the CloudNativePG-generated Secret
+  remains a legacy bootstrap artifact after the first external rotation.
+- Aligned PostgreSQL application validation and future candidate staging with
+  the active external credential chain instead of requiring equality with the
+  now-historical CNPG Secret.
+
+## v0.8.4
+
+### Added
+
+- Guarded, idempotent migration of the CloudNativePG application URI into the
+  `DATABASE_URL` property of the Terraform-managed AWS Secrets Manager Secret.
+- Active namespaced ExternalSecret reconciliation for the existing
+  `startup-apps/demo-api-postgresql` contract.
+- Runtime validation for exact-secret IAM denial, protected-value equality,
+  target Secret deletion and automatic reconstruction, and application
+  connectivity through the current PostgreSQL primary.
+
+### Changed
+
+- Retired cross-namespace Kubernetes Secret copying from the normal deployment
+  path and retained it only as an explicitly guarded break-glass workflow.
+- Declared ExternalSecret CRD defaults explicitly to keep Argo CD
+  `Synced / Healthy` after API-server normalization.
+- Migrated PostgreSQL Service validation and failover diagnostics from the
+  deprecated core `v1 Endpoints` API to `discovery.k8s.io/v1` EndpointSlice.
+
+## v0.8.3
+
+### Added
+
+- Terraform-managed AWS Secrets Manager container without a Secret version,
+  plus an exact-secret IRSA role for External Secrets Operator.
+- Argo CD-managed External Secrets Operator `2.8.0`, namespace-scoped RBAC, and
+  the namespaced `startup-apps/aws-secrets-manager` SecretStore.
+
+### Changed
+
+- Made the data-platform NetworkPolicy rebuild-portable with an explicit EKS
+  Service CIDR, permanent CloudNativePG join policies, and live endpoint
+  validation after disposable cluster recreation.
+
+## v0.8.2
+
+### Added
+
+- Amazon VPC CNI NetworkPolicy enforcement with managed add-on, node-agent,
+  PolicyEndpoint, and isolated allow/deny/allow runtime validation.
+- GitOps-managed default-deny and explicit allow policies for `startup-apps`,
+  covering DNS, public-ALB ingress, and demo-api access to the baseline
+  PostgreSQL cluster.
+- GitOps-managed default-deny and explicit CloudNativePG policies for
+  `data-platform`, covering operator control, replication, PostgreSQL Service,
+  Barman plugin, Kubernetes API, S3, STS, and recovery Job traffic.
+- Static policy-contract checks and AWS runtime matrices for live subnet,
+  Service ClusterIP, Kubernetes API endpoint, database, WAL archival, and
+  unauthorized-traffic behavior.
+
+### Changed
+
+- Restricted ALB ingress to the live ELB-tagged public subnet CIDRs and
+  validated policy alignment against the deployed load balancer.
+- Restricted internal Service paths to live `/32` addresses instead of opening
+  the entire Kubernetes Service CIDR.
+- Extended the CloudNativePG recovery drill to detect failed recovery Jobs,
+  preserve diagnostics before cleanup, and wait only for database instance
+  Pods when evaluating readiness.
+- Revalidated backup, primary failover, latest-state recovery, PITR, data
+  integrity, and recovery-resource cleanup while default-deny enforcement was
+  active.
+
+## v0.8.1
+
+### Added
+
+- GitOps-managed namespace guardrails for `startup-apps` and `data-platform`,
+  including Pod Security Admission, ResourceQuota, and LimitRange controls.
+- Kubernetes-native ValidatingAdmissionPolicy and CEL enforcement for
+  application Pods and common workload-controller Pod templates.
+- Immutable `sha256` image-digest requirements for containers and init
+  containers in protected application namespaces.
+- Explicit CPU and memory request and limit requirements for
+  workload-controller Pod templates, with LimitRange defaults retained as a
+  safety fallback for directly created Pods.
+- Repository contract checks and AWS runtime admission tests covering
+  compliant requests, privileged Pods, mutable image tags, missing resource
+  declarations, LimitRange default injection, and namespace-scope isolation.
+
+### Changed
+
+- Enforced the `restricted` Pod Security Standard for `startup-apps` and staged
+  `data-platform` with `baseline` enforcement plus `restricted` warnings and
+  audit records.
+- Scoped application admission-policy bindings to namespaces labeled
+  `platform.startup.dev/tier=application`, keeping operator-managed
+  CloudNativePG workloads outside the generic application policy.
+- Hardened AWS admission validation to refresh the Argo CD Application and
+  wait for the intended Git revision before evaluating live policy behavior.
+
+## v0.8.0
+
+### Added
+
+- Gitleaks full-history secret scanning in the reusable pull-request and
+  publishing quality gates.
+- Trivy HIGH/CRITICAL misconfiguration gate for the demo-api Docker and Helm
+  configuration.
+- Pre-publication Trivy image gate that blocks fixable HIGH/CRITICAL operating
+  system and application-library vulnerabilities.
+- SPDX JSON SBOM generation, retained workflow artifact, and digest-bound
+  registry attestation for every published demo-api image.
+- Supply-chain contract validation covering immutable Action pins, scan
+  thresholds, pre-push ordering, digest resolution, attestations, and Promotion
+  PR dependencies.
+
+### Changed
+
+- Hardened the demo-api image and Kubernetes workload for non-root execution,
+  a read-only root filesystem, dropped capabilities, RuntimeDefault seccomp,
+  disabled ServiceAccount token automounting, and a bounded memory-backed
+  `/tmp`.
+- Pinned every external GitHub Action to a reviewed full commit SHA while
+  retaining readable release-version comments.
+- Changed image publishing to build and load a local security candidate first;
+  GHCR login and push occur only after the image scan and SBOM generation
+  succeed.
+- Made build provenance, SBOM attestation, and the complete scanned-image job
+  mandatory predecessors of the aws-dev Promotion PR.
+
 ## v0.7.4
 
 ### Added

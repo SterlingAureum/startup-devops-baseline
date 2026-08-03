@@ -76,6 +76,15 @@ def require(text: str, marker: str, label: str) -> None:
         raise SystemExit(f"{label} is missing: {marker}")
 
 
+def require_ordered(text: str, markers: tuple[str, ...], label: str) -> None:
+    offset = 0
+    for marker in markers:
+        position = text.find(marker, offset)
+        if position < 0:
+            raise SystemExit(f"{label} is missing or out of order: {marker}")
+        offset = position + len(marker)
+
+
 for marker in (
     "apiVersion: external-secrets.io/v1",
     "kind: ExternalSecret",
@@ -133,8 +142,25 @@ for marker in (
     "Waiting for ExternalSecret/",
     "force-sync=",
     "--for=condition=Ready",
+    "FORCE_SYNC_PRESENT=1",
+    "remove_force_sync_annotation",
+    "trap cleanup EXIT",
+    '(.metadata.annotations["force-sync"] == null)',
 ):
     require(deploy, marker, "ESO deployment cutover contract")
+
+require_ordered(
+    deploy,
+    (
+        'force-sync="$(date +%s)"',
+        "FORCE_SYNC_PRESENT=1",
+        "--for=condition=Ready",
+        "Removing the temporary ExternalSecret force-sync annotation",
+        "remove_force_sync_annotation",
+        '(.metadata.annotations["force-sync"] == null)',
+    ),
+    "ESO deployment force-sync cleanup contract",
+)
 
 if "SYNC_DATABASE_SECRET_SCRIPT" in deploy or "sync-demo-api-postgresql-secret.sh" in deploy:
     raise SystemExit("The deployment path must not invoke the legacy Kubernetes Secret copy.")
@@ -167,6 +193,10 @@ for marker in (
     "simulate-principal-policy",
     "implicitDeny",
     "force-sync=",
+    "FORCE_SYNC_PRESENT=1",
+    "remove_force_sync_annotation",
+    "trap remove_force_sync_annotation EXIT",
+    '(.metadata.annotations["force-sync"] == null)',
     '.spec.target.template.engineVersion == "v2"',
     '.spec.target.template.mergePolicy == "Replace"',
     '.spec.data[0].remoteRef.conversionStrategy == "Default"',
@@ -175,6 +205,20 @@ for marker in (
     "External Secrets migration runtime validation passed.",
 ):
     require(runtime, marker, "External Secrets runtime migration matrix")
+
+require_ordered(
+    runtime,
+    (
+        'force-sync="$(date +%s)"',
+        "FORCE_SYNC_PRESENT=1",
+        "--for=condition=Ready",
+        "Removing the temporary ExternalSecret force-sync annotation",
+        "remove_force_sync_annotation",
+        '(.metadata.annotations["force-sync"] == null)',
+        "Rechecking all three protected values after recreation",
+    ),
+    "External Secrets rebuild force-sync cleanup contract",
+)
 
 for marker in (
     "Checkpoint 3 validated. v0.8.4 is ready for release.",

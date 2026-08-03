@@ -24,6 +24,7 @@ EXTERNAL_SECRETS_RESOURCES_APPLICATION="${EXTERNAL_SECRETS_RESOURCES_APPLICATION
 EXTERNAL_SECRETS_STORE="${EXTERNAL_SECRETS_STORE:-aws-secrets-manager}"
 EXTERNAL_SECRET="${EXTERNAL_SECRET:-demo-api-postgresql}"
 EXTERNAL_SECRETS_WAIT_SECONDS="${EXTERNAL_SECRETS_WAIT_SECONDS:-900}"
+FORCE_SYNC_PRESENT=0
 MIGRATE_DATABASE_SECRET_SCRIPT="$(
   cd "$(dirname "${BASH_SOURCE[0]}")" &&
     pwd
@@ -43,6 +44,16 @@ done
 [[ -x "${RECONCILE_DEMO_API_DNS_SCRIPT}" ]] || {
   echo "Required executable is missing: ${RECONCILE_DEMO_API_DNS_SCRIPT}" >&2
   exit 1
+}
+
+remove_force_sync_annotation() {
+  if (( FORCE_SYNC_PRESENT == 1 )); then
+    if kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
+      --namespace "${DEMO_NAMESPACE}" \
+      force-sync- >/dev/null 2>&1; then
+      FORCE_SYNC_PRESENT=0
+    fi
+  fi
 }
 
 echo "==> Configuring kubeconfig for ${CLUSTER_NAME}"
@@ -119,7 +130,11 @@ kubectl annotate serviceaccount "${POSTGRES_SERVICE_ACCOUNT}" \
   --overwrite
 
 TEMP_FILE="$(mktemp)"
-trap 'rm -f "${TEMP_FILE}"' EXIT
+cleanup() {
+  rm -f -- "${TEMP_FILE}"
+  remove_force_sync_annotation
+}
+trap cleanup EXIT
 
 sed \
   -e "s#repoURL: .*startup-devops-baseline.git#repoURL: ${REPO_URL}#" \
@@ -220,6 +235,7 @@ kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
   --namespace "${DEMO_NAMESPACE}" \
   force-sync="$(date +%s)" \
   --overwrite
+FORCE_SYNC_PRESENT=1
 kubectl wait \
   --for=condition=Ready \
   "ExternalSecret/${EXTERNAL_SECRET}" \
@@ -227,6 +243,21 @@ kubectl wait \
   --timeout="${EXTERNAL_SECRETS_WAIT_SECONDS}s"
 kubectl get secret "${DEMO_DATABASE_SECRET}" \
   --namespace "${DEMO_NAMESPACE}" >/dev/null
+
+echo "==> Removing the temporary ExternalSecret force-sync annotation"
+remove_force_sync_annotation
+EXTERNAL_SECRET_JSON="$(
+  kubectl get externalsecret "${EXTERNAL_SECRET}" \
+    --namespace "${DEMO_NAMESPACE}" \
+    --output json
+)"
+jq --exit-status '
+  (.metadata.annotations["force-sync"] == null) and
+  any(.status.conditions[]?; .type == "Ready" and .status == "True")
+' <<<"${EXTERNAL_SECRET_JSON}" >/dev/null || {
+  echo "ExternalSecret is not Ready or its temporary force-sync annotation remains." >&2
+  exit 1
+}
 
 echo "==> Waiting for the demo-api Argo CD Application"
 deadline=$((SECONDS + DEMO_WAIT_SECONDS))

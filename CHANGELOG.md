@@ -25,6 +25,10 @@ All notable changes to this repository are documented in this file.
 
 ### Changed
 
+- Removed the temporary ExternalSecret `force-sync` annotation after successful
+  deployment and migration-rebuild convergence, with exit-time best-effort
+  cleanup and static ordering contracts preventing the annotation from blocking
+  later PostgreSQL credential activation.
 - Made the public EKS endpoint allowlist fail closed by default and rejected
   `0.0.0.0/0` in both environment validation and the EKS resource lifecycle.
 - Made the guarded endpoint updater create its disposable saved plan with

@@ -124,6 +124,15 @@ if [[ -z "${CURRENT_VERSION_ID}" || -z "${PREVIOUS_VERSION_ID}" || \
       "${CURRENT_VERSION_ID}" == "${PREVIOUS_VERSION_ID}" || \
       -n "${PENDING_VERSION_ID}" ]]; then
   echo "Expected distinct AWSCURRENT/AWSPREVIOUS versions and no AWSPENDING." >&2
+  if [[ -n "${CURRENT_VERSION_ID}" && -z "${PREVIOUS_VERSION_ID}" && \
+        -z "${PENDING_VERSION_ID}" ]]; then
+    cat >&2 <<'EOF'
+The Secret is in the normal initial state for a rebuilt environment: it has
+AWSCURRENT only. Complete the guarded v0.8.5 staging, activation, validation,
+and rollback/forward-recovery drill before running the v0.8 final validator.
+See docs/archive/V0.8.5_POSTGRESQL_CREDENTIAL_ROTATION.md.
+EOF
+  fi
   exit 1
 fi
 

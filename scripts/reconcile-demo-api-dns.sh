@@ -8,6 +8,7 @@ INGRESS_NAME="${INGRESS_NAME:-demo-api}"
 HOSTED_ZONE_NAME="${HOSTED_ZONE_NAME:-aureumstack.com}"
 DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.dev.aureumstack.com}"
 DNS_ACTION="${DNS_ACTION:-${1:-upsert}}"
+ALB_WAIT_SECONDS="${ALB_WAIT_SECONDS:-900}"
 
 for command in aws jq kubectl; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -56,29 +57,46 @@ else
     --region "${AWS_REGION}" \
     --name "${CLUSTER_NAME}" >/dev/null
 
-  ALB_HOSTNAME="$(
-    kubectl get ingress "${INGRESS_NAME}" \
-      --namespace "${APP_NAMESPACE}" \
-      --output jsonpath='{.status.loadBalancer.ingress[0].hostname}'
-  )"
-  if [[ ! "${ALB_HOSTNAME}" =~ \.elb\.amazonaws\.com$ ]]; then
-    echo "The Ingress does not expose a valid AWS load balancer hostname." >&2
-    exit 1
-  fi
+  echo "==> Waiting for the Ingress ALB hostname"
+  deadline=$((SECONDS + ALB_WAIT_SECONDS))
+  while true; do
+    ALB_HOSTNAME="$(
+      kubectl get ingress "${INGRESS_NAME}" \
+        --namespace "${APP_NAMESPACE}" \
+        --output jsonpath='{.status.loadBalancer.ingress[0].hostname}' \
+        2>/dev/null || true
+    )"
+    if [[ "${ALB_HOSTNAME}" =~ \.elb\.amazonaws\.com$ ]]; then
+      break
+    fi
+    if (( SECONDS >= deadline )); then
+      echo "Timed out waiting for the Ingress ALB hostname." >&2
+      exit 1
+    fi
+    sleep 10
+  done
 
-  LOAD_BALANCER="$(
-    aws elbv2 describe-load-balancers \
-      --region "${AWS_REGION}" \
-      --output json |
-      jq -c --arg dns "${ALB_HOSTNAME}" '
-        [.LoadBalancers[] | select(.DNSName == $dns)] |
-        if length == 1 then .[0] else empty end
-      '
-  )"
-  if [[ -z "${LOAD_BALANCER}" ]]; then
-    echo "Exactly one ALB must match ${ALB_HOSTNAME}." >&2
-    exit 1
-  fi
+  echo "==> Waiting for the ALB API identity"
+  deadline=$((SECONDS + ALB_WAIT_SECONDS))
+  while true; do
+    LOAD_BALANCER="$(
+      aws elbv2 describe-load-balancers \
+        --region "${AWS_REGION}" \
+        --output json |
+        jq -c --arg dns "${ALB_HOSTNAME}" '
+          [.LoadBalancers[] | select(.DNSName == $dns)] |
+          if length == 1 then .[0] else empty end
+        '
+    )"
+    if [[ -n "${LOAD_BALANCER}" ]]; then
+      break
+    fi
+    if (( SECONDS >= deadline )); then
+      echo "Timed out waiting for the ALB API identity for ${ALB_HOSTNAME}." >&2
+      exit 1
+    fi
+    sleep 10
+  done
 
   ALB_ZONE_ID="$(jq -r '.CanonicalHostedZoneId' <<<"${LOAD_BALANCER}")"
   ALIAS_DNS_NAME="${ALB_HOSTNAME}"

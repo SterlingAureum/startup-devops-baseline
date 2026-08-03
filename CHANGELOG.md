@@ -27,6 +27,16 @@ All notable changes to this repository are documented in this file.
 
 - Made the public EKS endpoint allowlist fail closed by default and rejected
   `0.0.0.0/0` in both environment validation and the EKS resource lifecycle.
+- Made the guarded endpoint updater create its disposable saved plan with
+  owner-only permissions, refresh kubeconfig after the EKS update, and prove
+  Kubernetes API readiness before reporting success.
+- Made the aws-dev root deployment refresh and verify kubeconfig before its
+  first Kubernetes operation, wait for a replacement ALB, and idempotently
+  reconcile the stable Route 53 Alias after every deployment.
+- Moved live AWS TLS/DNS validation ahead of credential-drill final-state
+  validation so stale post-rebuild Alias state is reported directly, and added
+  an explicit diagnostic for a rebuilt Secret that still has only
+  `AWSCURRENT`.
 - Changed aws-dev application and NetworkPolicy health checks from direct ALB
   HTTP access to the stable verified HTTPS hostname.
 - Added Route 53 Alias cleanup before ALB deletion while retaining domain

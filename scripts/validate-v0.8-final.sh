@@ -10,8 +10,10 @@ run_step() {
   "${script}"
 }
 
-run_step "TLS, DNS, endpoint, logging, and IP privacy contracts" \
+run_step "TLS, DNS, endpoint, logging, and IP privacy static contracts" \
   "${ROOT_DIR}/scripts/validate-tls-dns-security.sh"
+run_step "TLS, DNS, endpoint, logging, and HTTPS AWS runtime" \
+  "${ROOT_DIR}/scripts/validate-tls-dns-security-aws.sh"
 run_step "Namespace guardrail contracts" \
   "${ROOT_DIR}/scripts/validate-namespace-guardrails.sh"
 run_step "Application admission-policy contracts" \
@@ -32,8 +34,6 @@ run_step "PostgreSQL credential rotation contracts" \
   "${ROOT_DIR}/scripts/validate-postgresql-credential-rotation.sh"
 run_step "PostgreSQL rollback final state" \
   "${ROOT_DIR}/scripts/validate-postgresql-credential-rollback-aws.sh"
-run_step "TLS, DNS, endpoint, logging, and HTTPS runtime" \
-  "${ROOT_DIR}/scripts/validate-tls-dns-security-aws.sh"
 
 echo
 echo "v0.8 Production Security Baseline final validation passed."

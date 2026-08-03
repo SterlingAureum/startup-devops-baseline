@@ -8,6 +8,10 @@ ENV_MAIN="${ROOT_DIR}/infra/terraform/aws/environments/dev/main.tf"
 EKS_MAIN="${ROOT_DIR}/infra/terraform/aws/modules/eks/main.tf"
 TLS_MAIN="${ROOT_DIR}/infra/terraform/aws/modules/tls-dns/main.tf"
 APPLY_SCRIPT="${ROOT_DIR}/scripts/apply-eks-api-access-cidr.sh"
+DEPLOY_SCRIPT="${ROOT_DIR}/scripts/deploy-aws-dev-root-app.sh"
+DNS_SCRIPT="${ROOT_DIR}/scripts/reconcile-demo-api-dns.sh"
+FINAL_VALIDATOR="${ROOT_DIR}/scripts/validate-v0.8-final.sh"
+ACTIVATION_VALIDATOR="${ROOT_DIR}/scripts/validate-postgresql-credential-activation-aws.sh"
 
 for command in git python3; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -18,11 +22,23 @@ done
 
 python3 - \
   "${VALUES_FILE}" "${ENV_VARIABLES}" "${ENV_MAIN}" \
-  "${EKS_MAIN}" "${TLS_MAIN}" "${APPLY_SCRIPT}" <<'PY'
+  "${EKS_MAIN}" "${TLS_MAIN}" "${APPLY_SCRIPT}" "${DEPLOY_SCRIPT}" \
+  "${DNS_SCRIPT}" "${FINAL_VALIDATOR}" "${ACTIVATION_VALIDATOR}" <<'PY'
 from pathlib import Path
 import sys
 
-values, variables, env_main, eks_main, tls_main, apply_script = [
+(
+    values,
+    variables,
+    env_main,
+    eks_main,
+    tls_main,
+    apply_script,
+    deploy_script,
+    dns_script,
+    final_validator,
+    activation_validator,
+) = [
     Path(path).read_text() for path in sys.argv[1:]
 ]
 
@@ -69,13 +85,49 @@ for marker in [
 
 for marker in [
     'MANAGEMENT_PUBLIC_IP',
+    'umask 077',
     'mktemp',
     '-var="eks_public_access_cidrs=',
     '-var="eks_enabled_cluster_log_types=',
     'rm -f -- "${PLAN_FILE}"',
+    'aws eks wait cluster-active',
+    'aws eks update-kubeconfig',
+    'kubectl --request-timeout=30s get --raw=/readyz',
 ]:
     if marker not in apply_script:
         raise SystemExit(f"Missing runtime-only CIDR contract: {marker}")
+
+for marker in [
+    'aws eks update-kubeconfig',
+    'kubectl --request-timeout=30s get --raw=/readyz',
+    'RECONCILE_DEMO_API_DNS_SCRIPT',
+    'Reconciling the stable demo-api hostname to the live ALB',
+]:
+    if marker not in deploy_script:
+        raise SystemExit(f"Missing rebuild-safe deployment contract: {marker}")
+
+for marker in [
+    'ALB_WAIT_SECONDS',
+    'Waiting for the Ingress ALB hostname',
+    'Waiting for the ALB API identity',
+    'Action: "UPSERT"',
+]:
+    if marker not in dns_script:
+        raise SystemExit(f"Missing rebuild-safe DNS contract: {marker}")
+
+runtime_call = 'scripts/validate-tls-dns-security-aws.sh'
+rollback_call = 'scripts/validate-postgresql-credential-rollback-aws.sh'
+if runtime_call not in final_validator or rollback_call not in final_validator:
+    raise SystemExit("The v0.8 final validator is missing a required runtime check.")
+if final_validator.index(runtime_call) > final_validator.index(rollback_call):
+    raise SystemExit("AWS TLS/DNS runtime validation must precede credential final-state validation.")
+
+for marker in [
+    'normal initial state for a rebuilt environment',
+    'V0.8.5_POSTGRESQL_CREDENTIAL_ROTATION.md',
+]:
+    if marker not in activation_validator:
+        raise SystemExit(f"Missing rebuilt-credential diagnostic: {marker}")
 PY
 
 GIT_ROOT="$(git -C "${ROOT_DIR}" rev-parse --show-toplevel 2>/dev/null || true)"

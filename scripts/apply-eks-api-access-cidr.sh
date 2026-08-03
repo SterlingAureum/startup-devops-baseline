@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+umask 077
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/dev}"
@@ -9,7 +10,7 @@ IP_DISCOVERY_URL="${IP_DISCOVERY_URL:-https://checkip.amazonaws.com}"
 EKS_CLUSTER_LOG_TYPES_JSON="${EKS_CLUSTER_LOG_TYPES_JSON:-[\"api\",\"audit\",\"authenticator\"]}"
 EKS_CLUSTER_LOG_RETENTION_DAYS="${EKS_CLUSTER_LOG_RETENTION_DAYS:-14}"
 
-for command in aws curl python3 terraform; do
+for command in aws curl kubectl python3 terraform; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -65,6 +66,11 @@ terraform -chdir="${TF_DIR}" plan \
   -var="eks_cluster_log_retention_days=${EKS_CLUSTER_LOG_RETENTION_DAYS}"
 terraform -chdir="${TF_DIR}" apply -input=false "${PLAN_FILE}"
 
+echo "==> Waiting for ${CLUSTER_NAME} to report Active"
+aws eks wait cluster-active \
+  --region "${AWS_REGION}" \
+  --name "${CLUSTER_NAME}"
+
 ACTUAL_CIDRS="$(
   aws eks describe-cluster \
     --region "${AWS_REGION}" \
@@ -74,6 +80,22 @@ ACTUAL_CIDRS="$(
 )"
 if [[ "${ACTUAL_CIDRS}" != "${MANAGEMENT_CIDR}" ]]; then
   echo "EKS returned an unexpected public endpoint allowlist: ${ACTUAL_CIDRS}" >&2
+  exit 1
+fi
+
+echo "==> Refreshing kubeconfig for ${CLUSTER_NAME}"
+aws eks update-kubeconfig \
+  --region "${AWS_REGION}" \
+  --name "${CLUSTER_NAME}" >/dev/null
+
+echo "==> Verifying Kubernetes API access from this workstation"
+if ! kubectl --request-timeout=30s get --raw=/readyz >/dev/null; then
+  cat >&2 <<EOF
+EKS saved ${MANAGEMENT_CIDR}, but this terminal could not reach the Kubernetes
+API after kubeconfig was refreshed. Keep the current VPN or network route
+stable, verify the terminal's actual egress path, and rerun this guarded script.
+AWS Console or the EKS management API remains available for endpoint recovery.
+EOF
   exit 1
 fi
 

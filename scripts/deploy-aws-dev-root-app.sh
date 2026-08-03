@@ -2,6 +2,8 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+AWS_REGION="${AWS_REGION:-us-east-1}"
+CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
 REPO_URL="${REPO_URL:-https://github.com/SterlingAureum/startup-devops-baseline.git}"
 TARGET_REVISION="${TARGET_REVISION:-main}"
 SOURCE_FILE="${SOURCE_FILE:-${ROOT_DIR}/clusters/aws-dev/root-app.yaml}"
@@ -26,6 +28,10 @@ MIGRATE_DATABASE_SECRET_SCRIPT="$(
   cd "$(dirname "${BASH_SOURCE[0]}")" &&
     pwd
 )/migrate-demo-api-postgresql-secret.sh"
+RECONCILE_DEMO_API_DNS_SCRIPT="$(
+  cd "$(dirname "${BASH_SOURCE[0]}")" &&
+    pwd
+)/reconcile-demo-api-dns.sh"
 
 for command in aws kubectl terraform jq; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -34,6 +40,18 @@ for command in aws kubectl terraform jq; do
   }
 done
 
+[[ -x "${RECONCILE_DEMO_API_DNS_SCRIPT}" ]] || {
+  echo "Required executable is missing: ${RECONCILE_DEMO_API_DNS_SCRIPT}" >&2
+  exit 1
+}
+
+echo "==> Configuring kubeconfig for ${CLUSTER_NAME}"
+aws eks update-kubeconfig \
+  --region "${AWS_REGION}" \
+  --name "${CLUSTER_NAME}" >/dev/null
+
+echo "==> Verifying Kubernetes API access"
+kubectl --request-timeout=30s get --raw=/readyz >/dev/null
 kubectl get namespace argocd >/dev/null
 
 terraform_output() {
@@ -241,6 +259,12 @@ kubectl wait \
   "application/${DEMO_APPLICATION}" \
   --namespace argocd \
   --timeout="${DEMO_WAIT_SECONDS}s"
+
+echo "==> Reconciling the stable demo-api hostname to the live ALB"
+AWS_REGION="${AWS_REGION}" \
+CLUSTER_NAME="${CLUSTER_NAME}" \
+APP_NAMESPACE="${DEMO_NAMESPACE}" \
+  "${RECONCILE_DEMO_API_DNS_SCRIPT}"
 
 echo "Applied aws-dev root application"
 echo "Repository: ${REPO_URL}"

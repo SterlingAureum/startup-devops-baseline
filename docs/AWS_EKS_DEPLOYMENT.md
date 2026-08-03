@@ -70,7 +70,9 @@ The same apply creates and validates the ACM certificate and enables EKS
 `api`, `audit`, and `authenticator` logs with 14-day retention. Re-run this
 entrypoint whenever the workstation public IP changes. It still works while
 the old EKS allowlist blocks `kubectl`, because it updates EKS through the AWS
-API.
+API. Its saved plan is an owner-readable, disposable `/tmp` artifact rather
+than Terraform state. After apply, the script refreshes kubeconfig and proves
+Kubernetes API readiness from the same terminal.
 
 Do not apply an old plan after changing Terraform files.
 
@@ -128,7 +130,10 @@ its live S3 destination from the Terraform-managed backup bucket. It then waits
 for the generated `postgresql-baseline-app` credential, idempotently seeds the
 Terraform-managed Secrets Manager container, and waits for
 `ExternalSecret/demo-api-postgresql` to reconcile `DATABASE_URL` into
-`startup-apps/demo-api-postgresql`.
+`startup-apps/demo-api-postgresql`. Before its first Kubernetes operation it
+refreshes kubeconfig and verifies API readiness. After the application becomes
+healthy, it waits for the live ALB and idempotently reconciles the Route 53
+Alias, including after a disposable cluster rebuild.
 
 The synchronized Secret is runtime state and is not committed to Git. The
 normal deployment path no longer copies a Kubernetes Secret across namespaces.
@@ -155,8 +160,8 @@ The PostgreSQL cluster dynamically provisions three On-Demand database nodes,
 three root volumes, and three 20Gi gp3 data volumes. Leave the AWS environment
 running only when needed to avoid unnecessary EC2 and EBS charges.
 
-After the demo-api Ingress reports an ALB hostname, bind the stable public name
-to that ALB:
+The deployment performs DNS reconciliation automatically. The same idempotent
+command remains available for independent repair or verification:
 
 ```bash
 ./scripts/reconcile-demo-api-dns.sh
@@ -229,6 +234,12 @@ The demo-api validator should confirm that the ExternalSecret is ready, the
 ESO-managed target contains only `DATABASE_URL`, both replicas reach the current
 primary through `postgresql-baseline-rw`, and `/db/health` remains sanitized.
 It compares credentials without printing or decoding them.
+
+A rebuilt Secrets Manager container initially has only `AWSCURRENT`. Before the
+v0.8 final validator can prove the completed rotation state, repeat the guarded
+v0.8.5 staging, activation, and rollback/forward-recovery workflow documented
+in `docs/archive/V0.8.5_POSTGRESQL_CREDENTIAL_ROTATION.md`. Root deployment does
+not run credential drills automatically.
 
 Changes to the ObjectStore instance-sidecar resources may require a controlled
 CloudNativePG rolling restart; see `docs/TROUBLESHOOTING_V0.6.4.md`.

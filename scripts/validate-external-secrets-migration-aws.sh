@@ -14,7 +14,7 @@ TARGET_SECRET="${TARGET_SECRET:-demo-api-postgresql}"
 TARGET_KEY="${TARGET_KEY:-DATABASE_URL}"
 EXTERNAL_SECRET="${EXTERNAL_SECRET:-demo-api-postgresql}"
 WAIT_SECONDS="${WAIT_SECONDS:-600}"
-FORCE_SYNC_PRESENT=0
+FORCE_SYNC_ANNOTATION_SET=false
 
 for command in aws base64 jq kubectl terraform; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -23,17 +23,14 @@ for command in aws base64 jq kubectl terraform; do
   }
 done
 
-remove_force_sync_annotation() {
-  if (( FORCE_SYNC_PRESENT == 1 )); then
-    if kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
+cleanup_force_sync_annotation() {
+  if [[ "${FORCE_SYNC_ANNOTATION_SET}" == "true" ]]; then
+    kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
       --namespace "${TARGET_NAMESPACE}" \
-      force-sync- >/dev/null 2>&1; then
-      FORCE_SYNC_PRESENT=0
-    fi
+      force-sync- >/dev/null 2>&1 || true
   fi
 }
-
-trap remove_force_sync_annotation EXIT
+trap cleanup_force_sync_annotation EXIT
 
 tf_output() {
   local output_name="$1"
@@ -196,7 +193,7 @@ kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
   --namespace "${TARGET_NAMESPACE}" \
   force-sync="$(date +%s)" \
   --overwrite >/dev/null
-FORCE_SYNC_PRESENT=1
+FORCE_SYNC_ANNOTATION_SET=true
 
 deadline=$((SECONDS + WAIT_SECONDS))
 while true; do
@@ -227,21 +224,6 @@ kubectl wait \
   --namespace "${TARGET_NAMESPACE}" \
   --timeout="${WAIT_SECONDS}s"
 
-echo "==> Removing the temporary ExternalSecret force-sync annotation"
-remove_force_sync_annotation
-EXTERNAL_SECRET_JSON="$(
-  kubectl get externalsecret "${EXTERNAL_SECRET}" \
-    --namespace "${TARGET_NAMESPACE}" \
-    --output json
-)"
-jq --exit-status '
-  (.metadata.annotations["force-sync"] == null) and
-  any(.status.conditions[]?; .type == "Ready" and .status == "True")
-' <<<"${EXTERNAL_SECRET_JSON}" >/dev/null || {
-  echo "ExternalSecret is not Ready or its temporary force-sync annotation remains." >&2
-  exit 1
-}
-
 echo "==> Rechecking all three protected values after recreation"
 read_values
 if [[ "${SOURCE_BASE64}" != "${REMOTE_BASE64}" || \
@@ -251,6 +233,24 @@ if [[ "${SOURCE_BASE64}" != "${REMOTE_BASE64}" || \
   echo "The recreated Secret does not match CNPG and Secrets Manager." >&2
   exit 1
 fi
+
+echo "==> Removing the temporary ExternalSecret force-sync annotation"
+kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
+  --namespace "${TARGET_NAMESPACE}" \
+  force-sync- >/dev/null
+EXTERNAL_SECRET_JSON="$(
+  kubectl get externalsecret "${EXTERNAL_SECRET}" \
+    --namespace "${TARGET_NAMESPACE}" \
+    --output json
+)"
+jq --exit-status '
+  (.metadata.annotations["force-sync"] == null) and
+  any(.status.conditions[]?; .type == "Ready" and .status == "True")
+' <<<"${EXTERNAL_SECRET_JSON}" >/dev/null || {
+  echo "ExternalSecret is not Ready and clean after target reconstruction." >&2
+  exit 1
+}
+FORCE_SYNC_ANNOTATION_SET=false
 
 unset SOURCE_BASE64 TARGET_BASE64 REMOTE_BASE64 REMOTE_DOCUMENT REMOTE_VALUE TARGET_JSON
 

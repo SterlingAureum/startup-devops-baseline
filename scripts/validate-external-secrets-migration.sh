@@ -76,15 +76,6 @@ def require(text: str, marker: str, label: str) -> None:
         raise SystemExit(f"{label} is missing: {marker}")
 
 
-def require_ordered(text: str, markers: tuple[str, ...], label: str) -> None:
-    offset = 0
-    for marker in markers:
-        position = text.find(marker, offset)
-        if position < 0:
-            raise SystemExit(f"{label} is missing or out of order: {marker}")
-        offset = position + len(marker)
-
-
 for marker in (
     "apiVersion: external-secrets.io/v1",
     "kind: ExternalSecret",
@@ -121,9 +112,12 @@ for marker in (
     "describe-secret",
     "VersionIdsToStages",
     "AWSCURRENT differs",
-    "refusing to overwrite",
+    "credential_authenticates",
+    "psycopg.connect",
+    "preserving the rotated credential without overwriting it",
+    "cannot authenticate",
+    "Refusing to overwrite or accept an unverified database credential",
     "--secret-string file:///dev/stdin",
-    "Credential rotation belongs to v0.8.5",
     "The credential value was not printed, committed to Git, or written to Terraform state.",
 ):
     require(migration, marker, "guarded credential migration contract")
@@ -141,26 +135,13 @@ for marker in (
     "CONFIRM_EXTERNAL_SECRETS_MIGRATION=seed-from-cnpg",
     "Waiting for ExternalSecret/",
     "force-sync=",
+    "FORCE_SYNC_ANNOTATION_SET=true",
     "--for=condition=Ready",
-    "FORCE_SYNC_PRESENT=1",
-    "remove_force_sync_annotation",
-    "trap cleanup EXIT",
-    '(.metadata.annotations["force-sync"] == null)',
+    "force-sync-",
+    '.metadata.annotations["force-sync"] == null',
+    "FORCE_SYNC_ANNOTATION_SET=false",
 ):
     require(deploy, marker, "ESO deployment cutover contract")
-
-require_ordered(
-    deploy,
-    (
-        'force-sync="$(date +%s)"',
-        "FORCE_SYNC_PRESENT=1",
-        "--for=condition=Ready",
-        "Removing the temporary ExternalSecret force-sync annotation",
-        "remove_force_sync_annotation",
-        '(.metadata.annotations["force-sync"] == null)',
-    ),
-    "ESO deployment force-sync cleanup contract",
-)
 
 if "SYNC_DATABASE_SECRET_SCRIPT" in deploy or "sync-demo-api-postgresql-secret.sh" in deploy:
     raise SystemExit("The deployment path must not invoke the legacy Kubernetes Secret copy.")
@@ -193,10 +174,10 @@ for marker in (
     "simulate-principal-policy",
     "implicitDeny",
     "force-sync=",
-    "FORCE_SYNC_PRESENT=1",
-    "remove_force_sync_annotation",
-    "trap remove_force_sync_annotation EXIT",
-    '(.metadata.annotations["force-sync"] == null)',
+    "FORCE_SYNC_ANNOTATION_SET=true",
+    "force-sync-",
+    '.metadata.annotations["force-sync"] == null',
+    "FORCE_SYNC_ANNOTATION_SET=false",
     '.spec.target.template.engineVersion == "v2"',
     '.spec.target.template.mergePolicy == "Replace"',
     '.spec.data[0].remoteRef.conversionStrategy == "Default"',
@@ -206,19 +187,19 @@ for marker in (
 ):
     require(runtime, marker, "External Secrets runtime migration matrix")
 
-require_ordered(
-    runtime,
-    (
-        'force-sync="$(date +%s)"',
-        "FORCE_SYNC_PRESENT=1",
-        "--for=condition=Ready",
-        "Removing the temporary ExternalSecret force-sync annotation",
-        "remove_force_sync_annotation",
-        '(.metadata.annotations["force-sync"] == null)',
-        "Rechecking all three protected values after recreation",
-    ),
-    "External Secrets rebuild force-sync cleanup contract",
-)
+deploy_trigger = deploy.index("force-sync=")
+deploy_wait = deploy.index("--for=condition=Ready", deploy_trigger)
+deploy_cleanup = deploy.index("force-sync-", deploy_wait)
+deploy_verify = deploy.index('.metadata.annotations["force-sync"] == null', deploy_cleanup)
+if not deploy_trigger < deploy_wait < deploy_cleanup < deploy_verify:
+    raise SystemExit("Deployment force-sync cleanup order is invalid.")
+
+runtime_trigger = runtime.index("force-sync=")
+runtime_recheck = runtime.index("Rechecking all three protected values", runtime_trigger)
+runtime_cleanup = runtime.index("force-sync-", runtime_recheck)
+runtime_verify = runtime.index('.metadata.annotations["force-sync"] == null', runtime_cleanup)
+if not runtime_trigger < runtime_recheck < runtime_cleanup < runtime_verify:
+    raise SystemExit("Runtime rebuild force-sync cleanup order is invalid.")
 
 for marker in (
     "Checkpoint 3 validated. v0.8.4 is ready for release.",

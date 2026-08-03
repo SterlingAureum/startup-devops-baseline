@@ -25,10 +25,6 @@ All notable changes to this repository are documented in this file.
 
 ### Changed
 
-- Removed the temporary ExternalSecret `force-sync` annotation after successful
-  deployment and migration-rebuild convergence, with exit-time best-effort
-  cleanup and static ordering contracts preventing the annotation from blocking
-  later PostgreSQL credential activation.
 - Made the public EKS endpoint allowlist fail closed by default and rejected
   `0.0.0.0/0` in both environment validation and the EKS resource lifecycle.
 - Made the guarded endpoint updater create its disposable saved plan with
@@ -37,6 +33,12 @@ All notable changes to this repository are documented in this file.
 - Made the aws-dev root deployment refresh and verify kubeconfig before its
   first Kubernetes operation, wait for a replacement ALB, and idempotently
   reconcile the stable Route 53 Alias after every deployment.
+- Made credential bootstrap preserve a distinct existing `AWSCURRENT` only
+  after proving that it authenticates to the current PostgreSQL primary, so a
+  branch revision change cannot overwrite or reject a valid rotated credential.
+- Removed temporary ExternalSecret `force-sync` annotations after successful
+  deployment and Secret reconstruction, with best-effort exit cleanup to keep
+  later credential activation guards unblocked.
 - Moved live AWS TLS/DNS validation ahead of credential-drill final-state
   validation so stale post-rebuild Alias state is reported directly, and added
   an explicit diagnostic for a rebuilt Secret that still has only

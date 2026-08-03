@@ -24,7 +24,6 @@ EXTERNAL_SECRETS_RESOURCES_APPLICATION="${EXTERNAL_SECRETS_RESOURCES_APPLICATION
 EXTERNAL_SECRETS_STORE="${EXTERNAL_SECRETS_STORE:-aws-secrets-manager}"
 EXTERNAL_SECRET="${EXTERNAL_SECRET:-demo-api-postgresql}"
 EXTERNAL_SECRETS_WAIT_SECONDS="${EXTERNAL_SECRETS_WAIT_SECONDS:-900}"
-FORCE_SYNC_PRESENT=0
 MIGRATE_DATABASE_SECRET_SCRIPT="$(
   cd "$(dirname "${BASH_SOURCE[0]}")" &&
     pwd
@@ -33,6 +32,7 @@ RECONCILE_DEMO_API_DNS_SCRIPT="$(
   cd "$(dirname "${BASH_SOURCE[0]}")" &&
     pwd
 )/reconcile-demo-api-dns.sh"
+FORCE_SYNC_ANNOTATION_SET=false
 
 for command in aws kubectl terraform jq; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -44,16 +44,6 @@ done
 [[ -x "${RECONCILE_DEMO_API_DNS_SCRIPT}" ]] || {
   echo "Required executable is missing: ${RECONCILE_DEMO_API_DNS_SCRIPT}" >&2
   exit 1
-}
-
-remove_force_sync_annotation() {
-  if (( FORCE_SYNC_PRESENT == 1 )); then
-    if kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
-      --namespace "${DEMO_NAMESPACE}" \
-      force-sync- >/dev/null 2>&1; then
-      FORCE_SYNC_PRESENT=0
-    fi
-  fi
 }
 
 echo "==> Configuring kubeconfig for ${CLUSTER_NAME}"
@@ -130,11 +120,15 @@ kubectl annotate serviceaccount "${POSTGRES_SERVICE_ACCOUNT}" \
   --overwrite
 
 TEMP_FILE="$(mktemp)"
-cleanup() {
-  rm -f -- "${TEMP_FILE}"
-  remove_force_sync_annotation
+cleanup_deployment() {
+  rm -f "${TEMP_FILE}"
+  if [[ "${FORCE_SYNC_ANNOTATION_SET}" == "true" ]]; then
+    kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
+      --namespace "${DEMO_NAMESPACE}" \
+      force-sync- >/dev/null 2>&1 || true
+  fi
 }
-trap cleanup EXIT
+trap cleanup_deployment EXIT
 
 sed \
   -e "s#repoURL: .*startup-devops-baseline.git#repoURL: ${REPO_URL}#" \
@@ -235,7 +229,7 @@ kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
   --namespace "${DEMO_NAMESPACE}" \
   force-sync="$(date +%s)" \
   --overwrite
-FORCE_SYNC_PRESENT=1
+FORCE_SYNC_ANNOTATION_SET=true
 kubectl wait \
   --for=condition=Ready \
   "ExternalSecret/${EXTERNAL_SECRET}" \
@@ -245,8 +239,10 @@ kubectl get secret "${DEMO_DATABASE_SECRET}" \
   --namespace "${DEMO_NAMESPACE}" >/dev/null
 
 echo "==> Removing the temporary ExternalSecret force-sync annotation"
-remove_force_sync_annotation
-EXTERNAL_SECRET_JSON="$(
+kubectl annotate externalsecret "${EXTERNAL_SECRET}" \
+  --namespace "${DEMO_NAMESPACE}" \
+  force-sync- >/dev/null
+external_secret_json="$(
   kubectl get externalsecret "${EXTERNAL_SECRET}" \
     --namespace "${DEMO_NAMESPACE}" \
     --output json
@@ -254,10 +250,11 @@ EXTERNAL_SECRET_JSON="$(
 jq --exit-status '
   (.metadata.annotations["force-sync"] == null) and
   any(.status.conditions[]?; .type == "Ready" and .status == "True")
-' <<<"${EXTERNAL_SECRET_JSON}" >/dev/null || {
-  echo "ExternalSecret is not Ready or its temporary force-sync annotation remains." >&2
+' <<<"${external_secret_json}" >/dev/null || {
+  echo "ExternalSecret is not Ready and clean after forced synchronization." >&2
   exit 1
 }
+FORCE_SYNC_ANNOTATION_SET=false
 
 echo "==> Waiting for the demo-api Argo CD Application"
 deadline=$((SECONDS + DEMO_WAIT_SECONDS))

@@ -9,6 +9,8 @@ SOURCE_NAMESPACE="${SOURCE_NAMESPACE:-data-platform}"
 SOURCE_SECRET="${SOURCE_SECRET:-postgresql-baseline-app}"
 SOURCE_KEY="${SOURCE_KEY:-fqdn-uri}"
 REMOTE_KEY="${REMOTE_KEY:-DATABASE_URL}"
+DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
+DEMO_DEPLOYMENT="${DEMO_DEPLOYMENT:-demo-api}"
 
 for command in aws base64 jq kubectl terraform; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -50,6 +52,61 @@ if [[ -z "${SECRET_ARN}" || -z "${SECRET_NAME}" ]]; then
   echo "External Secrets Terraform outputs are empty." >&2
   exit 1
 fi
+
+credential_authenticates() {
+  local secret_document="$1"
+  local deployment_json selector pod_name
+
+  deployment_json="$(
+    kubectl get deployment "${DEMO_DEPLOYMENT}" \
+      --namespace "${DEMO_NAMESPACE}" \
+      --output json 2>/dev/null
+  )" || return 1
+  selector="$(
+    jq -er '
+      .spec.selector.matchLabels
+      | to_entries
+      | map("\(.key)=\(.value)")
+      | join(",")
+      | select(length > 0)
+    ' <<<"${deployment_json}"
+  )" || return 1
+  pod_name="$(
+    kubectl get pods \
+      --namespace "${DEMO_NAMESPACE}" \
+      --selector "${selector}" \
+      --output json |
+      jq -er '
+        [
+          .items[]
+          | select(.status.phase == "Running")
+          | select(any(.status.conditions[]?; .type == "Ready" and .status == "True"))
+          | .metadata.name
+        ][0] | select(length > 0)
+      '
+  )" || return 1
+
+  printf '%s' "${secret_document}" |
+    kubectl exec -i \
+      --namespace "${DEMO_NAMESPACE}" \
+      "${pod_name}" -- \
+      python -c '
+import json
+import sys
+import psycopg
+
+try:
+    uri = json.load(sys.stdin)["DATABASE_URL"]
+    with psycopg.connect(uri, connect_timeout=5) as connection:
+        identity = connection.execute(
+            "SELECT current_database(), current_user, pg_is_in_recovery()"
+        ).fetchone()
+    if identity != ("app", "app", False):
+        raise RuntimeError("unexpected database identity")
+except Exception:
+    raise SystemExit(1)
+'
+}
 
 echo "==> Reading the CloudNativePG application credential without printing it"
 SOURCE_BASE64="$(
@@ -101,9 +158,13 @@ if [[ "${HAS_CURRENT_VERSION}" == "true" ]]; then
   )"
 
   if [[ "${REMOTE_VALUE}" != "${SOURCE_VALUE}" ]]; then
-    echo "AWSCURRENT differs from the CloudNativePG credential; refusing to overwrite it." >&2
-    echo "Credential rotation belongs to v0.8.5 and requires a separate plan." >&2
-    exit 1
+    echo "==> Verifying the distinct AWSCURRENT as the active rotated credential"
+    if ! credential_authenticates "${REMOTE_DOCUMENT}"; then
+      echo "AWSCURRENT differs from the CloudNativePG bootstrap credential and cannot authenticate." >&2
+      echo "Refusing to overwrite or accept an unverified database credential." >&2
+      exit 1
+    fi
+    echo "AWSCURRENT authenticates; preserving the rotated credential without overwriting it."
   fi
 else
   echo "==> Creating the first AWSCURRENT version from protected standard input"

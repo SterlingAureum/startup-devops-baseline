@@ -4,8 +4,8 @@
 
 ```text
 Developer
-  -> Terraform apply
-  -> VPC, EKS control plane, and Managed Node Group
+  -> guarded Terraform apply with runtime-only management /32
+  -> VPC, EKS control plane, Managed Node Group, ACM, and security logs
   -> kubeconfig
   -> Argo CD bootstrap
   -> AWS Root Application
@@ -16,6 +16,8 @@ Developer
   -> sync wave 30: demo-api
   -> Kubernetes resources healthy
   -> internet-facing ALB available
+  -> Route 53 Alias reconciliation
+  -> HTTPS final validation
 ```
 
 ## Prerequisites
@@ -43,9 +45,10 @@ cp infra/terraform/aws/environments/dev/terraform.tfvars.example \
   infra/terraform/aws/environments/dev/terraform.tfvars
 ```
 
-Review region, Availability Zones, Kubernetes version, Service CIDR, API CIDRs,
+Review region, Availability Zones, Kubernetes version, Service CIDR, domain,
 and tags. Keep `eks_service_ipv4_cidr = "172.20.0.0/16"` aligned with the
-data-platform NetworkPolicy contract.
+data-platform NetworkPolicy contract. Do not add the workstation public IP to
+this file.
 
 ## 2. Validate Terraform
 
@@ -55,12 +58,19 @@ data-platform NetworkPolicy contract.
 
 ## 3. Plan and Apply
 
+Use the guarded entrypoint so the current public `/32` is passed directly to
+Terraform without being written to Git or a local repository file:
+
 ```bash
-terraform -chdir=infra/terraform/aws/environments/dev init
-terraform -chdir=infra/terraform/aws/environments/dev plan -out=tfplan
-terraform -chdir=infra/terraform/aws/environments/dev show tfplan
-terraform -chdir=infra/terraform/aws/environments/dev apply tfplan
+CONFIRM_EKS_API_CIDR_UPDATE=restrict-current-ip \
+  ./scripts/apply-eks-api-access-cidr.sh
 ```
+
+The same apply creates and validates the ACM certificate and enables EKS
+`api`, `audit`, and `authenticator` logs with 14-day retention. Re-run this
+entrypoint whenever the workstation public IP changes. It still works while
+the old EKS allowlist blocks `kubectl`, because it updates EKS through the AWS
+API.
 
 Do not apply an old plan after changing Terraform files.
 
@@ -145,6 +155,16 @@ The PostgreSQL cluster dynamically provisions three On-Demand database nodes,
 three root volumes, and three 20Gi gp3 data volumes. Leave the AWS environment
 running only when needed to avoid unnecessary EC2 and EBS charges.
 
+After the demo-api Ingress reports an ALB hostname, bind the stable public name
+to that ALB:
+
+```bash
+./scripts/reconcile-demo-api-dns.sh
+```
+
+The public endpoint is `https://demo.dev.aureumstack.com`. Port 80 must return
+301 and redirect to HTTPS.
+
 ## 7. Validate the Baseline
 
 The backup validator requires at least one completed base backup. On a clean
@@ -167,6 +187,8 @@ run independently:
 ./scripts/validate-cloudnative-pg-backup.sh
 ./scripts/validate-cloudnative-pg-recovery.sh
 ./scripts/validate-demo-api-postgresql.sh
+./scripts/validate-tls-dns-security-aws.sh
+./scripts/validate-v0.8-final.sh
 ```
 
 Manual checks:

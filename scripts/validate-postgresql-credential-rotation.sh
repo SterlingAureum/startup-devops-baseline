@@ -276,7 +276,8 @@ require(
     "rollback and forward-recovery implementation",
     "v0.8.5 roadmap status",
 )
-require(changelog, "## v0.8.5 (Unreleased)", "unreleased v0.8.5 changelog")
+require(changelog, "## v0.8.6 (Unreleased)", "unreleased v0.8.6 changelog")
+require(changelog, "## v0.8.5\n", "completed v0.8.5 changelog")
 require(changelog, "Automatic partial-cutover compensation", "Checkpoint 2 changelog")
 require(changelog, "Guarded `AWSPREVIOUS` rollback and forward-recovery drill", "Checkpoint 3 changelog")
 PY

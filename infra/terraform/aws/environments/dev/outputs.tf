@@ -43,6 +43,26 @@ output "eks_cluster_endpoint" {
   value       = module.eks.cluster_endpoint
 }
 
+output "eks_cluster_log_group_name" {
+  description = "CloudWatch log group used by EKS control-plane logging."
+  value       = module.eks.cluster_log_group_name
+}
+
+output "demo_api_hostname" {
+  description = "Public HTTPS hostname for demo-api."
+  value       = module.tls_dns.demo_hostname
+}
+
+output "demo_api_acm_certificate_arn" {
+  description = "ARN of the issued ACM certificate used by demo-api."
+  value       = module.tls_dns.certificate_arn
+}
+
+output "route53_hosted_zone_id" {
+  description = "ID of the public Route 53 hosted zone used by demo-api."
+  value       = module.tls_dns.hosted_zone_id
+}
+
 output "eks_cluster_version" {
   description = "Kubernetes version running on the EKS cluster."
   value       = module.eks.cluster_version

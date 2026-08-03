@@ -51,6 +51,9 @@ echo "==> Validating External Secrets migration contracts"
 echo "==> Validating PostgreSQL credential rotation contracts"
 "${ROOT_DIR}/scripts/validate-postgresql-credential-rotation.sh"
 
+echo "==> Validating TLS, DNS, EKS endpoint, logging, and IP privacy contracts"
+"${ROOT_DIR}/scripts/validate-tls-dns-security.sh"
+
 echo "==> Validating delivery trigger contracts"
 PUBLISH_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-image-publish.yaml"
 ROLLBACK_WORKFLOW="${ROOT_DIR}/.github/workflows/demo-api-rollback.yaml"

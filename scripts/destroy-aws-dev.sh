@@ -16,6 +16,7 @@ DEMO_DATABASE_SECRET="${DEMO_DATABASE_SECRET:-demo-api-postgresql}"
 ALB_WAIT_SECONDS="${ALB_WAIT_SECONDS:-600}"
 KARPENTER_WAIT_SECONDS="${KARPENTER_WAIT_SECONDS:-600}"
 EBS_WAIT_SECONDS="${EBS_WAIT_SECONDS:-600}"
+RECONCILE_DNS_SCRIPT="${ROOT_DIR}/scripts/reconcile-demo-api-dns.sh"
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -25,7 +26,7 @@ require_command() {
   }
 }
 
-for command_name in aws kubectl terraform; do
+for command_name in aws jq kubectl terraform; do
   require_command "${command_name}"
 done
 
@@ -176,6 +177,9 @@ if kubectl get crd ec2nodeclasses.karpenter.k8s.aws >/dev/null 2>&1; then
     sleep 15
   done
 fi
+
+echo "==> Deleting the demo-api Route 53 Alias before the ALB"
+DNS_ACTION=delete "${RECONCILE_DNS_SCRIPT}"
 
 if [[ "${ROOT_APPLICATION_EXISTS}" == "true" ]]; then
   kubectl delete application "${ROOT_APPLICATION}" -n "${ARGOCD_NAMESPACE}" --wait=false

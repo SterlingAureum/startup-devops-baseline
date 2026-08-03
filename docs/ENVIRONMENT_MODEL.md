@@ -57,6 +57,8 @@ Three encrypted 20Gi gp3 EBS data volumes
 S3 physical backups, WAL archiving, and PITR validation
 demo-api with PostgreSQL readiness and failover validation
 Application Load Balancer
+Route 53 public hostname and Alias
+ACM certificate and HTTPS redirect
 ```
 
 The v0.5.0 Karpenter foundation includes IAM, node authorization, interruption
@@ -95,7 +97,7 @@ preservation.
 | Ingress | ingress-nginx | AWS Load Balancer Controller |
 | Workload | Rollout | Deployment |
 | Progressive delivery | Enabled | Deferred |
-| Exposure | Local hostname | ALB DNS |
+| Exposure | Local hostname | Route 53 hostname with ACM-backed HTTPS |
 | IAM | N/A | IAM and IRSA |
 | Node capacity | kind nodes | system Managed Node Group plus isolated application and database Karpenter capacity |
 | Database | Disabled | three PostgreSQL instances on dedicated On-Demand nodes with encrypted gp3 persistence, S3 physical backups, isolated PITR, and demo-api failover validation |

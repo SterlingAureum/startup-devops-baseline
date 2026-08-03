@@ -12,6 +12,13 @@ locals {
 
 data "aws_partition" "current" {}
 
+resource "aws_cloudwatch_log_group" "cluster" {
+  name              = "/aws/eks/${var.cluster_name}/cluster"
+  retention_in_days = var.cluster_log_retention_days
+
+  tags = local.common_tags
+}
+
 data "tls_certificate" "cluster" {
   url = aws_eks_cluster.this.identity[0].oidc[0].issuer
 }
@@ -64,8 +71,22 @@ resource "aws_eks_cluster" "this" {
     public_access_cidrs     = var.public_access_cidrs
   }
 
+  lifecycle {
+    precondition {
+      condition = (
+        !var.endpoint_public_access ||
+        (
+          length(var.public_access_cidrs) > 0 &&
+          !contains(var.public_access_cidrs, "0.0.0.0/0")
+        )
+      )
+      error_message = "A public EKS endpoint requires at least one restricted CIDR and must never use 0.0.0.0/0."
+    }
+  }
+
   depends_on = [
     aws_iam_role_policy_attachment.cluster_policy,
+    aws_cloudwatch_log_group.cluster,
   ]
 
   tags = merge(local.common_tags, {

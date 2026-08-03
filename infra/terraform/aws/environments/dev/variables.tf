@@ -98,15 +98,57 @@ variable "eks_endpoint_private_access" {
 }
 
 variable "eks_public_access_cidrs" {
-  description = "CIDRs allowed to reach the public EKS API endpoint."
+  description = "CIDRs allowed to reach the public EKS API endpoint. Supply at runtime; never commit a workstation public IP."
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = []
+
+  validation {
+    condition = (
+      alltrue([for cidr in var.eks_public_access_cidrs : can(cidrnetmask(cidr))]) &&
+      !contains(var.eks_public_access_cidrs, "0.0.0.0/0")
+    )
+    error_message = "eks_public_access_cidrs must contain only valid restricted CIDRs and must not contain 0.0.0.0/0. Use scripts/apply-eks-api-access-cidr.sh for a dynamic workstation IP."
+  }
 }
 
 variable "eks_enabled_cluster_log_types" {
-  description = "EKS control-plane log types sent to CloudWatch."
+  description = "Security-relevant EKS control-plane log types sent to CloudWatch."
   type        = list(string)
-  default     = []
+  default     = ["api", "audit", "authenticator"]
+
+  validation {
+    condition = (
+      length(var.eks_enabled_cluster_log_types) == length(distinct(var.eks_enabled_cluster_log_types)) &&
+      alltrue([
+        for log_type in var.eks_enabled_cluster_log_types :
+        contains(["api", "audit", "authenticator", "controllerManager", "scheduler"], log_type)
+      ])
+    )
+    error_message = "eks_enabled_cluster_log_types contains an unsupported or duplicate EKS log type."
+  }
+}
+
+variable "eks_cluster_log_retention_days" {
+  description = "CloudWatch retention period for EKS control-plane logs."
+  type        = number
+  default     = 14
+
+  validation {
+    condition     = contains([1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365], var.eks_cluster_log_retention_days)
+    error_message = "eks_cluster_log_retention_days must use a CloudWatch-supported baseline retention value."
+  }
+}
+
+variable "route53_hosted_zone_name" {
+  description = "Existing public Route 53 hosted zone for the demo endpoint."
+  type        = string
+  default     = "aureumstack.com"
+}
+
+variable "demo_api_hostname" {
+  description = "Public HTTPS hostname for demo-api."
+  type        = string
+  default     = "demo.dev.aureumstack.com"
 }
 
 variable "eks_node_group_name" {

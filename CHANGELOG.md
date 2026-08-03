@@ -2,7 +2,37 @@
 
 All notable changes to this repository are documented in this file.
 
-## v0.8.5 (Unreleased)
+## v0.8.6 (Unreleased)
+
+### Added
+
+- Terraform-managed DNS-validated ACM certificate for
+  `demo.dev.aureumstack.com` in the existing public `aureumstack.com` Route 53
+  hosted zone.
+- HTTPS ALB listener, TLS 1.2/1.3 security policy, stable host routing, and
+  HTTP-to-HTTPS redirect for the aws-dev demo-api Ingress.
+- Guarded dynamic management-IP updater that passes the current public `/32`
+  directly to Terraform without writing it to a tracked or local repository
+  file.
+- Idempotent Route 53 Alias reconciliation from the live Kubernetes Ingress and
+  ALB canonical hosted-zone identity.
+- Security-relevant EKS `api`, `audit`, and `authenticator` control-plane logs
+  with Terraform-managed 14-day CloudWatch retention.
+- Static public-IP privacy and TLS/DNS security contracts plus a live final
+  validator for EKS endpoint access, logging, ACM, Route 53, redirect, TLS
+  identity, HTTPS application health, Argo CD convergence, and the completed
+  PostgreSQL credential rollback state.
+
+### Changed
+
+- Made the public EKS endpoint allowlist fail closed by default and rejected
+  `0.0.0.0/0` in both environment validation and the EKS resource lifecycle.
+- Changed aws-dev application and NetworkPolicy health checks from direct ALB
+  HTTP access to the stable verified HTTPS hostname.
+- Added Route 53 Alias cleanup before ALB deletion while retaining domain
+  registration and the public hosted zone outside the disposable environment.
+
+## v0.8.5
 
 ### Added
 

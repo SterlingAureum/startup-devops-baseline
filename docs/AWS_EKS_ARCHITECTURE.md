@@ -82,7 +82,13 @@ This document describes the runtime architecture of the AWS EKS environment.
                            |
                            v
 
-                  AWS Application Load Balancer
+              demo.dev.aureumstack.com (Route 53)
+
+                           |
+                           v
+
+              AWS Application Load Balancer
+                HTTP 301 / HTTPS + ACM
 
                            |
                            v
@@ -171,6 +177,8 @@ Karpenter IAM + EKS Access Entry
 SQS Interruption Queue + EventBridge
 Subnet + Security Group Discovery Tags
 AWS FIS Role + Spot Interruption Template
+ACM Certificate + DNS Validation
+EKS CloudWatch Security Log Group
 ```
 
 Infrastructure ownership:
@@ -180,6 +188,8 @@ Terraform
 ├── VPC and subnets
 ├── Internet Gateway and NAT Gateway
 ├── Amazon EKS
+├── restricted public and enabled private API endpoints
+├── bounded EKS control-plane security logs
 ├── stable EKS IPv4 Service CIDR
 ├── EKS managed add-ons
 ├── stable system Managed Node Group
@@ -188,6 +198,7 @@ Terraform
 ├── SQS interruption queue and EventBridge rules
 ├── Karpenter discovery tags
 ├── AWS FIS experiment role and template
+├── ACM certificate and Route 53 validation record
 ├── IAM roles and policies
 └── OIDC provider
 
@@ -196,7 +207,7 @@ Bootstrap scripts
 ├── Argo CD installation
 ├── IRSA ServiceAccount annotation
 ├── environment-specific ALB Application rendering
-└── minimum cross-namespace application Secret synchronization
+└── runtime External Secrets and Route 53 reconciliation
 
 Argo CD
 ├── AWS Load Balancer Controller

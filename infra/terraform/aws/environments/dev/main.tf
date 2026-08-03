@@ -30,6 +30,7 @@ module "eks" {
   endpoint_private_access     = var.eks_endpoint_private_access
   public_access_cidrs         = var.eks_public_access_cidrs
   enabled_cluster_log_types   = var.eks_enabled_cluster_log_types
+  cluster_log_retention_days  = var.eks_cluster_log_retention_days
   node_group_name             = var.eks_node_group_name
   node_instance_types         = var.eks_node_instance_types
   node_capacity_type          = var.eks_node_capacity_type
@@ -39,6 +40,14 @@ module "eks" {
   node_min_size               = var.eks_node_min_size
   node_max_size               = var.eks_node_max_size
   cluster_admin_principal_arn = var.eks_cluster_admin_principal_arn
+}
+
+module "tls_dns" {
+  source = "../../modules/tls-dns"
+
+  hosted_zone_name = var.route53_hosted_zone_name
+  demo_hostname    = var.demo_api_hostname
+  tags             = var.additional_tags
 }
 
 module "karpenter" {

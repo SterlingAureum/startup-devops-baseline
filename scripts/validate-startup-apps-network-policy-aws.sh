@@ -8,6 +8,7 @@ APPLICATION_NAME="${APPLICATION_NAME:-startup-apps-network-policy-aws-dev}"
 APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
 APP_DEPLOYMENT="${APP_DEPLOYMENT:-demo-api}"
 APP_SERVICE="${APP_SERVICE:-demo-api}"
+DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.dev.aureumstack.com}"
 POSTGRES_SERVICE="${POSTGRES_SERVICE:-postgresql-baseline-rw.data-platform.svc.cluster.local}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-10m}"
 TEST_IMAGE="${TEST_IMAGE:-public.ecr.aws/docker/library/busybox:1.36.1}"
@@ -55,7 +56,7 @@ wait_for_application() {
     --timeout="${WAIT_TIMEOUT}"
 }
 
-wait_for_alb_health() {
+wait_for_public_health() {
   local hostname="$1"
   local attempt
 
@@ -66,7 +67,7 @@ wait_for_alb_health() {
       --show-error \
       --connect-timeout 5 \
       --max-time 10 \
-      "http://${hostname}/health" |
+      "https://${hostname}/health" |
       jq --exit-status '.status == "ok"' >/dev/null 2>&1; then
       return 0
     fi
@@ -181,7 +182,7 @@ kubectl rollout status "deployment/${APP_DEPLOYMENT}" \
   --namespace "${APP_NAMESPACE}" \
   --timeout="${WAIT_TIMEOUT}"
 
-wait_for_alb_health "${ALB_HOSTNAME}"
+wait_for_public_health "${DEMO_HOSTNAME}"
 
 mapfile -t APP_PODS < <(
   kubectl get pods \

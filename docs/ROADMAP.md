@@ -160,11 +160,12 @@ Incremental scope:
 - v0.8.4 - PostgreSQL credential migration into AWS Secrets Manager and
   ExternalSecret cutover - delivered
 - v0.8.5 - PostgreSQL application credential rotation and workload reload
-  validation - in progress; candidate staging, guarded cutover, and guarded
-  AWSPREVIOUS rollback and forward-recovery implementation delivered, with the
-  live rollback round trip and final-state validation remaining
+  validation - delivered; candidate staging, guarded cutover, automatic
+  compensation, guarded AWSPREVIOUS rollback and forward-recovery implementation,
+  live round trip, and final-state validation completed
 - v0.8.6 - Route 53 DNS, ACM/ALB HTTPS, EKS endpoint and control-plane logging
-  hardening, and final security validation - planned
+  hardening, dynamic management-IP privacy, and final security validation -
+  implementation delivered; live AWS validation remaining
 
 ## v0.9 - Observability and SRE Baseline
 

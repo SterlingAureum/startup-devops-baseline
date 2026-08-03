@@ -35,13 +35,18 @@ eks_cluster_version = "1.36"
 # NetworkPolicy uses it for pre-DNAT access to operator-managed Services.
 eks_service_ipv4_cidr = "172.20.0.0/16"
 
-# Restrict this to your public IP in CIDR form before keeping the cluster online.
+# Public access fails closed unless a restricted CIDR is supplied at runtime.
+# Do not place a workstation public IP in this file. Use:
+# ./scripts/apply-eks-api-access-cidr.sh
 eks_endpoint_public_access  = true
 eks_endpoint_private_access = true
-eks_public_access_cidrs     = ["0.0.0.0/0"]
 
-# Disabled by default to limit CloudWatch ingestion cost in the lab.
-eks_enabled_cluster_log_types = []
+# Security-relevant control-plane logs use a bounded retention period.
+eks_enabled_cluster_log_types  = ["api", "audit", "authenticator"]
+eks_cluster_log_retention_days = 14
+
+route53_hosted_zone_name = "aureumstack.com"
+demo_api_hostname        = "demo.dev.aureumstack.com"
 
 eks_node_group_name     = "general"
 eks_node_instance_types = ["t3.medium"]

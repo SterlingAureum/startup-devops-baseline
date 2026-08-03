@@ -26,9 +26,15 @@ Do not provide an STS assumed-role session ARN.
 ## API endpoint
 
 The development environment enables both public and private endpoint access.
-The example initially permits `0.0.0.0/0` so the lab can be bootstrapped from a
-local workstation. Replace `public_access_cidrs` with the operator's public
-CIDR before keeping the environment online.
+The public allowlist fails closed, rejects `0.0.0.0/0`, and must be supplied at
+runtime. `scripts/apply-eks-api-access-cidr.sh` discovers or accepts the
+operator's current public IPv4 address and passes its `/32` directly to
+Terraform without creating a repository file. Re-run it after an address
+change.
+
+The module also creates the EKS CloudWatch log group before the cluster update
+and applies bounded retention. The development environment enables the
+security-relevant `api`, `audit`, and `authenticator` log streams.
 
 ## Node baseline
 

@@ -133,7 +133,7 @@ require(
     [
         "name: application-admission-policies-aws-dev",
         'argocd.argoproj.io/sync-wave: "-4"',
-        "targetRevision: feature/v0.8-production-security-baseline",
+        "targetRevision: main",
         "path: platform/security/admission-policies/application-workloads",
         "namespace: startup-apps",
         "ServerSideApply=true",

@@ -92,7 +92,7 @@ if "eks.amazonaws.com/role-arn" in operator:
 
 for marker in (
     "name: external-secrets-startup-apps",
-    "targetRevision: feature/v0.8-production-security-baseline",
+    "targetRevision: main",
     "path: clusters/aws-dev/security/external-secrets/startup-apps",
     "namespace: startup-apps",
     "SkipDryRunOnMissingResource=true",

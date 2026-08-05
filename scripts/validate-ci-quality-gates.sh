@@ -24,6 +24,9 @@ done < <(find "${ROOT_DIR}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 
+echo "==> Validating active GitOps repository revisions"
+"${ROOT_DIR}/scripts/validate-active-gitops-revisions.sh"
+
 echo "==> Validating namespace guardrail contracts"
 "${ROOT_DIR}/scripts/validate-namespace-guardrails.sh"
 

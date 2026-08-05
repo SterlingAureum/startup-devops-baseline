@@ -180,7 +180,7 @@ require(
     application,
     [
         "name: data-platform-network-policy-aws-dev",
-        "targetRevision: feature/v0.8-production-security-baseline",
+        "targetRevision: main",
         "path: clusters/aws-dev/security/network-policies/data-platform",
         "namespace: data-platform",
         "prune: true",

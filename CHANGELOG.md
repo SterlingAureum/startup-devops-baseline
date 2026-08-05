@@ -2,7 +2,34 @@
 
 All notable changes to this repository are documented in this file.
 
-## v0.8.6 (Unreleased)
+## v0.9.0
+
+### Added
+
+- Accepted multi-environment GitOps design contract for one independent EKS
+  cluster per AWS environment: `aws-dev`, `aws-test`, and `aws-prod`.
+- Ordered build-once promotion model that permits only build to aws-dev,
+  aws-dev to aws-test, and aws-test to aws-prod while retaining the same
+  immutable application digest.
+- Explicit isolation rules for Terraform state, AWS accounts, VPCs, clusters,
+  Argo CD installations, credentials, databases, backups, certificates, and
+  DNS identities.
+- Static active-revision validation that classifies every internal-repository
+  Argo CD Application and rejects feature-branch revisions from active cluster
+  and validation contracts.
+- Multi-environment architecture and v0.9.0 checkpoint documentation, including
+  the cost-aware sequential validation model and later target directory shape.
+
+### Changed
+
+- Converged the seven active aws-dev child Applications and their security
+  contract validators from the completed v0.8 feature branch to `main`.
+- Marked v0.8 complete and moved the former observability roadmap scope to
+  v1.0 so v0.9 can focus on multi-environment promotion.
+- Expanded the environment model to distinguish current deployed state from
+  the v0.9 target architecture and its per-environment lifecycle.
+
+## v0.8.6
 
 ### Added
 

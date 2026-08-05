@@ -24,22 +24,23 @@ paths. AWS Secrets Manager, exact-secret IRSA, a namespaced External Secrets
 Operator deployment, and an active ExternalSecret now provide the demo-api
 PostgreSQL credential without committing the value to Git or Terraform state.
 The repository remains intentionally smaller than a full production platform.
-The v0.8 finalization adds the `demo.dev.aureumstack.com` Route 53 endpoint,
+The v0.8 finalization added the `demo.dev.aureumstack.com` Route 53 endpoint,
 ACM-backed HTTPS, HTTP redirection, a runtime-only EKS management `/32`, and
-bounded security logging before the roadmap advances to observability, AI
-infrastructure workloads, and AIOps workflows.
+bounded security logging. v0.9 now begins the transition from this single AWS
+environment into a cost-aware, multi-environment GitOps promotion baseline.
 
 ## Current Version
 
 ```text
-v0.8.6-tls-dns-security-finalization
+v0.9.0-multi-environment-design-foundation
 ```
-The AWS EKS environment now exposes demo-api through
-`https://demo.dev.aureumstack.com`, with an ACM certificate, Route 53 Alias,
-HTTP-to-HTTPS redirect, restricted public control-plane access, and 14-day
-security-log retention. PostgreSQL credentials remain managed through AWS
-Secrets Manager and External Secrets, with guarded rotation, rollback, and
-forward recovery already validated.
+The completed v0.8 AWS EKS environment exposes demo-api through
+`https://demo.dev.aureumstack.com` with the production-security baseline in
+place. v0.9.0 converges every active aws-dev repository Application on `main`
+and establishes the formal `aws-dev -> aws-test -> aws-prod` design contract.
+Each AWS environment maps to its own EKS cluster and isolated stateful
+resources. v0.9.0 is design-only for aws-test and aws-prod: it creates no new
+AWS resources and leaves the implementation to later v0.9 increments.
 
 ## Platform Architecture
 
@@ -147,6 +148,7 @@ startup-devops-baseline/
 - `docs/ARCHITECTURE.md`
 - `docs/AWS_EKS_ARCHITECTURE.md`
 - `docs/ENVIRONMENT_MODEL.md`
+- `docs/MULTI_ENVIRONMENT_GITOPS_MODEL.md`
 
 ### Deployment and Operations
 

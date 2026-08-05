@@ -140,7 +140,7 @@ require(
     [
         "name: namespace-guardrails-aws-dev",
         'argocd.argoproj.io/sync-wave: "-5"',
-        "targetRevision: feature/v0.8-production-security-baseline",
+        "targetRevision: main",
         "path: platform/security/namespace-guardrails/startup-apps",
         "namespace: startup-apps",
         "ServerSideApply=true",
@@ -151,8 +151,8 @@ require(
 for path in [aws_demo_app, aws_postgres_app]:
     require(
         path,
-        ["targetRevision: feature/v0.8-production-security-baseline"],
-        "v0.8 feature-branch runtime validation source",
+        ["targetRevision: main"],
+        "main-branch runtime validation source",
     )
 PY
 

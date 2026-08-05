@@ -88,7 +88,7 @@ require(
     application,
     [
         "name: startup-apps-network-policy-aws-dev",
-        "targetRevision: feature/v0.8-production-security-baseline",
+        "targetRevision: main",
         "path: clusters/aws-dev/security/network-policies/startup-apps",
         "namespace: startup-apps",
         "prune: true",

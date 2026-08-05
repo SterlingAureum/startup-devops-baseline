@@ -9,10 +9,12 @@ TARGET_REVISION="${TARGET_REVISION:-main}"
 SOURCE_FILE="${SOURCE_FILE:-${ROOT_DIR}/clusters/aws-dev/root-app.yaml}"
 TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/dev}"
 POSTGRES_APPLICATION="${POSTGRES_APPLICATION:-postgresql-baseline}"
+POSTGRES_CLUSTER="${POSTGRES_CLUSTER:-postgresql-baseline}"
 POSTGRES_NAMESPACE="${POSTGRES_NAMESPACE:-data-platform}"
 POSTGRES_SERVICE_ACCOUNT="${POSTGRES_SERVICE_ACCOUNT:-postgresql-baseline}"
 BACKUP_OBJECT_STORE="${BACKUP_OBJECT_STORE:-postgresql-baseline-backup}"
 BACKUP_WAIT_SECONDS="${BACKUP_WAIT_SECONDS:-900}"
+POSTGRES_WAIT_SECONDS="${POSTGRES_WAIT_SECONDS:-1800}"
 DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-dev}"
 DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
 DEMO_DATABASE_SECRET="${DEMO_DATABASE_SECRET:-demo-api-postgresql}"
@@ -66,6 +68,64 @@ terraform_output() {
   fi
 
   printf '%s' "${value}"
+}
+
+deployment_diagnostics() {
+  local application
+  local failed_pod
+  local -a failed_pods=()
+
+  echo "==> Deployment diagnostics" >&2
+  for application in "${POSTGRES_APPLICATION}" "${DEMO_APPLICATION}"; do
+    kubectl get application "${application}" \
+      --namespace argocd \
+      --output wide >&2 2>/dev/null || true
+  done
+
+  kubectl get cluster "${POSTGRES_CLUSTER}" \
+    --namespace "${POSTGRES_NAMESPACE}" \
+    --output wide >&2 2>/dev/null || true
+
+  kubectl get cluster "${POSTGRES_CLUSTER}" \
+    --namespace "${POSTGRES_NAMESPACE}" \
+    --output jsonpath='{range .status.conditions[*]}{.type}{"="}{.status}{" reason="}{.reason}{" message="}{.message}{"\n"}{end}' \
+    >&2 2>/dev/null || true
+
+  kubectl get pods,jobs,persistentvolumeclaims \
+    --namespace "${POSTGRES_NAMESPACE}" \
+    --output wide >&2 2>/dev/null || true
+
+  kubectl get nodeclaims --output wide >&2 2>/dev/null || true
+
+  kubectl get events \
+    --namespace "${POSTGRES_NAMESPACE}" \
+    --sort-by=.lastTimestamp 2>/dev/null | tail -n 40 >&2 || true
+
+  mapfile -t failed_pods < <(
+    kubectl get pods \
+      --namespace "${POSTGRES_NAMESPACE}" \
+      --selector "cnpg.io/cluster=${POSTGRES_CLUSTER}" \
+      --field-selector status.phase=Failed \
+      --output name 2>/dev/null || true
+  )
+
+  for failed_pod in "${failed_pods[@]}"; do
+    echo "==> Recent logs for ${POSTGRES_NAMESPACE}/${failed_pod}" >&2
+    kubectl logs "${failed_pod}" \
+      --namespace "${POSTGRES_NAMESPACE}" \
+      --all-containers \
+      --prefix \
+      --timestamps \
+      --tail=100 >&2 2>/dev/null || true
+  done
+}
+
+fail_deployment() {
+  local message="$1"
+
+  echo "${message}" >&2
+  deployment_diagnostics
+  exit 1
 }
 
 BACKUP_BUCKET="$(terraform_output cnpg_backup_bucket_name)"
@@ -256,37 +316,96 @@ jq --exit-status '
 }
 FORCE_SYNC_ANNOTATION_SET=false
 
+echo "==> Waiting for the CloudNativePG Cluster"
+deadline=$((SECONDS + POSTGRES_WAIT_SECONDS))
+while ! kubectl get cluster "${POSTGRES_CLUSTER}" \
+  --namespace "${POSTGRES_NAMESPACE}" >/dev/null 2>&1; do
+  if (( SECONDS >= deadline )); then
+    fail_deployment \
+      "Timed out waiting for CloudNativePG Cluster ${POSTGRES_CLUSTER}."
+  fi
+  sleep 10
+done
+
+postgres_wait_remaining=$((deadline - SECONDS))
+if (( postgres_wait_remaining <= 0 )); then
+  fail_deployment \
+    "Timed out waiting for CloudNativePG Cluster ${POSTGRES_CLUSTER} to become Ready."
+fi
+
+if ! kubectl wait \
+  --for=condition=Ready \
+  "cluster/${POSTGRES_CLUSTER}" \
+  --namespace "${POSTGRES_NAMESPACE}" \
+  --timeout="${postgres_wait_remaining}s"; then
+  fail_deployment \
+    "Timed out waiting for CloudNativePG Cluster ${POSTGRES_CLUSTER} to become Ready."
+fi
+
+echo "==> Waiting for the PostgreSQL Argo CD Application"
+kubectl annotate application "${POSTGRES_APPLICATION}" \
+  --namespace argocd \
+  argocd.argoproj.io/refresh=hard \
+  --overwrite
+
+deadline=$((SECONDS + POSTGRES_WAIT_SECONDS))
+if ! kubectl wait \
+  --for=jsonpath='{.status.sync.status}'=Synced \
+  "application/${POSTGRES_APPLICATION}" \
+  --namespace argocd \
+  --timeout="${POSTGRES_WAIT_SECONDS}s"; then
+  fail_deployment \
+    "Timed out waiting for PostgreSQL Application ${POSTGRES_APPLICATION} to become Synced."
+fi
+
+postgres_wait_remaining=$((deadline - SECONDS))
+if (( postgres_wait_remaining <= 0 )); then
+  fail_deployment \
+    "Timed out waiting for PostgreSQL Application ${POSTGRES_APPLICATION} to become Healthy."
+fi
+
+if ! kubectl wait \
+  --for=jsonpath='{.status.health.status}'=Healthy \
+  "application/${POSTGRES_APPLICATION}" \
+  --namespace argocd \
+  --timeout="${postgres_wait_remaining}s"; then
+  fail_deployment \
+    "Timed out waiting for PostgreSQL Application ${POSTGRES_APPLICATION} to become Healthy."
+fi
+
 echo "==> Waiting for the demo-api Argo CD Application"
 deadline=$((SECONDS + DEMO_WAIT_SECONDS))
 while ! kubectl get application "${DEMO_APPLICATION}" \
   --namespace argocd >/dev/null 2>&1; do
   if (( SECONDS >= deadline )); then
-    echo "Timed out waiting for the demo-api Argo CD Application." >&2
-    exit 1
+    fail_deployment \
+      "Timed out waiting for demo-api Application ${DEMO_APPLICATION}."
   fi
   sleep 10
 done
-
-kubectl annotate application "${POSTGRES_APPLICATION}" \
-  --namespace argocd \
-  argocd.argoproj.io/refresh=hard \
-  --overwrite
 
 kubectl annotate application "${DEMO_APPLICATION}" \
   --namespace argocd \
   argocd.argoproj.io/refresh=hard \
   --overwrite
 
-kubectl wait \
+if ! kubectl wait \
   --for=jsonpath='{.status.sync.status}'=Synced \
   "application/${DEMO_APPLICATION}" \
   --namespace argocd \
-  --timeout="${DEMO_WAIT_SECONDS}s"
-kubectl wait \
+  --timeout="${DEMO_WAIT_SECONDS}s"; then
+  fail_deployment \
+    "Timed out waiting for demo-api Application ${DEMO_APPLICATION} to become Synced."
+fi
+
+if ! kubectl wait \
   --for=jsonpath='{.status.health.status}'=Healthy \
   "application/${DEMO_APPLICATION}" \
   --namespace argocd \
-  --timeout="${DEMO_WAIT_SECONDS}s"
+  --timeout="${DEMO_WAIT_SECONDS}s"; then
+  fail_deployment \
+    "Timed out waiting for demo-api Application ${DEMO_APPLICATION} to become Healthy."
+fi
 
 echo "==> Reconciling the stable demo-api hostname to the live ALB"
 AWS_REGION="${AWS_REGION}" \

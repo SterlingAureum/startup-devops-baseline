@@ -140,6 +140,11 @@ for marker in (
     "force-sync-",
     '.metadata.annotations["force-sync"] == null',
     "FORCE_SYNC_ANNOTATION_SET=false",
+    'POSTGRES_WAIT_SECONDS="${POSTGRES_WAIT_SECONDS:-1800}"',
+    "Waiting for the CloudNativePG Cluster",
+    '"cluster/${POSTGRES_CLUSTER}"',
+    "Waiting for the PostgreSQL Argo CD Application",
+    "deployment_diagnostics",
 ):
     require(deploy, marker, "ESO deployment cutover contract")
 
@@ -193,6 +198,27 @@ deploy_cleanup = deploy.index("force-sync-", deploy_wait)
 deploy_verify = deploy.index('.metadata.annotations["force-sync"] == null', deploy_cleanup)
 if not deploy_trigger < deploy_wait < deploy_cleanup < deploy_verify:
     raise SystemExit("Deployment force-sync cleanup order is invalid.")
+
+cluster_wait = deploy.index("Waiting for the CloudNativePG Cluster", deploy_verify)
+cluster_ready = deploy.index('"cluster/${POSTGRES_CLUSTER}"', cluster_wait)
+postgres_application_wait = deploy.index(
+    "Waiting for the PostgreSQL Argo CD Application", cluster_ready
+)
+demo_application_wait = deploy.index(
+    "Waiting for the demo-api Argo CD Application", postgres_application_wait
+)
+dns_reconcile = deploy.index(
+    "Reconciling the stable demo-api hostname", demo_application_wait
+)
+if not (
+    deploy_verify
+    < cluster_wait
+    < cluster_ready
+    < postgres_application_wait
+    < demo_application_wait
+    < dns_reconcile
+):
+    raise SystemExit("Database-dependent rebuild readiness order is invalid.")
 
 runtime_trigger = runtime.index("force-sync=")
 runtime_recheck = runtime.index("Rechecking all three protected values", runtime_trigger)

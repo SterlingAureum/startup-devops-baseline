@@ -25,8 +25,49 @@ spec:
         nginx:
           stableIngress: {{ .Values.rollout.strategy.canary.trafficRouting.nginx.stableIngress }}
       {{- end }}
+      {{- if .Values.rollout.strategy.canary.trafficRouting.alb.enabled }}
+      stableService: {{ .Values.rollout.strategy.canary.stableService }}
+      canaryService: {{ .Values.rollout.strategy.canary.canaryService }}
+      trafficRouting:
+        alb:
+          ingress: {{ .Values.rollout.strategy.canary.trafficRouting.alb.ingress }}
+          servicePort: {{ .Values.rollout.strategy.canary.trafficRouting.alb.servicePort }}
+      {{- end }}
       steps:
-        {{- toYaml .Values.rollout.strategy.canary.steps | nindent 8 }}
+        {{- range .Values.rollout.strategy.canary.steps }}
+        {{- if hasKey . "analysis" }}
+        - analysis:
+            templates:
+              {{- toYaml .analysis.templates | nindent 14 }}
+            args:
+              - name: expected-environment
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['platform.startup.dev/environment']
+              - name: expected-version
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['platform.startup.dev/application-version']
+              - name: image-digest
+                {{- if $.Values.image.digest }}
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['platform.startup.dev/image-digest']
+                {{- else }}
+                value: ""
+                {{- end }}
+              - name: source-commit
+                {{- if $.Values.delivery.sourceCommit }}
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['platform.startup.dev/source-commit']
+                {{- else }}
+                value: ""
+                {{- end }}
+        {{- else }}
+        - {{ toYaml . | nindent 10 | trim }}
+        {{- end }}
+        {{- end }}
   template:
     metadata:
       labels:

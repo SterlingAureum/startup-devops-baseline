@@ -2,7 +2,8 @@
 
 ## Purpose
 
-v0.9.4 places review and evidence controls around the ordered build-once chain:
+v0.9.4-v0.9.5 place review, static evidence, and runtime evidence controls
+around the ordered build-once chain:
 
 ```text
 build -> aws-dev -> aws-test -> aws-prod
@@ -22,18 +23,23 @@ For `aws-dev -> aws-test` or `aws-test -> aws-prod`:
 4. The workflow validates the isolated release schema, Helm lint/render, and
    exact digest availability in GHCR.
 5. Review and merge its evidence-only PR.
-6. Record the evidence workflow run ID.
-7. Dispatch `demo-api ordered environment promotion` from `main` with the
-   source, target, and evidence run ID.
-8. Approve the target GitHub Environment job when required.
-9. Review and merge the CODEOWNERS-protected target-release-only PR.
-10. Let the target Argo CD reconcile the merged desired state when that cluster
+6. Record the static evidence workflow run ID.
+7. From a clean local `main` that can reach the restricted EKS endpoint, run
+   `record-demo-api-runtime-evidence-aws.sh` for the source environment.
+8. Review and merge the generated runtime-evidence-only PR and record its UTC
+   evidence ID.
+9. Dispatch `demo-api ordered environment promotion` from `main` with the
+   source, target, static evidence run ID, and runtime evidence ID.
+10. Approve the target GitHub Environment job when required.
+11. Review and merge the CODEOWNERS-protected target-release-only PR.
+12. Let the target Argo CD reconcile the merged desired state when that cluster
     exists.
 
-The promotion fails closed if the evidence is absent from `main`, older than
-seven days, non-passing, malformed, for another environment/run, or no longer
-matches the source release SHA-256. It also rechecks the exact GHCR digest and
-rejects a moving `main` before branch push and PR creation.
+The promotion fails closed if either record is absent from `main`, non-passing,
+malformed, for another environment or ID, expired, or no longer matches the
+source release SHA-256. Static evidence defaults to seven days; runtime
+evidence defaults to three days. Promotion also rechecks the exact GHCR digest
+and rejects a moving `main` before branch push and PR creation.
 
 ## Evidence Boundary
 
@@ -57,8 +63,20 @@ The v0.9.4 schema records:
 This is static release qualification. It proves that the desired release is
 well-formed, renders, and references an existing immutable artifact. It does
 not prove live Pod readiness, ALB routing, AnalysisRun success, or cluster
-health. Those runtime signals become evidence only after v0.9.5 implements and
-exercises AWS test/prod progressive delivery.
+health.
+
+Runtime records use:
+
+```text
+evidence/demo-api/runtime/<source-environment>/<UTC-YYYYMMDDHHMMSS>.json
+```
+
+They prove the exact Argo CD Git revision, release annotations, ready Pod image
+digest, HTTPS health/readiness/version identity and, for aws-test/aws-prod, a
+Healthy Rollout, matching Successful AnalysisRun, and completed 100%-stable ALB
+action. The collector runs locally so the GitHub-hosted governance jobs remain
+outside the restricted EKS endpoint boundary. The generated JSON contains no
+credentials, Pod IPs, Secret values, or kubeconfig data.
 
 ## Approval Boundary
 
@@ -113,10 +131,13 @@ and does not bypass Argo CD.
 ```bash
 ./scripts/validate-demo-api-promotion.sh
 ./scripts/validate-demo-api-promotion-governance.sh
+./scripts/validate-demo-api-aws-progressive-delivery.sh
+./scripts/validate-demo-api-runtime-evidence-behavior.sh
 ./scripts/validate-ci-quality-gates.sh
 ```
 
 The governance validator tests valid evidence, environment/run mismatch,
 source-release drift, failed evidence, expiry, three-environment rollback
 isolation, workflow permissions, manual-only triggers, no direct EKS access,
-and CODEOWNERS coverage.
+runtime evidence identity/freshness, ALB/AnalysisRun declarations, and
+CODEOWNERS coverage.

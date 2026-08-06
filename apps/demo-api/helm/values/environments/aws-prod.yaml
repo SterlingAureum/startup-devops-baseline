@@ -1,15 +1,44 @@
-# Static aws-prod profile. v0.9.1 renders this desired state but does not create
-# a production cluster, Secret, database, certificate, or DNS record.
+# Declared aws-prod profile. v0.9.5 enables progressive-delivery desired state
+# but does not create a production cluster, Secret, database, certificate, or
+# DNS record.
 replicaCount: 3
 
 image:
   pullPolicy: IfNotPresent
 
 rollout:
-  enabled: false
+  enabled: true
+  progressDeadlineSeconds: 900
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      stableService: demo-api-stable
+      canaryService: demo-api-canary
+      trafficRouting:
+        nginx:
+          enabled: false
+        alb:
+          enabled: true
+          ingress: demo-api
+          servicePort: 80
+      steps:
+        - setWeight: 10
+        - pause:
+            duration: 5m
+        - analysis:
+            templates:
+              - templateName: demo-api-canary-health
+        - setWeight: 25
+        - pause: {}
+        - setWeight: 50
+        - pause:
+            duration: 10m
+        - setWeight: 100
 
 analysis:
-  enabled: false
+  enabled: true
+  provider: web
 
 service:
   type: ClusterIP

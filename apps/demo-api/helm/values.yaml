@@ -32,6 +32,10 @@ rollout:
         nginx:
           enabled: true
           stableIngress: demo-api
+        alb:
+          enabled: false
+          ingress: demo-api
+          servicePort: 80
       steps:
         - setWeight: 20
         - pause:
@@ -134,8 +138,15 @@ affinity: {}
 
 analysis:
   enabled: true
+  provider: prometheus
   prometheus:
     address: http://prometheus.monitoring.svc.cluster.local:9090
+  web:
+    readyUrl: http://demo-api-canary.startup-apps.svc.cluster.local/ready
+    versionUrl: http://demo-api-canary.startup-apps.svc.cluster.local/version
+    interval: 15s
+    count: 3
+    failureLimit: 1
   metrics:
     canaryTargetUp:
       interval: 15s

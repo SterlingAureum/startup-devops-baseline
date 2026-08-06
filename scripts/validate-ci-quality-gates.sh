@@ -39,6 +39,12 @@ echo "==> Validating ordered demo-api environment promotion"
 echo "==> Validating promotion evidence, approvals, and environment rollback"
 "${ROOT_DIR}/scripts/validate-demo-api-promotion-governance.sh"
 
+echo "==> Validating AWS ALB progressive-delivery declarations"
+"${ROOT_DIR}/scripts/validate-demo-api-aws-progressive-delivery.sh"
+
+echo "==> Validating AWS runtime evidence behavior"
+"${ROOT_DIR}/scripts/validate-demo-api-runtime-evidence-behavior.sh"
+
 echo "==> Validating namespace guardrail contracts"
 "${ROOT_DIR}/scripts/validate-namespace-guardrails.sh"
 

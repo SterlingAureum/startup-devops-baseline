@@ -17,7 +17,10 @@ The same immutable identity can then move only through the ordered
 `aws-dev -> aws-test -> aws-prod` chain, with one target-scoped, reviewable PR
 per transition and no direct cluster access from GitHub Actions. Cross-
 environment movement now requires a fresh, reviewed source-release evidence
-record, target GitHub Environment approval, and CODEOWNERS review. The same
+record, a separately reviewed source-runtime evidence record, target GitHub
+Environment approval, and CODEOWNERS review. AWS test and production desired
+state now use Argo Rollouts with ALB weighted target groups, canary-local Web
+AnalysisRuns, and explicit manual progression. The same
 governance boundary applies to environment-scoped rollback PRs.
 Promoted values and live workloads now retain enough delivery metadata to
 correlate source, build, Git promotion, Argo CD reconciliation, Pod image ID,
@@ -38,7 +41,7 @@ environment into a cost-aware, multi-environment GitOps promotion baseline.
 ## Current Version
 
 ```text
-v0.9.4-promotion-governance-evidence-rollback
+v0.9.5-aws-alb-progressive-delivery-runtime-evidence
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -54,8 +57,11 @@ protected environment Promotion PRs that retain the exact image digest and
 source commit while changing only the target release file. v0.9.4 requires a
 reviewed, unexpired evidence record that matches the current source release,
 adds CODEOWNERS and target-environment approvals, and generalizes rollback to
-aws-dev, aws-test, and aws-prod. These increments do not apply test or
-production infrastructure.
+aws-dev, aws-test, and aws-prod. v0.9.5 adds test/prod ALB canary declarations,
+Argo Rollouts, release-bound AnalysisRuns, local collection of reviewed AWS
+runtime evidence, and a dual static/runtime Promotion gate. These increments
+do not apply test or production infrastructure; clean-room live validation and
+cost cleanup remain v0.9.6 work.
 
 ## Platform Architecture
 
@@ -120,6 +126,9 @@ Both environments use Git and Argo CD as the desired-state control plane.
 The local environment focuses on progressive delivery, while the AWS
 environment covers cloud infrastructure, AWS-native application delivery,
 dynamic capacity, and the CloudNativePG database control plane.
+The diagram shows the aws-dev Deployment path. aws-test and aws-prod replace
+the single workload/Service hop with an Argo Rollout, stable/canary Services,
+ALB weighted target groups, and a release-bound AnalysisRun.
 
 ## Deployment Options
 
@@ -176,6 +185,7 @@ startup-devops-baseline/
 - `docs/LOCAL_DEPLOYMENT.md`
 - `docs/AWS_EKS_DEPLOYMENT.md`
 - `docs/AWS_EKS_DESTROY_RUNBOOK.md`
+- `docs/AWS_PROGRESSIVE_DELIVERY.md`
 - `docs/TROUBLESHOOTING.md`
 
 ### GitOps and Delivery

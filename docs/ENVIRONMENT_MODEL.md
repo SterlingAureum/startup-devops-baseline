@@ -21,7 +21,7 @@ The target AWS topology is therefore three environments and three clusters:
 | `aws-test` | `startup-devops-baseline-test` | Ephemeral; created for validation and then destroyed |
 | `aws-prod` | `startup-devops-baseline-prod` | Persistent production boundary |
 
-Only `aws-dev` is required to exist at the v0.9.4 checkpoint. Git now contains
+Only `aws-dev` is required to exist at the v0.9.5 checkpoint. Git now contains
 complete Terraform and GitOps declarations for all three environments;
 aws-test and aws-prod remain unapplied until their later validation stages.
 
@@ -61,7 +61,7 @@ External Secrets integration, security controls, HTTPS ingress, and validated
 backup, recovery, failover, credential-rotation, and network-policy paths built
 through v0.4-v0.8.
 
-At v0.9.4, the root Application and every internal-repository child
+At v0.9.5, the root Application and every internal-repository child
 Application track `main`. Third-party sources remain pinned to their reviewed
 Chart or component versions.
 
@@ -89,8 +89,11 @@ workflow must record passing, reviewed evidence on `main`. The record is bound
 to the current source release SHA-256 and expires after seven days by default.
 Promotion and rollback enter the target GitHub Environment boundary, while
 CODEOWNERS and branch protection preserve the human merge decision. At this
-checkpoint the evidence is static release qualification, not a claim that
-aws-test or aws-prod is live; runtime rollout evidence begins in v0.9.5.
+v0.9.5 adds a separate runtime record collected from the restricted local
+operations path. Cross-environment promotion requires both records on `main`,
+fresh and bound to the current source release. The runtime record proves live
+source identity and, for test/prod, completed ALB Rollout and AnalysisRun state;
+it does not claim that an environment exists until the collector succeeds.
 
 ## Declared AWS Profiles
 
@@ -157,7 +160,7 @@ portfolio environment into three permanent sources of AWS cost.
 | Cluster | Local sandbox | Independent dev | Independent test | Independent prod |
 | Ingress | ingress-nginx | AWS ALB | AWS ALB | AWS ALB |
 | Release entry | Direct development | Build output | From aws-dev | From aws-test |
-| Progressive delivery | Enabled | Fast integration path | Canary required by v0.9.5 | Canary plus approval by v0.9.5 |
+| Progressive delivery | Enabled | Existing Deployment path | ALB Canary declared | ALB Canary plus approval declared |
 | State and data | Disposable | Isolated dev | Isolated test | Isolated prod |
 | Lifetime | Developer-controlled | Rebuildable | Ephemeral | Persistent |
 

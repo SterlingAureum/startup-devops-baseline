@@ -11,7 +11,9 @@ the environment values remain immutable during promotion and rollback. v0.9.3
 adds ordered, main-sourced aws-dev to aws-test and aws-test to aws-prod
 Promotion PRs without rebuilding the image. v0.9.4 adds reviewed release
 evidence, target GitHub Environment gates, CODEOWNERS, and dev/test/prod
-rollback governance.
+rollback governance. v0.9.5 adds an independent reviewed AWS runtime evidence
+gate and ALB/Argo Rollouts progressive delivery declarations for test and
+production.
 
 ## Quality Gate
 
@@ -35,9 +37,11 @@ It performs:
    workflow-permission, and release-only diff validation.
 9. Release-evidence schema, tamper, expiry, approval, and environment rollback
    behavior contracts.
-10. Demo-api unit tests in the Dockerfile `test` stage.
-11. A final build of the production runtime image.
-12. Historical rollback restoration, idempotency, diff isolation, and invalid
+10. AWS ALB Rollout, AnalysisRun, Argo CD field-ownership, and runtime-evidence
+    schema/tamper/freshness contracts.
+11. Demo-api unit tests in the Dockerfile `test` stage.
+12. A final build of the production runtime image.
+13. Historical rollback restoration, idempotency, diff isolation, and invalid
     target rejection.
 
 The unit tests do not require AWS, Kubernetes, or a live PostgreSQL cluster.
@@ -131,10 +135,12 @@ First, `.github/workflows/demo-api-record-release-evidence.yaml` enters the
 source GitHub Environment, validates its release schema and Helm profile,
 verifies that the digest-addressed GHCR manifest exists, and creates an
 evidence-only PR. After review and merge, the operator supplies that workflow
-run ID to the promotion workflow.
+run ID to the promotion workflow. The operator must also collect live
+source-environment evidence with `record-demo-api-runtime-evidence-aws.sh`,
+review and merge that record, and supply its UTC evidence ID.
 
-The environment promotion workflow captures both the source release and its
-reviewed evidence from `origin/main`. It rejects missing, non-passing,
+The environment promotion workflow captures the source release plus both its
+reviewed static and runtime evidence from `origin/main`. It rejects missing, non-passing,
 mismatched, tampered, expired, or stale evidence, rechecks the GHCR manifest,
 and copies all image and build identity fields without mutation. It renders the
 target Helm profile and permits exactly one changed path:
@@ -150,9 +156,10 @@ environment edges. Its job enters the target GitHub Environment before it can
 create a PR. It cannot merge that PR and has no AWS, Kubernetes, EKS, or Argo CD
 credentials. CODEOWNERS plus branch protection preserve the reviewer boundary.
 
-v0.9.4 evidence proves static release qualification only. Runtime ALB,
-AnalysisRun, and live rollout evidence belongs to v0.9.5 because the aws-test
-and aws-prod clusters are not created by this increment.
+Static evidence remains CI-side qualification. v0.9.5 runtime evidence proves
+the live source release separately and is collected locally because the EKS
+public endpoint allowlist remains restricted; promotion itself still has no
+AWS or Kubernetes credentials.
 
 ## Rollback Boundary
 

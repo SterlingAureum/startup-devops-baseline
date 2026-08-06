@@ -62,6 +62,10 @@ require(
         "name: allow-alb-to-demo-api",
         "cidr: 10.20.0.0/24",
         "cidr: 10.20.1.0/24",
+        "name: allow-argo-rollouts-analysis-to-demo-api",
+        "kubernetes.io/metadata.name: argo-rollouts",
+        "app.kubernetes.io/name: argo-rollouts",
+        "port: 8080",
         "name: allow-demo-api-to-postgresql",
         "kubernetes.io/metadata.name: data-platform",
         "platform.startup.dev/tier: data",
@@ -72,9 +76,9 @@ require(
 )
 
 policy_content = policy.read_text()
-if policy_content.count("kind: NetworkPolicy") != 4:
+if policy_content.count("kind: NetworkPolicy") != 5:
     raise SystemExit(
-        f"{policy.relative_to(root)}: expected exactly four NetworkPolicy objects."
+        f"{policy.relative_to(root)}: expected exactly five NetworkPolicy objects."
     )
 if "cidr: 10.20.0.0/16" in policy_content:
     raise SystemExit(

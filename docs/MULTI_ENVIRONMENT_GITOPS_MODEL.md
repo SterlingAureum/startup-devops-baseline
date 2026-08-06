@@ -1,6 +1,6 @@
 # Multi-Environment GitOps Model
 
-Status: Accepted in v0.9.0; governed build-once promotion implemented through v0.9.4
+Status: Accepted in v0.9.0; governed build-once promotion implemented through v0.9.5
 
 ## Purpose
 
@@ -55,7 +55,9 @@ v0.9.3 enforces the transition order and requires the source release to remain
 current on `main` throughout PR preparation. v0.9.4 additionally requires a
 reviewed, unexpired qualification record on `main` whose environment, workflow
 run ID, release SHA-256, image identity, and source/build identity match that
-current source release before the next PR may be opened.
+current source release before the next PR may be opened. v0.9.5 additionally
+requires a reviewed, three-day runtime record that binds the same release to
+the live source environment.
 
 ## Build Once
 
@@ -109,8 +111,8 @@ test, and prod Git branches are not used.
 Each promotion:
 
 1. reads the source environment release from `main`;
-2. reads a separately reviewed evidence record from `main` and proves it is
-   fresh and byte-bound to that source release;
+2. reads separately reviewed static and runtime evidence records from `main`
+   and proves both are fresh and byte-bound to that source release;
 3. validates the source release and proves its immutable GHCR digest exists;
 4. enters the target GitHub Environment approval boundary;
 5. changes only the target environment release record;
@@ -132,10 +134,12 @@ while its source release bytes remain unchanged. The promotion workflow takes
 the evidence run ID, resolves that reviewed record from `main`, and fails closed
 on missing, mismatched, tampered, expired, or non-passing evidence.
 
-The record's qualification mode is intentionally
+The static record's qualification mode is intentionally
 `static-release-qualification`. It does not claim that an unapplied aws-test or
-aws-prod cluster is healthy. v0.9.5 adds ALB, Argo Rollouts, AnalysisRun, and
-runtime rollout evidence when those environments enter live validation.
+aws-prod cluster is healthy. v0.9.5 adds ALB, Argo Rollouts, release-bound Web
+AnalysisRuns, and a second `aws-runtime-verification` record. That record is
+collected locally against a restricted EKS endpoint and must be reviewed on
+`main` before the source release can advance.
 
 GitHub Actions do not receive Kubernetes or EKS administration credentials and
 do not directly apply workload manifests. Production automation must not merge
@@ -290,13 +294,34 @@ v0.9.4 delivers:
 It does not create AWS resources, run live canaries, claim source-cluster
 health, merge its own PRs, or promote Secrets, databases, Terraform state, or
 environment configuration. Runtime progressive-delivery evidence remains
-v0.9.5 work.
+separate from this static record and is delivered by v0.9.5.
+
+## v0.9.5 Implementation Boundary
+
+v0.9.5 delivers:
+
+- a pinned Argo Rollouts Application in the AWS GitOps base;
+- aws-test and aws-prod ALB weighted canary declarations with bounded capacity
+  and explicit manual progression;
+- canary-only Web AnalysisRuns for database readiness and exact release identity;
+- Argo CD ownership exceptions limited to Rollout-managed Service selectors
+  and ALB annotations;
+- local EKS runtime evidence collection for dev/test/prod without granting
+  GitHub-hosted governance jobs cluster access;
+- strict three-day runtime evidence validation and dual static/runtime
+  Promotion gates;
+- static and behavior tests for routing, analysis, evidence tamper, expiry,
+  environment identity, and release drift.
+
+It does not create test or production resources, claim a live canary passed,
+deploy the v1.0 observability platform, merge a Promotion PR, or widen the EKS
+endpoint allowlist. Clean-room live execution and cost cleanup remain v0.9.6.
 
 ## Deferred Decisions
 
 The following work belongs to later increments:
 
-- test/prod ALB canary mechanics and AnalysisRun behavior in v0.9.5;
+- clean-room dev/test execution and final v0.9 evidence in v0.9.6;
 - remote Terraform state bootstrap, full observability, and long-term
   operational readiness in v1.0.
 

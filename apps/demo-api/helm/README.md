@@ -58,7 +58,10 @@ digest, and opens a PR that changes only the target release file. First run
 `.github/workflows/demo-api-record-release-evidence.yaml` for the source
 environment, review and merge its evidence-only PR, then pass that workflow
 run ID to the promotion workflow. Evidence must be present on `main`, fresh,
-and byte-bound to the current source release.
+and byte-bound to the current source release. v0.9.5 also requires a reviewed
+AWS runtime record from `evidence/demo-api/runtime/<source>/<id>.json`; collect
+it from the restricted local operations path after the source runtime has
+converged.
 
 The lower-level manual image command remains available for troubleshooting:
 
@@ -87,6 +90,12 @@ The chart projects delivery identity into workload and Pod annotations under
 ```bash
 ./scripts/validate-demo-api-delivery-trace.sh
 ```
+
+aws-test and aws-prod enable Argo Rollouts ALB traffic routing. Their Ingress
+uses the `use-annotation` action backend, while Rollouts owns the stable/canary
+weights and Service selectors. The inline Web AnalysisRun checks canary
+database readiness and exact environment/version identity without introducing
+the full production observability stack planned for v1.0.
 
 The AWS environment values reference `startup-apps/demo-api-postgresql` inside
 their independent clusters. Create or refresh that runtime Secret with

@@ -2,6 +2,31 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.9.5
+
+### Added
+
+- GitOps-managed Argo Rollouts in the reusable AWS platform base and ALB
+  weighted canary delivery for aws-test and aws-prod.
+- Environment-specific test and production canary steps with bounded surge,
+  zero intentional unavailability, Web AnalysisRun readiness/database/release
+  identity checks, and manual progression gates.
+- Local restricted-EKS runtime evidence collection plus strict v0.9.5 evidence
+  writing, validation, freshness, release binding, and tamper behavior tests.
+- Static contracts for ALB action routing, Rollout-managed Argo CD fields,
+  AnalysisRun release identity, and the AWS progressive-delivery profiles.
+- A least-privilege NetworkPolicy path from the Argo Rollouts controller to
+  demo-api port 8080 for canary-local Web analysis.
+
+### Changed
+
+- Required cross-environment Promotion PRs to cite both the existing reviewed
+  static evidence and a fresh, reviewed AWS runtime record from `main`.
+- Preserved aws-dev as the already validated Deployment baseline while
+  enabling progressive delivery only in aws-test and aws-prod.
+- Kept GitHub-hosted evidence, promotion, and rollback jobs outside EKS; live
+  evidence is collected locally because the Kubernetes API remains restricted.
+
 ## v0.9.4
 
 ### Added

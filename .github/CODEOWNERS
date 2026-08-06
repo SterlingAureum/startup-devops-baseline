@@ -2,10 +2,17 @@
 # requires code-owner review. Keep the repository setting aligned with this file.
 
 /apps/demo-api/helm/values/releases/ @SterlingAureum
+/apps/demo-api/helm/values/environments/aws-test.yaml @SterlingAureum
+/apps/demo-api/helm/values/environments/aws-prod.yaml @SterlingAureum
+/apps/demo-api/helm/templates/ @SterlingAureum
+/clusters/aws/base/platform/argo-rollouts.yaml @SterlingAureum
 /evidence/demo-api/ @SterlingAureum
-/.github/workflows/demo-api-*.yaml @SterlingAureum
 /.github/CODEOWNERS @SterlingAureum
+/.github/workflows/demo-api-*.yaml @SterlingAureum
 /scripts/promote-demo-api-release.sh @SterlingAureum
 /scripts/prepare-demo-api-rollback.sh @SterlingAureum
 /scripts/write-demo-api-release-evidence.sh @SterlingAureum
 /scripts/validate-demo-api-release-evidence.sh @SterlingAureum
+/scripts/record-demo-api-runtime-evidence-aws.sh @SterlingAureum
+/scripts/write-demo-api-runtime-evidence.sh @SterlingAureum
+/scripts/validate-demo-api-runtime-evidence.sh @SterlingAureum

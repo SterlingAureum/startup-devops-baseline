@@ -34,6 +34,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "demo-api.deliveryAnnotations" -}}
 platform.startup.dev/image-tag: {{ required "image.tag is required" .Values.image.tag | quote }}
 platform.startup.dev/application-version: {{ required "release.applicationVersion is required" .Values.release.applicationVersion | quote }}
+platform.startup.dev/environment: {{ required "env.APP_ENV is required" .Values.env.APP_ENV | quote }}
 {{- with .Values.image.digest }}
 platform.startup.dev/image-digest: {{ . | quote }}
 {{- end }}

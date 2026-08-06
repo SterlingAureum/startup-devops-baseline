@@ -146,7 +146,10 @@ GitHub Actions only prepares the branch and PR. It neither merges nor connects
 to EKS. v0.9.4 requires a separate, reviewed source qualification evidence
 record from `main` and enters the target GitHub Environment before preparing
 the Promotion PR. The evidence must match the current source release and remain
-within its freshness window.
+within its freshness window. v0.9.5 additionally requires a reviewed, fresh
+AWS runtime record for the source environment. The runtime record must match
+the same release bytes and live digest identity; it is collected locally so
+the Promotion workflow retains zero EKS access.
 
 ### Argo CD Image Updater
 

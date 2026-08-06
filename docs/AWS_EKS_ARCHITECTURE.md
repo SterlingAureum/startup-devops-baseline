@@ -2,9 +2,15 @@
 
 ## Purpose
 
-This document describes the shared AWS EKS architecture and the v0.9.2
+This document describes the shared AWS EKS architecture and the v0.9
 dev/test/prod isolation profiles. The detailed runtime diagrams use aws-dev as
 the currently validated example.
+
+aws-dev retains its validated Deployment and single-Service traffic path.
+aws-test and aws-prod reuse the same infrastructure boundary but v0.9.5 render
+Argo Rollouts, stable/canary Services, ALB weighted target groups, and Web
+AnalysisRuns. See `docs/AWS_PROGRESSIVE_DELIVERY.md` for that target-specific
+release path.
 
 ## Architecture
 

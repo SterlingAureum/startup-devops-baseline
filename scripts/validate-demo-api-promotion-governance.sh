@@ -240,11 +240,15 @@ for name, workflow in (
 
 for fragment in (
     "evidence_run_id:",
+    "runtime_evidence_id:",
     "name: ${{ inputs.target_environment }}",
     "deployment: false",
     "./scripts/validate-demo-api-release-evidence.sh",
     "evidence/demo-api/${SOURCE_ENVIRONMENT}/${EVIDENCE_RUN_ID}.json",
+    "evidence/demo-api/runtime/${SOURCE_ENVIRONMENT}/${RUNTIME_EVIDENCE_ID}.json",
     "Reviewed release evidence is missing from main",
+    "Reviewed AWS runtime evidence is missing from main",
+    "./scripts/validate-demo-api-runtime-evidence.sh",
 ):
     if fragment not in promotion:
         raise SystemExit(f"Promotion governance is missing: {fragment}")
@@ -256,7 +260,7 @@ for fragment in (
     "./scripts/validate-demo-api-release-evidence.sh",
     'docker buildx imagetools inspect "${image_reference}"',
     "Evidence branch may add only ${EVIDENCE_FILE}",
-    "Runtime rollout evidence is added with the v0.9.5",
+    "separate v0.9.5 AWS runtime evidence",
 ):
     if fragment not in evidence:
         raise SystemExit(f"Evidence workflow is missing: {fragment}")
@@ -280,7 +284,11 @@ for environment in ("aws-dev", "aws-test", "aws-prod"):
 for path in (
     "/apps/demo-api/helm/values/releases/ @SterlingAureum",
     "/evidence/demo-api/ @SterlingAureum",
+    "/.github/CODEOWNERS @SterlingAureum",
     "/.github/workflows/demo-api-*.yaml @SterlingAureum",
+    "/scripts/record-demo-api-runtime-evidence-aws.sh @SterlingAureum",
+    "/scripts/write-demo-api-runtime-evidence.sh @SterlingAureum",
+    "/scripts/validate-demo-api-runtime-evidence.sh @SterlingAureum",
 ):
     if path not in codeowners:
         raise SystemExit(f"CODEOWNERS is missing protected path: {path}")

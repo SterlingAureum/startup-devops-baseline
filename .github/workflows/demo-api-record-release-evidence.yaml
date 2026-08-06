@@ -172,7 +172,7 @@ jobs:
             echo "- Qualified main revision: \`${BASE_REVISION}\`"
             echo "- Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
-            echo "This PR records reviewed static release qualification. It does not deploy, merge itself, or access EKS. Runtime rollout evidence is added with the v0.9.5 AWS progressive-delivery stage."
+            echo "This PR records reviewed static release qualification. It does not deploy, merge itself, or access EKS. Cross-environment promotion additionally requires separate v0.9.5 AWS runtime evidence collected through the restricted local operations path."
           } > "${body_file}"
 
           if ! pr_url="$(

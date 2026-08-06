@@ -13,6 +13,9 @@ pull-request validation and GHCR image publishing. Published application
 images now carry a SHA tag, immutable OCI digest, structured source identity,
 and GitHub build-provenance attestation. Successful main-branch builds now
 turn that identity into a reviewable aws-dev GitOps promotion pull request.
+The same immutable identity can then move only through the ordered
+`aws-dev -> aws-test -> aws-prod` chain, with one target-scoped, reviewable PR
+per transition and no direct cluster access from GitHub Actions.
 Promoted values and live workloads now retain enough delivery metadata to
 correlate source, build, Git promotion, Argo CD reconciliation, Pod image ID,
 and the application-reported version. A manual rollback workflow can now
@@ -32,7 +35,7 @@ environment into a cost-aware, multi-environment GitOps promotion baseline.
 ## Current Version
 
 ```text
-v0.9.2-aws-multi-environment-declaration
+v0.9.3-ordered-environment-promotion
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -43,8 +46,10 @@ resources. v0.9.1 separates
 stable Helm environment configuration from promotable release identity for
 aws-dev, aws-test, and aws-prod. v0.9.2 adds independent Terraform roots and
 states plus a shared Kustomize base with dev/test/prod overlays. All three
-declarations are statically validated; this increment does not apply test or
-production infrastructure.
+declarations are statically validated. v0.9.3 adds main-sourced, stale-state
+protected environment Promotion PRs that retain the exact image digest and
+source commit while changing only the target release file. This increment does
+not apply test or production infrastructure.
 
 ## Platform Architecture
 

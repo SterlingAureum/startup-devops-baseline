@@ -21,7 +21,7 @@ The target AWS topology is therefore three environments and three clusters:
 | `aws-test` | `startup-devops-baseline-test` | Ephemeral; created for validation and then destroyed |
 | `aws-prod` | `startup-devops-baseline-prod` | Persistent production boundary |
 
-Only `aws-dev` is required to exist at the v0.9.2 checkpoint. Git now contains
+Only `aws-dev` is required to exist at the v0.9.3 checkpoint. Git now contains
 complete Terraform and GitOps declarations for all three environments;
 aws-test and aws-prod remain unapplied until their later validation stages.
 
@@ -61,7 +61,7 @@ External Secrets integration, security controls, HTTPS ingress, and validated
 backup, recovery, failover, credential-rotation, and network-policy paths built
 through v0.4-v0.8.
 
-At v0.9.2, the root Application and every internal-repository child
+At v0.9.3, the root Application and every internal-repository child
 Application track `main`. Third-party sources remain pinned to their reviewed
 Chart or component versions.
 
@@ -75,6 +75,14 @@ values/releases/aws-dev.yaml
 The environment file owns runtime configuration and the release file owns the
 immutable artifact identity. aws-test and aws-prod have the same split for
 static Helm validation without claiming that either cluster currently exists.
+
+The build workflow writes only the aws-dev release through a reviewable PR.
+The ordered environment workflow then permits only aws-dev to aws-test and
+aws-test to aws-prod. Every transition reads the source release from `main`,
+retains its complete image and build identity, verifies the digest-addressed
+GHCR artifact, and changes only the target release file. A target-scoped
+concurrency group serializes competing attempts, and any main movement during
+PR preparation invalidates the captured source state.
 
 ## Declared AWS Profiles
 

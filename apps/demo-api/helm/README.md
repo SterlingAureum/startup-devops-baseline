@@ -51,6 +51,12 @@ The normal aws-dev path is the metadata-driven Promotion PR created by
 digest, application version, full source commit, and build workflow run ID in
 `values/releases/aws-dev.yaml` only.
 
+After the aws-dev PR is merged and its desired state is ready for advancement,
+run `.github/workflows/demo-api-promote-environment.yaml` from `main`. It allows
+only `aws-dev -> aws-test` and `aws-test -> aws-prod`, verifies the exact GHCR
+digest, and opens a PR that changes only the target release file. Validation
+evidence becomes a required cross-environment gate in v0.9.4.
+
 The lower-level manual image command remains available for troubleshooting:
 
 ```bash

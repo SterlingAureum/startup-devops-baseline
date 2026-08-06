@@ -1,6 +1,6 @@
 # Multi-Environment GitOps Model
 
-Status: Accepted in v0.9.0; Helm ownership and AWS declarations implemented through v0.9.2
+Status: Accepted in v0.9.0; ordered build-once promotion implemented through v0.9.3
 
 ## Purpose
 
@@ -51,8 +51,10 @@ aws-dev -> aws-prod
 aws-prod -> aws-test
 ```
 
-The source environment must have validation evidence matching its current
-release before a later increment may open the next promotion pull request.
+v0.9.3 enforces the transition order and requires the source release to remain
+current on `main` throughout PR preparation. v0.9.4 additionally requires
+validation evidence matching that current source release before the next PR
+may be opened.
 
 ## Build Once
 
@@ -93,9 +95,10 @@ environment file.
 
 Argo CD and every validation render load the environment file first and the
 release file second. The former mixed `values-aws-dev.yaml` is removed so there
-is one authoritative owner for every value. The aws-test and aws-prod release
-files are static seed identities only; ordered promotion and evidence gates are
-implemented in v0.9.3 and v0.9.4 before either becomes a runtime release path.
+is one authoritative owner for every value. The original aws-test and aws-prod
+seed identities remain valid only until replaced through the ordered v0.9.3
+Promotion PR path. Evidence gates are added in v0.9.4 before cross-environment
+promotion becomes the final governed runtime path.
 
 ## Git and Review Model
 
@@ -105,11 +108,18 @@ test, and prod Git branches are not used.
 Each promotion:
 
 1. reads the source environment release from `main`;
-2. validates the source release and evidence;
+2. validates the source release and proves its immutable GHCR digest exists;
 3. changes only the target environment release record;
 4. opens a pull request;
 5. relies on repository review and merge controls;
 6. lets the target cluster's Argo CD reconcile the merged desired state.
+
+v0.9.3 implements steps 1 through 5 with a fail-closed source snapshot:
+the workflow records the current `main` revision, reads the source release from
+that revision, and aborts if `main` moves before branch push or PR creation.
+Each target environment has its own non-cancelling concurrency group. The
+workflow never updates environment configuration, never rebuilds or retags the
+artifact, never merges its PR, and never connects to EKS.
 
 GitHub Actions do not receive Kubernetes or EKS administration credentials and
 do not directly apply workload manifests. Production automation must not merge
@@ -220,11 +230,29 @@ It does not create test or production clusters, introduce remote state,
 generalize application promotion, create release evidence, or enable AWS
 progressive delivery.
 
+## v0.9.3 Implementation Boundary
+
+v0.9.3 delivers:
+
+- the ordered `aws-dev -> aws-test -> aws-prod` environment state machine while
+  retaining build to aws-dev in the existing image workflow;
+- source release capture exclusively from `main`;
+- exact preservation of repository, tag, digest, application version, source
+  commit, source repository, and build workflow identity;
+- exact digest-addressed GHCR artifact existence validation;
+- target-scoped concurrency and fail-closed stale-main detection;
+- target-release-only branches and human-reviewed Promotion PRs;
+- local behavior tests for allowed, skipped, reverse, invalid-digest, stale-
+  source, and diff-isolation paths.
+
+It does not require source-environment validation evidence, add CODEOWNERS or
+GitHub Environment reviewers, generalize rollback, merge PRs, contact EKS, or
+create any AWS resources. Those governance additions remain v0.9.4 work.
+
 ## Deferred Decisions
 
 The following work belongs to later increments:
 
-- promotion workflow inputs and stale-source protection in v0.9.3;
 - evidence format, CODEOWNERS, approvals, and rollback governance in v0.9.4;
 - test/prod ALB canary mechanics and AnalysisRun behavior in v0.9.5;
 - remote Terraform state bootstrap, full observability, and long-term

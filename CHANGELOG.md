@@ -2,6 +2,31 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.9.3
+
+### Added
+
+- Manual ordered environment promotion workflow for aws-dev to aws-test and
+  aws-test to aws-prod, with invalid skipped, reverse, and same-environment
+  transitions rejected before mutation.
+- Strict release-copy helper that preserves the exact image digest, readable
+  tag, application version, source commit, source repository, and build
+  workflow identity while changing only the target release file.
+- Digest-addressed GHCR artifact existence verification, target-environment
+  concurrency groups, and fail-closed stale-main checks before branch push and
+  PR creation.
+- Local behavior and workflow-contract validation for allowed and denied
+  transitions, invalid digests, stale source snapshots, permissions, PR-only
+  behavior, and release-path isolation.
+
+### Changed
+
+- Extended the build-once delivery chain from the existing build to aws-dev PR
+  into the ordered aws-dev to aws-test to aws-prod model without granting
+  GitHub Actions access to EKS or automatic merge authority.
+- Added the ordered promotion contract to the reusable CI quality gate and
+  updated the active multi-environment delivery documentation.
+
 ## v0.9.2
 
 ### Added

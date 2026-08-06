@@ -7,7 +7,9 @@ reviewable aws-dev promotion pull request. v0.7.3 retains the build origin in
 Git and projects it into the live workload for end-to-end identity checks.
 v0.7.4 reuses that reviewed identity to prepare history-based rollback PRs.
 v0.9.1 moves the promoted identity into an isolated release values file while
-the environment values remain immutable during promotion and rollback.
+the environment values remain immutable during promotion and rollback. v0.9.3
+adds ordered, main-sourced aws-dev to aws-test and aws-test to aws-prod
+Promotion PRs without rebuilding the image.
 
 ## Quality Gate
 
@@ -27,9 +29,11 @@ It performs:
 5. Digest-pinned rendering for the local Rollout and aws-dev Deployment.
 6. Structured image identity metadata validation.
 7. Metadata-driven aws-dev release promotion and source-mismatch rejection.
-8. Demo-api unit tests in the Dockerfile `test` stage.
-9. A final build of the production runtime image.
-10. Historical rollback restoration, idempotency, diff isolation, and invalid
+8. Ordered environment-promotion edge, immutable identity, stale-source,
+   workflow-permission, and release-only diff validation.
+9. Demo-api unit tests in the Dockerfile `test` stage.
+10. A final build of the production runtime image.
+11. Historical rollback restoration, idempotency, diff isolation, and invalid
    target rejection.
 
 The unit tests do not require AWS, Kubernetes, or a live PostgreSQL cluster.
@@ -107,6 +111,34 @@ v0.7.2 automates preparation, not approval:
 Promotion commits are excluded from image-publish path filters. Merging a
 values-only promotion therefore cannot start another image build and cannot
 form a publish/promotion loop.
+
+## Ordered Environment Promotion
+
+`.github/workflows/demo-api-promote-environment.yaml` is manual-only and must
+be dispatched from `main`. The complete allowed chain is:
+
+```text
+build -> aws-dev       demo-api-image-publish.yaml
+aws-dev -> aws-test    demo-api-promote-environment.yaml
+aws-test -> aws-prod   demo-api-promote-environment.yaml
+```
+
+The environment workflow captures the source release from `origin/main`,
+validates its exact release schema, verifies that the digest-addressed GHCR
+manifest exists, and copies all image and build identity fields without
+mutation. It renders the target Helm profile and permits exactly one changed
+path: `values/releases/<target>.yaml`.
+
+Each target has an independent concurrency group. If `main` moves between
+capture, artifact verification, branch push, and PR creation, the workflow
+fails closed and must be rerun. This deliberately conservative guard prevents
+a PR from being created from a source release that is no longer current.
+
+The workflow rejects skipped, reverse, same-environment, and build-to-later-
+environment edges. It can create a PR but cannot merge it and has no AWS,
+Kubernetes, EKS, or Argo CD credentials. v0.9.4 adds source-environment
+validation evidence and environment-scoped rollback governance on top of this
+ordered transport contract.
 
 ## Rollback Boundary
 

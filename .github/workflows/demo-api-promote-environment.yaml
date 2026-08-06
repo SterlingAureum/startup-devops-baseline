@@ -1,0 +1,260 @@
+name: demo-api ordered environment promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_environment:
+        description: Source release environment
+        required: true
+        type: choice
+        options:
+          - build
+          - aws-dev
+          - aws-test
+          - aws-prod
+      target_environment:
+        description: Target release environment
+        required: true
+        type: choice
+        options:
+          - aws-dev
+          - aws-test
+          - aws-prod
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-api-environment-promotion-${{ inputs.target_environment }}
+  cancel-in-progress: false
+
+env:
+  BASE_BRANCH: main
+
+jobs:
+  prepare-promotion:
+    name: Create ordered promotion PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      packages: read
+      pull-requests: write
+    steps:
+      - name: Checkout main with repository history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to GHCR for immutable artifact verification
+        uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare release-only promotion
+        id: promotion
+        env:
+          SOURCE_ENVIRONMENT: ${{ inputs.source_environment }}
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+          EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
+        run: |
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "::error::Ordered environment promotion must be dispatched from main."
+            exit 1
+          fi
+
+          case "${SOURCE_ENVIRONMENT}->${TARGET_ENVIRONMENT}" in
+            aws-dev-\>aws-test|aws-test-\>aws-prod)
+              ;;
+            build-\>aws-dev)
+              echo "::error::build -> aws-dev is handled only by demo-api-image-publish.yaml."
+              exit 1
+              ;;
+            *)
+              echo "::error::Rejected promotion edge: ${SOURCE_ENVIRONMENT} -> ${TARGET_ENVIRONMENT}"
+              exit 1
+              ;;
+          esac
+
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          base_revision="$(git rev-parse "origin/${BASE_BRANCH}")"
+          source_release_path="apps/demo-api/helm/values/releases/${SOURCE_ENVIRONMENT}.yaml"
+          target_release_path="apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml"
+          source_release_snapshot="${RUNNER_TEMP}/demo-api-${SOURCE_ENVIRONMENT}-release.yaml"
+
+          source_release_blob="$(
+            git rev-parse "origin/${BASE_BRANCH}:${source_release_path}"
+          )"
+          target_release_blob="$(
+            git rev-parse "origin/${BASE_BRANCH}:${target_release_path}"
+          )"
+          git show "origin/${BASE_BRANCH}:${source_release_path}" \
+            > "${source_release_snapshot}"
+          source_release_sha256="$(sha256sum "${source_release_snapshot}" | awk '{print $1}')"
+
+          promotion_branch="release/demo-api-${SOURCE_ENVIRONMENT}-to-${TARGET_ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git switch --create "${promotion_branch}" "origin/${BASE_BRANCH}"
+          expected_image_repository="ghcr.io/${GITHUB_REPOSITORY,,}/demo-api"
+
+          SOURCE_RELEASE_FILE="${source_release_snapshot}" \
+          TARGET_RELEASE_FILE="${target_release_path}" \
+          EXPECTED_SOURCE_RELEASE_SHA256="${source_release_sha256}" \
+          EXPECTED_IMAGE_REPOSITORY="${expected_image_repository}" \
+            ./scripts/promote-demo-api-release.sh
+
+          helm lint apps/demo-api/helm \
+            --values "apps/demo-api/helm/values/environments/${TARGET_ENVIRONMENT}.yaml" \
+            --values "${target_release_path}"
+          helm template demo-api apps/demo-api/helm \
+            --values "apps/demo-api/helm/values/environments/${TARGET_ENVIRONMENT}.yaml" \
+            --values "${target_release_path}" >/dev/null
+          git diff --check
+
+          mapfile -t changed_files < <(git diff --name-only)
+          if [[ "${#changed_files[@]}" == "0" ]]; then
+            changed=false
+          elif [[ "${#changed_files[@]}" == "1" && \
+                  "${changed_files[0]}" == "${target_release_path}" ]]; then
+            changed=true
+          else
+            echo "::error::Promotion may change only ${target_release_path}."
+            printf 'Unexpected promotion diff: %s\n' "${changed_files[@]}"
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ "${changed}" == "true" ]]; then
+            git add "${target_release_path}"
+            git commit -m "release: promote ${SOURCE_ENVIRONMENT} demo-api to ${TARGET_ENVIRONMENT}"
+          fi
+
+          {
+            echo "base-revision=${base_revision}"
+            echo "source-release-blob=${source_release_blob}"
+            echo "target-release-blob=${target_release_blob}"
+            echo "source-release-path=${source_release_path}"
+            echo "target-release-path=${target_release_path}"
+            echo "promotion-branch=${promotion_branch}"
+            echo "changed=${changed}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Verify exact immutable GHCR artifact exists
+        env:
+          IMAGE_REFERENCE: ${{ steps.promotion.outputs.image-reference }}
+        run: |
+          if [[ ! "${IMAGE_REFERENCE}" =~ @sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::Promotion did not produce a valid immutable image reference."
+            exit 1
+          fi
+          docker buildx imagetools inspect "${IMAGE_REFERENCE}" >/dev/null
+
+      - name: Reject stale main state and push promotion branch
+        if: steps.promotion.outputs.changed == 'true'
+        env:
+          BASE_REVISION: ${{ steps.promotion.outputs.base-revision }}
+          PROMOTION_BRANCH: ${{ steps.promotion.outputs.promotion-branch }}
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          current_base_revision="$(git rev-parse "origin/${BASE_BRANCH}")"
+          if [[ "${current_base_revision}" != "${BASE_REVISION}" ]]; then
+            echo "::error::main changed while promotion was being prepared; rerun from the current source state."
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/${PROMOTION_BRANCH}"
+
+      - name: Create promotion pull request
+        id: pull-request
+        if: steps.promotion.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_REVISION: ${{ steps.promotion.outputs.base-revision }}
+          PROMOTION_BRANCH: ${{ steps.promotion.outputs.promotion-branch }}
+          TARGET_RELEASE_PATH: ${{ steps.promotion.outputs.target-release-path }}
+          SOURCE_ENVIRONMENT: ${{ inputs.source_environment }}
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+          IMAGE_TAG: ${{ steps.promotion.outputs.image-tag }}
+          IMAGE_DIGEST: ${{ steps.promotion.outputs.image-digest }}
+          SOURCE_COMMIT: ${{ steps.promotion.outputs.source-commit }}
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          if [[ "$(git rev-parse "origin/${BASE_BRANCH}")" != "${BASE_REVISION}" ]]; then
+            echo "::error::main changed before PR creation; the captured source release is stale."
+            exit 1
+          fi
+
+          mapfile -t changed_files < <(
+            git diff --name-only "origin/${BASE_BRANCH}" HEAD
+          )
+          if [[ "${#changed_files[@]}" != "1" || \
+                "${changed_files[0]}" != "${TARGET_RELEASE_PATH}" ]]; then
+            echo "::error::Promotion branch must differ from main only in ${TARGET_RELEASE_PATH}."
+            printf 'Unexpected promotion diff: %s\n' "${changed_files[@]}"
+            exit 1
+          fi
+
+          body_file="$(mktemp)"
+          {
+            echo "## demo-api ordered environment promotion"
+            echo
+            echo "- Edge: \`${SOURCE_ENVIRONMENT} -> ${TARGET_ENVIRONMENT}\`"
+            echo "- Image tag: \`${IMAGE_TAG}\`"
+            echo "- Image digest: \`${IMAGE_DIGEST}\`"
+            echo "- Source commit: \`${SOURCE_COMMIT}\`"
+            echo "- Captured main revision: \`${BASE_REVISION}\`"
+            echo "- Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo
+            echo "This PR copies the immutable release identity from the current main source environment. It changes only the target release file, never merges itself, and never accesses EKS."
+          } > "${body_file}"
+
+          if ! pr_url="$(
+            gh pr create \
+              --base "${BASE_BRANCH}" \
+              --head "${PROMOTION_BRANCH}" \
+              --title "release: promote demo-api ${SOURCE_ENVIRONMENT} to ${TARGET_ENVIRONMENT}" \
+              --body-file "${body_file}"
+          )"; then
+            echo "::error::Could not create the promotion PR. Enable repository Actions permission to create pull requests, then rerun the workflow."
+            exit 1
+          fi
+
+          echo "status=created" >> "${GITHUB_OUTPUT}"
+          echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish promotion summary
+        env:
+          CHANGED: ${{ steps.promotion.outputs.changed }}
+          PR_STATUS: ${{ steps.pull-request.outputs.status }}
+          PR_URL: ${{ steps.pull-request.outputs.url }}
+          SOURCE_ENVIRONMENT: ${{ inputs.source_environment }}
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+          IMAGE_TAG: ${{ steps.promotion.outputs.image-tag }}
+          IMAGE_DIGEST: ${{ steps.promotion.outputs.image-digest }}
+        run: |
+          if [[ "${CHANGED}" == "true" ]]; then
+            status="${PR_STATUS}"
+          else
+            status="already-promoted"
+          fi
+          {
+            echo "### demo-api ordered environment promotion"
+            echo
+            echo "- Status: \`${status}\`"
+            echo "- Edge: \`${SOURCE_ENVIRONMENT} -> ${TARGET_ENVIRONMENT}\`"
+            echo "- Image: \`${IMAGE_TAG}@${IMAGE_DIGEST}\`"
+            if [[ -n "${PR_URL}" ]]; then
+              echo "- Pull request: ${PR_URL}"
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"

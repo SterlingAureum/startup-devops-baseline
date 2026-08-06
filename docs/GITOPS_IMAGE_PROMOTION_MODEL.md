@@ -43,6 +43,24 @@ retag the old artifact.
 `commit B` is a release promotion commit. It promotes an already-published
 image into aws-dev after human review.
 
+After aws-dev, the same artifact can produce two additional desired-state
+commits without another image build:
+
+```text
+commit D:
+  reads values/releases/aws-dev.yaml from main
+  copies its complete immutable identity to values/releases/aws-test.yaml
+  is reviewed and merged through an aws-dev -> aws-test PR
+
+commit E:
+  reads values/releases/aws-test.yaml from main
+  copies its complete immutable identity to values/releases/aws-prod.yaml
+  is reviewed and merged through an aws-test -> aws-prod PR
+```
+
+The workflow rejects direct build to test/prod, dev to prod, reverse, and
+same-environment transitions.
+
 ## Why the image tag may not match the values commit
 
 If `values/releases/aws-dev.yaml` is updated in commit B, the image tag and digest
@@ -107,10 +125,26 @@ commit A
 This is the v0.7.2 model. CI creates the branch and pull request but does not
 merge it.
 
-The environment file is a separate ownership boundary. Build and rollback
-automation must not modify `values/environments/aws-dev.yaml`; future
+The environment file is a separate ownership boundary. Build, promotion, and
+rollback automation must not modify `values/environments/aws-dev.yaml`;
 environment promotion copies only the release identity into the target release
 file.
+
+### Implemented: ordered environment promotion
+
+`.github/workflows/demo-api-promote-environment.yaml` implements the
+post-build transitions. It always reads the source release from the current
+`main`, validates its immutable digest and source identity, proves the exact
+GHCR digest exists, and changes only the target release file.
+
+The workflow uses an independent concurrency group for each target
+environment. It records the captured main revision and rejects the operation
+if main changes before the branch is pushed or before the PR is opened. This
+prevents a workflow run from silently promoting an expired source snapshot.
+
+GitHub Actions only prepares the branch and PR. It neither merges nor connects
+to EKS. Environment validation evidence and generalized rollback controls are
+added separately in v0.9.4.
 
 ### Argo CD Image Updater
 
@@ -125,8 +159,7 @@ This is more automated but adds another component.
 
 ## Implemented rollback model
 
-Keep promotion review-gated. Do not add Argo CD Image Updater in v0.7 and do
-not grant the image or rollback workflow direct EKS access. v0.7.4 completes
-the model by creating a values-only Rollback PR from a validated historical
-desired state, then applying the same Argo CD and runtime trace contract after
-human approval.
+Keep promotion review-gated. Do not add Argo CD Image Updater and do not grant
+the image, environment-promotion, or rollback workflow direct EKS access. The
+existing rollback remains aws-dev-scoped through v0.9.3; v0.9.4 generalizes
+rollback governance without changing the build-once identity model.

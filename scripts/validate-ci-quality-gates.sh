@@ -33,6 +33,9 @@ echo "==> Validating AWS dev/test/prod declarations and overlays"
 echo "==> Validating demo-api environment/release values separation"
 "${ROOT_DIR}/scripts/validate-demo-api-values-separation.sh"
 
+echo "==> Validating ordered demo-api environment promotion"
+"${ROOT_DIR}/scripts/validate-demo-api-promotion.sh"
+
 echo "==> Validating namespace guardrail contracts"
 "${ROOT_DIR}/scripts/validate-namespace-guardrails.sh"
 

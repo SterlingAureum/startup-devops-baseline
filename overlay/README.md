@@ -32,17 +32,19 @@ environment into a cost-aware, multi-environment GitOps promotion baseline.
 ## Current Version
 
 ```text
-v0.9.1-helm-environment-release-separation
+v0.9.2-aws-multi-environment-declaration
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
 place. v0.9.0 converges every active aws-dev repository Application on `main`
 and establishes the formal `aws-dev -> aws-test -> aws-prod` design contract.
 Each AWS environment maps to its own EKS cluster and isolated stateful
-resources. v0.9.1 implements the first part of that contract by separating
+resources. v0.9.1 separates
 stable Helm environment configuration from promotable release identity for
-aws-dev, aws-test, and aws-prod. The test and production pairs are statically
-renderable, but this increment creates no new AWS resources or clusters.
+aws-dev, aws-test, and aws-prod. v0.9.2 adds independent Terraform roots and
+states plus a shared Kustomize base with dev/test/prod overlays. All three
+declarations are statically validated; this increment does not apply test or
+production infrastructure.
 
 ## Platform Architecture
 
@@ -134,9 +136,13 @@ startup-devops-baseline/
 │   └── demo-api/
 ├── clusters/
 │   ├── local/
-│   └── aws-dev/
+│   └── aws/
+│       ├── base/
+│       └── overlays/{dev,test,prod}/
 ├── infra/
 │   └── terraform/aws/
+│       ├── modules/
+│       └── environments/{dev,test,prod}/
 ├── docs/
 ├── examples/
 ├── platform/

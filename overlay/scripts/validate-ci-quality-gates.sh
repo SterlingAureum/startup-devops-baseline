@@ -27,6 +27,9 @@ echo "==> Validating security supply-chain contracts"
 echo "==> Validating active GitOps repository revisions"
 "${ROOT_DIR}/scripts/validate-active-gitops-revisions.sh"
 
+echo "==> Validating AWS dev/test/prod declarations and overlays"
+"${ROOT_DIR}/scripts/validate-aws-environment-declarations.sh"
+
 echo "==> Validating demo-api environment/release values separation"
 "${ROOT_DIR}/scripts/validate-demo-api-values-separation.sh"
 

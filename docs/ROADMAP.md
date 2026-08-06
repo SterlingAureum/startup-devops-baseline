@@ -184,8 +184,9 @@ Incremental scope:
 - v0.9.1 - Helm environment configuration and release identity separation,
   ordered multi-values rendering, release-only aws-dev promotion/rollback, and
   three-environment static Helm validation - delivered
-- v0.9.2 - reusable AWS base plus dev/test/prod infrastructure and GitOps
-  declarations
+- v0.9.2 - reusable AWS base, dev/test/prod Terraform and GitOps declarations,
+  non-overlapping address plans, independent state roots, and production
+  safety constraints - delivered
 - v0.9.3 - ordered build-once environment promotion workflow
 - v0.9.4 - approval, evidence, concurrency, stale-state protection, and
   environment-scoped rollback governance

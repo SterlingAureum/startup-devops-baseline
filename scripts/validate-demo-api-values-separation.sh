@@ -130,7 +130,7 @@ legacy_file = chart / "values-aws-dev.yaml"
 if legacy_file.exists():
     raise SystemExit(f"Legacy mixed values file still exists: {legacy_file}")
 
-application = (root / "clusters/aws-dev/platform/demo-api.yaml").read_text()
+application = (root / "clusters/aws/base/platform/demo-api.yaml").read_text()
 ordered_values = """      valueFiles:
         - values/environments/aws-dev.yaml
         - values/releases/aws-dev.yaml"""

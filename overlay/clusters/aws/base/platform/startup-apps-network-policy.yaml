@@ -1,0 +1,24 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: startup-apps-network-policy-aws-dev
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
+    targetRevision: main
+    path: clusters/aws/overlays/dev/security/network-policies/startup-apps
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: startup-apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - ServerSideApply=true

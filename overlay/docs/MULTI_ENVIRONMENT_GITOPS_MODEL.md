@@ -1,6 +1,6 @@
 # Multi-Environment GitOps Model
 
-Status: Accepted in v0.9.0; Helm ownership boundary implemented in v0.9.1
+Status: Accepted in v0.9.0; Helm ownership and AWS declarations implemented through v0.9.2
 
 ## Purpose
 
@@ -160,9 +160,11 @@ Shared Kubernetes definitions belong in a reusable base and environment
 differences in explicit overlays. Terraform environments use separate roots
 and state rather than CLI workspaces as a security boundary.
 
-v0.9.0 records this direction only. It deliberately leaves `clusters/aws-dev/`
-in place so the design checkpoint does not mix baseline convergence with a
-large manifest migration.
+v0.9.2 implements this structure. The base contains one copy of the shared
+controllers, Karpenter capacity policy, CloudNativePG resources, External
+Secrets resources, and NetworkPolicy contracts. Each overlay owns only its
+cluster identity, release values paths, IRSA/resource discovery names, Secret
+path, and environment address ranges.
 
 ## Runtime and Cost Strategy
 
@@ -202,11 +204,26 @@ It does not create aws-test or aws-prod infrastructure, generalize the ordered
 promotion workflow, add validation evidence, refactor Terraform or cluster
 manifests, or enable AWS progressive delivery.
 
+## v0.9.2 Implementation Boundary
+
+v0.9.2 delivers:
+
+- a reusable AWS Kustomize base and dev/test/prod overlays;
+- independent Terraform roots and local state boundaries for all three environments;
+- non-overlapping VPC and EKS Service CIDRs;
+- unique cluster, Secret, backup, certificate, and hostname identities;
+- fail-closed production rules for NAT availability, backup deletion, Secret
+  recovery, control-plane log retention, and FIS test resources;
+- three-environment Terraform and Kustomize validation without applying AWS resources.
+
+It does not create test or production clusters, introduce remote state,
+generalize application promotion, create release evidence, or enable AWS
+progressive delivery.
+
 ## Deferred Decisions
 
 The following work belongs to later increments:
 
-- reusable AWS base, CIDRs, names, and retention profiles in v0.9.2;
 - promotion workflow inputs and stale-source protection in v0.9.3;
 - evidence format, CODEOWNERS, approvals, and rollback governance in v0.9.4;
 - test/prod ALB canary mechanics and AnalysisRun behavior in v0.9.5;

@@ -1,0 +1,168 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../base
+labels:
+  - pairs:
+      platform.startup.dev/environment: aws-prod
+patches:
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: application-admission-policies-aws-dev
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: application-admission-policies-aws-prod
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: data-platform-network-policy-aws-dev
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: data-platform-network-policy-aws-prod
+      - op: replace
+        path: /spec/source/path
+        value: clusters/aws/overlays/prod/security/network-policies/data-platform
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: demo-api-aws-dev
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: demo-api-aws-prod
+      - op: replace
+        path: /spec/source/helm/valueFiles/0
+        value: values/environments/aws-prod.yaml
+      - op: replace
+        path: /spec/source/helm/valueFiles/1
+        value: values/releases/aws-prod.yaml
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: external-secrets-startup-apps
+    patch: |-
+      - op: replace
+        path: /spec/source/path
+        value: clusters/aws/overlays/prod/security/external-secrets/startup-apps
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: namespace-guardrails-aws-dev
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: namespace-guardrails-aws-prod
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: postgresql-baseline
+    patch: |-
+      - op: replace
+        path: /spec/source/path
+        value: clusters/aws/overlays/prod/data-platform/postgresql
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: startup-apps-network-policy-aws-dev
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: startup-apps-network-policy-aws-prod
+      - op: replace
+        path: /spec/source/path
+        value: clusters/aws/overlays/prod/security/network-policies/startup-apps
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: aws-load-balancer-controller
+    patch: |-
+      - op: replace
+        path: /spec/source/helm/valuesObject/clusterName
+        value: startup-devops-baseline-prod
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: karpenter
+    patch: |-
+      - op: replace
+        path: /spec/source/helm/valuesObject/settings/clusterName
+        value: startup-devops-baseline-prod
+      - op: replace
+        path: /spec/source/helm/valuesObject/settings/interruptionQueue
+        value: startup-devops-baseline-prod-karpenter-interruptions
+  - target:
+      group: karpenter.k8s.aws
+      version: v1
+      kind: EC2NodeClass
+      name: application
+    patch: |-
+      - op: replace
+        path: /spec/role
+        value: startup-devops-baseline-prod-karpenter-node-role
+      - op: replace
+        path: /spec/subnetSelectorTerms/0/tags/karpenter.sh~1discovery
+        value: startup-devops-baseline-prod
+      - op: replace
+        path: /spec/securityGroupSelectorTerms/0/tags/karpenter.sh~1discovery
+        value: startup-devops-baseline-prod
+      - op: replace
+        path: /spec/tags/Name
+        value: startup-devops-baseline-prod-karpenter-application
+      - op: replace
+        path: /spec/tags/Environment
+        value: prod
+  - target:
+      group: karpenter.k8s.aws
+      version: v1
+      kind: EC2NodeClass
+      name: database
+    patch: |-
+      - op: replace
+        path: /spec/role
+        value: startup-devops-baseline-prod-karpenter-node-role
+      - op: replace
+        path: /spec/subnetSelectorTerms/0/tags/karpenter.sh~1discovery
+        value: startup-devops-baseline-prod
+      - op: replace
+        path: /spec/securityGroupSelectorTerms/0/tags/karpenter.sh~1discovery
+        value: startup-devops-baseline-prod
+      - op: replace
+        path: /spec/tags/Name
+        value: startup-devops-baseline-prod-karpenter-database
+      - op: replace
+        path: /spec/tags/Environment
+        value: prod
+  - target:
+      group: karpenter.k8s.aws
+      version: v1
+      kind: EC2NodeClass
+      name: application-fis
+    patch: |-
+      $patch: delete
+      apiVersion: karpenter.k8s.aws/v1
+      kind: EC2NodeClass
+      metadata:
+        name: application-fis
+  - target:
+      group: karpenter.sh
+      version: v1
+      kind: NodePool
+      name: application-spot-fis
+    patch: |-
+      $patch: delete
+      apiVersion: karpenter.sh/v1
+      kind: NodePool
+      metadata:
+        name: application-spot-fis

@@ -21,10 +21,9 @@ The target AWS topology is therefore three environments and three clusters:
 | `aws-test` | `startup-devops-baseline-test` | Ephemeral; created for validation and then destroyed |
 | `aws-prod` | `startup-devops-baseline-prod` | Persistent production boundary |
 
-Only `aws-dev` exists in the repository's deployed baseline at v0.9.1. Helm
-environment/release pairs now exist for all three AWS environments, but the
-aws-test and aws-prod cluster manifests and Terraform environments are still
-delivered in later v0.9 increments.
+Only `aws-dev` is required to exist at the v0.9.2 checkpoint. Git now contains
+complete Terraform and GitOps declarations for all three environments;
+aws-test and aws-prod remain unapplied until their later validation stages.
 
 ## Local Sandbox
 
@@ -51,7 +50,8 @@ promotion chain.
 Locations:
 
 ```text
-clusters/aws-dev/
+clusters/aws/base/
+clusters/aws/overlays/dev/
 infra/terraform/aws/environments/dev/
 ```
 
@@ -61,7 +61,7 @@ External Secrets integration, security controls, HTTPS ingress, and validated
 backup, recovery, failover, credential-rotation, and network-policy paths built
 through v0.4-v0.8.
 
-At v0.9.1, the root Application and every internal-repository child
+At v0.9.2, the root Application and every internal-repository child
 Application track `main`. Third-party sources remain pinned to their reviewed
 Chart or component versions.
 
@@ -75,6 +75,23 @@ values/releases/aws-dev.yaml
 The environment file owns runtime configuration and the release file owns the
 immutable artifact identity. aws-test and aws-prod have the same split for
 static Helm validation without claiming that either cluster currently exists.
+
+## Declared AWS Profiles
+
+| Setting | dev | test | prod |
+|---|---|---|---|
+| VPC CIDR | `10.20.0.0/16` | `10.30.0.0/16` | `10.40.0.0/16` |
+| Service CIDR | `172.20.0.0/16` | `172.21.0.0/16` | `172.22.0.0/16` |
+| DNS | `demo.dev.aureumstack.com` | `demo.test.aureumstack.com` | `demo.prod.aureumstack.com` |
+| Control-plane logs | 14 days | 30 days | 90 days minimum |
+| NAT | Single | Single | One per AZ |
+| Backup force destroy | Allowed | Allowed for ephemeral validation | Rejected |
+| Secret recovery | Immediate | 7 days | 30 days required |
+
+Terraform state is rooted independently beneath `environments/dev`,
+`environments/test`, and `environments/prod`; ordinary CLI workspaces are not
+used as the isolation boundary. Environment names are locked in each root so a
+tfvars override cannot make one state claim another environment's names.
 
 ## Environment Isolation Boundary
 

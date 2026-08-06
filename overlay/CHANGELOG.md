@@ -2,6 +2,28 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.9.2
+
+### Added
+
+- Independent dev, test, and prod Terraform roots with non-overlapping VPC and
+  EKS Service CIDRs, unique cluster/DNS/Secret/backup identities, and separate
+  local state boundaries.
+- Reusable AWS Kustomize base plus dev/test/prod overlays for platform,
+  CloudNativePG, External Secrets, and NetworkPolicy declarations.
+- Static environment-isolation validation and three-environment Kustomize
+  rendering in the reusable quality gate.
+- Production fail-closed validation requiring multi-AZ NAT, 90-day control-plane
+  logs, a non-destructive backup bucket, and a 30-day Secret recovery window.
+
+### Changed
+
+- Migrated the active aws-dev GitOps source from `clusters/aws-dev` to the dev
+  overlay while preserving its resource identities and runtime configuration.
+- Extended Terraform validation from dev only to dev, test, and prod.
+- Excluded AWS FIS infrastructure and FIS-only Karpenter capacity from the
+  production declaration.
+
 ## v0.9.1
 
 ### Added

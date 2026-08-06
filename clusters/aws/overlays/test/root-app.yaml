@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: startup-devops-aws-test-root
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
+    targetRevision: main
+    path: clusters/aws/overlays/test
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      name: aws-load-balancer-controller
+      namespace: argocd
+      jsonPointers:
+        - /spec/source/helm/valuesObject/vpcId
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true

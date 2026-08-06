@@ -1,0 +1,205 @@
+name: demo-api release qualification evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Source environment release to qualify
+        required: true
+        type: choice
+        options:
+          - aws-dev
+          - aws-test
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-api-release-evidence-${{ inputs.environment }}
+  cancel-in-progress: false
+
+env:
+  BASE_BRANCH: main
+
+jobs:
+  record-evidence:
+    name: Record reviewed release evidence
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ inputs.environment }}
+      deployment: false
+    permissions:
+      contents: write
+      packages: read
+      pull-requests: write
+    steps:
+      - name: Checkout main with repository history
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Setup Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to GHCR for immutable artifact verification
+        uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Qualify the current source release
+        id: evidence
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
+          EVIDENCE_RUN_ID: ${{ github.run_id }}
+          EVIDENCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+          EVIDENCE_ACTOR: ${{ github.actor }}
+        run: |
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "::error::Release evidence must be dispatched from main."
+            exit 1
+          fi
+
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          base_revision="$(git rev-parse "origin/${BASE_BRANCH}")"
+          if [[ "$(git rev-parse HEAD)" != "${base_revision}" ]]; then
+            echo "::error::Checked-out main is stale before qualification."
+            exit 1
+          fi
+
+          environment_values="apps/demo-api/helm/values/environments/${ENVIRONMENT}.yaml"
+          release_file="apps/demo-api/helm/values/releases/${ENVIRONMENT}.yaml"
+          evidence_file="evidence/demo-api/${ENVIRONMENT}/${EVIDENCE_RUN_ID}.json"
+          expected_image_repository="ghcr.io/${GITHUB_REPOSITORY,,}/demo-api"
+
+          helm lint apps/demo-api/helm \
+            --values "${environment_values}" \
+            --values "${release_file}"
+          helm template demo-api apps/demo-api/helm \
+            --values "${environment_values}" \
+            --values "${release_file}" >/dev/null
+
+          RELEASE_FILE="${release_file}" \
+          OUTPUT_FILE="${evidence_file}" \
+          VALIDATED_REPOSITORY_REVISION="${base_revision}" \
+          EXPECTED_IMAGE_REPOSITORY="${expected_image_repository}" \
+            ./scripts/write-demo-api-release-evidence.sh
+
+          image_reference="$(
+            python3 -c \
+              'import json,sys; d=json.load(open(sys.argv[1])); print(d["release"]["imageRepository"]+"@"+d["release"]["imageDigest"])' \
+              "${evidence_file}"
+          )"
+          docker buildx imagetools inspect "${image_reference}" >/dev/null
+
+          EXPECTED_ENVIRONMENT="${ENVIRONMENT}" \
+          EXPECTED_EVIDENCE_RUN_ID="${EVIDENCE_RUN_ID}" \
+          EVIDENCE_FILE="${evidence_file}" \
+          RELEASE_FILE="${release_file}" \
+          EXPECTED_IMAGE_REPOSITORY="${expected_image_repository}" \
+            ./scripts/validate-demo-api-release-evidence.sh
+          git diff --check
+
+          evidence_branch="evidence/demo-api-${ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git switch --create "${evidence_branch}" "origin/${BASE_BRANCH}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${evidence_file}"
+          git commit -m "evidence: qualify ${ENVIRONMENT} demo-api release"
+
+          {
+            echo "base-revision=${base_revision}"
+            echo "evidence-branch=${evidence_branch}"
+            echo "evidence-file=${evidence_file}"
+            echo "image-reference=${image_reference}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Reject stale main and push evidence branch
+        env:
+          BASE_REVISION: ${{ steps.evidence.outputs.base-revision }}
+          EVIDENCE_BRANCH: ${{ steps.evidence.outputs.evidence-branch }}
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          if [[ "$(git rev-parse "origin/${BASE_BRANCH}")" != "${BASE_REVISION}" ]]; then
+            echo "::error::main changed while evidence was being prepared; qualify again."
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/${EVIDENCE_BRANCH}"
+
+      - name: Create evidence pull request
+        id: pull-request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_REVISION: ${{ steps.evidence.outputs.base-revision }}
+          EVIDENCE_BRANCH: ${{ steps.evidence.outputs.evidence-branch }}
+          EVIDENCE_FILE: ${{ steps.evidence.outputs.evidence-file }}
+          IMAGE_REFERENCE: ${{ steps.evidence.outputs.image-reference }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          if [[ "$(git rev-parse "origin/${BASE_BRANCH}")" != "${BASE_REVISION}" ]]; then
+            echo "::error::main changed before evidence PR creation; qualify again."
+            exit 1
+          fi
+
+          mapfile -t changed_files < <(
+            git diff --name-only "origin/${BASE_BRANCH}" HEAD
+          )
+          if [[ "${#changed_files[@]}" != "1" || \
+                "${changed_files[0]}" != "${EVIDENCE_FILE}" ]]; then
+            echo "::error::Evidence branch may add only ${EVIDENCE_FILE}."
+            printf 'Unexpected evidence diff: %s\n' "${changed_files[@]}"
+            exit 1
+          fi
+
+          body_file="$(mktemp)"
+          {
+            echo "## demo-api release qualification evidence"
+            echo
+            echo "- Environment: \`${ENVIRONMENT}\`"
+            echo "- Image: \`${IMAGE_REFERENCE}\`"
+            echo "- Evidence record: \`${EVIDENCE_FILE}\`"
+            echo "- Qualified main revision: \`${BASE_REVISION}\`"
+            echo "- Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo
+            echo "This PR records reviewed static release qualification. It does not deploy, merge itself, or access EKS. Runtime rollout evidence is added with the v0.9.5 AWS progressive-delivery stage."
+          } > "${body_file}"
+
+          if ! pr_url="$(
+            gh pr create \
+              --base "${BASE_BRANCH}" \
+              --head "${EVIDENCE_BRANCH}" \
+              --title "evidence: qualify demo-api ${ENVIRONMENT} release" \
+              --body-file "${body_file}"
+          )"; then
+            echo "::error::Could not create the evidence PR. Enable repository Actions permission to create pull requests, then rerun the workflow."
+            exit 1
+          fi
+
+          echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish evidence summary
+        env:
+          PR_URL: ${{ steps.pull-request.outputs.url }}
+          EVIDENCE_FILE: ${{ steps.evidence.outputs.evidence-file }}
+          IMAGE_REFERENCE: ${{ steps.evidence.outputs.image-reference }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          {
+            echo "### demo-api release qualification evidence"
+            echo
+            echo "- Environment: \`${ENVIRONMENT}\`"
+            echo "- Image: \`${IMAGE_REFERENCE}\`"
+            echo "- Evidence record: \`${EVIDENCE_FILE}\`"
+            echo "- Pull request: ${PR_URL}"
+          } >> "${GITHUB_STEP_SUMMARY}"

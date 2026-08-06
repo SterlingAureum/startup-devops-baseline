@@ -36,6 +36,9 @@ echo "==> Validating demo-api environment/release values separation"
 echo "==> Validating ordered demo-api environment promotion"
 "${ROOT_DIR}/scripts/validate-demo-api-promotion.sh"
 
+echo "==> Validating promotion evidence, approvals, and environment rollback"
+"${ROOT_DIR}/scripts/validate-demo-api-promotion-governance.sh"
+
 echo "==> Validating namespace guardrail contracts"
 "${ROOT_DIR}/scripts/validate-namespace-guardrails.sh"
 
@@ -109,8 +112,16 @@ if re.search(
     workflow,
 ):
     raise SystemExit("rollback workflow must not access Kubernetes or EKS")
-if "apps/demo-api/helm/values/releases/aws-dev.yaml" not in workflow:
-    raise SystemExit("rollback workflow must target the aws-dev release file")
+if "target_environment:" not in workflow:
+    raise SystemExit("rollback workflow must require a target environment")
+for environment in ("aws-dev", "aws-test", "aws-prod"):
+    if f"          - {environment}" not in workflow:
+        raise SystemExit(f"rollback workflow must allow {environment}")
+if "apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml" not in workflow:
+    raise SystemExit("rollback workflow must derive the environment release path")
+if "name: ${{ inputs.target_environment }}" not in workflow or \
+        "deployment: false" not in workflow:
+    raise SystemExit("rollback workflow must use an environment approval boundary")
 if "pull-requests: write" not in workflow:
     raise SystemExit("rollback workflow must prepare a reviewable pull request")
 PY

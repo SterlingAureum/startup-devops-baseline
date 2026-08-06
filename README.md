@@ -15,7 +15,10 @@ and GitHub build-provenance attestation. Successful main-branch builds now
 turn that identity into a reviewable aws-dev GitOps promotion pull request.
 The same immutable identity can then move only through the ordered
 `aws-dev -> aws-test -> aws-prod` chain, with one target-scoped, reviewable PR
-per transition and no direct cluster access from GitHub Actions.
+per transition and no direct cluster access from GitHub Actions. Cross-
+environment movement now requires a fresh, reviewed source-release evidence
+record, target GitHub Environment approval, and CODEOWNERS review. The same
+governance boundary applies to environment-scoped rollback PRs.
 Promoted values and live workloads now retain enough delivery metadata to
 correlate source, build, Git promotion, Argo CD reconciliation, Pod image ID,
 and the application-reported version. A manual rollback workflow can now
@@ -35,7 +38,7 @@ environment into a cost-aware, multi-environment GitOps promotion baseline.
 ## Current Version
 
 ```text
-v0.9.3-ordered-environment-promotion
+v0.9.4-promotion-governance-evidence-rollback
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -48,8 +51,11 @@ aws-dev, aws-test, and aws-prod. v0.9.2 adds independent Terraform roots and
 states plus a shared Kustomize base with dev/test/prod overlays. All three
 declarations are statically validated. v0.9.3 adds main-sourced, stale-state
 protected environment Promotion PRs that retain the exact image digest and
-source commit while changing only the target release file. This increment does
-not apply test or production infrastructure.
+source commit while changing only the target release file. v0.9.4 requires a
+reviewed, unexpired evidence record that matches the current source release,
+adds CODEOWNERS and target-environment approvals, and generalizes rollback to
+aws-dev, aws-test, and aws-prod. These increments do not apply test or
+production infrastructure.
 
 ## Platform Architecture
 
@@ -149,6 +155,8 @@ startup-devops-baseline/
 │       ├── modules/
 │       └── environments/{dev,test,prod}/
 ├── docs/
+├── evidence/
+│   └── demo-api/
 ├── examples/
 ├── platform/
 └── scripts/
@@ -176,6 +184,7 @@ startup-devops-baseline/
 - `docs/DELIVERY_TRACEABILITY.md`
 - `docs/GITOPS_ROLLBACK.md`
 - `docs/GITOPS_WORKFLOW.md`
+- `docs/PROMOTION_GOVERNANCE.md`
 - `docs/V0.7_FINAL_VALIDATION.md`
 - `docs/GHCR_IMAGE_WORKFLOW.md`
 - `docs/ARGO_ROLLOUTS_ANALYSIS_FLOW.md`

@@ -146,6 +146,8 @@ if re.search(r"(?m)^  (push|pull_request|schedule):", promotion):
     raise SystemExit("Ordered promotion workflow must be manual-only")
 if "source_environment:" not in promotion or "target_environment:" not in promotion:
     raise SystemExit("Ordered promotion workflow must require source and target inputs")
+if "evidence_run_id:" not in promotion:
+    raise SystemExit("Ordered promotion workflow must require reviewed source evidence")
 for environment in ("build", "aws-dev", "aws-test", "aws-prod"):
     if f"          - {environment}" not in promotion:
         raise SystemExit(f"Ordered promotion input options omit {environment}")
@@ -157,7 +159,11 @@ required_fragments = (
     "ref: main",
     "packages: read",
     "pull-requests: write",
+    "name: ${{ inputs.target_environment }}",
+    "deployment: false",
     "./scripts/promote-demo-api-release.sh",
+    "./scripts/validate-demo-api-release-evidence.sh",
+    "evidence/demo-api/${SOURCE_ENVIRONMENT}/${EVIDENCE_RUN_ID}.json",
     'git show "origin/${BASE_BRANCH}:${source_release_path}"',
     'docker buildx imagetools inspect "${IMAGE_REFERENCE}"',
     "main changed while promotion was being prepared",

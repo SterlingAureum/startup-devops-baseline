@@ -20,6 +20,10 @@ on:
           - aws-dev
           - aws-test
           - aws-prod
+      evidence_run_id:
+        description: Successful source release-evidence workflow run ID
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -36,6 +40,9 @@ jobs:
     name: Create ordered promotion PR
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    environment:
+      name: ${{ inputs.target_environment }}
+      deployment: false
     permissions:
       contents: write
       packages: read
@@ -65,6 +72,7 @@ jobs:
         env:
           SOURCE_ENVIRONMENT: ${{ inputs.source_environment }}
           TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+          EVIDENCE_RUN_ID: ${{ inputs.evidence_run_id }}
           EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
         run: |
           if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
@@ -85,12 +93,19 @@ jobs:
               ;;
           esac
 
+          if [[ ! "${EVIDENCE_RUN_ID}" =~ ^[0-9]+$ ]]; then
+            echo "::error::evidence_run_id must contain only decimal digits."
+            exit 1
+          fi
+
           git fetch --no-tags origin \
             "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
           base_revision="$(git rev-parse "origin/${BASE_BRANCH}")"
           source_release_path="apps/demo-api/helm/values/releases/${SOURCE_ENVIRONMENT}.yaml"
           target_release_path="apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml"
           source_release_snapshot="${RUNNER_TEMP}/demo-api-${SOURCE_ENVIRONMENT}-release.yaml"
+          evidence_snapshot="${RUNNER_TEMP}/demo-api-${SOURCE_ENVIRONMENT}-evidence.json"
+          evidence_path="evidence/demo-api/${SOURCE_ENVIRONMENT}/${EVIDENCE_RUN_ID}.json"
 
           source_release_blob="$(
             git rev-parse "origin/${BASE_BRANCH}:${source_release_path}"
@@ -100,7 +115,20 @@ jobs:
           )"
           git show "origin/${BASE_BRANCH}:${source_release_path}" \
             > "${source_release_snapshot}"
+          if ! git show "origin/${BASE_BRANCH}:${evidence_path}" \
+            > "${evidence_snapshot}"; then
+            echo "::error::Reviewed release evidence is missing from main: ${evidence_path}"
+            exit 1
+          fi
           source_release_sha256="$(sha256sum "${source_release_snapshot}" | awk '{print $1}')"
+
+          EXPECTED_ENVIRONMENT="${SOURCE_ENVIRONMENT}" \
+          EXPECTED_EVIDENCE_RUN_ID="${EVIDENCE_RUN_ID}" \
+          EVIDENCE_FILE="${evidence_snapshot}" \
+          RELEASE_FILE="${source_release_snapshot}" \
+          EXPECTED_IMAGE_REPOSITORY="ghcr.io/${GITHUB_REPOSITORY,,}/demo-api" \
+          EXPECTED_SOURCE_REPOSITORY="${EXPECTED_SOURCE_REPOSITORY}" \
+            ./scripts/validate-demo-api-release-evidence.sh
 
           promotion_branch="release/demo-api-${SOURCE_ENVIRONMENT}-to-${TARGET_ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git switch --create "${promotion_branch}" "origin/${BASE_BRANCH}"
@@ -145,6 +173,7 @@ jobs:
             echo "target-release-blob=${target_release_blob}"
             echo "source-release-path=${source_release_path}"
             echo "target-release-path=${target_release_path}"
+            echo "evidence-path=${evidence_path}"
             echo "promotion-branch=${promotion_branch}"
             echo "changed=${changed}"
           } >> "${GITHUB_OUTPUT}"
@@ -187,6 +216,8 @@ jobs:
           IMAGE_TAG: ${{ steps.promotion.outputs.image-tag }}
           IMAGE_DIGEST: ${{ steps.promotion.outputs.image-digest }}
           SOURCE_COMMIT: ${{ steps.promotion.outputs.source-commit }}
+          EVIDENCE_PATH: ${{ steps.promotion.outputs.evidence-path }}
+          EVIDENCE_RUN_ID: ${{ inputs.evidence_run_id }}
         run: |
           git fetch --no-tags origin \
             "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
@@ -213,6 +244,8 @@ jobs:
             echo "- Image tag: \`${IMAGE_TAG}\`"
             echo "- Image digest: \`${IMAGE_DIGEST}\`"
             echo "- Source commit: \`${SOURCE_COMMIT}\`"
+            echo "- Reviewed evidence: \`${EVIDENCE_PATH}\`"
+            echo "- Evidence workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${EVIDENCE_RUN_ID}"
             echo "- Captured main revision: \`${BASE_REVISION}\`"
             echo "- Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
@@ -242,6 +275,7 @@ jobs:
           TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
           IMAGE_TAG: ${{ steps.promotion.outputs.image-tag }}
           IMAGE_DIGEST: ${{ steps.promotion.outputs.image-digest }}
+          EVIDENCE_RUN_ID: ${{ inputs.evidence_run_id }}
         run: |
           if [[ "${CHANGED}" == "true" ]]; then
             status="${PR_STATUS}"
@@ -254,6 +288,7 @@ jobs:
             echo "- Status: \`${status}\`"
             echo "- Edge: \`${SOURCE_ENVIRONMENT} -> ${TARGET_ENVIRONMENT}\`"
             echo "- Image: \`${IMAGE_TAG}@${IMAGE_DIGEST}\`"
+            echo "- Evidence workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${EVIDENCE_RUN_ID}"
             if [[ -n "${PR_URL}" ]]; then
               echo "- Pull request: ${PR_URL}"
             fi

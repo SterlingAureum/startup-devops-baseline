@@ -54,8 +54,11 @@ digest, application version, full source commit, and build workflow run ID in
 After the aws-dev PR is merged and its desired state is ready for advancement,
 run `.github/workflows/demo-api-promote-environment.yaml` from `main`. It allows
 only `aws-dev -> aws-test` and `aws-test -> aws-prod`, verifies the exact GHCR
-digest, and opens a PR that changes only the target release file. Validation
-evidence becomes a required cross-environment gate in v0.9.4.
+digest, and opens a PR that changes only the target release file. First run
+`.github/workflows/demo-api-record-release-evidence.yaml` for the source
+environment, review and merge its evidence-only PR, then pass that workflow
+run ID to the promotion workflow. Evidence must be present on `main`, fresh,
+and byte-bound to the current source release.
 
 The lower-level manual image command remains available for troubleshooting:
 

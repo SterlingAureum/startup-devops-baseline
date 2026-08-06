@@ -1,6 +1,6 @@
 # Multi-Environment GitOps Model
 
-Status: Accepted in v0.9.0; ordered build-once promotion implemented through v0.9.3
+Status: Accepted in v0.9.0; governed build-once promotion implemented through v0.9.4
 
 ## Purpose
 
@@ -52,9 +52,10 @@ aws-prod -> aws-test
 ```
 
 v0.9.3 enforces the transition order and requires the source release to remain
-current on `main` throughout PR preparation. v0.9.4 additionally requires
-validation evidence matching that current source release before the next PR
-may be opened.
+current on `main` throughout PR preparation. v0.9.4 additionally requires a
+reviewed, unexpired qualification record on `main` whose environment, workflow
+run ID, release SHA-256, image identity, and source/build identity match that
+current source release before the next PR may be opened.
 
 ## Build Once
 
@@ -97,8 +98,8 @@ Argo CD and every validation render load the environment file first and the
 release file second. The former mixed `values-aws-dev.yaml` is removed so there
 is one authoritative owner for every value. The original aws-test and aws-prod
 seed identities remain valid only until replaced through the ordered v0.9.3
-Promotion PR path. Evidence gates are added in v0.9.4 before cross-environment
-promotion becomes the final governed runtime path.
+Promotion PR path. Evidence gates are enforced in v0.9.4 before cross-
+environment promotion may create its target release PR.
 
 ## Git and Review Model
 
@@ -108,11 +109,13 @@ test, and prod Git branches are not used.
 Each promotion:
 
 1. reads the source environment release from `main`;
-2. validates the source release and proves its immutable GHCR digest exists;
-3. changes only the target environment release record;
-4. opens a pull request;
-5. relies on repository review and merge controls;
-6. lets the target cluster's Argo CD reconcile the merged desired state.
+2. reads a separately reviewed evidence record from `main` and proves it is
+   fresh and byte-bound to that source release;
+3. validates the source release and proves its immutable GHCR digest exists;
+4. enters the target GitHub Environment approval boundary;
+5. changes only the target environment release record;
+6. opens a CODEOWNERS-protected pull request;
+7. lets the target cluster's Argo CD reconcile the merged desired state.
 
 v0.9.3 implements steps 1 through 5 with a fail-closed source snapshot:
 the workflow records the current `main` revision, reads the source release from
@@ -121,9 +124,30 @@ Each target environment has its own non-cancelling concurrency group. The
 workflow never updates environment configuration, never rebuilds or retags the
 artifact, never merges its PR, and never connects to EKS.
 
+v0.9.4 adds a separate manual qualification workflow for aws-dev and aws-test.
+After the source GitHub Environment gate is approved, it validates the release
+schema, renders the Helm profile, proves the exact digest exists in GHCR, and
+opens an evidence-only PR. Evidence is valid for seven days by default and only
+while its source release bytes remain unchanged. The promotion workflow takes
+the evidence run ID, resolves that reviewed record from `main`, and fails closed
+on missing, mismatched, tampered, expired, or non-passing evidence.
+
+The record's qualification mode is intentionally
+`static-release-qualification`. It does not claim that an unapplied aws-test or
+aws-prod cluster is healthy. v0.9.5 adds ALB, Argo Rollouts, AnalysisRun, and
+runtime rollout evidence when those environments enter live validation.
+
 GitHub Actions do not receive Kubernetes or EKS administration credentials and
 do not directly apply workload manifests. Production automation must not merge
 its own promotion pull request.
+
+`.github/CODEOWNERS` protects release records, evidence, and release-governance
+automation. Repository branch protection or a ruleset must require code-owner
+review for that file to become enforceable. GitHub Environments named
+`aws-dev`, `aws-test`, and `aws-prod` provide workflow approval boundaries;
+`aws-prod` must require designated production reviewers and must prevent self-
+review. These GitHub settings are external control-plane configuration and
+cannot be made effective by repository files alone.
 
 ## Isolation Contract
 
@@ -249,11 +273,29 @@ It does not require source-environment validation evidence, add CODEOWNERS or
 GitHub Environment reviewers, generalize rollback, merge PRs, contact EKS, or
 create any AWS resources. Those governance additions remain v0.9.4 work.
 
+## v0.9.4 Implementation Boundary
+
+v0.9.4 delivers:
+
+- reviewed, machine-readable aws-dev/aws-test static qualification evidence;
+- exact evidence binding to source environment, release bytes, immutable image,
+  source commit, build workflow identity, evidence run, actor, and timestamp;
+- a default seven-day freshness gate and fail-closed evidence validation;
+- target GitHub Environment boundaries and CODEOWNERS-protected release paths;
+- aws-dev/aws-test/aws-prod historical target-release-only rollback PRs;
+- GHCR existence checks, stale-main rejection, per-environment concurrency,
+  and no direct EKS access for rollback;
+- local tamper, expiry, isolation, and workflow-governance behavior tests.
+
+It does not create AWS resources, run live canaries, claim source-cluster
+health, merge its own PRs, or promote Secrets, databases, Terraform state, or
+environment configuration. Runtime progressive-delivery evidence remains
+v0.9.5 work.
+
 ## Deferred Decisions
 
 The following work belongs to later increments:
 
-- evidence format, CODEOWNERS, approvals, and rollback governance in v0.9.4;
 - test/prod ALB canary mechanics and AnalysisRun behavior in v0.9.5;
 - remote Terraform state bootstrap, full observability, and long-term
   operational readiness in v1.0.

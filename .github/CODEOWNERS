@@ -1,0 +1,11 @@
+# GitHub enforces these reviewers only when branch protection or a ruleset
+# requires code-owner review. Keep the repository setting aligned with this file.
+
+/apps/demo-api/helm/values/releases/ @SterlingAureum
+/evidence/demo-api/ @SterlingAureum
+/.github/workflows/demo-api-*.yaml @SterlingAureum
+/.github/CODEOWNERS @SterlingAureum
+/scripts/promote-demo-api-release.sh @SterlingAureum
+/scripts/prepare-demo-api-rollback.sh @SterlingAureum
+/scripts/write-demo-api-release-evidence.sh @SterlingAureum
+/scripts/validate-demo-api-release-evidence.sh @SterlingAureum

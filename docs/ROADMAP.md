@@ -190,8 +190,8 @@ Incremental scope:
 - v0.9.3 - ordered build-once environment promotion, main-sourced release
   capture, immutable GHCR identity verification, target concurrency,
   stale-state protection, and release-only Promotion PRs - delivered
-- v0.9.4 - approval, validation evidence, CODEOWNERS, and environment-scoped
-  rollback governance
+- v0.9.4 - reviewed static release evidence, target GitHub Environment
+  approvals, CODEOWNERS, and environment-scoped rollback governance - delivered
 - v0.9.5 - AWS test/prod progressive delivery with ALB and Argo Rollouts
 - v0.9.6 - clean-room dev/test sequence, production static validation, cost
   cleanup, and final documentation

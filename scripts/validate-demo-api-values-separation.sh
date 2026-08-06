@@ -155,9 +155,16 @@ publish = (root / ".github/workflows/demo-api-image-publish.yaml").read_text()
 rollback = (root / ".github/workflows/demo-api-rollback.yaml").read_text()
 release_path = "apps/demo-api/helm/values/releases/aws-dev.yaml"
 environment_path = "apps/demo-api/helm/values/environments/aws-dev.yaml"
-for name, workflow in (("publish", publish), ("rollback", rollback)):
-    if release_path not in workflow or environment_path not in workflow:
-        raise SystemExit(f"{name} workflow does not render the split aws-dev values")
+if release_path not in publish or environment_path not in publish:
+    raise SystemExit("publish workflow does not render the split aws-dev values")
+for dynamic_path in (
+    "apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml",
+    "apps/demo-api/helm/values/environments/${TARGET_ENVIRONMENT}.yaml",
+):
+    if dynamic_path not in rollback:
+        raise SystemExit(
+            f"rollback workflow does not render the split environment values: {dynamic_path}"
+        )
 
 print("demo-api environment/release values separation passed.")
 PY

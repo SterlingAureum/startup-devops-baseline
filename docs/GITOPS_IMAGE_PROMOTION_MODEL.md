@@ -143,8 +143,10 @@ if main changes before the branch is pushed or before the PR is opened. This
 prevents a workflow run from silently promoting an expired source snapshot.
 
 GitHub Actions only prepares the branch and PR. It neither merges nor connects
-to EKS. Environment validation evidence and generalized rollback controls are
-added separately in v0.9.4.
+to EKS. v0.9.4 requires a separate, reviewed source qualification evidence
+record from `main` and enters the target GitHub Environment before preparing
+the Promotion PR. The evidence must match the current source release and remain
+within its freshness window.
 
 ### Argo CD Image Updater
 
@@ -157,9 +159,12 @@ Argo CD syncs the new desired state
 
 This is more automated but adds another component.
 
-## Implemented rollback model
+## Implemented environment rollback model
 
 Keep promotion review-gated. Do not add Argo CD Image Updater and do not grant
-the image, environment-promotion, or rollback workflow direct EKS access. The
-existing rollback remains aws-dev-scoped through v0.9.3; v0.9.4 generalizes
-rollback governance without changing the build-once identity model.
+the image, environment-promotion, evidence, or rollback workflow direct EKS
+access. v0.9.4 accepts aws-dev, aws-test, or aws-prod as the rollback target,
+restores only a historical target-release-only commit, proves the old digest
+still exists, enters the target GitHub Environment, and opens a CODEOWNERS-
+protected PR. It never rewrites environment configuration or changes the
+build-once identity model.

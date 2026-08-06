@@ -21,7 +21,7 @@ The target AWS topology is therefore three environments and three clusters:
 | `aws-test` | `startup-devops-baseline-test` | Ephemeral; created for validation and then destroyed |
 | `aws-prod` | `startup-devops-baseline-prod` | Persistent production boundary |
 
-Only `aws-dev` is required to exist at the v0.9.3 checkpoint. Git now contains
+Only `aws-dev` is required to exist at the v0.9.4 checkpoint. Git now contains
 complete Terraform and GitOps declarations for all three environments;
 aws-test and aws-prod remain unapplied until their later validation stages.
 
@@ -61,7 +61,7 @@ External Secrets integration, security controls, HTTPS ingress, and validated
 backup, recovery, failover, credential-rotation, and network-policy paths built
 through v0.4-v0.8.
 
-At v0.9.3, the root Application and every internal-repository child
+At v0.9.4, the root Application and every internal-repository child
 Application track `main`. Third-party sources remain pinned to their reviewed
 Chart or component versions.
 
@@ -83,6 +83,14 @@ retains its complete image and build identity, verifies the digest-addressed
 GHCR artifact, and changes only the target release file. A target-scoped
 concurrency group serializes competing attempts, and any main movement during
 PR preparation invalidates the captured source state.
+
+Before a cross-environment PR can be created, a separate source qualification
+workflow must record passing, reviewed evidence on `main`. The record is bound
+to the current source release SHA-256 and expires after seven days by default.
+Promotion and rollback enter the target GitHub Environment boundary, while
+CODEOWNERS and branch protection preserve the human merge decision. At this
+checkpoint the evidence is static release qualification, not a claim that
+aws-test or aws-prod is live; runtime rollout evidence begins in v0.9.5.
 
 ## Declared AWS Profiles
 

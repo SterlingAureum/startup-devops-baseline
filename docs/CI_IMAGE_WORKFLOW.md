@@ -9,7 +9,9 @@ v0.7.4 reuses that reviewed identity to prepare history-based rollback PRs.
 v0.9.1 moves the promoted identity into an isolated release values file while
 the environment values remain immutable during promotion and rollback. v0.9.3
 adds ordered, main-sourced aws-dev to aws-test and aws-test to aws-prod
-Promotion PRs without rebuilding the image.
+Promotion PRs without rebuilding the image. v0.9.4 adds reviewed release
+evidence, target GitHub Environment gates, CODEOWNERS, and dev/test/prod
+rollback governance.
 
 ## Quality Gate
 
@@ -31,10 +33,12 @@ It performs:
 7. Metadata-driven aws-dev release promotion and source-mismatch rejection.
 8. Ordered environment-promotion edge, immutable identity, stale-source,
    workflow-permission, and release-only diff validation.
-9. Demo-api unit tests in the Dockerfile `test` stage.
-10. A final build of the production runtime image.
-11. Historical rollback restoration, idempotency, diff isolation, and invalid
-   target rejection.
+9. Release-evidence schema, tamper, expiry, approval, and environment rollback
+   behavior contracts.
+10. Demo-api unit tests in the Dockerfile `test` stage.
+11. A final build of the production runtime image.
+12. Historical rollback restoration, idempotency, diff isolation, and invalid
+    target rejection.
 
 The unit tests do not require AWS, Kubernetes, or a live PostgreSQL cluster.
 Database success and failure behavior is isolated with mocks, and tests never
@@ -123,11 +127,18 @@ aws-dev -> aws-test    demo-api-promote-environment.yaml
 aws-test -> aws-prod   demo-api-promote-environment.yaml
 ```
 
-The environment workflow captures the source release from `origin/main`,
-validates its exact release schema, verifies that the digest-addressed GHCR
-manifest exists, and copies all image and build identity fields without
-mutation. It renders the target Helm profile and permits exactly one changed
-path: `values/releases/<target>.yaml`.
+First, `.github/workflows/demo-api-record-release-evidence.yaml` enters the
+source GitHub Environment, validates its release schema and Helm profile,
+verifies that the digest-addressed GHCR manifest exists, and creates an
+evidence-only PR. After review and merge, the operator supplies that workflow
+run ID to the promotion workflow.
+
+The environment promotion workflow captures both the source release and its
+reviewed evidence from `origin/main`. It rejects missing, non-passing,
+mismatched, tampered, expired, or stale evidence, rechecks the GHCR manifest,
+and copies all image and build identity fields without mutation. It renders the
+target Helm profile and permits exactly one changed path:
+`values/releases/<target>.yaml`.
 
 Each target has an independent concurrency group. If `main` moves between
 capture, artifact verification, branch push, and PR creation, the workflow
@@ -135,28 +146,51 @@ fails closed and must be rerun. This deliberately conservative guard prevents
 a PR from being created from a source release that is no longer current.
 
 The workflow rejects skipped, reverse, same-environment, and build-to-later-
-environment edges. It can create a PR but cannot merge it and has no AWS,
-Kubernetes, EKS, or Argo CD credentials. v0.9.4 adds source-environment
-validation evidence and environment-scoped rollback governance on top of this
-ordered transport contract.
+environment edges. Its job enters the target GitHub Environment before it can
+create a PR. It cannot merge that PR and has no AWS, Kubernetes, EKS, or Argo CD
+credentials. CODEOWNERS plus branch protection preserve the reviewer boundary.
+
+v0.9.4 evidence proves static release qualification only. Runtime ALB,
+AnalysisRun, and live rollout evidence belongs to v0.9.5 because the aws-test
+and aws-prod clusters are not created by this increment.
 
 ## Rollback Boundary
 
-`.github/workflows/demo-api-rollback.yaml` is manual-only. It accepts a full
-historical desired-state commit, verifies that it is an eligible release-only
-commit contained in the selected base branch, restores the historical
-`values/releases/aws-dev.yaml`, and opens a pull request.
+`.github/workflows/demo-api-rollback.yaml` is manual-only. It accepts a target
+environment and full historical desired-state commit, verifies that the commit
+changed only that environment's release file and is contained in `main`,
+restores it exactly, proves the old GHCR digest still exists, and opens a pull
+request. It supports aws-dev, aws-test, and aws-prod without changing their
+environment files.
 
 The rollback job has only:
 
 ```text
 contents: write
+packages: read
 pull-requests: write
 ```
 
-It has no AWS, package-registry, Kubernetes, or Argo CD permission. It cannot
-merge the PR. The selected historical state is still subject to normal review,
-and Argo CD acts only after the PR reaches the tracked branch.
+It has no AWS, Kubernetes, EKS, or Argo CD permission. Package read access is
+used only to prove the rollback digest remains available. The workflow enters
+the target GitHub Environment, rejects a moving `main`, cannot merge its PR,
+and changes only the selected release record. Argo CD acts only after the
+CODEOWNERS-protected PR reaches the tracked branch.
+
+## Required Repository Settings
+
+Repository files declare the intended ownership and environment names, but
+GitHub settings make them enforceable:
+
+1. Create GitHub Environments named `aws-dev`, `aws-test`, and `aws-prod`.
+2. Require designated reviewers for `aws-prod` and prevent self-review.
+3. Protect `main` with pull requests and required code-owner review.
+4. Keep Actions permission to create pull requests enabled.
+5. Do not grant any evidence, promotion, or rollback job EKS credentials.
+
+These jobs use `deployment: false` because they prepare Git records and PRs,
+not deployments. GitHub still applies Environment protection rules. Required
+Environment reviewers on GitHub Free, Pro, and Team require a public repository.
 
 The repository must allow GitHub Actions to create pull requests under
 **Settings → Actions → General → Workflow permissions**. A manual feature

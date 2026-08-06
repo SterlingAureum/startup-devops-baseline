@@ -2,6 +2,33 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.9.4
+
+### Added
+
+- Manual source-release qualification workflow for aws-dev and aws-test that
+  verifies release schema, Helm rendering, and exact GHCR digest availability,
+  then creates a reviewable machine-readable evidence PR.
+- Strict v0.9.4 evidence schema and freshness validation bound to the current
+  source release SHA-256, source environment, evidence run ID, immutable image,
+  source commit, and original build workflow identity.
+- CODEOWNERS boundaries for demo-api release records, evidence, delivery
+  workflows, and the scripts that mutate or validate release state.
+- Promotion and rollback jobs protected by target GitHub Environments, plus
+  local behavior tests for evidence tampering, staleness, expiration, approval
+  contracts, and dev/test/prod rollback isolation.
+
+### Changed
+
+- Required every aws-dev to aws-test and aws-test to aws-prod Promotion PR to
+  cite reviewed, unexpired source evidence already present on `main`.
+- Generalized the GitOps rollback workflow from aws-dev to aws-dev, aws-test,
+  and aws-prod while preserving historical target-release-only restoration,
+  immutable artifact verification, stale-main rejection, PR review, and zero
+  direct EKS access.
+- Kept v0.9.4 evidence explicitly static; AWS rollout and AnalysisRun runtime
+  evidence remains part of v0.9.5.
+
 ## v0.9.3
 
 ### Added

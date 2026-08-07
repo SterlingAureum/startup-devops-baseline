@@ -1,0 +1,50 @@
+{
+  "application": "demo-api",
+  "environment": "aws-test",
+  "release": {
+    "applicationVersion": "sha-04ca5ab",
+    "buildWorkflowRunId": "31196357498",
+    "imageDigest": "sha256:fcfa4f473dd0f2752e73f885cd3e372cfdcc1f468222e425d0f2a18e8c2c8abc",
+    "imageRepository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "imageTag": "sha-04ca5ab",
+    "path": "apps/demo-api/helm/values/releases/aws-test.yaml",
+    "sha256": "7370ff5531f91f103c08d52ad44435c286072decdcec0a33c3423836552917c7",
+    "sourceCommit": "04ca5ab03d999d138c5187c9745f91749bd39f07",
+    "sourceRepository": "SterlingAureum/startup-devops-baseline"
+  },
+  "runtime": {
+    "actor": "SterlingAureum",
+    "albActionSha256": "472d97e678099742652ce165457433ccfbb860540e9a6339878475368d7963fe",
+    "analysisRunName": "demo-api-5fd4d6dd-3-2",
+    "analysisRunPhase": "Successful",
+    "argoApplication": "demo-api-aws-test",
+    "argoRevision": "fc62d0c50b1c012bc96b50904ad79ea0c41d7478",
+    "checks": [
+      "argocd-synced-healthy",
+      "release-annotations-match",
+      "all-pods-ready",
+      "immutable-pod-image-match",
+      "https-health",
+      "https-ready-database",
+      "https-version-identity",
+      "rollout-healthy",
+      "analysis-run-successful",
+      "analysis-release-identity-match",
+      "alb-stable-weight-100"
+    ],
+    "clusterName": "startup-devops-baseline-test",
+    "evidenceId": "20260807183425",
+    "ingressHostname": "demo.test.aureumstack.com",
+    "mode": "aws-runtime-verification",
+    "namespace": "startup-apps",
+    "observedImage": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api@sha256:fcfa4f473dd0f2752e73f885cd3e372cfdcc1f468222e425d0f2a18e8c2c8abc",
+    "readyPodCount": 2,
+    "recordedAt": "2026-08-07T18:34:46Z",
+    "repositoryRevision": "fc62d0c50b1c012bc96b50904ad79ea0c41d7478",
+    "rolloutPhase": "Healthy",
+    "workloadKind": "Rollout",
+    "workloadName": "demo-api"
+  },
+  "schemaVersion": "v0.9.5",
+  "status": "passed"
+}

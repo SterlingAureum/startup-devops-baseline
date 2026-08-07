@@ -1,14 +1,12 @@
-# Seed identity for static rendering. Ordered runtime promotion is introduced in
-# v0.9.3 and will replace this file through a reviewable aws-dev -> aws-test PR.
 image:
   repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
-  tag: "sha-983167a"
-  digest: "sha256:2de53fd2371377019cc608bb65a5187e327798b7e9fe36db1f8273f1fcb5bd54"
+  tag: "sha-04ca5ab"
+  digest: "sha256:fcfa4f473dd0f2752e73f885cd3e372cfdcc1f468222e425d0f2a18e8c2c8abc"
 
 release:
-  applicationVersion: "sha-983167a"
+  applicationVersion: "sha-04ca5ab"
 
 delivery:
   sourceRepository: "SterlingAureum/startup-devops-baseline"
-  sourceCommit: "983167adcae0d9b0397825027091b4a0a1c57532"
-  workflowRunId: "30356690212"
+  sourceCommit: "04ca5ab03d999d138c5187c9745f91749bd39f07"
+  workflowRunId: "31196357498"

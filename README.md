@@ -32,16 +32,21 @@ and CloudNativePG data workloads, with explicit runtime-validated traffic
 paths. AWS Secrets Manager, exact-secret IRSA, a namespaced External Secrets
 Operator deployment, and an active ExternalSecret now provide the demo-api
 PostgreSQL credential without committing the value to Git or Terraform state.
-The repository remains intentionally smaller than a full production platform.
+The v0.9 lifecycle now also defines a clean-room aws-dev/aws-test acceptance
+sequence, guarded ephemeral test creation, reviewed canary completion,
+CloudNativePG recovery validation, dependency-aware test destruction, exact
+AWS residual-cost checks, and tamper-evident final closure evidence. The
+repository remains intentionally smaller than a full production platform.
 The v0.8 finalization added the `demo.dev.aureumstack.com` Route 53 endpoint,
 ACM-backed HTTPS, HTTP redirection, a runtime-only EKS management `/32`, and
-bounded security logging. v0.9 now begins the transition from this single AWS
-environment into a cost-aware, multi-environment GitOps promotion baseline.
+bounded security logging. v0.9 turns this single live AWS baseline into a
+cost-aware, multi-environment GitOps promotion model without requiring three
+permanently running portfolio clusters.
 
 ## Current Version
 
 ```text
-v0.9.5-aws-alb-progressive-delivery-runtime-evidence
+v0.9.6-clean-room-multi-environment-validation
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -59,9 +64,11 @@ reviewed, unexpired evidence record that matches the current source release,
 adds CODEOWNERS and target-environment approvals, and generalizes rollback to
 aws-dev, aws-test, and aws-prod. v0.9.5 adds test/prod ALB canary declarations,
 Argo Rollouts, release-bound AnalysisRuns, local collection of reviewed AWS
-runtime evidence, and a dual static/runtime Promotion gate. These increments
-do not apply test or production infrastructure; clean-room live validation and
-cost cleanup remain v0.9.6 work.
+runtime evidence, and a dual static/runtime Promotion gate. v0.9.6 adds the
+guarded clean-room aws-test lifecycle, recovery drill sequence, cost-residual
+audit, and final evidence contract. Live aws-test execution and reviewed final
+evidence are still required before the roadmap status changes to Completed;
+aws-prod remains statically validated in v0.9.
 
 ## Platform Architecture
 

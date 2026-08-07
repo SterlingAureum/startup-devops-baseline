@@ -194,8 +194,9 @@ Incremental scope:
   approvals, CODEOWNERS, and environment-scoped rollback governance - delivered
 - v0.9.5 - AWS test/prod progressive delivery with ALB, Argo Rollouts,
   release-bound AnalysisRuns, and reviewed runtime evidence - delivered
-- v0.9.6 - clean-room dev/test sequence, production static validation, cost
-  cleanup, and final documentation
+- v0.9.6 - clean-room dev/test sequence, production static validation, guarded
+  recovery/teardown, cost-residual audit, and final evidence - implemented;
+  live aws-test acceptance pending
 
 ## v1.0 - Observability and Production Readiness Baseline
 

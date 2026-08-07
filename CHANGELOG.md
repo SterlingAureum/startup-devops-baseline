@@ -2,6 +2,34 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.9.6
+
+### Added
+
+- Guarded create/resume Terraform entrypoint and environment-aware GitOps
+  bootstrap for the ephemeral aws-test clean-room environment.
+- Reviewed aws-test Rollout completion and runtime validation entrypoints that
+  retain the restricted local EKS access boundary.
+- Generalized dependency-aware aws-dev/aws-test teardown with an explicit
+  aws-prod refusal and environment-specific confirmation phrase.
+- Post-destroy AWS residual audit for Terraform state, EKS, VPC, EC2, EBS,
+  NAT Gateway, Elastic IP, S3, Secrets Manager deletion state, CloudWatch,
+  ACM, Route 53, and currently tagged regional resources.
+- Final v0.9.6 evidence writer, validator, tamper behavior tests, and protected
+  evidence path binding dev/test qualification to one immutable artifact.
+- Clean-room lifecycle and failure-recovery runbook plus the v0.9.6 checkpoint
+  document.
+
+### Changed
+
+- Allowed the shared AWS root deployment helper to accept an explicit set of
+  reviewable Argo CD health states while preserving Healthy-only aws-dev
+  behavior by default.
+- Kept aws-test ephemeral and aws-prod static-only for v0.9 acceptance instead
+  of requiring three concurrently running portfolio clusters.
+- Added lifecycle, cleanup, and final-evidence behavior to the reusable CI
+  quality gate. Live AWS execution remains a separate operator acceptance step.
+
 ## v0.9.5
 
 ### Added

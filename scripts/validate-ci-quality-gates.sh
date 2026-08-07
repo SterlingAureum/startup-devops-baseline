@@ -45,6 +45,12 @@ echo "==> Validating AWS ALB progressive-delivery declarations"
 echo "==> Validating AWS runtime evidence behavior"
 "${ROOT_DIR}/scripts/validate-demo-api-runtime-evidence-behavior.sh"
 
+echo "==> Validating v0.9 clean-room lifecycle and cleanup contracts"
+"${ROOT_DIR}/scripts/validate-v0.9-lifecycle-contracts.sh"
+
+echo "==> Validating v0.9 final evidence behavior"
+"${ROOT_DIR}/scripts/validate-v0.9-final-evidence-behavior.sh"
+
 echo "==> Validating namespace guardrail contracts"
 "${ROOT_DIR}/scripts/validate-namespace-guardrails.sh"
 

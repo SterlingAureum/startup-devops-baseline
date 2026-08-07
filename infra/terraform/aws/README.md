@@ -6,7 +6,7 @@ foundation introduced in v0.5.5, the CloudNativePG S3 backup foundation
 introduced in v0.6.3, the External Secrets AWS foundation introduced in
 v0.8.3, and the ACM/control-plane hardening foundation introduced in v0.8.6.
 
-## Current repository scope: v0.9.2
+## Current repository scope: v0.9.6
 
 Terraform owns stable AWS infrastructure and identity. Argo CD owns the
 Kubernetes controllers and application resources, while guarded scripts
@@ -83,8 +83,32 @@ It supplies the current `/32` only for the Terraform execution. EKS is pinned
 to 1.36 for
 compatibility with Karpenter 1.14.x. Review the complete plan because this
 environment creates billable EKS and EC2 resources. Creating the dev/test FIS
-template does not start an experiment. Do not apply test or prod merely to
-satisfy the v0.9.2 checkpoint; their required acceptance is static.
+template does not start an experiment. v0.9.6 requires one bounded aws-test
+clean-room apply after the implementation reaches reviewed `main`; aws-prod
+remains statically validated and must not be applied merely to close the
+portfolio checkpoint.
+
+Use the guarded test entrypoint rather than supplying a workstation address in
+tracked configuration:
+
+```bash
+CONFIRM_AWS_TEST_APPLY=apply-ephemeral-aws-test \
+  ./scripts/apply-aws-test.sh
+```
+
+After runtime and recovery validation, destroy the temporary environment and
+require the residual audit to pass:
+
+```bash
+CONFIRM_AWS_ENVIRONMENT_DESTROY=destroy-aws-test-with-backups \
+  ./scripts/destroy-aws-test.sh
+
+AWS_ENVIRONMENT=aws-test \
+  ./scripts/validate-aws-cost-cleanup.sh
+```
+
+See `docs/AWS_MULTI_ENVIRONMENT_LIFECYCLE.md` for the complete ordered
+acceptance and safe continuation steps.
 
 ## Configure kubectl after apply
 

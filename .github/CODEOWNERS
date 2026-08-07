@@ -7,6 +7,7 @@
 /apps/demo-api/helm/templates/ @SterlingAureum
 /clusters/aws/base/platform/argo-rollouts.yaml @SterlingAureum
 /evidence/demo-api/ @SterlingAureum
+/evidence/v0.9/ @SterlingAureum
 /.github/CODEOWNERS @SterlingAureum
 /.github/workflows/demo-api-*.yaml @SterlingAureum
 /scripts/promote-demo-api-release.sh @SterlingAureum
@@ -16,3 +17,11 @@
 /scripts/record-demo-api-runtime-evidence-aws.sh @SterlingAureum
 /scripts/write-demo-api-runtime-evidence.sh @SterlingAureum
 /scripts/validate-demo-api-runtime-evidence.sh @SterlingAureum
+/scripts/apply-aws-test.sh @SterlingAureum
+/scripts/bootstrap-aws-test.sh @SterlingAureum
+/scripts/complete-aws-test-rollout.sh @SterlingAureum
+/scripts/destroy-aws-dev.sh @SterlingAureum
+/scripts/destroy-aws-test.sh @SterlingAureum
+/scripts/validate-aws-cost-cleanup.sh @SterlingAureum
+/scripts/write-v0.9-final-evidence.sh @SterlingAureum
+/scripts/validate-v0.9-final-evidence.sh @SterlingAureum

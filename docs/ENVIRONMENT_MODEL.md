@@ -152,6 +152,15 @@ The repository does not require three EKS clusters to run continuously:
 This sequential model proves independent lifecycles without turning the
 portfolio environment into three permanent sources of AWS cost.
 
+v0.9.6 makes that lifecycle executable through guarded phase-specific
+entrypoints. `apply-aws-test.sh` creates or deliberately resumes only the
+independent test root; `bootstrap-aws-test.sh` applies reviewed GitOps state;
+the governed workflow performs the dev-to-test release transition;
+`destroy-aws-test.sh` removes controller-owned dependencies before Terraform;
+and `validate-aws-cost-cleanup.sh` must pass before final evidence is recorded.
+The destroy entrypoint rejects aws-prod because the production declaration is
+not a disposable portfolio target.
+
 ## Deliberate Differences
 
 | Concern | local | aws-dev | aws-test | aws-prod |

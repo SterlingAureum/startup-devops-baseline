@@ -1,0 +1,1818 @@
+diff --git a/.github/CODEOWNERS b/.github/CODEOWNERS
+index 76910785fd21faec3b236906ae5e7e8540e29e2a..9b3c54b4727d485fe3b34d5993619c53332fed92 100644
+--- a/.github/CODEOWNERS
++++ b/.github/CODEOWNERS
+@@ -7,6 +7,7 @@
+ /apps/demo-api/helm/templates/ @SterlingAureum
+ /clusters/aws/base/platform/argo-rollouts.yaml @SterlingAureum
+ /evidence/demo-api/ @SterlingAureum
++/evidence/v0.9/ @SterlingAureum
+ /.github/CODEOWNERS @SterlingAureum
+ /.github/workflows/demo-api-*.yaml @SterlingAureum
+ /scripts/promote-demo-api-release.sh @SterlingAureum
+@@ -16,3 +17,11 @@
+ /scripts/record-demo-api-runtime-evidence-aws.sh @SterlingAureum
+ /scripts/write-demo-api-runtime-evidence.sh @SterlingAureum
+ /scripts/validate-demo-api-runtime-evidence.sh @SterlingAureum
++/scripts/apply-aws-test.sh @SterlingAureum
++/scripts/bootstrap-aws-test.sh @SterlingAureum
++/scripts/complete-aws-test-rollout.sh @SterlingAureum
++/scripts/destroy-aws-dev.sh @SterlingAureum
++/scripts/destroy-aws-test.sh @SterlingAureum
++/scripts/validate-aws-cost-cleanup.sh @SterlingAureum
++/scripts/write-v0.9-final-evidence.sh @SterlingAureum
++/scripts/validate-v0.9-final-evidence.sh @SterlingAureum
+diff --git a/CHANGELOG.md b/CHANGELOG.md
+index dbecafbb9f985872450e6f399f03bfc687f0a315..177b9e5e379fea3678583b2d037146c33d6d3cda 100644
+--- a/CHANGELOG.md
++++ b/CHANGELOG.md
+@@ -2,6 +2,34 @@
+ 
+ All notable changes to this repository are documented in this file.
+ 
++## v0.9.6
++
++### Added
++
++- Guarded create/resume Terraform entrypoint and environment-aware GitOps
++  bootstrap for the ephemeral aws-test clean-room environment.
++- Reviewed aws-test Rollout completion and runtime validation entrypoints that
++  retain the restricted local EKS access boundary.
++- Generalized dependency-aware aws-dev/aws-test teardown with an explicit
++  aws-prod refusal and environment-specific confirmation phrase.
++- Post-destroy AWS residual audit for Terraform state, EKS, VPC, EC2, EBS,
++  NAT Gateway, Elastic IP, S3, Secrets Manager deletion state, CloudWatch,
++  ACM, Route 53, and currently tagged regional resources.
++- Final v0.9.6 evidence writer, validator, tamper behavior tests, and protected
++  evidence path binding dev/test qualification to one immutable artifact.
++- Clean-room lifecycle and failure-recovery runbook plus the v0.9.6 checkpoint
++  document.
++
++### Changed
++
++- Allowed the shared AWS root deployment helper to accept an explicit set of
++  reviewable Argo CD health states while preserving Healthy-only aws-dev
++  behavior by default.
++- Kept aws-test ephemeral and aws-prod static-only for v0.9 acceptance instead
++  of requiring three concurrently running portfolio clusters.
++- Added lifecycle, cleanup, and final-evidence behavior to the reusable CI
++  quality gate. Live AWS execution remains a separate operator acceptance step.
++
+ ## v0.9.5
+ 
+ ### Added
+diff --git a/README.md b/README.md
+index cd5de7e02f5a815b06f319b20378620d0e1317bc..2e7b37a3035f59eaff750211ee308acd9e8b9ae0 100644
+--- a/README.md
++++ b/README.md
+@@ -32,16 +32,21 @@ and CloudNativePG data workloads, with explicit runtime-validated traffic
+ paths. AWS Secrets Manager, exact-secret IRSA, a namespaced External Secrets
+ Operator deployment, and an active ExternalSecret now provide the demo-api
+ PostgreSQL credential without committing the value to Git or Terraform state.
+-The repository remains intentionally smaller than a full production platform.
++The v0.9 lifecycle now also defines a clean-room aws-dev/aws-test acceptance
++sequence, guarded ephemeral test creation, reviewed canary completion,
++CloudNativePG recovery validation, dependency-aware test destruction, exact
++AWS residual-cost checks, and tamper-evident final closure evidence. The
++repository remains intentionally smaller than a full production platform.
+ The v0.8 finalization added the `demo.dev.aureumstack.com` Route 53 endpoint,
+ ACM-backed HTTPS, HTTP redirection, a runtime-only EKS management `/32`, and
+-bounded security logging. v0.9 now begins the transition from this single AWS
+-environment into a cost-aware, multi-environment GitOps promotion baseline.
++bounded security logging. v0.9 turns this single live AWS baseline into a
++cost-aware, multi-environment GitOps promotion model without requiring three
++permanently running portfolio clusters.
+ 
+ ## Current Version
+ 
+ ```text
+-v0.9.5-aws-alb-progressive-delivery-runtime-evidence
++v0.9.6-clean-room-multi-environment-validation
+ ```
+ The completed v0.8 AWS EKS environment exposes demo-api through
+ `https://demo.dev.aureumstack.com` with the production-security baseline in
+@@ -59,9 +64,11 @@ reviewed, unexpired evidence record that matches the current source release,
+ adds CODEOWNERS and target-environment approvals, and generalizes rollback to
+ aws-dev, aws-test, and aws-prod. v0.9.5 adds test/prod ALB canary declarations,
+ Argo Rollouts, release-bound AnalysisRuns, local collection of reviewed AWS
+-runtime evidence, and a dual static/runtime Promotion gate. These increments
+-do not apply test or production infrastructure; clean-room live validation and
+-cost cleanup remain v0.9.6 work.
++runtime evidence, and a dual static/runtime Promotion gate. v0.9.6 adds the
++guarded clean-room aws-test lifecycle, recovery drill sequence, cost-residual
++audit, and final evidence contract. Live aws-test execution and reviewed final
++evidence are still required before the roadmap status changes to Completed;
++aws-prod remains statically validated in v0.9.
+ 
+ ## Platform Architecture
+ 
+diff --git a/docs/AWS_MULTI_ENVIRONMENT_LIFECYCLE.md b/docs/AWS_MULTI_ENVIRONMENT_LIFECYCLE.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..1c813fa25f7e267d6295a5a56fa31c0e933d52d5
+--- /dev/null
++++ b/docs/AWS_MULTI_ENVIRONMENT_LIFECYCLE.md
+@@ -0,0 +1,224 @@
++# AWS Multi-Environment Clean-Room Lifecycle
++
++This runbook closes v0.9 without requiring three permanently running EKS
++clusters. It validates the existing aws-dev environment, creates aws-test from
++the reviewed `main` branch, promotes one immutable artifact, exercises runtime
++and recovery behavior, destroys aws-test, and proves that the temporary cost
++surface is gone. aws-prod remains a statically rendered governance target in
++v0.9.
++
++## Safety boundary
++
++- Run every live phase from a clean local `main` equal to `origin/main`.
++- Keep the EKS public endpoint allowlist runtime-only; never write the current
++  public IP to a tracked tfvars file.
++- Use the independent `infra/terraform/aws/environments/test` state. Do not use
++  Terraform CLI workspaces to represent environments.
++- Do not copy Secrets, PostgreSQL data, backups, Terraform state, or runtime
++  evidence between environments. Only the immutable application release
++  identity moves through promotion.
++- The repository destroy entrypoint accepts aws-dev or aws-test and rejects
++  aws-prod. Production is not a disposable portfolio environment.
++- Never remove the EKS control plane before Kubernetes Ingress and
++  LoadBalancer resources have released their AWS resources.
++
++AWS also recommends removing LoadBalancer Services and Ingress resources
++before deleting an EKS cluster so their AWS load balancers are released:
++<https://docs.aws.amazon.com/eks/latest/userguide/delete-cluster.html>.
++
++## Acceptance sequence
++
++### 1. Clean source and static preflight
++
++```bash
++git switch main
++git pull --ff-only
++git status --short
++
++./scripts/validate-aws-environment-declarations.sh
++./scripts/validate-demo-api-aws-progressive-delivery.sh
++./scripts/validate-v0.9-lifecycle-contracts.sh
++./scripts/validate-ci-quality-gates.sh
++```
++
++`git status --short` must be empty. Do not run a live clean-room test from a
++feature branch or from unreviewed files.
++
++### 2. Re-qualify aws-dev
++
++Validate aws-dev and record fresh v0.9.5 runtime evidence from the restricted
++EKS endpoint:
++
++```bash
++ENVIRONMENT=aws-dev \
++EVIDENCE_ACTOR=SterlingAureum \
++  ./scripts/record-demo-api-runtime-evidence-aws.sh
++```
++
++Commit the generated evidence through a reviewed PR. The normal static release
++evidence workflow must also produce a fresh aws-dev qualification record on
++`main` before promotion.
++
++### 3. Create ephemeral aws-test
++
++Review the complete Terraform plan. The create mode refuses an existing
++Terraform state or existing test cluster. If a previous apply failed after
++creating resources, inspect state and use `AWS_TEST_APPLY_MODE=resume` rather
++than deleting state or starting another environment.
++
++```bash
++CONFIRM_AWS_TEST_APPLY=apply-ephemeral-aws-test \
++  ./scripts/apply-aws-test.sh
++```
++
++This creates billable EKS, EC2, NAT Gateway, EBS, S3, Secrets Manager,
++CloudWatch, ACM, IAM, and networking resources. Keep the test window bounded.
++
++### 4. Bootstrap GitOps
++
++```bash
++CONFIRM_AWS_TEST_BOOTSTRAP=bootstrap-ephemeral-aws-test \
++  ./scripts/bootstrap-aws-test.sh
++```
++
++The bootstrap is restartable. It reuses the environment-specific Terraform
++outputs, installs Argo CD, and applies the aws-test root Application from
++`main`. It accepts a temporarily Progressing or Suspended demo-api Application
++because a reviewed canary may legitimately be paused; it does not claim
++runtime qualification at that point.
++
++### 5. Promote the immutable artifact
++
++Use `demo-api-promote-environment` with:
++
++```text
++source_environment: aws-dev
++target_environment: aws-test
++release_evidence_run_id: <reviewed aws-dev static evidence run>
++runtime_evidence_id: <reviewed aws-dev runtime evidence id>
++```
++
++Review and merge the generated release-only PR. Do not edit the aws-test
++environment values in that PR.
++
++Watch the live rollout:
++
++```bash
++AWS_REGION=us-east-1 \
++aws eks update-kubeconfig \
++  --name startup-devops-baseline-test
++
++./scripts/rollout-status.sh
++kubectl get analysisrun -n startup-apps
++```
++
++After reviewing canary Pods, ALB routing, AnalysisRun results, readiness, and
++version identity, advance only the explicit manual pause:
++
++```bash
++CONFIRM_AWS_TEST_ROLLOUT=promote-reviewed-aws-test \
++  ./scripts/complete-aws-test-rollout.sh
++```
++
++The helper stops after three unexpected pauses instead of repeatedly forcing
++an unknown strategy forward.
++
++### 6. Runtime and recovery validation
++
++```bash
++EVIDENCE_ACTOR=SterlingAureum \
++  ./scripts/validate-aws-test-runtime.sh
++```
++
++Commit the generated aws-test runtime evidence through a reviewed PR. Then run
++the controlled CloudNativePG primary-Pod failover drill with the test cluster
++identity:
++
++```bash
++CLUSTER_NAME=startup-devops-baseline-test \
++CONFIRM_POSTGRES_FAILOVER=failover-primary \
++  ./scripts/run-cloudnative-pg-failover-test.sh
++```
++
++This verifies committed data before and after primary replacement and confirms
++that demo-api database access recovers. It does not simulate an Availability
++Zone loss.
++
++### 7. Destroy aws-test
++
++Destroy as soon as the runtime evidence and recovery timestamps are safely
++recorded:
++
++```bash
++CONFIRM_AWS_ENVIRONMENT_DESTROY=destroy-aws-test-with-backups \
++  ./scripts/destroy-aws-test.sh
++```
++
++The destroy sequence suspends Argo CD automation, removes CloudNativePG and
++its PVCs, waits for EBS deletion, deletes Karpenter capacity, removes Route 53
++and Ingress resources, waits for load-balancer release, and finally runs the
++independent test Terraform destroy.
++
++### 8. Prove cost cleanup
++
++```bash
++AWS_ENVIRONMENT=aws-test \
++  ./scripts/validate-aws-cost-cleanup.sh
++```
++
++The audit checks Terraform state, EKS, VPC, non-terminated EC2, EBS, NAT
++Gateways, Elastic IPs, the backup bucket, the EKS log group, ACM certificate,
++Route 53 Alias, and currently tagged regional resources. The aws-test Secret
++uses a seven-day recovery window: a returned `DeletedDate` is an accepted
++tombstone, while an active Secret is a failure. AWS documents `DeletedDate` as
++the scheduled deletion date:
++<https://docs.aws.amazon.com/cli/latest/reference/secretsmanager/describe-secret.html>.
++AWS also states that Secrets marked for deletion are not charged during the
++recovery window:
++<https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_delete-secret.html>.
++
++The Resource Groups Tagging API is a secondary sweep, not the only inventory
++source, because it returns tagged resources supported by that API. Exact
++service checks remain authoritative:
++<https://docs.aws.amazon.com/cli/latest/reference/resourcegroupstaggingapi/get-resources.html>.
++
++If the audit fails, do not mark v0.9 complete. Resolve the named residual and
++rerun the audit; do not delete Terraform state to hide it.
++
++### 9. Record final v0.9 evidence
++
++After the cleanup audit passes, create the final record using the actual UTC
++timestamps and reviewed evidence paths:
++
++```bash
++EVIDENCE_ACTOR=SterlingAureum \
++DEV_RUNTIME_EVIDENCE_FILE=evidence/demo-api/runtime/aws-dev/<id>.json \
++TEST_RELEASE_EVIDENCE_FILE=evidence/demo-api/aws-test/<run-id>.json \
++TEST_RUNTIME_EVIDENCE_FILE=evidence/demo-api/runtime/aws-test/<id>.json \
++FAILOVER_COMPLETED_AT=<UTC timestamp> \
++TEST_DESTROY_COMPLETED_AT=<UTC timestamp> \
++COST_AUDIT_COMPLETED_AT=<UTC timestamp> \
++  ./scripts/write-v0.9-final-evidence.sh
++
++EVIDENCE_FILE=evidence/v0.9/final/<id>.json \
++  ./scripts/validate-v0.9-final-evidence.sh
++```
++
++The final record must be reviewed and merged. It proves the sequential
++portfolio lifecycle; it does not claim that aws-prod was created or that the
++repository has the full v1.0 observability and remote-state platform.
++
++## Failure recovery
++
++| Failure point | Safe continuation |
++|---|---|
++| Terraform apply interrupted | Inspect `terraform state list`, then rerun with `AWS_TEST_APPLY_MODE=resume` |
++| Workstation IP changes | Rerun the guarded endpoint CIDR script with aws-test `TF_DIR` and cluster overrides |
++| Argo CD bootstrap interrupted | Rerun `bootstrap-aws-test.sh`; operations are declarative |
++| Rollout AnalysisRun fails | Inspect, abort or roll back; never force a failed analysis forward |
++| Destroy blocked by ALB | Restore cluster access, remove Ingress/finalizers through the controller, then rerun destroy |
++| Cleanup audit reports residuals | Remove the exact named resource through Terraform/controller ownership, then rerun audit |
++
++Do not respond to a partial failure by deleting local Terraform state,
++recreating aws-test under a new name, widening the EKS endpoint to
++`0.0.0.0/0`, or manually deleting arbitrary tagged resources.
+diff --git a/docs/ENVIRONMENT_MODEL.md b/docs/ENVIRONMENT_MODEL.md
+index 98f1267f3614f131ea4102a5b3ba5d02b8a22601..636036f160fc1a7334d5c247ea73ad5c48080fc6 100644
+--- a/docs/ENVIRONMENT_MODEL.md
++++ b/docs/ENVIRONMENT_MODEL.md
+@@ -152,6 +152,15 @@ The repository does not require three EKS clusters to run continuously:
+ This sequential model proves independent lifecycles without turning the
+ portfolio environment into three permanent sources of AWS cost.
+ 
++v0.9.6 makes that lifecycle executable through guarded phase-specific
++entrypoints. `apply-aws-test.sh` creates or deliberately resumes only the
++independent test root; `bootstrap-aws-test.sh` applies reviewed GitOps state;
++the governed workflow performs the dev-to-test release transition;
++`destroy-aws-test.sh` removes controller-owned dependencies before Terraform;
++and `validate-aws-cost-cleanup.sh` must pass before final evidence is recorded.
++The destroy entrypoint rejects aws-prod because the production declaration is
++not a disposable portfolio target.
++
+ ## Deliberate Differences
+ 
+ | Concern | local | aws-dev | aws-test | aws-prod |
+diff --git a/docs/MULTI_ENVIRONMENT_GITOPS_MODEL.md b/docs/MULTI_ENVIRONMENT_GITOPS_MODEL.md
+index adb8b3149430e43943ce658d9b104af821770c0c..f21502ac37ed727ec50497e28c28a50b9bc66bfc 100644
+--- a/docs/MULTI_ENVIRONMENT_GITOPS_MODEL.md
++++ b/docs/MULTI_ENVIRONMENT_GITOPS_MODEL.md
+@@ -315,13 +315,37 @@ v0.9.5 delivers:
+ 
+ It does not create test or production resources, claim a live canary passed,
+ deploy the v1.0 observability platform, merge a Promotion PR, or widen the EKS
+-endpoint allowlist. Clean-room live execution and cost cleanup remain v0.9.6.
++endpoint allowlist. Clean-room live execution and cost cleanup were deferred to
++v0.9.6.
++
++## v0.9.6 Implementation Boundary
++
++v0.9.6 delivers:
++
++- a guarded create/resume entrypoint for the independent ephemeral aws-test
++  Terraform root using a runtime-only workstation `/32`;
++- environment-aware GitOps bootstrap and reviewed completion of the aws-test
++  ALB Rollout without granting GitHub-hosted runners EKS access;
++- aws-test runtime, database, HTTPS, immutable-release, and CloudNativePG
++  primary-failover acceptance steps;
++- dependency-aware dev/test destruction that explicitly refuses aws-prod;
++- exact post-destroy checks for continuing AWS cost identities plus a tagged
++  regional-resource sweep and an accepted Secret recovery-window tombstone;
++- tamper-evident final evidence binding reviewed dev/test records, one
++  immutable artifact, failure recovery, destroy, cleanup, and static-only
++  production validation.
++
++The implementation does not claim that aws-test was created merely because
++the scripts and CI pass. v0.9 reaches final acceptance only after the live
++sequence, reviewed evidence, destroy, and cleanup audit complete. It does not
++apply aws-prod, add remote Terraform state, deploy the v1.0 observability
++platform, or make test a permanent cost source.
+ 
+ ## Deferred Decisions
+ 
+ The following work belongs to later increments:
+ 
+-- clean-room dev/test execution and final v0.9 evidence in v0.9.6;
++- live clean-room dev/test execution and reviewed final v0.9 evidence;
+ - remote Terraform state bootstrap, full observability, and long-term
+   operational readiness in v1.0.
+ 
+diff --git a/docs/ROADMAP.md b/docs/ROADMAP.md
+index 28e4d5484be34992430342f7a1380c820907dd56..d7b98a03380d49c3a22b042f816216a536d7592a 100644
+--- a/docs/ROADMAP.md
++++ b/docs/ROADMAP.md
+@@ -194,8 +194,9 @@ Incremental scope:
+   approvals, CODEOWNERS, and environment-scoped rollback governance - delivered
+ - v0.9.5 - AWS test/prod progressive delivery with ALB, Argo Rollouts,
+   release-bound AnalysisRuns, and reviewed runtime evidence - delivered
+-- v0.9.6 - clean-room dev/test sequence, production static validation, cost
+-  cleanup, and final documentation
++- v0.9.6 - clean-room dev/test sequence, production static validation, guarded
++  recovery/teardown, cost-residual audit, and final evidence - implemented;
++  live aws-test acceptance pending
+ 
+ ## v1.0 - Observability and Production Readiness Baseline
+ 
+diff --git a/docs/archive/V0.9.6_CLEAN_ROOM_MULTI_ENVIRONMENT_VALIDATION.md b/docs/archive/V0.9.6_CLEAN_ROOM_MULTI_ENVIRONMENT_VALIDATION.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..3b525b0b132cfe1414706fcd03c96d49fccd009a
+--- /dev/null
++++ b/docs/archive/V0.9.6_CLEAN_ROOM_MULTI_ENVIRONMENT_VALIDATION.md
+@@ -0,0 +1,60 @@
++# v0.9.6 Clean-Room Multi-Environment Validation
++
++## Status
++
++Implementation complete; live aws-test acceptance evidence pending.
++
++## Purpose
++
++Close the v0.9 multi-environment baseline with one reproducible and
++cost-bounded live sequence:
++
++```text
++reviewed main
++  -> re-qualify aws-dev
++  -> create isolated aws-test
++  -> promote one immutable digest
++  -> complete ALB canary and AnalysisRun
++  -> exercise PostgreSQL primary recovery
++  -> destroy aws-test
++  -> prove no continuing cost resources remain
++```
++
++aws-prod remains a complete Terraform, Kustomize, Helm, promotion, approval,
++rollback, and progressive-delivery declaration. Live production creation is
++not required for the portfolio v0.9 checkpoint.
++
++## Delivered controls
++
++- guarded create/resume apply for the independent aws-test Terraform root;
++- environment-aware bootstrap and existing root deployment reuse;
++- reviewed manual aws-test rollout completion with bounded pause count;
++- aws-test GitOps, PostgreSQL, HTTPS, and runtime-evidence validation;
++- generalized dev/test teardown that rejects aws-prod;
++- exact AWS residual checks plus a tag-based secondary sweep;
++- accepted Secrets Manager recovery-window tombstone semantics;
++- final v0.9 evidence schema binding dev/test records to one artifact;
++- final evidence hash, lifecycle ordering, tamper, and sensitive-field checks;
++- failure recovery guidance that preserves Terraform and controller ownership.
++
++## Acceptance still required
++
++The implementation itself does not claim a live test. v0.9 is complete only
++after the operator:
++
++1. runs the sequence from reviewed `main`;
++2. merges fresh aws-dev and aws-test evidence;
++3. completes the CloudNativePG failover drill;
++4. destroys aws-test;
++5. passes the residual-cost audit; and
++6. merges a valid v0.9.6 final evidence record.
++
++## Non-goals
++
++- no permanently running test or production portfolio cluster;
++- no live aws-prod apply;
++- no automatic canary promotion or automatic PR merge;
++- no GitHub-hosted EKS access;
++- no workstation public IP in Git;
++- no remote Terraform state, full observability, SLO, or logging platform;
++- no Secret, database, backup, certificate, or state promotion.
+diff --git a/evidence/v0.9/README.md b/evidence/v0.9/README.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..e76acaa5e6805fe77434c1b9e73d9b9c5e037682
+--- /dev/null
++++ b/evidence/v0.9/README.md
+@@ -0,0 +1,29 @@
++# v0.9 Final Validation Evidence
++
++The `final/` directory contains reviewed v0.9.6 closure records generated only
++after the ephemeral aws-test environment has been exercised, destroyed, and
++checked for residual AWS resources.
++
++Each record references, but does not duplicate, the reviewed aws-dev runtime,
++aws-test release, and aws-test runtime evidence. It stores SHA-256 hashes,
++immutable artifact identity, ordered lifecycle timestamps, and the explicit
++decision that aws-prod remained statically validated in v0.9.
++
++Generate and validate a record with:
++
++```bash
++EVIDENCE_ACTOR=SterlingAureum \
++DEV_RUNTIME_EVIDENCE_FILE=evidence/demo-api/runtime/aws-dev/<id>.json \
++TEST_RELEASE_EVIDENCE_FILE=evidence/demo-api/aws-test/<run-id>.json \
++TEST_RUNTIME_EVIDENCE_FILE=evidence/demo-api/runtime/aws-test/<id>.json \
++FAILOVER_COMPLETED_AT=<UTC timestamp> \
++TEST_DESTROY_COMPLETED_AT=<UTC timestamp> \
++COST_AUDIT_COMPLETED_AT=<UTC timestamp> \
++  ./scripts/write-v0.9-final-evidence.sh
++
++EVIDENCE_FILE=evidence/v0.9/final/<id>.json \
++  ./scripts/validate-v0.9-final-evidence.sh
++```
++
++Never store account identifiers, public management IPs, credentials, Secret
++values, kubeconfig content, or raw Terraform state in this directory.
+diff --git a/infra/terraform/aws/README.md b/infra/terraform/aws/README.md
+index ed050689810824398ad6761ca5b1fa96706bbe1d..b8560ae180fff9dc1d1c3293b52834973188b3b7 100644
+--- a/infra/terraform/aws/README.md
++++ b/infra/terraform/aws/README.md
+@@ -6,7 +6,7 @@ foundation introduced in v0.5.5, the CloudNativePG S3 backup foundation
+ introduced in v0.6.3, the External Secrets AWS foundation introduced in
+ v0.8.3, and the ACM/control-plane hardening foundation introduced in v0.8.6.
+ 
+-## Current repository scope: v0.9.2
++## Current repository scope: v0.9.6
+ 
+ Terraform owns stable AWS infrastructure and identity. Argo CD owns the
+ Kubernetes controllers and application resources, while guarded scripts
+@@ -83,8 +83,32 @@ It supplies the current `/32` only for the Terraform execution. EKS is pinned
+ to 1.36 for
+ compatibility with Karpenter 1.14.x. Review the complete plan because this
+ environment creates billable EKS and EC2 resources. Creating the dev/test FIS
+-template does not start an experiment. Do not apply test or prod merely to
+-satisfy the v0.9.2 checkpoint; their required acceptance is static.
++template does not start an experiment. v0.9.6 requires one bounded aws-test
++clean-room apply after the implementation reaches reviewed `main`; aws-prod
++remains statically validated and must not be applied merely to close the
++portfolio checkpoint.
++
++Use the guarded test entrypoint rather than supplying a workstation address in
++tracked configuration:
++
++```bash
++CONFIRM_AWS_TEST_APPLY=apply-ephemeral-aws-test \
++  ./scripts/apply-aws-test.sh
++```
++
++After runtime and recovery validation, destroy the temporary environment and
++require the residual audit to pass:
++
++```bash
++CONFIRM_AWS_ENVIRONMENT_DESTROY=destroy-aws-test-with-backups \
++  ./scripts/destroy-aws-test.sh
++
++AWS_ENVIRONMENT=aws-test \
++  ./scripts/validate-aws-cost-cleanup.sh
++```
++
++See `docs/AWS_MULTI_ENVIRONMENT_LIFECYCLE.md` for the complete ordered
++acceptance and safe continuation steps.
+ 
+ ## Configure kubectl after apply
+ 
+diff --git a/scripts/apply-aws-test.sh b/scripts/apply-aws-test.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..414044ff810bcfc3e5a703a3c172780e70974c68
+--- /dev/null
++++ b/scripts/apply-aws-test.sh
+@@ -0,0 +1,100 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++umask 077
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++AWS_ENVIRONMENT="aws-test"
++# shellcheck source=scripts/aws-environment-context.sh
++source "${ROOT_DIR}/scripts/aws-environment-context.sh"
++configure_aws_environment_context
++
++IP_DISCOVERY_URL="${IP_DISCOVERY_URL:-https://checkip.amazonaws.com}"
++APPLY_MODE="${AWS_TEST_APPLY_MODE:-create}"
++PLAN_FILE="$(mktemp "${TMPDIR:-/tmp}/v096-aws-test.XXXXXX.tfplan")"
++trap 'rm -f -- "${PLAN_FILE}"' EXIT
++
++for command in aws curl git python3 terraform; do
++  command -v "${command}" >/dev/null 2>&1 || {
++    echo "Required command not found: ${command}" >&2
++    exit 1
++  }
++done
++
++if [[ "${APPLY_MODE}" != "create" && "${APPLY_MODE}" != "resume" ]]; then
++  echo "AWS_TEST_APPLY_MODE must be create or resume." >&2
++  exit 1
++fi
++if [[ "$(git -C "${ROOT_DIR}" branch --show-current)" != "main" ]] ||
++   [[ -n "$(git -C "${ROOT_DIR}" status --porcelain)" ]]; then
++  echo "Run the aws-test clean-room apply from a clean main worktree." >&2
++  exit 1
++fi
++
++if [[ "${CONFIRM_AWS_TEST_APPLY:-}" != "apply-ephemeral-aws-test" ]]; then
++  cat >&2 <<'EOF'
++This creates billable aws-test resources: EKS, EC2, NAT Gateway, EBS, S3,
++Secrets Manager, CloudWatch, and related networking. The environment is
++ephemeral and must be destroyed after evidence collection.
++
++Re-run with CONFIRM_AWS_TEST_APPLY=apply-ephemeral-aws-test.
++EOF
++  exit 1
++fi
++
++PUBLIC_IP="${MANAGEMENT_PUBLIC_IP:-}"
++if [[ -z "${PUBLIC_IP}" ]]; then
++  PUBLIC_IP="$(curl --proto '=https' --tlsv1.2 --fail --silent --show-error "${IP_DISCOVERY_URL}")"
++fi
++PUBLIC_IP="$(python3 - "${PUBLIC_IP}" <<'PY'
++import ipaddress
++import sys
++
++address = ipaddress.ip_address(sys.argv[1].strip())
++if address.version != 4 or not address.is_global:
++    raise SystemExit("The management address must be a globally routable IPv4 address.")
++print(address)
++PY
++)"
++MANAGEMENT_CIDR="${PUBLIC_IP}/32"
++
++echo "==> Verifying AWS identity"
++aws sts get-caller-identity >/dev/null
++
++echo "==> Initializing the independent aws-test Terraform root"
++terraform -chdir="${TF_DIR}" init -input=false
++
++STATE_LIST="$(terraform -chdir="${TF_DIR}" state list 2>/dev/null || true)"
++STATE_COUNT="$(sed '/^$/d' <<<"${STATE_LIST}" | wc -l | tr -d ' ')"
++if [[ "${APPLY_MODE}" == "create" && "${STATE_COUNT}" != "0" ]]; then
++  echo "aws-test Terraform state is not empty; use AWS_TEST_APPLY_MODE=resume only after reviewing the existing state." >&2
++  exit 1
++fi
++
++if [[ "${APPLY_MODE}" == "create" ]] &&
++   aws eks describe-cluster --region "${AWS_REGION}" --name "${CLUSTER_NAME}" >/dev/null 2>&1; then
++  echo "${CLUSTER_NAME} already exists; refusing a create-mode apply." >&2
++  exit 1
++fi
++
++echo "==> Planning aws-test with a runtime-only EKS management /32"
++terraform -chdir="${TF_DIR}" plan \
++  -input=false \
++  -out="${PLAN_FILE}" \
++  -var="eks_public_access_cidrs=[\"${MANAGEMENT_CIDR}\"]"
++
++echo "==> Applying reviewed aws-test plan"
++terraform -chdir="${TF_DIR}" apply -input=false "${PLAN_FILE}"
++aws eks wait cluster-active --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
++
++ACTUAL_CIDRS="$(aws eks describe-cluster \
++  --region "${AWS_REGION}" \
++  --name "${CLUSTER_NAME}" \
++  --query 'cluster.resourcesVpcConfig.publicAccessCidrs' \
++  --output text)"
++if [[ "${ACTUAL_CIDRS}" != "${MANAGEMENT_CIDR}" ]]; then
++  echo "EKS returned an unexpected endpoint allowlist: ${ACTUAL_CIDRS}" >&2
++  exit 1
++fi
++
++echo "aws-test Terraform apply passed. The management address remained runtime-only."
++echo "Next: ./scripts/bootstrap-aws-test.sh"
+diff --git a/scripts/aws-environment-context.sh b/scripts/aws-environment-context.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..dd286470ed4314975a872e06a9da637798b2325b
+--- /dev/null
++++ b/scripts/aws-environment-context.sh
+@@ -0,0 +1,51 @@
++#!/usr/bin/env bash
++
++# Source this file after ROOT_DIR is defined. It maps the repository's public
++# aws-* environment identity to the corresponding Terraform and GitOps names.
++configure_aws_environment_context() {
++  if [[ -z "${ROOT_DIR:-}" ]]; then
++    echo "ROOT_DIR must be set before sourcing aws-environment-context.sh." >&2
++    return 1
++  fi
++
++  case "${AWS_ENVIRONMENT:-}" in
++    aws-dev)
++      ENVIRONMENT_SHORT="dev"
++      CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
++      ROOT_APPLICATION="${ROOT_APPLICATION:-startup-devops-aws-dev-root}"
++      DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-dev}"
++      DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.dev.aureumstack.com}"
++      EKS_CLUSTER_LOG_RETENTION_DAYS="${EKS_CLUSTER_LOG_RETENTION_DAYS:-14}"
++      ;;
++    aws-test)
++      ENVIRONMENT_SHORT="test"
++      CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-test}"
++      ROOT_APPLICATION="${ROOT_APPLICATION:-startup-devops-aws-test-root}"
++      DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-test}"
++      DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.test.aureumstack.com}"
++      EKS_CLUSTER_LOG_RETENTION_DAYS="${EKS_CLUSTER_LOG_RETENTION_DAYS:-30}"
++      ;;
++    aws-prod)
++      ENVIRONMENT_SHORT="prod"
++      CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-prod}"
++      ROOT_APPLICATION="${ROOT_APPLICATION:-startup-devops-aws-prod-root}"
++      DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-prod}"
++      DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.prod.aureumstack.com}"
++      EKS_CLUSTER_LOG_RETENTION_DAYS="${EKS_CLUSTER_LOG_RETENTION_DAYS:-90}"
++      ;;
++    *)
++      echo "AWS_ENVIRONMENT must be aws-dev, aws-test, or aws-prod." >&2
++      return 1
++      ;;
++  esac
++
++  TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/${ENVIRONMENT_SHORT}}"
++  SOURCE_FILE="${SOURCE_FILE:-${ROOT_DIR}/clusters/aws/overlays/${ENVIRONMENT_SHORT}/root-app.yaml}"
++  AWS_REGION="${AWS_REGION:-us-east-1}"
++  PROJECT_NAME="${PROJECT_NAME:-startup-devops-baseline}"
++  HOSTED_ZONE_NAME="${HOSTED_ZONE_NAME:-aureumstack.com}"
++
++  export AWS_REGION CLUSTER_NAME DEMO_APPLICATION DEMO_HOSTNAME
++  export ENVIRONMENT_SHORT EKS_CLUSTER_LOG_RETENTION_DAYS HOSTED_ZONE_NAME
++  export PROJECT_NAME ROOT_APPLICATION SOURCE_FILE TF_DIR
++}
+diff --git a/scripts/bootstrap-aws-test.sh b/scripts/bootstrap-aws-test.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..c111d65a5876fa2607b58e87db7b1f40787bf261
+--- /dev/null
++++ b/scripts/bootstrap-aws-test.sh
+@@ -0,0 +1,43 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++AWS_ENVIRONMENT="aws-test"
++# shellcheck source=scripts/aws-environment-context.sh
++source "${ROOT_DIR}/scripts/aws-environment-context.sh"
++configure_aws_environment_context
++
++if [[ "${CONFIRM_AWS_TEST_BOOTSTRAP:-}" != "bootstrap-ephemeral-aws-test" ]]; then
++  cat >&2 <<'EOF'
++This bootstraps Argo CD and applies the aws-test root Application to the
++ephemeral EKS cluster. Run only after reviewing the aws-test Terraform apply.
++
++Re-run with CONFIRM_AWS_TEST_BOOTSTRAP=bootstrap-ephemeral-aws-test.
++EOF
++  exit 1
++fi
++
++if [[ "$(git -C "${ROOT_DIR}" branch --show-current)" != "main" ]] ||
++   [[ -n "$(git -C "${ROOT_DIR}" status --porcelain)" ]]; then
++  echo "Run aws-test bootstrap from a clean main worktree." >&2
++  exit 1
++fi
++
++AWS_REGION="${AWS_REGION}" \
++CLUSTER_NAME="${CLUSTER_NAME}" \
++TF_DIR="${TF_DIR}" \
++  "${ROOT_DIR}/scripts/bootstrap-eks-argocd.sh"
++
++AWS_REGION="${AWS_REGION}" \
++CLUSTER_NAME="${CLUSTER_NAME}" \
++TF_DIR="${TF_DIR}" \
++ROOT_APPLICATION="${ROOT_APPLICATION}" \
++DEMO_APPLICATION="${DEMO_APPLICATION}" \
++DEMO_HOSTNAME="${DEMO_HOSTNAME}" \
++SOURCE_FILE="${SOURCE_FILE}" \
++DEMO_ACCEPTED_HEALTH_STATUSES="Healthy,Suspended,Progressing" \
++TARGET_REVISION="main" \
++  "${ROOT_DIR}/scripts/deploy-aws-dev-root-app.sh"
++
++echo "aws-test GitOps bootstrap reached a reviewable runtime state."
++echo "Promote aws-dev -> aws-test through the governed workflow, then complete the canary."
+diff --git a/scripts/complete-aws-test-rollout.sh b/scripts/complete-aws-test-rollout.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..4785aa02b59cc685269db8b4752d46907e90cebe
+--- /dev/null
++++ b/scripts/complete-aws-test-rollout.sh
+@@ -0,0 +1,61 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++AWS_ENVIRONMENT="aws-test"
++# shellcheck source=scripts/aws-environment-context.sh
++source "${ROOT_DIR}/scripts/aws-environment-context.sh"
++configure_aws_environment_context
++
++NAMESPACE="${NAMESPACE:-startup-apps}"
++ROLLOUT_NAME="${ROLLOUT_NAME:-demo-api}"
++WAIT_SECONDS="${WAIT_SECONDS:-1200}"
++
++for command in aws jq kubectl; do
++  command -v "${command}" >/dev/null 2>&1 || {
++    echo "Required command not found: ${command}" >&2
++    exit 1
++  }
++done
++
++if [[ "${CONFIRM_AWS_TEST_ROLLOUT:-}" != "promote-reviewed-aws-test" ]]; then
++  echo "Set CONFIRM_AWS_TEST_ROLLOUT=promote-reviewed-aws-test after reviewing the live canary and AnalysisRun." >&2
++  exit 1
++fi
++
++aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}" >/dev/null
++
++deadline=$((SECONDS + WAIT_SECONDS))
++promotion_count=0
++while true; do
++  rollout_json="$(kubectl get rollout "${ROLLOUT_NAME}" -n "${NAMESPACE}" -o json)"
++  phase="$(jq -r '.status.phase // ""' <<<"${rollout_json}")"
++  if [[ "${phase}" == "Healthy" ]]; then
++    break
++  fi
++  if (( SECONDS >= deadline )); then
++    echo "Timed out waiting for the aws-test Rollout to become Healthy." >&2
++    exit 1
++  fi
++
++  manual_pause="$(jq -r '
++    (.status.currentStepIndex // 0) as $index |
++    (.spec.strategy.canary.steps[$index].pause? // null) as $pause |
++    ($pause != null and ($pause.duration? // "") == "")
++  ' <<<"${rollout_json}")"
++  if [[ "${manual_pause}" == "true" ]]; then
++    echo "==> Live Rollout reached the explicit manual pause; promoting the reviewed step"
++    kubectl argo rollouts promote "${ROLLOUT_NAME}" -n "${NAMESPACE}" >/dev/null
++    promotion_count=$((promotion_count + 1))
++    if (( promotion_count > 3 )); then
++      echo "Unexpected number of manual pauses; refusing further promotion." >&2
++      exit 1
++    fi
++  fi
++  sleep 10
++done
++
++kubectl get application "${DEMO_APPLICATION}" -n argocd -o json |
++  jq --exit-status '.status.sync.status == "Synced" and .status.health.status == "Healthy"' >/dev/null
++
++echo "aws-test Rollout completed after ${promotion_count} reviewed manual promotion(s)."
+diff --git a/scripts/deploy-aws-dev-root-app.sh b/scripts/deploy-aws-dev-root-app.sh
+index 1b63bcbfde703d126a8dd964f188ded2df666938..81efc5729c46a58893106adf539d76d84ea79cad 100755
+--- a/scripts/deploy-aws-dev-root-app.sh
++++ b/scripts/deploy-aws-dev-root-app.sh
+@@ -19,6 +19,7 @@ DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-dev}"
+ DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
+ DEMO_DATABASE_SECRET="${DEMO_DATABASE_SECRET:-demo-api-postgresql}"
+ DEMO_WAIT_SECONDS="${DEMO_WAIT_SECONDS:-900}"
++DEMO_ACCEPTED_HEALTH_STATUSES="${DEMO_ACCEPTED_HEALTH_STATUSES:-Healthy}"
+ EXTERNAL_SECRETS_NAMESPACE="${EXTERNAL_SECRETS_NAMESPACE:-external-secrets}"
+ EXTERNAL_SECRETS_SERVICE_ACCOUNT="${EXTERNAL_SECRETS_SERVICE_ACCOUNT:-external-secrets}"
+ EXTERNAL_SECRETS_APPLICATION="${EXTERNAL_SECRETS_APPLICATION:-external-secrets}"
+@@ -398,22 +399,30 @@ if ! kubectl wait \
+     "Timed out waiting for demo-api Application ${DEMO_APPLICATION} to become Synced."
+ fi
+ 
+-if ! kubectl wait \
+-  --for=jsonpath='{.status.health.status}'=Healthy \
+-  "application/${DEMO_APPLICATION}" \
+-  --namespace argocd \
+-  --timeout="${DEMO_WAIT_SECONDS}s"; then
+-  fail_deployment \
+-    "Timed out waiting for demo-api Application ${DEMO_APPLICATION} to become Healthy."
+-fi
++echo "==> Waiting for demo-api Application health (${DEMO_ACCEPTED_HEALTH_STATUSES})"
++deadline=$((SECONDS + DEMO_WAIT_SECONDS))
++while true; do
++  demo_health="$(kubectl get application "${DEMO_APPLICATION}" \
++    --namespace argocd \
++    --output jsonpath='{.status.health.status}' 2>/dev/null || true)"
++  case ",${DEMO_ACCEPTED_HEALTH_STATUSES}," in
++    *",${demo_health},"*) break ;;
++  esac
++  if (( SECONDS >= deadline )); then
++    fail_deployment \
++      "Timed out waiting for demo-api Application ${DEMO_APPLICATION} to reach an accepted health state."
++  fi
++  sleep 10
++done
+ 
+ echo "==> Reconciling the stable demo-api hostname to the live ALB"
+ AWS_REGION="${AWS_REGION}" \
+ CLUSTER_NAME="${CLUSTER_NAME}" \
+ APP_NAMESPACE="${DEMO_NAMESPACE}" \
++DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.dev.aureumstack.com}" \
+   "${RECONCILE_DEMO_API_DNS_SCRIPT}"
+ 
+-echo "Applied aws-dev root application"
++echo "Applied ${ROOT_APPLICATION}"
+ echo "Repository: ${REPO_URL}"
+ echo "Revision:   ${TARGET_REVISION}"
+ echo "Backup S3:  s3://${BACKUP_BUCKET}/postgresql-baseline"
+diff --git a/scripts/destroy-aws-dev.sh b/scripts/destroy-aws-dev.sh
+index 1cd56f660c61f29bea9108dede7beacfd509e68e..fcfaa6fd5ce65721e6c5138136f9cc1d9f59cd26 100755
+--- a/scripts/destroy-aws-dev.sh
++++ b/scripts/destroy-aws-dev.sh
+@@ -2,10 +2,16 @@
+ set -Eeuo pipefail
+ 
+ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+-TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/dev}"
+-AWS_REGION="${AWS_REGION:-us-east-1}"
+-CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
+-ROOT_APPLICATION="${ROOT_APPLICATION:-startup-devops-aws-dev-root}"
++AWS_ENVIRONMENT="${AWS_ENVIRONMENT:-aws-dev}"
++# shellcheck source=scripts/aws-environment-context.sh
++source "${ROOT_DIR}/scripts/aws-environment-context.sh"
++configure_aws_environment_context
++
++if [[ "${AWS_ENVIRONMENT}" == "aws-prod" ]]; then
++  echo "This portfolio destroy entrypoint refuses aws-prod." >&2
++  exit 1
++fi
++
+ ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
+ APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
+ POSTGRES_APPLICATION="${POSTGRES_APPLICATION:-postgresql-baseline}"
+@@ -31,7 +37,7 @@ for command_name in aws jq kubectl terraform; do
+ done
+ 
+ cat <<EOF
+-WARNING: this operation will destroy the aws-dev environment.
++WARNING: this operation will destroy the ${AWS_ENVIRONMENT} environment.
+ 
+ Cluster: ${CLUSTER_NAME}
+ Region: ${AWS_REGION}
+@@ -40,19 +46,41 @@ Terraform directory: ${TF_DIR}
+ Expected resources include EKS, EC2 nodes, NAT Gateway, VPC, ALB-related
+ resources, applications, and the CloudNativePG S3 backup bucket.
+ 
+-The aws-dev backup bucket uses force_destroy=true. Terraform will permanently
++The ${AWS_ENVIRONMENT} backup bucket uses force_destroy=true. Terraform will permanently
+ delete all base backups, WAL archives, current objects, and noncurrent object
+ versions.
+-
+-Type 'destroy-with-backups' to continue:
+ EOF
+ 
+-read -r confirmation
+-if [[ "${confirmation}" != "destroy-with-backups" ]]; then
++if [[ "${AWS_ENVIRONMENT}" == "aws-dev" ]]; then
++  expected_confirmation="destroy-with-backups"
++else
++  expected_confirmation="destroy-aws-test-with-backups"
++fi
++echo "Type '${expected_confirmation}' to continue:"
++
++if [[ -n "${CONFIRM_AWS_ENVIRONMENT_DESTROY:-}" ]]; then
++  confirmation="${CONFIRM_AWS_ENVIRONMENT_DESTROY}"
++else
++  read -r confirmation
++fi
++if [[ "${confirmation}" != "${expected_confirmation}" ]]; then
+   echo "Destroy cancelled."
+   exit 0
+ fi
+ 
++EKS_PUBLIC_ACCESS_CIDRS_JSON="$(aws eks describe-cluster \
++  --region "${AWS_REGION}" \
++  --name "${CLUSTER_NAME}" \
++  --query 'cluster.resourcesVpcConfig.publicAccessCidrs' \
++  --output json | jq -c '.')"
++jq --exit-status '
++  type == "array" and length > 0 and
++  all(.[]; test("^[0-9./]+$") and . != "0.0.0.0/0")
++' <<<"${EKS_PUBLIC_ACCESS_CIDRS_JSON}" >/dev/null || {
++  echo "The live EKS public endpoint allowlist is empty, open, or invalid." >&2
++  exit 1
++}
++
+ aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
+ 
+ ROOT_APPLICATION_EXISTS=false
+@@ -179,7 +207,11 @@ if kubectl get crd ec2nodeclasses.karpenter.k8s.aws >/dev/null 2>&1; then
+ fi
+ 
+ echo "==> Deleting the demo-api Route 53 Alias before the ALB"
+-DNS_ACTION=delete "${RECONCILE_DNS_SCRIPT}"
++AWS_REGION="${AWS_REGION}" \
++CLUSTER_NAME="${CLUSTER_NAME}" \
++DEMO_HOSTNAME="${DEMO_HOSTNAME}" \
++DNS_ACTION=delete \
++  "${RECONCILE_DNS_SCRIPT}"
+ 
+ if [[ "${ROOT_APPLICATION_EXISTS}" == "true" ]]; then
+   kubectl delete application "${ROOT_APPLICATION}" -n "${ARGOCD_NAMESPACE}" --wait=false
+@@ -206,6 +238,8 @@ done
+ 
+ sleep 30
+ kubectl get service -A --field-selector spec.type=LoadBalancer || true
+-terraform -chdir="${TF_DIR}" destroy
++terraform -chdir="${TF_DIR}" destroy \
++  -var="eks_public_access_cidrs=${EKS_PUBLIC_ACCESS_CIDRS_JSON}"
+ 
+-echo "Destroy completed. Review AWS for unexpected residual load balancers, NAT Gateways, or Elastic IPs."
++echo "${AWS_ENVIRONMENT} destroy completed."
++echo "Next: AWS_ENVIRONMENT=${AWS_ENVIRONMENT} ./scripts/validate-aws-cost-cleanup.sh"
+diff --git a/scripts/destroy-aws-test.sh b/scripts/destroy-aws-test.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..479b145691f796ac6c123635af74078faf0d005a
+--- /dev/null
++++ b/scripts/destroy-aws-test.sh
+@@ -0,0 +1,5 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++AWS_ENVIRONMENT="aws-test" exec "${ROOT_DIR}/scripts/destroy-aws-dev.sh"
+diff --git a/scripts/validate-aws-cost-cleanup.sh b/scripts/validate-aws-cost-cleanup.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..227cb105dfe8ff91ea4cb0b8d2609409b256ee3a
+--- /dev/null
++++ b/scripts/validate-aws-cost-cleanup.sh
+@@ -0,0 +1,148 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++# shellcheck source=scripts/aws-environment-context.sh
++source "${ROOT_DIR}/scripts/aws-environment-context.sh"
++configure_aws_environment_context
++
++if [[ "${AWS_ENVIRONMENT}" == "aws-prod" ]]; then
++  echo "This portfolio cleanup audit does not treat aws-prod as disposable." >&2
++  exit 1
++fi
++
++for command in aws jq terraform; do
++  command -v "${command}" >/dev/null 2>&1 || {
++    echo "Required command not found: ${command}" >&2
++    exit 1
++  }
++done
++
++failures=()
++record_count() {
++  local label="$1"
++  local count="$2"
++  if [[ ! "${count}" =~ ^[0-9]+$ ]]; then
++    echo "Unexpected count for ${label}: ${count}" >&2
++    exit 1
++  fi
++  if (( count > 0 )); then
++    failures+=("${label}: ${count}")
++  fi
++}
++
++echo "==> Verifying AWS identity and Terraform state"
++ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
++[[ "${ACCOUNT_ID}" =~ ^[0-9]{12}$ ]] || {
++  echo "AWS account identity is invalid." >&2
++  exit 1
++}
++
++if [[ -d "${TF_DIR}/.terraform" || -f "${TF_DIR}/terraform.tfstate" ]]; then
++  STATE_LIST="$(terraform -chdir="${TF_DIR}" state list 2>/dev/null || true)"
++  STATE_COUNT="$(sed '/^$/d' <<<"${STATE_LIST}" | wc -l | tr -d ' ')"
++  record_count "Terraform state resources" "${STATE_COUNT}"
++fi
++
++echo "==> Verifying exact cluster, network, compute, storage, and edge identities"
++if aws eks describe-cluster --region "${AWS_REGION}" --name "${CLUSTER_NAME}" >/dev/null 2>&1; then
++  failures+=("EKS cluster still exists: ${CLUSTER_NAME}")
++fi
++
++TAG_FILTERS=(
++  "Name=tag:Project,Values=${PROJECT_NAME}"
++  "Name=tag:Environment,Values=${ENVIRONMENT_SHORT}"
++)
++record_count "non-terminated EC2 instances" "$(aws ec2 describe-instances \
++  --region "${AWS_REGION}" \
++  --filters "${TAG_FILTERS[@]}" "Name=instance-state-name,Values=pending,running,stopping,stopped" \
++  --query 'length(Reservations[].Instances[])' --output text)"
++record_count "EBS volumes" "$(aws ec2 describe-volumes \
++  --region "${AWS_REGION}" --filters "${TAG_FILTERS[@]}" \
++  --query 'length(Volumes)' --output text)"
++record_count "NAT Gateways" "$(aws ec2 describe-nat-gateways \
++  --region "${AWS_REGION}" --filter "${TAG_FILTERS[@]}" \
++  --query 'length(NatGateways[?State!=`deleted`])' --output text)"
++record_count "Elastic IP allocations" "$(aws ec2 describe-addresses \
++  --region "${AWS_REGION}" --filters "${TAG_FILTERS[@]}" \
++  --query 'length(Addresses)' --output text)"
++record_count "VPCs" "$(aws ec2 describe-vpcs \
++  --region "${AWS_REGION}" \
++  --filters "Name=tag:Name,Values=${PROJECT_NAME}-${ENVIRONMENT_SHORT}-vpc" \
++  --query 'length(Vpcs)' --output text)"
++
++ALB_RESIDUALS="$(aws resourcegroupstaggingapi get-resources \
++  --region "${AWS_REGION}" \
++  --resource-type-filters \
++    elasticloadbalancing:loadbalancer \
++    elasticloadbalancing:targetgroup \
++  --tag-filters "Key=elbv2.k8s.aws/cluster,Values=${CLUSTER_NAME}" \
++  --query 'length(ResourceTagMappingList)' \
++  --output text)"
++record_count "ALB load balancers or target groups" "${ALB_RESIDUALS}"
++
++BUCKET_NAME="${PROJECT_NAME}-${ENVIRONMENT_SHORT}-${ACCOUNT_ID}-${AWS_REGION}-cnpg"
++if aws s3api head-bucket --bucket "${BUCKET_NAME}" >/dev/null 2>&1; then
++  failures+=("S3 backup bucket still exists: ${BUCKET_NAME}")
++fi
++
++SECRET_NAME="${PROJECT_NAME}-${ENVIRONMENT_SHORT}/demo-api/postgresql"
++if secret_json="$(aws secretsmanager describe-secret \
++  --region "${AWS_REGION}" --secret-id "${SECRET_NAME}" --output json 2>/dev/null)"; then
++  if ! jq --exit-status '.DeletedDate != null' <<<"${secret_json}" >/dev/null; then
++    failures+=("Secrets Manager secret is not scheduled for deletion: ${SECRET_NAME}")
++  else
++    echo "Secrets Manager tombstone is within its configured recovery window."
++  fi
++fi
++
++record_count "CloudWatch EKS log groups" "$(aws logs describe-log-groups \
++  --region "${AWS_REGION}" \
++  --log-group-name-prefix "/aws/eks/${CLUSTER_NAME}/cluster" \
++  --query "length(logGroups[?logGroupName=='/aws/eks/${CLUSTER_NAME}/cluster'])" \
++  --output text)"
++record_count "ACM certificates" "$(aws acm list-certificates \
++  --region "${AWS_REGION}" \
++  --query "length(CertificateSummaryList[?DomainName=='${DEMO_HOSTNAME}'])" \
++  --output text)"
++
++ZONE_ID="$(aws route53 list-hosted-zones-by-name \
++  --dns-name "${HOSTED_ZONE_NAME}" \
++  --query "HostedZones[?Name=='${HOSTED_ZONE_NAME}.'] | [0].Id" \
++  --output text | sed 's#^/hostedzone/##')"
++if [[ -n "${ZONE_ID}" && "${ZONE_ID}" != "None" ]]; then
++  ALIAS_RECORD="$(aws route53 list-resource-record-sets \
++    --hosted-zone-id "${ZONE_ID}" \
++    --query "ResourceRecordSets[?Name=='${DEMO_HOSTNAME}.' && Type=='A'] | [0]" \
++    --output json)"
++  if [[ "${ALIAS_RECORD}" != "null" ]]; then
++    failures+=("Route 53 A record still exists: ${DEMO_HOSTNAME}")
++  fi
++fi
++
++echo "==> Sweeping currently tagged regional resources"
++TAGGED_JSON="$(aws resourcegroupstaggingapi get-resources \
++  --region "${AWS_REGION}" \
++  --tag-filters \
++    "Key=Project,Values=${PROJECT_NAME}" \
++    "Key=Environment,Values=${ENVIRONMENT_SHORT}" \
++  --output json)"
++TAGGED_ARNS="$(jq -r \
++  --arg secret_marker ":secret:${SECRET_NAME}-" '
++    [.ResourceTagMappingList[].ResourceARN
++      | select(contains($secret_marker) | not)]
++    | .[]
++  ' <<<"${TAGGED_JSON}")"
++if [[ -n "${TAGGED_ARNS}" ]]; then
++  failures+=("tagged resources remain")
++  printf '%s\n' "${TAGGED_ARNS}" >&2
++fi
++
++if (( ${#failures[@]} > 0 )); then
++  echo "AWS cleanup audit failed:" >&2
++  printf '  - %s\n' "${failures[@]}" >&2
++  exit 1
++fi
++
++echo "AWS cleanup audit passed for ${AWS_ENVIRONMENT}."
++echo "No continuing cluster, network, compute, volume, load-balancer, bucket, certificate, DNS, or tagged-resource identity was found."
+diff --git a/scripts/validate-aws-test-runtime.sh b/scripts/validate-aws-test-runtime.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..40a3e39aff759b49c7d207b094a5a5a2ad01cde1
+--- /dev/null
++++ b/scripts/validate-aws-test-runtime.sh
+@@ -0,0 +1,51 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++AWS_ENVIRONMENT="aws-test"
++# shellcheck source=scripts/aws-environment-context.sh
++source "${ROOT_DIR}/scripts/aws-environment-context.sh"
++configure_aws_environment_context
++
++for command in aws curl jq kubectl terraform; do
++  command -v "${command}" >/dev/null 2>&1 || {
++    echo "Required command not found: ${command}" >&2
++    exit 1
++  }
++done
++
++echo "==> Configuring the exact aws-test Kubernetes context"
++aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}" >/dev/null
++kubectl --request-timeout=30s get --raw=/readyz >/dev/null
++[[ "$(kubectl config current-context)" == *"${CLUSTER_NAME}"* ]] || {
++  echo "Current context does not identify ${CLUSTER_NAME}." >&2
++  exit 1
++}
++
++echo "==> Validating GitOps convergence"
++for application in "${ROOT_APPLICATION}" "${DEMO_APPLICATION}" postgresql-baseline; do
++  kubectl get application "${application}" -n argocd -o json |
++    jq --exit-status '.status.sync.status == "Synced" and .status.health.status == "Healthy"' >/dev/null
++done
++
++echo "==> Validating database and application runtime"
++AWS_REGION="${AWS_REGION}" CLUSTER_NAME="${CLUSTER_NAME}" TF_DIR="${TF_DIR}" \
++  "${ROOT_DIR}/scripts/validate-cloudnative-pg-backup.sh"
++"${ROOT_DIR}/scripts/validate-cloudnative-pg-persistence.sh"
++APPLICATION_NAME="${DEMO_APPLICATION}" DEMO_WORKLOAD_KIND="Rollout" \
++  "${ROOT_DIR}/scripts/validate-demo-api-postgresql.sh"
++
++curl --fail --silent --show-error "https://${DEMO_HOSTNAME}/ready" |
++  jq --exit-status '.status == "ready" and .database == "ok"' >/dev/null
++curl --fail --silent --show-error "https://${DEMO_HOSTNAME}/version" |
++  jq --exit-status '.environment == "aws-test" and (.version | length > 0)' >/dev/null
++
++if [[ -n "${EVIDENCE_ACTOR:-}" ]]; then
++  echo "==> Recording release-bound aws-test runtime evidence"
++  ENVIRONMENT="aws-test" EVIDENCE_ACTOR="${EVIDENCE_ACTOR}" \
++    "${ROOT_DIR}/scripts/record-demo-api-runtime-evidence-aws.sh"
++else
++  echo "EVIDENCE_ACTOR is unset; runtime evidence recording was intentionally skipped."
++fi
++
++echo "aws-test runtime validation passed."
+diff --git a/scripts/validate-ci-quality-gates.sh b/scripts/validate-ci-quality-gates.sh
+index 8bc20cd69796ec970a7ae70aa20c933c2166433f..7fceef8a667d1c994630e6fc31627970e56dcfc2 100755
+--- a/scripts/validate-ci-quality-gates.sh
++++ b/scripts/validate-ci-quality-gates.sh
+@@ -45,6 +45,12 @@ echo "==> Validating AWS ALB progressive-delivery declarations"
+ echo "==> Validating AWS runtime evidence behavior"
+ "${ROOT_DIR}/scripts/validate-demo-api-runtime-evidence-behavior.sh"
+ 
++echo "==> Validating v0.9 clean-room lifecycle and cleanup contracts"
++"${ROOT_DIR}/scripts/validate-v0.9-lifecycle-contracts.sh"
++
++echo "==> Validating v0.9 final evidence behavior"
++"${ROOT_DIR}/scripts/validate-v0.9-final-evidence-behavior.sh"
++
+ echo "==> Validating namespace guardrail contracts"
+ "${ROOT_DIR}/scripts/validate-namespace-guardrails.sh"
+ 
+diff --git a/scripts/validate-demo-api-postgresql.sh b/scripts/validate-demo-api-postgresql.sh
+index 669e6a9d8926c22befb8bfd029b944a55005c03c..ed592e9e847bcabe39a7aab30fe024b5932518d3 100755
+--- a/scripts/validate-demo-api-postgresql.sh
++++ b/scripts/validate-demo-api-postgresql.sh
+@@ -8,6 +8,7 @@ POSTGRES_CLUSTER="${POSTGRES_CLUSTER:-postgresql-baseline}"
+ POSTGRES_NAMESPACE="${POSTGRES_NAMESPACE:-data-platform}"
+ DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
+ DEMO_DEPLOYMENT="${DEMO_DEPLOYMENT:-demo-api}"
++DEMO_WORKLOAD_KIND="${DEMO_WORKLOAD_KIND:-Deployment}"
+ TARGET_SECRET="${TARGET_SECRET:-demo-api-postgresql}"
+ EXTERNAL_SECRET="${EXTERNAL_SECRET:-demo-api-postgresql}"
+ WAIT_TIMEOUT="${WAIT_TIMEOUT:-20m}"
+@@ -65,8 +66,16 @@ if [[ -z "${TARGET_VALUE}" || "${TARGET_KEYS}" != "DATABASE_URL" || \
+ fi
+ 
+ echo "==> Checking the demo-api database environment contract"
++case "${DEMO_WORKLOAD_KIND}" in
++  Deployment) workload_resource="deployment" ;;
++  Rollout) workload_resource="rollout" ;;
++  *)
++    echo "DEMO_WORKLOAD_KIND must be Deployment or Rollout." >&2
++    exit 1
++    ;;
++esac
+ DEPLOYMENT_JSON="$(
+-  kubectl get deployment "${DEMO_DEPLOYMENT}" \
++  kubectl get "${workload_resource}" "${DEMO_DEPLOYMENT}" \
+     --namespace "${DEMO_NAMESPACE}" \
+     --output json
+ )"
+@@ -91,14 +100,22 @@ ENV_CONTRACT="$(
+ 
+ if [[ "${ENV_CONTRACT}" != \
+       "true:${TARGET_SECRET}:DATABASE_URL:2:3:1" ]]; then
+-  echo "The demo-api Deployment does not match the database environment contract." >&2
++  echo "The demo-api ${DEMO_WORKLOAD_KIND} does not match the database environment contract." >&2
+   exit 1
+ fi
+ 
+ echo "==> Waiting for demo-api Pods"
+-kubectl rollout status "deployment/${DEMO_DEPLOYMENT}" \
+-  --namespace "${DEMO_NAMESPACE}" \
+-  --timeout="${WAIT_TIMEOUT}"
++if [[ "${DEMO_WORKLOAD_KIND}" == "Deployment" ]]; then
++  kubectl rollout status "deployment/${DEMO_DEPLOYMENT}" \
++    --namespace "${DEMO_NAMESPACE}" \
++    --timeout="${WAIT_TIMEOUT}"
++else
++  kubectl wait \
++    --for=jsonpath='{.status.phase}'=Healthy \
++    "rollout/${DEMO_DEPLOYMENT}" \
++    --namespace "${DEMO_NAMESPACE}" \
++    --timeout="${WAIT_TIMEOUT}"
++fi
+ kubectl wait \
+   --for=condition=Ready \
+   pod \
+diff --git a/scripts/validate-v0.9-final-evidence-behavior.sh b/scripts/validate-v0.9-final-evidence-behavior.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..f715805cb63e29c6ae54869434acf0f68cb7a04e
+--- /dev/null
++++ b/scripts/validate-v0.9-final-evidence-behavior.sh
+@@ -0,0 +1,73 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++WORK_DIR="$(mktemp -d "${ROOT_DIR}/.v096-evidence.XXXXXX")"
++trap 'rm -rf -- "${WORK_DIR}"' EXIT
++
++DIGEST="sha256:$(printf 'a%.0s' {1..64})"
++SOURCE_COMMIT="$(printf 'b%.0s' {1..40})"
++REPOSITORY_REVISION="$(printf 'c%.0s' {1..40})"
++IMAGE_REPOSITORY="ghcr.io/sterlingaureum/startup-devops-baseline/demo-api"
++
++write_fixture() {
++  local path="$1"
++  local schema="$2"
++  local environment="$3"
++  local recorded_at="$4"
++  mkdir -p "$(dirname "${path}")"
++  jq -n \
++    --arg schema "${schema}" \
++    --arg environment "${environment}" \
++    --arg repository "${IMAGE_REPOSITORY}" \
++    --arg digest "${DIGEST}" \
++    --arg source "${SOURCE_COMMIT}" \
++    --arg recorded_at "${recorded_at}" '
++      {
++        schemaVersion: $schema,
++        environment: $environment,
++        status: "passed",
++        release: {
++          imageRepository: $repository,
++          imageDigest: $digest,
++          sourceCommit: $source,
++          applicationVersion: ("sha-" + ($source[0:7]))
++        },
++        qualification: (if $schema == "v0.9.4" then {recordedAt: $recorded_at} else null end),
++        runtime: (if $schema == "v0.9.5" then {recordedAt: $recorded_at} else null end)
++      }
++    ' >"${path}"
++}
++
++write_fixture "${WORK_DIR}/dev-runtime.json" "v0.9.5" "aws-dev" "2026-08-07T00:30:00Z"
++write_fixture "${WORK_DIR}/test-release.json" "v0.9.4" "aws-test" "2026-08-07T00:40:00Z"
++write_fixture "${WORK_DIR}/test-runtime.json" "v0.9.5" "aws-test" "2026-08-07T00:50:00Z"
++
++FINAL_FILE="${WORK_DIR}/final.json"
++EVIDENCE_ID="20260807010000" \
++EVIDENCE_ACTOR="SterlingAureum" \
++REPOSITORY_REVISION="${REPOSITORY_REVISION}" \
++RECORDED_AT="2026-08-07T01:30:00Z" \
++DEV_RUNTIME_EVIDENCE_FILE="${WORK_DIR}/dev-runtime.json" \
++TEST_RELEASE_EVIDENCE_FILE="${WORK_DIR}/test-release.json" \
++TEST_RUNTIME_EVIDENCE_FILE="${WORK_DIR}/test-runtime.json" \
++FAILOVER_COMPLETED_AT="2026-08-07T01:00:00Z" \
++TEST_DESTROY_COMPLETED_AT="2026-08-07T01:10:00Z" \
++COST_AUDIT_COMPLETED_AT="2026-08-07T01:20:00Z" \
++OUTPUT_FILE="${FINAL_FILE}" \
++  "${ROOT_DIR}/scripts/write-v0.9-final-evidence.sh" >/dev/null
++
++EVIDENCE_FILE="${FINAL_FILE}" \
++  "${ROOT_DIR}/scripts/validate-v0.9-final-evidence.sh" >/dev/null
++
++jq '.status = "failed"' "${WORK_DIR}/test-runtime.json" \
++  >"${WORK_DIR}/test-runtime-tampered.json"
++mv "${WORK_DIR}/test-runtime-tampered.json" "${WORK_DIR}/test-runtime.json"
++
++if EVIDENCE_FILE="${FINAL_FILE}" \
++     "${ROOT_DIR}/scripts/validate-v0.9-final-evidence.sh" >/dev/null 2>&1; then
++  echo "Final evidence validator accepted a tampered referenced record." >&2
++  exit 1
++fi
++
++echo "v0.9 final evidence behavior passed."
+diff --git a/scripts/validate-v0.9-final-evidence.sh b/scripts/validate-v0.9-final-evidence.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..7eed0813b4c652341bebb5ef2c37bcef01dd60a1
+--- /dev/null
++++ b/scripts/validate-v0.9-final-evidence.sh
+@@ -0,0 +1,122 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++: "${EVIDENCE_FILE:?Set EVIDENCE_FILE to a v0.9.6 final evidence JSON file.}"
++
++command -v python3 >/dev/null 2>&1 || {
++  echo "Required command not found: python3" >&2
++  exit 1
++}
++
++python3 - "${ROOT_DIR}" "${EVIDENCE_FILE}" <<'PY'
++from datetime import datetime, timezone
++from pathlib import Path
++import hashlib
++import json
++import re
++import sys
++
++root = Path(sys.argv[1]).resolve()
++evidence_path = Path(sys.argv[2])
++if not evidence_path.is_absolute():
++    evidence_path = root / evidence_path
++document = json.loads(evidence_path.read_text())
++
++if document.get("schemaVersion") != "v0.9.6" or document.get("status") != "passed":
++    raise SystemExit("Final evidence schema or status is invalid.")
++if not re.fullmatch(r"\d{14}", str(document.get("evidenceId", ""))):
++    raise SystemExit("Final evidence ID is invalid.")
++if not re.fullmatch(r"[0-9a-f]{40}", str(document.get("repositoryRevision", ""))):
++    raise SystemExit("Final evidence repository revision is invalid.")
++
++artifact = document.get("artifact", {})
++if not re.fullmatch(r"sha256:[0-9a-f]{64}", str(artifact.get("imageDigest", ""))):
++    raise SystemExit("Final evidence artifact digest is invalid.")
++if not re.fullmatch(r"[0-9a-f]{40}", str(artifact.get("sourceCommit", ""))):
++    raise SystemExit("Final evidence source commit is invalid.")
++
++expected_refs = {
++    "awsDevRuntime": ("v0.9.5", "aws-dev"),
++    "awsTestRelease": ("v0.9.4", "aws-test"),
++    "awsTestRuntime": ("v0.9.5", "aws-test"),
++}
++identities = []
++for key, (schema, environment) in expected_refs.items():
++    reference = document.get("evidence", {}).get(key, {})
++    relative = Path(str(reference.get("path", "")))
++    if relative.is_absolute() or ".." in relative.parts:
++        raise SystemExit(f"{key} path is not repository-relative")
++    path = (root / relative).resolve()
++    try:
++        path.relative_to(root)
++    except ValueError as error:
++        raise SystemExit(f"{key} escaped the repository") from error
++    if not path.is_file():
++        raise SystemExit(f"{key} target does not exist")
++    actual_hash = hashlib.sha256(path.read_bytes()).hexdigest()
++    if actual_hash != reference.get("sha256"):
++        raise SystemExit(f"{key} hash does not match")
++    target = json.loads(path.read_text())
++    if target.get("schemaVersion") != schema or target.get("environment") != environment or target.get("status") != "passed":
++        raise SystemExit(f"{key} target identity is invalid")
++    release = target.get("release", {})
++    identities.append((
++        release.get("imageRepository"), release.get("imageDigest"),
++        release.get("sourceCommit"), release.get("applicationVersion"),
++    ))
++
++expected_artifact = {
++    "imageRepository": identities[0][0],
++    "imageDigest": identities[0][1],
++    "sourceCommit": identities[0][2],
++    "applicationVersion": identities[0][3],
++}
++if len(set(identities)) != 1 or artifact != expected_artifact:
++    raise SystemExit("Final evidence artifact identity does not match referenced evidence.")
++
++lifecycle = document.get("lifecycle", {})
++if lifecycle.get("awsTestMode") != "ephemeral-clean-room" or lifecycle.get("awsProdValidation") != "static-only":
++    raise SystemExit("Final evidence lifecycle boundary is invalid.")
++required_checks = {
++    "clean-main-source", "aws-dev-runtime-qualified",
++    "ordered-dev-to-test-promotion", "aws-test-rollout-and-analysis-qualified",
++    "postgresql-primary-failover-recovered", "aws-test-terraform-destroyed",
++    "aws-test-cost-residual-audit-passed", "aws-prod-static-declarations-rendered",
++}
++if set(lifecycle.get("checks", [])) != required_checks:
++    raise SystemExit("Final evidence lifecycle checks are incomplete.")
++
++def parse_time(value):
++    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", str(value)):
++        raise SystemExit("Final evidence contains an invalid timestamp.")
++    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
++
++ordered = [
++    parse_time(lifecycle.get("postgresqlFailoverCompletedAt")),
++    parse_time(lifecycle.get("terraformDestroyCompletedAt")),
++    parse_time(lifecycle.get("costCleanupAuditCompletedAt")),
++    parse_time(document.get("recordedAt")),
++]
++if ordered != sorted(ordered):
++    raise SystemExit("Final evidence timestamps are not ordered.")
++
++test_release_time = parse_time(json.loads((root / Path(document["evidence"]["awsTestRelease"]["path"])).read_text()).get("qualification", {}).get("recordedAt"))
++test_runtime_time = parse_time(json.loads((root / Path(document["evidence"]["awsTestRuntime"]["path"])).read_text()).get("runtime", {}).get("recordedAt"))
++if test_release_time > test_runtime_time or test_runtime_time > ordered[0]:
++    raise SystemExit("Referenced test release, runtime, and failover timestamps are not ordered.")
++
++sensitive_pattern = re.compile(r"password|credential|secretvalue|token|privatekey", re.I)
++def walk(value):
++    if isinstance(value, dict):
++        for key, child in value.items():
++            if sensitive_pattern.search(str(key)):
++                raise SystemExit("Final evidence contains a prohibited sensitive field name.")
++            walk(child)
++    elif isinstance(value, list):
++        for child in value:
++            walk(child)
++walk(document)
++
++print("v0.9 final evidence validation passed.")
++PY
+diff --git a/scripts/validate-v0.9-lifecycle-contracts.sh b/scripts/validate-v0.9-lifecycle-contracts.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..b453a5db3cabe45d88e22ccec40e2e3676159078
+--- /dev/null
++++ b/scripts/validate-v0.9-lifecycle-contracts.sh
+@@ -0,0 +1,136 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++WORK_DIR="$(mktemp -d)"
++trap 'rm -rf -- "${WORK_DIR}"' EXIT
++
++for command in bash python3; do
++  command -v "${command}" >/dev/null 2>&1 || {
++    echo "Required command not found: ${command}" >&2
++    exit 1
++  }
++done
++
++python3 - "${ROOT_DIR}" <<'PY'
++from pathlib import Path
++import sys
++
++root = Path(sys.argv[1])
++required = {
++    "scripts/apply-aws-test.sh": (
++        "CONFIRM_AWS_TEST_APPLY",
++        "apply-ephemeral-aws-test",
++        "AWS_TEST_APPLY_MODE",
++        'AWS_ENVIRONMENT="aws-test"',
++    ),
++    "scripts/bootstrap-aws-test.sh": (
++        "CONFIRM_AWS_TEST_BOOTSTRAP",
++        "DEMO_ACCEPTED_HEALTH_STATUSES",
++        'TARGET_REVISION="main"',
++    ),
++    "scripts/complete-aws-test-rollout.sh": (
++        "CONFIRM_AWS_TEST_ROLLOUT",
++        "promote-reviewed-aws-test",
++        "currentStepIndex",
++        "promotion_count > 3",
++    ),
++    "scripts/validate-demo-api-postgresql.sh": (
++        "DEMO_WORKLOAD_KIND",
++        'Rollout) workload_resource="rollout"',
++        'rollout/${DEMO_DEPLOYMENT}',
++    ),
++    "scripts/destroy-aws-dev.sh": (
++        'AWS_ENVIRONMENT}" == "aws-prod"',
++        "CONFIRM_AWS_ENVIRONMENT_DESTROY",
++        "EKS_PUBLIC_ACCESS_CIDRS_JSON",
++        "validate-aws-cost-cleanup.sh",
++    ),
++    "scripts/validate-aws-cost-cleanup.sh": (
++        "resourcegroupstaggingapi get-resources",
++        "describe-nat-gateways",
++        "describe-volumes",
++        "elbv2.k8s.aws/cluster",
++        "head-bucket",
++        ".DeletedDate != null",
++        "list-resource-record-sets",
++    ),
++}
++for relative, markers in required.items():
++    path = root / relative
++    if not path.is_file():
++        raise SystemExit(f"Missing lifecycle file: {relative}")
++    text = path.read_text()
++    for marker in markers:
++        if marker not in text:
++            raise SystemExit(f"{relative}: missing lifecycle marker {marker}")
++
++destroy_wrapper = (root / "scripts/destroy-aws-test.sh").read_text()
++if 'AWS_ENVIRONMENT="aws-test"' not in destroy_wrapper:
++    raise SystemExit("destroy-aws-test.sh must pin the disposable target")
++
++prod_variables = (root / "infra/terraform/aws/environments/prod/variables.tf").read_text()
++for marker in ('default     = false', 'var.external_secrets_recovery_window_in_days == 30'):
++    if marker not in prod_variables:
++        raise SystemExit("Production destruction or recovery guard regressed")
++
++print("v0.9 lifecycle static contracts passed.")
++PY
++
++mkdir -p "${WORK_DIR}/bin" "${WORK_DIR}/tf"
++
++cat >"${WORK_DIR}/bin/terraform" <<'MOCK'
++#!/usr/bin/env bash
++set -euo pipefail
++if [[ "$*" == *"state list"* ]]; then
++  exit 0
++fi
++exit 1
++MOCK
++
++cat >"${WORK_DIR}/bin/aws" <<'MOCK'
++#!/usr/bin/env bash
++set -euo pipefail
++service="${1:-}"
++operation="${2:-}"
++case "${service}:${operation}" in
++  sts:get-caller-identity) echo "123456789012" ;;
++  eks:describe-cluster) exit 254 ;;
++  ec2:describe-instances|ec2:describe-volumes|ec2:describe-addresses|ec2:describe-vpcs)
++    echo "0"
++    ;;
++  ec2:describe-nat-gateways)
++    if [[ "${MOCK_AWS_RESIDUAL:-}" == "nat" ]]; then echo "1"; else echo "0"; fi
++    ;;
++  s3api:head-bucket) exit 254 ;;
++  secretsmanager:describe-secret) echo '{"DeletedDate":"2026-08-14T00:00:00Z"}' ;;
++  logs:describe-log-groups|acm:list-certificates) echo "0" ;;
++  route53:list-hosted-zones-by-name) echo "/hostedzone/ZTEST" ;;
++  route53:list-resource-record-sets) echo "null" ;;
++  resourcegroupstaggingapi:get-resources)
++    if [[ "$*" == *"length(ResourceTagMappingList)"* ]]; then
++      echo "0"
++    else
++      echo '{"ResourceTagMappingList":[]}'
++    fi
++    ;;
++  *) echo "Unexpected mock AWS call: $*" >&2; exit 1 ;;
++esac
++MOCK
++chmod +x "${WORK_DIR}/bin/aws" "${WORK_DIR}/bin/terraform"
++
++PATH="${WORK_DIR}/bin:${PATH}" \
++AWS_ENVIRONMENT="aws-test" \
++TF_DIR="${WORK_DIR}/tf" \
++  "${ROOT_DIR}/scripts/validate-aws-cost-cleanup.sh" >/dev/null
++
++if PATH="${WORK_DIR}/bin:${PATH}" \
++   AWS_ENVIRONMENT="aws-test" \
++   TF_DIR="${WORK_DIR}/tf" \
++   MOCK_AWS_RESIDUAL="nat" \
++     "${ROOT_DIR}/scripts/validate-aws-cost-cleanup.sh" >/dev/null 2>&1; then
++  echo "Cleanup audit accepted a residual NAT Gateway." >&2
++  exit 1
++fi
++
++echo "v0.9 lifecycle cleanup behavior passed."
+diff --git a/scripts/write-v0.9-final-evidence.sh b/scripts/write-v0.9-final-evidence.sh
+new file mode 100755
+index 0000000000000000000000000000000000000000..94e20886262a254da565e4a6711f46e2a6676ca4
+--- /dev/null
++++ b/scripts/write-v0.9-final-evidence.sh
+@@ -0,0 +1,164 @@
++#!/usr/bin/env bash
++set -Eeuo pipefail
++umask 077
++
++ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++EVIDENCE_ID="${EVIDENCE_ID:-$(date -u +%Y%m%d%H%M%S)}"
++OUTPUT_FILE="${OUTPUT_FILE:-${ROOT_DIR}/evidence/v0.9/final/${EVIDENCE_ID}.json}"
++
++: "${EVIDENCE_ACTOR:?Set EVIDENCE_ACTOR to the GitHub login recording final evidence.}"
++: "${DEV_RUNTIME_EVIDENCE_FILE:?Set DEV_RUNTIME_EVIDENCE_FILE.}"
++: "${TEST_RELEASE_EVIDENCE_FILE:?Set TEST_RELEASE_EVIDENCE_FILE.}"
++: "${TEST_RUNTIME_EVIDENCE_FILE:?Set TEST_RUNTIME_EVIDENCE_FILE.}"
++: "${FAILOVER_COMPLETED_AT:?Set FAILOVER_COMPLETED_AT in UTC YYYY-MM-DDTHH:MM:SSZ.}"
++: "${TEST_DESTROY_COMPLETED_AT:?Set TEST_DESTROY_COMPLETED_AT in UTC YYYY-MM-DDTHH:MM:SSZ.}"
++: "${COST_AUDIT_COMPLETED_AT:?Set COST_AUDIT_COMPLETED_AT in UTC YYYY-MM-DDTHH:MM:SSZ.}"
++
++for command in git python3; do
++  command -v "${command}" >/dev/null 2>&1 || {
++    echo "Required command not found: ${command}" >&2
++    exit 1
++  }
++done
++
++REPOSITORY_REVISION="${REPOSITORY_REVISION:-$(git -C "${ROOT_DIR}" rev-parse HEAD)}"
++RECORDED_AT="${RECORDED_AT:-$(date -u +%Y-%m-%dT%H:%M:%SZ)}"
++
++python3 - \
++  "${ROOT_DIR}" \
++  "${OUTPUT_FILE}" \
++  "${EVIDENCE_ID}" \
++  "${EVIDENCE_ACTOR}" \
++  "${REPOSITORY_REVISION}" \
++  "${RECORDED_AT}" \
++  "${DEV_RUNTIME_EVIDENCE_FILE}" \
++  "${TEST_RELEASE_EVIDENCE_FILE}" \
++  "${TEST_RUNTIME_EVIDENCE_FILE}" \
++  "${FAILOVER_COMPLETED_AT}" \
++  "${TEST_DESTROY_COMPLETED_AT}" \
++  "${COST_AUDIT_COMPLETED_AT}" <<'PY'
++from datetime import datetime, timezone
++from pathlib import Path
++import hashlib
++import json
++import re
++import sys
++
++(
++    root_raw, output_raw, evidence_id, actor, revision, recorded_at,
++    dev_runtime_raw, test_release_raw, test_runtime_raw,
++    failover_at, destroy_at, audit_at,
++) = sys.argv[1:]
++root = Path(root_raw).resolve()
++output = Path(output_raw).resolve()
++
++
++def parse_time(value: str) -> datetime:
++    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z", value):
++        raise SystemExit(f"Invalid UTC timestamp: {value}")
++    return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
++
++
++def load_inside_repo(raw: str, label: str):
++    path = Path(raw)
++    if not path.is_absolute():
++        path = root / path
++    path = path.resolve()
++    try:
++        relative = path.relative_to(root)
++    except ValueError as error:
++        raise SystemExit(f"{label} must be inside the repository") from error
++    if not path.is_file():
++        raise SystemExit(f"{label} does not exist: {relative}")
++    data = json.loads(path.read_text())
++    return path, relative.as_posix(), data
++
++
++if not re.fullmatch(r"\d{14}", evidence_id):
++    raise SystemExit("EVIDENCE_ID must use UTC YYYYMMDDHHMMSS digits.")
++if not re.fullmatch(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})", actor):
++    raise SystemExit("EVIDENCE_ACTOR is not a valid GitHub login.")
++if not re.fullmatch(r"[0-9a-f]{40}", revision):
++    raise SystemExit("REPOSITORY_REVISION must be a full lowercase commit SHA.")
++
++times = [parse_time(value) for value in (failover_at, destroy_at, audit_at, recorded_at)]
++if times != sorted(times):
++    raise SystemExit("Failover, destroy, cleanup audit, and final recording timestamps must be ordered.")
++
++dev_path, dev_relative, dev = load_inside_repo(dev_runtime_raw, "dev runtime evidence")
++release_path, release_relative, test_release = load_inside_repo(test_release_raw, "test release evidence")
++test_path, test_relative, test_runtime = load_inside_repo(test_runtime_raw, "test runtime evidence")
++
++expected = (
++    (dev, "v0.9.5", "aws-dev", "dev runtime evidence"),
++    (test_release, "v0.9.4", "aws-test", "test release evidence"),
++    (test_runtime, "v0.9.5", "aws-test", "test runtime evidence"),
++)
++for document, schema, environment, label in expected:
++    if document.get("schemaVersion") != schema or document.get("environment") != environment or document.get("status") != "passed":
++        raise SystemExit(f"{label} has an unexpected schema, environment, or status")
++
++test_release_at = parse_time(test_release.get("qualification", {}).get("recordedAt", ""))
++test_runtime_at = parse_time(test_runtime.get("runtime", {}).get("recordedAt", ""))
++if test_release_at > test_runtime_at or test_runtime_at > times[0]:
++    raise SystemExit("Test release, runtime, and failover timestamps must be ordered.")
++
++identities = []
++for document in (dev, test_release, test_runtime):
++    release = document.get("release", {})
++    identities.append((
++        release.get("imageRepository"),
++        release.get("imageDigest"),
++        release.get("sourceCommit"),
++        release.get("applicationVersion"),
++    ))
++if len(set(identities)) != 1:
++    raise SystemExit("Final evidence rejected an artifact identity change across dev and test.")
++
++def reference(path: Path, relative: str):
++    return {
++        "path": relative,
++        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
++    }
++
++document = {
++    "schemaVersion": "v0.9.6",
++    "status": "passed",
++    "evidenceId": evidence_id,
++    "actor": actor,
++    "recordedAt": recorded_at,
++    "repositoryRevision": revision,
++    "artifact": {
++        "imageRepository": identities[0][0],
++        "imageDigest": identities[0][1],
++        "sourceCommit": identities[0][2],
++        "applicationVersion": identities[0][3],
++    },
++    "evidence": {
++        "awsDevRuntime": reference(dev_path, dev_relative),
++        "awsTestRelease": reference(release_path, release_relative),
++        "awsTestRuntime": reference(test_path, test_relative),
++    },
++    "lifecycle": {
++        "awsTestMode": "ephemeral-clean-room",
++        "postgresqlFailoverCompletedAt": failover_at,
++        "terraformDestroyCompletedAt": destroy_at,
++        "costCleanupAuditCompletedAt": audit_at,
++        "awsProdValidation": "static-only",
++        "checks": [
++            "clean-main-source",
++            "aws-dev-runtime-qualified",
++            "ordered-dev-to-test-promotion",
++            "aws-test-rollout-and-analysis-qualified",
++            "postgresql-primary-failover-recovered",
++            "aws-test-terraform-destroyed",
++            "aws-test-cost-residual-audit-passed",
++            "aws-prod-static-declarations-rendered",
++        ],
++    },
++}
++
++output.parent.mkdir(parents=True, exist_ok=True)
++output.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n")
++print(f"Recorded v0.9 final evidence: {output}")
++PY

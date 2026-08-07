@@ -8,6 +8,7 @@ POSTGRES_CLUSTER="${POSTGRES_CLUSTER:-postgresql-baseline}"
 POSTGRES_NAMESPACE="${POSTGRES_NAMESPACE:-data-platform}"
 DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
 DEMO_DEPLOYMENT="${DEMO_DEPLOYMENT:-demo-api}"
+DEMO_WORKLOAD_KIND="${DEMO_WORKLOAD_KIND:-Deployment}"
 TARGET_SECRET="${TARGET_SECRET:-demo-api-postgresql}"
 EXTERNAL_SECRET="${EXTERNAL_SECRET:-demo-api-postgresql}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-20m}"
@@ -65,8 +66,16 @@ if [[ -z "${TARGET_VALUE}" || "${TARGET_KEYS}" != "DATABASE_URL" || \
 fi
 
 echo "==> Checking the demo-api database environment contract"
+case "${DEMO_WORKLOAD_KIND}" in
+  Deployment) workload_resource="deployment" ;;
+  Rollout) workload_resource="rollout" ;;
+  *)
+    echo "DEMO_WORKLOAD_KIND must be Deployment or Rollout." >&2
+    exit 1
+    ;;
+esac
 DEPLOYMENT_JSON="$(
-  kubectl get deployment "${DEMO_DEPLOYMENT}" \
+  kubectl get "${workload_resource}" "${DEMO_DEPLOYMENT}" \
     --namespace "${DEMO_NAMESPACE}" \
     --output json
 )"
@@ -91,14 +100,22 @@ ENV_CONTRACT="$(
 
 if [[ "${ENV_CONTRACT}" != \
       "true:${TARGET_SECRET}:DATABASE_URL:2:3:1" ]]; then
-  echo "The demo-api Deployment does not match the database environment contract." >&2
+  echo "The demo-api ${DEMO_WORKLOAD_KIND} does not match the database environment contract." >&2
   exit 1
 fi
 
 echo "==> Waiting for demo-api Pods"
-kubectl rollout status "deployment/${DEMO_DEPLOYMENT}" \
-  --namespace "${DEMO_NAMESPACE}" \
-  --timeout="${WAIT_TIMEOUT}"
+if [[ "${DEMO_WORKLOAD_KIND}" == "Deployment" ]]; then
+  kubectl rollout status "deployment/${DEMO_DEPLOYMENT}" \
+    --namespace "${DEMO_NAMESPACE}" \
+    --timeout="${WAIT_TIMEOUT}"
+else
+  kubectl wait \
+    --for=jsonpath='{.status.phase}'=Healthy \
+    "rollout/${DEMO_DEPLOYMENT}" \
+    --namespace "${DEMO_NAMESPACE}" \
+    --timeout="${WAIT_TIMEOUT}"
+fi
 kubectl wait \
   --for=condition=Ready \
   pod \

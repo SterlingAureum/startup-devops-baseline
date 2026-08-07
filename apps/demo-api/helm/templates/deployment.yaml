@@ -44,6 +44,8 @@ spec:
             - name: {{ $key }}
               value: {{ $value | quote }}
             {{- end }}
+            - name: APP_VERSION
+              value: {{ required "release.applicationVersion is required" .Values.release.applicationVersion | quote }}
             - name: DATABASE_ENABLED
               value: {{ .Values.database.enabled | quote }}
             - name: DATABASE_CONNECT_TIMEOUT_SECONDS

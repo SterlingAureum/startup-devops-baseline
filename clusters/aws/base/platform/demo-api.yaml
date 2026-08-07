@@ -1,0 +1,50 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-api-aws-dev
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "30"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
+    targetRevision: main
+    path: apps/demo-api/helm
+    helm:
+      releaseName: demo-api
+      valueFiles:
+        - values/environments/aws-dev.yaml
+        - values/releases/aws-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: startup-apps
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      name: demo-api-stable
+      namespace: startup-apps
+      jsonPointers:
+        - /spec/selector
+    - group: ""
+      kind: Service
+      name: demo-api-canary
+      namespace: startup-apps
+      jsonPointers:
+        - /spec/selector
+    - group: networking.k8s.io
+      kind: Ingress
+      name: demo-api
+      namespace: startup-apps
+      jqPathExpressions:
+        - .metadata.annotations."alb.ingress.kubernetes.io/actions.demo-api-stable"
+        - .metadata.annotations."rollouts.argoproj.io/managed-alb-actions"
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - RespectIgnoreDifferences=true

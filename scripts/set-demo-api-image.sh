@@ -80,9 +80,9 @@ for line in lines:
             out.append(f'{indent}pullPolicy: {pull_policy}')
             continue
 
-    if section == "env" and stripped.startswith("APP_VERSION:"):
+    if section == "release" and stripped.startswith("applicationVersion:"):
         indent = line[: len(line) - len(line.lstrip())]
-        out.append(f'{indent}APP_VERSION: "{app_version}"')
+        out.append(f'{indent}applicationVersion: "{app_version}"')
         continue
 
     out.append(line)
@@ -98,7 +98,7 @@ echo "  image.repository=${IMAGE_REPOSITORY}"
 echo "  image.tag=${IMAGE_TAG}"
 echo "  image.digest=${IMAGE_DIGEST:-<empty>}"
 echo "  image.pullPolicy=${IMAGE_PULL_POLICY}"
-echo "  env.APP_VERSION=${APP_VERSION}"
+echo "  release.applicationVersion=${APP_VERSION}"
 echo
 echo "Next:"
 echo "  helm lint apps/demo-api/helm"

@@ -2,10 +2,16 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/dev}"
-AWS_REGION="${AWS_REGION:-us-east-1}"
-CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
-ROOT_APPLICATION="${ROOT_APPLICATION:-startup-devops-aws-dev-root}"
+AWS_ENVIRONMENT="${AWS_ENVIRONMENT:-aws-dev}"
+# shellcheck source=scripts/aws-environment-context.sh
+source "${ROOT_DIR}/scripts/aws-environment-context.sh"
+configure_aws_environment_context
+
+if [[ "${AWS_ENVIRONMENT}" == "aws-prod" ]]; then
+  echo "This portfolio destroy entrypoint refuses aws-prod." >&2
+  exit 1
+fi
+
 ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
 POSTGRES_APPLICATION="${POSTGRES_APPLICATION:-postgresql-baseline}"
@@ -31,7 +37,7 @@ for command_name in aws jq kubectl terraform; do
 done
 
 cat <<EOF
-WARNING: this operation will destroy the aws-dev environment.
+WARNING: this operation will destroy the ${AWS_ENVIRONMENT} environment.
 
 Cluster: ${CLUSTER_NAME}
 Region: ${AWS_REGION}
@@ -40,18 +46,40 @@ Terraform directory: ${TF_DIR}
 Expected resources include EKS, EC2 nodes, NAT Gateway, VPC, ALB-related
 resources, applications, and the CloudNativePG S3 backup bucket.
 
-The aws-dev backup bucket uses force_destroy=true. Terraform will permanently
+The ${AWS_ENVIRONMENT} backup bucket uses force_destroy=true. Terraform will permanently
 delete all base backups, WAL archives, current objects, and noncurrent object
 versions.
-
-Type 'destroy-with-backups' to continue:
 EOF
 
-read -r confirmation
-if [[ "${confirmation}" != "destroy-with-backups" ]]; then
+if [[ "${AWS_ENVIRONMENT}" == "aws-dev" ]]; then
+  expected_confirmation="destroy-with-backups"
+else
+  expected_confirmation="destroy-aws-test-with-backups"
+fi
+echo "Type '${expected_confirmation}' to continue:"
+
+if [[ -n "${CONFIRM_AWS_ENVIRONMENT_DESTROY:-}" ]]; then
+  confirmation="${CONFIRM_AWS_ENVIRONMENT_DESTROY}"
+else
+  read -r confirmation
+fi
+if [[ "${confirmation}" != "${expected_confirmation}" ]]; then
   echo "Destroy cancelled."
   exit 0
 fi
+
+EKS_PUBLIC_ACCESS_CIDRS_JSON="$(aws eks describe-cluster \
+  --region "${AWS_REGION}" \
+  --name "${CLUSTER_NAME}" \
+  --query 'cluster.resourcesVpcConfig.publicAccessCidrs' \
+  --output json | jq -c '.')"
+jq --exit-status '
+  type == "array" and length > 0 and
+  all(.[]; test("^[0-9./]+$") and . != "0.0.0.0/0")
+' <<<"${EKS_PUBLIC_ACCESS_CIDRS_JSON}" >/dev/null || {
+  echo "The live EKS public endpoint allowlist is empty, open, or invalid." >&2
+  exit 1
+}
 
 aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
 
@@ -179,7 +207,11 @@ if kubectl get crd ec2nodeclasses.karpenter.k8s.aws >/dev/null 2>&1; then
 fi
 
 echo "==> Deleting the demo-api Route 53 Alias before the ALB"
-DNS_ACTION=delete "${RECONCILE_DNS_SCRIPT}"
+AWS_REGION="${AWS_REGION}" \
+CLUSTER_NAME="${CLUSTER_NAME}" \
+DEMO_HOSTNAME="${DEMO_HOSTNAME}" \
+DNS_ACTION=delete \
+  "${RECONCILE_DNS_SCRIPT}"
 
 if [[ "${ROOT_APPLICATION_EXISTS}" == "true" ]]; then
   kubectl delete application "${ROOT_APPLICATION}" -n "${ARGOCD_NAMESPACE}" --wait=false
@@ -206,6 +238,8 @@ done
 
 sleep 30
 kubectl get service -A --field-selector spec.type=LoadBalancer || true
-terraform -chdir="${TF_DIR}" destroy
+terraform -chdir="${TF_DIR}" destroy \
+  -var="eks_public_access_cidrs=${EKS_PUBLIC_ACCESS_CIDRS_JSON}"
 
-echo "Destroy completed. Review AWS for unexpected residual load balancers, NAT Gateways, or Elastic IPs."
+echo "${AWS_ENVIRONMENT} destroy completed."
+echo "Next: AWS_ENVIRONMENT=${AWS_ENVIRONMENT} ./scripts/validate-aws-cost-cleanup.sh"

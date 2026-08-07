@@ -1,0 +1,89 @@
+# Declared aws-prod profile. v0.9.5 enables progressive-delivery desired state
+# but does not create a production cluster, Secret, database, certificate, or
+# DNS record.
+replicaCount: 3
+
+image:
+  pullPolicy: IfNotPresent
+
+rollout:
+  enabled: true
+  progressDeadlineSeconds: 900
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      stableService: demo-api-stable
+      canaryService: demo-api-canary
+      trafficRouting:
+        nginx:
+          enabled: false
+        alb:
+          enabled: true
+          ingress: demo-api
+          servicePort: 80
+      steps:
+        - setWeight: 10
+        - pause:
+            duration: 5m
+        - analysis:
+            templates:
+              - templateName: demo-api-canary-health
+        - setWeight: 25
+        - pause: {}
+        - setWeight: 50
+        - pause:
+            duration: 10m
+        - setWeight: 100
+
+analysis:
+  enabled: true
+  provider: web
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true
+  hosts:
+    - host: demo.prod.aureumstack.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+readinessProbe:
+  timeoutSeconds: 10
+
+env:
+  APP_NAME: demo-api
+  APP_ENV: aws-prod
+
+database:
+  enabled: true
+  secretName: demo-api-postgresql
+  secretKey: DATABASE_URL
+  connectTimeoutSeconds: 2
+  retryAttempts: 3
+  retryDelaySeconds: 1

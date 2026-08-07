@@ -6,7 +6,7 @@ AWS_REGION="${AWS_REGION:-us-east-1}"
 CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
 TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/dev}"
 ARGOCD_VERSION="${ARGOCD_VERSION:-stable}"
-ALB_APPLICATION_TEMPLATE="${ALB_APPLICATION_TEMPLATE:-${ROOT_DIR}/clusters/aws-dev/platform/aws-load-balancer-controller.yaml}"
+ALB_APPLICATION_TEMPLATE="${ALB_APPLICATION_TEMPLATE:-${ROOT_DIR}/clusters/aws/base/platform/aws-load-balancer-controller.yaml}"
 
 for command in aws kubectl terraform; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -81,11 +81,19 @@ fi
 ALB_APPLICATION_RENDERED="$(mktemp)"
 trap 'rm -f "${ALB_APPLICATION_RENDERED}"' EXIT
 
-sed "s#__VPC_ID__#${VPC_ID}#g" \
+sed \
+  -e "s#__VPC_ID__#${VPC_ID}#g" \
+  -e "s#clusterName: startup-devops-baseline-dev#clusterName: ${CLUSTER_NAME}#" \
   "${ALB_APPLICATION_TEMPLATE}" > "${ALB_APPLICATION_RENDERED}"
 
 if grep -q "__VPC_ID__" "${ALB_APPLICATION_RENDERED}"; then
   echo "AWS Load Balancer Controller template still contains __VPC_ID__." >&2
+  exit 1
+fi
+
+if ! grep -F "clusterName: ${CLUSTER_NAME}" \
+  "${ALB_APPLICATION_RENDERED}" >/dev/null; then
+  echo "AWS Load Balancer Controller template does not use ${CLUSTER_NAME}." >&2
   exit 1
 fi
 

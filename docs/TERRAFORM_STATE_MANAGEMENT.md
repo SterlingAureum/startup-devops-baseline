@@ -2,7 +2,9 @@
 
 ## Current Design
 
-The `aws-dev` environment currently uses local state. This is acceptable for personal development, demonstrations, and a single operator.
+The dev, test, and prod Terraform roots each use their own local state in
+v0.9.2. This is acceptable for single-operator, sequential portfolio
+validation; it is not the long-term production backend model.
 
 State files are excluded from Git. Keep them until the environment has been destroyed.
 
@@ -11,7 +13,16 @@ state: it is a disposable, owner-readable execution artifact under `/tmp`, is
 applied immediately, and is removed when the script exits. Losing that plan
 before apply only fails the current run; it does not lose the deployed-resource
 inventory. The local `terraform.tfstate` remains the authoritative artifact
-that must be retained for this single-operator environment.
+that must be retained for the corresponding environment.
+
+```text
+infra/terraform/aws/environments/dev/terraform.tfstate
+infra/terraform/aws/environments/test/terraform.tfstate
+infra/terraform/aws/environments/prod/terraform.tfstate
+```
+
+Do not copy state between these directories and do not use Terraform CLI
+workspaces to make one root impersonate another environment.
 
 ## Limitations
 
@@ -34,7 +45,7 @@ Example keys:
 
 ```text
 startup-devops-baseline/dev/terraform.tfstate
-startup-devops-baseline/staging/terraform.tfstate
+startup-devops-baseline/test/terraform.tfstate
 startup-devops-baseline/prod/terraform.tfstate
 ```
 

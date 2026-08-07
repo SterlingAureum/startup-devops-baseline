@@ -140,7 +140,7 @@ Incremental scope:
 
 ## v0.8 - Production Security Baseline
 
-Status: In progress
+Status: Completed
 
 Goal:
 
@@ -165,36 +165,55 @@ Incremental scope:
   live round trip, and final-state validation completed
 - v0.8.6 - Route 53 DNS, ACM/ALB HTTPS, EKS endpoint and control-plane logging
   hardening, dynamic management-IP privacy, and final security validation -
-  implementation delivered; live AWS validation remaining
+  delivered and live AWS validation completed
 
-## v0.9 - Observability and SRE Baseline
+## v0.9 - Multi-Environment GitOps Promotion Baseline
+
+Status: In progress
+
+Goal:
+
+Promote one immutable application artifact through isolated AWS development,
+test, and production environments with reviewable GitOps controls.
+
+Incremental scope:
+
+- v0.9.0 - v0.8 main convergence, environment topology, promotion boundaries,
+  isolation rules, lifecycle model, and active GitOps revision validation -
+  delivered
+- v0.9.1 - Helm environment configuration and release identity separation,
+  ordered multi-values rendering, release-only aws-dev promotion/rollback, and
+  three-environment static Helm validation - delivered
+- v0.9.2 - reusable AWS base, dev/test/prod Terraform and GitOps declarations,
+  non-overlapping address plans, independent state roots, and production
+  safety constraints - delivered
+- v0.9.3 - ordered build-once environment promotion, main-sourced release
+  capture, immutable GHCR identity verification, target concurrency,
+  stale-state protection, and release-only Promotion PRs - delivered
+- v0.9.4 - reviewed static release evidence, target GitHub Environment
+  approvals, CODEOWNERS, and environment-scoped rollback governance - delivered
+- v0.9.5 - AWS test/prod progressive delivery with ALB, Argo Rollouts,
+  release-bound AnalysisRuns, and reviewed runtime evidence - delivered
+- v0.9.6 - clean-room dev/test sequence, production static validation, guarded
+  recovery/teardown, cost-residual audit, and final evidence - implemented;
+  live aws-test acceptance pending
+
+## v1.0 - Observability and Production Readiness Baseline
 
 Status: Planned
 
 Goal:
 
-Build a production observability foundation.
+Make the multi-environment baseline observable and operationally sustainable.
 
 Planned scope:
 
 - Prometheus production deployment
 - Grafana dashboards
-- Alertmanager
+- Alertmanager and actionable alert routing
 - centralized logging
 - application SLI/SLO metrics
 - platform health monitoring
-
-## v1.0 - Production Readiness Baseline
-
-Status: Planned
-
-Goal:
-
-Finalize the reusable DevOps and platform-engineering baseline.
-
-Planned scope:
-
-- production-like environment and promotion model
 - remote Terraform state bootstrap and locking
 - platform upgrade and dependency lifecycle
 - clean-room infrastructure and GitOps rebuild

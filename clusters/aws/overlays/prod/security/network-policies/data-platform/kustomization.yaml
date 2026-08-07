@@ -1,0 +1,95 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../../../base/security/network-policies/data-platform
+labels:
+  - pairs:
+      platform.startup.dev/environment: aws-prod
+patches:
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-dns-egress
+    patch: |-
+      - op: replace
+        path: /spec/egress/0/to/1/ipBlock/cidr
+        value: 172.22.0.10/32
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-postgresql-baseline-join-egress
+    patch: |-
+      - op: replace
+        path: /spec/egress/0/to/0/ipBlock/cidr
+        value: 172.22.0.1/32
+      - op: replace
+        path: /spec/egress/0/to/1/ipBlock/cidr
+        value: 10.40.10.0/24
+      - op: replace
+        path: /spec/egress/0/to/2/ipBlock/cidr
+        value: 10.40.11.0/24
+      - op: replace
+        path: /spec/egress/1/to/0/ipBlock/cidr
+        value: 172.22.0.0/16
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-cnpg-to-postgresql-rw-service
+    patch: |-
+      - op: replace
+        path: /spec/egress/0/to/0/ipBlock/cidr
+        value: 172.22.0.0/16
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-kubernetes-api-to-cnpg-status
+    patch: |-
+      - op: replace
+        path: /spec/ingress/0/from/0/ipBlock/cidr
+        value: 10.40.10.0/24
+      - op: replace
+        path: /spec/ingress/0/from/1/ipBlock/cidr
+        value: 10.40.11.0/24
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-cnpg-to-barman-plugin
+    patch: |-
+      - op: replace
+        path: /spec/egress/0/to/1/ipBlock/cidr
+        value: 172.22.0.0/16
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-cnpg-to-kubernetes-api
+    patch: |-
+      - op: replace
+        path: /spec/egress/0/to/0/ipBlock/cidr
+        value: 172.22.0.1/32
+      - op: replace
+        path: /spec/egress/0/to/1/ipBlock/cidr
+        value: 10.40.10.0/24
+      - op: replace
+        path: /spec/egress/0/to/2/ipBlock/cidr
+        value: 10.40.11.0/24
+  - target:
+      group: networking.k8s.io
+      version: v1
+      kind: NetworkPolicy
+      name: allow-cnpg-full-recovery-egress
+    patch: |-
+      - op: replace
+        path: /spec/egress/0/to/0/ipBlock/cidr
+        value: 172.22.0.1/32
+      - op: replace
+        path: /spec/egress/0/to/1/ipBlock/cidr
+        value: 10.40.10.0/24
+      - op: replace
+        path: /spec/egress/0/to/2/ipBlock/cidr
+        value: 10.40.11.0/24

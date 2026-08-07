@@ -16,7 +16,8 @@ root = Path(sys.argv[1])
 policy = (
     root
     / "clusters"
-    / "aws-dev"
+    / "aws"
+    / "base"
     / "security"
     / "network-policies"
     / "data-platform"
@@ -25,7 +26,8 @@ policy = (
 application = (
     root
     / "clusters"
-    / "aws-dev"
+    / "aws"
+    / "base"
     / "platform"
     / "data-platform-network-policy.yaml"
 )
@@ -180,8 +182,8 @@ require(
     application,
     [
         "name: data-platform-network-policy-aws-dev",
-        "targetRevision: feature/v0.8-production-security-baseline",
-        "path: clusters/aws-dev/security/network-policies/data-platform",
+        "targetRevision: main",
+        "path: clusters/aws/overlays/dev/security/network-policies/data-platform",
         "namespace: data-platform",
         "prune: true",
         "selfHeal: true",

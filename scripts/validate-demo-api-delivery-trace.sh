@@ -9,7 +9,8 @@ ARGO_NAMESPACE="${ARGO_NAMESPACE:-argocd}"
 ARGO_APPLICATION="${ARGO_APPLICATION:-demo-api-aws-dev}"
 DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
 DEMO_DEPLOYMENT="${DEMO_DEPLOYMENT:-demo-api}"
-VALUES_PATH="${VALUES_PATH:-apps/demo-api/helm/values-aws-dev.yaml}"
+VALUES_PATH="${VALUES_PATH:-apps/demo-api/helm/values/releases/aws-dev.yaml}"
+ENVIRONMENT_VALUES_PATH="${ENVIRONMENT_VALUES_PATH:-apps/demo-api/helm/values/environments/aws-dev.yaml}"
 DESIRED_REVISION="${DESIRED_REVISION:-${PROMOTION_REVISION:-HEAD}}"
 EXPECTED_SOURCE_REPOSITORY="${EXPECTED_SOURCE_REPOSITORY:-SterlingAureum/startup-devops-baseline}"
 WAIT_TIMEOUT="${WAIT_TIMEOUT:-10m}"
@@ -101,7 +102,7 @@ for field in (
     ("image", "repository"),
     ("image", "tag"),
     ("image", "digest"),
-    ("env", "APP_VERSION"),
+    ("release", "applicationVersion"),
     ("delivery", "sourceRepository"),
     ("delivery", "sourceCommit"),
     ("delivery", "workflowRunId"),
@@ -168,12 +169,16 @@ if [[ "${ARGO_REVISION}" != "${DESIRED_REVISION}" ]]; then
 fi
 
 jq --exit-status \
-  --arg values_file "$(basename "${VALUES_PATH}")" \
+  --arg environment_values_file "${ENVIRONMENT_VALUES_PATH#apps/demo-api/helm/}" \
+  --arg release_values_file "${VALUES_PATH#apps/demo-api/helm/}" \
   '
     .spec.source.path == "apps/demo-api/helm" and
-    (.spec.source.helm.valueFiles | index($values_file) != null)
+    .spec.source.helm.valueFiles == [
+      $environment_values_file,
+      $release_values_file
+    ]
   ' <<< "${ARGO_JSON}" >/dev/null || {
-  echo "The Argo CD Application does not use the expected Helm values file." >&2
+  echo "The Argo CD Application does not use the expected ordered Helm values files." >&2
   exit 1
 }
 

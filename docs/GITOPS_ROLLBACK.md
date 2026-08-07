@@ -8,8 +8,8 @@ deploy directly to Kubernetes.
 ```text
 operator selects historical desired-state commit
   -> GitHub Actions validates its release identity
-  -> rollback branch restores values-aws-dev.yaml
-  -> human reviews and merges the values-only pull request
+  -> rollback branch restores values/releases/aws-dev.yaml
+  -> human reviews and merges the release-only pull request
   -> Argo CD reconciles the approved Git revision
   -> delivery trace verifies the restored runtime identity
 ```
@@ -24,7 +24,7 @@ desired-state commit contained in the selected base branch. Relative to its
 first parent, that commit must change only:
 
 ```text
-apps/demo-api/helm/values-aws-dev.yaml
+apps/demo-api/helm/values/releases/aws-dev.yaml
 ```
 
 The historical file must contain a complete v0.7.3-or-later delivery identity:
@@ -33,7 +33,7 @@ The historical file must contain a complete v0.7.3-or-later delivery identity:
 image.repository
 image.tag = sha-<first-seven-source-commit-characters>
 image.digest = sha256:<64-lowercase-hex-characters>
-env.APP_VERSION = image.tag
+release.applicationVersion = image.tag
 delivery.sourceRepository
 delivery.sourceCommit = <full-commit>
 delivery.workflowRunId
@@ -51,14 +51,14 @@ Start from the branch that will receive the rollback:
 git switch main
 git pull --ff-only
 git log --first-parent --oneline -- \
-  apps/demo-api/helm/values-aws-dev.yaml
+  apps/demo-api/helm/values/releases/aws-dev.yaml
 ```
 
 Inspect a candidate before dispatching:
 
 ```bash
 git show --stat <candidate-commit>
-git show <candidate-commit>:apps/demo-api/helm/values-aws-dev.yaml
+git show <candidate-commit>:apps/demo-api/helm/values/releases/aws-dev.yaml
 ```
 
 Choose an older commit with non-empty `image.digest` and `delivery` fields.
@@ -110,7 +110,7 @@ gh pr diff <rollback-pr-number> --name-only
 Expected output:
 
 ```text
-apps/demo-api/helm/values-aws-dev.yaml
+apps/demo-api/helm/values/releases/aws-dev.yaml
 ```
 
 Then review the restored tag, digest, source commit, and workflow run ID. The
@@ -139,8 +139,9 @@ DESIRED_REVISION="${ROLLBACK_DESIRED_REVISION}" \
 ./scripts/validate-demo-api-delivery-trace.sh
 ```
 
-The validator requires the Argo CD revision to equal the selected commit. It
-then checks that Git, Deployment annotations, digest-pinned container image,
+The environment values file is never restored by this workflow. The validator
+requires the Argo CD revision to equal the selected commit. It then checks that
+Git, Deployment annotations, digest-pinned container image,
 every Pod `imageID`, and every `/version` response all identify the historical
 release.
 

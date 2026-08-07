@@ -1,130 +1,186 @@
-name: demo-api GitOps rollback
+name: demo-api environment GitOps rollback
 
 on:
   workflow_dispatch:
     inputs:
-      rollback_to_revision:
-        description: Full historical values-only desired-state commit to restore
+      target_environment:
+        description: Environment whose release identity will be restored
         required: true
-        type: string
-      rollback_base_branch:
-        description: Branch that will receive the rollback pull request
-        required: false
-        default: main
+        type: choice
+        options:
+          - aws-dev
+          - aws-test
+          - aws-prod
+      rollback_to_revision:
+        description: Full historical target-release-only desired-state commit
+        required: true
         type: string
 
 permissions:
   contents: read
 
 concurrency:
-  group: demo-api-rollback-${{ inputs.rollback_base_branch }}
+  group: demo-api-environment-rollback-${{ inputs.target_environment }}
   cancel-in-progress: false
+
+env:
+  BASE_BRANCH: main
 
 jobs:
   prepare-rollback:
-    name: Create aws-dev rollback PR
+    name: Create environment rollback PR
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    environment:
+      name: ${{ inputs.target_environment }}
+      deployment: false
     permissions:
       contents: write
+      packages: read
       pull-requests: write
-    env:
-      ROLLBACK_TO_REVISION: ${{ inputs.rollback_to_revision }}
-      ROLLBACK_BASE_BRANCH: ${{ inputs.rollback_base_branch }}
-      VALUES_PATH: apps/demo-api/helm/values-aws-dev.yaml
     steps:
-      - name: Checkout repository history
+      - name: Checkout main with repository history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          ref: main
           fetch-depth: 0
 
       - name: Setup Helm
         uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
 
-      - name: Prepare rollback branch
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to GHCR for immutable artifact verification
+        uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Prepare target-release-only rollback
         id: rollback
         env:
+          TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+          ROLLBACK_TO_REVISION: ${{ inputs.rollback_to_revision }}
           EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
         run: |
-          base_branch="${ROLLBACK_BASE_BRANCH}"
-          target_revision="${ROLLBACK_TO_REVISION}"
-
-          if ! git check-ref-format "refs/heads/${base_branch}" >/dev/null 2>&1; then
-            echo "::error::Invalid rollback base branch: ${base_branch}"
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "::error::Environment rollback must be dispatched from main."
             exit 1
           fi
-
-          if [[ ! "${target_revision}" =~ ^[0-9a-f]{40}$ ]]; then
+          case "${TARGET_ENVIRONMENT}" in
+            aws-dev|aws-test|aws-prod)
+              ;;
+            *)
+              echo "::error::Unsupported rollback environment: ${TARGET_ENVIRONMENT}"
+              exit 1
+              ;;
+          esac
+          if [[ ! "${ROLLBACK_TO_REVISION}" =~ ^[0-9a-f]{40}$ ]]; then
             echo "::error::rollback_to_revision must be a full lowercase Git commit SHA."
             exit 1
           fi
 
-          if ! git ls-remote --exit-code --heads origin \
-            "refs/heads/${base_branch}" >/dev/null; then
-            echo "::error::Rollback base branch does not exist: ${base_branch}"
-            exit 1
-          fi
-
           git fetch --no-tags origin \
-            "+refs/heads/${base_branch}:refs/remotes/origin/${base_branch}"
-
-          if ! git cat-file -e "${target_revision}^{commit}" 2>/dev/null; then
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          base_revision="$(git rev-parse "origin/${BASE_BRANCH}")"
+          if ! git cat-file -e "${ROLLBACK_TO_REVISION}^{commit}" 2>/dev/null; then
             echo "::error::Rollback target is unavailable in repository history."
             exit 1
           fi
-
           if ! git merge-base --is-ancestor \
-            "${target_revision}" "origin/${base_branch}"; then
-            echo "::error::Rollback target is not contained in ${base_branch}."
+            "${ROLLBACK_TO_REVISION}" "origin/${BASE_BRANCH}"; then
+            echo "::error::Rollback target is not contained in main."
             exit 1
           fi
 
-          base_revision="$(git rev-parse "origin/${base_branch}")"
-          rollback_branch="rollback/demo-api-${target_revision:0:12}-from-${base_revision:0:12}"
+          environment_values_path="apps/demo-api/helm/values/environments/${TARGET_ENVIRONMENT}.yaml"
+          values_path="apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml"
+          rollback_branch="rollback/demo-api-${TARGET_ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git switch --create "${rollback_branch}" "origin/${BASE_BRANCH}"
 
-          if git ls-remote --exit-code --heads origin \
-            "refs/heads/${rollback_branch}" >/dev/null 2>&1; then
-            git fetch --no-tags origin \
-              "+refs/heads/${rollback_branch}:refs/remotes/origin/${rollback_branch}"
-            git switch --create "${rollback_branch}" \
-              --track "origin/${rollback_branch}"
-          else
-            git switch --create "${rollback_branch}" "origin/${base_branch}"
-          fi
-
-          ROLLBACK_BASE_REVISION="origin/${base_branch}" \
-          ROLLBACK_TO_REVISION="${target_revision}" \
-          EXPECTED_SOURCE_REPOSITORY="${EXPECTED_SOURCE_REPOSITORY}" \
-          VALUES_PATH="${VALUES_PATH}" \
+          ROLLBACK_BASE_REVISION="origin/${BASE_BRANCH}" \
+          VALUES_PATH="${values_path}" \
             ./scripts/prepare-demo-api-rollback.sh
 
-          helm lint apps/demo-api/helm --values "${VALUES_PATH}"
+          helm lint apps/demo-api/helm \
+            --values "${environment_values_path}" \
+            --values "${values_path}"
           helm template demo-api apps/demo-api/helm \
-            --values "${VALUES_PATH}" >/dev/null
+            --values "${environment_values_path}" \
+            --values "${values_path}" >/dev/null
           git diff --check
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          changed=false
-          if ! git diff --quiet -- "${VALUES_PATH}"; then
-            git add "${VALUES_PATH}"
-            git commit -m "release: roll back aws-dev demo-api to ${target_revision:0:12}"
-            git push origin "HEAD:refs/heads/${rollback_branch}"
+          mapfile -t changed_files < <(git diff --name-only)
+          if [[ "${#changed_files[@]}" == "0" ]]; then
+            changed=false
+          elif [[ "${#changed_files[@]}" == "1" && \
+                  "${changed_files[0]}" == "${values_path}" ]]; then
             changed=true
+          else
+            echo "::error::Rollback may change only ${values_path}."
+            printf 'Unexpected rollback diff: %s\n' "${changed_files[@]}"
+            exit 1
           fi
 
-          echo "base-branch=${base_branch}" >> "${GITHUB_OUTPUT}"
-          echo "base-revision=${base_revision}" >> "${GITHUB_OUTPUT}"
-          echo "rollback-branch=${rollback_branch}" >> "${GITHUB_OUTPUT}"
-          echo "changed=${changed}" >> "${GITHUB_OUTPUT}"
+          image_repository="$(
+            awk '/^  repository:/{gsub(/"/, "", $2); print $2}' "${values_path}"
+          )"
+          image_digest="$(
+            awk '/^  digest:/{gsub(/"/, "", $2); print $2}' "${values_path}"
+          )"
+          image_reference="${image_repository}@${image_digest}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [[ "${changed}" == "true" ]]; then
+            git add "${values_path}"
+            git commit -m "release: roll back ${TARGET_ENVIRONMENT} demo-api to ${ROLLBACK_TO_REVISION:0:12}"
+          fi
 
-      - name: Create or reuse rollback pull request
+          {
+            echo "base-revision=${base_revision}"
+            echo "rollback-branch=${rollback_branch}"
+            echo "target-environment=${TARGET_ENVIRONMENT}"
+            echo "environment-values-path=${environment_values_path}"
+            echo "values-path=${values_path}"
+            echo "image-reference=${image_reference}"
+            echo "changed=${changed}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Verify exact immutable GHCR artifact exists
+        env:
+          IMAGE_REFERENCE: ${{ steps.rollback.outputs.image-reference }}
+        run: |
+          if [[ ! "${IMAGE_REFERENCE}" =~ @sha256:[0-9a-f]{64}$ ]]; then
+            echo "::error::Rollback did not produce a valid immutable image reference."
+            exit 1
+          fi
+          docker buildx imagetools inspect "${IMAGE_REFERENCE}" >/dev/null
+
+      - name: Reject stale main state and push rollback branch
+        if: steps.rollback.outputs.changed == 'true'
+        env:
+          BASE_REVISION: ${{ steps.rollback.outputs.base-revision }}
+          ROLLBACK_BRANCH: ${{ steps.rollback.outputs.rollback-branch }}
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          if [[ "$(git rev-parse "origin/${BASE_BRANCH}")" != "${BASE_REVISION}" ]]; then
+            echo "::error::main changed while rollback was being prepared; rerun from current state."
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/${ROLLBACK_BRANCH}"
+
+      - name: Create rollback pull request
         id: pull-request
+        if: steps.rollback.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BASE_BRANCH: ${{ steps.rollback.outputs.base-branch }}
+          BASE_REVISION: ${{ steps.rollback.outputs.base-revision }}
           ROLLBACK_BRANCH: ${{ steps.rollback.outputs.rollback-branch }}
+          TARGET_ENVIRONMENT: ${{ steps.rollback.outputs.target-environment }}
+          VALUES_PATH: ${{ steps.rollback.outputs.values-path }}
           TARGET_REVISION: ${{ steps.rollback.outputs.target-revision }}
           IMAGE_TAG: ${{ steps.rollback.outputs.image-tag }}
           IMAGE_DIGEST: ${{ steps.rollback.outputs.image-digest }}
@@ -132,11 +188,9 @@ jobs:
         run: |
           git fetch --no-tags origin \
             "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
-
-          if git diff --quiet "origin/${BASE_BRANCH}" HEAD; then
-            echo "status=already-restored" >> "${GITHUB_OUTPUT}"
-            echo "url=" >> "${GITHUB_OUTPUT}"
-            exit 0
+          if [[ "$(git rev-parse "origin/${BASE_BRANCH}")" != "${BASE_REVISION}" ]]; then
+            echo "::error::main changed before rollback PR creation; rerun the workflow."
+            exit 1
           fi
 
           mapfile -t changed_files < <(
@@ -144,70 +198,61 @@ jobs:
           )
           if [[ "${#changed_files[@]}" != "1" || \
                 "${changed_files[0]}" != "${VALUES_PATH}" ]]; then
-            echo "::error::Rollback branch must differ from the base only in ${VALUES_PATH}."
+            echo "::error::Rollback branch must differ from main only in ${VALUES_PATH}."
             printf 'Unexpected rollback diff: %s\n' "${changed_files[@]}"
             exit 1
           fi
 
-          pr_url="$(
-            gh pr list \
-              --state open \
+          body_file="$(mktemp)"
+          {
+            echo "## ${TARGET_ENVIRONMENT} demo-api rollback"
+            echo
+            echo "- Historical desired-state commit: \`${TARGET_REVISION}\`"
+            echo "- Restored image tag: \`${IMAGE_TAG}\`"
+            echo "- Restored image digest: \`${IMAGE_DIGEST}\`"
+            echo "- Restored source commit: \`${SOURCE_COMMIT}\`"
+            echo "- Captured main revision: \`${BASE_REVISION}\`"
+            echo "- Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo
+            echo "This PR restores a previously reviewed target-release-only commit. It never changes environment configuration, merges itself, or accesses EKS."
+          } > "${body_file}"
+
+          if ! pr_url="$(
+            gh pr create \
               --base "${BASE_BRANCH}" \
               --head "${ROLLBACK_BRANCH}" \
-              --json url \
-              --jq '.[0].url // empty'
-          )"
-
-          if [[ -z "${pr_url}" ]]; then
-            body_file="$(mktemp)"
-            {
-              echo "## aws-dev demo-api rollback"
-              echo
-              echo "- Historical desired-state commit: \`${TARGET_REVISION}\`"
-              echo "- Restored image tag: \`${IMAGE_TAG}\`"
-              echo "- Restored image digest: \`${IMAGE_DIGEST}\`"
-              echo "- Restored source commit: \`${SOURCE_COMMIT}\`"
-              echo "- Rollback workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-              echo
-              echo "This PR restores a previously reviewed values file. It changes Git desired state only; merge remains a human decision and Argo CD performs reconciliation."
-            } > "${body_file}"
-
-            if ! pr_url="$(
-              gh pr create \
-                --base "${BASE_BRANCH}" \
-                --head "${ROLLBACK_BRANCH}" \
-                --title "release: roll back aws-dev demo-api to ${IMAGE_TAG}" \
-                --body-file "${body_file}"
-            )"; then
-              echo "::error::Could not create the rollback PR. Enable repository Actions permission to create pull requests, then rerun this job."
-              exit 1
-            fi
-            status=created
-          else
-            status=reused
+              --title "release: roll back demo-api ${TARGET_ENVIRONMENT} to ${IMAGE_TAG}" \
+              --body-file "${body_file}"
+          )"; then
+            echo "::error::Could not create the rollback PR. Enable repository Actions permission to create pull requests, then rerun this job."
+            exit 1
           fi
 
-          echo "status=${status}" >> "${GITHUB_OUTPUT}"
+          echo "status=created" >> "${GITHUB_OUTPUT}"
           echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
 
       - name: Publish rollback summary
         env:
+          CHANGED: ${{ steps.rollback.outputs.changed }}
           PR_STATUS: ${{ steps.pull-request.outputs.status }}
           PR_URL: ${{ steps.pull-request.outputs.url }}
-          BASE_BRANCH: ${{ steps.rollback.outputs.base-branch }}
-          ROLLBACK_BRANCH: ${{ steps.rollback.outputs.rollback-branch }}
+          TARGET_ENVIRONMENT: ${{ steps.rollback.outputs.target-environment }}
           TARGET_REVISION: ${{ steps.rollback.outputs.target-revision }}
           IMAGE_TAG: ${{ steps.rollback.outputs.image-tag }}
           IMAGE_DIGEST: ${{ steps.rollback.outputs.image-digest }}
         run: |
+          if [[ "${CHANGED}" == "true" ]]; then
+            status="${PR_STATUS}"
+          else
+            status="already-restored"
+          fi
           {
-            echo "### aws-dev GitOps rollback"
+            echo "### demo-api environment GitOps rollback"
             echo
-            echo "- Status: \`${PR_STATUS}\`"
+            echo "- Status: \`${status}\`"
+            echo "- Environment: \`${TARGET_ENVIRONMENT}\`"
             echo "- Historical desired state: \`${TARGET_REVISION}\`"
             echo "- Restored image: \`${IMAGE_TAG}@${IMAGE_DIGEST}\`"
-            echo "- Base branch: \`${BASE_BRANCH}\`"
-            echo "- Rollback branch: \`${ROLLBACK_BRANCH}\`"
             if [[ -n "${PR_URL}" ]]; then
               echo "- Pull request: ${PR_URL}"
             fi

@@ -1,0 +1,68 @@
+aws_region   = "us-east-1"
+project_name = "startup-devops-baseline"
+environment  = "test"
+
+vpc_cidr = "10.30.0.0/16"
+
+availability_zones = [
+  "us-east-1a",
+  "us-east-1b",
+]
+
+public_subnet_cidrs = [
+  "10.30.0.0/24",
+  "10.30.1.0/24",
+]
+
+private_subnet_cidrs = [
+  "10.30.10.0/24",
+  "10.30.11.0/24",
+]
+
+enable_nat_gateway = true
+single_nat_gateway = true
+
+additional_tags = {
+  Owner      = "replace-me"
+  Repository = "startup-devops-baseline"
+}
+
+# EKS 1.36 requires Karpenter 1.13 or newer. The GitOps increment pins
+# Karpenter 1.14.x, so keep this version explicit and upgrade deliberately.
+eks_cluster_version = "1.36"
+
+# Keep this stable across disposable cluster rebuilds. The data-platform
+# NetworkPolicy uses it for pre-DNAT access to operator-managed Services.
+eks_service_ipv4_cidr = "172.21.0.0/16"
+
+# Public access fails closed unless a restricted CIDR is supplied at runtime.
+# Do not place a workstation public IP in this file. Use:
+# ./scripts/apply-eks-api-access-cidr.sh
+eks_endpoint_public_access  = true
+eks_endpoint_private_access = true
+
+# Security-relevant control-plane logs use a bounded retention period.
+eks_enabled_cluster_log_types  = ["api", "audit", "authenticator"]
+eks_cluster_log_retention_days = 30
+
+route53_hosted_zone_name = "aureumstack.com"
+demo_api_hostname        = "demo.test.aureumstack.com"
+
+eks_node_group_name     = "general"
+eks_node_instance_types = ["t3.medium"]
+eks_node_capacity_type  = "ON_DEMAND"
+eks_node_ami_type       = "AL2023_x86_64_STANDARD"
+eks_node_disk_size      = 30
+eks_node_desired_size   = 2
+eks_node_min_size       = 2
+eks_node_max_size       = 3
+
+# Optional: use a persistent IAM role/user ARN, not an STS assumed-role session ARN.
+eks_cluster_admin_principal_arn = null
+
+# The aws-test environment is disposable. Set false before using this pattern
+# for backups that must survive an infrastructure destroy.
+cnpg_backup_force_destroy = true
+
+# The ephemeral test environment retains a seven-day recovery opportunity.
+external_secrets_recovery_window_in_days = 7

@@ -5,7 +5,7 @@ SCRIPT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPOSITORY_DIR="${REPOSITORY_DIR:-${SCRIPT_ROOT}}"
 ROLLBACK_TO_REVISION="${ROLLBACK_TO_REVISION:-}"
 ROLLBACK_BASE_REVISION="${ROLLBACK_BASE_REVISION:-HEAD}"
-VALUES_PATH="${VALUES_PATH:-apps/demo-api/helm/values-aws-dev.yaml}"
+VALUES_PATH="${VALUES_PATH:-apps/demo-api/helm/values/releases/aws-dev.yaml}"
 EXPECTED_SOURCE_REPOSITORY="${EXPECTED_SOURCE_REPOSITORY:-SterlingAureum/startup-devops-baseline}"
 
 for command in git python3; do
@@ -113,7 +113,7 @@ for field in (
     ("image", "repository"),
     ("image", "tag"),
     ("image", "digest"),
-    ("env", "APP_VERSION"),
+    ("release", "applicationVersion"),
     ("delivery", "sourceRepository"),
     ("delivery", "sourceCommit"),
     ("delivery", "workflowRunId"),

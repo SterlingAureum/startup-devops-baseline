@@ -22,7 +22,7 @@
 {{- define "demo-api.labels" -}}
 helm.sh/chart: {{ include "demo-api.chart" . }}
 {{ include "demo-api.selectorLabels" . }}
-app.kubernetes.io/version: {{ default .Chart.AppVersion .Values.env.APP_VERSION | quote }}
+app.kubernetes.io/version: {{ default .Chart.AppVersion .Values.release.applicationVersion | quote }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
@@ -33,7 +33,8 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 
 {{- define "demo-api.deliveryAnnotations" -}}
 platform.startup.dev/image-tag: {{ required "image.tag is required" .Values.image.tag | quote }}
-platform.startup.dev/application-version: {{ required "env.APP_VERSION is required" .Values.env.APP_VERSION | quote }}
+platform.startup.dev/application-version: {{ required "release.applicationVersion is required" .Values.release.applicationVersion | quote }}
+platform.startup.dev/environment: {{ required "env.APP_ENV is required" .Values.env.APP_ENV | quote }}
 {{- with .Values.image.digest }}
 platform.startup.dev/image-digest: {{ . | quote }}
 {{- end }}

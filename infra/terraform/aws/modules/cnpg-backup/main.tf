@@ -70,7 +70,7 @@ resource "aws_s3_bucket_lifecycle_configuration" "this" {
   bucket = aws_s3_bucket.this.id
 
   rule {
-    id     = "development-backup-hygiene"
+    id     = "backup-hygiene"
     status = "Enabled"
 
     filter {}

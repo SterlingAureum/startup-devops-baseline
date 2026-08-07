@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-VALUES_FILE="${VALUES_FILE:-apps/demo-api/helm/values-aws-dev.yaml}"
+VALUES_FILE="${VALUES_FILE:-apps/demo-api/helm/values/releases/aws-dev.yaml}"
 SOURCE_REPOSITORY="${SOURCE_REPOSITORY:-}"
 SOURCE_COMMIT="${SOURCE_COMMIT:-}"
 WORKFLOW_RUN_ID="${WORKFLOW_RUN_ID:-}"

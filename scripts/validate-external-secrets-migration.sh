@@ -3,8 +3,8 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-readonly ACTIVE_EXTERNAL_SECRET="${ROOT_DIR}/clusters/aws-dev/security/external-secrets/startup-apps/demo-api-postgresql.yaml"
-readonly STAGED_EXTERNAL_SECRET="${ROOT_DIR}/clusters/aws-dev/security/external-secrets/staged/demo-api-postgresql.yaml"
+readonly ACTIVE_EXTERNAL_SECRET="${ROOT_DIR}/clusters/aws/base/security/external-secrets/startup-apps/demo-api-postgresql.yaml"
+readonly STAGED_EXTERNAL_SECRET="${ROOT_DIR}/clusters/aws/base/security/external-secrets/staged/demo-api-postgresql.yaml"
 readonly MIGRATION_SCRIPT="${ROOT_DIR}/scripts/migrate-demo-api-postgresql-secret.sh"
 readonly DEPLOY_SCRIPT="${ROOT_DIR}/scripts/deploy-aws-dev-root-app.sh"
 readonly LEGACY_SCRIPT="${ROOT_DIR}/scripts/sync-demo-api-postgresql-secret.sh"
@@ -242,9 +242,10 @@ for marker in (
     require(roadmap, marker, "v0.8 roadmap status")
 
 for marker in (
-    "!clusters/aws-dev/platform/external-secrets.yaml",
-    "!clusters/aws-dev/platform/external-secrets-startup-apps.yaml",
-    "!clusters/aws-dev/security/external-secrets/**/*.yaml",
+    "!clusters/aws/base/platform/external-secrets.yaml",
+    "!clusters/aws/base/platform/external-secrets-startup-apps.yaml",
+    "!clusters/aws/base/security/external-secrets/**/*.yaml",
+    "!clusters/aws/overlays/**/security/external-secrets/**/*.yaml",
 ):
     require(gitignore, marker, "External Secrets GitOps ignore exception")
 PY

@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 METADATA_FILE="${METADATA_FILE:-demo-api-image-metadata.json}"
-VALUES_FILE="${VALUES_FILE:-apps/demo-api/helm/values-aws-dev.yaml}"
+VALUES_FILE="${VALUES_FILE:-apps/demo-api/helm/values/releases/aws-dev.yaml}"
 EXPECTED_IMAGE_REPOSITORY="${EXPECTED_IMAGE_REPOSITORY:-}"
 EXPECTED_SOURCE_REPOSITORY="${EXPECTED_SOURCE_REPOSITORY:-}"
 EXPECTED_SOURCE_COMMIT="${EXPECTED_SOURCE_COMMIT:-}"
@@ -92,7 +92,7 @@ if [[ -n "${GITHUB_OUTPUT:-}" ]]; then
   } >> "${GITHUB_OUTPUT}"
 fi
 
-echo "Prepared aws-dev promotion from verified image metadata:"
+echo "Prepared aws-dev release identity from verified image metadata:"
 echo "  source=${SOURCE_REPOSITORY}@${SOURCE_COMMIT}"
 echo "  image=${IMAGE_REPOSITORY}@${IMAGE_DIGEST}"
 echo "  values=${VALUES_FILE}"

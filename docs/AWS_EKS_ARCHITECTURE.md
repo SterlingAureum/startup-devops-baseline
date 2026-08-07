@@ -2,7 +2,15 @@
 
 ## Purpose
 
-This document describes the runtime architecture of the AWS EKS environment.
+This document describes the shared AWS EKS architecture and the v0.9
+dev/test/prod isolation profiles. The detailed runtime diagrams use aws-dev as
+the currently validated example.
+
+aws-dev retains its validated Deployment and single-Service traffic path.
+aws-test and aws-prod reuse the same infrastructure boundary but v0.9.5 render
+Argo Rollouts, stable/canary Services, ALB weighted target groups, and Web
+AnalysisRuns. See `docs/AWS_PROGRESSIVE_DELIVERY.md` for that target-specific
+release path.
 
 ## Architecture
 
@@ -226,6 +234,17 @@ Argo CD
 ```
 
 ## Network
+
+Declared environment address plan:
+
+| Environment | VPC | Public subnets | Private subnets | EKS Service CIDR |
+|---|---|---|---|---|
+| dev | `10.20.0.0/16` | `10.20.0.0/24`, `10.20.1.0/24` | `10.20.10.0/24`, `10.20.11.0/24` | `172.20.0.0/16` |
+| test | `10.30.0.0/16` | `10.30.0.0/24`, `10.30.1.0/24` | `10.30.10.0/24`, `10.30.11.0/24` | `172.21.0.0/16` |
+| prod | `10.40.0.0/16` | `10.40.0.0/24`, `10.40.1.0/24` | `10.40.10.0/24`, `10.40.11.0/24` | `172.22.0.0/16` |
+
+The prod profile uses one NAT Gateway per Availability Zone and excludes the
+FIS experiment foundation and FIS-only Karpenter capacity.
 
 ```text
 VPC 10.20.0.0/16

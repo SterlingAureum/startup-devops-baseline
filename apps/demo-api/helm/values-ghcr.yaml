@@ -12,7 +12,9 @@ image:
   digest: "sha256:REPLACE_WITH_64_CHARACTER_DIGEST"
   pullPolicy: IfNotPresent
 
+release:
+  applicationVersion: "sha-REPLACE_WITH_SHORT_COMMIT"
+
 env:
   APP_NAME: demo-api
-  APP_VERSION: "sha-REPLACE_WITH_SHORT_COMMIT"
   APP_ENV: local

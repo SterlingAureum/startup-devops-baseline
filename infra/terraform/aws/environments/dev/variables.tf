@@ -14,6 +14,11 @@ variable "environment" {
   description = "Deployment environment name."
   type        = string
   default     = "dev"
+
+  validation {
+    condition     = var.environment == "dev"
+    error_message = "The dev root must use environment = dev so its state cannot claim another environment's resource names."
+  }
 }
 
 variable "additional_tags" {

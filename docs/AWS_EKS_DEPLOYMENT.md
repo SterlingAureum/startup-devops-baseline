@@ -2,6 +2,11 @@
 
 ## Deployment Flow
 
+This runbook remains the live aws-dev workflow. v0.9.2 also declares aws-test
+and aws-prod, but does not apply them as part of this checkpoint. The existing
+operational scripts continue to default to the dev Terraform root and dev
+overlay until the clean-room multi-environment validation increment.
+
 ```text
 Developer
   -> guarded Terraform apply with runtime-only management /32
@@ -54,6 +59,13 @@ this file.
 
 ```bash
 ./scripts/validate-terraform.sh
+```
+
+This validates dev, test, and prod with `init -backend=false`; it does not plan
+or create any AWS resource. Validate the GitOps declarations separately with:
+
+```bash
+./scripts/validate-aws-environment-declarations.sh
 ```
 
 ## 3. Plan and Apply

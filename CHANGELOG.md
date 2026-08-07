@@ -2,7 +2,186 @@
 
 All notable changes to this repository are documented in this file.
 
-## v0.8.6 (Unreleased)
+## v0.9.6
+
+### Added
+
+- Guarded create/resume Terraform entrypoint and environment-aware GitOps
+  bootstrap for the ephemeral aws-test clean-room environment.
+- Reviewed aws-test Rollout completion and runtime validation entrypoints that
+  retain the restricted local EKS access boundary.
+- Generalized dependency-aware aws-dev/aws-test teardown with an explicit
+  aws-prod refusal and environment-specific confirmation phrase.
+- Post-destroy AWS residual audit for Terraform state, EKS, VPC, EC2, EBS,
+  NAT Gateway, Elastic IP, S3, Secrets Manager deletion state, CloudWatch,
+  ACM, Route 53, and currently tagged regional resources.
+- Final v0.9.6 evidence writer, validator, tamper behavior tests, and protected
+  evidence path binding dev/test qualification to one immutable artifact.
+- Clean-room lifecycle and failure-recovery runbook plus the v0.9.6 checkpoint
+  document.
+
+### Changed
+
+- Allowed the shared AWS root deployment helper to accept an explicit set of
+  reviewable Argo CD health states while preserving Healthy-only aws-dev
+  behavior by default.
+- Kept aws-test ephemeral and aws-prod static-only for v0.9 acceptance instead
+  of requiring three concurrently running portfolio clusters.
+- Added lifecycle, cleanup, and final-evidence behavior to the reusable CI
+  quality gate. Live AWS execution remains a separate operator acceptance step.
+
+## v0.9.5
+
+### Added
+
+- GitOps-managed Argo Rollouts in the reusable AWS platform base and ALB
+  weighted canary delivery for aws-test and aws-prod.
+- Environment-specific test and production canary steps with bounded surge,
+  zero intentional unavailability, Web AnalysisRun readiness/database/release
+  identity checks, and manual progression gates.
+- Local restricted-EKS runtime evidence collection plus strict v0.9.5 evidence
+  writing, validation, freshness, release binding, and tamper behavior tests.
+- Static contracts for ALB action routing, Rollout-managed Argo CD fields,
+  AnalysisRun release identity, and the AWS progressive-delivery profiles.
+- A least-privilege NetworkPolicy path from the Argo Rollouts controller to
+  demo-api port 8080 for canary-local Web analysis.
+
+### Changed
+
+- Required cross-environment Promotion PRs to cite both the existing reviewed
+  static evidence and a fresh, reviewed AWS runtime record from `main`.
+- Preserved aws-dev as the already validated Deployment baseline while
+  enabling progressive delivery only in aws-test and aws-prod.
+- Kept GitHub-hosted evidence, promotion, and rollback jobs outside EKS; live
+  evidence is collected locally because the Kubernetes API remains restricted.
+
+## v0.9.4
+
+### Added
+
+- Manual source-release qualification workflow for aws-dev and aws-test that
+  verifies release schema, Helm rendering, and exact GHCR digest availability,
+  then creates a reviewable machine-readable evidence PR.
+- Strict v0.9.4 evidence schema and freshness validation bound to the current
+  source release SHA-256, source environment, evidence run ID, immutable image,
+  source commit, and original build workflow identity.
+- CODEOWNERS boundaries for demo-api release records, evidence, delivery
+  workflows, and the scripts that mutate or validate release state.
+- Promotion and rollback jobs protected by target GitHub Environments, plus
+  local behavior tests for evidence tampering, staleness, expiration, approval
+  contracts, and dev/test/prod rollback isolation.
+
+### Changed
+
+- Required every aws-dev to aws-test and aws-test to aws-prod Promotion PR to
+  cite reviewed, unexpired source evidence already present on `main`.
+- Generalized the GitOps rollback workflow from aws-dev to aws-dev, aws-test,
+  and aws-prod while preserving historical target-release-only restoration,
+  immutable artifact verification, stale-main rejection, PR review, and zero
+  direct EKS access.
+- Kept v0.9.4 evidence explicitly static; AWS rollout and AnalysisRun runtime
+  evidence remains part of v0.9.5.
+
+## v0.9.3
+
+### Added
+
+- Manual ordered environment promotion workflow for aws-dev to aws-test and
+  aws-test to aws-prod, with invalid skipped, reverse, and same-environment
+  transitions rejected before mutation.
+- Strict release-copy helper that preserves the exact image digest, readable
+  tag, application version, source commit, source repository, and build
+  workflow identity while changing only the target release file.
+- Digest-addressed GHCR artifact existence verification, target-environment
+  concurrency groups, and fail-closed stale-main checks before branch push and
+  PR creation.
+- Local behavior and workflow-contract validation for allowed and denied
+  transitions, invalid digests, stale source snapshots, permissions, PR-only
+  behavior, and release-path isolation.
+
+### Changed
+
+- Extended the build-once delivery chain from the existing build to aws-dev PR
+  into the ordered aws-dev to aws-test to aws-prod model without granting
+  GitHub Actions access to EKS or automatic merge authority.
+- Added the ordered promotion contract to the reusable CI quality gate and
+  updated the active multi-environment delivery documentation.
+
+## v0.9.2
+
+### Added
+
+- Independent dev, test, and prod Terraform roots with non-overlapping VPC and
+  EKS Service CIDRs, unique cluster/DNS/Secret/backup identities, and separate
+  local state boundaries.
+- Reusable AWS Kustomize base plus dev/test/prod overlays for platform,
+  CloudNativePG, External Secrets, and NetworkPolicy declarations.
+- Static environment-isolation validation and three-environment Kustomize
+  rendering in the reusable quality gate.
+- Production fail-closed validation requiring multi-AZ NAT, 90-day control-plane
+  logs, a non-destructive backup bucket, and a 30-day Secret recovery window.
+
+### Changed
+
+- Migrated the active aws-dev GitOps source from `clusters/aws-dev` to the dev
+  overlay while preserving its resource identities and runtime configuration.
+- Extended Terraform validation from dev only to dev, test, and prod.
+- Excluded AWS FIS infrastructure and FIS-only Karpenter capacity from the
+  production declaration.
+
+## v0.9.1
+
+### Added
+
+- Separate Helm environment and release values for aws-dev, aws-test, and
+  aws-prod, with static rendering profiles for environments not yet created.
+- A values-ownership contract that rejects artifact identity in environment
+  files, runtime configuration in release files, invalid delivery identity,
+  legacy mixed aws-dev values, and incorrect Argo CD value-file ordering.
+- Three-environment Helm lint and rendering coverage in the reusable quality
+  gate without creating AWS resources.
+
+### Changed
+
+- Made the active aws-dev Argo CD Application load environment configuration
+  first and release identity second while preserving the existing rendered
+  Deployment behavior.
+- Restricted metadata-driven image promotion and history-based rollback to
+  `values/releases/aws-dev.yaml`; hostname, resources, ingress, Secret, and
+  database settings remain outside the automation diff.
+- Moved readable application version ownership from `env.APP_VERSION` to
+  `release.applicationVersion` and continued rendering it as the workload
+  `APP_VERSION` environment variable and delivery annotation.
+- Removed the mixed `apps/demo-api/helm/values-aws-dev.yaml` source of truth.
+
+## v0.9.0
+
+### Added
+
+- Accepted multi-environment GitOps design contract for one independent EKS
+  cluster per AWS environment: `aws-dev`, `aws-test`, and `aws-prod`.
+- Ordered build-once promotion model that permits only build to aws-dev,
+  aws-dev to aws-test, and aws-test to aws-prod while retaining the same
+  immutable application digest.
+- Explicit isolation rules for Terraform state, AWS accounts, VPCs, clusters,
+  Argo CD installations, credentials, databases, backups, certificates, and
+  DNS identities.
+- Static active-revision validation that classifies every internal-repository
+  Argo CD Application and rejects feature-branch revisions from active cluster
+  and validation contracts.
+- Multi-environment architecture and v0.9.0 checkpoint documentation, including
+  the cost-aware sequential validation model and later target directory shape.
+
+### Changed
+
+- Converged the seven active aws-dev child Applications and their security
+  contract validators from the completed v0.8 feature branch to `main`.
+- Marked v0.8 complete and moved the former observability roadmap scope to
+  v1.0 so v0.9 can focus on multi-environment promotion.
+- Expanded the environment model to distinguish current deployed state from
+  the v0.9 target architecture and its per-environment lifecycle.
+
+## v0.8.6
 
 ### Added
 

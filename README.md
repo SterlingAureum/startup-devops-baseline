@@ -13,6 +13,15 @@ pull-request validation and GHCR image publishing. Published application
 images now carry a SHA tag, immutable OCI digest, structured source identity,
 and GitHub build-provenance attestation. Successful main-branch builds now
 turn that identity into a reviewable aws-dev GitOps promotion pull request.
+The same immutable identity can then move only through the ordered
+`aws-dev -> aws-test -> aws-prod` chain, with one target-scoped, reviewable PR
+per transition and no direct cluster access from GitHub Actions. Cross-
+environment movement now requires a fresh, reviewed source-release evidence
+record, a separately reviewed source-runtime evidence record, target GitHub
+Environment approval, and CODEOWNERS review. AWS test and production desired
+state now use Argo Rollouts with ALB weighted target groups, canary-local Web
+AnalysisRuns, and explicit manual progression. The same
+governance boundary applies to environment-scoped rollback PRs.
 Promoted values and live workloads now retain enough delivery metadata to
 correlate source, build, Git promotion, Argo CD reconciliation, Pod image ID,
 and the application-reported version. A manual rollback workflow can now
@@ -23,23 +32,43 @@ and CloudNativePG data workloads, with explicit runtime-validated traffic
 paths. AWS Secrets Manager, exact-secret IRSA, a namespaced External Secrets
 Operator deployment, and an active ExternalSecret now provide the demo-api
 PostgreSQL credential without committing the value to Git or Terraform state.
-The repository remains intentionally smaller than a full production platform.
-The v0.8 finalization adds the `demo.dev.aureumstack.com` Route 53 endpoint,
+The v0.9 lifecycle now also defines a clean-room aws-dev/aws-test acceptance
+sequence, guarded ephemeral test creation, reviewed canary completion,
+CloudNativePG recovery validation, dependency-aware test destruction, exact
+AWS residual-cost checks, and tamper-evident final closure evidence. The
+repository remains intentionally smaller than a full production platform.
+The v0.8 finalization added the `demo.dev.aureumstack.com` Route 53 endpoint,
 ACM-backed HTTPS, HTTP redirection, a runtime-only EKS management `/32`, and
-bounded security logging before the roadmap advances to observability, AI
-infrastructure workloads, and AIOps workflows.
+bounded security logging. v0.9 turns this single live AWS baseline into a
+cost-aware, multi-environment GitOps promotion model without requiring three
+permanently running portfolio clusters.
 
 ## Current Version
 
 ```text
-v0.8.6-tls-dns-security-finalization
+v0.9.6-clean-room-multi-environment-validation
 ```
-The AWS EKS environment now exposes demo-api through
-`https://demo.dev.aureumstack.com`, with an ACM certificate, Route 53 Alias,
-HTTP-to-HTTPS redirect, restricted public control-plane access, and 14-day
-security-log retention. PostgreSQL credentials remain managed through AWS
-Secrets Manager and External Secrets, with guarded rotation, rollback, and
-forward recovery already validated.
+The completed v0.8 AWS EKS environment exposes demo-api through
+`https://demo.dev.aureumstack.com` with the production-security baseline in
+place. v0.9.0 converges every active aws-dev repository Application on `main`
+and establishes the formal `aws-dev -> aws-test -> aws-prod` design contract.
+Each AWS environment maps to its own EKS cluster and isolated stateful
+resources. v0.9.1 separates
+stable Helm environment configuration from promotable release identity for
+aws-dev, aws-test, and aws-prod. v0.9.2 adds independent Terraform roots and
+states plus a shared Kustomize base with dev/test/prod overlays. All three
+declarations are statically validated. v0.9.3 adds main-sourced, stale-state
+protected environment Promotion PRs that retain the exact image digest and
+source commit while changing only the target release file. v0.9.4 requires a
+reviewed, unexpired evidence record that matches the current source release,
+adds CODEOWNERS and target-environment approvals, and generalizes rollback to
+aws-dev, aws-test, and aws-prod. v0.9.5 adds test/prod ALB canary declarations,
+Argo Rollouts, release-bound AnalysisRuns, local collection of reviewed AWS
+runtime evidence, and a dual static/runtime Promotion gate. v0.9.6 adds the
+guarded clean-room aws-test lifecycle, recovery drill sequence, cost-residual
+audit, and final evidence contract. Live aws-test execution and reviewed final
+evidence are still required before the roadmap status changes to Completed;
+aws-prod remains statically validated in v0.9.
 
 ## Platform Architecture
 
@@ -104,6 +133,9 @@ Both environments use Git and Argo CD as the desired-state control plane.
 The local environment focuses on progressive delivery, while the AWS
 environment covers cloud infrastructure, AWS-native application delivery,
 dynamic capacity, and the CloudNativePG database control plane.
+The diagram shows the aws-dev Deployment path. aws-test and aws-prod replace
+the single workload/Service hop with an Argo Rollout, stable/canary Services,
+ALB weighted target groups, and a release-bound AnalysisRun.
 
 ## Deployment Options
 
@@ -131,10 +163,16 @@ startup-devops-baseline/
 │   └── demo-api/
 ├── clusters/
 │   ├── local/
-│   └── aws-dev/
+│   └── aws/
+│       ├── base/
+│       └── overlays/{dev,test,prod}/
 ├── infra/
 │   └── terraform/aws/
+│       ├── modules/
+│       └── environments/{dev,test,prod}/
 ├── docs/
+├── evidence/
+│   └── demo-api/
 ├── examples/
 ├── platform/
 └── scripts/
@@ -147,12 +185,14 @@ startup-devops-baseline/
 - `docs/ARCHITECTURE.md`
 - `docs/AWS_EKS_ARCHITECTURE.md`
 - `docs/ENVIRONMENT_MODEL.md`
+- `docs/MULTI_ENVIRONMENT_GITOPS_MODEL.md`
 
 ### Deployment and Operations
 
 - `docs/LOCAL_DEPLOYMENT.md`
 - `docs/AWS_EKS_DEPLOYMENT.md`
 - `docs/AWS_EKS_DESTROY_RUNBOOK.md`
+- `docs/AWS_PROGRESSIVE_DELIVERY.md`
 - `docs/TROUBLESHOOTING.md`
 
 ### GitOps and Delivery
@@ -161,6 +201,7 @@ startup-devops-baseline/
 - `docs/DELIVERY_TRACEABILITY.md`
 - `docs/GITOPS_ROLLBACK.md`
 - `docs/GITOPS_WORKFLOW.md`
+- `docs/PROMOTION_GOVERNANCE.md`
 - `docs/V0.7_FINAL_VALIDATION.md`
 - `docs/GHCR_IMAGE_WORKFLOW.md`
 - `docs/ARGO_ROLLOUTS_ANALYSIS_FLOW.md`

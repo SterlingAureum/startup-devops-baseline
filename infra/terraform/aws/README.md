@@ -6,14 +6,23 @@ foundation introduced in v0.5.5, the CloudNativePG S3 backup foundation
 introduced in v0.6.3, the External Secrets AWS foundation introduced in
 v0.8.3, and the ACM/control-plane hardening foundation introduced in v0.8.6.
 
-## Current repository scope: v0.8.6
+## Current repository scope: v0.9.6
 
 Terraform owns stable AWS infrastructure and identity. Argo CD owns the
 Kubernetes controllers and application resources, while guarded scripts
 coordinate runtime-only values such as the management `/32`, the ALB Alias,
 and database credential transitions.
 
-The development environment now creates:
+The dev, test, and prod directories are independent Terraform roots. They use
+the same reviewed modules but never share local state or CLI workspaces.
+
+| Profile | VPC | Service CIDR | Logs | Secret recovery | Backup destroy |
+|---|---|---|---:|---:|---|
+| dev | `10.20.0.0/16` | `172.20.0.0/16` | 14 days | immediate | allowed |
+| test | `10.30.0.0/16` | `172.21.0.0/16` | 30 days | 7 days | allowed |
+| prod | `10.40.0.0/16` | `172.22.0.0/16` | 90 days | 30 days | rejected |
+
+Each applied environment creates:
 
 - the v0.4.1 VPC network baseline;
 - an Amazon EKS control plane in private subnets;
@@ -27,13 +36,12 @@ The development environment now creates:
 - a dedicated Karpenter node role and EKS access entry;
 - an encrypted interruption queue and EventBridge rules;
 - subnet and security-group discovery tags;
-- an AWS FIS experiment role with only the Spot interruption permissions;
-- a tag-scoped, single-target Spot interruption experiment template;
+- an AWS FIS experiment role and tag-scoped template in dev/test only;
 - a versioned, encrypted, public-access-blocked S3 backup bucket;
 - a least-privilege IRSA role for PostgreSQL base backups and WAL archives;
 - a Secrets Manager Secret container with no Terraform-managed value; and
 - an External Secrets IRSA role scoped to read only that Secret;
-- a DNS-validated ACM certificate for `demo.dev.aureumstack.com`;
+- an environment-specific DNS-validated ACM certificate;
 - a fail-closed EKS public endpoint allowlist supplied only at runtime; and
 - security-relevant EKS control-plane logs with 14-day retention.
 
@@ -48,9 +56,10 @@ GitOps-managed.
 After `terraform apply`, the main continuing costs are the EKS control plane,
 EC2 managed nodes, NAT Gateway, EBS root volumes, S3 backup storage and
 requests, Secrets Manager storage and API calls, and related network traffic.
-Security-relevant control-plane logging is enabled and retained for 14 days.
-This adds CloudWatch ingestion and storage cost; bounded retention prevents the
-disposable lab from keeping logs indefinitely.
+Security-relevant control-plane logging is enabled with environment-specific
+bounded retention. The repository does not require the three clusters to run
+at the same time: aws-test is ephemeral and aws-prod is statically validated
+without a mandatory v0.9 apply.
 
 ## Validate locally
 
@@ -61,8 +70,9 @@ disposable lab from keeping logs indefinitely.
 
 ## Plan
 
-Do not put a workstation address in `terraform.tfvars`. Apply through the
-guarded entrypoint:
+`validate-terraform.sh` formats and validates all three roots with backend
+initialization disabled. Do not put a workstation address in any tracked
+tfvars. The guarded apply entrypoint currently defaults to dev:
 
 ```bash
 CONFIRM_EKS_API_CIDR_UPDATE=restrict-current-ip \
@@ -72,8 +82,33 @@ CONFIRM_EKS_API_CIDR_UPDATE=restrict-current-ip \
 It supplies the current `/32` only for the Terraform execution. EKS is pinned
 to 1.36 for
 compatibility with Karpenter 1.14.x. Review the complete plan because this
-environment creates billable EKS and EC2 resources. Creating the FIS template
-does not start an experiment.
+environment creates billable EKS and EC2 resources. Creating the dev/test FIS
+template does not start an experiment. v0.9.6 requires one bounded aws-test
+clean-room apply after the implementation reaches reviewed `main`; aws-prod
+remains statically validated and must not be applied merely to close the
+portfolio checkpoint.
+
+Use the guarded test entrypoint rather than supplying a workstation address in
+tracked configuration:
+
+```bash
+CONFIRM_AWS_TEST_APPLY=apply-ephemeral-aws-test \
+  ./scripts/apply-aws-test.sh
+```
+
+After runtime and recovery validation, destroy the temporary environment and
+require the residual audit to pass:
+
+```bash
+CONFIRM_AWS_ENVIRONMENT_DESTROY=destroy-aws-test-with-backups \
+  ./scripts/destroy-aws-test.sh
+
+AWS_ENVIRONMENT=aws-test \
+  ./scripts/validate-aws-cost-cleanup.sh
+```
+
+See `docs/AWS_MULTI_ENVIRONMENT_LIFECYCLE.md` for the complete ordered
+acceptance and safe continuation steps.
 
 ## Configure kubectl after apply
 

@@ -3,9 +3,9 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-readonly OPERATOR_APP="${ROOT_DIR}/clusters/aws-dev/platform/external-secrets.yaml"
-readonly RESOURCES_APP="${ROOT_DIR}/clusters/aws-dev/platform/external-secrets-startup-apps.yaml"
-readonly STORE="${ROOT_DIR}/clusters/aws-dev/security/external-secrets/startup-apps/secret-store.yaml"
+readonly OPERATOR_APP="${ROOT_DIR}/clusters/aws/base/platform/external-secrets.yaml"
+readonly RESOURCES_APP="${ROOT_DIR}/clusters/aws/base/platform/external-secrets-startup-apps.yaml"
+readonly STORE="${ROOT_DIR}/clusters/aws/base/security/external-secrets/startup-apps/secret-store.yaml"
 readonly DEPLOY_SCRIPT="${ROOT_DIR}/scripts/deploy-aws-dev-root-app.sh"
 readonly RUNTIME_SCRIPT="${ROOT_DIR}/scripts/validate-external-secrets-gitops-aws.sh"
 readonly ARCHIVE_DOC="${ROOT_DIR}/docs/archive/V0.8.3_EXTERNAL_SECRETS_GITOPS.md"
@@ -92,8 +92,8 @@ if "eks.amazonaws.com/role-arn" in operator:
 
 for marker in (
     "name: external-secrets-startup-apps",
-    "targetRevision: feature/v0.8-production-security-baseline",
-    "path: clusters/aws-dev/security/external-secrets/startup-apps",
+    "targetRevision: main",
+    "path: clusters/aws/overlays/dev/security/external-secrets/startup-apps",
     "namespace: startup-apps",
     "SkipDryRunOnMissingResource=true",
 ):

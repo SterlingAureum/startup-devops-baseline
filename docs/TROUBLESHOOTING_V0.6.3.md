@@ -117,7 +117,7 @@ This limit was insufficient for a compressed physical base backup.
 ### Resolution
 
 Update
-`clusters/aws-dev/data-platform/postgresql/object-store.yaml`:
+`clusters/aws/base/data-platform/postgresql/object-store.yaml`:
 
 ```yaml
 spec:
@@ -226,7 +226,7 @@ Synced when another controller subsequently adds or normalizes fields.
 ### Resolution
 
 Declare the default explicitly in
-`clusters/aws-dev/data-platform/postgresql/cluster.yaml`:
+`clusters/aws/base/data-platform/postgresql/cluster.yaml`:
 
 ```yaml
 spec:

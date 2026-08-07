@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-VALUES_FILE="${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml"
+VALUES_FILE="${ROOT_DIR}/apps/demo-api/helm/values/environments/aws-dev.yaml"
 ENV_VARIABLES="${ROOT_DIR}/infra/terraform/aws/environments/dev/variables.tf"
 ENV_MAIN="${ROOT_DIR}/infra/terraform/aws/environments/dev/main.tf"
 EKS_MAIN="${ROOT_DIR}/infra/terraform/aws/modules/eks/main.tf"

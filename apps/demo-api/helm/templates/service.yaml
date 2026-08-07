@@ -1,5 +1,7 @@
 {{- $fullName := include "demo-api.fullname" . -}}
-{{- $trafficRoutingEnabled := and .Values.rollout.enabled .Values.rollout.strategy.canary.trafficRouting.nginx.enabled -}}
+{{- $nginxRoutingEnabled := and .Values.rollout.enabled .Values.rollout.strategy.canary.trafficRouting.nginx.enabled -}}
+{{- $albRoutingEnabled := and .Values.rollout.enabled .Values.rollout.strategy.canary.trafficRouting.alb.enabled -}}
+{{- $trafficRoutingEnabled := or $nginxRoutingEnabled $albRoutingEnabled -}}
 {{- if $trafficRoutingEnabled }}
 apiVersion: v1
 kind: Service

@@ -6,7 +6,7 @@ AWS_REGION="${AWS_REGION:-us-east-1}"
 CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
 REPO_URL="${REPO_URL:-https://github.com/SterlingAureum/startup-devops-baseline.git}"
 TARGET_REVISION="${TARGET_REVISION:-main}"
-SOURCE_FILE="${SOURCE_FILE:-${ROOT_DIR}/clusters/aws-dev/root-app.yaml}"
+SOURCE_FILE="${SOURCE_FILE:-${ROOT_DIR}/clusters/aws/overlays/dev/root-app.yaml}"
 TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/dev}"
 POSTGRES_APPLICATION="${POSTGRES_APPLICATION:-postgresql-baseline}"
 POSTGRES_CLUSTER="${POSTGRES_CLUSTER:-postgresql-baseline}"
@@ -19,6 +19,7 @@ DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-dev}"
 DEMO_NAMESPACE="${DEMO_NAMESPACE:-startup-apps}"
 DEMO_DATABASE_SECRET="${DEMO_DATABASE_SECRET:-demo-api-postgresql}"
 DEMO_WAIT_SECONDS="${DEMO_WAIT_SECONDS:-900}"
+DEMO_ACCEPTED_HEALTH_STATUSES="${DEMO_ACCEPTED_HEALTH_STATUSES:-Healthy}"
 EXTERNAL_SECRETS_NAMESPACE="${EXTERNAL_SECRETS_NAMESPACE:-external-secrets}"
 EXTERNAL_SECRETS_SERVICE_ACCOUNT="${EXTERNAL_SECRETS_SERVICE_ACCOUNT:-external-secrets}"
 EXTERNAL_SECRETS_APPLICATION="${EXTERNAL_SECRETS_APPLICATION:-external-secrets}"
@@ -398,22 +399,30 @@ if ! kubectl wait \
     "Timed out waiting for demo-api Application ${DEMO_APPLICATION} to become Synced."
 fi
 
-if ! kubectl wait \
-  --for=jsonpath='{.status.health.status}'=Healthy \
-  "application/${DEMO_APPLICATION}" \
-  --namespace argocd \
-  --timeout="${DEMO_WAIT_SECONDS}s"; then
-  fail_deployment \
-    "Timed out waiting for demo-api Application ${DEMO_APPLICATION} to become Healthy."
-fi
+echo "==> Waiting for demo-api Application health (${DEMO_ACCEPTED_HEALTH_STATUSES})"
+deadline=$((SECONDS + DEMO_WAIT_SECONDS))
+while true; do
+  demo_health="$(kubectl get application "${DEMO_APPLICATION}" \
+    --namespace argocd \
+    --output jsonpath='{.status.health.status}' 2>/dev/null || true)"
+  case ",${DEMO_ACCEPTED_HEALTH_STATUSES}," in
+    *",${demo_health},"*) break ;;
+  esac
+  if (( SECONDS >= deadline )); then
+    fail_deployment \
+      "Timed out waiting for demo-api Application ${DEMO_APPLICATION} to reach an accepted health state."
+  fi
+  sleep 10
+done
 
 echo "==> Reconciling the stable demo-api hostname to the live ALB"
 AWS_REGION="${AWS_REGION}" \
 CLUSTER_NAME="${CLUSTER_NAME}" \
 APP_NAMESPACE="${DEMO_NAMESPACE}" \
+DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.dev.aureumstack.com}" \
   "${RECONCILE_DEMO_API_DNS_SCRIPT}"
 
-echo "Applied aws-dev root application"
+echo "Applied ${ROOT_APPLICATION}"
 echo "Repository: ${REPO_URL}"
 echo "Revision:   ${TARGET_REVISION}"
 echo "Backup S3:  s3://${BACKUP_BUCKET}/postgresql-baseline"

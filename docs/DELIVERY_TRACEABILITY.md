@@ -22,7 +22,7 @@ Promotion PR, trigger Argo CD, restart a workload, or call a database endpoint.
 ## Stored Git Identity
 
 A metadata-driven Promotion PR writes the following fields to
-`values-aws-dev.yaml`:
+`values/releases/aws-dev.yaml`:
 
 ```yaml
 image:
@@ -35,11 +35,13 @@ delivery:
   sourceCommit: "<full-source-commit>"
   workflowRunId: "<image-build-run-id>"
 
-env:
-  APP_VERSION: "sha-<short-source-commit>"
+release:
+  applicationVersion: "sha-<short-source-commit>"
 ```
 
-The PR still changes only this values file.
+The PR still changes only this release file. Hostname, resource, Secret,
+database, ingress, and `APP_ENV` settings remain in
+`values/environments/aws-dev.yaml`.
 
 ## Live Workload Identity
 
@@ -89,20 +91,21 @@ CONFIGURE_KUBECONFIG=false \
 
 `DESIRED_REVISION` defaults to `HEAD`. `PROMOTION_REVISION` remains accepted as
 a compatibility alias. The resolved commit must change only
-`apps/demo-api/helm/values-aws-dev.yaml` relative to its first parent, and Argo
-CD must report that exact full commit as its synced revision.
+`apps/demo-api/helm/values/releases/aws-dev.yaml` relative to its first parent,
+and Argo CD must report that exact full commit as its synced revision.
 
 The check then verifies:
 
 1. the SHA tag matches the first seven characters of the full source commit;
 2. the digest is a valid immutable `sha256` identity;
 3. `APP_VERSION` matches the readable image tag;
-4. the desired-state commit changes only the aws-dev values file;
-5. Argo CD is `Synced` and `Healthy` at the desired-state commit;
-6. Deployment and Pod annotations match Git;
-7. the Deployment and every Pod use the digest-pinned image;
-8. every container runtime `imageID` ends with the expected digest;
-9. every demo-api Pod reports the expected version and `aws-dev` environment.
+4. the desired-state commit changes only the aws-dev release file;
+5. Argo CD loads the aws-dev environment file before the release file;
+6. Argo CD is `Synced` and `Healthy` at the desired-state commit;
+7. Deployment and Pod annotations match Git;
+8. the Deployment and every Pod use the digest-pinned image;
+9. every container runtime `imageID` ends with the expected digest;
+10. every demo-api Pod reports the expected version and `aws-dev` environment.
 
 ## Feature-Branch Boundary
 

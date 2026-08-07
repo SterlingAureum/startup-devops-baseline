@@ -22,7 +22,9 @@ image:
   repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
   tag: "sha-<short-commit>"
   digest: "sha256:<64-character-digest>"
-  pullPolicy: IfNotPresent
+
+release:
+  applicationVersion: "sha-<short-commit>"
 ```
 
 The Helm chart renders:
@@ -31,8 +33,9 @@ The Helm chart renders:
 ghcr.io/sterlingaureum/startup-devops-baseline/demo-api@sha256:<digest>
 ```
 
-`env.APP_VERSION` continues to use the SHA tag so `/version` remains easy to
-read.
+`release.applicationVersion` uses the SHA tag and is rendered as the
+`APP_VERSION` environment variable so `/version` remains easy to read. Image
+pull policy remains in the target environment values file.
 
 ## Publishing
 
@@ -131,7 +134,7 @@ For a successful `main` push, the workflow:
 
 1. downloads the metadata from the completed build job;
 2. verifies the metadata repository and source commit against the workflow;
-3. updates `values-aws-dev.yaml` by tag and digest and records the full source
+3. updates `values/releases/aws-dev.yaml` by tag and digest and records the full source
    commit and workflow run ID;
 4. validates the promoted Helm rendering;
 5. creates or reuses `release/demo-api-sha-<short-commit>`;

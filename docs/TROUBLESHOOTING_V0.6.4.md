@@ -145,7 +145,7 @@ restart.
 Use equal requests and limits in:
 
 ```text
-clusters/aws-dev/data-platform/postgresql/object-store.yaml
+clusters/aws/base/data-platform/postgresql/object-store.yaml
 ```
 
 ```yaml

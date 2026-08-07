@@ -21,7 +21,7 @@ Worker nodes use IMDSv2 with hop limit `1`, so the controller Pod cannot discove
 terraform -chdir=infra/terraform/aws/environments/dev output -raw vpc_id
 ```
 
-Configure the returned value in `clusters/aws-dev/platform/aws-load-balancer-controller.yaml`:
+Configure the returned value in `clusters/aws/base/platform/aws-load-balancer-controller.yaml`:
 
 ```yaml
 helm:

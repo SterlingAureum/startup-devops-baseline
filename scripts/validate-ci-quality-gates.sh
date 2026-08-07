@@ -24,6 +24,33 @@ done < <(find "${ROOT_DIR}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 
+echo "==> Validating active GitOps repository revisions"
+"${ROOT_DIR}/scripts/validate-active-gitops-revisions.sh"
+
+echo "==> Validating AWS dev/test/prod declarations and overlays"
+"${ROOT_DIR}/scripts/validate-aws-environment-declarations.sh"
+
+echo "==> Validating demo-api environment/release values separation"
+"${ROOT_DIR}/scripts/validate-demo-api-values-separation.sh"
+
+echo "==> Validating ordered demo-api environment promotion"
+"${ROOT_DIR}/scripts/validate-demo-api-promotion.sh"
+
+echo "==> Validating promotion evidence, approvals, and environment rollback"
+"${ROOT_DIR}/scripts/validate-demo-api-promotion-governance.sh"
+
+echo "==> Validating AWS ALB progressive-delivery declarations"
+"${ROOT_DIR}/scripts/validate-demo-api-aws-progressive-delivery.sh"
+
+echo "==> Validating AWS runtime evidence behavior"
+"${ROOT_DIR}/scripts/validate-demo-api-runtime-evidence-behavior.sh"
+
+echo "==> Validating v0.9 clean-room lifecycle and cleanup contracts"
+"${ROOT_DIR}/scripts/validate-v0.9-lifecycle-contracts.sh"
+
+echo "==> Validating v0.9 final evidence behavior"
+"${ROOT_DIR}/scripts/validate-v0.9-final-evidence-behavior.sh"
+
 echo "==> Validating namespace guardrail contracts"
 "${ROOT_DIR}/scripts/validate-namespace-guardrails.sh"
 
@@ -72,9 +99,9 @@ for line in lines[paths_start + 1:]:
     if line and not line.startswith("      "):
         break
 
-if "apps/demo-api/helm/values-aws-dev.yaml" in trigger_paths:
+if "apps/demo-api/helm/values/releases/aws-dev.yaml" in trigger_paths:
     raise SystemExit(
-        "aws-dev promotion values must not trigger another image publish"
+        "aws-dev release values must not trigger another image publish"
     )
 if "apps/demo-api/src/**" not in trigger_paths:
     raise SystemExit("demo-api source changes must trigger image publishing")
@@ -97,8 +124,16 @@ if re.search(
     workflow,
 ):
     raise SystemExit("rollback workflow must not access Kubernetes or EKS")
-if "apps/demo-api/helm/values-aws-dev.yaml" not in workflow:
-    raise SystemExit("rollback workflow must target the aws-dev values file")
+if "target_environment:" not in workflow:
+    raise SystemExit("rollback workflow must require a target environment")
+for environment in ("aws-dev", "aws-test", "aws-prod"):
+    if f"          - {environment}" not in workflow:
+        raise SystemExit(f"rollback workflow must allow {environment}")
+if "apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml" not in workflow:
+    raise SystemExit("rollback workflow must derive the environment release path")
+if "name: ${{ inputs.target_environment }}" not in workflow or \
+        "deployment: false" not in workflow:
+    raise SystemExit("rollback workflow must use an environment approval boundary")
 if "pull-requests: write" not in workflow:
     raise SystemExit("rollback workflow must prepare a reviewable pull request")
 PY
@@ -110,10 +145,23 @@ helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
 
 echo "==> Linting and rendering the aws-dev Helm release"
 helm lint "${ROOT_DIR}/apps/demo-api/helm" \
-  --values "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml"
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/environments/aws-dev.yaml" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml"
 helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
-  --values "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/environments/aws-dev.yaml" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml" \
   >"${WORK_DIR}/demo-api-aws-dev.yaml"
+
+for environment in aws-test aws-prod; do
+  echo "==> Linting and rendering the ${environment} Helm release"
+  helm lint "${ROOT_DIR}/apps/demo-api/helm" \
+    --values "${ROOT_DIR}/apps/demo-api/helm/values/environments/${environment}.yaml" \
+    --values "${ROOT_DIR}/apps/demo-api/helm/values/releases/${environment}.yaml"
+  helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
+    --values "${ROOT_DIR}/apps/demo-api/helm/values/environments/${environment}.yaml" \
+    --values "${ROOT_DIR}/apps/demo-api/helm/values/releases/${environment}.yaml" \
+    >"${WORK_DIR}/demo-api-${environment}.yaml"
+done
 
 TEST_IMAGE_DIGEST="sha256:$(printf 'a%.0s' {1..64})"
 TEST_IMAGE_REFERENCE="ghcr.io/sterlingaureum/startup-devops-baseline/demo-api@${TEST_IMAGE_DIGEST}"
@@ -123,7 +171,8 @@ helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
   --set "image.digest=${TEST_IMAGE_DIGEST}" \
   >"${WORK_DIR}/demo-api-local-digest.yaml"
 helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
-  --values "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/environments/aws-dev.yaml" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml" \
   --set "image.digest=${TEST_IMAGE_DIGEST}" \
   >"${WORK_DIR}/demo-api-aws-dev-digest.yaml"
 
@@ -165,39 +214,40 @@ jq --exit-status \
 
 echo "==> Validating metadata-driven aws-dev promotion"
 cp \
-  "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml" \
-  "${WORK_DIR}/values-aws-dev.yaml"
+  "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml" \
+  "${WORK_DIR}/release-aws-dev.yaml"
 EXPECTED_IMAGE_REPOSITORY="ghcr.io/sterlingaureum/startup-devops-baseline/demo-api" \
 EXPECTED_SOURCE_REPOSITORY="SterlingAureum/startup-devops-baseline" \
 EXPECTED_SOURCE_COMMIT="0123456789abcdef0123456789abcdef01234567" \
 METADATA_FILE="${WORK_DIR}/demo-api-image-metadata.json" \
-VALUES_FILE="${WORK_DIR}/values-aws-dev.yaml" \
+VALUES_FILE="${WORK_DIR}/release-aws-dev.yaml" \
   "${ROOT_DIR}/scripts/promote-demo-api-image.sh" >/dev/null
 
-grep -F 'tag: "sha-0123456"' "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+grep -F 'tag: "sha-0123456"' "${WORK_DIR}/release-aws-dev.yaml" >/dev/null
 grep -F "digest: \"${TEST_IMAGE_DIGEST}\"" \
-  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
-grep -F 'APP_VERSION: "sha-0123456"' \
-  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+  "${WORK_DIR}/release-aws-dev.yaml" >/dev/null
+grep -F 'applicationVersion: "sha-0123456"' \
+  "${WORK_DIR}/release-aws-dev.yaml" >/dev/null
 grep -F 'sourceRepository: "SterlingAureum/startup-devops-baseline"' \
-  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+  "${WORK_DIR}/release-aws-dev.yaml" >/dev/null
 grep -F 'sourceCommit: "0123456789abcdef0123456789abcdef01234567"' \
-  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+  "${WORK_DIR}/release-aws-dev.yaml" >/dev/null
 grep -F 'workflowRunId: "local-validation"' \
-  "${WORK_DIR}/values-aws-dev.yaml" >/dev/null
+  "${WORK_DIR}/release-aws-dev.yaml" >/dev/null
 
-VALUES_FILE="${WORK_DIR}/values-aws-dev.yaml" \
+VALUES_FILE="${WORK_DIR}/release-aws-dev.yaml" \
 SOURCE_REPOSITORY="SterlingAureum/startup-devops-baseline" \
 SOURCE_COMMIT="0123456789abcdef0123456789abcdef01234567" \
 WORKFLOW_RUN_ID="local-validation" \
   "${ROOT_DIR}/scripts/set-demo-api-delivery-metadata.sh" >/dev/null
-if [[ "$(grep -c '^delivery:$' "${WORK_DIR}/values-aws-dev.yaml")" != "1" ]]; then
+if [[ "$(grep -c '^delivery:$' "${WORK_DIR}/release-aws-dev.yaml")" != "1" ]]; then
   echo "Delivery metadata update is not idempotent." >&2
   exit 1
 fi
 
 helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
-  --values "${WORK_DIR}/values-aws-dev.yaml" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/environments/aws-dev.yaml" \
+  --values "${WORK_DIR}/release-aws-dev.yaml" \
   >"${WORK_DIR}/demo-api-promoted-aws-dev.yaml"
 grep -F "image: \"${TEST_IMAGE_REFERENCE}\"" \
   "${WORK_DIR}/demo-api-promoted-aws-dev.yaml" >/dev/null
@@ -224,7 +274,7 @@ grep -F 'app.kubernetes.io/version: "sha-0123456"' \
 
 if EXPECTED_SOURCE_COMMIT="ffffffffffffffffffffffffffffffffffffffff" \
   METADATA_FILE="${WORK_DIR}/demo-api-image-metadata.json" \
-  VALUES_FILE="${WORK_DIR}/values-aws-dev.yaml" \
+  VALUES_FILE="${WORK_DIR}/release-aws-dev.yaml" \
     "${ROOT_DIR}/scripts/promote-demo-api-image.sh" >/dev/null 2>&1; then
   echo "Promotion accepted metadata for an unexpected source commit." >&2
   exit 1
@@ -232,7 +282,7 @@ fi
 
 if EXPECTED_IMAGE_REPOSITORY="ghcr.io/example/other/demo-api" \
   METADATA_FILE="${WORK_DIR}/demo-api-image-metadata.json" \
-  VALUES_FILE="${WORK_DIR}/values-aws-dev.yaml" \
+  VALUES_FILE="${WORK_DIR}/release-aws-dev.yaml" \
     "${ROOT_DIR}/scripts/promote-demo-api-image.sh" >/dev/null 2>&1; then
   echo "Promotion accepted metadata for an unexpected image repository." >&2
   exit 1
@@ -240,11 +290,11 @@ fi
 
 echo "==> Validating history-based GitOps rollback"
 ROLLBACK_REPOSITORY="${WORK_DIR}/rollback-repository"
-ROLLBACK_VALUES_PATH="apps/demo-api/helm/values-aws-dev.yaml"
+ROLLBACK_VALUES_PATH="apps/demo-api/helm/values/releases/aws-dev.yaml"
 ROLLBACK_VALUES_FILE="${ROLLBACK_REPOSITORY}/${ROLLBACK_VALUES_PATH}"
 mkdir -p "$(dirname "${ROLLBACK_VALUES_FILE}")"
 cp \
-  "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml" \
+  "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml" \
   "${ROLLBACK_VALUES_FILE}"
 
 git -C "${ROLLBACK_REPOSITORY}" init --quiet --initial-branch=main

@@ -34,12 +34,14 @@ assert_manifest_contains() {
 echo "==> Rendering hardened local and aws-dev workloads"
 helm lint "${ROOT_DIR}/apps/demo-api/helm"
 helm lint "${ROOT_DIR}/apps/demo-api/helm" \
-  --values "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml"
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/environments/aws-dev.yaml" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml"
 
 helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
   >"${WORK_DIR}/demo-api-local.yaml"
 helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
-  --values "${ROOT_DIR}/apps/demo-api/helm/values-aws-dev.yaml" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/environments/aws-dev.yaml" \
+  --values "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml" \
   >"${WORK_DIR}/demo-api-aws-dev.yaml"
 
 for manifest in \

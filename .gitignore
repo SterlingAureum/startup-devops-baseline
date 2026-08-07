@@ -54,9 +54,10 @@ kubeconfig.*
 
 # Declarative External Secrets manifests contain references and sync rules,
 # never credential values, and are required GitOps source files.
-!clusters/aws-dev/platform/external-secrets.yaml
-!clusters/aws-dev/platform/external-secrets-startup-apps.yaml
-!clusters/aws-dev/security/external-secrets/**/*.yaml
+!clusters/aws/base/platform/external-secrets.yaml
+!clusters/aws/base/platform/external-secrets-startup-apps.yaml
+!clusters/aws/base/security/external-secrets/**/*.yaml
+!clusters/aws/overlays/**/security/external-secrets/**/*.yaml
 
 # Helm packages and dependencies
 *.tgz

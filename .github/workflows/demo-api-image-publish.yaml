@@ -235,7 +235,8 @@ jobs:
       METADATA_ARTIFACT_NAME: ${{ needs.build-and-push.outputs.metadata-artifact-name }}
       METADATA_DIRECTORY: .promotion/demo-api-image
       METADATA_FILE: .promotion/demo-api-image/demo-api-image-metadata.json
-      VALUES_FILE: apps/demo-api/helm/values-aws-dev.yaml
+      ENVIRONMENT_VALUES_FILE: apps/demo-api/helm/values/environments/aws-dev.yaml
+      VALUES_FILE: apps/demo-api/helm/values/releases/aws-dev.yaml
     steps:
       - name: Checkout source revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -304,8 +305,11 @@ jobs:
           VALUES_FILE="${VALUES_FILE}" \
             ./scripts/promote-demo-api-image.sh
 
-          helm lint apps/demo-api/helm --values "${VALUES_FILE}"
+          helm lint apps/demo-api/helm \
+            --values "${ENVIRONMENT_VALUES_FILE}" \
+            --values "${VALUES_FILE}"
           helm template demo-api apps/demo-api/helm \
+            --values "${ENVIRONMENT_VALUES_FILE}" \
             --values "${VALUES_FILE}" >/dev/null
           git diff --check
 

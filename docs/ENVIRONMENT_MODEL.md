@@ -2,12 +2,30 @@
 
 ## Overview
 
-| Environment | Platform | Purpose |
-|---|---|---|
-| `local` | kind | GitOps and progressive-delivery development |
-| `aws-dev` | Amazon EKS | Cloud infrastructure and delivery validation |
+The repository distinguishes the local development sandbox from the formal AWS
+promotion chain. Each named AWS environment represents an independent EKS
+cluster and an independent operational boundary.
 
-## Local
+| Environment | Platform | Role | Promotion chain | v0.9 runtime expectation |
+|---|---|---|---|---|
+| `local` | kind | Local GitOps and progressive-delivery sandbox | No | Retained |
+| `aws-dev` | Amazon EKS | First cloud integration environment | Yes | Required and live-validated |
+| `aws-test` | Amazon EKS | Isolated pre-production environment | Yes | Created and live-validated at least once |
+| `aws-prod` | Amazon EKS | Production desired state and governance target | Yes | Complete declarations required; live creation optional in v0.9 |
+
+The target AWS topology is therefore three environments and three clusters:
+
+| Environment | Cluster identity | Intended lifecycle |
+|---|---|---|
+| `aws-dev` | `startup-devops-baseline-dev` | Disposable and rebuildable |
+| `aws-test` | `startup-devops-baseline-test` | Ephemeral; created for validation and then destroyed |
+| `aws-prod` | `startup-devops-baseline-prod` | Persistent production boundary |
+
+Only `aws-dev` is required to exist at the v0.9.5 checkpoint. Git now contains
+complete Terraform and GitOps declarations for all three environments;
+aws-test and aws-prod remain unapplied until their later validation stages.
+
+## Local Sandbox
 
 Location: `clusters/local/`
 
@@ -22,84 +40,142 @@ Prometheus
 demo-api
 ```
 
-The local environment demonstrates canary routing, AnalysisRun, promotion, abort, rollback, and capacity guardrails.
+The local environment supports fast chart iteration, canary routing,
+AnalysisRun, promotion, abort, rollback, and capacity experiments. It can use
+development image identities and `HEAD` while it is outside the formal AWS
+promotion chain.
 
-## AWS Dev
+## AWS Dev Baseline
 
 Locations:
 
 ```text
-clusters/aws-dev/
+clusters/aws/base/
+clusters/aws/overlays/dev/
 infra/terraform/aws/environments/dev/
 ```
 
-Components:
+The existing aws-dev cluster contains the AWS infrastructure, Argo CD,
+application delivery, Karpenter capacity, CloudNativePG data platform,
+External Secrets integration, security controls, HTTPS ingress, and validated
+backup, recovery, failover, credential-rotation, and network-policy paths built
+through v0.4-v0.8.
+
+At v0.9.5, the root Application and every internal-repository child
+Application track `main`. Third-party sources remain pinned to their reviewed
+Chart or component versions.
+
+The active demo-api Application loads:
 
 ```text
-AWS VPC
-Amazon EKS
-Managed Node Group
-EKS managed add-ons
-Argo CD
-AWS Load Balancer Controller
-Karpenter AWS foundation
-Karpenter CRDs and controller
-Karpenter application EC2NodeClass
-Karpenter On-Demand application NodePool
-Karpenter Spot application NodePool
-AWS FIS Spot interruption foundation
-Karpenter FIS-only EC2NodeClass and Spot NodePool
-Karpenter database EC2NodeClass and On-Demand NodePool
-Karpenter isolated On-Demand database recovery NodePool
-CloudNativePG operator and CRDs
-Three-instance PostgreSQL 17.10 HA Cluster
-Three encrypted 20Gi gp3 EBS data volumes
-S3 physical backups, WAL archiving, and PITR validation
-demo-api with PostgreSQL readiness and failover validation
-Application Load Balancer
-Route 53 public hostname and Alias
-ACM certificate and HTTPS redirect
+values/environments/aws-dev.yaml
+values/releases/aws-dev.yaml
 ```
 
-The v0.5.0 Karpenter foundation includes IAM, node authorization, interruption
-handling, and discovery tags. v0.5.1 adds the GitOps-managed CRDs and controller
-on the stable system Managed Node Group. v0.5.2 adds an `EC2NodeClass` that
-validates AWS launch configuration and discovery. v0.5.3 adds a bounded
-On-Demand `NodePool` for explicitly opted-in application workloads. The normal
-validation path keeps the NodePool idle; the separate scale test creates and
-then removes temporary capacity. v0.5.4 adds a separately tainted Spot
-`NodePool`, validates its EC2 purchase option, and checks the controller-to-SQS
-interruption path. v0.5.5 adds a tag-isolated FIS-only Spot pool and an AWS FIS
-experiment that can issue a real interruption notice to exactly one temporary
-test node. v0.6.0 adds the cluster-wide CloudNativePG operator, admission
-webhooks, and CRDs through Argo CD. Its two replicas run on separate stable
-system nodes. v0.6.1 adds one PostgreSQL 17.10 instance on a stable system node
-and one encrypted 20Gi gp3 EBS data volume. v0.6.2 moves PostgreSQL onto a
-dedicated Karpenter On-Demand NodePool and expands it to one primary and two
-replicas. Required hostname anti-affinity gives each instance a different node,
-while topology spreading balances them `2+1` across the two development
-Availability Zones. One synchronous standby acknowledgement is required. The
-v0.6.3 Barman Cloud plugin archives WAL files continuously and creates daily
-physical base backups in a versioned, encrypted S3 bucket through a dedicated
-IRSA role. v0.6.4 uses a one-node isolated recovery pool to validate both
-latest-state restore and timestamp-based PITR in independent clusters, then
-removes their temporary PVC, EBS, NodeClaim, and EC2 resources without
-changing the source cluster. v0.6.5 connects demo-api to the operator-managed
-RW Service using the generated application identity, then validates primary-Pod
-failover, RW Service movement, application reconnection, and committed-data
-preservation.
+The environment file owns runtime configuration and the release file owns the
+immutable artifact identity. aws-test and aws-prod have the same split for
+static Helm validation without claiming that either cluster currently exists.
+
+The build workflow writes only the aws-dev release through a reviewable PR.
+The ordered environment workflow then permits only aws-dev to aws-test and
+aws-test to aws-prod. Every transition reads the source release from `main`,
+retains its complete image and build identity, verifies the digest-addressed
+GHCR artifact, and changes only the target release file. A target-scoped
+concurrency group serializes competing attempts, and any main movement during
+PR preparation invalidates the captured source state.
+
+Before a cross-environment PR can be created, a separate source qualification
+workflow must record passing, reviewed evidence on `main`. The record is bound
+to the current source release SHA-256 and expires after seven days by default.
+Promotion and rollback enter the target GitHub Environment boundary, while
+CODEOWNERS and branch protection preserve the human merge decision. At this
+v0.9.5 adds a separate runtime record collected from the restricted local
+operations path. Cross-environment promotion requires both records on `main`,
+fresh and bound to the current source release. The runtime record proves live
+source identity and, for test/prod, completed ALB Rollout and AnalysisRun state;
+it does not claim that an environment exists until the collector succeeds.
+
+## Declared AWS Profiles
+
+| Setting | dev | test | prod |
+|---|---|---|---|
+| VPC CIDR | `10.20.0.0/16` | `10.30.0.0/16` | `10.40.0.0/16` |
+| Service CIDR | `172.20.0.0/16` | `172.21.0.0/16` | `172.22.0.0/16` |
+| DNS | `demo.dev.aureumstack.com` | `demo.test.aureumstack.com` | `demo.prod.aureumstack.com` |
+| Control-plane logs | 14 days | 30 days | 90 days minimum |
+| NAT | Single | Single | One per AZ |
+| Backup force destroy | Allowed | Allowed for ephemeral validation | Rejected |
+| Secret recovery | Immediate | 7 days | 30 days required |
+
+Terraform state is rooted independently beneath `environments/dev`,
+`environments/test`, and `environments/prod`; ordinary CLI workspaces are not
+used as the isolation boundary. Environment names are locked in each root so a
+tfvars override cannot make one state claim another environment's names.
+
+## Environment Isolation Boundary
+
+Each AWS environment owns its own:
+
+- EKS cluster and Argo CD installation;
+- VPC, address ranges, security groups, and load balancers;
+- Terraform state and environment credentials;
+- Secrets Manager Secrets, IAM roles, and IRSA bindings;
+- CloudNativePG cluster, data volumes, and backup destination;
+- Route 53 application hostname and ACM certificate;
+- environment configuration, release record, and validation evidence.
+
+Application images are shared by immutable registry digest. Secret values,
+database contents, backup objects, certificates, and Terraform state never move
+through the application promotion chain.
+
+## AWS Account Boundary
+
+The portfolio validation path may create aws-dev and aws-test sequentially in
+one AWS account to limit cost. Unique names, CIDRs, state, IAM resources, and
+data resources still preserve environment isolation within that account.
+
+This is not presented as the final production account model. A production
+deployment should place aws-prod in a separately governed AWS account; teams
+with stronger separation requirements should also place dev and test in
+dedicated accounts.
+
+## Lifecycle and Cost Model
+
+The repository does not require three EKS clusters to run continuously:
+
+1. Keep or rebuild aws-dev and validate the candidate release.
+2. Create aws-test, promote the same digest, run pre-production and failure
+   tests, then destroy the environment after collecting non-sensitive evidence.
+3. Render and statically validate aws-prod declarations in v0.9; a live
+   production deployment is optional.
+
+This sequential model proves independent lifecycles without turning the
+portfolio environment into three permanent sources of AWS cost.
+
+v0.9.6 makes that lifecycle executable through guarded phase-specific
+entrypoints. `apply-aws-test.sh` creates or deliberately resumes only the
+independent test root; `bootstrap-aws-test.sh` applies reviewed GitOps state;
+the governed workflow performs the dev-to-test release transition;
+`destroy-aws-test.sh` removes controller-owned dependencies before Terraform;
+and `validate-aws-cost-cleanup.sh` must pass before final evidence is recorded.
+The destroy entrypoint rejects aws-prod because the production declaration is
+not a disposable portfolio target.
 
 ## Deliberate Differences
 
-| Concern | local | aws-dev |
-|---|---|---|
-| Kubernetes | kind | EKS |
-| Ingress | ingress-nginx | AWS Load Balancer Controller |
-| Workload | Rollout | Deployment |
-| Progressive delivery | Enabled | Deferred |
-| Exposure | Local hostname | Route 53 hostname with ACM-backed HTTPS |
-| IAM | N/A | IAM and IRSA |
-| Node capacity | kind nodes | system Managed Node Group plus isolated application and database Karpenter capacity |
-| Database | Disabled | three PostgreSQL instances on dedicated On-Demand nodes with encrypted gp3 persistence, S3 physical backups, isolated PITR, and demo-api failover validation |
+| Concern | local | aws-dev | aws-test | aws-prod |
+|---|---|---|---|---|
+| Kubernetes | kind | EKS | EKS | EKS |
+| Cluster | Local sandbox | Independent dev | Independent test | Independent prod |
+| Ingress | ingress-nginx | AWS ALB | AWS ALB | AWS ALB |
+| Release entry | Direct development | Build output | From aws-dev | From aws-test |
+| Progressive delivery | Enabled | Existing Deployment path | ALB Canary declared | ALB Canary plus approval declared |
+| State and data | Disposable | Isolated dev | Isolated test | Isolated prod |
+| Lifetime | Developer-controlled | Rebuildable | Ephemeral | Persistent |
 
-The environments share GitOps principles but are not required to use identical traffic-routing implementations.
+Environment-specific capacity, retention, rollout, and availability settings
+may differ. The immutable application digest and its source/build identity must
+not change during aws-dev to aws-test to aws-prod promotion.
+
+See `docs/MULTI_ENVIRONMENT_GITOPS_MODEL.md` for the promotion and repository
+design contract.

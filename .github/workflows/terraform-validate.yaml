@@ -40,11 +40,5 @@ jobs:
         with:
           terraform_wrapper: false
 
-      - name: Terraform format
-        run: terraform -chdir=infra/terraform/aws/environments/dev fmt -check -recursive
-
-      - name: Terraform init
-        run: terraform -chdir=infra/terraform/aws/environments/dev init -backend=false -input=false
-
-      - name: Terraform validate
-        run: terraform -chdir=infra/terraform/aws/environments/dev validate
+      - name: Validate all Terraform environments
+        run: ./scripts/validate-terraform.sh

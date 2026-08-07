@@ -1,0 +1,84 @@
+# Declared aws-test profile. The cluster-local Secret and AWS backing resources
+# are introduced by v0.9.2; v0.9.5 adds Rollout behavior without credentials.
+replicaCount: 2
+
+image:
+  pullPolicy: IfNotPresent
+
+rollout:
+  enabled: true
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      stableService: demo-api-stable
+      canaryService: demo-api-canary
+      trafficRouting:
+        nginx:
+          enabled: false
+        alb:
+          enabled: true
+          ingress: demo-api
+          servicePort: 80
+      steps:
+        - setWeight: 20
+        - pause:
+            duration: 60s
+        - analysis:
+            templates:
+              - templateName: demo-api-canary-health
+        - setWeight: 50
+        - pause: {}
+        - setWeight: 100
+
+analysis:
+  enabled: true
+  provider: web
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80},{"HTTPS":443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-TLS13-1-2-2021-06
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/success-codes: "200"
+    alb.ingress.kubernetes.io/load-balancer-attributes: routing.http.drop_invalid_header_fields.enabled=true
+  hosts:
+    - host: demo.test.aureumstack.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 64Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+readinessProbe:
+  timeoutSeconds: 10
+
+env:
+  APP_NAME: demo-api
+  APP_ENV: aws-test
+
+database:
+  enabled: true
+  secretName: demo-api-postgresql
+  secretKey: DATABASE_URL
+  connectTimeoutSeconds: 2
+  retryAttempts: 3
+  retryDelaySeconds: 1

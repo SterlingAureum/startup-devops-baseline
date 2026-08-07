@@ -20,15 +20,15 @@ startup_dir = (
 startup_namespace = startup_dir / "namespace.yaml"
 startup_quota = startup_dir / "resource-quota.yaml"
 startup_limits = startup_dir / "limit-range.yaml"
-data_dir = root / "clusters" / "aws-dev" / "data-platform" / "postgresql"
+data_dir = root / "clusters" / "aws" / "base" / "data-platform" / "postgresql"
 data_namespace = data_dir / "namespace.yaml"
 data_quota = data_dir / "resource-quota.yaml"
 data_limits = data_dir / "limit-range.yaml"
 local_app = root / "clusters" / "local" / "platform" / "namespace-guardrails.yaml"
-aws_app = root / "clusters" / "aws-dev" / "platform" / "namespace-guardrails.yaml"
-aws_demo_app = root / "clusters" / "aws-dev" / "platform" / "demo-api.yaml"
+aws_app = root / "clusters" / "aws" / "base" / "platform" / "namespace-guardrails.yaml"
+aws_demo_app = root / "clusters" / "aws" / "base" / "platform" / "demo-api.yaml"
 aws_postgres_app = (
-    root / "clusters" / "aws-dev" / "platform" / "postgresql-baseline.yaml"
+    root / "clusters" / "aws" / "base" / "platform" / "postgresql-baseline.yaml"
 )
 
 required_files = [
@@ -140,7 +140,7 @@ require(
     [
         "name: namespace-guardrails-aws-dev",
         'argocd.argoproj.io/sync-wave: "-5"',
-        "targetRevision: feature/v0.8-production-security-baseline",
+        "targetRevision: main",
         "path: platform/security/namespace-guardrails/startup-apps",
         "namespace: startup-apps",
         "ServerSideApply=true",
@@ -151,8 +151,8 @@ require(
 for path in [aws_demo_app, aws_postgres_app]:
     require(
         path,
-        ["targetRevision: feature/v0.8-production-security-baseline"],
-        "v0.8 feature-branch runtime validation source",
+        ["targetRevision: main"],
+        "main-branch runtime validation source",
     )
 PY
 

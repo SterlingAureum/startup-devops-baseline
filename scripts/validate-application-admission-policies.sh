@@ -27,7 +27,8 @@ workload_binding = policy_dir / "workload-binding.yaml"
 aws_app = (
     root
     / "clusters"
-    / "aws-dev"
+    / "aws"
+    / "base"
     / "platform"
     / "application-admission-policies.yaml"
 )
@@ -133,7 +134,7 @@ require(
     [
         "name: application-admission-policies-aws-dev",
         'argocd.argoproj.io/sync-wave: "-4"',
-        "targetRevision: feature/v0.8-production-security-baseline",
+        "targetRevision: main",
         "path: platform/security/admission-policies/application-workloads",
         "namespace: startup-apps",
         "ServerSideApply=true",

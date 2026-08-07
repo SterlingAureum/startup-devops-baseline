@@ -136,7 +136,7 @@ if [[ "${WORKLOAD_KIND}" == "Deployment" ]]; then
   kubectl -n "${NAMESPACE}" get deployment "${WORKLOAD_NAME}" -o json \
     >"${WORK_DIR}/workload.json"
   jq --exit-status \
-    '.status.observedGeneration == .metadata.generation and
+    '(.status.observedGeneration | tostring) == (.metadata.generation | tostring) and
      .status.readyReplicas == .spec.replicas and
      .status.updatedReplicas == .spec.replicas and
      .status.availableReplicas == .spec.replicas' \

@@ -149,7 +149,7 @@ else
   kubectl -n "${NAMESPACE}" get rollouts.argoproj.io "${WORKLOAD_NAME}" -o json \
     >"${WORK_DIR}/workload.json"
   jq --exit-status \
-    '.status.observedGeneration == .metadata.generation and
+    '(.status.observedGeneration | tostring) == (.metadata.generation | tostring) and
      .status.phase == "Healthy" and
      .status.currentPodHash == .status.stableRS and
      .status.availableReplicas == .spec.replicas and

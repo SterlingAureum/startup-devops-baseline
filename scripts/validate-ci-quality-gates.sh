@@ -42,6 +42,9 @@ echo "==> Validating promotion evidence, approvals, and environment rollback"
 echo "==> Validating AWS ALB progressive-delivery declarations"
 "${ROOT_DIR}/scripts/validate-demo-api-aws-progressive-delivery.sh"
 
+echo "==> Validating demo-api AWS application-capacity scheduling"
+"${ROOT_DIR}/scripts/validate-demo-api-aws-scheduling.sh"
+
 echo "==> Validating AWS runtime evidence behavior"
 "${ROOT_DIR}/scripts/validate-demo-api-runtime-evidence-behavior.sh"
 

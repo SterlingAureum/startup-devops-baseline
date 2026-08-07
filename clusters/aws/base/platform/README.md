@@ -76,7 +76,10 @@ Availability Zones and discovery identity with the selected Terraform root.
 `karpenter-nodepool-ondemand.yaml` and `karpenter-nodepool-spot.yaml` define
 the normal application capacity tiers. Both use `workload=application`, but
 each has a distinct `NoSchedule` taint so a workload opts in to exactly one
-tier. Both pools are limited to small development capacity.
+tier. The environment-specific demo-api values select and tolerate only
+`application-ondemand`, keeping the Managed Node Group for platform capacity.
+The Spot pool remains opt-in validation capacity. Both pools are limited to
+small development capacity.
 
 `karpenter-ec2nodeclass-fis.yaml` and
 `karpenter-nodepool-spot-fis.yaml` provide a third, test-only capacity
@@ -86,5 +89,6 @@ receive this tag.
 
 The scale and interruption workloads under `examples/karpenter/` are not
 GitOps-managed. They are applied only during controlled validation and removed
-before the test returns. Their scripts scope cleanup to the selected application
-NodePool and never delete the persistent database NodeClaims.
+before the test returns. The On-Demand scale test records the live demo-api
+capacity baseline, forces one incremental node, and waits for the pool to
+return to that baseline. Its cleanup never deletes the pool-wide NodeClaims.

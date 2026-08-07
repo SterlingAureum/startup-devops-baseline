@@ -82,3 +82,13 @@ database:
   connectTimeoutSeconds: 2
   retryAttempts: 3
   retryDelaySeconds: 1
+
+nodeSelector:
+  workload: application
+  capacity-tier: on-demand
+
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: application
+    effect: NoSchedule

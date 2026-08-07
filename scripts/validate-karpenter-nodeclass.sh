@@ -107,9 +107,8 @@ validate_nodeclass() {
 validate_nodeclass "${APPLICATION_NODE_CLASS}"
 validate_nodeclass "${DATABASE_NODE_CLASS}"
 
-echo "==> Confirming application capacity tiers remain idle"
+echo "==> Confirming exercise-only application capacity tiers remain idle"
 for nodepool_name in \
-  application-ondemand \
   application-spot \
   application-spot-fis; do
   if [[ -n "$(

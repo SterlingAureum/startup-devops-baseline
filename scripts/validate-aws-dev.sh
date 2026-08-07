@@ -33,6 +33,30 @@ echo "==> demo-api deployment"
 kubectl rollout status deployment/demo-api \
   -n startup-apps --timeout="${WAIT_TIMEOUT}"
 
+mapfile -t DEMO_API_NODES < <(
+  kubectl get pods \
+    --namespace startup-apps \
+    --selector app.kubernetes.io/name=demo-api \
+    --output jsonpath='{range .items[*]}{.spec.nodeName}{"\n"}{end}' |
+    sort -u
+)
+if (( ${#DEMO_API_NODES[@]} < 1 )); then
+  echo "No scheduled demo-api node was found." >&2
+  exit 1
+fi
+
+for demo_api_node in "${DEMO_API_NODES[@]}"; do
+  scheduling_identity="$(
+    kubectl get node "${demo_api_node}" \
+      --output jsonpath='{.metadata.labels.karpenter\.sh/nodepool}:{.metadata.labels.workload}:{.metadata.labels.capacity-tier}'
+  )"
+  if [[ "${scheduling_identity}" != \
+        "application-ondemand:application:on-demand" ]]; then
+    echo "demo-api is running outside the On-Demand application tier: ${demo_api_node}." >&2
+    exit 1
+  fi
+done
+
 kubectl get ingress demo-api -n startup-apps
 
 ALB_HOSTNAME="$(kubectl get ingress demo-api -n startup-apps -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')"

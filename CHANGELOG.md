@@ -25,6 +25,12 @@ All notable changes to this repository are documented in this file.
 - Allowed the shared AWS root deployment helper to accept an explicit set of
   reviewable Argo CD health states while preserving Healthy-only aws-dev
   behavior by default.
+- Assigned demo-api in every AWS environment to the Karpenter-managed
+  `application-ondemand` tier, leaving the Managed Node Group for stable
+  platform capacity and Spot/FIS tiers for controlled exercises, with static
+  rendering and live aws-dev placement validation.
+- Made the On-Demand scale test baseline-aware and removed pool-wide NodeClaim
+  deletion so a failed exercise cannot evict the steady demo-api workload.
 - Kept aws-test ephemeral and aws-prod static-only for v0.9 acceptance instead
   of requiring three concurrently running portfolio clusters.
 - Added lifecycle, cleanup, and final-evidence behavior to the reusable CI

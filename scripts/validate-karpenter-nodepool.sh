@@ -208,9 +208,8 @@ if [[ "${RECOVERY_DISRUPTION}" != "Never:WhenEmpty:1m" ]]; then
   exit 1
 fi
 
-echo "==> Confirming temporary application and recovery capacity tiers remain idle"
+echo "==> Confirming exercise-only application and recovery tiers remain idle"
 for nodepool_name in \
-  "${ON_DEMAND_NODE_POOL_NAME}" \
   "${SPOT_NODE_POOL_NAME}" \
   "${FIS_NODE_POOL_NAME}" \
   "${DATABASE_RECOVERY_NODE_POOL_NAME}"; do

@@ -1,0 +1,46 @@
+{
+  "application": "demo-api",
+  "environment": "aws-dev",
+  "release": {
+    "applicationVersion": "sha-8946c18",
+    "buildWorkflowRunId": "31136216030",
+    "imageDigest": "sha256:9d44e1193d9bec5583bb5dec01d6e934cf61b1cb17b27011e5ae0105d22a6bb5",
+    "imageRepository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "imageTag": "sha-8946c18",
+    "path": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+    "sha256": "a446cb1df3607d0efa745ef168dd89dd92cded81817aa10ec5a404fab59198c9",
+    "sourceCommit": "8946c1885675d63c0f127f87250784cc816c2cb9",
+    "sourceRepository": "SterlingAureum/startup-devops-baseline"
+  },
+  "runtime": {
+    "actor": "SterlingAureum",
+    "albActionSha256": "",
+    "analysisRunName": "",
+    "analysisRunPhase": "not-applicable",
+    "argoApplication": "demo-api-aws-dev",
+    "argoRevision": "802988cc0ee55c75fe9f12e9a66adcf2cbc7352e",
+    "checks": [
+      "argocd-synced-healthy",
+      "release-annotations-match",
+      "all-pods-ready",
+      "immutable-pod-image-match",
+      "https-health",
+      "https-ready-database",
+      "https-version-identity"
+    ],
+    "clusterName": "startup-devops-baseline-dev",
+    "evidenceId": "20260807041411",
+    "ingressHostname": "demo.dev.aureumstack.com",
+    "mode": "aws-runtime-verification",
+    "namespace": "startup-apps",
+    "observedImage": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api@sha256:9d44e1193d9bec5583bb5dec01d6e934cf61b1cb17b27011e5ae0105d22a6bb5",
+    "readyPodCount": 2,
+    "recordedAt": "2026-08-07T04:14:29Z",
+    "repositoryRevision": "802988cc0ee55c75fe9f12e9a66adcf2cbc7352e",
+    "rolloutPhase": "not-applicable",
+    "workloadKind": "Deployment",
+    "workloadName": "demo-api"
+  },
+  "schemaVersion": "v0.9.5",
+  "status": "passed"
+}

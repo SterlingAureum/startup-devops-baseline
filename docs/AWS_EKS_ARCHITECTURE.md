@@ -67,7 +67,8 @@ release path.
  On-Demand         Spot NodePool   FIS-only Spot NodePool
  NodePool               |                 |
     |                    |                 v
-    +--------------------+------> NodeClaims and temporary application nodes
+    v                    +--------> temporary exercise nodes
+ demo-api baseline nodes
 
  database EC2NodeClass
           |
@@ -283,6 +284,15 @@ instance-profile, private-subnet, security-group, and AMI discovery.
 Their different `NoSchedule` taints make the pools mutually exclusive unless a
 workload explicitly tolerates both. CPU, memory, and node-count limits bound
 the development environment, while consolidation removes empty capacity.
+
+All AWS demo-api environment profiles select `workload=application` and
+`capacity-tier=on-demand` and tolerate only
+`dedicated=application:NoSchedule`. The scheduler therefore leaves a Pod
+Pending when current On-Demand application capacity is insufficient. Karpenter
+observes that unschedulable Pod, matches it to `application-ondemand`, creates a
+NodeClaim, and launches a compatible EC2 node. The stable Managed Node Group
+continues to host platform controllers and is not automatically enlarged by
+Karpenter. Spot and FIS-only pools remain explicit exercise capacity.
 
 The separate `database` EC2NodeClass and `database-ondemand` NodePool reuse the
 existing Karpenter node IAM role and private-subnet discovery. A

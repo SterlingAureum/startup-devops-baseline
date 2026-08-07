@@ -369,9 +369,12 @@ CloudNativePG primary failover and demo-api reconnect validation passed.
 
 ## 11. Run the Controlled Scale Test
 
-The following command creates a temporary workload and one small On-Demand
-application node. It validates scale-out, deletes the workload, and waits for
-consolidation-driven scale-in:
+demo-api normally keeps at least one `application-ondemand` node active. The
+following command records the current NodeClaim and node counts, creates one
+test Pod per existing application node plus one, and uses required Pod
+anti-affinity to force one additional On-Demand application node. It then
+deletes the workload and waits for consolidation to return the pool to the
+recorded baseline:
 
 ```bash
 ./scripts/run-karpenter-scale-test.sh
@@ -383,7 +386,7 @@ it is not part of `validate-all.sh`.
 Expected final output:
 
 ```text
-Karpenter On-Demand scale-out and scale-in validation passed.
+Karpenter On-Demand incremental scale-out and baseline restoration validation passed.
 ```
 
 After the test:
@@ -393,8 +396,9 @@ kubectl get nodeclaims
 kubectl get nodes -l karpenter.sh/nodepool
 ```
 
-The three database NodeClaims and nodes remain. Confirm only that the temporary
-application pool returned to zero:
+The three database NodeClaims and nodes remain. Confirm that the On-Demand
+application pool returned to its pre-test baseline; it should not normally be
+empty while demo-api is running:
 
 ```bash
 kubectl get nodeclaims \
@@ -403,7 +407,9 @@ kubectl get nodes \
   -l karpenter.sh/nodepool=application-ondemand
 ```
 
-Both scoped commands should return no resources.
+The scoped counts should match the baseline printed by the test. The script
+does not force-delete NodeClaims on failure because a post-consolidation claim
+may already host the steady demo-api workload.
 
 ## 12. Run the Controlled Spot Test
 

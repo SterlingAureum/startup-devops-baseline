@@ -1,0 +1,31 @@
+{
+  "application": "demo-api",
+  "environment": "aws-test",
+  "qualification": {
+    "actor": "SterlingAureum",
+    "checks": [
+      "release-schema",
+      "helm-lint",
+      "helm-render",
+      "immutable-artifact-exists"
+    ],
+    "mode": "static-release-qualification",
+    "recordedAt": "2026-08-09T11:36:22Z",
+    "repositoryRevision": "d2171d580cc5c6cdafe0a978b9970ed75c6cbcaa",
+    "workflowRunAttempt": 1,
+    "workflowRunId": "31311195902"
+  },
+  "release": {
+    "applicationVersion": "sha-04ca5ab",
+    "buildWorkflowRunId": "31196357498",
+    "imageDigest": "sha256:fcfa4f473dd0f2752e73f885cd3e372cfdcc1f468222e425d0f2a18e8c2c8abc",
+    "imageRepository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "imageTag": "sha-04ca5ab",
+    "path": "apps/demo-api/helm/values/releases/aws-test.yaml",
+    "sha256": "7370ff5531f91f103c08d52ad44435c286072decdcec0a33c3423836552917c7",
+    "sourceCommit": "04ca5ab03d999d138c5187c9745f91749bd39f07",
+    "sourceRepository": "SterlingAureum/startup-devops-baseline"
+  },
+  "schemaVersion": "v0.9.4",
+  "status": "passed"
+}

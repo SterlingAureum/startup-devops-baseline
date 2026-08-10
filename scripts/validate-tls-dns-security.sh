@@ -55,7 +55,6 @@ for marker in required_values:
 for marker in [
     'default     = []',
     '!contains(var.eks_public_access_cidrs, "0.0.0.0/0")',
-    'default     = ["api", "audit", "authenticator"]',
     'default     = 14',
     'default     = "aureumstack.com"',
     'default     = "demo.dev.aureumstack.com"',

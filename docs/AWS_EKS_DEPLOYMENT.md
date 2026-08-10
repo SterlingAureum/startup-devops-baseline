@@ -78,13 +78,15 @@ CONFIRM_EKS_API_CIDR_UPDATE=restrict-current-ip \
   ./scripts/apply-eks-api-access-cidr.sh
 ```
 
-The same apply creates and validates the ACM certificate and enables EKS
-`api`, `audit`, and `authenticator` logs with 14-day retention. Re-run this
-entrypoint whenever the workstation public IP changes. It still works while
-the old EKS allowlist blocks `kubectl`, because it updates EKS through the AWS
-API. Its saved plan is an owner-readable, disposable `/tmp` artifact rather
-than Terraform state. After apply, the script refreshes kubeconfig and proves
-Kubernetes API readiness from the same terminal.
+The initial disposable aws-dev profile leaves EKS control-plane log ingestion
+off while Terraform still owns the log group with 14-day retention. The
+endpoint entrypoint preserves the live logging profile unless log types are
+explicitly supplied, so a workstation or VPN IP change cannot silently enable
+high-volume audit ingestion. It still works while the old EKS allowlist blocks
+`kubectl`, because it updates EKS through the AWS API. Its saved plan is an
+owner-readable, disposable `/tmp` artifact rather than Terraform state. After
+apply, the script refreshes kubeconfig and proves Kubernetes API readiness from
+the same terminal.
 
 Do not apply an old plan after changing Terraform files.
 
@@ -184,6 +186,16 @@ The public endpoint is `https://demo.dev.aureumstack.com`. Port 80 must return
 
 ## 7. Validate the Baseline
 
+Formal security validation requires the production-parity logging profile.
+Enable all five EKS control-plane log types before collecting evidence:
+
+```bash
+AWS_ENVIRONMENT=aws-dev \
+EKS_CONTROL_PLANE_LOGGING_PROFILE=production-parity \
+CONFIRM_EKS_LOGGING_PROFILE=apply-eks-logging-profile \
+  ./scripts/apply-eks-control-plane-logging-profile.sh
+```
+
 The backup validator requires at least one completed base backup. On a clean
 environment, intentionally create and verify one backup first:
 
@@ -195,6 +207,16 @@ Then run the unified non-disruptive baseline validation:
 
 ```bash
 ./scripts/validate-all.sh
+```
+
+After evidence collection, either destroy the environment or return it to the
+cost-optimized profile:
+
+```bash
+AWS_ENVIRONMENT=aws-dev \
+EKS_CONTROL_PLANE_LOGGING_PROFILE=off \
+CONFIRM_EKS_LOGGING_PROFILE=apply-eks-logging-profile \
+  ./scripts/apply-eks-control-plane-logging-profile.sh
 ```
 
 When diagnosing a specific layer, the corresponding validators can also be

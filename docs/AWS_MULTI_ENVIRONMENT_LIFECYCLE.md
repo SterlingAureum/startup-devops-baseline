@@ -182,6 +182,12 @@ source, because it returns tagged resources supported by that API. Exact
 service checks remain authoritative:
 <https://docs.aws.amazon.com/cli/latest/reference/resourcegroupstaggingapi/get-resources.html>.
 
+Karpenter-created Instant Fleet history is classified separately. Fleet state
+`deleted`, `deleted_terminating`, or an already-expired `NotFound` response is
+accepted after the exact instance and infrastructure checks pass. Active,
+unknown, or unclassifiable Fleet state remains a cleanup failure. Do not repeat
+`delete-fleets` for terminal history; wait for AWS to expire the record.
+
 If the audit fails, do not mark v0.9 complete. Resolve the named residual and
 rerun the audit; do not delete Terraform state to hide it.
 

@@ -30,6 +30,9 @@ echo "==> Validating active GitOps repository revisions"
 echo "==> Validating AWS dev/test/prod declarations and overlays"
 "${ROOT_DIR}/scripts/validate-aws-environment-declarations.sh"
 
+echo "==> Validating cost-aware EKS control-plane logging profiles"
+"${ROOT_DIR}/scripts/validate-eks-control-plane-logging-profiles.sh"
+
 echo "==> Validating demo-api environment/release values separation"
 "${ROOT_DIR}/scripts/validate-demo-api-values-separation.sh"
 

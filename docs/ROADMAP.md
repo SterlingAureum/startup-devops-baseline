@@ -195,10 +195,36 @@ Incremental scope:
 - v0.9.5 - AWS test/prod progressive delivery with ALB, Argo Rollouts,
   release-bound AnalysisRuns, and reviewed runtime evidence - delivered
 - v0.9.6 - clean-room dev/test sequence, production static validation, guarded
-  recovery/teardown, cost-residual audit, and final evidence - implemented;
-  live aws-test acceptance pending
+  recovery/teardown, cost-residual audit, and final evidence - delivered and
+  live acceptance completed
+- v0.9.7 - cost-aware EKS control-plane logging profiles, bounded retention,
+  endpoint-update profile preservation, and terminal EC2 Fleet audit handling
+  - implemented; final validation and version closure pending
 
-## v1.0 - Observability and Production Readiness Baseline
+## v0.10 - Release Orchestration and Delivery Automation
+
+Status: Planned
+
+Goal:
+
+Turn the existing build, GitOps release, runtime evidence, qualification, and
+ordered promotion controls into one resumable delivery workflow while
+retaining human production approval.
+
+Planned scope:
+
+- automatic immutable image build after accepted application changes
+- automatic aws-dev release PR preparation
+- deployment, Rollout, and AnalysisRun readiness orchestration
+- automatic runtime and qualification evidence chaining
+- automatic aws-dev to aws-test Promotion PR preparation
+- automatic aws-test to aws-prod Promotion preparation
+- retained aws-prod Environment approval and reviewed PR merge
+- concurrency, idempotency, retry, stale-state, and resume controls
+- failure diagnostics and governed rollback handoff
+- no automatic EKS creation for every application commit
+
+## v0.11 - Observability and Production Readiness Baseline
 
 Status: Planned
 
@@ -220,7 +246,7 @@ Planned scope:
 - recovery objectives and operational readiness review
 - end-to-end security, observability, delivery, and cost validation
 
-## v1.1 - AI Infrastructure Extension
+## v1.0 - AI Infrastructure Extension
 
 Status: Planned
 
@@ -238,7 +264,7 @@ Planned scope:
 - OpenAI-compatible API serving
 - model storage workflow
 
-## v1.2 - AIOps Operations Extension
+## v1.1 - AIOps Operations Extension
 
 Status: Planned
 

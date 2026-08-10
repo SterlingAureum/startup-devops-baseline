@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-AWS_REGION="${AWS_REGION:-us-east-1}"
-CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+AWS_ENVIRONMENT="${AWS_ENVIRONMENT:-aws-dev}"
+# shellcheck source=scripts/aws-environment-context.sh
+source "${ROOT_DIR}/scripts/aws-environment-context.sh"
+configure_aws_environment_context
+
 APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
 INGRESS_NAME="${INGRESS_NAME:-demo-api}"
-HOSTED_ZONE_NAME="${HOSTED_ZONE_NAME:-aureumstack.com}"
-DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.dev.aureumstack.com}"
-EXPECTED_LOG_RETENTION_DAYS="${EXPECTED_LOG_RETENTION_DAYS:-14}"
+EXPECTED_LOG_RETENTION_DAYS="${EXPECTED_LOG_RETENTION_DAYS:-${EKS_CLUSTER_LOG_RETENTION_DAYS}}"
+EXPECTED_LOG_TYPES_JSON="${EXPECTED_LOG_TYPES_JSON:-[\"api\",\"audit\",\"authenticator\",\"controllerManager\",\"scheduler\"]}"
 
 for command in aws curl jq kubectl openssl; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -23,16 +26,15 @@ CLUSTER_JSON="$(
     --name "${CLUSTER_NAME}" \
     --output json
 )"
-if ! jq --exit-status '
+if ! jq --exit-status --argjson expected "${EXPECTED_LOG_TYPES_JSON}" '
   .cluster.resourcesVpcConfig.endpointPublicAccess == true and
   .cluster.resourcesVpcConfig.endpointPrivateAccess == true and
   (.cluster.resourcesVpcConfig.publicAccessCidrs | length > 0) and
   (.cluster.resourcesVpcConfig.publicAccessCidrs | index("0.0.0.0/0") | not) and
   ([.cluster.logging.clusterLogging[] |
-    select(.enabled == true) | .types[]] as $enabled |
-    all(["api", "audit", "authenticator"][]; . as $required | $enabled | index($required)))
+    select(.enabled == true) | .types[]] | unique | sort) == ($expected | unique | sort)
 ' <<<"${CLUSTER_JSON}" >/dev/null; then
-  echo "EKS endpoint or security logging is not hardened as expected." >&2
+  echo "EKS endpoint or production-parity logging is not hardened as expected." >&2
   exit 1
 fi
 
@@ -152,12 +154,12 @@ done
 
 kubectl wait \
   --for=jsonpath='{.status.sync.status}'=Synced \
-  application/demo-api-aws-dev \
+  "application/${DEMO_APPLICATION}" \
   --namespace argocd \
   --timeout=10m
 kubectl wait \
   --for=jsonpath='{.status.health.status}'=Healthy \
-  application/demo-api-aws-dev \
+  "application/${DEMO_APPLICATION}" \
   --namespace argocd \
   --timeout=10m
 

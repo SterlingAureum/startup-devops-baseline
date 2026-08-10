@@ -48,6 +48,10 @@ required = {
     ),
     "scripts/validate-aws-cost-cleanup.sh": (
         "resourcegroupstaggingapi get-resources",
+        "ec2 describe-fleets",
+        "deleted_terminating",
+        "InvalidFleetId\\.NotFound",
+        "DescribeFleetInstances",
         "describe-nat-gateways",
         "describe-volumes",
         "elbv2.k8s.aws/cluster",
@@ -102,6 +106,21 @@ case "${service}:${operation}" in
   ec2:describe-nat-gateways)
     if [[ "${MOCK_AWS_RESIDUAL:-}" == "nat" ]]; then echo "1"; else echo "0"; fi
     ;;
+  ec2:describe-fleets)
+    case "${MOCK_AWS_RESIDUAL:-}" in
+      fleet-terminal)
+        echo '{"Fleets":[{"FleetId":"fleet-00000000-0000-0000-0000-000000000001","FleetState":"deleted_terminating","Type":"instant"}]}'
+        ;;
+      fleet-active)
+        echo '{"Fleets":[{"FleetId":"fleet-00000000-0000-0000-0000-000000000001","FleetState":"active","Type":"instant"}]}'
+        ;;
+      fleet-notfound)
+        echo 'An error occurred (InvalidFleetId.NotFound) when calling the DescribeFleets operation' >&2
+        exit 254
+        ;;
+      *) echo '{"Fleets":[]}' ;;
+    esac
+    ;;
   s3api:head-bucket) exit 254 ;;
   secretsmanager:describe-secret) echo '{"DeletedDate":"2026-08-14T00:00:00Z"}' ;;
   logs:describe-log-groups|acm:list-certificates) echo "0" ;;
@@ -110,6 +129,8 @@ case "${service}:${operation}" in
   resourcegroupstaggingapi:get-resources)
     if [[ "$*" == *"length(ResourceTagMappingList)"* ]]; then
       echo "0"
+    elif [[ "${MOCK_AWS_RESIDUAL:-}" == fleet-* ]]; then
+      echo '{"ResourceTagMappingList":[{"ResourceARN":"arn:aws:ec2:us-east-1:123456789012:fleet/fleet-00000000-0000-0000-0000-000000000001","Tags":[]}]}'
     else
       echo '{"ResourceTagMappingList":[]}'
     fi
@@ -130,6 +151,23 @@ if PATH="${WORK_DIR}/bin:${PATH}" \
    MOCK_AWS_RESIDUAL="nat" \
      "${ROOT_DIR}/scripts/validate-aws-cost-cleanup.sh" >/dev/null 2>&1; then
   echo "Cleanup audit accepted a residual NAT Gateway." >&2
+  exit 1
+fi
+
+for terminal_case in fleet-terminal fleet-notfound; do
+  PATH="${WORK_DIR}/bin:${PATH}" \
+  AWS_ENVIRONMENT="aws-test" \
+  TF_DIR="${WORK_DIR}/tf" \
+  MOCK_AWS_RESIDUAL="${terminal_case}" \
+    "${ROOT_DIR}/scripts/validate-aws-cost-cleanup.sh" >/dev/null
+done
+
+if PATH="${WORK_DIR}/bin:${PATH}" \
+   AWS_ENVIRONMENT="aws-test" \
+   TF_DIR="${WORK_DIR}/tf" \
+   MOCK_AWS_RESIDUAL="fleet-active" \
+     "${ROOT_DIR}/scripts/validate-aws-cost-cleanup.sh" >/dev/null 2>&1; then
+  echo "Cleanup audit accepted an active EC2 Fleet." >&2
   exit 1
 fi
 

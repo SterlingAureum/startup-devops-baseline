@@ -2,6 +2,33 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.9.7
+
+### Added
+
+- Guarded `off` and `production-parity` EKS control-plane logging profiles
+  that preserve each environment's Terraform-managed CloudWatch retention.
+- Static profile contracts covering disposable dev/test defaults, complete
+  production logging, endpoint-update profile preservation, and formal live
+  security validation.
+- Terminal EC2 Fleet classification in the post-destroy audit, including
+  behavior tests for terminal, expired, active, and unrelated residual cases.
+- Cost-aware operations and cleanup-hardening checkpoint documentation.
+
+### Changed
+
+- Defaulted disposable aws-dev and aws-test control-plane log ingestion to
+  off while retaining 14-day and 30-day log-group retention respectively.
+- Required all five EKS control-plane log types and at least 90-day retention
+  in the aws-prod Terraform root.
+- Made the dynamic EKS management-IP updater preserve the live logging profile
+  unless log types are explicitly supplied.
+- Treated `deleted`, `deleted_terminating`, and already-expired Instant Fleet
+  records as non-actionable audit history while continuing to fail on active,
+  unknown, or unclassifiable Fleet state.
+- Recorded the completed dev/test and governed static-prod promotion boundary;
+  end-to-end delivery orchestration remains v0.10 scope.
+
 ## v0.9.6
 
 ### Added

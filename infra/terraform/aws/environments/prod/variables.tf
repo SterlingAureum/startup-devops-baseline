@@ -122,9 +122,9 @@ variable "eks_public_access_cidrs" {
 }
 
 variable "eks_enabled_cluster_log_types" {
-  description = "Security-relevant EKS control-plane log types sent to CloudWatch."
+  description = "Complete EKS control-plane logging required by the production root."
   type        = list(string)
-  default     = ["api", "audit", "authenticator"]
+  default     = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
 
   validation {
     condition = (
@@ -135,6 +135,17 @@ variable "eks_enabled_cluster_log_types" {
       ])
     )
     error_message = "eks_enabled_cluster_log_types contains an unsupported or duplicate EKS log type."
+  }
+
+  validation {
+    condition = toset(var.eks_enabled_cluster_log_types) == toset([
+      "api",
+      "audit",
+      "authenticator",
+      "controllerManager",
+      "scheduler",
+    ])
+    error_message = "The production root requires all five EKS control-plane log types."
   }
 }
 

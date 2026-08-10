@@ -120,3 +120,16 @@ Before Terraform destroy, verify that all PostgreSQL PVs are gone and that
 their `vol-*` identifiers no longer appear in `aws ec2 describe-volumes`.
 Residual EBS volumes do not block VPC deletion, but they continue to incur
 cost.
+
+After Terraform destroy, run the environment-aware residual audit:
+
+```bash
+AWS_ENVIRONMENT=aws-dev \
+  ./scripts/validate-aws-cost-cleanup.sh
+```
+
+The tag sweep can still see Karpenter Instant Fleet records after their
+capacity is gone. `deleted`, `deleted_terminating`, and expired `NotFound`
+records are accepted as terminal history. Any active, unknown, or
+unclassifiable Fleet remains a failure. Terminal Fleet records require waiting,
+not another deletion attempt.

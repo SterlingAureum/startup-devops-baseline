@@ -41,12 +41,14 @@ The v0.8 finalization added the `demo.dev.aureumstack.com` Route 53 endpoint,
 ACM-backed HTTPS, HTTP redirection, a runtime-only EKS management `/32`, and
 bounded security logging. v0.9 turns this single live AWS baseline into a
 cost-aware, multi-environment GitOps promotion model without requiring three
-permanently running portfolio clusters.
+permanently running portfolio clusters. v0.9.7 separates disposable
+control-plane logging cost from formal production-parity validation and makes
+the cleanup audit aware of terminal Karpenter Instant Fleet history.
 
 ## Current Version
 
 ```text
-v0.9.6-clean-room-multi-environment-validation
+v0.9.7-cost-aware-operations-and-cleanup-hardening
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -66,9 +68,13 @@ aws-dev, aws-test, and aws-prod. v0.9.5 adds test/prod ALB canary declarations,
 Argo Rollouts, release-bound AnalysisRuns, local collection of reviewed AWS
 runtime evidence, and a dual static/runtime Promotion gate. v0.9.6 adds the
 guarded clean-room aws-test lifecycle, recovery drill sequence, cost-residual
-audit, and final evidence contract. Live aws-test execution and reviewed final
-evidence are still required before the roadmap status changes to Completed;
-aws-prod remains statically validated in v0.9.
+audit, and final evidence contract. The live sequence completed aws-dev and
+aws-test validation plus the governed aws-test to aws-prod Promotion, while
+aws-prod remained statically validated by design. v0.9.7 defaults disposable
+dev/test control-plane ingestion off, provides an explicit all-five-log
+production-parity checkpoint, preserves the live profile during management-IP
+updates, and ignores only terminal or expired Instant Fleet history after
+exact cost-resource checks pass.
 
 ## Platform Architecture
 

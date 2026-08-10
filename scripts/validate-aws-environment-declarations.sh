@@ -33,6 +33,7 @@ profiles = {
         "private": ("10.20.10.0/24", "10.20.11.0/24"),
         "service": "172.20.0.0/16",
         "hostname": "demo.dev.aureumstack.com",
+        "log_types": (),
         "logs": "14",
         "force_destroy": "true",
         "secret_recovery": "0",
@@ -45,6 +46,7 @@ profiles = {
         "private": ("10.30.10.0/24", "10.30.11.0/24"),
         "service": "172.21.0.0/16",
         "hostname": "demo.test.aureumstack.com",
+        "log_types": (),
         "logs": "30",
         "force_destroy": "true",
         "secret_recovery": "7",
@@ -57,6 +59,9 @@ profiles = {
         "private": ("10.40.10.0/24", "10.40.11.0/24"),
         "service": "172.22.0.0/16",
         "hostname": "demo.prod.aureumstack.com",
+        "log_types": (
+            "api", "audit", "authenticator", "controllerManager", "scheduler"
+        ),
         "logs": "90",
         "force_destroy": "false",
         "secret_recovery": "30",
@@ -138,6 +143,8 @@ for environment, expected in profiles.items():
         raise SystemExit(f"{environment}: public subnet defaults do not match the address plan")
     if list_default(variables, "private_subnet_cidrs") != expected["private"]:
         raise SystemExit(f"{environment}: private subnet defaults do not match the address plan")
+    if list_default(variables, "eks_enabled_cluster_log_types") != expected["log_types"]:
+        raise SystemExit(f"{environment}: EKS logging default does not match the cost profile")
     if f'var.environment == "{environment}"' not in variable_block(variables, "environment"):
         raise SystemExit(f"{environment}: root does not lock its environment identity")
     if 'cluster_name = "${var.project_name}-${var.environment}"' not in main:
@@ -173,6 +180,8 @@ for name, marker in {
     "external_secrets_recovery_window_in_days":
         "var.external_secrets_recovery_window_in_days == 30",
     "eks_cluster_log_retention_days": "var.eks_cluster_log_retention_days >= 90",
+    "eks_enabled_cluster_log_types":
+        "toset(var.eks_enabled_cluster_log_types) == toset([",
 }.items():
     if marker not in variable_block(prod_variables, name):
         raise SystemExit(f"prod: fail-closed validation is missing for {name}")

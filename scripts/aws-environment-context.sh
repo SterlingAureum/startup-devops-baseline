@@ -15,6 +15,8 @@ configure_aws_environment_context() {
       ROOT_APPLICATION="${ROOT_APPLICATION:-startup-devops-aws-dev-root}"
       DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-dev}"
       DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.dev.aureumstack.com}"
+      EKS_CONTROL_PLANE_LOGGING_PROFILE="${EKS_CONTROL_PLANE_LOGGING_PROFILE:-off}"
+      EKS_CLUSTER_LOG_TYPES_JSON="${EKS_CLUSTER_LOG_TYPES_JSON:-[]}"
       EKS_CLUSTER_LOG_RETENTION_DAYS="${EKS_CLUSTER_LOG_RETENTION_DAYS:-14}"
       ;;
     aws-test)
@@ -23,6 +25,8 @@ configure_aws_environment_context() {
       ROOT_APPLICATION="${ROOT_APPLICATION:-startup-devops-aws-test-root}"
       DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-test}"
       DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.test.aureumstack.com}"
+      EKS_CONTROL_PLANE_LOGGING_PROFILE="${EKS_CONTROL_PLANE_LOGGING_PROFILE:-off}"
+      EKS_CLUSTER_LOG_TYPES_JSON="${EKS_CLUSTER_LOG_TYPES_JSON:-[]}"
       EKS_CLUSTER_LOG_RETENTION_DAYS="${EKS_CLUSTER_LOG_RETENTION_DAYS:-30}"
       ;;
     aws-prod)
@@ -31,6 +35,8 @@ configure_aws_environment_context() {
       ROOT_APPLICATION="${ROOT_APPLICATION:-startup-devops-aws-prod-root}"
       DEMO_APPLICATION="${DEMO_APPLICATION:-demo-api-aws-prod}"
       DEMO_HOSTNAME="${DEMO_HOSTNAME:-demo.prod.aureumstack.com}"
+      EKS_CONTROL_PLANE_LOGGING_PROFILE="${EKS_CONTROL_PLANE_LOGGING_PROFILE:-production-parity}"
+      EKS_CLUSTER_LOG_TYPES_JSON="${EKS_CLUSTER_LOG_TYPES_JSON:-[\"api\",\"audit\",\"authenticator\",\"controllerManager\",\"scheduler\"]}"
       EKS_CLUSTER_LOG_RETENTION_DAYS="${EKS_CLUSTER_LOG_RETENTION_DAYS:-90}"
       ;;
     *)
@@ -46,6 +52,7 @@ configure_aws_environment_context() {
   HOSTED_ZONE_NAME="${HOSTED_ZONE_NAME:-aureumstack.com}"
 
   export AWS_REGION CLUSTER_NAME DEMO_APPLICATION DEMO_HOSTNAME
-  export ENVIRONMENT_SHORT EKS_CLUSTER_LOG_RETENTION_DAYS HOSTED_ZONE_NAME
+  export ENVIRONMENT_SHORT EKS_CLUSTER_LOG_RETENTION_DAYS EKS_CLUSTER_LOG_TYPES_JSON
+  export EKS_CONTROL_PLANE_LOGGING_PROFILE HOSTED_ZONE_NAME
   export PROJECT_NAME ROOT_APPLICATION SOURCE_FILE TF_DIR
 }

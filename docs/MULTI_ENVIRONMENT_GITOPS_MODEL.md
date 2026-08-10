@@ -345,9 +345,18 @@ platform, or make test a permanent cost source.
 
 The following work belongs to later increments:
 
-- live clean-room dev/test execution and reviewed final v0.9 evidence;
-- remote Terraform state bootstrap, full observability, and long-term
-  operational readiness in v1.0.
+- end-to-end release orchestration and mechanical evidence chaining in v0.10;
+- full observability, SLOs, and long-term operational readiness in v0.11.
+
+## v0.9.7 Operational Closure
+
+The live v0.9 sequence validated the aws-dev and aws-test runtime paths and the
+governed aws-test to aws-prod desired-state Promotion. aws-prod remained
+static-only by design. v0.9.7 closes the two operational issues discovered
+during teardown: disposable dev/test control-plane log ingestion now defaults
+off with explicit production-parity checkpoints, and the cost audit separates
+terminal Instant Fleet history from actionable capacity. Delivery automation
+is intentionally unchanged.
 
 ## Non-Goals
 

@@ -117,9 +117,9 @@ variable "eks_public_access_cidrs" {
 }
 
 variable "eks_enabled_cluster_log_types" {
-  description = "Security-relevant EKS control-plane log types sent to CloudWatch."
+  description = "EKS control-plane logs sent to CloudWatch. The disposable dev profile defaults to no ingestion; use the guarded logging-profile script for production-parity validation."
   type        = list(string)
-  default     = ["api", "audit", "authenticator"]
+  default     = []
 
   validation {
     condition = (

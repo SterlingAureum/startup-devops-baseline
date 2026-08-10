@@ -41,8 +41,9 @@ eks_service_ipv4_cidr = "172.21.0.0/16"
 eks_endpoint_public_access  = true
 eks_endpoint_private_access = true
 
-# Security-relevant control-plane logs use a bounded retention period.
-eks_enabled_cluster_log_types  = ["api", "audit", "authenticator"]
+# Disposable day-to-day profile: retain the managed log group but ingest no
+# control-plane logs. Enable production-parity explicitly before formal tests.
+eks_enabled_cluster_log_types  = []
 eks_cluster_log_retention_days = 30
 
 route53_hosted_zone_name = "aureumstack.com"

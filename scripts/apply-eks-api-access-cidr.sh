@@ -3,14 +3,15 @@ set -Eeuo pipefail
 umask 077
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/dev}"
-AWS_REGION="${AWS_REGION:-us-east-1}"
-CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
-IP_DISCOVERY_URL="${IP_DISCOVERY_URL:-https://checkip.amazonaws.com}"
-EKS_CLUSTER_LOG_TYPES_JSON="${EKS_CLUSTER_LOG_TYPES_JSON:-[\"api\",\"audit\",\"authenticator\"]}"
-EKS_CLUSTER_LOG_RETENTION_DAYS="${EKS_CLUSTER_LOG_RETENTION_DAYS:-14}"
+AWS_ENVIRONMENT="${AWS_ENVIRONMENT:-aws-dev}"
+REQUESTED_LOG_TYPES_JSON="${EKS_CLUSTER_LOG_TYPES_JSON-}"
+# shellcheck source=scripts/aws-environment-context.sh
+source "${ROOT_DIR}/scripts/aws-environment-context.sh"
+configure_aws_environment_context
 
-for command in aws curl kubectl python3 terraform; do
+IP_DISCOVERY_URL="${IP_DISCOVERY_URL:-https://checkip.amazonaws.com}"
+
+for command in aws curl jq kubectl python3 terraform; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -54,8 +55,35 @@ trap 'rm -f -- "${PLAN_FILE}"' EXIT
 echo "==> AWS identity"
 aws sts get-caller-identity >/dev/null
 
+# Endpoint allowlist maintenance must not silently change the logging cost
+# profile. Preserve the live EKS setting unless the operator explicitly passes
+# EKS_CLUSTER_LOG_TYPES_JSON.
+if [[ -z "${REQUESTED_LOG_TYPES_JSON}" ]]; then
+  EKS_CLUSTER_LOG_TYPES_JSON="$(
+    aws eks describe-cluster \
+      --region "${AWS_REGION}" \
+      --name "${CLUSTER_NAME}" \
+      --output json |
+      jq -c '[.cluster.logging.clusterLogging[]? | select(.enabled == true) | .types[]] | unique'
+  )"
+else
+  EKS_CLUSTER_LOG_TYPES_JSON="${REQUESTED_LOG_TYPES_JSON}"
+fi
+EKS_CLUSTER_LOG_TYPES_JSON="$(
+  jq -ce '
+    type == "array" and
+    length == (unique | length) and
+    all(.[]; IN("api", "audit", "authenticator", "controllerManager", "scheduler"))
+  ' <<<"${EKS_CLUSTER_LOG_TYPES_JSON}" >/dev/null &&
+  jq -c 'sort' <<<"${EKS_CLUSTER_LOG_TYPES_JSON}"
+)" || {
+  echo "EKS_CLUSTER_LOG_TYPES_JSON must be a unique array of supported EKS control-plane log types." >&2
+  exit 1
+}
+
 echo "==> Restricting ${CLUSTER_NAME} public endpoint to the current workstation /32"
 echo "The address is runtime-only and will not be written to Git."
+echo "Preserving EKS control-plane log types: ${EKS_CLUSTER_LOG_TYPES_JSON}"
 
 terraform -chdir="${TF_DIR}" init -input=false
 terraform -chdir="${TF_DIR}" plan \

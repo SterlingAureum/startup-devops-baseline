@@ -41,8 +41,15 @@ eks_service_ipv4_cidr = "172.22.0.0/16"
 eks_endpoint_public_access  = true
 eks_endpoint_private_access = true
 
-# Security-relevant control-plane logs use a bounded retention period.
-eks_enabled_cluster_log_types  = ["api", "audit", "authenticator"]
+# Production fails closed on complete control-plane logging and bounded
+# retention. The production root rejects the disposable off profile.
+eks_enabled_cluster_log_types = [
+  "api",
+  "audit",
+  "authenticator",
+  "controllerManager",
+  "scheduler",
+]
 eks_cluster_log_retention_days = 90
 
 route53_hosted_zone_name = "aureumstack.com"

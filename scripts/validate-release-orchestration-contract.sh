@@ -96,6 +96,11 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     require(isinstance(application, dict), "application must be an object")
     require(application.get("name") == "demo-api", "Unexpected application")
     require(application.get("buildOnce") is True, "Release must build once")
+    require(
+        application.get("stageContract")
+        == "delivery/contracts/demo-api-stages.json",
+        "Reusable delivery stage contract is not linked",
+    )
     template = application.get("releaseIdTemplate")
     require(template == EXPECTED_RELEASE_TEMPLATE, "Unsafe release ID template")
     require("environment" not in template.lower(), "Release ID includes environment")

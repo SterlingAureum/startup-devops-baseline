@@ -2,6 +2,34 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.1
+
+### Added
+
+- Machine-readable reusable delivery-stage contract for image publishing,
+  static qualification, ordered environment Promotion, and rollback handoff.
+- Typed `workflow_call` inputs and stable workflow outputs on the four existing
+  delivery workflows while retaining their v0.9 push or manual entrypoints.
+- Offline reusable-stage validator with positive checks and negative mutations
+  for unsafe runner access, AWS credentials, automatic merge, environment
+  creation, skipped test Promotion, PR-code execution, missing production
+  coverage, and incomplete stage outputs.
+- Reusable delivery-stage documentation covering compatibility, stage
+  interfaces, durable results, retry scope, and the deferred trusted-runtime
+  boundary.
+
+### Changed
+
+- Linked the v0.10 application contract to the reusable stage contract.
+- Added the reusable-stage validator to the repository-wide CI quality gate.
+- Marked v0.10.1 delivered and made it the repository's current checkpoint.
+
+### Boundary
+
+- This increment makes the existing GitHub-hosted workflows reusable but does
+  not add the event-driven orchestrator, automatic PR merge, AWS OIDC/IAM/RBAC,
+  EKS access, runtime qualification workflow, or unified qualification bundle.
+
 ## v0.10.0
 
 ### Added

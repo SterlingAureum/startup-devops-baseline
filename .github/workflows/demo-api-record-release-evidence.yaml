@@ -1,6 +1,28 @@
 name: demo-api release qualification evidence
 
 on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Non-production release to qualify statically
+        required: true
+        type: string
+    outputs:
+      status:
+        description: Evidence PR stage status
+        value: ${{ jobs.record-evidence.outputs.status }}
+      pr_url:
+        description: Created evidence PR URL
+        value: ${{ jobs.record-evidence.outputs.pr-url }}
+      evidence_file:
+        description: Append-only static evidence path
+        value: ${{ jobs.record-evidence.outputs.evidence-file }}
+      image_reference:
+        description: Qualified immutable image reference
+        value: ${{ jobs.record-evidence.outputs.image-reference }}
+      base_revision:
+        description: Main revision qualified by this stage
+        value: ${{ jobs.record-evidence.outputs.base-revision }}
   workflow_dispatch:
     inputs:
       environment:
@@ -33,6 +55,12 @@ jobs:
       contents: write
       packages: read
       pull-requests: write
+    outputs:
+      status: ${{ steps.pull-request.outputs.status }}
+      pr-url: ${{ steps.pull-request.outputs.url }}
+      evidence-file: ${{ steps.evidence.outputs.evidence-file }}
+      image-reference: ${{ steps.evidence.outputs.image-reference }}
+      base-revision: ${{ steps.evidence.outputs.base-revision }}
     steps:
       - name: Checkout main with repository history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -187,6 +215,7 @@ jobs:
           fi
 
           echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+          echo "status=created" >> "${GITHUB_OUTPUT}"
 
       - name: Publish evidence summary
         env:

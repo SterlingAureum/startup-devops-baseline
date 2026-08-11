@@ -51,11 +51,17 @@ identity, derived phase/status model, resumable transition graph, and separated
 GitHub-hosted, trusted-runtime, and human approval boundaries that the later
 delivery automation increments must implement. This checkpoint is deliberately
 offline: it adds no release orchestrator and grants no Workflow AWS/EKS access.
+v0.10.1 upgrades the existing image, static qualification, ordered Promotion,
+and rollback workflows into reusable delivery stages with typed inputs,
+machine-readable outputs, an offline stage contract, and unchanged manual
+entrypoints. The reusable stages remain GitHub-hosted, PR-oriented, and unable
+to access AWS or EKS; runtime qualification remains reserved for the later
+trusted executor.
 
 ## Current Version
 
 ```text
-v0.10.0-release-orchestration-contract
+v0.10.1-reusable-delivery-stages
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -92,6 +98,12 @@ phase path, treats absent environments and unavailable runtime executors as
 resumable waits, preserves manual production approval and merge, and includes
 offline negative tests for unsafe policy mutations. Workflow implementation,
 OIDC/IAM/RBAC, and live runtime orchestration remain later v0.10 increments.
+v0.10.1 adds `workflow_call` interfaces to the four existing delivery
+workflows, publishes stable stage outputs, and records their script primitives,
+mutation scopes, allowed environments, and security boundary in
+`delivery/contracts/demo-api-stages.json`. It preserves all v0.9 dispatch and
+push paths and does not introduce an orchestrator, automatic merge, or cluster
+access.
 
 ## Platform Architecture
 

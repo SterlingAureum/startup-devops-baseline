@@ -1,6 +1,43 @@
 name: demo-api ordered environment promotion
 
 on:
+  workflow_call:
+    inputs:
+      source_environment:
+        description: Reviewed source environment
+        required: true
+        type: string
+      target_environment:
+        description: Next environment in the declared promotion chain
+        required: true
+        type: string
+      evidence_run_id:
+        description: Reviewed static qualification workflow run ID
+        required: true
+        type: string
+      runtime_evidence_id:
+        description: Reviewed AWS runtime evidence ID
+        required: true
+        type: string
+    outputs:
+      status:
+        description: Promotion PR stage status
+        value: ${{ jobs.prepare-promotion.outputs.status }}
+      pr_url:
+        description: Created promotion PR URL
+        value: ${{ jobs.prepare-promotion.outputs.pr-url }}
+      target_release_path:
+        description: Only release file the stage may change
+        value: ${{ jobs.prepare-promotion.outputs.target-release-path }}
+      image_tag:
+        description: Promoted image tag
+        value: ${{ jobs.prepare-promotion.outputs.image-tag }}
+      image_digest:
+        description: Promoted immutable image digest
+        value: ${{ jobs.prepare-promotion.outputs.image-digest }}
+      source_commit:
+        description: Source commit bound to the promoted image
+        value: ${{ jobs.prepare-promotion.outputs.source-commit }}
   workflow_dispatch:
     inputs:
       source_environment:
@@ -51,6 +88,13 @@ jobs:
       contents: write
       packages: read
       pull-requests: write
+    outputs:
+      status: ${{ steps.pull-request.outputs.status || 'already-promoted' }}
+      pr-url: ${{ steps.pull-request.outputs.url }}
+      target-release-path: ${{ steps.promotion.outputs.target-release-path }}
+      image-tag: ${{ steps.promotion.outputs.image-tag }}
+      image-digest: ${{ steps.promotion.outputs.image-digest }}
+      source-commit: ${{ steps.promotion.outputs.source-commit }}
     steps:
       - name: Checkout main with repository history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

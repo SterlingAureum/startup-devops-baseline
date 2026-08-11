@@ -1,6 +1,35 @@
 name: demo-api environment GitOps rollback
 
 on:
+  workflow_call:
+    inputs:
+      target_environment:
+        description: Environment whose release identity will be restored
+        required: true
+        type: string
+      rollback_to_revision:
+        description: Full historical target-release-only desired-state commit
+        required: true
+        type: string
+    outputs:
+      status:
+        description: Rollback PR stage status
+        value: ${{ jobs.prepare-rollback.outputs.status }}
+      pr_url:
+        description: Created rollback PR URL
+        value: ${{ jobs.prepare-rollback.outputs.pr-url }}
+      target_environment:
+        description: Environment selected for rollback
+        value: ${{ jobs.prepare-rollback.outputs.target-environment }}
+      target_revision:
+        description: Historical desired-state revision restored by the PR
+        value: ${{ jobs.prepare-rollback.outputs.target-revision }}
+      image_tag:
+        description: Restored image tag
+        value: ${{ jobs.prepare-rollback.outputs.image-tag }}
+      image_digest:
+        description: Restored immutable image digest
+        value: ${{ jobs.prepare-rollback.outputs.image-digest }}
   workflow_dispatch:
     inputs:
       target_environment:
@@ -38,6 +67,13 @@ jobs:
       contents: write
       packages: read
       pull-requests: write
+    outputs:
+      status: ${{ steps.pull-request.outputs.status || 'already-restored' }}
+      pr-url: ${{ steps.pull-request.outputs.url }}
+      target-environment: ${{ steps.rollback.outputs.target-environment }}
+      target-revision: ${{ steps.rollback.outputs.target-revision }}
+      image-tag: ${{ steps.rollback.outputs.image-tag }}
+      image-digest: ${{ steps.rollback.outputs.image-digest }}
     steps:
       - name: Checkout main with repository history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

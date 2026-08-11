@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "v0.10.1",
+  "application": "demo-api",
+  "defaultRef": "refs/heads/main",
+  "executionBoundary": {
+    "runner": "github-hosted",
+    "clusterAccess": false,
+    "awsCredentials": "none",
+    "automaticMerge": false,
+    "automaticEnvironmentCreation": false
+  },
+  "stages": [
+    {
+      "id": "image-publish",
+      "workflow": ".github/workflows/demo-api-image-publish.yaml",
+      "entrypoints": [
+        "push-main",
+        "workflow-dispatch",
+        "workflow-call"
+      ],
+      "requiresProtectedMainForOrchestration": true,
+      "inputs": {
+        "caller_ref": "string",
+        "create_promotion_pr": "boolean",
+        "promotion_base_branch": "string"
+      },
+      "outputs": [
+        "image_repository",
+        "image_tag",
+        "image_digest",
+        "metadata_artifact_name",
+        "promotion_status",
+        "promotion_pr_url"
+      ],
+      "primitiveScripts": [
+        "scripts/write-demo-api-image-metadata.sh",
+        "scripts/promote-demo-api-image.sh",
+        "scripts/set-demo-api-delivery-metadata.sh"
+      ],
+      "mutationScope": [
+        "ghcr-image-and-attestations",
+        "optional-aws-dev-release-only-pr"
+      ],
+      "environmentApproval": "not-applicable"
+    },
+    {
+      "id": "static-qualification",
+      "workflow": ".github/workflows/demo-api-record-release-evidence.yaml",
+      "entrypoints": [
+        "workflow-dispatch",
+        "workflow-call"
+      ],
+      "requiresProtectedMainForOrchestration": true,
+      "inputs": {
+        "environment": "string"
+      },
+      "allowedEnvironments": [
+        "aws-dev",
+        "aws-test"
+      ],
+      "outputs": [
+        "status",
+        "pr_url",
+        "evidence_file",
+        "image_reference",
+        "base_revision"
+      ],
+      "primitiveScripts": [
+        "scripts/write-demo-api-release-evidence.sh",
+        "scripts/validate-demo-api-release-evidence.sh"
+      ],
+      "mutationScope": [
+        "static-evidence-only-pr"
+      ],
+      "environmentApproval": "target-environment"
+    },
+    {
+      "id": "environment-promotion",
+      "workflow": ".github/workflows/demo-api-promote-environment.yaml",
+      "entrypoints": [
+        "workflow-dispatch",
+        "workflow-call"
+      ],
+      "requiresProtectedMainForOrchestration": true,
+      "inputs": {
+        "source_environment": "string",
+        "target_environment": "string",
+        "evidence_run_id": "string",
+        "runtime_evidence_id": "string"
+      },
+      "allowedEdges": [
+        "aws-dev->aws-test",
+        "aws-test->aws-prod"
+      ],
+      "outputs": [
+        "status",
+        "pr_url",
+        "target_release_path",
+        "image_tag",
+        "image_digest",
+        "source_commit"
+      ],
+      "primitiveScripts": [
+        "scripts/validate-demo-api-release-evidence.sh",
+        "scripts/validate-demo-api-runtime-evidence.sh",
+        "scripts/promote-demo-api-release.sh"
+      ],
+      "mutationScope": [
+        "target-release-only-pr"
+      ],
+      "environmentApproval": "target-environment"
+    },
+    {
+      "id": "rollback-handoff",
+      "workflow": ".github/workflows/demo-api-rollback.yaml",
+      "entrypoints": [
+        "workflow-dispatch",
+        "workflow-call"
+      ],
+      "requiresProtectedMainForOrchestration": true,
+      "inputs": {
+        "target_environment": "string",
+        "rollback_to_revision": "string"
+      },
+      "allowedEnvironments": [
+        "aws-dev",
+        "aws-test",
+        "aws-prod"
+      ],
+      "outputs": [
+        "status",
+        "pr_url",
+        "target_environment",
+        "target_revision",
+        "image_tag",
+        "image_digest"
+      ],
+      "primitiveScripts": [
+        "scripts/prepare-demo-api-rollback.sh"
+      ],
+      "mutationScope": [
+        "target-release-only-pr"
+      ],
+      "environmentApproval": "target-environment"
+    }
+  ],
+  "deferredStages": {
+    "runtimeQualification": "v0.10.3-trusted-runtime-executor",
+    "eventDrivenOrchestrator": "v0.10.2-event-driven-orchestrator",
+    "qualificationBundle": "v0.10.4-plus"
+  }
+}

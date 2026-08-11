@@ -221,8 +221,10 @@ Incremental scope:
   contract and release-state schema, derived phase/status model, execution and
   production safety boundaries, resumable transition contract, and offline
   positive/negative validation - delivered
-- v0.10.1 - reusable build, qualification, Promotion, evidence, and rollback
-  stages with CI-provider-neutral script entrypoints - planned
+- v0.10.1 - reusable image, static qualification, Promotion, evidence, and
+  rollback stages with typed workflow-call interfaces, stable outputs,
+  CI-provider-neutral script primitives, and offline boundary validation -
+  delivered
 - v0.10.2 - event-driven start, status, and resume orchestration with
   idempotent PR discovery, concurrency, and stale-main handling - planned
 - v0.10.3 - protected trusted runtime executor, AWS OIDC, environment-isolated

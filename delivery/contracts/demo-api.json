@@ -6,6 +6,7 @@
     "imageRepository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
     "releaseIdTemplate": "demo-api-{sourceCommit12}-{imageDigest12}",
     "buildWorkflow": ".github/workflows/demo-api-image-publish.yaml",
+    "stageContract": "delivery/contracts/demo-api-stages.json",
     "buildOnce": true
   },
   "environments": [

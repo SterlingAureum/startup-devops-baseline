@@ -90,7 +90,7 @@ def require(condition: bool, message: str) -> None:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.0", "Bad schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.2", "Bad schemaVersion")
 
     application = contract.get("application")
     require(isinstance(application, dict), "application must be an object")
@@ -101,6 +101,16 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
         == "delivery/contracts/demo-api-stages.json",
         "Reusable delivery stage contract is not linked",
     )
+    require(
+        application.get("orchestratorContract")
+        == "delivery/contracts/demo-api-orchestrator.json",
+        "Event-driven orchestrator contract is not linked",
+    )
+    if check_files:
+        require(
+            (root / application["orchestratorContract"]).is_file(),
+            "Event-driven orchestrator contract is missing",
+        )
     template = application.get("releaseIdTemplate")
     require(template == EXPECTED_RELEASE_TEMPLATE, "Unsafe release ID template")
     require("environment" not in template.lower(), "Release ID includes environment")

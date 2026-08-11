@@ -1,0 +1,228 @@
+name: demo-api release orchestrator
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/demo-api/src/**'
+      - 'apps/demo-api/tests/**'
+      - 'apps/demo-api/Dockerfile'
+      - 'apps/demo-api/requirements.txt'
+      - 'apps/demo-api/helm/values/releases/aws-*.yaml'
+      - 'evidence/demo-api/**/*.json'
+      - '.github/workflows/demo-api-release-orchestrator.yaml'
+      - 'delivery/contracts/demo-api-orchestrator.json'
+      - 'scripts/collect-demo-api-orchestration-snapshot.py'
+      - 'scripts/derive-demo-api-orchestration-plan.py'
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Recompute a new release, inspect current state, or resume a waiting release
+        required: true
+        default: status
+        type: choice
+        options:
+          - start
+          - status
+          - resume
+      release_id:
+        description: Optional deterministic release ID to inspect or resume
+        required: false
+        type: string
+      policy:
+        description: Delivery policy; production remains reviewed in every mode
+        required: true
+        default: reviewed
+        type: choice
+        options:
+          - reviewed
+          - continuous-nonprod
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: demo-api-release-orchestrator-${{ inputs.release_id || github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  derive:
+    name: Derive release state and next action
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      operation: ${{ steps.context.outputs.operation }}
+      release-id: ${{ steps.finalize.outputs.release-id }}
+      phase: ${{ steps.finalize.outputs.phase }}
+      status: ${{ steps.finalize.outputs.status }}
+      reason: ${{ steps.finalize.outputs.reason }}
+      recommended-action: ${{ steps.finalize.outputs.recommended-action }}
+      target-environment: ${{ steps.finalize.outputs.target-environment }}
+    steps:
+      - name: Checkout protected main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Resolve orchestration context
+        id: context
+        env:
+          REQUESTED_OPERATION: ${{ inputs.operation }}
+          REQUESTED_POLICY: ${{ inputs.policy }}
+          REQUESTED_RELEASE_ID: ${{ inputs.release_id }}
+          BEFORE_REVISION: ${{ github.event.before }}
+        run: |
+          captured_main="$(git rev-parse HEAD)"
+          operation="${REQUESTED_OPERATION:-}"
+          policy="${REQUESTED_POLICY:-reviewed}"
+          source_commit=""
+
+          if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
+            operation="resume"
+            before_revision="${BEFORE_REVISION}"
+            if [[ ! "${before_revision}" =~ ^[0-9a-f]{40}$ ]] || \
+               [[ "${before_revision}" == "0000000000000000000000000000000000000000" ]]; then
+              before_revision="${captured_main}^"
+            fi
+            mapfile -t changed_files < <(git diff --name-only "${before_revision}" "${captured_main}")
+            for path in "${changed_files[@]}"; do
+              case "${path}" in
+                apps/demo-api/src/*|apps/demo-api/tests/*|apps/demo-api/Dockerfile|apps/demo-api/requirements.txt)
+                  operation="start"
+                  source_commit="${captured_main}"
+                  break
+                  ;;
+              esac
+            done
+          elif [[ "${operation}" == "start" ]]; then
+            source_commit="${captured_main}"
+          fi
+
+          case "${operation}" in
+            start|status|resume) ;;
+            *)
+              echo "::error::Unsupported orchestration operation: ${operation}"
+              exit 1
+              ;;
+          esac
+          case "${policy}" in
+            reviewed|continuous-nonprod) ;;
+            *)
+              echo "::error::Unsupported orchestration policy: ${policy}"
+              exit 1
+              ;;
+          esac
+          if [[ -n "${REQUESTED_RELEASE_ID}" && \
+                ! "${REQUESTED_RELEASE_ID}" =~ ^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$ ]]; then
+            echo "::error::release_id does not satisfy the deterministic release identity contract."
+            exit 1
+          fi
+
+          {
+            echo "operation=${operation}"
+            echo "policy=${policy}"
+            echo "source-commit=${source_commit}"
+            echo "captured-main=${captured_main}"
+            echo "requested-release-id=${REQUESTED_RELEASE_ID}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Collect read-only Git and pull-request facts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPERATION: ${{ steps.context.outputs.operation }}
+          POLICY: ${{ steps.context.outputs.policy }}
+          SOURCE_COMMIT: ${{ steps.context.outputs.source-commit }}
+          CAPTURED_MAIN: ${{ steps.context.outputs.captured-main }}
+          REQUESTED_RELEASE_ID: ${{ steps.context.outputs.requested-release-id }}
+        run: |
+          arguments=(
+            --operation "${OPERATION}"
+            --policy "${POLICY}"
+            --event-name "${GITHUB_EVENT_NAME}"
+            --ref "${GITHUB_REF}"
+            --captured-main-revision "${CAPTURED_MAIN}"
+            --observed-main-revision "${CAPTURED_MAIN}"
+            --repository "${GITHUB_REPOSITORY}"
+            --output "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json"
+          )
+          if [[ -n "${SOURCE_COMMIT}" ]]; then
+            arguments+=(--source-commit "${SOURCE_COMMIT}")
+          fi
+          if [[ -n "${REQUESTED_RELEASE_ID}" ]]; then
+            arguments+=(--requested-release-id "${REQUESTED_RELEASE_ID}")
+          fi
+          ./scripts/collect-demo-api-orchestration-snapshot.py "${arguments[@]}"
+
+      - name: Derive deterministic plan
+        run: |
+          ./scripts/derive-demo-api-orchestration-plan.py \
+            --snapshot "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json" \
+            --output "${RUNNER_TEMP}/demo-api-orchestration-decision.json"
+
+      - name: Recheck protected main and block a stale plan
+        id: finalize
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          observed_main="$(
+            gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" \
+              --jq '.object.sha'
+          )"
+          planned_main="$(
+            jq --raw-output '.observedMainRevision' \
+              "${RUNNER_TEMP}/demo-api-orchestration-decision.json"
+          )"
+          if [[ "${observed_main}" != "${planned_main}" ]]; then
+            python3 -c \
+              'import json,sys; from pathlib import Path; p=Path(sys.argv[1]); d=json.loads(p.read_text()); d["observedMainRevision"]=sys.argv[2]; p.write_text(json.dumps(d,indent=2,sort_keys=True)+"\n")' \
+              "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json" \
+              "${observed_main}"
+            ./scripts/derive-demo-api-orchestration-plan.py \
+              --snapshot "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json" \
+              --output "${RUNNER_TEMP}/demo-api-orchestration-decision.json"
+          fi
+
+          for field in releaseId phase status reason recommendedAction targetEnvironment; do
+            output_name="$(sed -E 's/([A-Z])/-\L\1/g' <<< "${field}")"
+            value="$(jq --raw-output --arg field "${field}" '.[$field] // empty' \
+              "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
+            echo "${output_name}=${value}" >> "${GITHUB_OUTPUT}"
+          done
+
+      - name: Publish orchestration summary
+        run: |
+          release_id="$(jq --raw-output '.releaseId // "not-yet-assigned"' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
+          phase="$(jq --raw-output '.phase' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
+          status="$(jq --raw-output '.status' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
+          reason="$(jq --raw-output '.reason // "none"' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
+          action="$(jq --raw-output '.recommendedAction' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
+          target="$(jq --raw-output '.targetEnvironment // "none"' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
+          pr_url="$(jq --raw-output '.openPullRequest.url // empty' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
+          {
+            echo "### demo-api release orchestration"
+            echo
+            echo "- Operation: \`${{ steps.context.outputs.operation }}\`"
+            echo "- Release: \`${release_id}\`"
+            echo "- State: \`${phase} / ${status}\`"
+            echo "- Reason: \`${reason}\`"
+            echo "- Recommended action: \`${action}\`"
+            echo "- Target environment: \`${target}\`"
+            if [[ -n "${pr_url}" ]]; then
+              echo "- Existing pull request: ${pr_url}"
+            fi
+            echo
+            echo "v0.10.2 is plan-only: it does not dispatch a delivery stage, merge a PR, access AWS/EKS, or create an environment."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload derived snapshot and decision
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: demo-api-orchestration-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/demo-api-orchestration-snapshot.json
+            ${{ runner.temp }}/demo-api-orchestration-decision.json
+          if-no-files-found: error
+          retention-days: 14

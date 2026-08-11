@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.0",
+  "schemaVersion": "v0.10.2",
   "application": {
     "name": "demo-api",
     "sourceRepository": "SterlingAureum/startup-devops-baseline",
@@ -7,6 +7,7 @@
     "releaseIdTemplate": "demo-api-{sourceCommit12}-{imageDigest12}",
     "buildWorkflow": ".github/workflows/demo-api-image-publish.yaml",
     "stageContract": "delivery/contracts/demo-api-stages.json",
+    "orchestratorContract": "delivery/contracts/demo-api-orchestrator.json",
     "buildOnce": true
   },
   "environments": [

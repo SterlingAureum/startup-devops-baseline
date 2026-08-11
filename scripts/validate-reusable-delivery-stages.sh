@@ -140,7 +140,7 @@ def workflow_call_block(text: str) -> str:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.1", "Bad stage schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.2", "Bad stage schemaVersion")
     require(contract.get("application") == "demo-api", "Unexpected application")
     require(contract.get("defaultRef") == "refs/heads/main", "Default ref must be main")
 
@@ -204,10 +204,21 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     require(rollback["environmentApproval"] == "target-environment", "Rollback needs target Environment")
     require(qualification["environmentApproval"] == "target-environment", "Qualification needs source Environment")
 
+    orchestration = contract.get("orchestration")
+    require(isinstance(orchestration, dict), "Missing orchestrator integration")
+    require(
+        orchestration.get("contract") == "delivery/contracts/demo-api-orchestrator.json",
+        "Unexpected orchestrator contract",
+    )
+    require(orchestration.get("executionMode") == "plan-only", "Stage dispatch activated too early")
+    require(orchestration.get("stageDispatch") is False, "Reusable stage dispatch must remain disabled")
+    if check_files:
+        require((root / orchestration["contract"]).is_file(), "Orchestrator contract is missing")
+
     deferred = contract.get("deferredStages")
     require(isinstance(deferred, dict), "Missing deferred stage declarations")
     require(deferred.get("runtimeQualification") == "v0.10.3-trusted-runtime-executor", "Runtime qualification must remain deferred")
-    require(deferred.get("eventDrivenOrchestrator") == "v0.10.2-event-driven-orchestrator", "Orchestrator must remain deferred")
+    require(deferred.get("qualificationBundle") == "v0.10.4-plus", "Qualification bundle must remain deferred")
 
 
 contract = load_json(contract_path)
@@ -231,6 +242,7 @@ mutations: list[tuple[str, Any]] = [
     ("undeclared stage", lambda c: c["stages"].append(copy.deepcopy(c["stages"][0]))),
     ("missing stage output", lambda c: c["stages"][2]["outputs"].remove("image_digest")),
     ("runtime moved to hosted", lambda c: c["deferredStages"].__setitem__("runtimeQualification", "github-hosted")),
+    ("stage dispatch activated", lambda c: c["orchestration"].__setitem__("stageDispatch", True)),
 ]
 
 for name, mutate in mutations:

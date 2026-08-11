@@ -27,6 +27,9 @@ echo "==> Validating release orchestration contracts"
 echo "==> Validating reusable delivery stage contracts"
 "${ROOT_DIR}/scripts/validate-reusable-delivery-stages.sh"
 
+echo "==> Validating event-driven release orchestrator"
+"${ROOT_DIR}/scripts/validate-demo-api-release-orchestrator.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

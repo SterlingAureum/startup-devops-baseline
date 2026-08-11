@@ -57,11 +57,17 @@ machine-readable outputs, an offline stage contract, and unchanged manual
 entrypoints. The reusable stages remain GitHub-hosted, PR-oriented, and unable
 to access AWS or EKS; runtime qualification remains reserved for the later
 trusted executor.
+v0.10.2 adds the event-driven, read-only release orchestrator. Protected-main
+source, release, and evidence events plus manual `start`, `status`, and `resume`
+now produce a deterministic snapshot and next-action decision, discover and
+reuse matching open PRs, reject ambiguous duplicates, and block safely if
+`main` changes during derivation. This checkpoint remains plan-only: it grants
+no write, AWS, or EKS permission and does not dispatch a reusable stage.
 
 ## Current Version
 
 ```text
-v0.10.1-reusable-delivery-stages
+v0.10.2-event-driven-release-orchestrator
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -104,6 +110,13 @@ mutation scopes, allowed environments, and security boundary in
 `delivery/contracts/demo-api-stages.json`. It preserves all v0.9 dispatch and
 push paths and does not introduce an orchestrator, automatic merge, or cluster
 access.
+v0.10.2 introduces `.github/workflows/demo-api-release-orchestrator.yaml`, a
+read-only fact collector, and a deterministic planner. The orchestrator derives
+one state and recommendation from current release files, matching evidence,
+open PR contents, environment availability, and protected-main freshness. Its
+workflow artifacts are diagnostic observations rather than mutable release
+state. Actual stage dispatch remains deferred to v0.10.4 through v0.10.6, after
+the v0.10.3 trusted runtime boundary exists.
 
 ## Platform Architecture
 
@@ -236,6 +249,8 @@ startup-devops-baseline/
 ### GitOps and Delivery
 
 - `docs/RELEASE_ORCHESTRATION_MODEL.md`
+- `docs/REUSABLE_DELIVERY_STAGES.md`
+- `docs/RELEASE_ORCHESTRATOR.md`
 - `docs/CI_IMAGE_WORKFLOW.md`
 - `docs/DELIVERY_TRACEABILITY.md`
 - `docs/GITOPS_ROLLBACK.md`

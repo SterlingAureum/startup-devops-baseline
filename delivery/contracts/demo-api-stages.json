@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.1",
+  "schemaVersion": "v0.10.2",
   "application": "demo-api",
   "defaultRef": "refs/heads/main",
   "executionBoundary": {
@@ -144,9 +144,13 @@
       "environmentApproval": "target-environment"
     }
   ],
+  "orchestration": {
+    "contract": "delivery/contracts/demo-api-orchestrator.json",
+    "executionMode": "plan-only",
+    "stageDispatch": false
+  },
   "deferredStages": {
     "runtimeQualification": "v0.10.3-trusted-runtime-executor",
-    "eventDrivenOrchestrator": "v0.10.2-event-driven-orchestrator",
     "qualificationBundle": "v0.10.4-plus"
   }
 }

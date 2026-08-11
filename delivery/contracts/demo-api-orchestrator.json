@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "v0.10.2",
+  "application": "demo-api",
+  "workflow": ".github/workflows/demo-api-release-orchestrator.yaml",
+  "protectedRef": "refs/heads/main",
+  "operations": [
+    "start",
+    "status",
+    "resume"
+  ],
+  "eventModel": {
+    "pushMain": [
+      "application-source-change",
+      "environment-release-change",
+      "reviewed-evidence-change"
+    ],
+    "workflowDispatch": [
+      "start",
+      "status",
+      "resume"
+    ],
+    "workflowRunChaining": false,
+    "pullRequestCode": false
+  },
+  "stateDerivation": {
+    "snapshotSchema": "delivery/contracts/orchestration-snapshot.schema.json",
+    "decisionSchema": "delivery/contracts/orchestration-decision.schema.json",
+    "collector": "scripts/collect-demo-api-orchestration-snapshot.py",
+    "planner": "scripts/derive-demo-api-orchestration-plan.py",
+    "stateIsRecomputed": true,
+    "mutableStateFile": false,
+    "releaseIdIsEnvironmentIndependent": true
+  },
+  "pullRequestDiscovery": {
+    "mode": "read-only",
+    "baseBranch": "main",
+    "matchReleaseIdentityFromChangedFile": true,
+    "reuseOpenPullRequest": true,
+    "duplicatePreparationAllowed": false
+  },
+  "concurrency": {
+    "scope": "application-and-release",
+    "cancelInProgress": false
+  },
+  "staleMain": {
+    "captureBeforeDerivation": true,
+    "recheckAfterDerivation": true,
+    "onChange": "blocked-resumable"
+  },
+  "executionBoundary": {
+    "runner": "github-hosted",
+    "permissions": [
+      "contents-read",
+      "pull-requests-read"
+    ],
+    "awsCredentials": "none",
+    "clusterAccess": false,
+    "repositoryMutation": false,
+    "automaticMerge": false,
+    "automaticEnvironmentCreation": false
+  },
+  "actionExecution": {
+    "mode": "plan-only",
+    "dispatchReusableStages": false,
+    "deferredActivation": {
+      "trustedRuntime": "v0.10.3",
+      "awsDev": "v0.10.4",
+      "awsTest": "v0.10.5",
+      "awsProd": "v0.10.6"
+    }
+  },
+  "productionBoundary": {
+    "environmentApprovalRequired": true,
+    "reviewedPullRequestRequired": true,
+    "automaticMerge": false,
+    "automaticRollback": false
+  }
+}

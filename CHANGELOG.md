@@ -2,6 +2,37 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.2
+
+### Added
+
+- Event-driven demo-api release orchestrator for protected-main source,
+  release, and evidence changes plus manual `start`, `status`, and `resume`.
+- Read-only Git and GitHub fact collector that derives release identities from
+  exact release/evidence content and discovers matching open PRs targeting
+  `main`.
+- Deterministic plan engine covering source, dev/test/prod release, runtime and
+  static qualification, absent-environment, production approval, stale-main,
+  duplicate-PR, and complete states.
+- Machine-readable orchestrator, snapshot, and decision contracts plus an
+  offline validator with positive scenarios and unsafe negative mutations.
+- Release-orchestrator documentation covering operations, fact sources,
+  idempotency, resume, evidence freshness, concurrency, and security boundaries.
+
+### Changed
+
+- Linked the application and reusable-stage contracts to the implemented
+  v0.10.2 orchestrator contract.
+- Added the event-driven orchestrator validator to the repository-wide CI
+  quality gate.
+- Marked v0.10.2 delivered and made it the repository's current checkpoint.
+
+### Boundary
+
+- v0.10.2 is plan-only. It does not dispatch reusable delivery stages, create
+  or merge PRs, access AWS/EKS, create environments, collect trusted runtime
+  evidence, or bypass production Environment and reviewed-PR controls.
+
 ## v0.10.1
 
 ### Added

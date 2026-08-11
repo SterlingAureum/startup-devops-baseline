@@ -226,7 +226,9 @@ Incremental scope:
   CI-provider-neutral script primitives, and offline boundary validation -
   delivered
 - v0.10.2 - event-driven start, status, and resume orchestration with
-  idempotent PR discovery, concurrency, and stale-main handling - planned
+  read-only Git/GitHub fact snapshots, idempotent open-PR discovery,
+  deterministic next-action planning, concurrency, stale-main handling, and
+  offline positive/negative behavior validation - delivered
 - v0.10.3 - protected trusted runtime executor, AWS OIDC, environment-isolated
   IAM and Kubernetes RBAC, preflight, and unavailable-runner handling - planned
 - v0.10.4 - automatic aws-dev release preparation, GitOps convergence,

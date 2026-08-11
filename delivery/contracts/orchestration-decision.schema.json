@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aureumstack.com/schemas/orchestration-decision-v0.10.2.json",
+  "title": "Derived demo-api orchestration decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "application",
+    "operation",
+    "releaseId",
+    "phase",
+    "status",
+    "reason",
+    "recommendedAction",
+    "targetEnvironment",
+    "openPullRequest",
+    "executionMode",
+    "dispatchAuthorized",
+    "capturedMainRevision",
+    "observedMainRevision",
+    "derivedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "v0.10.2"
+    },
+    "application": {
+      "const": "demo-api"
+    },
+    "operation": {
+      "enum": [
+        "start",
+        "status",
+        "resume"
+      ]
+    },
+    "releaseId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+    },
+    "phase": {
+      "enum": [
+        "source",
+        "image",
+        "dev-release",
+        "dev-qualification",
+        "test-release",
+        "test-qualification",
+        "prod-approval",
+        "prod-release",
+        "complete"
+      ]
+    },
+    "status": {
+      "enum": [
+        "progressing",
+        "waiting_review",
+        "waiting_runtime",
+        "waiting_environment",
+        "blocked",
+        "failed",
+        "superseded",
+        "completed"
+      ]
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "recommendedAction": {
+      "enum": [
+        "publish-image-and-prepare-dev",
+        "prepare-dev-release",
+        "wait-for-review",
+        "collect-runtime-evidence",
+        "record-static-evidence",
+        "prepare-test-promotion",
+        "prepare-prod-promotion",
+        "restore-environment",
+        "retry-after-main-stabilizes",
+        "none"
+      ]
+    },
+    "targetEnvironment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "aws-dev",
+        "aws-test",
+        "aws-prod"
+      ]
+    },
+    "openPullRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "number",
+            "url"
+          ],
+          "properties": {
+            "number": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "url": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "executionMode": {
+      "const": "plan-only"
+    },
+    "dispatchAuthorized": {
+      "const": false
+    },
+    "capturedMainRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "observedMainRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "derivedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

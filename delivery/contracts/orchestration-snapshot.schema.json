@@ -1,0 +1,347 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aureumstack.com/schemas/orchestration-snapshot-v0.10.2.json",
+  "title": "Read-only demo-api orchestration fact snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "application",
+    "operation",
+    "policy",
+    "trigger",
+    "capturedMainRevision",
+    "observedMainRevision",
+    "requestedReleaseId",
+    "activeRelease",
+    "releases",
+    "evidence",
+    "pullRequests",
+    "environmentAvailability",
+    "derivedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "v0.10.2"
+    },
+    "application": {
+      "const": "demo-api"
+    },
+    "operation": {
+      "enum": [
+        "start",
+        "status",
+        "resume"
+      ]
+    },
+    "policy": {
+      "enum": [
+        "reviewed",
+        "continuous-nonprod"
+      ]
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eventName",
+        "ref",
+        "sourceCommit"
+      ],
+      "properties": {
+        "eventName": {
+          "enum": [
+            "push",
+            "workflow_dispatch",
+            "fixture"
+          ]
+        },
+        "ref": {
+          "const": "refs/heads/main"
+        },
+        "sourceCommit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+    "capturedMainRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "observedMainRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "requestedReleaseId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+    },
+    "activeRelease": {
+      "$ref": "#/$defs/nullableIdentity"
+    },
+    "releases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aws-dev",
+        "aws-test",
+        "aws-prod"
+      ],
+      "properties": {
+        "aws-dev": {
+          "$ref": "#/$defs/releaseFact"
+        },
+        "aws-test": {
+          "$ref": "#/$defs/releaseFact"
+        },
+        "aws-prod": {
+          "$ref": "#/$defs/releaseFact"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aws-dev",
+        "aws-test"
+      ],
+      "properties": {
+        "aws-dev": {
+          "$ref": "#/$defs/evidencePair"
+        },
+        "aws-test": {
+          "$ref": "#/$defs/evidencePair"
+        }
+      }
+    },
+    "pullRequests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/pullRequest"
+      }
+    },
+    "environmentAvailability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aws-dev",
+        "aws-test",
+        "aws-prod"
+      ],
+      "properties": {
+        "aws-dev": {
+          "$ref": "#/$defs/availability"
+        },
+        "aws-test": {
+          "$ref": "#/$defs/availability"
+        },
+        "aws-prod": {
+          "$ref": "#/$defs/availability"
+        }
+      }
+    },
+    "derivedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "availability": {
+      "enum": [
+        "present",
+        "absent",
+        "unknown"
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "releaseId",
+        "sourceRepository",
+        "sourceCommit",
+        "imageRepository",
+        "imageTag",
+        "imageDigest",
+        "buildWorkflowRunId"
+      ],
+      "properties": {
+        "releaseId": {
+          "type": "string",
+          "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+        },
+        "sourceRepository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "imageRepository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "imageTag": {
+          "type": "string",
+          "pattern": "^sha-[0-9a-f]{7,40}$"
+        },
+        "imageDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "buildWorkflowRunId": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      }
+    },
+    "nullableIdentity": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/identity"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "releaseFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "identity"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "identity": {
+          "$ref": "#/$defs/identity"
+        }
+      }
+    },
+    "evidenceFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "id",
+        "ref",
+        "sha256"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "missing",
+            "fresh",
+            "stale"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "evidencePair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "static",
+        "runtime"
+      ],
+      "properties": {
+        "static": {
+          "$ref": "#/$defs/evidenceFact"
+        },
+        "runtime": {
+          "$ref": "#/$defs/evidenceFact"
+        }
+      }
+    },
+    "pullRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "url",
+        "kind",
+        "targetEnvironment",
+        "releaseId",
+        "releaseSha256",
+        "headRefName",
+        "baseRefName"
+      ],
+      "properties": {
+        "number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "environment-release",
+            "static-evidence",
+            "runtime-evidence"
+          ]
+        },
+        "targetEnvironment": {
+          "enum": [
+            "aws-dev",
+            "aws-test",
+            "aws-prod"
+          ]
+        },
+        "releaseId": {
+          "type": "string",
+          "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+        },
+        "releaseSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "headRefName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseRefName": {
+          "const": "main"
+        }
+      }
+    }
+  }
+}

@@ -2,10 +2,11 @@
 
 v0.10.1 turns the existing v0.9 delivery workflows into stable, reusable stage
 interfaces. The workflows retain their current manual or push entrypoints and
-also expose `workflow_call` inputs and outputs for the event-driven orchestrator
-planned in v0.10.2.
+also expose `workflow_call` inputs and outputs for the event-driven orchestrator.
+v0.10.2 now consumes their contracts as read-only planning inputs; actual stage
+dispatch remains disabled until the environment-specific automation increments.
 
-This increment does not add the orchestrator and does not grant GitHub-hosted
+The v0.10.1 increment did not add the orchestrator and does not grant GitHub-hosted
 runners access to AWS or EKS.
 
 ## Stage Catalog

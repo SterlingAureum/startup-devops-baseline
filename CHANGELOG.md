@@ -2,6 +2,25 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.3.2
+
+### Fixed
+
+- Replaced full repository copies in trusted-runtime mutation tests with a
+  filtered validation-tree copy that excludes local Terraform provider caches,
+  state, plans, and real variable files.
+- Added a self-contained fixture regression proving local artifacts are
+  excluded while `.terraform.lock.hcl` and tracked Terraform configuration are
+  retained.
+- Removed each mutation workspace immediately after its expected rejection so
+  disk use remains bounded for the duration of the validator.
+
+### Boundary
+
+- v0.10.3.2 changes only offline validation workspace construction. It changes
+  no Workflow, OIDC trust, IAM permission, EKS access entry, Kubernetes RBAC,
+  runtime result, Promotion, evidence, or production-access behavior.
+
 ## v0.10.3.1
 
 ### Fixed

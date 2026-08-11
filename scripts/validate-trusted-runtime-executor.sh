@@ -9,7 +9,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for command in bash cp jq python3 sed sha256sum; do
+for command in bash cmp jq python3 sed sha256sum tar; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -129,16 +129,95 @@ if "${WRITER}" "${common_arguments[@]}" \
   exit 1
 fi
 
+copy_validation_tree() {
+  local source="$1"
+  local destination="$2"
+
+  mkdir -p "${destination}"
+  tar \
+    --directory "${source}" \
+    --exclude='.git' \
+    --exclude='.terraform' \
+    --exclude='*.tfstate' \
+    --exclude='*.tfstate.*' \
+    --exclude='tfplan' \
+    --exclude='*.tfplan' \
+    --exclude='*.tfvars' \
+    --exclude='*.tfvars.json' \
+    --create --file - . \
+    | tar --directory "${destination}" --extract --file -
+}
+
+echo "==> Validating mutation fixture hygiene"
+copy_source="${WORK_DIR}/copy-source"
+copy_destination="${WORK_DIR}/copy-destination"
+terraform_fixture="infra/terraform/aws/environments/dev"
+mkdir -p \
+  "${copy_source}/.git" \
+  "${copy_source}/${terraform_fixture}/.terraform/providers"
+printf '%s\n' 'repository metadata' >"${copy_source}/.git/config"
+printf '%s\n' 'provider cache' >"${copy_source}/${terraform_fixture}/.terraform/providers/provider.bin"
+printf '%s\n' 'state' >"${copy_source}/${terraform_fixture}/terraform.tfstate"
+printf '%s\n' 'state backup' >"${copy_source}/${terraform_fixture}/terraform.tfstate.backup"
+printf '%s\n' 'named state' >"${copy_source}/${terraform_fixture}/runtime.tfstate"
+printf '%s\n' 'named state backup' >"${copy_source}/${terraform_fixture}/runtime.tfstate.backup"
+printf '%s\n' 'plan' >"${copy_source}/${terraform_fixture}/tfplan"
+printf '%s\n' 'named plan' >"${copy_source}/${terraform_fixture}/runtime.tfplan"
+printf '%s\n' 'local variables' >"${copy_source}/${terraform_fixture}/terraform.tfvars"
+printf '%s\n' 'json local variables' >"${copy_source}/${terraform_fixture}/runtime.tfvars.json"
+printf '%s\n' 'dependency lock' >"${copy_source}/${terraform_fixture}/.terraform.lock.hcl"
+printf '%s\n' 'example variables' >"${copy_source}/${terraform_fixture}/terraform.tfvars.example"
+printf '%s\n' 'tracked configuration' >"${copy_source}/${terraform_fixture}/main.tf"
+
+copy_validation_tree "${copy_source}" "${copy_destination}"
+
+for excluded in \
+  ".git" \
+  "${terraform_fixture}/.terraform" \
+  "${terraform_fixture}/terraform.tfstate" \
+  "${terraform_fixture}/terraform.tfstate.backup" \
+  "${terraform_fixture}/runtime.tfstate" \
+  "${terraform_fixture}/runtime.tfstate.backup" \
+  "${terraform_fixture}/tfplan" \
+  "${terraform_fixture}/runtime.tfplan" \
+  "${terraform_fixture}/terraform.tfvars" \
+  "${terraform_fixture}/runtime.tfvars.json"; do
+  if [[ -e "${copy_destination}/${excluded}" ]]; then
+    echo "Mutation fixture copied excluded local artifact: ${excluded}" >&2
+    exit 1
+  fi
+done
+
+cmp \
+  "${copy_source}/${terraform_fixture}/.terraform.lock.hcl" \
+  "${copy_destination}/${terraform_fixture}/.terraform.lock.hcl" >/dev/null || {
+  echo "Mutation fixture did not preserve .terraform.lock.hcl." >&2
+  exit 1
+}
+cmp \
+  "${copy_source}/${terraform_fixture}/terraform.tfvars.example" \
+  "${copy_destination}/${terraform_fixture}/terraform.tfvars.example" >/dev/null || {
+  echo "Mutation fixture did not preserve terraform.tfvars.example." >&2
+  exit 1
+}
+cmp \
+  "${copy_source}/${terraform_fixture}/main.tf" \
+  "${copy_destination}/${terraform_fixture}/main.tf" >/dev/null || {
+  echo "Mutation fixture did not preserve tracked Terraform configuration." >&2
+  exit 1
+}
+
 expect_mutation_failure() {
   local name="$1"
   local mutation="$2"
   local fixture="${WORK_DIR}/mutation-${name}"
-  cp -a "${ROOT_DIR}" "${fixture}"
+  copy_validation_tree "${ROOT_DIR}" "${fixture}"
   bash -c "${mutation}" -- "${fixture}"
   if "${fixture}/scripts/validate-trusted-runtime-executor.py" "${fixture}" >/dev/null 2>&1; then
     echo "Trusted runtime validator accepted mutation: ${name}" >&2
     exit 1
   fi
+  rm -rf -- "${fixture}"
 }
 
 echo "==> Rejecting trusted runtime boundary mutations"

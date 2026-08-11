@@ -165,6 +165,15 @@ standard Kustomize load restrictions and confirms runtime RBAC exists only in
 dev/test. The full quality gate requires the repository's existing Docker and
 Helm toolchain.
 
+The trusted-runtime validator builds each negative-test repository from a
+filtered archive. It excludes `.git/`, `.terraform/`, `*.tfstate`,
+`*.tfstate.*`, `tfplan`, `*.tfplan`, and real `*.tfvars`/`*.tfvars.json` files.
+Each mutation workspace is deleted immediately after validation.
+`.terraform.lock.hcl`,
+`terraform.tfvars.example`, and tracked Terraform configuration remain in the
+fixture. This prevents local provider caches and state from multiplying in
+`/tmp`; do not replace the filtered copy with `cp -a`.
+
 ## Post-merge live check
 
 Do not run this section from the feature branch. `workflow_dispatch` must

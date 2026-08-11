@@ -73,11 +73,15 @@ v0.10.3.1 repairs the dev/test-only RBAC Application assembly so standard
 Kustomize load restrictions render every AWS overlay successfully, and brings
 the runtime identity module into canonical Terraform formatting. No execution
 or authorization boundary changes in this patch release.
+v0.10.3.2 bounds trusted-runtime offline mutation-test storage by excluding
+local Terraform caches, state, plans, and real variable files from temporary
+repository copies, while retaining dependency lock and tracked configuration
+files. It changes no runtime or authorization behavior.
 
 ## Current Version
 
 ```text
-v0.10.3.1-trusted-runtime-qualification-executor-fix
+v0.10.3.2-trusted-runtime-mutation-fixture-storage-fix
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

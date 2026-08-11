@@ -236,6 +236,9 @@ Incremental scope:
 - v0.10.3.1 - Terraform formatting and load-restriction-safe dev/test runtime
   RBAC Application assembly, with prod exclusion and render regressions -
   delivered
+- v0.10.3.2 - storage-bounded trusted-runtime mutation fixtures that exclude
+  local Terraform caches, state, plans, and real variable files while
+  retaining dependency locks and tracked configuration - delivered
 - v0.10.4 - automatic aws-dev release preparation, GitOps convergence,
   runtime validation, and unified qualification evidence - planned
 - v0.10.5 - automatic aws-dev to aws-test Promotion preparation, reviewed

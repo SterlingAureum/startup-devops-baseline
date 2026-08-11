@@ -2,6 +2,37 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.9.8
+
+### Added
+
+- Canonical, command-by-command multi-environment release Runbook covering
+  one-time GitHub configuration, immutable image publication, aws-dev and
+  aws-test runtime evidence, qualification evidence, ordered Promotion,
+  production approval, safe pause/resume, troubleshooting, and cost cleanup.
+- Explicit operator checkpoints that distinguish the numeric GitHub
+  `evidence_run_id` from the UTC `runtime_evidence_id` and verify that both
+  evidence-only PRs are merged before Promotion.
+- Single-maintainer portfolio guidance that prevents an impossible GitHub
+  Environment approval configuration while retaining the distinct-reviewer
+  and self-review prohibition expected for real production teams.
+
+### Changed
+
+- Corrected the clean-room lifecycle example from the invalid
+  `release_evidence_run_id` input to the workflow's actual
+  `evidence_run_id` input.
+- Linked architecture, governance, workflow, and lifecycle documentation to a
+  single manual operator entry point.
+- Documented when an ephemeral aws-test cluster may be destroyed without
+  invalidating a still-fresh, release-bound static test-to-prod Promotion.
+
+### Boundary
+
+- This increment changes documentation and examples only. It does not change
+  release workflow behavior, automate PR merges, create a production cluster,
+  or pull v0.10 delivery-orchestration scope into v0.9.
+
 ## v0.9.7
 
 ### Added

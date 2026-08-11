@@ -7,6 +7,11 @@ and recovery behavior, destroys aws-test, and proves that the temporary cost
 surface is gone. aws-prod remains a statically rendered governance target in
 v0.9.
 
+For the complete operator sequence from image publication through runtime and
+qualification evidence, ordered dev-to-test and test-to-prod Promotion, GitHub
+approval, and safe pause/resume, use `MULTI_ENVIRONMENT_RELEASE_RUNBOOK.md`.
+This document remains the infrastructure clean-room and teardown procedure.
+
 ## Safety boundary
 
 - Run every live phase from a clean local `main` equal to `origin/main`.
@@ -94,7 +99,7 @@ Use `demo-api-promote-environment` with:
 ```text
 source_environment: aws-dev
 target_environment: aws-test
-release_evidence_run_id: <reviewed aws-dev static evidence run>
+evidence_run_id: <reviewed aws-dev qualification workflow run ID>
 runtime_evidence_id: <reviewed aws-dev runtime evidence id>
 ```
 

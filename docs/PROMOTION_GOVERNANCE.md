@@ -12,6 +12,10 @@ build -> aws-dev -> aws-test -> aws-prod
 The workflows prepare Git changes only. They never merge pull requests, apply
 Kubernetes resources, or receive EKS credentials.
 
+Use `MULTI_ENVIRONMENT_RELEASE_RUNBOOK.md` as the canonical command-by-command
+operator procedure. This document defines the governance rationale and
+security boundary.
+
 ## Governance Flow
 
 For `aws-dev -> aws-test` or `aws-test -> aws-prod`:

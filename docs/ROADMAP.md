@@ -199,7 +199,11 @@ Incremental scope:
   live acceptance completed
 - v0.9.7 - cost-aware EKS control-plane logging profiles, bounded retention,
   endpoint-update profile preservation, and terminal EC2 Fleet audit handling
-  - implemented; final validation and version closure pending
+  - delivered
+- v0.9.8 - canonical manual multi-environment release Runbook, one-time GitHub
+  governance setup, exact evidence and Promotion commands, ID disambiguation,
+  safe pause/resume, troubleshooting, and cleanup checklist - implemented;
+  final merge and v0.9 version closure pending
 
 ## v0.10 - Release Orchestration and Delivery Automation
 

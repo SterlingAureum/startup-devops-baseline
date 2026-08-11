@@ -2,6 +2,37 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.0
+
+### Added
+
+- Machine-readable demo-api release-orchestration contract defining the
+  environment chain, immutable release identity, execution policies, runner
+  boundaries, production controls, and resumable phase transitions.
+- Draft 2020-12 release-state JSON Schema plus a derived-state example that
+  separates release phase from progressing, waiting, blocked, failed,
+  superseded, and completed status.
+- Offline contract validator with positive checks and in-memory negative
+  mutations for environment skipping, production auto-merge, automatic EKS
+  creation, unsafe runner access, duplicate release paths, unsafe release IDs,
+  missing production approval, and invalid state transitions.
+- Release orchestration model documentation covering durable fact sources,
+  idempotency, resume, absent-environment behavior, execution boundaries, and
+  deferred implementation scope.
+
+### Changed
+
+- Started the v0.10 roadmap while retaining v0.9 as a completed version line.
+- Added the release-orchestration contract validator to the repository-wide CI
+  quality gate before Docker- and Helm-dependent validation.
+
+### Boundary
+
+- This increment adds contracts, documentation, a state example, and offline
+  validation only. It does not add an orchestration Workflow, automatic PR
+  merge, AWS OIDC/IAM/RBAC, runner registration, EKS creation, or live cluster
+  access from GitHub Actions.
+
 ## v0.9.8
 
 ### Added

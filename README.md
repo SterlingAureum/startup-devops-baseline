@@ -46,11 +46,16 @@ control-plane logging cost from formal production-parity validation and makes
 the cleanup audit aware of terminal Karpenter Instant Fleet history. v0.9.8
 provides one canonical, command-by-command operator Runbook for GitHub setup,
 evidence collection, ordered Promotion, safe pause/resume, and cost cleanup.
+v0.10.0 now defines the deterministic, environment-independent release
+identity, derived phase/status model, resumable transition graph, and separated
+GitHub-hosted, trusted-runtime, and human approval boundaries that the later
+delivery automation increments must implement. This checkpoint is deliberately
+offline: it adds no release orchestrator and grants no Workflow AWS/EKS access.
 
 ## Current Version
 
 ```text
-v0.9.8-manual-multi-environment-release-runbook
+v0.10.0-release-orchestration-contract
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -81,6 +86,12 @@ documentation gap with a single release procedure that distinguishes GitHub
 workflow run IDs from UTC runtime-evidence IDs, corrects the Promotion input
 name, and documents how a destroyed aws-test cluster can remain a valid source
 for time-bounded static production Promotion.
+v0.10.0 converts that validated manual procedure into a machine-readable
+application contract and release-state schema. It fixes the only successful
+phase path, treats absent environments and unavailable runtime executors as
+resumable waits, preserves manual production approval and merge, and includes
+offline negative tests for unsafe policy mutations. Workflow implementation,
+OIDC/IAM/RBAC, and live runtime orchestration remain later v0.10 increments.
 
 ## Platform Architecture
 
@@ -183,6 +194,8 @@ startup-devops-baseline/
 │       ├── modules/
 │       └── environments/{dev,test,prod}/
 ├── docs/
+├── delivery/
+│   └── contracts/
 ├── evidence/
 │   └── demo-api/
 ├── examples/
@@ -210,6 +223,7 @@ startup-devops-baseline/
 
 ### GitOps and Delivery
 
+- `docs/RELEASE_ORCHESTRATION_MODEL.md`
 - `docs/CI_IMAGE_WORKFLOW.md`
 - `docs/DELIVERY_TRACEABILITY.md`
 - `docs/GITOPS_ROLLBACK.md`

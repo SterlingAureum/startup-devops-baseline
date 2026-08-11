@@ -207,7 +207,7 @@ Incremental scope:
 
 ## v0.10 - Release Orchestration and Delivery Automation
 
-Status: Planned
+Status: In progress
 
 Goal:
 
@@ -215,18 +215,32 @@ Turn the existing build, GitOps release, runtime evidence, qualification, and
 ordered promotion controls into one resumable delivery workflow while
 retaining human production approval.
 
-Planned scope:
+Incremental scope:
 
-- automatic immutable image build after accepted application changes
-- automatic aws-dev release PR preparation
-- deployment, Rollout, and AnalysisRun readiness orchestration
-- automatic runtime and qualification evidence chaining
-- automatic aws-dev to aws-test Promotion PR preparation
-- automatic aws-test to aws-prod Promotion preparation
-- retained aws-prod Environment approval and reviewed PR merge
-- concurrency, idempotency, retry, stale-state, and resume controls
-- failure diagnostics and governed rollback handoff
-- no automatic EKS creation for every application commit
+- v0.10.0 - deterministic release identity, machine-readable application
+  contract and release-state schema, derived phase/status model, execution and
+  production safety boundaries, resumable transition contract, and offline
+  positive/negative validation - delivered
+- v0.10.1 - reusable build, qualification, Promotion, evidence, and rollback
+  stages with CI-provider-neutral script entrypoints - planned
+- v0.10.2 - event-driven start, status, and resume orchestration with
+  idempotent PR discovery, concurrency, and stale-main handling - planned
+- v0.10.3 - protected trusted runtime executor, AWS OIDC, environment-isolated
+  IAM and Kubernetes RBAC, preflight, and unavailable-runner handling - planned
+- v0.10.4 - automatic aws-dev release preparation, GitOps convergence,
+  runtime validation, and unified qualification evidence - planned
+- v0.10.5 - automatic aws-dev to aws-test Promotion preparation, reviewed
+  Canary progression, AnalysisRun verification, and test qualification - planned
+- v0.10.6 - automatic production Promotion preparation with retained aws-prod
+  Environment approval and reviewed release-only PR merge - planned
+- v0.10.7 - retry, resume, supersede, evidence expiry, failure diagnostics,
+  and governed rollback handoff - planned
+- v0.10.8 - clean-room dev/test/prod-static acceptance, interrupted-run
+  recovery, cost cleanup, closure evidence, and final Runbook - planned
+
+The application release path does not automatically create EKS environments.
+An absent disposable environment is a resumable wait, and production approval
+and PR merge remain human controls throughout v0.10.
 
 ## v0.11 - Observability and Production Readiness Baseline
 

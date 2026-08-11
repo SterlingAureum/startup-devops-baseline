@@ -1,0 +1,215 @@
+{
+  "schemaVersion": "v0.10.0",
+  "application": {
+    "name": "demo-api",
+    "sourceRepository": "SterlingAureum/startup-devops-baseline",
+    "imageRepository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "releaseIdTemplate": "demo-api-{sourceCommit12}-{imageDigest12}",
+    "buildWorkflow": ".github/workflows/demo-api-image-publish.yaml",
+    "buildOnce": true
+  },
+  "environments": [
+    {
+      "name": "aws-dev",
+      "order": 10,
+      "environmentFile": "apps/demo-api/helm/values/environments/aws-dev.yaml",
+      "releaseFile": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+      "runtimeExecutor": "trusted-runtime",
+      "automaticClusterCreation": false,
+      "environmentApprovalRequired": false,
+      "mergePolicy": {
+        "reviewed": "manual",
+        "continuous-nonprod": "automatic-after-required-checks"
+      }
+    },
+    {
+      "name": "aws-test",
+      "order": 20,
+      "environmentFile": "apps/demo-api/helm/values/environments/aws-test.yaml",
+      "releaseFile": "apps/demo-api/helm/values/releases/aws-test.yaml",
+      "runtimeExecutor": "trusted-runtime",
+      "automaticClusterCreation": false,
+      "environmentApprovalRequired": false,
+      "mergePolicy": {
+        "reviewed": "manual",
+        "continuous-nonprod": "automatic-after-required-checks"
+      }
+    },
+    {
+      "name": "aws-prod",
+      "order": 30,
+      "environmentFile": "apps/demo-api/helm/values/environments/aws-prod.yaml",
+      "releaseFile": "apps/demo-api/helm/values/releases/aws-prod.yaml",
+      "runtimeExecutor": "trusted-runtime",
+      "automaticClusterCreation": false,
+      "environmentApprovalRequired": true,
+      "mergePolicy": {
+        "reviewed": "manual",
+        "continuous-nonprod": "manual"
+      }
+    }
+  ],
+  "promotion": {
+    "edges": [
+      {
+        "from": "aws-dev",
+        "to": "aws-test"
+      },
+      {
+        "from": "aws-test",
+        "to": "aws-prod"
+      }
+    ],
+    "sameDigestRequired": true,
+    "releaseFileOnly": true,
+    "freshQualificationEvidenceRequired": true
+  },
+  "executionPolicies": {
+    "default": "reviewed",
+    "allowed": [
+      "reviewed",
+      "continuous-nonprod"
+    ],
+    "productionPolicyOverrideAllowed": false
+  },
+  "executionBoundaries": {
+    "githubHosted": {
+      "clusterAccess": false,
+      "awsCredentials": "none",
+      "responsibilities": [
+        "build",
+        "scan",
+        "attest",
+        "static-validation",
+        "state-derivation",
+        "pull-request-preparation"
+      ]
+    },
+    "trustedRuntime": {
+      "clusterAccess": true,
+      "credentials": "aws-oidc-short-lived",
+      "allowedRef": "refs/heads/main",
+      "allowPullRequestCode": false,
+      "environmentIsolation": true,
+      "responsibilities": [
+        "argocd-status",
+        "rollout-status",
+        "analysisrun-status",
+        "pod-image-verification",
+        "https-runtime-validation"
+      ]
+    },
+    "human": {
+      "responsibilities": [
+        "production-environment-approval",
+        "production-pull-request-review",
+        "exception-disposition",
+        "rollback-pull-request-merge"
+      ]
+    }
+  },
+  "productionBoundaries": {
+    "automaticMerge": false,
+    "environmentApprovalRequired": true,
+    "reviewedPullRequestRequired": true,
+    "automaticEksCreation": false,
+    "automaticTerraformApply": false,
+    "automaticSecretMutation": false,
+    "automaticDatabaseMutation": false,
+    "automaticRollback": false
+  },
+  "stateModel": {
+    "schema": "delivery/contracts/release-state.schema.json",
+    "phases": [
+      "source",
+      "image",
+      "dev-release",
+      "dev-qualification",
+      "test-release",
+      "test-qualification",
+      "prod-approval",
+      "prod-release",
+      "complete"
+    ],
+    "statuses": [
+      "progressing",
+      "waiting_review",
+      "waiting_runtime",
+      "waiting_environment",
+      "blocked",
+      "failed",
+      "superseded",
+      "completed"
+    ],
+    "resumeStatuses": [
+      "waiting_review",
+      "waiting_runtime",
+      "waiting_environment",
+      "blocked",
+      "failed"
+    ],
+    "terminalStatuses": [
+      "superseded",
+      "completed"
+    ],
+    "transitions": [
+      {
+        "from": "source",
+        "to": "image",
+        "gate": "immutable-image-identity"
+      },
+      {
+        "from": "image",
+        "to": "dev-release",
+        "gate": "dev-release-pr"
+      },
+      {
+        "from": "dev-release",
+        "to": "dev-qualification",
+        "gate": "dev-gitops-converged"
+      },
+      {
+        "from": "dev-qualification",
+        "to": "test-release",
+        "gate": "fresh-dev-qualification"
+      },
+      {
+        "from": "test-release",
+        "to": "test-qualification",
+        "gate": "test-gitops-converged"
+      },
+      {
+        "from": "test-qualification",
+        "to": "prod-approval",
+        "gate": "fresh-test-qualification"
+      },
+      {
+        "from": "prod-approval",
+        "to": "prod-release",
+        "gate": "production-approval"
+      },
+      {
+        "from": "prod-release",
+        "to": "complete",
+        "gate": "production-release-merged"
+      }
+    ]
+  },
+  "factSources": [
+    "main-release-values",
+    "image-digest-and-attestation",
+    "github-pull-requests-and-checks",
+    "reviewed-qualification-evidence",
+    "argocd-application-status",
+    "argo-rollout-and-analysisrun-status",
+    "pod-image-id",
+    "https-health-ready-version"
+  ],
+  "orchestrationBoundaries": {
+    "longRunningWorkflow": false,
+    "stateIsDerived": true,
+    "mutableCurrentStateFile": false,
+    "resumeWithoutRebuild": true,
+    "environmentAbsenceIsWaiting": true
+  }
+}

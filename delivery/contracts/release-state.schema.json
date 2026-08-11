@@ -1,0 +1,163 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aureumstack.com/schemas/release-state-v0.10.0.json",
+  "title": "Derived demo-api release orchestration state",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "releaseId",
+    "application",
+    "identity",
+    "phase",
+    "status",
+    "reason",
+    "policy",
+    "derivedAt",
+    "facts"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "v0.10.0"
+    },
+    "releaseId": {
+      "type": "string",
+      "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+    },
+    "application": {
+      "const": "demo-api"
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceRepository",
+        "sourceCommit",
+        "imageRepository",
+        "imageDigest",
+        "imageTag",
+        "buildWorkflowRunId"
+      ],
+      "properties": {
+        "sourceRepository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "imageRepository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "imageDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "imageTag": {
+          "type": "string",
+          "pattern": "^sha-[0-9a-f]{7,40}$"
+        },
+        "buildWorkflowRunId": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      }
+    },
+    "phase": {
+      "enum": [
+        "source",
+        "image",
+        "dev-release",
+        "dev-qualification",
+        "test-release",
+        "test-qualification",
+        "prod-approval",
+        "prod-release",
+        "complete"
+      ]
+    },
+    "status": {
+      "enum": [
+        "progressing",
+        "waiting_review",
+        "waiting_runtime",
+        "waiting_environment",
+        "blocked",
+        "failed",
+        "superseded",
+        "completed"
+      ]
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "review-required",
+        "runtime-executor-unavailable",
+        "environment-absent",
+        "qualification-missing",
+        "qualification-stale",
+        "gitops-not-converged",
+        "analysis-failed",
+        "release-superseded",
+        "policy-violation"
+      ]
+    },
+    "policy": {
+      "enum": [
+        "reviewed",
+        "continuous-nonprod"
+      ]
+    },
+    "derivedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "facts": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "ref",
+          "sha256"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "source",
+              "image",
+              "release",
+              "pull-request",
+              "qualification",
+              "runtime"
+            ]
+          },
+          "environment": {
+            "type": "string",
+            "enum": [
+              "aws-dev",
+              "aws-test",
+              "aws-prod"
+            ]
+          },
+          "ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "v0.10.0",
+  "releaseId": "demo-api-04ca5ab03d99-fcfa4f473dd0",
+  "application": "demo-api",
+  "identity": {
+    "sourceRepository": "SterlingAureum/startup-devops-baseline",
+    "sourceCommit": "04ca5ab03d99b7970ce8d47f305dd8a15e5e0bb8",
+    "imageRepository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "imageDigest": "sha256:fcfa4f473dd058237c0c70e2d8282004d1067d7510752fa5a9f1e6cd37f2ab73",
+    "imageTag": "sha-04ca5ab",
+    "buildWorkflowRunId": "31415926535"
+  },
+  "phase": "test-release",
+  "status": "waiting_environment",
+  "reason": "environment-absent",
+  "policy": "reviewed",
+  "derivedAt": "2026-08-11T04:00:00Z",
+  "facts": [
+    {
+      "type": "source",
+      "ref": "main@04ca5ab03d99b7970ce8d47f305dd8a15e5e0bb8",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111"
+    },
+    {
+      "type": "release",
+      "environment": "aws-dev",
+      "ref": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222"
+    },
+    {
+      "type": "qualification",
+      "environment": "aws-dev",
+      "ref": "evidence/demo-api/aws-dev/31200996399.json",
+      "sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+    }
+  ]
+}

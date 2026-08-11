@@ -269,6 +269,21 @@ for environment in dev test prod; do
   grep -F "clusters/aws/overlays/${environment}/data-platform/postgresql" "${rendered}" >/dev/null
   grep -F "clusters/aws/overlays/${environment}/security/external-secrets/startup-apps" "${rendered}" >/dev/null
 
+  case "${environment}" in
+    dev|test)
+      grep -F "name: runtime-qualification-rbac-aws-${environment}" "${rendered}" >/dev/null || {
+        echo "${environment}: rendered platform is missing runtime qualification RBAC" >&2
+        exit 1
+      }
+      ;;
+    prod)
+      if grep -F "runtime-qualification-rbac" "${rendered}" >/dev/null; then
+        echo "prod: rendered platform contains runtime qualification RBAC" >&2
+        exit 1
+      fi
+      ;;
+  esac
+
   render "${overlay}/data-platform/postgresql" \
     >"${WORK_DIR}/${environment}-postgresql.yaml"
   render "${overlay}/security/external-secrets/startup-apps" \

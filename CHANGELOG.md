@@ -2,6 +2,26 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.3.1
+
+### Fixed
+
+- Formatted the GitHub Actions runtime identity module with canonical
+  `terraform fmt` alignment.
+- Repackaged the runtime qualification RBAC Application as an independent
+  Kustomize directory so dev/test overlays no longer load an individual YAML
+  file outside their build root.
+- Updated active-revision and trusted-runtime validation for the new
+  Application path.
+- Added negative coverage for direct cross-directory YAML loading and rendered
+  assertions that runtime qualification RBAC exists in dev/test but not prod.
+
+### Boundary
+
+- v0.10.3.1 changes no Workflow, IAM, EKS access-entry, Kubernetes RBAC, or
+  production-access semantics. It is a packaging and validation repair for
+  v0.10.3.
+
 ## v0.10.3
 
 ### Added

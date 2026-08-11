@@ -158,8 +158,10 @@ expect_mutation_failure rbac-write \
   'sed -i '\''0,/verbs: \["get", "list", "watch"\]/s//verbs: ["get", "list", "watch", "patch"]/'\'' "$1/clusters/aws/base/security/runtime-qualification/rbac.yaml"'
 expect_mutation_failure rbac-secret \
   'sed -i '\''0,/resources: \["events", "pods", "services"\]/s//resources: ["events", "pods", "services", "secrets"]/'\'' "$1/clusters/aws/base/security/runtime-qualification/rbac.yaml"'
+expect_mutation_failure direct-rbac-file-load \
+  'sed -i '\''s#../../base/platform/runtime-qualification-rbac$#../../base/platform/runtime-qualification-rbac/application.yaml#'\'' "$1/clusters/aws/overlays/dev/kustomization.yaml"'
 expect_mutation_failure production-rbac \
-  'sed -i '\''/  - ..\/..\/base/a\  - ../../base/platform/runtime-qualification-rbac.yaml'\'' "$1/clusters/aws/overlays/prod/kustomization.yaml"'
+  'sed -i '\''/  - ..\/..\/base/a\  - ../../base/platform/runtime-qualification-rbac'\'' "$1/clusters/aws/overlays/prod/kustomization.yaml"'
 expect_mutation_failure collector-terraform \
   'printf "\\nterraform apply -auto-approve\\n" >> "$1/scripts/collect-demo-api-runtime-qualification-aws.sh"'
 

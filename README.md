@@ -69,11 +69,15 @@ ephemeral self-hosted execution, short-lived GitHub OIDC, exact-cluster IAM,
 namespaced read-only EKS RBAC, release-bound live checks, and a secret-free
 temporary result artifact. It is not yet dispatched by the orchestrator and
 does not implement production runtime access.
+v0.10.3.1 repairs the dev/test-only RBAC Application assembly so standard
+Kustomize load restrictions render every AWS overlay successfully, and brings
+the runtime identity module into canonical Terraform formatting. No execution
+or authorization boundary changes in this patch release.
 
 ## Current Version
 
 ```text
-v0.10.3-trusted-runtime-qualification-executor
+v0.10.3.1-trusted-runtime-qualification-executor-fix
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

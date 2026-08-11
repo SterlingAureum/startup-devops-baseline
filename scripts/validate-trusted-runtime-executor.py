@@ -117,11 +117,32 @@ def main() -> None:
     require('verbs: ["get", "list", "watch"]' in rbac, "Read-only RBAC verbs are missing")
     require(not re.search(r'verbs:\s*\[[^\]]*(create|update|patch|delete|\*)', rbac), "RBAC contains a write or wildcard verb")
     require(not re.search(r'resources:\s*\[[^\]]*(secrets|pods/exec|\*)', rbac), "RBAC exposes a sensitive or wildcard resource")
+    application_resource = "../../base/platform/runtime-qualification-rbac"
     for environment in ("dev", "test"):
         overlay = read(root, f"clusters/aws/overlays/{environment}/kustomization.yaml")
-        require("../../base/platform/runtime-qualification-rbac.yaml" in overlay, f"{environment} RBAC Application missing")
-    require("../../base/platform/runtime-qualification-rbac.yaml" not in read(root, "clusters/aws/overlays/prod/kustomization.yaml"), "Production overlay received runtime RBAC")
-    rbac_application = read(root, "clusters/aws/base/platform/runtime-qualification-rbac.yaml")
+        require(
+            re.search(rf"(?m)^  - {re.escape(application_resource)}$", overlay),
+            f"{environment} RBAC Application directory missing",
+        )
+        require(
+            not re.search(r"(?m)^\s*- .*runtime-qualification-rbac(?:\.yaml|/[^\s]+)$", overlay),
+            f"{environment} directly loads an out-of-root RBAC Application file",
+        )
+    require(
+        "runtime-qualification-rbac" not in read(root, "clusters/aws/overlays/prod/kustomization.yaml"),
+        "Production overlay received runtime RBAC",
+    )
+    legacy_application = root / "clusters/aws/base/platform/runtime-qualification-rbac.yaml"
+    require(not legacy_application.exists(), "Legacy cross-root RBAC Application file remains")
+    rbac_application_kustomization = read(
+        root,
+        "clusters/aws/base/platform/runtime-qualification-rbac/kustomization.yaml",
+    )
+    require(
+        re.search(r"(?m)^  - application\.yaml$", rbac_application_kustomization),
+        "Runtime RBAC Application Kustomization does not load application.yaml",
+    )
+    rbac_application = read(root, "clusters/aws/base/platform/runtime-qualification-rbac/application.yaml")
     require("targetRevision: main" in rbac_application, "Runtime RBAC Application is not main-sourced")
     require("path: clusters/aws/base/security/runtime-qualification" in rbac_application, "Runtime RBAC Application path changed")
 

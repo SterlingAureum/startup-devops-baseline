@@ -69,6 +69,14 @@ ARN. The access entry maps the role to
 `demo-api-runtime-qualification`. GitOps-managed Roles bind that group in
 `argocd` and `startup-apps` with `get`, `list`, and `watch` only.
 
+The Argo CD Application that installs those bindings is packaged as its own
+Kustomize resource directory at
+`clusters/aws/base/platform/runtime-qualification-rbac/`. The dev and test
+overlays reference that directory; the prod overlay does not. Keeping the
+Application outside the shared base preserves production exclusion, while the
+directory boundary lets standard Kustomize load restrictions remain enabled.
+Direct cross-directory references to an individual YAML file are forbidden.
+
 The workflow explicitly verifies that the identity cannot read Secrets,
 create Deployments, or create `pods/exec`. Any unexpectedly permissive answer
 produces `failed / rbac_boundary_failed`.
@@ -146,13 +154,16 @@ No AWS environment or runner is required for this increment:
 
 ```bash
 ./scripts/validate-trusted-runtime-executor.sh
-./scripts/validate-ci-quality-gates.sh
 terraform fmt -check -recursive
+./scripts/validate-aws-environment-declarations.sh
+./scripts/validate-ci-quality-gates.sh
 git status --short
 ```
 
-The full quality gate requires the repository's existing Docker and Helm
-toolchain.
+The environment declaration validator renders all three AWS overlays with
+standard Kustomize load restrictions and confirms runtime RBAC exists only in
+dev/test. The full quality gate requires the repository's existing Docker and
+Helm toolchain.
 
 ## Post-merge live check
 

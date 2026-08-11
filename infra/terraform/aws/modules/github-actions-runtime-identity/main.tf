@@ -1,7 +1,7 @@
 data "aws_partition" "current" {}
 
 locals {
-  environment_name  = trimprefix(var.environment, "aws-")
+  environment_name   = trimprefix(var.environment, "aws-")
   github_environment = "${var.environment}-runtime"
   kubernetes_group   = "demo-api-runtime-qualification"
   oidc_subject       = "repo:${var.github_repository}:environment:${local.github_environment}"

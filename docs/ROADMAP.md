@@ -233,6 +233,9 @@ Incremental scope:
   self-hosted execution, AWS OIDC, environment-isolated IAM and Kubernetes
   RBAC, immutable runtime artifacts, and safe absent/unavailable handling -
   delivered
+- v0.10.3.1 - Terraform formatting and load-restriction-safe dev/test runtime
+  RBAC Application assembly, with prod exclusion and render regressions -
+  delivered
 - v0.10.4 - automatic aws-dev release preparation, GitOps convergence,
   runtime validation, and unified qualification evidence - planned
 - v0.10.5 - automatic aws-dev to aws-test Promotion preparation, reviewed

@@ -140,7 +140,7 @@ def workflow_call_block(text: str) -> str:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.2", "Bad stage schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.3", "Bad application schemaVersion")
     require(contract.get("application") == "demo-api", "Unexpected application")
     require(contract.get("defaultRef") == "refs/heads/main", "Default ref must be main")
 
@@ -217,7 +217,7 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
 
     deferred = contract.get("deferredStages")
     require(isinstance(deferred, dict), "Missing deferred stage declarations")
-    require(deferred.get("runtimeQualification") == "v0.10.3-trusted-runtime-executor", "Runtime qualification must remain deferred")
+    require(deferred.get("runtimeQualification") == "v0.10.3-implemented-not-dispatched", "Runtime qualification integration state changed")
     require(deferred.get("qualificationBundle") == "v0.10.4-plus", "Qualification bundle must remain deferred")
 
 

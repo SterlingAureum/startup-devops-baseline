@@ -233,3 +233,27 @@ variable "external_secrets_recovery_window_in_days" {
     error_message = "external_secrets_recovery_window_in_days must be 0 or between 7 and 30."
   }
 }
+
+variable "enable_github_actions_runtime_identity" {
+  description = "Create the aws-dev GitHub OIDC runtime read role and EKS access entry."
+  type        = bool
+  default     = false
+}
+
+variable "github_actions_oidc_provider_arn" {
+  description = "Account-level GitHub Actions OIDC provider ARN; required when runtime identity is enabled."
+  type        = string
+  default     = null
+  nullable    = true
+
+  validation {
+    condition = (
+      !var.enable_github_actions_runtime_identity ||
+      (var.github_actions_oidc_provider_arn != null && can(regex(
+        "^arn:[^:]+:iam::[0-9]{12}:oidc-provider/token\\.actions\\.githubusercontent\\.com$",
+        var.github_actions_oidc_provider_arn,
+      )))
+    )
+    error_message = "Enable runtime identity only with the exact GitHub Actions OIDC provider ARN."
+  }
+}

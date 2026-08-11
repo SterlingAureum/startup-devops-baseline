@@ -30,6 +30,9 @@ echo "==> Validating reusable delivery stage contracts"
 echo "==> Validating event-driven release orchestrator"
 "${ROOT_DIR}/scripts/validate-demo-api-release-orchestrator.sh"
 
+echo "==> Validating trusted runtime qualification executor"
+"${ROOT_DIR}/scripts/validate-trusted-runtime-executor.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

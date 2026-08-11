@@ -229,8 +229,10 @@ Incremental scope:
   read-only Git/GitHub fact snapshots, idempotent open-PR discovery,
   deterministic next-action planning, concurrency, stale-main handling, and
   offline positive/negative behavior validation - delivered
-- v0.10.3 - protected trusted runtime executor, AWS OIDC, environment-isolated
-  IAM and Kubernetes RBAC, preflight, and unavailable-runner handling - planned
+- v0.10.3 - protected-main trusted runtime qualification, ephemeral
+  self-hosted execution, AWS OIDC, environment-isolated IAM and Kubernetes
+  RBAC, immutable runtime artifacts, and safe absent/unavailable handling -
+  delivered
 - v0.10.4 - automatic aws-dev release preparation, GitOps convergence,
   runtime validation, and unified qualification evidence - planned
 - v0.10.5 - automatic aws-dev to aws-test Promotion preparation, reviewed

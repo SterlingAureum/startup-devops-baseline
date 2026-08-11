@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.2",
+  "schemaVersion": "v0.10.3",
   "application": {
     "name": "demo-api",
     "sourceRepository": "SterlingAureum/startup-devops-baseline",
@@ -8,6 +8,8 @@
     "buildWorkflow": ".github/workflows/demo-api-image-publish.yaml",
     "stageContract": "delivery/contracts/demo-api-stages.json",
     "orchestratorContract": "delivery/contracts/demo-api-orchestrator.json",
+    "runtimeExecutorContract": "delivery/contracts/runtime-executor.json",
+    "runtimeQualificationWorkflow": ".github/workflows/demo-api-runtime-qualification.yaml",
     "buildOnce": true
   },
   "environments": [
@@ -93,6 +95,12 @@
       "allowedRef": "refs/heads/main",
       "allowPullRequestCode": false,
       "environmentIsolation": true,
+      "implementedEnvironments": [
+        "aws-dev",
+        "aws-test"
+      ],
+      "productionAccess": false,
+      "resultDurability": "temporary-actions-artifact",
       "responsibilities": [
         "argocd-status",
         "rollout-status",

@@ -68,3 +68,8 @@ cnpg_backup_force_destroy = true
 # Immediate deletion supports repeatable teardown of the disposable aws-dev
 # environment. Use 7-30 days for persistent environments.
 external_secrets_recovery_window_in_days = 0
+
+# Enable only after the shared account-level GitHub Actions OIDC provider and
+# the aws-dev-runtime GitHub Environment have been configured.
+enable_github_actions_runtime_identity = false
+# github_actions_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"

@@ -63,11 +63,17 @@ now produce a deterministic snapshot and next-action decision, discover and
 reuse matching open PRs, reject ambiguous duplicates, and block safely if
 `main` changes during derivation. This checkpoint remains plan-only: it grants
 no write, AWS, or EKS permission and does not dispatch a reusable stage.
+v0.10.3 implements the separately trusted runtime qualification boundary for
+`aws-dev` and `aws-test`: protected-main preflight, environment-labeled
+ephemeral self-hosted execution, short-lived GitHub OIDC, exact-cluster IAM,
+namespaced read-only EKS RBAC, release-bound live checks, and a secret-free
+temporary result artifact. It is not yet dispatched by the orchestrator and
+does not implement production runtime access.
 
 ## Current Version
 
 ```text
-v0.10.2-event-driven-release-orchestrator
+v0.10.3-trusted-runtime-qualification-executor
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -117,6 +123,13 @@ open PR contents, environment availability, and protected-main freshness. Its
 workflow artifacts are diagnostic observations rather than mutable release
 state. Actual stage dispatch remains deferred to v0.10.4 through v0.10.6, after
 the v0.10.3 trusted runtime boundary exists.
+v0.10.3 adds `.github/workflows/demo-api-runtime-qualification.yaml`, the
+runtime executor/result contracts, a short-lived OIDC IAM and EKS access-entry
+module for dev/test, GitOps-managed read-only Roles, and deterministic runtime
+collection. An unavailable runner or absent disposable environment remains a
+safe wait; no GitHub-hosted fallback or automatic Terraform apply is allowed.
+The temporary runtime result becomes unified qualification evidence in
+v0.10.4.
 
 ## Platform Architecture
 

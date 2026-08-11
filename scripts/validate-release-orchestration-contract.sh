@@ -90,7 +90,7 @@ def require(condition: bool, message: str) -> None:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.2", "Bad schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.3", "Bad schemaVersion")
 
     application = contract.get("application")
     require(isinstance(application, dict), "application must be an object")
@@ -287,6 +287,8 @@ def validate_workflow_boundary() -> None:
         r"(?im)\b(kubectl|aws\s+eks|update-kubeconfig|configure-aws-credentials)\b"
     )
     for path in sorted(workflow_dir.glob("*.y*ml")):
+        if path.name == "demo-api-runtime-qualification.yaml":
+            continue
         require(forbidden.search(path.read_text()) is None, f"Workflow gained AWS/EKS runtime access: {path.name}")
 
 

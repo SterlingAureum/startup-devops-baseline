@@ -67,3 +67,8 @@ cnpg_backup_force_destroy = true
 
 # The ephemeral test environment retains a seven-day recovery opportunity.
 external_secrets_recovery_window_in_days = 7
+
+# Enable only after the shared account-level GitHub Actions OIDC provider and
+# the aws-test-runtime GitHub Environment have been configured.
+enable_github_actions_runtime_identity = false
+# github_actions_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"

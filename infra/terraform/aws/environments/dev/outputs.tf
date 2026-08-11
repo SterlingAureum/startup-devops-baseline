@@ -182,3 +182,13 @@ output "external_secrets_policy_arn" {
   description = "ARN of the least-privilege External Secrets read policy."
   value       = module.external_secrets.policy_arn
 }
+
+output "github_actions_runtime_role_arn" {
+  description = "IAM role ARN configured as AWS_RUNTIME_ROLE_ARN in aws-dev-runtime."
+  value       = try(module.github_actions_runtime_identity[0].role_arn, null)
+}
+
+output "github_actions_runtime_oidc_subject" {
+  description = "Exact GitHub OIDC subject accepted by the aws-dev runtime role."
+  value       = try(module.github_actions_runtime_identity[0].oidc_subject, null)
+}

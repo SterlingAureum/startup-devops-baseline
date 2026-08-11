@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aureumstack.com/schemas/runtime-qualification-v0.10.3.json",
+  "title": "demo-api trusted runtime qualification result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "application",
+    "environment",
+    "releaseId",
+    "status",
+    "reason",
+    "recordedAt",
+    "expiresAt",
+    "controlPlane",
+    "expected",
+    "executor",
+    "runtime"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "v0.10.3" },
+    "application": { "const": "demo-api" },
+    "environment": { "enum": ["aws-dev", "aws-test"] },
+    "releaseId": { "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$" },
+    "status": { "enum": ["qualified", "blocked", "failed"] },
+    "reason": {
+      "enum": [
+        "all_checks_passed",
+        "environment_absent",
+        "executor_unavailable",
+        "main_advanced",
+        "oidc_denied",
+        "endpoint_unreachable",
+        "input_mismatch",
+        "argo_not_converged",
+        "rollout_unhealthy",
+        "analysis_failed",
+        "digest_mismatch",
+        "https_validation_failed",
+        "rbac_boundary_failed"
+      ]
+    },
+    "recordedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "controlPlane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "ref", "revision", "releaseFile", "releaseFileSha256"],
+      "properties": {
+        "repository": { "const": "SterlingAureum/startup-devops-baseline" },
+        "ref": { "const": "refs/heads/main" },
+        "revision": { "pattern": "^[0-9a-f]{40}$" },
+        "releaseFile": { "pattern": "^apps/demo-api/helm/values/releases/aws-(dev|test)\\.yaml$" },
+        "releaseFileSha256": { "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceCommit", "imageDigest", "imageReference"],
+      "properties": {
+        "sourceCommit": { "pattern": "^[0-9a-f]{40}$" },
+        "imageDigest": { "pattern": "^sha256:[0-9a-f]{64}$" },
+        "imageReference": { "pattern": "^ghcr\\.io/sterlingaureum/startup-devops-baseline/demo-api@sha256:[0-9a-f]{64}$" }
+      }
+    },
+    "executor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "githubEnvironment", "runnerName", "workflowRunId", "workflowRunAttempt", "awsCallerArn", "clusterName"],
+      "properties": {
+        "kind": { "const": "ephemeral-self-hosted" },
+        "githubEnvironment": { "enum": ["aws-dev-runtime", "aws-test-runtime"] },
+        "runnerName": { "type": "string" },
+        "workflowRunId": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+        "workflowRunAttempt": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+        "awsCallerArn": { "type": "string" },
+        "clusterName": { "enum": ["startup-devops-baseline-dev", "startup-devops-baseline-test"] }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argoApplication", "argoRevision", "workloadKind", "workloadName", "rolloutPhase", "analysisRunName", "analysisRunPhase", "httpsHostname", "readyPodCount", "observedImageIds", "checks"],
+      "properties": {
+        "argoApplication": { "type": "string" },
+        "argoRevision": { "type": "string" },
+        "workloadKind": { "enum": ["Deployment", "Rollout"] },
+        "workloadName": { "const": "demo-api" },
+        "rolloutPhase": { "type": "string" },
+        "analysisRunName": { "type": "string" },
+        "analysisRunPhase": { "type": "string" },
+        "httpsHostname": { "type": "string" },
+        "readyPodCount": { "type": "integer", "minimum": 0 },
+        "observedImageIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "checks": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "status": { "const": "qualified" } } },
+      "then": {
+        "properties": {
+          "reason": { "const": "all_checks_passed" },
+          "runtime": {
+            "properties": {
+              "readyPodCount": { "minimum": 1 },
+              "observedImageIds": { "minItems": 1 },
+              "checks": { "minItems": 7 }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

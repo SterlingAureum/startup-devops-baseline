@@ -2,6 +2,50 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.3
+
+### Added
+
+- Protected-main demo-api runtime qualification Workflow with separate
+  GitHub-hosted preflight and environment-labeled ephemeral self-hosted
+  execution jobs.
+- Machine-readable trusted executor and runtime-result contracts covering
+  dev/test identities, immutable inputs, qualified/blocked/failed outcomes,
+  artifact hygiene, and production exclusion.
+- GitHub OIDC IAM and EKS access-entry module with exact repository Environment
+  subjects, exact-cluster `eks:DescribeCluster`, and dev/test-isolated roles.
+- GitOps-managed `argocd` and `startup-apps` read-only Roles and RoleBindings
+  for Argo Application, Deployment/Rollout, AnalysisRun, Pod imageID, Service,
+  Ingress, and Event facts.
+- Runtime collector and secret-field-rejecting result writer covering current
+  main, release identity, cluster presence, endpoint reachability, negative
+  RBAC checks, Argo convergence, rollout/analysis health, Pod digest, and HTTPS
+  identity.
+- Offline positive and negative validation for GitHub-hosted fallback,
+  untrusted triggers, arbitrary target inputs, production access, wildcard
+  OIDC trust, IAM/Kubernetes writes, Secret access, Terraform execution, and
+  sensitive artifact fields.
+- Trusted runtime setup, security, result, queue behavior, branch validation,
+  and post-merge live acceptance documentation.
+
+### Changed
+
+- Linked the v0.10 application contract to the runtime executor Workflow and
+  result contracts.
+- Added the trusted runtime validator to the repository-wide quality gate and
+  reviewed the pinned AWS credential Action.
+- Added optional, disabled-by-default runtime identity instances and outputs to
+  the aws-dev and aws-test Terraform roots only.
+- Marked v0.10.3 delivered and made it the repository's current checkpoint.
+
+### Boundary
+
+- v0.10.3 does not dispatch runtime qualification from the orchestrator,
+  create or merge PRs, create EKS environments, register persistent runners,
+  store long-lived AWS keys, write durable qualification evidence, mutate
+  Kubernetes, or provide aws-prod runtime access. Those automation and
+  evidence integrations remain v0.10.4 through v0.10.8.
+
 ## v0.10.2
 
 ### Added

@@ -1,0 +1,264 @@
+name: demo-api trusted runtime qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Non-production environment to qualify
+        required: true
+        type: choice
+        options:
+          - aws-dev
+          - aws-test
+      release_id:
+        description: Deterministic environment-independent release ID
+        required: true
+        type: string
+      control_plane_sha:
+        description: Full protected-main SHA whose desired state is being qualified
+        required: true
+        type: string
+      expected_source_commit:
+        description: Full application source commit from the immutable release identity
+        required: true
+        type: string
+      expected_image_digest:
+        description: Full sha256 image digest from the target release file
+        required: true
+        type: string
+      expected_release_file_sha256:
+        description: SHA-256 of the exact target release values file
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      release_id:
+        required: true
+        type: string
+      control_plane_sha:
+        required: true
+        type: string
+      expected_source_commit:
+        required: true
+        type: string
+      expected_image_digest:
+        required: true
+        type: string
+      expected_release_file_sha256:
+        required: true
+        type: string
+    outputs:
+      status:
+        description: qualified, blocked, or failed
+        value: ${{ jobs.qualify.outputs.status }}
+      reason:
+        description: Stable machine-readable result reason
+        value: ${{ jobs.qualify.outputs.reason }}
+      artifact_name:
+        description: Temporary runtime result artifact name
+        value: ${{ jobs.qualify.outputs.artifact_name }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-api-runtime-${{ inputs.environment }}-${{ inputs.release_id }}
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Validate protected-main runtime request
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      artifact_name: ${{ steps.identity.outputs.artifact_name }}
+    steps:
+      - name: Checkout protected main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Validate immutable qualification identity
+        id: identity
+        env:
+          REQUESTED_ENVIRONMENT: ${{ inputs.environment }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
+          EXPECTED_SOURCE_COMMIT: ${{ inputs.expected_source_commit }}
+          EXPECTED_IMAGE_DIGEST: ${{ inputs.expected_image_digest }}
+          EXPECTED_RELEASE_FILE_SHA256: ${{ inputs.expected_release_file_sha256 }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "::error::Trusted runtime qualification may only be invoked from refs/heads/main."
+            exit 1
+          fi
+          case "${GITHUB_EVENT_NAME}" in
+            workflow_dispatch|push) ;;
+            *)
+              echo "::error::Pull-request and untrusted caller events are not permitted."
+              exit 1
+              ;;
+          esac
+          case "${REQUESTED_ENVIRONMENT}" in
+            aws-dev|aws-test) ;;
+            *)
+              echo "::error::Only aws-dev and aws-test runtime qualification is implemented."
+              exit 1
+              ;;
+          esac
+          for value in "${CONTROL_PLANE_SHA}" "${EXPECTED_SOURCE_COMMIT}"; do
+            [[ "${value}" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          done
+          [[ "${EXPECTED_IMAGE_DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]] || exit 1
+          [[ "${EXPECTED_RELEASE_FILE_SHA256}" =~ ^[0-9a-f]{64}$ ]] || exit 1
+          expected_release_id="demo-api-${EXPECTED_SOURCE_COMMIT:0:12}-${EXPECTED_IMAGE_DIGEST#sha256:}"
+          expected_release_id="${expected_release_id:0:34}"
+          [[ "${RELEASE_ID}" == "${expected_release_id}" ]] || {
+            echo "::error::release_id does not match source commit and image digest."
+            exit 1
+          }
+          observed_main="$(gh api "repos/${GITHUB_REPOSITORY}/git/ref/heads/main" --jq '.object.sha')"
+          [[ "$(git rev-parse HEAD)" == "${CONTROL_PLANE_SHA}" && "${observed_main}" == "${CONTROL_PLANE_SHA}" ]] || {
+            echo "::error::Protected main advanced before runtime qualification."
+            exit 1
+          }
+          release_file="apps/demo-api/helm/values/releases/${REQUESTED_ENVIRONMENT}.yaml"
+          observed_release_sha="$(sha256sum "${release_file}" | awk '{print $1}')"
+          [[ "${observed_release_sha}" == "${EXPECTED_RELEASE_FILE_SHA256}" ]] || {
+            echo "::error::Target release file differs from the requested identity."
+            exit 1
+          }
+          echo "artifact_name=demo-api-runtime-${REQUESTED_ENVIRONMENT}-${RELEASE_ID}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" >> "${GITHUB_OUTPUT}"
+
+  qualify:
+    name: Qualify ${{ inputs.environment }} from a trusted executor
+    needs: preflight
+    runs-on: [self-hosted, linux, x64, trusted-runtime, "${{ inputs.environment }}"]
+    timeout-minutes: 20
+    environment:
+      name: ${{ inputs.environment }}-runtime
+      deployment: false
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      status: ${{ steps.result.outputs.status }}
+      reason: ${{ steps.result.outputs.reason }}
+      artifact_name: ${{ needs.preflight.outputs.artifact_name }}
+    steps:
+      - name: Checkout the validated protected-main revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.control_plane_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify trusted executor prerequisites
+        run: |
+          for command in aws curl git jq kubectl python3 sha256sum; do
+            command -v "${command}" >/dev/null 2>&1 || {
+              echo "::error::Trusted executor is missing ${command}."
+              exit 1
+            }
+          done
+
+      - name: Acquire environment-isolated AWS credentials
+        id: aws
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_RUNTIME_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          role-session-name: runtime-${{ github.run_id }}-${{ github.run_attempt }}
+          role-duration-seconds: 900
+          unset-current-credentials: true
+
+      - name: Record an OIDC boundary failure
+        if: steps.aws.outcome != 'success'
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
+          EXPECTED_SOURCE_COMMIT: ${{ inputs.expected_source_commit }}
+          EXPECTED_IMAGE_DIGEST: ${{ inputs.expected_image_digest }}
+          EXPECTED_RELEASE_FILE_SHA256: ${{ inputs.expected_release_file_sha256 }}
+          OUTPUT_FILE: ${{ runner.temp }}/runtime-qualification/result.json
+        run: |
+          ./scripts/write-demo-api-runtime-qualification.py \
+            --environment "${ENVIRONMENT}" \
+            --release-id "${RELEASE_ID}" \
+            --control-plane-sha "${CONTROL_PLANE_SHA}" \
+            --expected-source-commit "${EXPECTED_SOURCE_COMMIT}" \
+            --expected-image-digest "${EXPECTED_IMAGE_DIGEST}" \
+            --expected-release-file-sha256 "${EXPECTED_RELEASE_FILE_SHA256}" \
+            --release-file "apps/demo-api/helm/values/releases/${ENVIRONMENT}.yaml" \
+            --status blocked \
+            --reason oidc_denied \
+            --runner-name "${RUNNER_NAME}" \
+            --workflow-run-id "${GITHUB_RUN_ID}" \
+            --workflow-run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --output "${OUTPUT_FILE}"
+
+      - name: Collect read-only runtime qualification
+        if: steps.aws.outcome == 'success'
+        id: collect
+        continue-on-error: true
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
+          EXPECTED_SOURCE_COMMIT: ${{ inputs.expected_source_commit }}
+          EXPECTED_IMAGE_DIGEST: ${{ inputs.expected_image_digest }}
+          EXPECTED_RELEASE_FILE_SHA256: ${{ inputs.expected_release_file_sha256 }}
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+          OUTPUT_FILE: ${{ runner.temp }}/runtime-qualification/result.json
+        run: ./scripts/collect-demo-api-runtime-qualification-aws.sh
+
+      - name: Publish stable runtime result outputs
+        if: always()
+        id: result
+        run: |
+          result="${RUNNER_TEMP}/runtime-qualification/result.json"
+          [[ -f "${result}" ]] || {
+            echo "::error::Runtime executor did not produce a result."
+            exit 1
+          }
+          status="$(jq -r '.status' "${result}")"
+          reason="$(jq -r '.reason' "${result}")"
+          echo "status=${status}" >> "${GITHUB_OUTPUT}"
+          echo "reason=${reason}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "### demo-api trusted runtime qualification"
+            echo
+            echo "- Environment: \`${{ inputs.environment }}\`"
+            echo "- Release: \`${{ inputs.release_id }}\`"
+            echo "- Result: \`${status} / ${reason}\`"
+            echo "- Control plane: \`${{ inputs.control_plane_sha }}\`"
+            echo
+            echo "This v0.10.3 artifact is temporary input for later unified qualification; it is not reviewed durable evidence."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload secret-free runtime result
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ needs.preflight.outputs.artifact_name }}
+          path: ${{ runner.temp }}/runtime-qualification/result.json
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Fail an unqualified runtime
+        if: always()
+        run: |
+          status="$(jq -r '.status' "${RUNNER_TEMP}/runtime-qualification/result.json")"
+          if [[ "${status}" == "failed" ]]; then
+            exit 1
+          fi

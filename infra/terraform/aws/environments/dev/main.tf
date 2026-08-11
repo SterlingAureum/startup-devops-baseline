@@ -101,3 +101,15 @@ module "external_secrets" {
   recovery_window_in_days   = var.external_secrets_recovery_window_in_days
   tags                      = var.additional_tags
 }
+
+module "github_actions_runtime_identity" {
+  count  = var.enable_github_actions_runtime_identity ? 1 : 0
+  source = "../../modules/github-actions-runtime-identity"
+
+  project_name             = var.project_name
+  environment              = "aws-dev"
+  cluster_name             = module.eks.cluster_name
+  cluster_arn              = module.eks.cluster_arn
+  github_oidc_provider_arn = var.github_actions_oidc_provider_arn
+  tags                     = var.additional_tags
+}

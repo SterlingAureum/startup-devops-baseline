@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.2",
+  "schemaVersion": "v0.10.3",
   "application": "demo-api",
   "defaultRef": "refs/heads/main",
   "executionBoundary": {
@@ -150,7 +150,7 @@
     "stageDispatch": false
   },
   "deferredStages": {
-    "runtimeQualification": "v0.10.3-trusted-runtime-executor",
+    "runtimeQualification": "v0.10.3-implemented-not-dispatched",
     "qualificationBundle": "v0.10.4-plus"
   }
 }

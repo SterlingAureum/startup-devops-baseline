@@ -15,6 +15,10 @@ rollback governance. v0.9.5 adds an independent reviewed AWS runtime evidence
 gate and ALB/Argo Rollouts progressive delivery declarations for test and
 production.
 
+For exact operator commands, GitHub repository settings, evidence ID handling,
+ordered dev-to-test and test-to-prod execution, and pause/resume procedures,
+use `MULTI_ENVIRONMENT_RELEASE_RUNBOOK.md`.
+
 ## Quality Gate
 
 The local and GitHub Actions entry point is:

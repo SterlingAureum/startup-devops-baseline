@@ -43,12 +43,14 @@ bounded security logging. v0.9 turns this single live AWS baseline into a
 cost-aware, multi-environment GitOps promotion model without requiring three
 permanently running portfolio clusters. v0.9.7 separates disposable
 control-plane logging cost from formal production-parity validation and makes
-the cleanup audit aware of terminal Karpenter Instant Fleet history.
+the cleanup audit aware of terminal Karpenter Instant Fleet history. v0.9.8
+provides one canonical, command-by-command operator Runbook for GitHub setup,
+evidence collection, ordered Promotion, safe pause/resume, and cost cleanup.
 
 ## Current Version
 
 ```text
-v0.9.7-cost-aware-operations-and-cleanup-hardening
+v0.9.8-manual-multi-environment-release-runbook
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -74,7 +76,11 @@ aws-prod remained statically validated by design. v0.9.7 defaults disposable
 dev/test control-plane ingestion off, provides an explicit all-five-log
 production-parity checkpoint, preserves the live profile during management-IP
 updates, and ignores only terminal or expired Instant Fleet history after
-exact cost-resource checks pass.
+exact cost-resource checks pass. v0.9.8 closes the manual-operability
+documentation gap with a single release procedure that distinguishes GitHub
+workflow run IDs from UTC runtime-evidence IDs, corrects the Promotion input
+name, and documents how a destroyed aws-test cluster can remain a valid source
+for time-bounded static production Promotion.
 
 ## Platform Architecture
 
@@ -195,6 +201,7 @@ startup-devops-baseline/
 
 ### Deployment and Operations
 
+- `docs/MULTI_ENVIRONMENT_RELEASE_RUNBOOK.md`
 - `docs/LOCAL_DEPLOYMENT.md`
 - `docs/AWS_EKS_DEPLOYMENT.md`
 - `docs/AWS_EKS_DESTROY_RUNBOOK.md`

@@ -169,7 +169,7 @@ Incremental scope:
 
 ## v0.9 - Multi-Environment GitOps Promotion Baseline
 
-Status: In progress
+Status: Completed
 
 Goal:
 
@@ -202,8 +202,8 @@ Incremental scope:
   - delivered
 - v0.9.8 - canonical manual multi-environment release Runbook, one-time GitHub
   governance setup, exact evidence and Promotion commands, ID disambiguation,
-  safe pause/resume, troubleshooting, and cleanup checklist - implemented;
-  final merge and v0.9 version closure pending
+  safe pause/resume, troubleshooting, and cleanup checklist - delivered;
+  v0.9 version line closed
 
 ## v0.10 - Release Orchestration and Delivery Automation
 

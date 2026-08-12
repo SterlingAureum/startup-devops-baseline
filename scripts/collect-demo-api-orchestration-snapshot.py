@@ -505,7 +505,7 @@ def main() -> None:
         public_prs.append({key: value for key, value in item.items() if not key.startswith("_")})
 
     snapshot = {
-        "schemaVersion": "v0.10.5",
+        "schemaVersion": "v0.10.6",
         "application": "demo-api",
         "operation": args.operation,
         "policy": args.policy,

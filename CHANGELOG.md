@@ -2,6 +2,39 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.6
+
+### Added
+
+- Repository-variable-gated `aws-test -> aws-prod` Promotion preparation from
+  the merged, fresh, scope-valid aws-test Qualification Bundle.
+- A required protected `aws-prod` GitHub Environment approval before the
+  release-only PR preparation job can execute.
+- Offline production orchestration tests covering fresh/stale test Bundles,
+  exact ordered edges, source-bound Bundle paths, existing prod PR reuse,
+  completed GitOps state, and forbidden runtime/merge behavior.
+- `docs/AWS_PROD_CONTROLLED_PROMOTION.md` with GitHub setup, state semantics,
+  accepted facts, permissions, and validation commands.
+
+### Changed
+
+- Upgraded application, stage, orchestrator, snapshot, and decision contracts
+  to v0.10.6 while retaining the v0.10.5 Qualification Bundle format so
+  existing reviewed test Bundles remain consumable.
+- Extended Bundle-mode Promotion to the two exact ordered edges:
+  `aws-dev -> aws-test` and `aws-test -> aws-prod`.
+- Authorized `prepare-prod-promotion` only after test qualification succeeds;
+  the orchestrator selects the aws-test Bundle path and SHA-256 from the same
+  protected-main snapshot.
+
+### Boundary
+
+- v0.10.6 may prepare a production release-only PR after Environment approval.
+  It never merges the PR, accesses AWS/EKS, writes Kubernetes, creates an
+  environment, runs production qualification, applies Terraform, triggers
+  rollback, or mutates Secrets/databases. `complete` means the GitOps release
+  file reached prod, not that production runtime was validated.
+
 ## v0.10.5
 
 ### Added

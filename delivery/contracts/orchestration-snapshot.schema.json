@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aureumstack.com/schemas/orchestration-snapshot-v0.10.5.json",
+  "$id": "https://aureumstack.com/schemas/orchestration-snapshot-v0.10.6.json",
   "title": "Read-only demo-api orchestration fact snapshot",
   "type": "object",
   "additionalProperties": false,
@@ -24,7 +24,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "v0.10.5"
+      "const": "v0.10.6"
     },
     "application": {
       "const": "demo-api"

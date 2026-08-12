@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.5",
+  "schemaVersion": "v0.10.6",
   "application": "demo-api",
   "workflow": ".github/workflows/demo-api-release-orchestrator.yaml",
   "protectedRef": "refs/heads/main",
@@ -66,22 +66,24 @@
       "aws-dev",
       "aws-test"
     ],
-    "repositoryMutation": "test-release-only-or-qualification-bundle-only-pr",
+    "repositoryMutation": "target-release-only-or-qualification-bundle-only-pr",
     "automaticMerge": false,
     "automaticEnvironmentCreation": false
   },
   "actionExecution": {
-    "mode": "bounded-dev-test-automation",
+    "mode": "bounded-reviewed-promotion",
     "dispatchReusableStages": true,
     "authorizedActions": [
       "qualify-aws-dev",
       "prepare-test-promotion",
-      "qualify-aws-test"
+      "qualify-aws-test",
+      "prepare-prod-promotion"
     ],
     "activationVariables": {
       "qualify-aws-dev": "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
       "prepare-test-promotion": "DEMO_API_AWS_TEST_PROMOTION_ENABLED",
-      "qualify-aws-test": "DEMO_API_AWS_TEST_QUALIFICATION_ENABLED"
+      "qualify-aws-test": "DEMO_API_AWS_TEST_QUALIFICATION_ENABLED",
+      "prepare-prod-promotion": "DEMO_API_AWS_PROD_PROMOTION_ENABLED"
     },
     "activationValue": "true",
     "staticMode": "artifact-only",
@@ -118,12 +120,23 @@
     "runtimeMutationByAutomation": false,
     "qualificationBeforeConfirmation": false
   },
+  "productionPromotion": {
+    "workflow": ".github/workflows/demo-api-promote-environment.yaml",
+    "source": "aws-test",
+    "target": "aws-prod",
+    "qualificationMode": "qualification-bundle",
+    "sourceBundleRequired": true,
+    "environmentApprovalRequired": true,
+    "releaseOnlyPullRequest": true,
+    "automaticMerge": false,
+    "runtimeQualification": false
+  },
   "productionBoundary": {
     "environmentApprovalRequired": true,
     "reviewedPullRequestRequired": true,
     "automaticMerge": false,
     "automaticRollback": false,
-    "automaticPromotion": false,
+    "automaticPromotionPreparation": true,
     "runtimeAccess": false
   }
 }

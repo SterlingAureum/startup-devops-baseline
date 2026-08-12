@@ -18,6 +18,10 @@ with `test_rollout_gate=reviewed-and-completed`, and
 it verifies the completed Rollout and matching Successful AnalysisRun rather
 than progressing either resource.
 
+v0.10.6 does not add an aws-prod executor. Production PR preparation remains a
+GitHub-hosted, no-cloud-access operation that consumes the reviewed aws-test
+Bundle; production runtime qualification stays outside this release.
+
 ## Trust boundary
 
 The workflow has two jobs:

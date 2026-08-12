@@ -10,6 +10,9 @@ v0.10.5 generalizes the Bundle stage to dev/test and adds the orchestrated
 Qualification Bundle input mode to the existing Promotion stage. The original
 manual static/runtime evidence inputs remain available and cannot be mixed
 with Bundle mode.
+v0.10.6 enables that Bundle mode for the second declared edge as well. The
+`aws-test -> aws-prod` call consumes the current test Bundle, enters the target
+`aws-prod` Environment, and still produces only a reviewed release-file PR.
 
 The v0.10.1 increment did not add the orchestrator and does not grant GitHub-hosted
 runners access to AWS or EKS.
@@ -118,6 +121,8 @@ executor only for aws-dev and passes its secret-free result to the Bundle
 stage through the current Workflow run.
 v0.10.5 additionally dispatches the aws-test executor only after explicit
 reviewed Canary completion and passes that result through the same-run boundary.
+v0.10.6 does not extend the runtime executor to production; it consumes the
+already reviewed aws-test Bundle in the GitHub-hosted Promotion stage.
 
 This separation prevents the GitHub-hosted derivation and Bundle jobs from gaining
 cluster access simply because it can call reusable delivery stages.

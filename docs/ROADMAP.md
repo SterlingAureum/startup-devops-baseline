@@ -247,7 +247,7 @@ Incremental scope:
   Canary progression, AnalysisRun verification, test scope hashing, and
   reviewed aws-test Qualification Bundle evidence - delivered
 - v0.10.6 - automatic production Promotion preparation with retained aws-prod
-  Environment approval and reviewed release-only PR merge - planned
+  Environment approval and reviewed release-only PR merge - delivered
 - v0.10.7 - retry, resume, supersede, evidence expiry, failure diagnostics,
   and governed rollback handoff - planned
 - v0.10.8 - clean-room dev/test/prod-static acceptance, interrupted-run

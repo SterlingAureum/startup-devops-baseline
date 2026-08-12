@@ -167,7 +167,7 @@ def workflow_call_block(text: str) -> str:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.5", "Bad application schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.6", "Bad application schemaVersion")
     require(contract.get("application") == "demo-api", "Unexpected application")
     require(contract.get("defaultRef") == "refs/heads/main", "Default ref must be main")
 
@@ -240,8 +240,8 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
         orchestration.get("contract") == "delivery/contracts/demo-api-orchestrator.json",
         "Unexpected orchestrator contract",
     )
-    require(orchestration.get("executionMode") == "bounded-dev-test-automation", "Unexpected execution mode")
-    require(orchestration.get("stageDispatch") is True, "dev/test stage dispatch is not active")
+    require(orchestration.get("executionMode") == "bounded-reviewed-promotion", "Unexpected execution mode")
+    require(orchestration.get("stageDispatch") is True, "reviewed stage dispatch is not active")
     if check_files:
         require((root / orchestration["contract"]).is_file(), "Orchestrator contract is missing")
 
@@ -249,7 +249,7 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     require(isinstance(deferred, dict), "Missing deferred stage declarations")
     require(deferred.get("runtimeQualification") == "v0.10.5-dispatched-aws-dev-and-aws-test", "Runtime qualification integration state changed")
     require(deferred.get("qualificationBundle") == "v0.10.5-implemented-dev-and-test", "Qualification Bundle state changed")
-    require(deferred.get("productionPromotion") == "v0.10.6-deferred", "Production boundary changed")
+    require(deferred.get("productionPromotion") == "v0.10.6-reviewed-pr-preparation", "Production preparation state changed")
 
 
 contract = load_json(contract_path)

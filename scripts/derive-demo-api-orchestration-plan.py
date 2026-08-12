@@ -68,7 +68,7 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
         "derivedAt",
     }
     require(set(snapshot) == required, "Snapshot fields are missing or unknown")
-    require(snapshot["schemaVersion"] == "v0.10.5", "Unsupported snapshot schema")
+    require(snapshot["schemaVersion"] == "v0.10.6", "Unsupported snapshot schema")
     require(snapshot["application"] == "demo-api", "Unexpected application")
     require(snapshot["operation"] in OPERATIONS, "Unsupported operation")
     require(snapshot["policy"] in {"reviewed", "continuous-nonprod"}, "Unsupported policy")
@@ -147,7 +147,7 @@ def decision(
 ) -> dict[str, Any]:
     active = snapshot["activeRelease"]
     return {
-        "schemaVersion": "v0.10.5",
+        "schemaVersion": "v0.10.6",
         "application": "demo-api",
         "operation": snapshot["operation"],
         "releaseId": active["releaseId"] if active else None,
@@ -157,11 +157,12 @@ def decision(
         "recommendedAction": action,
         "targetEnvironment": target,
         "openPullRequest": {"number": pr["number"], "url": pr["url"]} if pr else None,
-        "executionMode": "bounded-dev-test-automation",
+        "executionMode": "bounded-reviewed-promotion",
         "dispatchAuthorized": (
             (action == "qualify-aws-dev" and target == "aws-dev")
             or (action == "prepare-test-promotion" and target == "aws-test")
             or (action == "qualify-aws-test" and target == "aws-test")
+            or (action == "prepare-prod-promotion" and target == "aws-prod")
         ),
         "capturedMainRevision": snapshot["capturedMainRevision"],
         "observedMainRevision": snapshot["observedMainRevision"],
@@ -342,7 +343,7 @@ def derive(snapshot: dict[str, Any]) -> dict[str, Any]:
             snapshot,
             "prod-approval",
             "waiting_review",
-            "review-required",
+            "production-environment-approval-required",
             "prepare-prod-promotion",
             "aws-prod",
         )

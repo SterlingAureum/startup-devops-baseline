@@ -18,6 +18,7 @@
 /scripts/demo_api_qualification_scope.py @SterlingAureum
 /scripts/write-demo-api-qualification-bundle.py @SterlingAureum
 /scripts/validate-demo-api-qualification-bundle.py @SterlingAureum
+/scripts/validate-demo-api-aws-prod-orchestration.sh @SterlingAureum
 /scripts/promote-demo-api-release.sh @SterlingAureum
 /scripts/prepare-demo-api-rollback.sh @SterlingAureum
 /scripts/write-demo-api-release-evidence.sh @SterlingAureum

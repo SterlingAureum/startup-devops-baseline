@@ -63,7 +63,7 @@ def main() -> None:
 
     require(schema["properties"]["environment"]["enum"] == ["aws-dev", "aws-test"], "Result schema permits an unsafe environment")
     require(schema["properties"]["status"]["enum"] == ["qualified", "blocked", "failed"], "Result statuses changed")
-    require(app["schemaVersion"] == "v0.10.5", "Application contract is not on v0.10.5")
+    require(app["schemaVersion"] == "v0.10.6", "Application contract is not on v0.10.6")
     require(app["application"]["runtimeExecutorContract"] == "delivery/contracts/runtime-executor.json", "Application contract does not link runtime executor")
     require(app["application"]["runtimeQualificationWorkflow"] == contract["workflow"], "Workflow link differs from runtime contract")
     trusted = app["executionBoundaries"]["trustedRuntime"]

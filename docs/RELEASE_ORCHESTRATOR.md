@@ -5,11 +5,12 @@ recomputes the current phase, status, blocker, open pull request, and recommende
 next action from durable Git and GitHub facts. It does not keep a mutable
 `current-state.json` file and does not wait inside one long-running workflow.
 
-v0.10.5 preserves the read-only derivation job and authorizes three bounded,
+v0.10.6 preserves the read-only derivation job and authorizes four bounded,
 repository-variable-gated actions: `qualify-aws-dev`,
-`prepare-test-promotion`, and `qualify-aws-test`. They may create only a
-release-only aws-test PR or a qualification-only dev/test Bundle PR. They never
-merge a PR, write Kubernetes, or prepare production.
+`prepare-test-promotion`, `qualify-aws-test`, and `prepare-prod-promotion`.
+They may create only a target release-only PR or a qualification-only dev/test
+Bundle PR. They never merge a PR, write Kubernetes, or run production runtime
+qualification.
 
 ## Scope
 
@@ -29,8 +30,10 @@ Execution additionally requires the exact variable for the recommended action:
 | `qualify-aws-dev` | `DEMO_API_AWS_DEV_QUALIFICATION_ENABLED=true` |
 | `prepare-test-promotion` | `DEMO_API_AWS_TEST_PROMOTION_ENABLED=true` |
 | `qualify-aws-test` | `DEMO_API_AWS_TEST_QUALIFICATION_ENABLED=true` |
+| `prepare-prod-promotion` | `DEMO_API_AWS_PROD_PROMOTION_ENABLED=true` |
 
-`prepare-prod-promotion` is always plan-only in v0.10.5.
+The production action additionally enters the protected `aws-prod` GitHub
+Environment and cannot begin until a configured reviewer approves it.
 
 ## Event Model
 
@@ -102,7 +105,7 @@ The planner follows the v0.10 phase order and returns one recommendation:
 | Canary confirmed, test Bundle missing/stale | `test-qualification / progressing` | qualify aws-test |
 | Matching aws-test Bundle PR open | `test-qualification / waiting_review` | wait for review |
 | Required disposable environment is absent | qualification phase / `waiting_environment` | restore the environment, then resume |
-| aws-test is qualified | `prod-approval / waiting_review` | prepare reviewed prod Promotion |
+| aws-test is qualified | `prod-approval / waiting_review` | enter prod Environment and prepare reviewed prod Promotion |
 | aws-prod carries the same Release ID | `complete / completed` | none |
 | `main` changed during derivation | current phase / `blocked` | retry after `main` stabilizes |
 
@@ -126,17 +129,18 @@ into the resumable `stale-main` blocker.
 
 ## Security Boundary
 
-The v0.10.5 derivation job still has only:
+The v0.10.6 derivation job still has only:
 
 ```text
 contents: read
 pull-requests: read
 ```
 
-The complete workflow may additionally prepare one aws-test release-only PR or
-one dev/test Qualification Bundle PR, but it still cannot:
+The complete workflow may additionally prepare one aws-test or aws-prod
+release-only PR or one dev/test Qualification Bundle PR, but it still cannot:
 
-- create a production or rollback PR;
+- create a production PR without the fresh test Bundle and aws-prod Environment approval;
+- create a rollback PR;
 - merge or auto-merge any PR;
 - publish or rebuild an image;
 - obtain AWS credentials in a GitHub-hosted job;
@@ -148,7 +152,9 @@ one dev/test Qualification Bundle PR, but it still cannot:
 
 v0.10.3 adds the separate trusted runtime executor. v0.10.4 activates aws-dev
 qualification. v0.10.5 activates reviewed test PR preparation and post-Canary
-aws-test qualification. v0.10.6 retains the production boundary.
+aws-test qualification. v0.10.6 activates only the Environment-approved,
+release-only prod PR preparation while retaining manual merge and all runtime
+production exclusions.
 
 ## Validation
 
@@ -159,11 +165,11 @@ Run the offline validator:
 ```
 
 It validates the contracts, schemas, triggers, permissions, protected-main
-recheck, PR discovery boundary, bounded dev/test dispatch, manual Canary gate,
-and positive state cases.
+recheck, PR discovery boundary, bounded reviewed dispatch, manual Canary gate,
+production Environment/PR gates, and positive state cases.
 It also proves that PR-code entry, `workflow_run` chaining, mutable state,
 duplicate Bundle preparation, cross-run artifacts, mixed legacy/Bundle inputs,
-Canary-gate bypass, production runtime/dispatch, and automatic merge mutations
+Canary-gate bypass, production runtime or approval bypass, and automatic merge mutations
 are rejected.
 
 The repository-wide quality gate invokes the same validator:

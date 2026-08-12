@@ -140,7 +140,7 @@ require("DEMO_API_AWS_TEST_QUALIFICATION_ENABLED" in workflow, "Test qualificati
 require("qualification_mode: qualification-bundle" in workflow, "Orchestrator does not use Bundle mode")
 require("qualification-bundle" in promotion and "legacy-evidence" in promotion, "Promotion dual-mode contract is missing")
 require("Legacy and Qualification Bundle inputs may not be mixed" in promotion, "Promotion does not reject mixed evidence")
-require("aws-dev->aws-test" in promotion, "Bundle mode edge is not exact")
+require("aws-dev-\\>aws-test|aws-test-\\>aws-prod" in promotion, "Bundle mode ordered edges are not exact")
 require("gh pr merge" not in promotion and "--auto" not in promotion, "Promotion may merge itself")
 require("kubectl" not in promotion and "configure-aws-credentials" not in promotion, "Promotion gained cluster access")
 require(".status.phase == \"Healthy\"" in collector, "Runtime does not require a completed Rollout")
@@ -175,7 +175,7 @@ def snapshot() -> dict[str, object]:
     old["imageTag"] = "sha-aaaaaaa"
     old["imageDigest"] = "sha256:" + "1" * 64
     return {
-        "schemaVersion": "v0.10.5",
+        "schemaVersion": "v0.10.6",
         "application": "demo-api",
         "operation": "resume",
         "policy": "reviewed",
@@ -216,8 +216,8 @@ value["qualificationBundles"]["aws-test"] = fact("fresh")
 decision = planner.derive(value)
 require(
     (decision["phase"], decision["status"], decision["recommendedAction"], decision["dispatchAuthorized"])
-    == ("prod-approval", "waiting_review", "prepare-prod-promotion", False),
-    "Test qualification did not stop at production approval",
+    == ("prod-approval", "waiting_review", "prepare-prod-promotion", True),
+    "Test qualification did not authorize the protected production preparation stage",
 )
 print("Automated dev-to-test Promotion, manual Canary gate, and aws-test qualification contracts passed.")
 PY

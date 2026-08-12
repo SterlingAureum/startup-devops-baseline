@@ -87,13 +87,15 @@ v0.10.5 consumes the merged, still-fresh aws-dev Bundle to prepare a reviewed
 dev-to-test release-only PR. After that PR is merged, aws-test Canary progression
 remains an explicit human action; only a manual `reviewed-and-completed` resume
 may run same-run static/runtime qualification and create the reviewed aws-test
-Bundle PR. The workflow stops at `prod-approval` and never prepares or mutates
-production.
+Bundle PR. v0.10.6 consumes that merged, still-fresh test Bundle to prepare a
+reviewed test-to-prod release-only PR behind the protected `aws-prod` GitHub
+Environment. The workflow never merges the PR, obtains production runtime
+access, or writes Kubernetes.
 
 ## Current Version
 
 ```text
-v0.10.5-automated-dev-to-test-promotion-test-qualification
+v0.10.6-controlled-test-to-production-promotion
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -160,8 +162,13 @@ v0.10.5 activates that reviewed dev-to-test PR preparation behind
 `DEMO_API_AWS_TEST_PROMOTION_ENABLED`, retains the existing guarded Canary
 completion helper, and gates aws-test qualification separately with
 `DEMO_API_AWS_TEST_QUALIFICATION_ENABLED`. Both automated paths accept only
-protected-main facts; no PR is merged automatically and prod remains outside
-the execution boundary.
+protected-main facts; no PR is merged automatically.
+v0.10.6 activates reviewed test-to-prod PR preparation behind
+`DEMO_API_AWS_PROD_PROMOTION_ENABLED`. The job consumes only the current fresh
+aws-test Qualification Bundle, enters the protected `aws-prod` Environment,
+and may change only the aws-prod release values file. Production runtime access,
+cluster creation, Kubernetes writes, rollback, and automatic merge remain
+forbidden.
 
 ## Platform Architecture
 

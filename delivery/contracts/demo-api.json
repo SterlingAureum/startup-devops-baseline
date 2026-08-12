@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.5",
+  "schemaVersion": "v0.10.6",
   "application": {
     "name": "demo-api",
     "sourceRepository": "SterlingAureum/startup-devops-baseline",
@@ -233,8 +233,10 @@
     "awsDevQualificationVariable": "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
     "awsTestPromotionVariable": "DEMO_API_AWS_TEST_PROMOTION_ENABLED",
     "awsTestQualificationVariable": "DEMO_API_AWS_TEST_QUALIFICATION_ENABLED",
+    "awsProdPromotionVariable": "DEMO_API_AWS_PROD_PROMOTION_ENABLED",
     "automaticPromotion": false,
     "automaticTestPromotionPreparation": true,
+    "automaticProdPromotionPreparation": true,
     "automaticPullRequestMerge": false
   }
 }

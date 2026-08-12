@@ -219,8 +219,15 @@ jobs:
             echo "${output_name}=${value}" >> "${GITHUB_OUTPUT}"
           done
           target_environment="$(jq --raw-output '.targetEnvironment // "aws-dev"' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
-          if [[ "${target_environment}" != "aws-dev" && "${target_environment}" != "aws-test" ]]; then
+          if [[ "${target_environment}" != "aws-dev" && \
+                "${target_environment}" != "aws-test" && \
+                "${target_environment}" != "aws-prod" ]]; then
             target_environment="aws-dev"
+          fi
+          bundle_environment="aws-dev"
+          if [[ "$(jq --raw-output '.recommendedAction' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")" == \
+                "prepare-prod-promotion" ]]; then
+            bundle_environment="aws-test"
           fi
           {
             echo "dispatch-authorized=$(jq --raw-output '.dispatchAuthorized' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
@@ -228,8 +235,8 @@ jobs:
             echo "source-commit=$(jq --raw-output '.activeRelease.sourceCommit // empty' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
             echo "image-digest=$(jq --raw-output '.activeRelease.imageDigest // empty' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
             echo "release-file-sha256=$(jq --raw-output --arg environment "${target_environment}" '.releases[$environment].sha256' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
-            echo "qualification-bundle-path=$(jq --raw-output '.qualificationBundles["aws-dev"].ref // empty' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
-            echo "qualification-bundle-sha256=$(jq --raw-output '.qualificationBundles["aws-dev"].sha256 // empty' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
+            echo "qualification-bundle-path=$(jq --raw-output --arg environment "${bundle_environment}" '.qualificationBundles[$environment].ref // empty' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
+            echo "qualification-bundle-sha256=$(jq --raw-output --arg environment "${bundle_environment}" '.qualificationBundles[$environment].sha256 // empty' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Publish orchestration summary
@@ -255,11 +262,12 @@ jobs:
             echo "- aws-dev qualification enabled: \`${{ vars.DEMO_API_AWS_DEV_QUALIFICATION_ENABLED == 'true' }}\`"
             echo "- aws-test Promotion enabled: \`${{ vars.DEMO_API_AWS_TEST_PROMOTION_ENABLED == 'true' }}\`"
             echo "- aws-test qualification enabled: \`${{ vars.DEMO_API_AWS_TEST_QUALIFICATION_ENABLED == 'true' }}\`"
+            echo "- aws-prod Promotion enabled: \`${{ vars.DEMO_API_AWS_PROD_PROMOTION_ENABLED == 'true' }}\`"
             if [[ -n "${pr_url}" ]]; then
               echo "- Existing pull request: ${pr_url}"
             fi
             echo
-            echo "v0.10.5 may prepare one reviewed dev-to-test release PR or qualify dev/test after the explicit gates. It never merges, writes Kubernetes, creates an environment, or prepares production."
+            echo "v0.10.6 may prepare reviewed dev-to-test or test-to-prod release PRs after their explicit gates. It never merges, writes Kubernetes, creates an environment, or performs production runtime qualification."
           } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Upload derived snapshot and decision
@@ -314,6 +322,50 @@ jobs:
             echo "- Recommended action: \`prepare-test-promotion\`"
             echo
             echo "Set \`DEMO_API_AWS_TEST_PROMOTION_ENABLED=true\` only when reviewed dev-to-test PR preparation is intended."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  prepare-prod-promotion:
+    name: Prepare approved aws-test to aws-prod Promotion
+    needs: derive
+    if: >-
+      needs.derive.outputs.recommended-action == 'prepare-prod-promotion' &&
+      needs.derive.outputs.dispatch-authorized == 'true' &&
+      vars.DEMO_API_AWS_PROD_PROMOTION_ENABLED == 'true'
+    permissions:
+      contents: write
+      packages: read
+      pull-requests: write
+    uses: ./.github/workflows/demo-api-promote-environment.yaml
+    with:
+      source_environment: aws-test
+      target_environment: aws-prod
+      qualification_mode: qualification-bundle
+      qualification_bundle_path: ${{ needs.derive.outputs.qualification-bundle-path }}
+      qualification_bundle_sha256: ${{ needs.derive.outputs.qualification-bundle-sha256 }}
+      release_id: ${{ needs.derive.outputs.release-id }}
+      control_plane_sha: ${{ needs.derive.outputs.control-plane-sha }}
+
+  prod-promotion-disabled:
+    name: Report disabled aws-prod Promotion preparation
+    needs: derive
+    if: >-
+      needs.derive.outputs.recommended-action == 'prepare-prod-promotion' &&
+      vars.DEMO_API_AWS_PROD_PROMOTION_ENABLED != 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    steps:
+      - name: Publish safe disabled result
+        run: |
+          {
+            echo "### demo-api aws-prod Promotion"
+            echo
+            echo "- Status: \`automation-disabled\`"
+            echo "- Release: \`${{ needs.derive.outputs.release-id }}\`"
+            echo "- Recommended action: \`prepare-prod-promotion\`"
+            echo
+            echo "Set \`DEMO_API_AWS_PROD_PROMOTION_ENABLED=true\` only when the protected aws-prod Environment reviewers are configured and production PR preparation is intended."
           } >> "${GITHUB_STEP_SUMMARY}"
 
   static-qualification:

@@ -19,7 +19,7 @@ fresh aws-dev Qualification Bundle on main
   -> trusted read-only aws-test runtime qualification
   -> reviewed aws-test Qualification Bundle PR
   -> human review and merge
-  -> prod-approval / prepare-prod-promotion, dispatchAuthorized=false
+  -> prod-approval / prepare-prod-promotion, dispatchAuthorized=true
 ```
 
 ## Activation switches
@@ -135,8 +135,10 @@ targetEnvironment: aws-prod
 dispatchAuthorized: false
 ```
 
-v0.10.5 contains no job that prepares prod, obtains prod runtime access, or
-mutates production. That boundary remains deferred to v0.10.6.
+v0.10.5 itself contains no job that prepares prod. v0.10.6 adds only the
+Environment-approved release-only PR preparation described in
+`docs/AWS_PROD_CONTROLLED_PROMOTION.md`; it still provides no prod runtime
+access or direct production mutation.
 
 ## Offline validation
 

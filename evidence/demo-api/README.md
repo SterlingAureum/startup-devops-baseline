@@ -39,4 +39,7 @@ legacy v0.9 static/runtime records remain valid for the manual Promotion
 Runbook, but they are not accepted as a substitute for the aws-dev Bundle in
 the v0.10 automated path. Automated dev-to-test preparation accepts only the
 merged aws-dev Bundle; aws-test qualification produces its own Bundle only
-after the explicit reviewed Canary gate.
+after the explicit reviewed Canary gate. v0.10.6 accepts that merged, fresh
+aws-test Bundle as the sole automated source qualification for the reviewed
+test-to-prod release PR. It does not create a prod Bundle or claim production
+runtime qualification.

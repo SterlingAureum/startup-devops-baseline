@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.5",
+  "schemaVersion": "v0.10.6",
   "application": "demo-api",
   "defaultRef": "refs/heads/main",
   "executionBoundary": {
@@ -192,12 +192,12 @@
   ],
   "orchestration": {
     "contract": "delivery/contracts/demo-api-orchestrator.json",
-    "executionMode": "bounded-dev-test-automation",
+    "executionMode": "bounded-reviewed-promotion",
     "stageDispatch": true
   },
   "deferredStages": {
     "runtimeQualification": "v0.10.5-dispatched-aws-dev-and-aws-test",
     "qualificationBundle": "v0.10.5-implemented-dev-and-test",
-    "productionPromotion": "v0.10.6-deferred"
+    "productionPromotion": "v0.10.6-reviewed-pr-preparation"
   }
 }

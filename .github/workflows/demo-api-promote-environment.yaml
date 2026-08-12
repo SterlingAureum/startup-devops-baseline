@@ -180,10 +180,13 @@ jobs:
               fi
               ;;
             qualification-bundle)
-              if [[ "${SOURCE_ENVIRONMENT}->${TARGET_ENVIRONMENT}" != "aws-dev->aws-test" ]]; then
-                echo "::error::Automated Bundle mode permits only aws-dev -> aws-test."
-                exit 1
-              fi
+              case "${SOURCE_ENVIRONMENT}->${TARGET_ENVIRONMENT}" in
+                aws-dev-\>aws-test|aws-test-\>aws-prod) ;;
+                *)
+                  echo "::error::Automated Bundle mode permits only aws-dev -> aws-test or aws-test -> aws-prod."
+                  exit 1
+                  ;;
+              esac
               if [[ -n "${EVIDENCE_RUN_ID}${RUNTIME_EVIDENCE_ID}" ]]; then
                 echo "::error::Qualification Bundle mode rejects legacy evidence inputs."
                 exit 1
@@ -191,7 +194,7 @@ jobs:
               if [[ ! "${RELEASE_ID}" =~ ^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$ || \
                     ! "${CONTROL_PLANE_SHA}" =~ ^[0-9a-f]{40}$ || \
                     ! "${QUALIFICATION_BUNDLE_SHA256}" =~ ^[0-9a-f]{64}$ || \
-                    ! "${QUALIFICATION_BUNDLE_PATH}" =~ ^evidence/demo-api/qualification/aws-dev/${RELEASE_ID}/[1-9][0-9]*-[1-9][0-9]*\.json$ ]]; then
+                    ! "${QUALIFICATION_BUNDLE_PATH}" =~ ^evidence/demo-api/qualification/${SOURCE_ENVIRONMENT}/${RELEASE_ID}/[1-9][0-9]*-[1-9][0-9]*\.json$ ]]; then
                 echo "::error::Qualification Bundle inputs violate the immutable identity contract."
                 exit 1
               fi
@@ -265,14 +268,15 @@ jobs:
             ./scripts/validate-demo-api-qualification-bundle.py \
               --bundle "${qualification_bundle_snapshot}"
             jq --exit-status \
+              --arg environment "${SOURCE_ENVIRONMENT}" \
               --arg release_id "${RELEASE_ID}" \
               --arg release_sha "${source_release_sha256}" '
-                .environment == "aws-dev" and
+                .environment == $environment and
                 .releaseId == $release_id and
                 .release.sha256 == $release_sha and
                 .status == "qualified"
               ' "${qualification_bundle_snapshot}" >/dev/null || {
-                echo "::error::Qualification Bundle does not bind the current aws-dev release."
+                echo "::error::Qualification Bundle does not bind the current ${SOURCE_ENVIRONMENT} release."
                 exit 1
               }
           fi

@@ -90,7 +90,7 @@ def require(condition: bool, message: str) -> None:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.3", "Bad schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.4", "Bad schemaVersion")
 
     application = contract.get("application")
     require(isinstance(application, dict), "application must be an object")
@@ -106,11 +106,29 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
         == "delivery/contracts/demo-api-orchestrator.json",
         "Event-driven orchestrator contract is not linked",
     )
+    require(
+        application.get("qualificationBundleSchema")
+        == "delivery/contracts/qualification-bundle.schema.json",
+        "Qualification Bundle schema is not linked",
+    )
+    require(
+        application.get("qualificationScopeContract")
+        == "delivery/contracts/demo-api-qualification-scope.json",
+        "Qualification scope contract is not linked",
+    )
+    require(
+        application.get("qualificationBundleWorkflow")
+        == ".github/workflows/demo-api-record-qualification-bundle.yaml",
+        "Qualification Bundle workflow is not linked",
+    )
     if check_files:
-        require(
-            (root / application["orchestratorContract"]).is_file(),
-            "Event-driven orchestrator contract is missing",
-        )
+        for field in (
+            "orchestratorContract",
+            "qualificationBundleSchema",
+            "qualificationScopeContract",
+            "qualificationBundleWorkflow",
+        ):
+            require((root / application[field]).is_file(), f"Application file is missing: {field}")
     template = application.get("releaseIdTemplate")
     require(template == EXPECTED_RELEASE_TEMPLATE, "Unsafe release ID template")
     require("environment" not in template.lower(), "Release ID includes environment")
@@ -145,6 +163,9 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     prod = environments[-1]
     require(prod.get("environmentApprovalRequired") is True, "Production Environment approval required")
     require(all(value == "manual" for value in prod["mergePolicy"].values()), "Production auto-merge forbidden")
+    require(environments[0].get("automaticQualification") == "repository-variable-gated", "aws-dev qualification gate changed")
+    require(environments[1].get("automaticQualification") is False, "aws-test automatic qualification enabled early")
+    require(environments[2].get("automaticQualification") is False, "aws-prod automatic qualification enabled")
 
     promotion = contract.get("promotion")
     require(isinstance(promotion, dict), "promotion must be an object")
@@ -212,6 +233,9 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     require(orchestration.get("mutableCurrentStateFile") is False, "Mutable current-state file forbidden")
     require(orchestration.get("resumeWithoutRebuild") is True, "Resume must preserve image identity")
     require(orchestration.get("environmentAbsenceIsWaiting") is True, "Absent environment must be a waiting condition")
+    require(orchestration.get("awsDevQualificationVariable") == "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED", "aws-dev activation variable changed")
+    require(orchestration.get("automaticPromotion") is False, "Automatic Promotion enabled early")
+    require(orchestration.get("automaticPullRequestMerge") is False, "Automatic PR merge enabled")
 
 
 def validate_schema(contract: dict[str, Any], schema: dict[str, Any]) -> None:

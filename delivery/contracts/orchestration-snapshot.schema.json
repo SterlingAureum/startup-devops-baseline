@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aureumstack.com/schemas/orchestration-snapshot-v0.10.2.json",
+  "$id": "https://aureumstack.com/schemas/orchestration-snapshot-v0.10.4.json",
   "title": "Read-only demo-api orchestration fact snapshot",
   "type": "object",
   "additionalProperties": false,
@@ -16,13 +16,14 @@
     "activeRelease",
     "releases",
     "evidence",
+    "qualificationBundles",
     "pullRequests",
     "environmentAvailability",
     "derivedAt"
   ],
   "properties": {
     "schemaVersion": {
-      "const": "v0.10.2"
+      "const": "v0.10.4"
     },
     "application": {
       "const": "demo-api"
@@ -119,6 +120,18 @@
         },
         "aws-test": {
           "$ref": "#/$defs/evidencePair"
+        }
+      }
+    },
+    "qualificationBundles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aws-dev"
+      ],
+      "properties": {
+        "aws-dev": {
+          "$ref": "#/$defs/evidenceFact"
         }
       }
     },
@@ -316,7 +329,8 @@
           "enum": [
             "environment-release",
             "static-evidence",
-            "runtime-evidence"
+            "runtime-evidence",
+            "qualification-bundle"
           ]
         },
         "targetEnvironment": {

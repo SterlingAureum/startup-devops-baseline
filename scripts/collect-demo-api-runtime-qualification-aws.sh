@@ -13,6 +13,8 @@ OUTPUT_FILE="${OUTPUT_FILE:-}"
 WORKFLOW_RUN_ID="${GITHUB_RUN_ID:-1}"
 WORKFLOW_RUN_ATTEMPT="${GITHUB_RUN_ATTEMPT:-1}"
 RUNNER_NAME_VALUE="${RUNNER_NAME:-local-runtime-executor}"
+WAIT_TIMEOUT_SECONDS="${WAIT_TIMEOUT_SECONDS:-900}"
+WAIT_INTERVAL_SECONDS="${WAIT_INTERVAL_SECONDS:-15}"
 
 for command in aws curl git jq kubectl python3 sha256sum; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -20,6 +22,14 @@ for command in aws curl git jq kubectl python3 sha256sum; do
     exit 1
   }
 done
+
+if [[ ! "${WAIT_TIMEOUT_SECONDS}" =~ ^[1-9][0-9]*$ || \
+      ! "${WAIT_INTERVAL_SECONDS}" =~ ^[1-9][0-9]*$ || \
+      "${WAIT_TIMEOUT_SECONDS}" -gt 1800 || \
+      "${WAIT_INTERVAL_SECONDS}" -gt 60 ]]; then
+  echo "Runtime wait settings must be positive and bounded." >&2
+  exit 1
+fi
 
 case "${ENVIRONMENT}" in
   aws-dev)
@@ -138,17 +148,23 @@ for denied_check in \
   fi
 done
 
-if ! kubectl -n argocd get application "${ARGO_APPLICATION}" -o json \
-  >"${WORK_DIR}/application.json"; then
-  write_result failed argo_not_converged
-  exit 1
-fi
-if ! jq --exit-status --arg revision "${CONTROL_PLANE_SHA}" '
-  .spec.source.targetRevision == "main" and
-  .status.sync.status == "Synced" and
-  .status.health.status == "Healthy" and
-  .status.sync.revision == $revision
-' "${WORK_DIR}/application.json" >/dev/null; then
+QUALIFICATION_DEADLINE=$((SECONDS + WAIT_TIMEOUT_SECONDS))
+ARGO_CONVERGED=false
+while ((SECONDS < QUALIFICATION_DEADLINE)); do
+  if kubectl -n argocd get application "${ARGO_APPLICATION}" -o json \
+      >"${WORK_DIR}/application.json" 2>/dev/null && \
+     jq --exit-status --arg revision "${CONTROL_PLANE_SHA}" '
+       .spec.source.targetRevision == "main" and
+       .status.sync.status == "Synced" and
+       .status.health.status == "Healthy" and
+       .status.sync.revision == $revision
+     ' "${WORK_DIR}/application.json" >/dev/null; then
+    ARGO_CONVERGED=true
+    break
+  fi
+  sleep "${WAIT_INTERVAL_SECONDS}"
+done
+if [[ "${ARGO_CONVERGED}" != "true" ]]; then
   write_result failed argo_not_converged
   exit 1
 fi
@@ -158,33 +174,43 @@ ROLLOUT_PHASE="not-applicable"
 ANALYSIS_RUN_NAME=""
 ANALYSIS_RUN_PHASE="not-applicable"
 if [[ "${WORKLOAD_KIND}" == "Deployment" ]]; then
-  if ! kubectl -n startup-apps get deployment demo-api -o json \
-    >"${WORK_DIR}/workload.json"; then
-    write_result failed rollout_unhealthy
-    exit 1
-  fi
-  if ! jq --exit-status '
-    (.status.observedGeneration | tostring) == (.metadata.generation | tostring) and
-    .status.readyReplicas == .spec.replicas and
-    .status.updatedReplicas == .spec.replicas and
-    .status.availableReplicas == .spec.replicas
-  ' "${WORK_DIR}/workload.json" >/dev/null; then
+  WORKLOAD_READY=false
+  while ((SECONDS < QUALIFICATION_DEADLINE)); do
+    if kubectl -n startup-apps get deployment demo-api -o json \
+        >"${WORK_DIR}/workload.json" 2>/dev/null && \
+       jq --exit-status '
+         (.status.observedGeneration | tostring) == (.metadata.generation | tostring) and
+         .status.readyReplicas == .spec.replicas and
+         .status.updatedReplicas == .spec.replicas and
+         .status.availableReplicas == .spec.replicas
+       ' "${WORK_DIR}/workload.json" >/dev/null; then
+      WORKLOAD_READY=true
+      break
+    fi
+    sleep "${WAIT_INTERVAL_SECONDS}"
+  done
+  if [[ "${WORKLOAD_READY}" != "true" ]]; then
     write_result failed rollout_unhealthy
     exit 1
   fi
 else
-  if ! kubectl -n startup-apps get rollouts.argoproj.io demo-api -o json \
-    >"${WORK_DIR}/workload.json"; then
-    write_result failed rollout_unhealthy
-    exit 1
-  fi
-  if ! jq --exit-status '
-    (.status.observedGeneration | tostring) == (.metadata.generation | tostring) and
-    .status.phase == "Healthy" and
-    .status.currentPodHash == .status.stableRS and
-    .status.availableReplicas == .spec.replicas and
-    .status.updatedReplicas == .spec.replicas
-  ' "${WORK_DIR}/workload.json" >/dev/null; then
+  WORKLOAD_READY=false
+  while ((SECONDS < QUALIFICATION_DEADLINE)); do
+    if kubectl -n startup-apps get rollouts.argoproj.io demo-api -o json \
+        >"${WORK_DIR}/workload.json" 2>/dev/null && \
+       jq --exit-status '
+         (.status.observedGeneration | tostring) == (.metadata.generation | tostring) and
+         .status.phase == "Healthy" and
+         .status.currentPodHash == .status.stableRS and
+         .status.availableReplicas == .spec.replicas and
+         .status.updatedReplicas == .spec.replicas
+       ' "${WORK_DIR}/workload.json" >/dev/null; then
+      WORKLOAD_READY=true
+      break
+    fi
+    sleep "${WAIT_INTERVAL_SECONDS}"
+  done
+  if [[ "${WORKLOAD_READY}" != "true" ]]; then
     write_result failed rollout_unhealthy
     exit 1
   fi

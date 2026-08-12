@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.3",
+  "schemaVersion": "v0.10.4",
   "application": "demo-api",
   "workflow": ".github/workflows/demo-api-runtime-qualification.yaml",
   "resultSchema": "delivery/contracts/runtime-qualification.schema.json",
@@ -113,6 +113,13 @@
     "durableEvidence": false,
     "allowCredentials": false,
     "allowKubeconfig": false
+  },
+  "convergenceWait": {
+    "maximumSeconds": 900,
+    "intervalSeconds": 15,
+    "passiveOnly": true,
+    "argoSyncAllowed": false,
+    "rolloutMutationAllowed": false
   },
   "production": {
     "enabled": false,

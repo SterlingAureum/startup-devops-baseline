@@ -239,8 +239,10 @@ Incremental scope:
 - v0.10.3.2 - storage-bounded trusted-runtime mutation fixtures that exclude
   local Terraform caches, state, plans, and real variable files while
   retaining dependency locks and tracked configuration - delivered
-- v0.10.4 - automatic aws-dev release preparation, GitOps convergence,
-  runtime validation, and unified qualification evidence - planned
+- v0.10.4 - repository-variable-gated post-release aws-dev static
+  qualification, passive GitOps convergence, trusted runtime validation,
+  deterministic deployment-scope hashing, and reviewed unified Qualification
+  Bundle evidence - delivered
 - v0.10.5 - automatic aws-dev to aws-test Promotion preparation, reviewed
   Canary progression, AnalysisRun verification, and test qualification - planned
 - v0.10.6 - automatic production Promotion preparation with retained aws-prod

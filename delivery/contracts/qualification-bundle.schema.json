@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aureumstack.com/schemas/qualification-bundle-v0.10.4.json",
+  "title": "demo-api unified aws-dev qualification bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "application",
+    "environment",
+    "releaseId",
+    "status",
+    "recordedAt",
+    "expiresAt",
+    "identity",
+    "release",
+    "qualificationScope",
+    "staticQualification",
+    "runtimeQualification",
+    "orchestration"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "v0.10.4" },
+    "application": { "const": "demo-api" },
+    "environment": { "const": "aws-dev" },
+    "releaseId": { "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$" },
+    "status": { "const": "qualified" },
+    "recordedAt": { "type": "string", "format": "date-time" },
+    "expiresAt": { "type": "string", "format": "date-time" },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceRepository", "sourceCommit", "imageRepository", "imageTag", "imageDigest", "buildWorkflowRunId"],
+      "properties": {
+        "sourceRepository": { "const": "SterlingAureum/startup-devops-baseline" },
+        "sourceCommit": { "pattern": "^[0-9a-f]{40}$" },
+        "imageRepository": { "const": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api" },
+        "imageTag": { "pattern": "^sha-[0-9a-f]{7}$" },
+        "imageDigest": { "pattern": "^sha256:[0-9a-f]{64}$" },
+        "buildWorkflowRunId": { "pattern": "^[1-9][0-9]*$" }
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "const": "apps/demo-api/helm/values/releases/aws-dev.yaml" },
+        "sha256": { "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "qualificationScope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["algorithm", "contract", "contractSha256", "scopeSha256", "files"],
+      "properties": {
+        "algorithm": { "const": "sha256-path-content-v1" },
+        "contract": { "const": "delivery/contracts/demo-api-qualification-scope.json" },
+        "contractSha256": { "pattern": "^[0-9a-f]{64}$" },
+        "scopeSha256": { "pattern": "^[0-9a-f]{64}$" },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": { "type": "string", "minLength": 1 },
+              "sha256": { "pattern": "^[0-9a-f]{64}$" }
+            }
+          }
+        }
+      }
+    },
+    "staticQualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "expiresAt", "result"],
+      "properties": {
+        "sha256": { "pattern": "^[0-9a-f]{64}$" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "result": { "type": "object" }
+      }
+    },
+    "runtimeQualification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sha256", "result"],
+      "properties": {
+        "sha256": { "pattern": "^[0-9a-f]{64}$" },
+        "result": { "type": "object" }
+      }
+    },
+    "orchestration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "ref", "revision", "workflow", "workflowRunId", "workflowRunAttempt", "actor"],
+      "properties": {
+        "repository": { "const": "SterlingAureum/startup-devops-baseline" },
+        "ref": { "const": "refs/heads/main" },
+        "revision": { "pattern": "^[0-9a-f]{40}$" },
+        "workflow": { "const": ".github/workflows/demo-api-release-orchestrator.yaml" },
+        "workflowRunId": { "pattern": "^[1-9][0-9]*$" },
+        "workflowRunAttempt": { "pattern": "^[1-9][0-9]*$" },
+        "actor": { "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$" }
+      }
+    }
+  }
+}

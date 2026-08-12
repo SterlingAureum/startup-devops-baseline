@@ -77,11 +77,17 @@ v0.10.3.2 bounds trusted-runtime offline mutation-test storage by excluding
 local Terraform caches, state, plans, and real variable files from temporary
 repository copies, while retaining dependency lock and tracked configuration
 files. It changes no runtime or authorization behavior.
+v0.10.4 activates repository-variable-gated aws-dev qualification after a
+reviewed dev release reaches `main`. It combines same-run static and trusted
+runtime results into one scope-bound, self-contained Qualification Bundle PR,
+waits passively for GitOps convergence, and stops before aws-test Promotion.
+It neither rebuilds the image nor merges a PR, creates a cluster, syncs Argo
+CD, accesses production, or dispatches rollback.
 
 ## Current Version
 
 ```text
-v0.10.3.2-trusted-runtime-mutation-fixture-storage-fix
+v0.10.4-automated-aws-dev-qualification-unified-evidence
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -138,6 +144,12 @@ collection. An unavailable runner or absent disposable environment remains a
 safe wait; no GitHub-hosted fallback or automatic Terraform apply is allowed.
 The temporary runtime result becomes unified qualification evidence in
 v0.10.4.
+v0.10.4 adds deterministic qualification-scope hashing, same-run artifact
+binding, a reviewed append-only aws-dev Bundle, and the single authorized
+`qualify-aws-dev` orchestrator action. The explicit repository variable keeps
+the action disabled while disposable AWS environments and ephemeral runners
+are absent. After the Bundle merges, the planner recommends test Promotion but
+does not dispatch it.
 
 ## Platform Architecture
 

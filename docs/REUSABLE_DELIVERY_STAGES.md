@@ -3,8 +3,9 @@
 v0.10.1 turns the existing v0.9 delivery workflows into stable, reusable stage
 interfaces. The workflows retain their current manual or push entrypoints and
 also expose `workflow_call` inputs and outputs for the event-driven orchestrator.
-v0.10.2 now consumes their contracts as read-only planning inputs; actual stage
-dispatch remains disabled until the environment-specific automation increments.
+v0.10.2 consumed their contracts as read-only planning inputs. v0.10.4 now
+dispatches only static `artifact-only` qualification, the separate trusted
+aws-dev runtime executor, and the unified Bundle stage.
 
 The v0.10.1 increment did not add the orchestrator and does not grant GitHub-hosted
 runners access to AWS or EKS.
@@ -15,6 +16,7 @@ runners access to AWS or EKS.
 | --- | --- | --- |
 | Image publish | `demo-api-image-publish.yaml` | Immutable digest, metadata, attestations, and optional aws-dev release PR |
 | Static qualification | `demo-api-record-release-evidence.yaml` | Reviewable static-evidence-only PR |
+| Qualification Bundle | `demo-api-record-qualification-bundle.yaml` | Reviewable, unified aws-dev qualification-only PR |
 | Environment promotion | `demo-api-promote-environment.yaml` | Reviewable target-release-only PR |
 | Rollback handoff | `demo-api-rollback.yaml` | Reviewable historical target-release-only PR |
 
@@ -28,7 +30,7 @@ promotion edges, and mutation scopes.
 The existing operator entrypoints remain valid:
 
 - source changes on `main` still invoke image publishing;
-- every stage retains `workflow_dispatch` for reviewed manual operation;
+- the original four stages retain `workflow_dispatch` for reviewed manual operation;
 - the input names used by v0.9 remain unchanged;
 - existing scripts remain the implementation primitives;
 - evidence and release files retain their v0.9 schemas and paths.
@@ -41,6 +43,10 @@ behavior.
 
 `workflow_call` is additive. A future caller can invoke the same reviewed
 implementation without copying its shell logic into a new workflow.
+
+The Qualification Bundle is intentionally `workflow_call`-only. It accepts
+same-run artifact names from the orchestrator and has no manual interface for
+selecting arbitrary historical artifacts.
 
 ## Stage Interface Rules
 
@@ -71,6 +77,7 @@ Important output groups are:
 
 - image identity: repository, tag, digest, and metadata artifact name;
 - qualification: evidence file, image reference, and qualified main revision;
+- unified qualification: Bundle path, PR URL, and same-run static/runtime identity;
 - promotion: target release path and promoted image/source identity;
 - rollback: historical revision and restored image identity;
 - pull-request result: stage status and PR URL.
@@ -80,7 +87,7 @@ be interpreted as a completed gate.
 
 ## Execution and Production Boundaries
 
-All four stages run on GitHub-hosted runners and keep:
+All five repository/PR stages run on GitHub-hosted runners and keep:
 
 ```text
 AWS credentials: none
@@ -100,13 +107,13 @@ rollback automatically.
 
 ## Runtime Qualification Boundary
 
-AWS runtime qualification is deliberately absent from the reusable
-GitHub-hosted stage catalog. The existing restricted operator script remains
-the v0.9 compatibility path. v0.10.3 will introduce a separate trusted-runtime
-stage using protected `main`, environment-isolated permissions, and short-lived
-OIDC credentials.
+AWS runtime qualification remains separate from the reusable GitHub-hosted
+repository/PR stage catalog. v0.10.3 provides the protected-main,
+environment-isolated, short-lived OIDC executor. v0.10.4 dispatches that
+executor only for aws-dev and passes its secret-free result to the Bundle
+stage through the current Workflow run.
 
-This separation prevents the v0.10.2 GitHub-hosted orchestrator from gaining
+This separation prevents the GitHub-hosted derivation and Bundle jobs from gaining
 cluster access simply because it can call reusable delivery stages.
 
 ## Retry and Idempotency Scope

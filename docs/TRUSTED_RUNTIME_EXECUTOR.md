@@ -5,10 +5,11 @@ for live AWS and Kubernetes facts. It qualifies one immutable `demo-api`
 release in `aws-dev` or `aws-test` from protected `main`, using an ephemeral
 self-hosted runner and short-lived GitHub OIDC credentials.
 
-This checkpoint does not connect the executor to the v0.10.2 orchestrator.
-The operator starts it manually after the workflow, GitHub Environments, IAM
-roles, EKS access entries, RBAC, and runner are available. v0.10.4 consumes
-the temporary result and combines it with static qualification.
+v0.10.4 connects only the `aws-dev` executor to the orchestrator when the
+`DEMO_API_AWS_DEV_QUALIFICATION_ENABLED=true` repository variable is present.
+The manual entrypoint remains available for diagnostics and aws-test remains
+outside automatic dispatch. The temporary aws-dev result is combined with a
+same-run static result in a reviewed, durable Qualification Bundle.
 
 ## Trust boundary
 
@@ -126,6 +127,10 @@ The trusted collector verifies:
 - every selected Pod ready and every actual `imageID` digest-matched;
 - HTTPS `/health`, `/ready`, and `/version` identity.
 
+For orchestrated qualification it waits passively for at most 900 seconds,
+polling every 15 seconds for the exact Argo revision and workload readiness.
+The wait does not sync Argo CD or mutate a Deployment, Rollout, or AnalysisRun.
+
 The only uploaded path is:
 
 ```text
@@ -133,8 +138,9 @@ runtime-qualification/result.json
 ```
 
 The writer rejects fields named like Secrets, tokens, credentials, passwords,
-or kubeconfigs. The artifact is retained for 14 days and is not durable,
-reviewed Evidence.
+or kubeconfigs. The artifact is retained for 14 days and is not durable by
+itself. v0.10.4 accepts it only from the same orchestrator run and embeds it in
+a reviewed aws-dev Qualification Bundle.
 
 ## Result semantics
 

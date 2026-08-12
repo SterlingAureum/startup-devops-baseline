@@ -72,16 +72,38 @@ EXPECTED = {
     "static-qualification": {
         "workflow": ".github/workflows/demo-api-record-release-evidence.yaml",
         "entrypoints": ["workflow-dispatch", "workflow-call"],
-        "inputs": {"environment": "string"},
+        "inputs": {
+            "environment": "string",
+            "mode": "string",
+            "expected_control_plane_sha": "string",
+        },
         "outputs": [
             "status",
             "pr_url",
             "evidence_file",
             "image_reference",
             "base_revision",
+            "artifact_name",
+            "source_commit",
+            "image_digest",
+            "release_file_sha256",
         ],
         "allowedEnvironments": ["aws-dev", "aws-test"],
-        "mutationScope": ["static-evidence-only-pr"],
+        "mutationScope": ["same-run-static-artifact", "optional-static-evidence-only-pr"],
+    },
+    "qualification-bundle": {
+        "workflow": ".github/workflows/demo-api-record-qualification-bundle.yaml",
+        "entrypoints": ["workflow-call"],
+        "inputs": {
+            "environment": "string",
+            "release_id": "string",
+            "control_plane_sha": "string",
+            "static_artifact_name": "string",
+            "runtime_artifact_name": "string",
+        },
+        "outputs": ["status", "pr_url", "bundle_file"],
+        "allowedEnvironments": ["aws-dev"],
+        "mutationScope": ["qualification-bundle-only-pr"],
     },
     "environment-promotion": {
         "workflow": ".github/workflows/demo-api-promote-environment.yaml",
@@ -140,7 +162,7 @@ def workflow_call_block(text: str) -> str:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.3", "Bad application schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.4", "Bad application schemaVersion")
     require(contract.get("application") == "demo-api", "Unexpected application")
     require(contract.get("defaultRef") == "refs/heads/main", "Default ref must be main")
 
@@ -175,7 +197,10 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
         require(workflow_path.is_file(), f"{stage_id}: workflow missing")
         workflow = workflow_path.read_text()
         call_block = workflow_call_block(workflow)
-        require("\n  workflow_dispatch:\n" in workflow, f"{stage_id}: manual compatibility entrypoint missing")
+        if "workflow-dispatch" in stage["entrypoints"]:
+            require("\n  workflow_dispatch:\n" in workflow, f"{stage_id}: manual compatibility entrypoint missing")
+        else:
+            require("\n  workflow_dispatch:\n" not in workflow, f"{stage_id}: unexpected manual entrypoint")
         require(not re.search(r"(?m)^  pull_request:\s*$", workflow), f"{stage_id}: PR code entrypoint forbidden")
         require("runs-on: ubuntu-latest" in workflow, f"{stage_id}: unexpected runner")
         require(not re.search(r"(?i)configure-aws-credentials|\baws\s+eks\b|\bkubectl\b", workflow), f"{stage_id}: AWS/EKS access forbidden")
@@ -210,15 +235,15 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
         orchestration.get("contract") == "delivery/contracts/demo-api-orchestrator.json",
         "Unexpected orchestrator contract",
     )
-    require(orchestration.get("executionMode") == "plan-only", "Stage dispatch activated too early")
-    require(orchestration.get("stageDispatch") is False, "Reusable stage dispatch must remain disabled")
+    require(orchestration.get("executionMode") == "bounded-aws-dev-qualification", "Unexpected execution mode")
+    require(orchestration.get("stageDispatch") is True, "aws-dev stage dispatch is not active")
     if check_files:
         require((root / orchestration["contract"]).is_file(), "Orchestrator contract is missing")
 
     deferred = contract.get("deferredStages")
     require(isinstance(deferred, dict), "Missing deferred stage declarations")
-    require(deferred.get("runtimeQualification") == "v0.10.3-implemented-not-dispatched", "Runtime qualification integration state changed")
-    require(deferred.get("qualificationBundle") == "v0.10.4-plus", "Qualification bundle must remain deferred")
+    require(deferred.get("runtimeQualification") == "v0.10.4-dispatched-aws-dev-only", "Runtime qualification integration state changed")
+    require(deferred.get("qualificationBundle") == "v0.10.4-implemented", "Qualification Bundle state changed")
 
 
 contract = load_json(contract_path)
@@ -237,12 +262,12 @@ mutations: list[tuple[str, Any]] = [
     ("automatic environment creation", lambda c: c["executionBoundary"].__setitem__("automaticEnvironmentCreation", True)),
     ("missing workflow-call", lambda c: c["stages"][0]["entrypoints"].remove("workflow-call")),
     ("PR code entrypoint", lambda c: c["stages"][1]["entrypoints"].append("pull-request")),
-    ("skipped test", lambda c: c["stages"][2].__setitem__("allowedEdges", ["aws-dev->aws-prod"])),
-    ("production omitted", lambda c: c["stages"][3].__setitem__("allowedEnvironments", ["aws-dev", "aws-test"])),
+    ("skipped test", lambda c: c["stages"][3].__setitem__("allowedEdges", ["aws-dev->aws-prod"])),
+    ("production omitted", lambda c: c["stages"][4].__setitem__("allowedEnvironments", ["aws-dev", "aws-test"])),
     ("undeclared stage", lambda c: c["stages"].append(copy.deepcopy(c["stages"][0]))),
-    ("missing stage output", lambda c: c["stages"][2]["outputs"].remove("image_digest")),
+    ("missing stage output", lambda c: c["stages"][1]["outputs"].remove("image_digest")),
     ("runtime moved to hosted", lambda c: c["deferredStages"].__setitem__("runtimeQualification", "github-hosted")),
-    ("stage dispatch activated", lambda c: c["orchestration"].__setitem__("stageDispatch", True)),
+    ("stage dispatch disabled", lambda c: c["orchestration"].__setitem__("stageDispatch", False)),
 ]
 
 for name, mutate in mutations:

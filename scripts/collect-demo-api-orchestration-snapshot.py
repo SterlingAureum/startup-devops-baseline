@@ -14,6 +14,9 @@ import subprocess
 import sys
 from typing import Any
 
+from demo_api_qualification_scope import calculate as calculate_qualification_scope
+from demo_api_qualification_bundle import validate as validate_qualification_bundle
+
 
 ENVIRONMENTS = ("aws-dev", "aws-test", "aws-prod")
 STATIC_MAX_AGE = 604800
@@ -171,8 +174,13 @@ def load_open_prs(repository: str, fixture: Path | None) -> list[dict[str, Any]]
         files = []
         for item in details.get("files", []):
             path = item.get("path", "")
-            if re.fullmatch(r"apps/demo-api/helm/values/releases/aws-(dev|test|prod)\.yaml", path) or re.fullmatch(
-                r"evidence/demo-api/(?:runtime/)?aws-(dev|test)/[^/]+\.json", path
+            if (
+                re.fullmatch(r"apps/demo-api/helm/values/releases/aws-(dev|test|prod)\.yaml", path)
+                or re.fullmatch(r"evidence/demo-api/(?:runtime/)?aws-(dev|test)/[^/]+\.json", path)
+                or re.fullmatch(
+                    r"evidence/demo-api/qualification/aws-dev/demo-api-[0-9a-f]{12}-[0-9a-f]{12}/[^/]+\.json",
+                    path,
+                )
             ):
                 files.append(
                     {
@@ -205,6 +213,33 @@ def identity_from_evidence(text: str, label: str) -> dict[str, str]:
     }
 
 
+def identity_from_bundle(text: str, label: str) -> tuple[dict[str, str], str]:
+    try:
+        document = json.loads(text)
+        identity = document["identity"]
+        release_sha256 = document["release"]["sha256"]
+    except (KeyError, json.JSONDecodeError) as exc:
+        fail(f"{label}: invalid Qualification Bundle: {exc}")
+    source_commit = identity.get("sourceCommit", "")
+    digest = identity.get("imageDigest", "")
+    if not SHA_PATTERN.fullmatch(source_commit) or not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+        fail(f"{label}: Qualification Bundle has an invalid immutable identity")
+    if not re.fullmatch(r"[0-9a-f]{64}", release_sha256):
+        fail(f"{label}: Qualification Bundle has an invalid release SHA-256")
+    value = {
+        "releaseId": f"demo-api-{source_commit[:12]}-{digest.removeprefix('sha256:')[:12]}",
+        "sourceRepository": identity.get("sourceRepository", ""),
+        "sourceCommit": source_commit,
+        "imageRepository": identity.get("imageRepository", ""),
+        "imageTag": identity.get("imageTag", ""),
+        "imageDigest": digest,
+        "buildWorkflowRunId": str(identity.get("buildWorkflowRunId", "")),
+    }
+    if document.get("releaseId") != value["releaseId"]:
+        fail(f"{label}: Qualification Bundle Release ID is inconsistent")
+    return value, release_sha256
+
+
 def classify_prs(raw_prs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     classified = []
     for pr in raw_prs:
@@ -220,11 +255,19 @@ def classify_prs(raw_prs: list[dict[str, Any]]) -> list[dict[str, Any]]:
         )
         static_match = re.fullmatch(r"evidence/demo-api/(aws-dev|aws-test)/[^/]+\.json", path)
         runtime_match = re.fullmatch(r"evidence/demo-api/runtime/(aws-dev|aws-test)/[^/]+\.json", path)
+        bundle_match = re.fullmatch(
+            r"evidence/demo-api/qualification/(aws-dev)/(demo-api-[0-9a-f]{12}-[0-9a-f]{12})/[^/]+\.json",
+            path,
+        )
         if release_match:
             kind = "environment-release"
             environment = release_match.group(1)
             identity = parse_release_text(content, f"PR #{pr['number']}:{path}")
             release_sha256 = hashlib.sha256(content.encode()).hexdigest()
+        elif bundle_match:
+            kind = "qualification-bundle"
+            environment = bundle_match.group(1)
+            identity, release_sha256 = identity_from_bundle(content, f"PR #{pr['number']}:{path}")
         elif static_match or runtime_match:
             kind = "runtime-evidence" if runtime_match else "static-evidence"
             environment = (runtime_match or static_match).group(1)
@@ -309,6 +352,56 @@ def matching_evidence(
     }
 
 
+def matching_bundle(
+    root: Path,
+    identity: dict[str, str] | None,
+    release_sha256: str,
+    scope_sha256: str,
+    now: datetime,
+) -> dict[str, Any]:
+    if identity is None:
+        return empty_evidence()
+    directory = root / f"evidence/demo-api/qualification/aws-dev/{identity['releaseId']}"
+    candidates: list[tuple[datetime, Path, dict[str, Any]]] = []
+    if directory.is_dir():
+        for path in directory.glob("*.json"):
+            try:
+                document = json.loads(path.read_text())
+                recorded_at = parse_utc(document["recordedAt"])
+                expires_at = parse_utc(document["expiresAt"])
+                validate_qualification_bundle(
+                    document,
+                    root=root,
+                    now=now,
+                    require_fresh=False,
+                )
+            except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+                continue
+            bundle_identity = document.get("identity", {})
+            if (
+                document.get("schemaVersion") == "v0.10.4"
+                and document.get("application") == "demo-api"
+                and document.get("environment") == "aws-dev"
+                and document.get("releaseId") == identity["releaseId"]
+                and document.get("status") == "qualified"
+                and bundle_identity.get("sourceCommit") == identity["sourceCommit"]
+                and bundle_identity.get("imageDigest") == identity["imageDigest"]
+                and document.get("release", {}).get("sha256") == release_sha256
+                and document.get("qualificationScope", {}).get("scopeSha256") == scope_sha256
+            ):
+                candidates.append((recorded_at, path, {**document, "_expiresAt": expires_at}))
+    if not candidates:
+        return empty_evidence()
+    recorded_at, path, document = max(candidates, key=lambda item: item[0])
+    state = "fresh" if recorded_at <= now <= document["_expiresAt"] else "stale"
+    return {
+        "state": state,
+        "id": f"{document['orchestration']['workflowRunId']}-{document['orchestration']['workflowRunAttempt']}",
+        "ref": str(path.relative_to(root)),
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
+
+
 def choose_active(
     operation: str,
     source_commit: str | None,
@@ -385,13 +478,23 @@ def main() -> None:
             "static": matching_evidence(root, environment, active, release_sha, "static", now),
             "runtime": matching_evidence(root, environment, active, release_sha, "runtime", now),
         }
+    scope = calculate_qualification_scope(root)
+    qualification_bundles = {
+        "aws-dev": matching_bundle(
+            root,
+            active,
+            releases["aws-dev"]["sha256"],
+            scope["scopeSha256"],
+            now,
+        )
+    }
 
     public_prs = []
     for item in classified:
         public_prs.append({key: value for key, value in item.items() if not key.startswith("_")})
 
     snapshot = {
-        "schemaVersion": "v0.10.2",
+        "schemaVersion": "v0.10.4",
         "application": "demo-api",
         "operation": args.operation,
         "policy": args.policy,
@@ -406,6 +509,7 @@ def main() -> None:
         "activeRelease": active,
         "releases": releases,
         "evidence": evidence,
+        "qualificationBundles": qualification_bundles,
         "pullRequests": public_prs,
         "environmentAvailability": {environment: "unknown" for environment in ENVIRONMENTS},
         "derivedAt": now.strftime("%Y-%m-%dT%H:%M:%SZ"),

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.3",
+  "schemaVersion": "v0.10.4",
   "application": {
     "name": "demo-api",
     "sourceRepository": "SterlingAureum/startup-devops-baseline",
@@ -10,6 +10,9 @@
     "orchestratorContract": "delivery/contracts/demo-api-orchestrator.json",
     "runtimeExecutorContract": "delivery/contracts/runtime-executor.json",
     "runtimeQualificationWorkflow": ".github/workflows/demo-api-runtime-qualification.yaml",
+    "qualificationBundleSchema": "delivery/contracts/qualification-bundle.schema.json",
+    "qualificationScopeContract": "delivery/contracts/demo-api-qualification-scope.json",
+    "qualificationBundleWorkflow": ".github/workflows/demo-api-record-qualification-bundle.yaml",
     "buildOnce": true
   },
   "environments": [
@@ -19,6 +22,7 @@
       "environmentFile": "apps/demo-api/helm/values/environments/aws-dev.yaml",
       "releaseFile": "apps/demo-api/helm/values/releases/aws-dev.yaml",
       "runtimeExecutor": "trusted-runtime",
+      "automaticQualification": "repository-variable-gated",
       "automaticClusterCreation": false,
       "environmentApprovalRequired": false,
       "mergePolicy": {
@@ -32,6 +36,7 @@
       "environmentFile": "apps/demo-api/helm/values/environments/aws-test.yaml",
       "releaseFile": "apps/demo-api/helm/values/releases/aws-test.yaml",
       "runtimeExecutor": "trusted-runtime",
+      "automaticQualification": false,
       "automaticClusterCreation": false,
       "environmentApprovalRequired": false,
       "mergePolicy": {
@@ -45,6 +50,7 @@
       "environmentFile": "apps/demo-api/helm/values/environments/aws-prod.yaml",
       "releaseFile": "apps/demo-api/helm/values/releases/aws-prod.yaml",
       "runtimeExecutor": "trusted-runtime",
+      "automaticQualification": false,
       "automaticClusterCreation": false,
       "environmentApprovalRequired": true,
       "mergePolicy": {
@@ -100,7 +106,7 @@
         "aws-test"
       ],
       "productionAccess": false,
-      "resultDurability": "temporary-actions-artifact",
+      "resultDurability": "temporary-artifact-plus-reviewed-aws-dev-bundle",
       "responsibilities": [
         "argocd-status",
         "rollout-status",
@@ -210,6 +216,8 @@
     "image-digest-and-attestation",
     "github-pull-requests-and-checks",
     "reviewed-qualification-evidence",
+    "reviewed-unified-qualification-bundle",
+    "qualification-scope-sha256",
     "argocd-application-status",
     "argo-rollout-and-analysisrun-status",
     "pod-image-id",
@@ -220,6 +228,9 @@
     "stateIsDerived": true,
     "mutableCurrentStateFile": false,
     "resumeWithoutRebuild": true,
-    "environmentAbsenceIsWaiting": true
+    "environmentAbsenceIsWaiting": true,
+    "awsDevQualificationVariable": "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
+    "automaticPromotion": false,
+    "automaticPullRequestMerge": false
   }
 }

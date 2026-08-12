@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.3",
+  "schemaVersion": "v0.10.4",
   "application": "demo-api",
   "defaultRef": "refs/heads/main",
   "executionBoundary": {
@@ -52,7 +52,9 @@
       ],
       "requiresProtectedMainForOrchestration": true,
       "inputs": {
-        "environment": "string"
+        "environment": "string",
+        "mode": "string",
+        "expected_control_plane_sha": "string"
       },
       "allowedEnvironments": [
         "aws-dev",
@@ -63,16 +65,53 @@
         "pr_url",
         "evidence_file",
         "image_reference",
-        "base_revision"
+        "base_revision",
+        "artifact_name",
+        "source_commit",
+        "image_digest",
+        "release_file_sha256"
       ],
       "primitiveScripts": [
         "scripts/write-demo-api-release-evidence.sh",
         "scripts/validate-demo-api-release-evidence.sh"
       ],
       "mutationScope": [
-        "static-evidence-only-pr"
+        "same-run-static-artifact",
+        "optional-static-evidence-only-pr"
       ],
       "environmentApproval": "target-environment"
+    },
+    {
+      "id": "qualification-bundle",
+      "workflow": ".github/workflows/demo-api-record-qualification-bundle.yaml",
+      "entrypoints": [
+        "workflow-call"
+      ],
+      "requiresProtectedMainForOrchestration": true,
+      "inputs": {
+        "environment": "string",
+        "release_id": "string",
+        "control_plane_sha": "string",
+        "static_artifact_name": "string",
+        "runtime_artifact_name": "string"
+      },
+      "allowedEnvironments": [
+        "aws-dev"
+      ],
+      "outputs": [
+        "status",
+        "pr_url",
+        "bundle_file"
+      ],
+      "primitiveScripts": [
+        "scripts/calculate-demo-api-qualification-scope.py",
+        "scripts/write-demo-api-qualification-bundle.py",
+        "scripts/validate-demo-api-qualification-bundle.py"
+      ],
+      "mutationScope": [
+        "qualification-bundle-only-pr"
+      ],
+      "environmentApproval": "not-applicable"
     },
     {
       "id": "environment-promotion",
@@ -146,11 +185,11 @@
   ],
   "orchestration": {
     "contract": "delivery/contracts/demo-api-orchestrator.json",
-    "executionMode": "plan-only",
-    "stageDispatch": false
+    "executionMode": "bounded-aws-dev-qualification",
+    "stageDispatch": true
   },
   "deferredStages": {
-    "runtimeQualification": "v0.10.3-implemented-not-dispatched",
-    "qualificationBundle": "v0.10.4-plus"
+    "runtimeQualification": "v0.10.4-dispatched-aws-dev-only",
+    "qualificationBundle": "v0.10.4-implemented"
   }
 }

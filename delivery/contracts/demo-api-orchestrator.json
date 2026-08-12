@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.2",
+  "schemaVersion": "v0.10.4",
   "application": "demo-api",
   "workflow": ".github/workflows/demo-api-release-orchestrator.yaml",
   "protectedRef": "refs/heads/main",
@@ -12,7 +12,8 @@
     "pushMain": [
       "application-source-change",
       "environment-release-change",
-      "reviewed-evidence-change"
+      "reviewed-evidence-change",
+      "reviewed-qualification-bundle-change"
     ],
     "workflowDispatch": [
       "start",
@@ -29,7 +30,8 @@
     "planner": "scripts/derive-demo-api-orchestration-plan.py",
     "stateIsRecomputed": true,
     "mutableStateFile": false,
-    "releaseIdIsEnvironmentIndependent": true
+    "releaseIdIsEnvironmentIndependent": true,
+    "qualificationScope": "delivery/contracts/demo-api-qualification-scope.json"
   },
   "pullRequestDiscovery": {
     "mode": "read-only",
@@ -45,23 +47,35 @@
   "staleMain": {
     "captureBeforeDerivation": true,
     "recheckAfterDerivation": true,
+    "recheckBeforeEveryMutation": true,
     "onChange": "blocked-resumable"
   },
   "executionBoundary": {
-    "runner": "github-hosted",
-    "permissions": [
+    "deriveRunner": "github-hosted",
+    "derivePermissions": [
       "contents-read",
       "pull-requests-read"
     ],
-    "awsCredentials": "none",
-    "clusterAccess": false,
-    "repositoryMutation": false,
+    "deriveAwsCredentials": "none",
+    "deriveClusterAccess": false,
+    "runtimeRunner": "ephemeral-self-hosted",
+    "runtimeEnvironments": [
+      "aws-dev"
+    ],
+    "repositoryMutation": "qualification-bundle-only-pr",
     "automaticMerge": false,
     "automaticEnvironmentCreation": false
   },
   "actionExecution": {
-    "mode": "plan-only",
-    "dispatchReusableStages": false,
+    "mode": "bounded-aws-dev-qualification",
+    "dispatchReusableStages": true,
+    "authorizedActions": [
+      "qualify-aws-dev"
+    ],
+    "activationVariable": "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
+    "activationValue": "true",
+    "staticMode": "artifact-only",
+    "sameRunArtifactsRequired": true,
     "deferredActivation": {
       "trustedRuntime": "v0.10.3",
       "awsDev": "v0.10.4",
@@ -69,10 +83,20 @@
       "awsProd": "v0.10.6"
     }
   },
+  "qualificationBundle": {
+    "workflow": ".github/workflows/demo-api-record-qualification-bundle.yaml",
+    "schema": "delivery/contracts/qualification-bundle.schema.json",
+    "scope": "delivery/contracts/demo-api-qualification-scope.json",
+    "pathTemplate": "evidence/demo-api/qualification/aws-dev/{releaseId}/{runtimeRunId}-{runtimeRunAttempt}.json",
+    "automaticMerge": false,
+    "legacyEvidenceAcceptedForAwsDevAutomation": false
+  },
   "productionBoundary": {
     "environmentApprovalRequired": true,
     "reviewedPullRequestRequired": true,
     "automaticMerge": false,
-    "automaticRollback": false
+    "automaticRollback": false,
+    "automaticPromotion": false,
+    "runtimeAccess": false
   }
 }

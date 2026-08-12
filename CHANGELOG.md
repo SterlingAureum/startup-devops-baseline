@@ -2,6 +2,41 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.4
+
+### Added
+
+- Repository-variable-gated `qualify-aws-dev` orchestration after a reviewed
+  aws-dev release reaches protected `main`.
+- Static `artifact-only` qualification mode bound to the exact orchestrated
+  control-plane SHA, while retaining the v0.9 reviewed static-evidence PR mode.
+- Deterministic aws-dev qualification-scope contract and path/content hashing
+  across Helm, release/environment values, Argo Application/overlay,
+  ExternalSecret, NetworkPolicy, and runtime RBAC inputs.
+- Self-contained Qualification Bundle schema, writer, validator, same-run
+  artifact binding, append-only evidence path, and qualification-only PR
+  Workflow.
+- Positive and negative offline tests for cross-run artifacts, wrong
+  environment/identity, stale release/scope, extended expiry, secret-like
+  fields, duplicate Bundle PRs, Promotion dispatch, production access, and
+  automatic merge.
+
+### Changed
+
+- Upgraded orchestration snapshot and decision contracts to v0.10.4 and made
+  reviewed aws-dev Bundles the durable qualification fact for the automated
+  path.
+- Added a shared 900-second passive convergence window with 15-second polling
+  for exact Argo revision and workload readiness.
+- Updated reusable-stage and application contracts, quality gates, README,
+  Roadmap, trusted-runtime guidance, evidence layout, and orchestrator docs.
+
+### Boundary
+
+- v0.10.4 does not rebuild images, dispatch aws-test/aws-prod Promotion or
+  qualification, merge PRs, create EKS environments, apply Terraform, sync
+  Argo CD, mutate Rollouts/Secrets/databases, or trigger rollback.
+
 ## v0.10.3.2
 
 ### Fixed

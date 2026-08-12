@@ -10,6 +10,13 @@
 /evidence/v0.9/ @SterlingAureum
 /.github/CODEOWNERS @SterlingAureum
 /.github/workflows/demo-api-*.yaml @SterlingAureum
+/delivery/contracts/demo-api-qualification-scope.json @SterlingAureum
+/delivery/contracts/qualification-bundle.schema.json @SterlingAureum
+/scripts/calculate-demo-api-qualification-scope.py @SterlingAureum
+/scripts/demo_api_qualification_bundle.py @SterlingAureum
+/scripts/demo_api_qualification_scope.py @SterlingAureum
+/scripts/write-demo-api-qualification-bundle.py @SterlingAureum
+/scripts/validate-demo-api-qualification-bundle.py @SterlingAureum
 /scripts/promote-demo-api-release.sh @SterlingAureum
 /scripts/prepare-demo-api-rollback.sh @SterlingAureum
 /scripts/write-demo-api-release-evidence.sh @SterlingAureum

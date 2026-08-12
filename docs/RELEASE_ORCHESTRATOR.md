@@ -1,9 +1,14 @@
 # Event-Driven Release Orchestrator
 
-v0.10.2 adds the read-only control plane for the demo-api release path. It
+v0.10.2 added the read-only control plane for the demo-api release path. It
 recomputes the current phase, status, blocker, open pull request, and recommended
 next action from durable Git and GitHub facts. It does not keep a mutable
 `current-state.json` file and does not wait inside one long-running workflow.
+
+v0.10.4 preserves that read-only derivation job and activates exactly one
+action: `qualify-aws-dev`. The action is repository-variable gated and may call
+static qualification, the trusted aws-dev runtime executor, and the unified
+Qualification Bundle PR writer. It cannot dispatch Promotion or merge a PR.
 
 ## Scope
 
@@ -16,8 +21,10 @@ three manual operations:
 | `status` | Recompute and report state without changing the release. |
 | `resume` | Recompute a waiting or blocked release after its external fact changed. |
 
-All operations are plan-only in v0.10.2. A recommended action is not permission
-to execute that action.
+Only a decision with `recommendedAction=qualify-aws-dev` and
+`dispatchAuthorized=true` may execute in v0.10.4, and only when
+`DEMO_API_AWS_DEV_QUALIFICATION_ENABLED=true`. Every other recommendation is
+plan-only.
 
 ## Event Model
 
@@ -81,9 +88,9 @@ The planner follows the v0.10 phase order and returns one recommendation:
 | --- | --- | --- |
 | Image identity not assigned | `source / progressing` | publish image and prepare dev |
 | Open target release PR | target release phase / `waiting_review` | wait for the existing PR |
-| Target release is on `main`, runtime evidence missing | qualification phase / `waiting_runtime` | collect runtime evidence |
-| Runtime passed, static evidence missing | qualification phase / `progressing` | record static evidence |
-| Both source qualifications are fresh | next release phase / `progressing` | prepare ordered Promotion |
+| aws-dev release is on `main`, Bundle missing/stale | `dev-qualification / progressing` | qualify aws-dev |
+| Matching aws-dev Bundle PR open | `dev-qualification / waiting_review` | wait for review |
+| Fresh aws-dev Bundle merged | `test-release / progressing` | prepare test Promotion; do not dispatch |
 | Required disposable environment is absent | qualification phase / `waiting_environment` | restore the environment, then resume |
 | aws-test is qualified | `prod-approval / waiting_review` | prepare reviewed prod Promotion |
 | aws-prod carries the same Release ID | `complete / completed` | none |
@@ -97,9 +104,9 @@ Freshness is evaluated only for the next transition that has not yet occurred.
 ## Idempotency and Resume
 
 Every run begins from current durable facts. Re-running `status` or `resume`
-does not create a second PR because v0.10.2 does not dispatch mutation stages.
-If an existing matching PR is open, the decision points to that PR and returns
-`wait-for-review`.
+does not create a second Qualification Bundle PR when one already exists. The
+collector recognizes the exact Bundle path and immutable release identity; the
+planner points to that PR and returns `wait-for-review`.
 
 Concurrency is serialized by application and requested release key, with
 `cancel-in-progress: false`. A newer event therefore cannot cancel another
@@ -109,27 +116,29 @@ into the resumable `stale-main` blocker.
 
 ## Security Boundary
 
-The v0.10.2 workflow has only:
+The v0.10.4 derivation job still has only:
 
 ```text
 contents: read
 pull-requests: read
 ```
 
-It cannot:
+The complete workflow may additionally prepare one Qualification Bundle PR,
+but it still cannot:
 
-- create, update, merge, or auto-merge a PR;
-- publish an image or call a reusable delivery stage;
-- obtain AWS credentials or access EKS;
+- create a release, Promotion, rollback, test, or production PR;
+- merge or auto-merge any PR;
+- publish or rebuild an image;
+- obtain AWS credentials in a GitHub-hosted job;
+- use the trusted executor for aws-test or aws-prod;
 - create an environment or apply Terraform;
-- collect trusted runtime evidence;
+- collect trusted runtime evidence outside aws-dev;
 - bypass the aws-prod Environment or reviewed PR controls;
 - execute a rollback.
 
-v0.10.3 adds the separate trusted runtime executor. v0.10.4, v0.10.5, and
-v0.10.6 activate the already planned aws-dev, aws-test, and aws-prod actions in
-order. The same planner remains the decision core when those actions are
-enabled.
+v0.10.3 adds the separate trusted runtime executor. v0.10.4 activates only
+aws-dev qualification. v0.10.5 and v0.10.6 retain the future test and
+production boundaries.
 
 ## Validation
 
@@ -140,10 +149,11 @@ Run the offline validator:
 ```
 
 It validates the contracts, schemas, triggers, permissions, protected-main
-recheck, PR discovery boundary, plan-only behavior, and positive state cases.
+recheck, PR discovery boundary, bounded aws-dev dispatch, and positive state
+cases.
 It also proves that PR-code entry, `workflow_run` chaining, mutable state,
-duplicate PR preparation, cancellation, AWS/EKS access, stage dispatch, and
-production automatic merge mutations are rejected.
+duplicate Bundle preparation, cross-run artifacts, Promotion dispatch,
+production runtime access, and automatic merge mutations are rejected.
 
 The repository-wide quality gate invokes the same validator:
 

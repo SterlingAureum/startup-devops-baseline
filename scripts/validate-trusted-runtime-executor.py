@@ -26,7 +26,7 @@ def main() -> None:
     schema = json.loads(read(root, "delivery/contracts/runtime-qualification.schema.json"))
     app = json.loads(read(root, "delivery/contracts/demo-api.json"))
 
-    require(contract["schemaVersion"] == "v0.10.3", "Bad runtime contract version")
+    require(contract["schemaVersion"] == "v0.10.4", "Bad runtime contract version")
     require(contract["application"] == "demo-api", "Bad runtime application")
     require(set(contract["environments"]) == {"aws-dev", "aws-test"}, "Runtime environments must be dev/test only")
     require(contract["production"] == {
@@ -46,6 +46,13 @@ def main() -> None:
     require(set(contract["kubernetesPermissions"]["forbiddenResources"]) == {"secrets", "pods/exec"}, "Kubernetes deny boundary changed")
     require(contract["forbiddenInputs"] == ["cluster_name", "namespace", "argo_application", "https_url", "role_arn"], "Forbidden target inputs changed")
     require(contract["artifact"]["allowCredentials"] is False and contract["artifact"]["allowKubeconfig"] is False, "Artifact may expose credentials")
+    require(contract["convergenceWait"] == {
+        "maximumSeconds": 900,
+        "intervalSeconds": 15,
+        "passiveOnly": True,
+        "argoSyncAllowed": False,
+        "rolloutMutationAllowed": False,
+    }, "Runtime convergence wait boundary changed")
     for name, expected in {
         "aws-dev": ("aws-dev-runtime", "startup-devops-baseline-dev", "Deployment"),
         "aws-test": ("aws-test-runtime", "startup-devops-baseline-test", "Rollout"),
@@ -56,7 +63,7 @@ def main() -> None:
 
     require(schema["properties"]["environment"]["enum"] == ["aws-dev", "aws-test"], "Result schema permits an unsafe environment")
     require(schema["properties"]["status"]["enum"] == ["qualified", "blocked", "failed"], "Result statuses changed")
-    require(app["schemaVersion"] == "v0.10.3", "Application contract is not on v0.10.3")
+    require(app["schemaVersion"] == "v0.10.4", "Application contract is not on v0.10.4")
     require(app["application"]["runtimeExecutorContract"] == "delivery/contracts/runtime-executor.json", "Application contract does not link runtime executor")
     require(app["application"]["runtimeQualificationWorkflow"] == contract["workflow"], "Workflow link differs from runtime contract")
     trusted = app["executionBoundaries"]["trustedRuntime"]
@@ -91,6 +98,8 @@ def main() -> None:
     require("endpoint_unreachable" in collector and "main_advanced" in collector, "Recoverable runtime waits are incomplete")
     require("kubectl auth can-i" in collector and "rbac_boundary_failed" in collector, "RBAC negative checks are missing")
     require("imageID" in collector and "EXPECTED_IMAGE_DIGEST" in collector, "Pod imageID is not release-bound")
+    require("WAIT_TIMEOUT_SECONDS:-900" in collector and "WAIT_INTERVAL_SECONDS:-15" in collector, "Bounded convergence wait is missing")
+    require("sleep \"${WAIT_INTERVAL_SECONDS}\"" in collector, "Passive convergence polling is missing")
     for line in collector.splitlines():
         if "kubectl auth can-i" in line:
             continue

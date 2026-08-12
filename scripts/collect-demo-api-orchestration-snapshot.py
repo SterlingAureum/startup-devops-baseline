@@ -178,7 +178,7 @@ def load_open_prs(repository: str, fixture: Path | None) -> list[dict[str, Any]]
                 re.fullmatch(r"apps/demo-api/helm/values/releases/aws-(dev|test|prod)\.yaml", path)
                 or re.fullmatch(r"evidence/demo-api/(?:runtime/)?aws-(dev|test)/[^/]+\.json", path)
                 or re.fullmatch(
-                    r"evidence/demo-api/qualification/aws-dev/demo-api-[0-9a-f]{12}-[0-9a-f]{12}/[^/]+\.json",
+                    r"evidence/demo-api/qualification/aws-(?:dev|test)/demo-api-[0-9a-f]{12}-[0-9a-f]{12}/[^/]+\.json",
                     path,
                 )
             ):
@@ -256,7 +256,7 @@ def classify_prs(raw_prs: list[dict[str, Any]]) -> list[dict[str, Any]]:
         static_match = re.fullmatch(r"evidence/demo-api/(aws-dev|aws-test)/[^/]+\.json", path)
         runtime_match = re.fullmatch(r"evidence/demo-api/runtime/(aws-dev|aws-test)/[^/]+\.json", path)
         bundle_match = re.fullmatch(
-            r"evidence/demo-api/qualification/(aws-dev)/(demo-api-[0-9a-f]{12}-[0-9a-f]{12})/[^/]+\.json",
+            r"evidence/demo-api/qualification/(aws-dev|aws-test)/(demo-api-[0-9a-f]{12}-[0-9a-f]{12})/[^/]+\.json",
             path,
         )
         if release_match:
@@ -354,6 +354,7 @@ def matching_evidence(
 
 def matching_bundle(
     root: Path,
+    environment: str,
     identity: dict[str, str] | None,
     release_sha256: str,
     scope_sha256: str,
@@ -361,7 +362,7 @@ def matching_bundle(
 ) -> dict[str, Any]:
     if identity is None:
         return empty_evidence()
-    directory = root / f"evidence/demo-api/qualification/aws-dev/{identity['releaseId']}"
+    directory = root / f"evidence/demo-api/qualification/{environment}/{identity['releaseId']}"
     candidates: list[tuple[datetime, Path, dict[str, Any]]] = []
     if directory.is_dir():
         for path in directory.glob("*.json"):
@@ -379,9 +380,9 @@ def matching_bundle(
                 continue
             bundle_identity = document.get("identity", {})
             if (
-                document.get("schemaVersion") == "v0.10.4"
+                document.get("schemaVersion") == "v0.10.5"
                 and document.get("application") == "demo-api"
-                and document.get("environment") == "aws-dev"
+                and document.get("environment") == environment
                 and document.get("releaseId") == identity["releaseId"]
                 and document.get("status") == "qualified"
                 and bundle_identity.get("sourceCommit") == identity["sourceCommit"]
@@ -441,6 +442,11 @@ def main() -> None:
     parser.add_argument("--observed-main-revision", required=True)
     parser.add_argument("--repository", required=True)
     parser.add_argument("--requested-release-id")
+    parser.add_argument(
+        "--test-rollout-gate",
+        default="not-reviewed",
+        choices=("not-reviewed", "reviewed-and-completed"),
+    )
     parser.add_argument("--open-prs-json", type=Path)
     parser.add_argument("--now")
     parser.add_argument("--output", required=True, type=Path)
@@ -478,15 +484,20 @@ def main() -> None:
             "static": matching_evidence(root, environment, active, release_sha, "static", now),
             "runtime": matching_evidence(root, environment, active, release_sha, "runtime", now),
         }
-    scope = calculate_qualification_scope(root)
+    scopes = {
+        environment: calculate_qualification_scope(root, environment)
+        for environment in ("aws-dev", "aws-test")
+    }
     qualification_bundles = {
-        "aws-dev": matching_bundle(
+        environment: matching_bundle(
             root,
+            environment,
             active,
-            releases["aws-dev"]["sha256"],
-            scope["scopeSha256"],
+            releases[environment]["sha256"],
+            scopes[environment]["scopeSha256"],
             now,
         )
+        for environment in ("aws-dev", "aws-test")
     }
 
     public_prs = []
@@ -494,7 +505,7 @@ def main() -> None:
         public_prs.append({key: value for key, value in item.items() if not key.startswith("_")})
 
     snapshot = {
-        "schemaVersion": "v0.10.4",
+        "schemaVersion": "v0.10.5",
         "application": "demo-api",
         "operation": args.operation,
         "policy": args.policy,
@@ -506,6 +517,7 @@ def main() -> None:
         "capturedMainRevision": args.captured_main_revision,
         "observedMainRevision": args.observed_main_revision,
         "requestedReleaseId": args.requested_release_id,
+        "testRolloutGate": args.test_rollout_gate,
         "activeRelease": active,
         "releases": releases,
         "evidence": evidence,

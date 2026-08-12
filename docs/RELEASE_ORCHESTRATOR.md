@@ -5,10 +5,11 @@ recomputes the current phase, status, blocker, open pull request, and recommende
 next action from durable Git and GitHub facts. It does not keep a mutable
 `current-state.json` file and does not wait inside one long-running workflow.
 
-v0.10.4 preserves that read-only derivation job and activates exactly one
-action: `qualify-aws-dev`. The action is repository-variable gated and may call
-static qualification, the trusted aws-dev runtime executor, and the unified
-Qualification Bundle PR writer. It cannot dispatch Promotion or merge a PR.
+v0.10.5 preserves the read-only derivation job and authorizes three bounded,
+repository-variable-gated actions: `qualify-aws-dev`,
+`prepare-test-promotion`, and `qualify-aws-test`. They may create only a
+release-only aws-test PR or a qualification-only dev/test Bundle PR. They never
+merge a PR, write Kubernetes, or prepare production.
 
 ## Scope
 
@@ -21,10 +22,15 @@ three manual operations:
 | `status` | Recompute and report state without changing the release. |
 | `resume` | Recompute a waiting or blocked release after its external fact changed. |
 
-Only a decision with `recommendedAction=qualify-aws-dev` and
-`dispatchAuthorized=true` may execute in v0.10.4, and only when
-`DEMO_API_AWS_DEV_QUALIFICATION_ENABLED=true`. Every other recommendation is
-plan-only.
+Execution additionally requires the exact variable for the recommended action:
+
+| Action | Repository variable |
+| --- | --- |
+| `qualify-aws-dev` | `DEMO_API_AWS_DEV_QUALIFICATION_ENABLED=true` |
+| `prepare-test-promotion` | `DEMO_API_AWS_TEST_PROMOTION_ENABLED=true` |
+| `qualify-aws-test` | `DEMO_API_AWS_TEST_QUALIFICATION_ENABLED=true` |
+
+`prepare-prod-promotion` is always plan-only in v0.10.5.
 
 ## Event Model
 
@@ -52,6 +58,7 @@ gh workflow run demo-api-release-orchestrator.yaml \
   --ref main \
   -f operation=resume \
   -f release_id=demo-api-04ca5ab03d99-fcfa4f473dd0 \
+  -f test_rollout_gate=not-reviewed \
   -f policy=reviewed
 ```
 
@@ -90,7 +97,10 @@ The planner follows the v0.10 phase order and returns one recommendation:
 | Open target release PR | target release phase / `waiting_review` | wait for the existing PR |
 | aws-dev release is on `main`, Bundle missing/stale | `dev-qualification / progressing` | qualify aws-dev |
 | Matching aws-dev Bundle PR open | `dev-qualification / waiting_review` | wait for review |
-| Fresh aws-dev Bundle merged | `test-release / progressing` | prepare test Promotion; do not dispatch |
+| Fresh aws-dev Bundle merged | `test-release / progressing` | prepare reviewed test Promotion PR |
+| aws-test release merged, Canary not confirmed | `test-qualification / waiting_review` | review and complete test Canary |
+| Canary confirmed, test Bundle missing/stale | `test-qualification / progressing` | qualify aws-test |
+| Matching aws-test Bundle PR open | `test-qualification / waiting_review` | wait for review |
 | Required disposable environment is absent | qualification phase / `waiting_environment` | restore the environment, then resume |
 | aws-test is qualified | `prod-approval / waiting_review` | prepare reviewed prod Promotion |
 | aws-prod carries the same Release ID | `complete / completed` | none |
@@ -116,29 +126,29 @@ into the resumable `stale-main` blocker.
 
 ## Security Boundary
 
-The v0.10.4 derivation job still has only:
+The v0.10.5 derivation job still has only:
 
 ```text
 contents: read
 pull-requests: read
 ```
 
-The complete workflow may additionally prepare one Qualification Bundle PR,
-but it still cannot:
+The complete workflow may additionally prepare one aws-test release-only PR or
+one dev/test Qualification Bundle PR, but it still cannot:
 
-- create a release, Promotion, rollback, test, or production PR;
+- create a production or rollback PR;
 - merge or auto-merge any PR;
 - publish or rebuild an image;
 - obtain AWS credentials in a GitHub-hosted job;
-- use the trusted executor for aws-test or aws-prod;
+- use the trusted executor for aws-prod;
 - create an environment or apply Terraform;
-- collect trusted runtime evidence outside aws-dev;
+- promote, abort, apply, or sync any Kubernetes resource;
 - bypass the aws-prod Environment or reviewed PR controls;
 - execute a rollback.
 
-v0.10.3 adds the separate trusted runtime executor. v0.10.4 activates only
-aws-dev qualification. v0.10.5 and v0.10.6 retain the future test and
-production boundaries.
+v0.10.3 adds the separate trusted runtime executor. v0.10.4 activates aws-dev
+qualification. v0.10.5 activates reviewed test PR preparation and post-Canary
+aws-test qualification. v0.10.6 retains the production boundary.
 
 ## Validation
 
@@ -149,11 +159,12 @@ Run the offline validator:
 ```
 
 It validates the contracts, schemas, triggers, permissions, protected-main
-recheck, PR discovery boundary, bounded aws-dev dispatch, and positive state
-cases.
+recheck, PR discovery boundary, bounded dev/test dispatch, manual Canary gate,
+and positive state cases.
 It also proves that PR-code entry, `workflow_run` chaining, mutable state,
-duplicate Bundle preparation, cross-run artifacts, Promotion dispatch,
-production runtime access, and automatic merge mutations are rejected.
+duplicate Bundle preparation, cross-run artifacts, mixed legacy/Bundle inputs,
+Canary-gate bypass, production runtime/dispatch, and automatic merge mutations
+are rejected.
 
 The repository-wide quality gate invokes the same validator:
 

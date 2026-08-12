@@ -26,7 +26,7 @@ def main() -> None:
     schema = json.loads(read(root, "delivery/contracts/runtime-qualification.schema.json"))
     app = json.loads(read(root, "delivery/contracts/demo-api.json"))
 
-    require(contract["schemaVersion"] == "v0.10.4", "Bad runtime contract version")
+    require(contract["schemaVersion"] == "v0.10.5", "Bad runtime contract version")
     require(contract["application"] == "demo-api", "Bad runtime application")
     require(set(contract["environments"]) == {"aws-dev", "aws-test"}, "Runtime environments must be dev/test only")
     require(contract["production"] == {
@@ -63,7 +63,7 @@ def main() -> None:
 
     require(schema["properties"]["environment"]["enum"] == ["aws-dev", "aws-test"], "Result schema permits an unsafe environment")
     require(schema["properties"]["status"]["enum"] == ["qualified", "blocked", "failed"], "Result statuses changed")
-    require(app["schemaVersion"] == "v0.10.4", "Application contract is not on v0.10.4")
+    require(app["schemaVersion"] == "v0.10.5", "Application contract is not on v0.10.5")
     require(app["application"]["runtimeExecutorContract"] == "delivery/contracts/runtime-executor.json", "Application contract does not link runtime executor")
     require(app["application"]["runtimeQualificationWorkflow"] == contract["workflow"], "Workflow link differs from runtime contract")
     trusted = app["executionBoundaries"]["trustedRuntime"]

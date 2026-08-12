@@ -6,6 +6,10 @@ also expose `workflow_call` inputs and outputs for the event-driven orchestrator
 v0.10.2 consumed their contracts as read-only planning inputs. v0.10.4 now
 dispatches only static `artifact-only` qualification, the separate trusted
 aws-dev runtime executor, and the unified Bundle stage.
+v0.10.5 generalizes the Bundle stage to dev/test and adds the orchestrated
+Qualification Bundle input mode to the existing Promotion stage. The original
+manual static/runtime evidence inputs remain available and cannot be mixed
+with Bundle mode.
 
 The v0.10.1 increment did not add the orchestrator and does not grant GitHub-hosted
 runners access to AWS or EKS.
@@ -16,7 +20,7 @@ runners access to AWS or EKS.
 | --- | --- | --- |
 | Image publish | `demo-api-image-publish.yaml` | Immutable digest, metadata, attestations, and optional aws-dev release PR |
 | Static qualification | `demo-api-record-release-evidence.yaml` | Reviewable static-evidence-only PR |
-| Qualification Bundle | `demo-api-record-qualification-bundle.yaml` | Reviewable, unified aws-dev qualification-only PR |
+| Qualification Bundle | `demo-api-record-qualification-bundle.yaml` | Reviewable, unified dev/test qualification-only PR |
 | Environment promotion | `demo-api-promote-environment.yaml` | Reviewable target-release-only PR |
 | Rollback handoff | `demo-api-rollback.yaml` | Reviewable historical target-release-only PR |
 
@@ -112,6 +116,8 @@ repository/PR stage catalog. v0.10.3 provides the protected-main,
 environment-isolated, short-lived OIDC executor. v0.10.4 dispatches that
 executor only for aws-dev and passes its secret-free result to the Bundle
 stage through the current Workflow run.
+v0.10.5 additionally dispatches the aws-test executor only after explicit
+reviewed Canary completion and passes that result through the same-run boundary.
 
 This separation prevents the GitHub-hosted derivation and Bundle jobs from gaining
 cluster access simply because it can call reusable delivery stages.

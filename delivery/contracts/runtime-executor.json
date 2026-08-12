@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.4",
+  "schemaVersion": "v0.10.5",
   "application": "demo-api",
   "workflow": ".github/workflows/demo-api-runtime-qualification.yaml",
   "resultSchema": "delivery/contracts/runtime-qualification.schema.json",

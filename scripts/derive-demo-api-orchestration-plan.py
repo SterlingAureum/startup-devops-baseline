@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Derive one deterministic demo-api decision with bounded aws-dev execution."""
+"""Derive one deterministic demo-api decision with bounded dev/test execution."""
 
 from __future__ import annotations
 
@@ -58,6 +58,7 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
         "capturedMainRevision",
         "observedMainRevision",
         "requestedReleaseId",
+        "testRolloutGate",
         "activeRelease",
         "releases",
         "evidence",
@@ -67,7 +68,7 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
         "derivedAt",
     }
     require(set(snapshot) == required, "Snapshot fields are missing or unknown")
-    require(snapshot["schemaVersion"] == "v0.10.4", "Unsupported snapshot schema")
+    require(snapshot["schemaVersion"] == "v0.10.5", "Unsupported snapshot schema")
     require(snapshot["application"] == "demo-api", "Unexpected application")
     require(snapshot["operation"] in OPERATIONS, "Unsupported operation")
     require(snapshot["policy"] in {"reviewed", "continuous-nonprod"}, "Unsupported policy")
@@ -76,6 +77,10 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
     require(SHA_PATTERN.fullmatch(snapshot["observedMainRevision"]) is not None, "Invalid observed main")
     if snapshot["requestedReleaseId"] is not None:
         require(RELEASE_ID_PATTERN.fullmatch(snapshot["requestedReleaseId"]) is not None, "Bad requested release ID")
+    require(
+        snapshot["testRolloutGate"] in {"not-reviewed", "reviewed-and-completed"},
+        "Invalid aws-test Rollout gate",
+    )
     if snapshot["activeRelease"] is not None:
         validate_identity(snapshot["activeRelease"])
     require(set(snapshot["releases"]) == set(ENVIRONMENTS), "Release environment set changed")
@@ -88,8 +93,9 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
         require(set(pair) == {"static", "runtime"}, "Evidence pair is incomplete")
         for fact in pair.values():
             require(fact.get("state") in {"missing", "fresh", "stale"}, "Bad evidence state")
-    require(set(snapshot["qualificationBundles"]) == {"aws-dev"}, "Qualification Bundle environment set changed")
-    require(snapshot["qualificationBundles"]["aws-dev"].get("state") in {"missing", "fresh", "stale"}, "Bad Qualification Bundle state")
+    require(set(snapshot["qualificationBundles"]) == {"aws-dev", "aws-test"}, "Qualification Bundle environment set changed")
+    for bundle in snapshot["qualificationBundles"].values():
+        require(bundle.get("state") in {"missing", "fresh", "stale"}, "Bad Qualification Bundle state")
     require(set(snapshot["environmentAvailability"]) == set(ENVIRONMENTS), "Availability set changed")
     for value in snapshot["environmentAvailability"].values():
         require(value in {"present", "absent", "unknown"}, "Bad environment availability")
@@ -141,7 +147,7 @@ def decision(
 ) -> dict[str, Any]:
     active = snapshot["activeRelease"]
     return {
-        "schemaVersion": "v0.10.4",
+        "schemaVersion": "v0.10.5",
         "application": "demo-api",
         "operation": snapshot["operation"],
         "releaseId": active["releaseId"] if active else None,
@@ -151,8 +157,12 @@ def decision(
         "recommendedAction": action,
         "targetEnvironment": target,
         "openPullRequest": {"number": pr["number"], "url": pr["url"]} if pr else None,
-        "executionMode": "aws-dev-qualification",
-        "dispatchAuthorized": action == "qualify-aws-dev" and target == "aws-dev",
+        "executionMode": "bounded-dev-test-automation",
+        "dispatchAuthorized": (
+            (action == "qualify-aws-dev" and target == "aws-dev")
+            or (action == "prepare-test-promotion" and target == "aws-test")
+            or (action == "qualify-aws-test" and target == "aws-test")
+        ),
         "capturedMainRevision": snapshot["capturedMainRevision"],
         "observedMainRevision": snapshot["observedMainRevision"],
         "derivedAt": snapshot["derivedAt"],
@@ -160,7 +170,7 @@ def decision(
 
 
 def qualify_environment(
-    snapshot: dict[str, Any], environment: str, phase: str, release_id: str, use_bundle: bool = False
+    snapshot: dict[str, Any], environment: str, phase: str, release_id: str
 ) -> dict[str, Any] | None:
     if snapshot["environmentAvailability"][environment] == "absent":
         return decision(
@@ -175,7 +185,7 @@ def qualify_environment(
         snapshot,
         release_id,
         environment,
-        {"qualification-bundle"} if use_bundle else {"static-evidence", "runtime-evidence"},
+        {"qualification-bundle"},
     )
     if evidence_pr:
         return decision(
@@ -187,32 +197,9 @@ def qualify_environment(
             environment,
             evidence_pr,
         )
-    if use_bundle:
-        bundle = snapshot["qualificationBundles"]["aws-dev"]
-        if bundle["state"] == "stale":
-            return decision(
-                snapshot,
-                phase,
-                "blocked",
-                "qualification-stale",
-                "qualify-aws-dev",
-                environment,
-            )
-        if bundle["state"] == "missing":
-            return decision(
-                snapshot,
-                phase,
-                "progressing",
-                "qualification-missing",
-                "qualify-aws-dev",
-                environment,
-            )
-        return None
-
-    runtime = snapshot["evidence"][environment]["runtime"]
-    static = snapshot["evidence"][environment]["static"]
-    if runtime["state"] == "stale" or static["state"] == "stale":
-        action = "collect-runtime-evidence" if runtime["state"] == "stale" else "record-static-evidence"
+    bundle = snapshot["qualificationBundles"][environment]
+    action = "qualify-aws-dev" if environment == "aws-dev" else "qualify-aws-test"
+    if bundle["state"] == "stale":
         return decision(
             snapshot,
             phase,
@@ -221,22 +208,13 @@ def qualify_environment(
             action,
             environment,
         )
-    if runtime["state"] == "missing":
-        return decision(
-            snapshot,
-            phase,
-            "waiting_runtime",
-            "runtime-executor-unavailable",
-            "collect-runtime-evidence",
-            environment,
-        )
-    if static["state"] == "missing":
+    if bundle["state"] == "missing":
         return decision(
             snapshot,
             phase,
             "progressing",
             "qualification-missing",
-            "record-static-evidence",
+            action,
             environment,
         )
     return None
@@ -291,9 +269,7 @@ def derive(snapshot: dict[str, Any]) -> dict[str, Any]:
         )
 
     if not matches_release(snapshot, "aws-test", release_id):
-        dev_qualification = qualify_environment(
-            snapshot, "aws-dev", "dev-qualification", release_id, use_bundle=True
-        )
+        dev_qualification = qualify_environment(snapshot, "aws-dev", "dev-qualification", release_id)
         if dev_qualification:
             return dev_qualification
         test_pr = open_pr(snapshot, release_id, "aws-test", {"environment-release"})
@@ -316,6 +292,36 @@ def derive(snapshot: dict[str, Any]) -> dict[str, Any]:
             "aws-test",
         )
 
+    test_bundle_pr = open_pr(snapshot, release_id, "aws-test", {"qualification-bundle"})
+    if test_bundle_pr:
+        return decision(
+            snapshot,
+            "test-qualification",
+            "waiting_review",
+            "review-required",
+            "wait-for-review",
+            "aws-test",
+            test_bundle_pr,
+        )
+    if snapshot["qualificationBundles"]["aws-test"]["state"] != "fresh":
+        if snapshot["environmentAvailability"]["aws-test"] == "absent":
+            return decision(
+                snapshot,
+                "test-qualification",
+                "waiting_environment",
+                "environment-absent",
+                "restore-environment",
+                "aws-test",
+            )
+        if snapshot["testRolloutGate"] != "reviewed-and-completed":
+            return decision(
+                snapshot,
+                "test-qualification",
+                "waiting_review",
+                "canary-review-required",
+                "review-and-complete-test-canary",
+                "aws-test",
+            )
     test_qualification = qualify_environment(snapshot, "aws-test", "test-qualification", release_id)
     if test_qualification:
         return test_qualification

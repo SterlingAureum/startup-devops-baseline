@@ -15,6 +15,7 @@ from demo_api_qualification_bundle import canonical_bytes, utc, validate
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
+    parser.add_argument("--environment", required=True, choices=("aws-dev", "aws-test"))
     parser.add_argument("--static-result", type=Path, required=True)
     parser.add_argument("--runtime-result", type=Path, required=True)
     parser.add_argument("--scope-result", type=Path, required=True)
@@ -44,16 +45,16 @@ def main() -> None:
         f"{identity['imageDigest'].removeprefix('sha256:')[:12]}"
     )
     document = {
-        "schemaVersion": "v0.10.4",
+        "schemaVersion": "v0.10.5",
         "application": "demo-api",
-        "environment": "aws-dev",
+        "environment": args.environment,
         "releaseId": release_id,
         "status": "qualified",
         "recordedAt": recorded_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "expiresAt": expires_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
         "identity": identity,
         "release": {
-            "path": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+            "path": f"apps/demo-api/helm/values/releases/{args.environment}.yaml",
             "sha256": release["sha256"],
         },
         "qualificationScope": {

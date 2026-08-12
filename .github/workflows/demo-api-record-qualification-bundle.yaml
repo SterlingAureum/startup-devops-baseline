@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       environment:
-        description: Qualification target; v0.10.4 implements aws-dev only
+        description: Qualification target; aws-dev and aws-test only
         required: true
         type: string
       release_id:
@@ -43,8 +43,8 @@ concurrency:
 
 jobs:
   record-bundle:
-    name: Record reviewed aws-dev qualification
-    if: inputs.environment == 'aws-dev'
+    name: Record reviewed ${{ inputs.environment }} qualification
+    if: inputs.environment == 'aws-dev' || inputs.environment == 'aws-test'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -76,6 +76,7 @@ jobs:
       - name: Verify protected main and compose the Bundle
         id: bundle
         env:
+          ENVIRONMENT: ${{ inputs.environment }}
           RELEASE_ID: ${{ inputs.release_id }}
           CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
         run: |
@@ -85,6 +86,13 @@ jobs:
             echo "::error::Qualification Bundle request violates the protected-main identity contract."
             exit 1
           fi
+          case "${ENVIRONMENT}" in
+            aws-dev|aws-test) ;;
+            *)
+              echo "::error::Qualification Bundle target must be aws-dev or aws-test."
+              exit 1
+              ;;
+          esac
           if [[ "$(git rev-parse HEAD)" != "${CONTROL_PLANE_SHA}" ]]; then
             echo "::error::Checked-out control-plane revision differs from the request."
             exit 1
@@ -105,9 +113,12 @@ jobs:
           done
 
           scope_result="${RUNNER_TEMP}/qualification/scope.json"
-          bundle_file="evidence/demo-api/qualification/aws-dev/${RELEASE_ID}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.json"
-          ./scripts/calculate-demo-api-qualification-scope.py --output "${scope_result}"
+          bundle_file="evidence/demo-api/qualification/${ENVIRONMENT}/${RELEASE_ID}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.json"
+          ./scripts/calculate-demo-api-qualification-scope.py \
+            --environment "${ENVIRONMENT}" \
+            --output "${scope_result}"
           ./scripts/write-demo-api-qualification-bundle.py \
+            --environment "${ENVIRONMENT}" \
             --static-result "${static_result}" \
             --runtime-result "${runtime_result}" \
             --scope-result "${scope_result}" \
@@ -130,18 +141,19 @@ jobs:
           CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
           BUNDLE_FILE: ${{ steps.bundle.outputs.bundle-file }}
           RELEASE_ID: ${{ inputs.release_id }}
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
           git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
           if [[ "$(git rev-parse origin/main)" != "${CONTROL_PLANE_SHA}" ]]; then
             echo "::error::Protected main advanced after Bundle composition."
             exit 1
           fi
-          branch="qualification/demo-api-aws-dev-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          branch="qualification/demo-api-${ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git switch --create "${branch}" "origin/main"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "${BUNDLE_FILE}"
-          git commit -m "evidence: qualify aws-dev ${RELEASE_ID}"
+          git commit -m "evidence: qualify ${ENVIRONMENT} ${RELEASE_ID}"
           mapfile -t changed_files < <(git diff --name-only "origin/main" HEAD)
           if [[ "${#changed_files[@]}" != "1" || "${changed_files[0]}" != "${BUNDLE_FILE}" ]]; then
             echo "::error::Qualification branch may add only ${BUNDLE_FILE}."
@@ -160,10 +172,11 @@ jobs:
           CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
           SCOPE_SHA256: ${{ steps.bundle.outputs.scope-sha256 }}
           EXPIRES_AT: ${{ steps.bundle.outputs.expires-at }}
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
           body_file="$(mktemp)"
           printf '%s\n' \
-            '## demo-api unified aws-dev qualification' \
+            "## demo-api unified ${ENVIRONMENT} qualification" \
             '' \
             "- Release: \`${RELEASE_ID}\`" \
             "- Qualified control plane: \`${CONTROL_PLANE_SHA}\`" \
@@ -176,7 +189,7 @@ jobs:
           pr_url="$(gh pr create \
             --base main \
             --head "${BRANCH}" \
-            --title "evidence: qualify demo-api aws-dev ${RELEASE_ID}" \
+            --title "evidence: qualify demo-api ${ENVIRONMENT} ${RELEASE_ID}" \
             --body-file "${body_file}")"
           echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
           echo "status=created" >> "${GITHUB_OUTPUT}"
@@ -185,13 +198,14 @@ jobs:
         env:
           PR_URL: ${{ steps.pull-request.outputs.url }}
           BUNDLE_FILE: ${{ steps.bundle.outputs.bundle-file }}
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
           {
-            echo "### demo-api unified aws-dev qualification"
+            echo "### demo-api unified ${ENVIRONMENT} qualification"
             echo
             echo "- Release: \`${{ inputs.release_id }}\`"
             echo "- Bundle: \`${BUNDLE_FILE}\`"
             echo "- Pull request: ${PR_URL}"
             echo
-            echo "Review and merge remain human actions. aws-test Promotion is not dispatched by v0.10.4."
+            echo "Review and merge remain human actions. Production Promotion is outside v0.10.5."
           } >> "${GITHUB_STEP_SUMMARY}"

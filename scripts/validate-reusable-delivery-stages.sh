@@ -102,7 +102,7 @@ EXPECTED = {
             "runtime_artifact_name": "string",
         },
         "outputs": ["status", "pr_url", "bundle_file"],
-        "allowedEnvironments": ["aws-dev"],
+        "allowedEnvironments": ["aws-dev", "aws-test"],
         "mutationScope": ["qualification-bundle-only-pr"],
     },
     "environment-promotion": {
@@ -111,8 +111,13 @@ EXPECTED = {
         "inputs": {
             "source_environment": "string",
             "target_environment": "string",
+            "qualification_mode": "string",
             "evidence_run_id": "string",
             "runtime_evidence_id": "string",
+            "qualification_bundle_path": "string",
+            "qualification_bundle_sha256": "string",
+            "release_id": "string",
+            "control_plane_sha": "string",
         },
         "outputs": [
             "status",
@@ -162,7 +167,7 @@ def workflow_call_block(text: str) -> str:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.4", "Bad application schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.5", "Bad application schemaVersion")
     require(contract.get("application") == "demo-api", "Unexpected application")
     require(contract.get("defaultRef") == "refs/heads/main", "Default ref must be main")
 
@@ -235,15 +240,16 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
         orchestration.get("contract") == "delivery/contracts/demo-api-orchestrator.json",
         "Unexpected orchestrator contract",
     )
-    require(orchestration.get("executionMode") == "bounded-aws-dev-qualification", "Unexpected execution mode")
-    require(orchestration.get("stageDispatch") is True, "aws-dev stage dispatch is not active")
+    require(orchestration.get("executionMode") == "bounded-dev-test-automation", "Unexpected execution mode")
+    require(orchestration.get("stageDispatch") is True, "dev/test stage dispatch is not active")
     if check_files:
         require((root / orchestration["contract"]).is_file(), "Orchestrator contract is missing")
 
     deferred = contract.get("deferredStages")
     require(isinstance(deferred, dict), "Missing deferred stage declarations")
-    require(deferred.get("runtimeQualification") == "v0.10.4-dispatched-aws-dev-only", "Runtime qualification integration state changed")
-    require(deferred.get("qualificationBundle") == "v0.10.4-implemented", "Qualification Bundle state changed")
+    require(deferred.get("runtimeQualification") == "v0.10.5-dispatched-aws-dev-and-aws-test", "Runtime qualification integration state changed")
+    require(deferred.get("qualificationBundle") == "v0.10.5-implemented-dev-and-test", "Qualification Bundle state changed")
+    require(deferred.get("productionPromotion") == "v0.10.6-deferred", "Production boundary changed")
 
 
 contract = load_json(contract_path)

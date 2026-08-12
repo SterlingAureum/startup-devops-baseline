@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aureumstack.com/schemas/orchestration-decision-v0.10.4.json",
+  "$id": "https://aureumstack.com/schemas/orchestration-decision-v0.10.5.json",
   "title": "Derived demo-api orchestration decision",
   "type": "object",
   "additionalProperties": false,
@@ -23,7 +23,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "v0.10.4"
+      "const": "v0.10.5"
     },
     "application": {
       "const": "demo-api"
@@ -82,6 +82,8 @@
         "record-static-evidence",
         "qualify-aws-dev",
         "prepare-test-promotion",
+        "review-and-complete-test-canary",
+        "qualify-aws-test",
         "prepare-prod-promotion",
         "restore-environment",
         "retry-after-main-stabilizes",
@@ -126,7 +128,7 @@
       ]
     },
     "executionMode": {
-      "const": "aws-dev-qualification"
+      "const": "bounded-dev-test-automation"
     },
     "dispatchAuthorized": {
       "type": "boolean"

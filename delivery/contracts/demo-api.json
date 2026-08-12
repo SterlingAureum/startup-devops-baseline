@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.4",
+  "schemaVersion": "v0.10.5",
   "application": {
     "name": "demo-api",
     "sourceRepository": "SterlingAureum/startup-devops-baseline",
@@ -12,6 +12,7 @@
     "runtimeQualificationWorkflow": ".github/workflows/demo-api-runtime-qualification.yaml",
     "qualificationBundleSchema": "delivery/contracts/qualification-bundle.schema.json",
     "qualificationScopeContract": "delivery/contracts/demo-api-qualification-scope.json",
+    "testQualificationScopeContract": "delivery/contracts/demo-api-qualification-scope-aws-test.json",
     "qualificationBundleWorkflow": ".github/workflows/demo-api-record-qualification-bundle.yaml",
     "buildOnce": true
   },
@@ -36,7 +37,7 @@
       "environmentFile": "apps/demo-api/helm/values/environments/aws-test.yaml",
       "releaseFile": "apps/demo-api/helm/values/releases/aws-test.yaml",
       "runtimeExecutor": "trusted-runtime",
-      "automaticQualification": false,
+      "automaticQualification": "repository-variable-gated-after-manual-canary",
       "automaticClusterCreation": false,
       "environmentApprovalRequired": false,
       "mergePolicy": {
@@ -106,7 +107,7 @@
         "aws-test"
       ],
       "productionAccess": false,
-      "resultDurability": "temporary-artifact-plus-reviewed-aws-dev-bundle",
+      "resultDurability": "temporary-artifact-plus-reviewed-dev-test-bundle",
       "responsibilities": [
         "argocd-status",
         "rollout-status",
@@ -230,7 +231,10 @@
     "resumeWithoutRebuild": true,
     "environmentAbsenceIsWaiting": true,
     "awsDevQualificationVariable": "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
+    "awsTestPromotionVariable": "DEMO_API_AWS_TEST_PROMOTION_ENABLED",
+    "awsTestQualificationVariable": "DEMO_API_AWS_TEST_QUALIFICATION_ENABLED",
     "automaticPromotion": false,
+    "automaticTestPromotionPreparation": true,
     "automaticPullRequestMerge": false
   }
 }

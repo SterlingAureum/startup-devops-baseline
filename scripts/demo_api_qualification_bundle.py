@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validation helpers for the v0.10.4 unified qualification bundle."""
+"""Validation helpers for the v0.10.5 dev/test qualification bundle."""
 
 from __future__ import annotations
 
@@ -59,9 +59,10 @@ def validate(
         "staticQualification", "runtimeQualification", "orchestration",
     }
     require(set(document) == top, "Bundle has missing or unknown top-level fields.")
-    require(document["schemaVersion"] == "v0.10.4", "Unsupported bundle schema.")
+    require(document["schemaVersion"] == "v0.10.5", "Unsupported bundle schema.")
     require(document["application"] == "demo-api", "Unexpected application.")
-    require(document["environment"] == "aws-dev", "Only aws-dev bundles are implemented.")
+    environment = document["environment"]
+    require(environment in {"aws-dev", "aws-test"}, "Only aws-dev/aws-test bundles are implemented.")
     require(document["status"] == "qualified", "Bundle is not qualified.")
     require(RELEASE_ID.fullmatch(document["releaseId"]) is not None, "Invalid Release ID.")
     recorded_at = utc(document["recordedAt"])
@@ -89,7 +90,10 @@ def validate(
     require(document["releaseId"] == expected_release_id, "Release ID differs from immutable identity.")
 
     release = document["release"]
-    require(release.get("path") == "apps/demo-api/helm/values/releases/aws-dev.yaml", "Wrong release path.")
+    require(
+        release.get("path") == f"apps/demo-api/helm/values/releases/{environment}.yaml",
+        "Wrong release path.",
+    )
     require(SHA256.fullmatch(release.get("sha256", "")) is not None, "Invalid release SHA-256.")
 
     static_wrapper = document["staticQualification"]
@@ -101,9 +105,9 @@ def validate(
     require(hashlib.sha256(canonical_bytes(static)).hexdigest() == static_wrapper["sha256"], "Static result hash mismatch.")
     require(hashlib.sha256(canonical_bytes(runtime)).hexdigest() == runtime_wrapper["sha256"], "Runtime result hash mismatch.")
     require(static.get("schemaVersion") == "v0.9.4" and static.get("status") == "passed", "Static qualification did not pass.")
-    require(static.get("application") == "demo-api" and static.get("environment") == "aws-dev", "Static target mismatch.")
+    require(static.get("application") == "demo-api" and static.get("environment") == environment, "Static target mismatch.")
     require(runtime.get("schemaVersion") == "v0.10.3" and runtime.get("status") == "qualified", "Runtime qualification did not pass.")
-    require(runtime.get("application") == "demo-api" and runtime.get("environment") == "aws-dev", "Runtime target mismatch.")
+    require(runtime.get("application") == "demo-api" and runtime.get("environment") == environment, "Runtime target mismatch.")
     require(runtime.get("releaseId") == document["releaseId"], "Runtime Release ID mismatch.")
     for field in ("sourceRepository", "sourceCommit", "imageRepository", "imageTag", "imageDigest", "buildWorkflowRunId"):
         require(str(static["release"].get(field, "")) == str(identity[field]), f"Static identity mismatch: {field}.")
@@ -141,14 +145,19 @@ def validate(
     scope = document["qualificationScope"]
     require(set(scope) == {"algorithm", "contract", "contractSha256", "scopeSha256", "files"}, "Invalid scope record.")
     require(scope["algorithm"] == "sha256-path-content-v1", "Unsupported scope algorithm.")
-    require(scope["contract"] == "delivery/contracts/demo-api-qualification-scope.json", "Unexpected scope contract.")
+    expected_contract = (
+        "delivery/contracts/demo-api-qualification-scope.json"
+        if environment == "aws-dev"
+        else "delivery/contracts/demo-api-qualification-scope-aws-test.json"
+    )
+    require(scope["contract"] == expected_contract, "Unexpected scope contract.")
     require(SHA256.fullmatch(scope["contractSha256"]) is not None, "Invalid contract hash.")
     require(SHA256.fullmatch(scope["scopeSha256"]) is not None, "Invalid scope hash.")
     require(isinstance(scope["files"], list) and scope["files"], "Scope files are empty.")
     require(scope["files"] == sorted(scope["files"], key=lambda item: item["path"]), "Scope files are not sorted.")
     require(len({item["path"] for item in scope["files"]}) == len(scope["files"]), "Scope paths are duplicated.")
     if root is not None:
-        current = calculate(root)
+        current = calculate(root, environment)
         for field in ("algorithm", "contract", "contractSha256", "scopeSha256", "files"):
             require(scope[field] == current[field], f"Qualification scope is stale: {field}.")
         release_path = root / release["path"]

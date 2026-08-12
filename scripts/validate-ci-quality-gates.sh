@@ -30,7 +30,7 @@ echo "==> Validating reusable delivery stage contracts"
 echo "==> Validating event-driven release orchestrator"
 "${ROOT_DIR}/scripts/validate-demo-api-release-orchestrator.sh"
 
-echo "==> Validating unified aws-dev Qualification Bundle"
+echo "==> Validating unified dev/test Qualification Bundles"
 "${ROOT_DIR}/scripts/validate-demo-api-qualification-bundle.sh"
 
 echo "==> Validating trusted runtime qualification executor"

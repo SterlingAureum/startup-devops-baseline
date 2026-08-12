@@ -83,11 +83,17 @@ runtime results into one scope-bound, self-contained Qualification Bundle PR,
 waits passively for GitOps convergence, and stops before aws-test Promotion.
 It neither rebuilds the image nor merges a PR, creates a cluster, syncs Argo
 CD, accesses production, or dispatches rollback.
+v0.10.5 consumes the merged, still-fresh aws-dev Bundle to prepare a reviewed
+dev-to-test release-only PR. After that PR is merged, aws-test Canary progression
+remains an explicit human action; only a manual `reviewed-and-completed` resume
+may run same-run static/runtime qualification and create the reviewed aws-test
+Bundle PR. The workflow stops at `prod-approval` and never prepares or mutates
+production.
 
 ## Current Version
 
 ```text
-v0.10.4-automated-aws-dev-qualification-unified-evidence
+v0.10.5-automated-dev-to-test-promotion-test-qualification
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -150,6 +156,12 @@ binding, a reviewed append-only aws-dev Bundle, and the single authorized
 the action disabled while disposable AWS environments and ephemeral runners
 are absent. After the Bundle merges, the planner recommends test Promotion but
 does not dispatch it.
+v0.10.5 activates that reviewed dev-to-test PR preparation behind
+`DEMO_API_AWS_TEST_PROMOTION_ENABLED`, retains the existing guarded Canary
+completion helper, and gates aws-test qualification separately with
+`DEMO_API_AWS_TEST_QUALIFICATION_ENABLED`. Both automated paths accept only
+protected-main facts; no PR is merged automatically and prod remains outside
+the execution boundary.
 
 ## Platform Architecture
 

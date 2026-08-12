@@ -2,6 +2,39 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.5
+
+### Added
+
+- Repository-variable-gated preparation of the reviewed `aws-dev -> aws-test`
+  release-only PR from a merged, fresh, scope-valid aws-dev Qualification
+  Bundle.
+- A separate `DEMO_API_AWS_TEST_QUALIFICATION_ENABLED` switch plus the explicit
+  `reviewed-and-completed` resume input after the existing guarded Canary
+  completion helper.
+- Deterministic aws-test qualification Scope, dev/test Bundle schema support,
+  same-run test static/runtime composition, and append-only reviewed aws-test
+  Bundle PRs.
+- Offline positive and negative tests for Bundle/legacy input isolation,
+  Canary-gate bypass, Rollout and AnalysisRun identity checks, stale main,
+  duplicate PRs, automatic merge, Kubernetes writes, and production dispatch.
+
+### Changed
+
+- Upgraded application, stage, orchestrator, snapshot, decision, runtime, Scope,
+  and Bundle contracts to v0.10.5.
+- Extended the planner with `prepare-test-promotion`,
+  `review-and-complete-test-canary`, and `qualify-aws-test` transitions while
+  preserving the historical manual static/runtime evidence Promotion mode.
+- Generalized Qualification Bundle collection and validation to `aws-dev` and
+  `aws-test`; each environment retains an independent deployment Scope.
+
+### Boundary
+
+- v0.10.5 creates only reviewed PRs. It never merges a PR, promotes or aborts a
+  Rollout, syncs Argo CD, writes Kubernetes, creates an EKS environment, applies
+  Terraform, rebuilds an image, triggers rollback, or prepares aws-prod.
+
 ## v0.10.4
 
 ### Added

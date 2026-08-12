@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.4",
+  "schemaVersion": "v0.10.5",
   "application": "demo-api",
   "workflow": ".github/workflows/demo-api-release-orchestrator.yaml",
   "protectedRef": "refs/heads/main",
@@ -31,7 +31,10 @@
     "stateIsRecomputed": true,
     "mutableStateFile": false,
     "releaseIdIsEnvironmentIndependent": true,
-    "qualificationScope": "delivery/contracts/demo-api-qualification-scope.json"
+    "qualificationScopes": {
+      "aws-dev": "delivery/contracts/demo-api-qualification-scope.json",
+      "aws-test": "delivery/contracts/demo-api-qualification-scope-aws-test.json"
+    }
   },
   "pullRequestDiscovery": {
     "mode": "read-only",
@@ -60,19 +63,26 @@
     "deriveClusterAccess": false,
     "runtimeRunner": "ephemeral-self-hosted",
     "runtimeEnvironments": [
-      "aws-dev"
+      "aws-dev",
+      "aws-test"
     ],
-    "repositoryMutation": "qualification-bundle-only-pr",
+    "repositoryMutation": "test-release-only-or-qualification-bundle-only-pr",
     "automaticMerge": false,
     "automaticEnvironmentCreation": false
   },
   "actionExecution": {
-    "mode": "bounded-aws-dev-qualification",
+    "mode": "bounded-dev-test-automation",
     "dispatchReusableStages": true,
     "authorizedActions": [
-      "qualify-aws-dev"
+      "qualify-aws-dev",
+      "prepare-test-promotion",
+      "qualify-aws-test"
     ],
-    "activationVariable": "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
+    "activationVariables": {
+      "qualify-aws-dev": "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
+      "prepare-test-promotion": "DEMO_API_AWS_TEST_PROMOTION_ENABLED",
+      "qualify-aws-test": "DEMO_API_AWS_TEST_QUALIFICATION_ENABLED"
+    },
     "activationValue": "true",
     "staticMode": "artifact-only",
     "sameRunArtifactsRequired": true,
@@ -86,10 +96,27 @@
   "qualificationBundle": {
     "workflow": ".github/workflows/demo-api-record-qualification-bundle.yaml",
     "schema": "delivery/contracts/qualification-bundle.schema.json",
-    "scope": "delivery/contracts/demo-api-qualification-scope.json",
-    "pathTemplate": "evidence/demo-api/qualification/aws-dev/{releaseId}/{runtimeRunId}-{runtimeRunAttempt}.json",
+    "scopes": {
+      "aws-dev": "delivery/contracts/demo-api-qualification-scope.json",
+      "aws-test": "delivery/contracts/demo-api-qualification-scope-aws-test.json"
+    },
+    "pathTemplate": "evidence/demo-api/qualification/{environment}/{releaseId}/{runtimeRunId}-{runtimeRunAttempt}.json",
     "automaticMerge": false,
-    "legacyEvidenceAcceptedForAwsDevAutomation": false
+    "legacyEvidenceAcceptedForAutomation": false
+  },
+  "testPromotion": {
+    "workflow": ".github/workflows/demo-api-promote-environment.yaml",
+    "source": "aws-dev",
+    "target": "aws-test",
+    "qualificationMode": "qualification-bundle",
+    "releaseOnlyPullRequest": true,
+    "automaticMerge": false
+  },
+  "testCanaryGate": {
+    "confirmation": "reviewed-and-completed",
+    "helper": "scripts/complete-aws-test-rollout.sh",
+    "runtimeMutationByAutomation": false,
+    "qualificationBeforeConfirmation": false
   },
   "productionBoundary": {
     "environmentApprovalRequired": true,

@@ -24,6 +24,7 @@ RELEASE_FILE="${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml"
 STATIC_RESULT="${WORK_DIR}/static.json"
 RUNTIME_RESULT="${WORK_DIR}/runtime.json"
 SCOPE_RESULT="${WORK_DIR}/scope.json"
+TEST_SCOPE_RESULT="${WORK_DIR}/scope-test.json"
 BUNDLE_FILE="${WORK_DIR}/bundle.json"
 
 ENVIRONMENT=aws-dev \
@@ -102,8 +103,13 @@ Path(output_path).write_text(json.dumps(runtime, indent=2, sort_keys=True) + "\n
 PY
 
 "${ROOT_DIR}/scripts/calculate-demo-api-qualification-scope.py" \
+  --environment aws-dev \
   --output "${SCOPE_RESULT}" >/dev/null
+"${ROOT_DIR}/scripts/calculate-demo-api-qualification-scope.py" \
+  --environment aws-test \
+  --output "${TEST_SCOPE_RESULT}" >/dev/null
 "${ROOT_DIR}/scripts/write-demo-api-qualification-bundle.py" \
+  --environment aws-dev \
   --static-result "${STATIC_RESULT}" \
   --runtime-result "${RUNTIME_RESULT}" \
   --scope-result "${SCOPE_RESULT}" \
@@ -117,7 +123,7 @@ PY
   --bundle "${BUNDLE_FILE}" \
   --now 2026-08-12T02:00:00Z >/dev/null
 
-python3 - "${ROOT_DIR}" "${WORK_DIR}" "${BUNDLE_FILE}" "${SCOPE_RESULT}" <<'PY'
+python3 - "${ROOT_DIR}" "${WORK_DIR}" "${BUNDLE_FILE}" "${SCOPE_RESULT}" "${TEST_SCOPE_RESULT}" <<'PY'
 from __future__ import annotations
 
 import copy
@@ -133,6 +139,7 @@ root = Path(sys.argv[1])
 work = Path(sys.argv[2])
 bundle = json.loads(Path(sys.argv[3]).read_text())
 scope = json.loads(Path(sys.argv[4]).read_text())
+test_scope = json.loads(Path(sys.argv[5]).read_text())
 sys.path.insert(0, str(root / "scripts"))
 from demo_api_qualification_bundle import canonical_bytes, validate
 
@@ -178,6 +185,15 @@ contract_source = root / scope["contract"]
 contract_target = fixture_root / scope["contract"]
 contract_target.parent.mkdir(parents=True, exist_ok=True)
 shutil.copy2(contract_source, contract_target)
+for item in test_scope["files"]:
+    source = root / item["path"]
+    target = fixture_root / item["path"]
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, target)
+test_contract_source = root / test_scope["contract"]
+test_contract_target = fixture_root / test_scope["contract"]
+test_contract_target.parent.mkdir(parents=True, exist_ok=True)
+shutil.copy2(test_contract_source, test_contract_target)
 validate(bundle, root=fixture_root, now=now)
 for environment in ("aws-test", "aws-prod"):
     relative = Path(f"apps/demo-api/helm/values/releases/{environment}.yaml")

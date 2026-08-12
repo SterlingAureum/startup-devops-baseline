@@ -6,6 +6,10 @@ v0.10.4 activates one bounded action in the demo-api release orchestrator:
 GitOps convergence, run the trusted aws-dev executor, and prepare one reviewed
 Qualification Bundle PR.
 
+v0.10.5 preserves this dev flow unchanged, then consumes the reviewed Bundle
+through the separately gated test path documented in
+`docs/AWS_TEST_AUTOMATED_QUALIFICATION.md`.
+
 It does not build the image again. The existing image-publish Workflow remains
 the only image build, scan, SBOM, publication, attestation, and aws-dev release
 PR stage.
@@ -126,7 +130,7 @@ any other mutation.
 
 | Condition | Outcome |
 | --- | --- |
-| Bundle already fresh | proceed to `test-release / prepare-test-promotion`; dispatch remains false |
+| Bundle already fresh | proceed to `test-release / prepare-test-promotion`; v0.10.5 dispatch requires its separate variable |
 | Matching Bundle PR open | `waiting_review`; reuse the PR |
 | Cluster absent | runtime `blocked / environment_absent`; restore it manually, then resume |
 | Endpoint or OIDC unavailable | runtime blocked; correct access and resume |

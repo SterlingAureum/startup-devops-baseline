@@ -244,7 +244,8 @@ Incremental scope:
   deterministic deployment-scope hashing, and reviewed unified Qualification
   Bundle evidence - delivered
 - v0.10.5 - automatic aws-dev to aws-test Promotion preparation, reviewed
-  Canary progression, AnalysisRun verification, and test qualification - planned
+  Canary progression, AnalysisRun verification, test scope hashing, and
+  reviewed aws-test Qualification Bundle evidence - delivered
 - v0.10.6 - automatic production Promotion preparation with retained aws-prod
   Environment approval and reviewed release-only PR merge - planned
 - v0.10.7 - retry, resume, supersede, evidence expiry, failure diagnostics,

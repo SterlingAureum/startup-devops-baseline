@@ -24,15 +24,19 @@ for aws-test/aws-prod, a Healthy Rollout, matching Successful AnalysisRun, and
 completed ALB stable action. Runtime records expire after three days by
 default. Promotion requires both record types to be reviewed on `main`.
 
-v0.10.4 adds the durable, self-contained aws-dev Qualification Bundle used by
-the automated orchestration path:
+v0.10.4 adds the durable, self-contained aws-dev Qualification Bundle. v0.10.5
+extends the same reviewed format to aws-test:
 
 ```text
 evidence/demo-api/qualification/aws-dev/<release-id>/<run-id>-<attempt>.json
+evidence/demo-api/qualification/aws-test/<release-id>/<run-id>-<attempt>.json
 ```
 
 It combines same-run static and trusted runtime results, their hashes, the
-immutable release, and a deterministic aws-dev deployment-scope hash. The
+immutable release, and a deterministic environment-specific deployment-scope
+hash. The
 legacy v0.9 static/runtime records remain valid for the manual Promotion
 Runbook, but they are not accepted as a substitute for the aws-dev Bundle in
-the v0.10.4 automated path.
+the v0.10 automated path. Automated dev-to-test preparation accepts only the
+merged aws-dev Bundle; aws-test qualification produces its own Bundle only
+after the explicit reviewed Canary gate.

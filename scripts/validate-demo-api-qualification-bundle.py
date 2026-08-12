@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate one durable v0.10.4 qualification bundle."""
+"""Validate one durable v0.10.5 qualification bundle."""
 
 from __future__ import annotations
 

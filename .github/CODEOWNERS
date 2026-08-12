@@ -11,6 +11,7 @@
 /.github/CODEOWNERS @SterlingAureum
 /.github/workflows/demo-api-*.yaml @SterlingAureum
 /delivery/contracts/demo-api-qualification-scope.json @SterlingAureum
+/delivery/contracts/demo-api-qualification-scope-aws-test.json @SterlingAureum
 /delivery/contracts/qualification-bundle.schema.json @SterlingAureum
 /scripts/calculate-demo-api-qualification-scope.py @SterlingAureum
 /scripts/demo_api_qualification_bundle.py @SterlingAureum

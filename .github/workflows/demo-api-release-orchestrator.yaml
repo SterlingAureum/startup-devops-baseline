@@ -14,6 +14,7 @@ on:
       - '.github/workflows/demo-api-release-orchestrator.yaml'
       - 'delivery/contracts/demo-api-orchestrator.json'
       - 'delivery/contracts/demo-api-qualification-scope.json'
+      - 'delivery/contracts/demo-api-qualification-scope-aws-test.json'
       - 'delivery/contracts/qualification-bundle.schema.json'
       - 'scripts/collect-demo-api-orchestration-snapshot.py'
       - 'scripts/derive-demo-api-orchestration-plan.py'
@@ -37,6 +38,14 @@ on:
         description: Optional deterministic release ID to inspect or resume
         required: false
         type: string
+      test_rollout_gate:
+        description: Explicit human confirmation after the guarded aws-test Canary helper completed
+        required: true
+        default: not-reviewed
+        type: choice
+        options:
+          - not-reviewed
+          - reviewed-and-completed
       policy:
         description: Delivery policy; production remains reviewed in every mode
         required: true
@@ -72,6 +81,8 @@ jobs:
       source-commit: ${{ steps.finalize.outputs.source-commit }}
       image-digest: ${{ steps.finalize.outputs.image-digest }}
       release-file-sha256: ${{ steps.finalize.outputs.release-file-sha256 }}
+      qualification-bundle-path: ${{ steps.finalize.outputs.qualification-bundle-path }}
+      qualification-bundle-sha256: ${{ steps.finalize.outputs.qualification-bundle-sha256 }}
     steps:
       - name: Checkout protected main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -86,6 +97,7 @@ jobs:
           REQUESTED_POLICY: ${{ inputs.policy }}
           REQUESTED_RELEASE_ID: ${{ inputs.release_id }}
           BEFORE_REVISION: ${{ github.event.before }}
+          REQUESTED_TEST_ROLLOUT_GATE: ${{ inputs.test_rollout_gate }}
         run: |
           captured_main="$(git rev-parse HEAD)"
           operation="${REQUESTED_OPERATION:-}"
@@ -139,6 +151,7 @@ jobs:
             echo "source-commit=${source_commit}"
             echo "captured-main=${captured_main}"
             echo "requested-release-id=${REQUESTED_RELEASE_ID}"
+            echo "test-rollout-gate=${REQUESTED_TEST_ROLLOUT_GATE:-not-reviewed}"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Collect read-only Git and pull-request facts
@@ -149,6 +162,7 @@ jobs:
           SOURCE_COMMIT: ${{ steps.context.outputs.source-commit }}
           CAPTURED_MAIN: ${{ steps.context.outputs.captured-main }}
           REQUESTED_RELEASE_ID: ${{ steps.context.outputs.requested-release-id }}
+          TEST_ROLLOUT_GATE: ${{ steps.context.outputs.test-rollout-gate }}
         run: |
           arguments=(
             --operation "${OPERATION}"
@@ -159,6 +173,7 @@ jobs:
             --observed-main-revision "${CAPTURED_MAIN}"
             --repository "${GITHUB_REPOSITORY}"
             --output "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json"
+            --test-rollout-gate "${TEST_ROLLOUT_GATE}"
           )
           if [[ -n "${SOURCE_COMMIT}" ]]; then
             arguments+=(--source-commit "${SOURCE_COMMIT}")
@@ -203,12 +218,18 @@ jobs:
               "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
             echo "${output_name}=${value}" >> "${GITHUB_OUTPUT}"
           done
+          target_environment="$(jq --raw-output '.targetEnvironment // "aws-dev"' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
+          if [[ "${target_environment}" != "aws-dev" && "${target_environment}" != "aws-test" ]]; then
+            target_environment="aws-dev"
+          fi
           {
             echo "dispatch-authorized=$(jq --raw-output '.dispatchAuthorized' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
             echo "control-plane-sha=$(jq --raw-output '.observedMainRevision' "${RUNNER_TEMP}/demo-api-orchestration-decision.json")"
             echo "source-commit=$(jq --raw-output '.activeRelease.sourceCommit // empty' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
             echo "image-digest=$(jq --raw-output '.activeRelease.imageDigest // empty' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
-            echo "release-file-sha256=$(jq --raw-output '.releases["aws-dev"].sha256' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
+            echo "release-file-sha256=$(jq --raw-output --arg environment "${target_environment}" '.releases[$environment].sha256' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
+            echo "qualification-bundle-path=$(jq --raw-output '.qualificationBundles["aws-dev"].ref // empty' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
+            echo "qualification-bundle-sha256=$(jq --raw-output '.qualificationBundles["aws-dev"].sha256 // empty' "${RUNNER_TEMP}/demo-api-orchestration-snapshot.json")"
           } >> "${GITHUB_OUTPUT}"
 
       - name: Publish orchestration summary
@@ -231,12 +252,14 @@ jobs:
             echo "- Recommended action: \`${action}\`"
             echo "- Target environment: \`${target}\`"
             echo "- Dispatch authorized by plan: \`${dispatch}\`"
-            echo "- aws-dev automation enabled: \`${{ vars.DEMO_API_AWS_DEV_QUALIFICATION_ENABLED == 'true' }}\`"
+            echo "- aws-dev qualification enabled: \`${{ vars.DEMO_API_AWS_DEV_QUALIFICATION_ENABLED == 'true' }}\`"
+            echo "- aws-test Promotion enabled: \`${{ vars.DEMO_API_AWS_TEST_PROMOTION_ENABLED == 'true' }}\`"
+            echo "- aws-test qualification enabled: \`${{ vars.DEMO_API_AWS_TEST_QUALIFICATION_ENABLED == 'true' }}\`"
             if [[ -n "${pr_url}" ]]; then
               echo "- Existing pull request: ${pr_url}"
             fi
             echo
-            echo "v0.10.4 may dispatch only aws-dev static qualification, trusted runtime qualification, and a qualification-only PR. It never merges a PR, promotes test/prod, syncs Argo CD, or creates an environment."
+            echo "v0.10.5 may prepare one reviewed dev-to-test release PR or qualify dev/test after the explicit gates. It never merges, writes Kubernetes, creates an environment, or prepares production."
           } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Upload derived snapshot and decision
@@ -249,28 +272,33 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  static-qualification:
-    name: Produce same-run aws-dev static qualification
+  prepare-test-promotion:
+    name: Prepare reviewed aws-dev to aws-test Promotion
     needs: derive
     if: >-
-      needs.derive.outputs.recommended-action == 'qualify-aws-dev' &&
+      needs.derive.outputs.recommended-action == 'prepare-test-promotion' &&
       needs.derive.outputs.dispatch-authorized == 'true' &&
-      vars.DEMO_API_AWS_DEV_QUALIFICATION_ENABLED == 'true'
+      vars.DEMO_API_AWS_TEST_PROMOTION_ENABLED == 'true'
     permissions:
-      contents: read
+      contents: write
       packages: read
-    uses: ./.github/workflows/demo-api-record-release-evidence.yaml
+      pull-requests: write
+    uses: ./.github/workflows/demo-api-promote-environment.yaml
     with:
-      environment: aws-dev
-      mode: artifact-only
-      expected_control_plane_sha: ${{ needs.derive.outputs.control-plane-sha }}
+      source_environment: aws-dev
+      target_environment: aws-test
+      qualification_mode: qualification-bundle
+      qualification_bundle_path: ${{ needs.derive.outputs.qualification-bundle-path }}
+      qualification_bundle_sha256: ${{ needs.derive.outputs.qualification-bundle-sha256 }}
+      release_id: ${{ needs.derive.outputs.release-id }}
+      control_plane_sha: ${{ needs.derive.outputs.control-plane-sha }}
 
-  automation-disabled:
-    name: Report disabled aws-dev automation
+  test-promotion-disabled:
+    name: Report disabled aws-test Promotion preparation
     needs: derive
     if: >-
-      needs.derive.outputs.recommended-action == 'qualify-aws-dev' &&
-      vars.DEMO_API_AWS_DEV_QUALIFICATION_ENABLED != 'true'
+      needs.derive.outputs.recommended-action == 'prepare-test-promotion' &&
+      vars.DEMO_API_AWS_TEST_PROMOTION_ENABLED != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 2
     permissions:
@@ -279,17 +307,64 @@ jobs:
       - name: Publish safe disabled result
         run: |
           {
-            echo "### demo-api aws-dev qualification"
+            echo "### demo-api aws-test Promotion"
             echo
             echo "- Status: \`automation-disabled\`"
             echo "- Release: \`${{ needs.derive.outputs.release-id }}\`"
-            echo "- Recommended action: \`qualify-aws-dev\`"
+            echo "- Recommended action: \`prepare-test-promotion\`"
             echo
-            echo "Set repository variable \`DEMO_API_AWS_DEV_QUALIFICATION_ENABLED=true\` only after aws-dev and its ephemeral trusted runner are ready."
+            echo "Set \`DEMO_API_AWS_TEST_PROMOTION_ENABLED=true\` only when reviewed dev-to-test PR preparation is intended."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  static-qualification:
+    name: Produce same-run non-production static qualification
+    needs: derive
+    if: >-
+      (needs.derive.outputs.recommended-action == 'qualify-aws-dev' ||
+       needs.derive.outputs.recommended-action == 'qualify-aws-test') &&
+      needs.derive.outputs.dispatch-authorized == 'true' &&
+      ((needs.derive.outputs.target-environment == 'aws-dev' &&
+        vars.DEMO_API_AWS_DEV_QUALIFICATION_ENABLED == 'true') ||
+       (needs.derive.outputs.target-environment == 'aws-test' &&
+        vars.DEMO_API_AWS_TEST_QUALIFICATION_ENABLED == 'true'))
+    permissions:
+      contents: read
+      packages: read
+    uses: ./.github/workflows/demo-api-record-release-evidence.yaml
+    with:
+      environment: ${{ needs.derive.outputs.target-environment }}
+      mode: artifact-only
+      expected_control_plane_sha: ${{ needs.derive.outputs.control-plane-sha }}
+
+  qualification-disabled:
+    name: Report disabled non-production qualification
+    needs: derive
+    if: >-
+      (needs.derive.outputs.recommended-action == 'qualify-aws-dev' ||
+       needs.derive.outputs.recommended-action == 'qualify-aws-test') &&
+      ((needs.derive.outputs.target-environment == 'aws-dev' &&
+        vars.DEMO_API_AWS_DEV_QUALIFICATION_ENABLED != 'true') ||
+       (needs.derive.outputs.target-environment == 'aws-test' &&
+        vars.DEMO_API_AWS_TEST_QUALIFICATION_ENABLED != 'true'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    steps:
+      - name: Publish safe disabled result
+        run: |
+          {
+            echo "### demo-api ${{ needs.derive.outputs.target-environment }} qualification"
+            echo
+            echo "- Status: \`automation-disabled\`"
+            echo "- Release: \`${{ needs.derive.outputs.release-id }}\`"
+            echo "- Recommended action: \`${{ needs.derive.outputs.recommended-action }}\`"
+            echo
+            echo "Enable only the matching environment qualification variable after its cluster and ephemeral trusted runner are ready."
           } >> "${GITHUB_STEP_SUMMARY}"
 
   runtime-qualification:
-    name: Qualify aws-dev from the trusted executor
+    name: Qualify non-production from the trusted executor
     needs:
       - derive
       - static-qualification
@@ -301,7 +376,7 @@ jobs:
       id-token: write
     uses: ./.github/workflows/demo-api-runtime-qualification.yaml
     with:
-      environment: aws-dev
+      environment: ${{ needs.derive.outputs.target-environment }}
       release_id: ${{ needs.derive.outputs.release-id }}
       control_plane_sha: ${{ needs.derive.outputs.control-plane-sha }}
       expected_source_commit: ${{ needs.derive.outputs.source-commit }}
@@ -309,7 +384,7 @@ jobs:
       expected_release_file_sha256: ${{ needs.derive.outputs.release-file-sha256 }}
 
   record-qualification-bundle:
-    name: Prepare reviewed aws-dev Qualification Bundle
+    name: Prepare reviewed non-production Qualification Bundle
     needs:
       - derive
       - static-qualification
@@ -322,7 +397,7 @@ jobs:
       pull-requests: write
     uses: ./.github/workflows/demo-api-record-qualification-bundle.yaml
     with:
-      environment: aws-dev
+      environment: ${{ needs.derive.outputs.target-environment }}
       release_id: ${{ needs.derive.outputs.release-id }}
       control_plane_sha: ${{ needs.derive.outputs.control-plane-sha }}
       static_artifact_name: ${{ needs.static-qualification.outputs.artifact_name }}

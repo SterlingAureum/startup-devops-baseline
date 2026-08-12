@@ -1,15 +1,15 @@
 {
   "schemaVersion": "v0.10.5",
   "application": "demo-api",
-  "environment": "aws-dev",
+  "environment": "aws-test",
   "algorithm": "sha256-path-content-v1",
   "include": [
     "apps/demo-api/helm/Chart.yaml",
     "apps/demo-api/helm/.helmignore",
     "apps/demo-api/helm/values.yaml",
     "apps/demo-api/helm/templates/**/*",
-    "apps/demo-api/helm/values/environments/aws-dev.yaml",
-    "apps/demo-api/helm/values/releases/aws-dev.yaml",
+    "apps/demo-api/helm/values/environments/aws-test.yaml",
+    "apps/demo-api/helm/values/releases/aws-test.yaml",
     "clusters/aws/base/kustomization.yaml",
     "clusters/aws/base/platform/demo-api.yaml",
     "clusters/aws/base/platform/external-secrets-startup-apps.yaml",
@@ -19,6 +19,6 @@
     "clusters/aws/base/security/external-secrets/startup-apps/**/*",
     "clusters/aws/base/security/network-policies/startup-apps/**/*",
     "clusters/aws/base/security/runtime-qualification/**/*",
-    "clusters/aws/overlays/dev/**/*"
+    "clusters/aws/overlays/test/**/*"
   ]
 }

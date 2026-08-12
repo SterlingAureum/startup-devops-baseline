@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Deterministically hash the deployment inputs qualified for aws-dev."""
+"""Deterministically hash the deployment inputs qualified for dev or test."""
 
 from __future__ import annotations
 
@@ -9,7 +9,10 @@ from pathlib import Path
 from typing import Any
 
 
-CONTRACT_PATH = Path("delivery/contracts/demo-api-qualification-scope.json")
+CONTRACT_PATHS = {
+    "aws-dev": Path("delivery/contracts/demo-api-qualification-scope.json"),
+    "aws-test": Path("delivery/contracts/demo-api-qualification-scope-aws-test.json"),
+}
 PREFIX = b"demo-api-qualification-scope-v1\0"
 
 
@@ -17,20 +20,23 @@ def fail(message: str) -> None:
     raise SystemExit(message)
 
 
-def calculate(root: Path) -> dict[str, Any]:
+def calculate(root: Path, environment: str = "aws-dev") -> dict[str, Any]:
     root = root.resolve()
-    contract_path = root / CONTRACT_PATH
+    if environment not in CONTRACT_PATHS:
+        fail(f"Unsupported qualification scope environment: {environment}")
+    contract_path_relative = CONTRACT_PATHS[environment]
+    contract_path = root / contract_path_relative
     if not contract_path.is_file():
-        fail(f"Missing qualification scope contract: {CONTRACT_PATH}")
+        fail(f"Missing qualification scope contract: {contract_path_relative}")
     contract_bytes = contract_path.read_bytes()
     try:
         contract = json.loads(contract_bytes)
     except json.JSONDecodeError as exc:
         fail(f"Invalid qualification scope contract: {exc}")
     if contract != {
-        "schemaVersion": "v0.10.4",
+        "schemaVersion": "v0.10.5",
         "application": "demo-api",
-        "environment": "aws-dev",
+        "environment": environment,
         "algorithm": "sha256-path-content-v1",
         "include": contract.get("include"),
     }:
@@ -67,11 +73,11 @@ def calculate(root: Path) -> dict[str, Any]:
         files.append({"path": relative, "sha256": content_sha})
 
     return {
-        "schemaVersion": "v0.10.4",
+        "schemaVersion": "v0.10.5",
         "application": "demo-api",
-        "environment": "aws-dev",
+        "environment": environment,
         "algorithm": "sha256-path-content-v1",
-        "contract": CONTRACT_PATH.as_posix(),
+        "contract": contract_path_relative.as_posix(),
         "contractSha256": hashlib.sha256(contract_bytes).hexdigest(),
         "scopeSha256": digest.hexdigest(),
         "files": files,

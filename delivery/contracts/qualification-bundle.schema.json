@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aureumstack.com/schemas/qualification-bundle-v0.10.4.json",
-  "title": "demo-api unified aws-dev qualification bundle",
+  "$id": "https://aureumstack.com/schemas/qualification-bundle-v0.10.5.json",
+  "title": "demo-api unified non-production qualification bundle",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -20,9 +20,9 @@
     "orchestration"
   ],
   "properties": {
-    "schemaVersion": { "const": "v0.10.4" },
+    "schemaVersion": { "const": "v0.10.5" },
     "application": { "const": "demo-api" },
-    "environment": { "const": "aws-dev" },
+    "environment": { "enum": ["aws-dev", "aws-test"] },
     "releaseId": { "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$" },
     "status": { "const": "qualified" },
     "recordedAt": { "type": "string", "format": "date-time" },
@@ -45,7 +45,7 @@
       "additionalProperties": false,
       "required": ["path", "sha256"],
       "properties": {
-        "path": { "const": "apps/demo-api/helm/values/releases/aws-dev.yaml" },
+        "path": { "pattern": "^apps/demo-api/helm/values/releases/aws-(dev|test)\\.yaml$" },
         "sha256": { "pattern": "^[0-9a-f]{64}$" }
       }
     },
@@ -55,7 +55,7 @@
       "required": ["algorithm", "contract", "contractSha256", "scopeSha256", "files"],
       "properties": {
         "algorithm": { "const": "sha256-path-content-v1" },
-        "contract": { "const": "delivery/contracts/demo-api-qualification-scope.json" },
+        "contract": { "enum": ["delivery/contracts/demo-api-qualification-scope.json", "delivery/contracts/demo-api-qualification-scope-aws-test.json"] },
         "contractSha256": { "pattern": "^[0-9a-f]{64}$" },
         "scopeSha256": { "pattern": "^[0-9a-f]{64}$" },
         "files": {

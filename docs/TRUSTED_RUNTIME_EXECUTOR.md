@@ -11,6 +11,13 @@ The manual entrypoint remains available for diagnostics and aws-test remains
 outside automatic dispatch. The temporary aws-dev result is combined with a
 same-run static result in a reviewed, durable Qualification Bundle.
 
+v0.10.5 connects `aws-test` only after the release PR is merged, the existing
+guarded Canary completion helper has run, the orchestrator is manually resumed
+with `test_rollout_gate=reviewed-and-completed`, and
+`DEMO_API_AWS_TEST_QUALIFICATION_ENABLED=true`. The executor remains read-only;
+it verifies the completed Rollout and matching Successful AnalysisRun rather
+than progressing either resource.
+
 ## Trust boundary
 
 The workflow has two jobs:

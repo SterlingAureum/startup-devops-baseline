@@ -54,6 +54,7 @@ snapshot_schema = load("delivery/contracts/orchestration-snapshot.schema.json")
 decision_schema = load("delivery/contracts/orchestration-decision.schema.json")
 bundle_schema = load("delivery/contracts/qualification-bundle.schema.json")
 scope_contract = load("delivery/contracts/demo-api-qualification-scope.json")
+test_scope_contract = load("delivery/contracts/demo-api-qualification-scope-aws-test.json")
 workflow = read(contract["workflow"])
 static_workflow = read(".github/workflows/demo-api-record-release-evidence.yaml")
 runtime_workflow = read(".github/workflows/demo-api-runtime-qualification.yaml")
@@ -61,7 +62,7 @@ bundle_workflow = read(".github/workflows/demo-api-record-qualification-bundle.y
 
 
 def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
-    require(value.get("schemaVersion") == "v0.10.4", "Bad orchestrator schema version")
+    require(value.get("schemaVersion") == "v0.10.5", "Bad orchestrator schema version")
     require(value.get("application") == "demo-api", "Unexpected orchestrator application")
     require(value.get("protectedRef") == "refs/heads/main", "Protected main boundary changed")
     require(value.get("operations") == ["start", "status", "resume"], "Operation set changed")
@@ -74,11 +75,17 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
     require(derivation.get("stateIsRecomputed") is True, "State must be recomputed")
     require(derivation.get("mutableStateFile") is False, "Mutable current state is forbidden")
     require(derivation.get("releaseIdIsEnvironmentIndependent") is True, "Release ID boundary changed")
-    require(derivation.get("qualificationScope") == "delivery/contracts/demo-api-qualification-scope.json", "Scope contract changed")
-    for field in ("snapshotSchema", "decisionSchema", "collector", "planner", "qualificationScope"):
+    require(derivation.get("qualificationScopes") == {
+        "aws-dev": "delivery/contracts/demo-api-qualification-scope.json",
+        "aws-test": "delivery/contracts/demo-api-qualification-scope-aws-test.json",
+    }, "Scope contracts changed")
+    for field in ("snapshotSchema", "decisionSchema", "collector", "planner"):
         require(isinstance(derivation.get(field), str) and derivation[field], f"Missing {field}")
         if check_files:
             require((root / derivation[field]).is_file(), f"Missing orchestration file: {derivation[field]}")
+    if check_files:
+        for path in derivation["qualificationScopes"].values():
+            require((root / path).is_file(), f"Missing orchestration scope: {path}")
 
     discovery = value.get("pullRequestDiscovery", {})
     require(discovery.get("mode") == "read-only", "PR discovery must remain read-only")
@@ -99,16 +106,20 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
     require(boundary.get("deriveAwsCredentials") == "none", "Derivation received AWS credentials")
     require(boundary.get("deriveClusterAccess") is False, "Derivation received EKS access")
     require(boundary.get("runtimeRunner") == "ephemeral-self-hosted", "Runtime runner changed")
-    require(boundary.get("runtimeEnvironments") == ["aws-dev"], "v0.10.4 runtime scope widened")
-    require(boundary.get("repositoryMutation") == "qualification-bundle-only-pr", "Repository mutation widened")
+    require(boundary.get("runtimeEnvironments") == ["aws-dev", "aws-test"], "Runtime environment scope changed")
+    require(boundary.get("repositoryMutation") == "test-release-only-or-qualification-bundle-only-pr", "Repository mutation widened")
     require(boundary.get("automaticMerge") is False, "Automatic merge enabled")
     require(boundary.get("automaticEnvironmentCreation") is False, "Automatic environment creation enabled")
 
     execution = value.get("actionExecution", {})
-    require(execution.get("mode") == "bounded-aws-dev-qualification", "Unexpected execution mode")
-    require(execution.get("dispatchReusableStages") is True, "aws-dev stage dispatch is not active")
-    require(execution.get("authorizedActions") == ["qualify-aws-dev"], "Authorized action set widened")
-    require(execution.get("activationVariable") == "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED", "Activation variable changed")
+    require(execution.get("mode") == "bounded-dev-test-automation", "Unexpected execution mode")
+    require(execution.get("dispatchReusableStages") is True, "Stage dispatch is not active")
+    require(execution.get("authorizedActions") == ["qualify-aws-dev", "prepare-test-promotion", "qualify-aws-test"], "Authorized action set changed")
+    require(execution.get("activationVariables") == {
+        "qualify-aws-dev": "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
+        "prepare-test-promotion": "DEMO_API_AWS_TEST_PROMOTION_ENABLED",
+        "qualify-aws-test": "DEMO_API_AWS_TEST_QUALIFICATION_ENABLED",
+    }, "Activation variables changed")
     require(execution.get("activationValue") == "true", "Activation value changed")
     require(execution.get("staticMode") == "artifact-only", "Static stage may create an intermediate PR")
     require(execution.get("sameRunArtifactsRequired") is True, "Cross-run artifacts were enabled")
@@ -116,12 +127,23 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
     bundle = value.get("qualificationBundle", {})
     require(bundle.get("workflow") == ".github/workflows/demo-api-record-qualification-bundle.yaml", "Bundle workflow changed")
     require(bundle.get("schema") == "delivery/contracts/qualification-bundle.schema.json", "Bundle schema changed")
-    require(bundle.get("scope") == "delivery/contracts/demo-api-qualification-scope.json", "Bundle scope changed")
+    require(bundle.get("scopes") == {
+        "aws-dev": "delivery/contracts/demo-api-qualification-scope.json",
+        "aws-test": "delivery/contracts/demo-api-qualification-scope-aws-test.json",
+    }, "Bundle scopes changed")
     require(bundle.get("automaticMerge") is False, "Bundle PR may merge itself")
-    require(bundle.get("legacyEvidenceAcceptedForAwsDevAutomation") is False, "Legacy evidence entered aws-dev automation")
+    require(bundle.get("legacyEvidenceAcceptedForAutomation") is False, "Legacy evidence entered automation")
     if check_files:
-        for field in ("workflow", "schema", "scope"):
+        for field in ("workflow", "schema"):
             require((root / bundle[field]).is_file(), f"Missing Bundle file: {bundle[field]}")
+        for path in bundle["scopes"].values():
+            require((root / path).is_file(), f"Missing Bundle scope: {path}")
+
+    test_gate = value.get("testCanaryGate", {})
+    require(test_gate.get("confirmation") == "reviewed-and-completed", "Test confirmation changed")
+    require(test_gate.get("helper") == "scripts/complete-aws-test-rollout.sh", "Guarded helper changed")
+    require(test_gate.get("runtimeMutationByAutomation") is False, "Automation gained Rollout mutation")
+    require(test_gate.get("qualificationBeforeConfirmation") is False, "Test qualification can bypass review")
 
     production = value.get("productionBoundary", {})
     require(production.get("environmentApprovalRequired") is True, "Production approval missing")
@@ -131,29 +153,33 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
 
 
 validate_contract(contract)
-require(snapshot_schema["properties"]["schemaVersion"]["const"] == "v0.10.4", "Snapshot schema version changed")
+require(snapshot_schema["properties"]["schemaVersion"]["const"] == "v0.10.5", "Snapshot schema version changed")
 require("qualificationBundles" in snapshot_schema["required"], "Snapshot omits Qualification Bundles")
-require(decision_schema["properties"]["schemaVersion"]["const"] == "v0.10.4", "Decision schema version changed")
-require(decision_schema["properties"]["executionMode"]["const"] == "aws-dev-qualification", "Decision execution mode changed")
+require("testRolloutGate" in snapshot_schema["required"], "Snapshot omits the test Rollout gate")
+require(decision_schema["properties"]["schemaVersion"]["const"] == "v0.10.5", "Decision schema version changed")
+require(decision_schema["properties"]["executionMode"]["const"] == "bounded-dev-test-automation", "Decision execution mode changed")
 require(decision_schema["properties"]["dispatchAuthorized"]["type"] == "boolean", "Dispatch authorization is not explicit")
 require("qualify-aws-dev" in decision_schema["properties"]["recommendedAction"]["enum"], "aws-dev action missing")
-require(bundle_schema["properties"]["environment"]["const"] == "aws-dev", "Bundle schema permits another environment")
+require(bundle_schema["properties"]["environment"]["enum"] == ["aws-dev", "aws-test"], "Bundle environment set changed")
 require(bundle_schema["additionalProperties"] is False, "Bundle schema accepts unknown fields")
 require(scope_contract["environment"] == "aws-dev", "Scope contract permits another environment")
+require(test_scope_contract["environment"] == "aws-test", "Test scope contract changed")
 require(all("evidence/" not in item and not item.startswith("docs/") for item in scope_contract["include"]), "Evidence or docs entered qualification scope")
 
 require("\n  push:\n" in workflow and "\n  workflow_dispatch:\n" in workflow, "Orchestrator entrypoints changed")
 require(not re.search(r"(?m)^  (pull_request|pull_request_target|workflow_run|schedule):", workflow), "Unsafe orchestrator trigger")
 require("branches:\n      - main" in workflow, "Push is not protected-main only")
-derive_block, action_block = workflow.split("\n  static-qualification:\n", 1)
+derive_block, action_block = workflow.split("\n  prepare-test-promotion:\n", 1)
 require("runs-on: ubuntu-latest" in derive_block, "Derive job is not GitHub-hosted")
 require(not re.search(r"(?i)configure-aws-credentials|\baws\s+eks\b|\bkubectl\b", derive_block), "Derive job gained AWS/EKS access")
 require("DEMO_API_AWS_DEV_QUALIFICATION_ENABLED" in action_block, "Activation variable is not enforced")
+require("DEMO_API_AWS_TEST_PROMOTION_ENABLED" in action_block, "Test Promotion variable is not enforced")
+require("DEMO_API_AWS_TEST_QUALIFICATION_ENABLED" in action_block, "Test qualification variable is not enforced")
 require("mode: artifact-only" in action_block, "Static stage is not artifact-only")
 require("demo-api-runtime-qualification.yaml" in action_block, "Trusted runtime stage is not dispatched")
 require("demo-api-record-qualification-bundle.yaml" in action_block, "Bundle stage is not dispatched")
-require("demo-api-promote-environment.yaml" not in workflow, "v0.10.4 dispatches Promotion")
-require("demo-api-rollback.yaml" not in workflow, "v0.10.4 dispatches rollback")
+require("demo-api-promote-environment.yaml" in action_block, "Reviewed test Promotion stage is not dispatched")
+require("demo-api-rollback.yaml" not in workflow, "v0.10.5 dispatches rollback")
 require("gh pr merge" not in workflow and "--auto" not in workflow, "Orchestrator can merge a PR")
 
 require("mode:" in static_workflow and "artifact-only" in static_workflow, "Static artifact mode missing")
@@ -164,7 +190,7 @@ require("aws-prod" not in runtime_workflow, "Runtime workflow permits production
 
 require("\n  workflow_call:\n" in bundle_workflow, "Bundle workflow is not reusable")
 require("\n  workflow_dispatch:\n" not in bundle_workflow, "Bundle workflow accepts arbitrary manual artifacts")
-require("if: inputs.environment == 'aws-dev'" in bundle_workflow, "Bundle target is not exact aws-dev")
+require("inputs.environment == 'aws-dev' || inputs.environment == 'aws-test'" in bundle_workflow, "Bundle target set changed")
 require("actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131" in bundle_workflow, "Bundle download pin changed")
 require("run-id:" not in bundle_workflow and "github-token:" not in bundle_workflow, "Bundle can download another run")
 require("gh pr create" in bundle_workflow, "Bundle PR is not created")
@@ -175,8 +201,8 @@ require("kubectl" not in bundle_workflow and "configure-aws-credentials" not in 
 mutations = [
     ("PR code", lambda c: c["eventModel"].__setitem__("pullRequestCode", True)),
     ("cross-run artifact", lambda c: c["actionExecution"].__setitem__("sameRunArtifactsRequired", False)),
-    ("test dispatch", lambda c: c["actionExecution"]["authorizedActions"].append("prepare-test-promotion")),
-    ("runtime scope", lambda c: c["executionBoundary"]["runtimeEnvironments"].append("aws-test")),
+    ("production dispatch", lambda c: c["actionExecution"]["authorizedActions"].append("prepare-prod-promotion")),
+    ("runtime scope", lambda c: c["executionBoundary"]["runtimeEnvironments"].append("aws-prod")),
     ("automatic merge", lambda c: c["qualificationBundle"].__setitem__("automaticMerge", True)),
     ("production runtime", lambda c: c["productionBoundary"].__setitem__("runtimeAccess", True)),
 ]
@@ -219,7 +245,7 @@ def fact(state: str = "missing") -> dict[str, Any]:
 
 def base() -> dict[str, Any]:
     return {
-        "schemaVersion": "v0.10.4",
+        "schemaVersion": "v0.10.5",
         "application": "demo-api",
         "operation": "resume",
         "policy": "reviewed",
@@ -227,6 +253,7 @@ def base() -> dict[str, Any]:
         "capturedMainRevision": "c" * 40,
         "observedMainRevision": "c" * 40,
         "requestedReleaseId": None,
+        "testRolloutGate": "not-reviewed",
         "activeRelease": copy.deepcopy(new),
         "releases": {
             environment: {
@@ -240,7 +267,7 @@ def base() -> dict[str, Any]:
             environment: {"static": fact(), "runtime": fact()}
             for environment in ("aws-dev", "aws-test")
         },
-        "qualificationBundles": {"aws-dev": fact()},
+        "qualificationBundles": {"aws-dev": fact(), "aws-test": fact()},
         "pullRequests": [],
         "environmentAvailability": {environment: "unknown" for environment in ("aws-dev", "aws-test", "aws-prod")},
         "derivedAt": "2026-08-12T00:00:00Z",
@@ -282,7 +309,7 @@ cases.append(("bundle review", value, ("dev-qualification", "waiting_review", "w
 value = copy.deepcopy(value)
 value["pullRequests"] = []
 value["qualificationBundles"]["aws-dev"] = fact("fresh")
-cases.append(("test boundary", value, ("test-release", "progressing", "prepare-test-promotion", False)))
+cases.append(("test boundary", value, ("test-release", "progressing", "prepare-test-promotion", True)))
 
 value = base()
 value["observedMainRevision"] = "d" * 40
@@ -297,7 +324,7 @@ for name, snapshot, expected in cases:
     result = planner.derive(snapshot)
     actual = (result["phase"], result["status"], result["recommendedAction"], result["dispatchAuthorized"])
     require(actual == expected, f"{name}: expected {expected}, got {actual}")
-    require(result["executionMode"] == "aws-dev-qualification", f"{name}: bad execution mode")
+    require(result["executionMode"] == "bounded-dev-test-automation", f"{name}: bad execution mode")
 
 duplicate = base()
 duplicate["releases"]["aws-dev"]["identity"] = copy.deepcopy(new)
@@ -309,5 +336,5 @@ except SystemExit:
 else:
     raise ValidationError("Duplicate Qualification Bundle PRs were accepted")
 
-print("Automated aws-dev qualification orchestration contracts passed.")
+print("Automated aws-dev qualification and dev-to-test boundary contracts passed.")
 PY

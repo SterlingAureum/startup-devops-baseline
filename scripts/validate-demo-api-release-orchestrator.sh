@@ -2,4 +2,5 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec "${ROOT_DIR}/scripts/validate-demo-api-aws-dev-orchestration.sh"
+"${ROOT_DIR}/scripts/validate-demo-api-aws-dev-orchestration.sh"
+"${ROOT_DIR}/scripts/validate-demo-api-aws-test-orchestration.sh"

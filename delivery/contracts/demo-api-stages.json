@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.4",
+  "schemaVersion": "v0.10.5",
   "application": "demo-api",
   "defaultRef": "refs/heads/main",
   "executionBoundary": {
@@ -96,7 +96,8 @@
         "runtime_artifact_name": "string"
       },
       "allowedEnvironments": [
-        "aws-dev"
+        "aws-dev",
+        "aws-test"
       ],
       "outputs": [
         "status",
@@ -124,8 +125,13 @@
       "inputs": {
         "source_environment": "string",
         "target_environment": "string",
+        "qualification_mode": "string",
         "evidence_run_id": "string",
-        "runtime_evidence_id": "string"
+        "runtime_evidence_id": "string",
+        "qualification_bundle_path": "string",
+        "qualification_bundle_sha256": "string",
+        "release_id": "string",
+        "control_plane_sha": "string"
       },
       "allowedEdges": [
         "aws-dev->aws-test",
@@ -142,6 +148,7 @@
       "primitiveScripts": [
         "scripts/validate-demo-api-release-evidence.sh",
         "scripts/validate-demo-api-runtime-evidence.sh",
+        "scripts/validate-demo-api-qualification-bundle.py",
         "scripts/promote-demo-api-release.sh"
       ],
       "mutationScope": [
@@ -185,11 +192,12 @@
   ],
   "orchestration": {
     "contract": "delivery/contracts/demo-api-orchestrator.json",
-    "executionMode": "bounded-aws-dev-qualification",
+    "executionMode": "bounded-dev-test-automation",
     "stageDispatch": true
   },
   "deferredStages": {
-    "runtimeQualification": "v0.10.4-dispatched-aws-dev-only",
-    "qualificationBundle": "v0.10.4-implemented"
+    "runtimeQualification": "v0.10.5-dispatched-aws-dev-and-aws-test",
+    "qualificationBundle": "v0.10.5-implemented-dev-and-test",
+    "productionPromotion": "v0.10.6-deferred"
   }
 }

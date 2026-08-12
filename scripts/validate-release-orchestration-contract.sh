@@ -90,7 +90,7 @@ def require(condition: bool, message: str) -> None:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.4", "Bad schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.5", "Bad schemaVersion")
 
     application = contract.get("application")
     require(isinstance(application, dict), "application must be an object")
@@ -117,6 +117,11 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
         "Qualification scope contract is not linked",
     )
     require(
+        application.get("testQualificationScopeContract")
+        == "delivery/contracts/demo-api-qualification-scope-aws-test.json",
+        "Test qualification scope contract is not linked",
+    )
+    require(
         application.get("qualificationBundleWorkflow")
         == ".github/workflows/demo-api-record-qualification-bundle.yaml",
         "Qualification Bundle workflow is not linked",
@@ -126,6 +131,7 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
             "orchestratorContract",
             "qualificationBundleSchema",
             "qualificationScopeContract",
+            "testQualificationScopeContract",
             "qualificationBundleWorkflow",
         ):
             require((root / application[field]).is_file(), f"Application file is missing: {field}")
@@ -164,7 +170,10 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     require(prod.get("environmentApprovalRequired") is True, "Production Environment approval required")
     require(all(value == "manual" for value in prod["mergePolicy"].values()), "Production auto-merge forbidden")
     require(environments[0].get("automaticQualification") == "repository-variable-gated", "aws-dev qualification gate changed")
-    require(environments[1].get("automaticQualification") is False, "aws-test automatic qualification enabled early")
+    require(
+        environments[1].get("automaticQualification") == "repository-variable-gated-after-manual-canary",
+        "aws-test qualification gate changed",
+    )
     require(environments[2].get("automaticQualification") is False, "aws-prod automatic qualification enabled")
 
     promotion = contract.get("promotion")
@@ -234,7 +243,10 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     require(orchestration.get("resumeWithoutRebuild") is True, "Resume must preserve image identity")
     require(orchestration.get("environmentAbsenceIsWaiting") is True, "Absent environment must be a waiting condition")
     require(orchestration.get("awsDevQualificationVariable") == "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED", "aws-dev activation variable changed")
-    require(orchestration.get("automaticPromotion") is False, "Automatic Promotion enabled early")
+    require(orchestration.get("awsTestPromotionVariable") == "DEMO_API_AWS_TEST_PROMOTION_ENABLED", "aws-test Promotion variable changed")
+    require(orchestration.get("awsTestQualificationVariable") == "DEMO_API_AWS_TEST_QUALIFICATION_ENABLED", "aws-test qualification variable changed")
+    require(orchestration.get("automaticPromotion") is False, "Automatic merge-style Promotion enabled")
+    require(orchestration.get("automaticTestPromotionPreparation") is True, "Reviewed test Promotion preparation is not active")
     require(orchestration.get("automaticPullRequestMerge") is False, "Automatic PR merge enabled")
 
 

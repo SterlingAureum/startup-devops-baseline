@@ -13,10 +13,11 @@ from demo_api_qualification_scope import calculate
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parent.parent)
+    parser.add_argument("--environment", required=True, choices=("aws-dev", "aws-test"))
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--github-output", type=Path)
     args = parser.parse_args()
-    value = calculate(args.root)
+    value = calculate(args.root, args.environment)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
     if args.github_output:

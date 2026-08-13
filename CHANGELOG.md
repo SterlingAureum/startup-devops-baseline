@@ -2,6 +2,41 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.8
+
+### Added
+
+- Machine-readable final acceptance contract for protected-main
+  dev/test/prod-static acceptance, interruption recovery, supersede, manual
+  rollback boundary, disposable-environment cleanup, and closure ordering.
+- Strict v0.10 final-evidence schema, repository-bound writer, reference/hash
+  validator, operator input template, and append-only `evidence/v0.10/` layout.
+- `docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md` with GitHub settings, activation
+  variables, exact orchestrator commands, environment rebuild, Canary review,
+  prod-static Promotion, destroy/audit, evidence-only PR, and tag procedure.
+- Offline positive/negative acceptance tests for required checkpoints,
+  placeholder identities, duplicate PR claims, cleanup residuals, active
+  runners, production runtime/cluster claims, and automatic rollback.
+
+### Changed
+
+- Integrated the v0.10 final acceptance validator into repository quality
+  gates and protected its contracts, scripts, Runbook, and evidence through
+  CODEOWNERS.
+- Marked the v0.10 Roadmap implementation complete. Live acceptance remains an
+  explicit post-merge operation and is represented only by its reviewed final
+  evidence record.
+
+### Boundary
+
+- v0.10.8 adds no application workflow dispatch path, Terraform/IAM/RBAC,
+  Helm runtime change, automatic merge, automatic environment creation,
+  production cluster/runtime access, Kubernetes write, or automatic rollback.
+- Bundle expiry and exact retry/rollback-handoff failure classes use
+  deterministic clock/history validation. Live acceptance proves the normal
+  Qualification/Promotion path without keeping EKS running for 24 hours or
+  deliberately damaging a workload.
+
 ## v0.10.7
 
 ### Added

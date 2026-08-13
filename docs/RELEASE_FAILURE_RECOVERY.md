@@ -129,5 +129,10 @@ orchestrator does not generate a production rollback handoff.
 git diff --check
 ```
 
-The final interrupted-run, supersede, expiry, rollback, cost cleanup, and
-clean-room environment exercises remain in v0.10.8.
+v0.10.8 defines the final live interrupted-run, supersede, environment-absent,
+manual rollback-workflow, cost-cleanup, and dev/test/prod-static acceptance in
+`V0.10_FINAL_ACCEPTANCE_RUNBOOK.md`. Bundle expiry, exact retry, and rollback
+handoff classification remain deterministic clock/history tests so disposable
+clusters are not retained or deliberately damaged merely to manufacture a
+failure. The append-only final evidence distinguishes those deterministic
+checks from the live GitHub/AWS checkpoints.

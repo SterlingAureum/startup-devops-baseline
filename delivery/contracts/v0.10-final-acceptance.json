@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "v0.10.8",
+  "version": "v0.10",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "protectedRef": "refs/heads/main",
+  "acceptanceMode": "clean-room-dev-test-prod-static",
+  "liveCheckpoints": [
+    "status-read-only",
+    "release-supersede",
+    "environment-absent-resume",
+    "interrupted-run-resume",
+    "aws-dev-qualification",
+    "aws-dev-to-aws-test-promotion",
+    "aws-test-reviewed-canary-completion",
+    "aws-test-qualification",
+    "aws-test-to-aws-prod-static-promotion",
+    "manual-rollback-workflow-boundary",
+    "aws-test-cost-cleanup",
+    "aws-dev-cost-cleanup"
+  ],
+  "deterministicCheckpoints": [
+    "exact-failed-attempt-retry",
+    "bundle-expiring-classification",
+    "bundle-expired-classification",
+    "bundle-scope-drift-classification",
+    "bundle-release-drift-classification",
+    "dev-test-rollback-handoff-resolution"
+  ],
+  "activationVariables": [
+    "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
+    "DEMO_API_AWS_TEST_PROMOTION_ENABLED",
+    "DEMO_API_AWS_TEST_QUALIFICATION_ENABLED",
+    "DEMO_API_AWS_PROD_PROMOTION_ENABLED"
+  ],
+  "requiredChecks": [
+    "validate / quality-gates",
+    "validate / demo-api release currentness"
+  ],
+  "runtimeEnvironments": [
+    "aws-dev",
+    "aws-test"
+  ],
+  "productionBoundary": {
+    "mode": "prod-static",
+    "environmentApprovalRequired": true,
+    "releaseOnlyPullRequestRequired": true,
+    "runtimeQualification": false,
+    "clusterCreation": false,
+    "kubernetesWrites": false,
+    "automaticMerge": false,
+    "automaticRollback": false
+  },
+  "cleanup": {
+    "environments": [
+      "aws-test",
+      "aws-dev"
+    ],
+    "validator": "scripts/validate-aws-cost-cleanup.sh",
+    "ephemeralRunnersMustStop": true,
+    "activationVariablesMustBeDisabled": true
+  },
+  "closure": {
+    "schema": "delivery/contracts/v0.10-final-evidence.schema.json",
+    "writer": "scripts/write-v0.10-final-evidence.py",
+    "validator": "scripts/validate-v0.10-final-evidence.py",
+    "pathTemplate": "evidence/v0.10/final/<UTC timestamp>.json",
+    "evidenceOnlyPullRequest": true,
+    "tagAfterEvidenceMerge": "v0.10.8"
+  },
+  "acceptanceScopePatterns": [
+    ".github/CODEOWNERS",
+    ".github/workflows/demo-api-*.yaml",
+    "apps/demo-api/helm/values/releases/aws-*.yaml",
+    "delivery/contracts/demo-api*.json",
+    "delivery/contracts/*orchestration*.json",
+    "delivery/contracts/qualification-bundle.schema.json",
+    "delivery/contracts/runtime-qualification.schema.json",
+    "delivery/contracts/v0.10-final-*.json",
+    "scripts/*demo-api*",
+    "scripts/*trusted-runtime*",
+    "scripts/validate-v0.10-final-acceptance.sh",
+    "scripts/v010_final_evidence.py",
+    "scripts/write-v0.10-final-evidence.py",
+    "scripts/validate-v0.10-final-evidence.py",
+    "docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md",
+    "docs/RELEASE_FAILURE_RECOVERY.md",
+    "docs/RELEASE_ORCHESTRATOR.md",
+    "docs/TRUSTED_RUNTIME_EXECUTOR.md",
+    "docs/AWS_PROD_CONTROLLED_PROMOTION.md"
+  ]
+}

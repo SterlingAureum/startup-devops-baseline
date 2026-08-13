@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aureumstack.com/schemas/v0.10-final-evidence.schema.json",
+  "title": "v0.10 final clean-room acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "version",
+    "status",
+    "recordedAt",
+    "repository",
+    "protectedRef",
+    "validatedControlPlaneSha",
+    "release",
+    "qualificationBundles",
+    "github",
+    "recovery",
+    "production",
+    "cleanup",
+    "verification"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "v0.10.8" },
+    "version": { "const": "v0.10" },
+    "status": { "const": "accepted" },
+    "recordedAt": { "type": "string", "format": "date-time" },
+    "repository": { "const": "SterlingAureum/startup-devops-baseline" },
+    "protectedRef": { "const": "refs/heads/main" },
+    "validatedControlPlaneSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "release": { "$ref": "#/$defs/release" },
+    "qualificationBundles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aws-dev", "aws-test"],
+      "properties": {
+        "aws-dev": { "$ref": "#/$defs/fileReference" },
+        "aws-test": { "$ref": "#/$defs/fileReference" }
+      }
+    },
+    "github": { "$ref": "#/$defs/github" },
+    "recovery": { "$ref": "#/$defs/recovery" },
+    "production": { "$ref": "#/$defs/production" },
+    "cleanup": { "$ref": "#/$defs/cleanup" },
+    "verification": { "$ref": "#/$defs/verification" }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^[1-9][0-9]*$"
+    },
+    "pullRequest": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "fileReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "releaseId",
+        "sourceCommit",
+        "imageDigest",
+        "environmentReleaseSha256"
+      ],
+      "properties": {
+        "releaseId": {
+          "type": "string",
+          "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+        },
+        "sourceCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "imageDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "environmentReleaseSha256": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["aws-dev", "aws-test", "aws-prod"],
+          "properties": {
+            "aws-dev": { "$ref": "#/$defs/sha256" },
+            "aws-test": { "$ref": "#/$defs/sha256" },
+            "aws-prod": { "$ref": "#/$defs/sha256" }
+          }
+        }
+      }
+    },
+    "github": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runs", "pullRequests"],
+      "properties": {
+        "runs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "statusReadOnly",
+            "supersedeStatus",
+            "environmentAbsent",
+            "interrupted",
+            "resumed",
+            "devQualification",
+            "testPromotion",
+            "testQualification",
+            "prodPromotion",
+            "rollbackBoundary"
+          ],
+          "properties": {
+            "statusReadOnly": { "$ref": "#/$defs/runId" },
+            "supersedeStatus": { "$ref": "#/$defs/runId" },
+            "environmentAbsent": { "$ref": "#/$defs/runId" },
+            "interrupted": { "$ref": "#/$defs/runId" },
+            "resumed": { "$ref": "#/$defs/runId" },
+            "devQualification": { "$ref": "#/$defs/runId" },
+            "testPromotion": { "$ref": "#/$defs/runId" },
+            "testQualification": { "$ref": "#/$defs/runId" },
+            "prodPromotion": { "$ref": "#/$defs/runId" },
+            "rollbackBoundary": { "$ref": "#/$defs/runId" }
+          }
+        },
+        "pullRequests": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "supersededRelease",
+            "devQualification",
+            "testPromotion",
+            "testQualification",
+            "prodPromotion",
+            "rollbackBoundary"
+          ],
+          "properties": {
+            "supersededRelease": { "$ref": "#/$defs/pullRequest" },
+            "devQualification": { "$ref": "#/$defs/pullRequest" },
+            "testPromotion": { "$ref": "#/$defs/pullRequest" },
+            "testQualification": { "$ref": "#/$defs/pullRequest" },
+            "prodPromotion": { "$ref": "#/$defs/pullRequest" },
+            "rollbackBoundary": { "$ref": "#/$defs/pullRequest" }
+          }
+        }
+      }
+    },
+    "recovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "statusReadOnlyNoDispatch",
+        "environmentAbsentResumed",
+        "interruptedRunRecovered",
+        "duplicatePullRequestCreated",
+        "supersededReleaseBlocked",
+        "supersededPullRequestClosedByHuman",
+        "expiryValidationMode",
+        "requalificationBehaviorValidated",
+        "rollbackHandoffMode",
+        "rollbackAutomaticallyDispatched",
+        "rollbackPullRequestMerged"
+      ],
+      "properties": {
+        "statusReadOnlyNoDispatch": { "const": true },
+        "environmentAbsentResumed": { "const": true },
+        "interruptedRunRecovered": { "const": true },
+        "duplicatePullRequestCreated": { "const": false },
+        "supersededReleaseBlocked": { "const": true },
+        "supersededPullRequestClosedByHuman": { "const": true },
+        "expiryValidationMode": { "const": "deterministic-time-shift" },
+        "requalificationBehaviorValidated": { "const": true },
+        "rollbackHandoffMode": { "const": "deterministic-handoff-plus-live-manual-pr" },
+        "rollbackAutomaticallyDispatched": { "const": false },
+        "rollbackPullRequestMerged": { "const": false }
+      }
+    },
+    "production": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "environmentApprovalPassed",
+        "releaseOnlyPullRequestMerged",
+        "runtimeQualificationPerformed",
+        "clusterCreated",
+        "kubernetesWritesPerformed",
+        "automaticMerge",
+        "automaticRollback"
+      ],
+      "properties": {
+        "mode": { "const": "prod-static" },
+        "environmentApprovalPassed": { "const": true },
+        "releaseOnlyPullRequestMerged": { "const": true },
+        "runtimeQualificationPerformed": { "const": false },
+        "clusterCreated": { "const": false },
+        "kubernetesWritesPerformed": { "const": false },
+        "automaticMerge": { "const": false },
+        "automaticRollback": { "const": false }
+      }
+    },
+    "cleanupEnvironment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "completedAt"],
+      "properties": {
+        "status": { "const": "residual-cost-audit-passed" },
+        "completedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aws-dev",
+        "aws-test",
+        "ephemeralRunnersStopped",
+        "activationVariablesDisabled"
+      ],
+      "properties": {
+        "aws-dev": { "$ref": "#/$defs/cleanupEnvironment" },
+        "aws-test": { "$ref": "#/$defs/cleanupEnvironment" },
+        "ephemeralRunnersStopped": { "const": true },
+        "activationVariablesDisabled": { "const": true }
+      }
+    },
+    "verification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "acceptanceContractSha256",
+        "acceptanceScopeSha256",
+        "acceptanceScopeFileCount",
+        "offlineGate"
+      ],
+      "properties": {
+        "acceptanceContractSha256": { "$ref": "#/$defs/sha256" },
+        "acceptanceScopeSha256": { "$ref": "#/$defs/sha256" },
+        "acceptanceScopeFileCount": { "type": "integer", "minimum": 1 },
+        "offlineGate": { "const": "scripts/validate-v0.10-final-acceptance.sh" }
+      }
+    }
+  }
+}

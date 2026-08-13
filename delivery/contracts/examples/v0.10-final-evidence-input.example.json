@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "v0.10.8-input",
+  "recordedAt": "REPLACE_WITH_UTC_TIMESTAMP",
+  "validatedControlPlaneSha": "REPLACE_WITH_40_CHARACTER_MAIN_SHA",
+  "qualificationBundles": {
+    "aws-dev": "REPLACE_WITH_REVIEWED_AWS_DEV_BUNDLE_PATH",
+    "aws-test": "REPLACE_WITH_REVIEWED_AWS_TEST_BUNDLE_PATH"
+  },
+  "github": {
+    "runs": {
+      "statusReadOnly": "REPLACE_WITH_RUN_ID",
+      "supersedeStatus": "REPLACE_WITH_RUN_ID",
+      "environmentAbsent": "REPLACE_WITH_RUN_ID",
+      "interrupted": "REPLACE_WITH_RUN_ID",
+      "resumed": "REPLACE_WITH_RUN_ID",
+      "devQualification": "REPLACE_WITH_RUN_ID",
+      "testPromotion": "REPLACE_WITH_RUN_ID",
+      "testQualification": "REPLACE_WITH_RUN_ID",
+      "prodPromotion": "REPLACE_WITH_RUN_ID",
+      "rollbackBoundary": "REPLACE_WITH_RUN_ID"
+    },
+    "pullRequests": {
+      "supersededRelease": 0,
+      "devQualification": 0,
+      "testPromotion": 0,
+      "testQualification": 0,
+      "prodPromotion": 0,
+      "rollbackBoundary": 0
+    }
+  },
+  "recovery": {
+    "statusReadOnlyNoDispatch": true,
+    "environmentAbsentResumed": true,
+    "interruptedRunRecovered": true,
+    "duplicatePullRequestCreated": false,
+    "supersededReleaseBlocked": true,
+    "supersededPullRequestClosedByHuman": true,
+    "expiryValidationMode": "deterministic-time-shift",
+    "requalificationBehaviorValidated": true,
+    "rollbackHandoffMode": "deterministic-handoff-plus-live-manual-pr",
+    "rollbackAutomaticallyDispatched": false,
+    "rollbackPullRequestMerged": false
+  },
+  "production": {
+    "mode": "prod-static",
+    "environmentApprovalPassed": true,
+    "releaseOnlyPullRequestMerged": true,
+    "runtimeQualificationPerformed": false,
+    "clusterCreated": false,
+    "kubernetesWritesPerformed": false,
+    "automaticMerge": false,
+    "automaticRollback": false
+  },
+  "cleanup": {
+    "aws-dev": {
+      "status": "residual-cost-audit-passed",
+      "completedAt": "REPLACE_WITH_UTC_TIMESTAMP"
+    },
+    "aws-test": {
+      "status": "residual-cost-audit-passed",
+      "completedAt": "REPLACE_WITH_UTC_TIMESTAMP"
+    },
+    "ephemeralRunnersStopped": true,
+    "activationVariablesDisabled": true
+  }
+}

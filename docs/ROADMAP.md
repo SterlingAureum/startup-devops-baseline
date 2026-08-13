@@ -207,7 +207,7 @@ Incremental scope:
 
 ## v0.10 - Release Orchestration and Delivery Automation
 
-Status: In progress
+Status: Implementation delivered; completed when reviewed final evidence exists
 
 Goal:
 
@@ -251,8 +251,11 @@ Incremental scope:
 - v0.10.7 - strictly read-only status, exact failed-Attempt retry, secret-free
   attempt diagnostics, source-ancestry supersede handling, explicit Bundle
   expiry/drift states, and governed dev/test rollback handoff - delivered
-- v0.10.8 - clean-room dev/test/prod-static acceptance, interrupted-run
-  recovery, cost cleanup, closure evidence, and final Runbook - planned
+- v0.10.8 - clean-room dev/test/prod-static acceptance contract,
+  interrupted-run and environment-restoration procedure, deterministic
+  expiry/retry/rollback-handoff checks, cost cleanup, tamper-evident closure
+  evidence, and final command-by-command Runbook - delivered; live acceptance
+  is recorded only after the evidence-only PR merges
 
 The application release path does not automatically create EKS environments.
 An absent disposable environment is a resumable wait, and production approval

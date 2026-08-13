@@ -36,6 +36,9 @@ echo "==> Validating unified dev/test Qualification Bundles"
 echo "==> Validating trusted runtime qualification executor"
 "${ROOT_DIR}/scripts/validate-trusted-runtime-executor.sh"
 
+echo "==> Validating v0.10 final clean-room acceptance contracts"
+"${ROOT_DIR}/scripts/validate-v0.10-final-acceptance.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

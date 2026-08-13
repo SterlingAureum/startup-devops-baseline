@@ -97,11 +97,16 @@ older unfinished work without automatically closing PRs, Bundle expiry and
 drift are explicit, and selected dev/test runtime failures can produce a
 read-only governed rollback handoff. The orchestrator still never dispatches a
 rollback, merges a PR, or gains production runtime access.
+v0.10.8 closes the version line with a protected-main clean-room acceptance
+contract, exact dev/test/prod-static Runbook, interruption and environment
+restoration checkpoints, deterministic expiry/retry/rollback-handoff tests,
+dependency-aware dev/test cost cleanup, and repository-bound append-only final
+evidence. No success evidence is included before the real live sequence runs.
 
 ## Current Version
 
 ```text
-v0.10.7-failure-recovery-supersede-governed-rollback-handoff
+v0.10.8-clean-room-acceptance-closure-final-runbook
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -182,6 +187,12 @@ an optional manual dev/test rollback handoff. `status` can no longer dispatch
 even when activation variables are enabled. All PR closure, merge, rollback,
 Kubernetes mutation, environment creation, and production runtime operations
 remain human or explicitly out of scope.
+v0.10.8 adds `docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md`, a machine-readable final
+acceptance contract, strict closure-evidence schema/writer/validator, and an
+offline negative gate that rejects unsafe production claims or incomplete
+cleanup. Live run IDs, PR numbers, Qualification Bundles, and cleanup times are
+recorded later through one reviewed evidence-only PR. The final tag is created
+only after that record merges; aws-prod remains desired-state-only.
 
 ## Platform Architecture
 

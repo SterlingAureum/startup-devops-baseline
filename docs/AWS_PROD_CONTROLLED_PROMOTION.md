@@ -88,3 +88,7 @@ It may create a branch and pull request. It cannot:
 ```
 
 Live Workflow acceptance remains part of the later clean-room checkpoint.
+
+v0.10.7 additionally requires at least 3600 seconds of source Bundle validity
+when the Promotion stage executes. Long-lived production PRs must retain current
+required checks and may require renewed test qualification before merge.

@@ -83,20 +83,27 @@ old.update({
 })
 
 
-def fact(state: str = "missing", environment: str = "aws-test") -> dict[str, object]:
+def evidence_fact(state: str = "missing") -> dict[str, object]:
     if state == "missing":
         return {"state": "missing", "id": None, "ref": None, "sha256": None}
+    return {"state": state, "id": "500-3", "ref": "evidence/fixture.json", "sha256": "9" * 64}
+
+
+def fact(state: str = "missing", environment: str = "aws-test") -> dict[str, object]:
     return {
         "state": state,
-        "id": "500-3",
-        "ref": f"evidence/demo-api/qualification/{environment}/{identity['releaseId']}/500-3.json",
-        "sha256": "9" * 64,
+        "reason": "not_found" if state == "missing" else ("time_expired" if state == "expired" else "valid"),
+        "id": None if state == "missing" else "500-3",
+        "ref": None if state == "missing" else f"evidence/demo-api/qualification/{environment}/{identity['releaseId']}/500-3.json",
+        "sha256": None if state == "missing" else "9" * 64,
+        "expiresAt": None if state == "missing" else "2026-08-13T00:30:00Z",
+        "remainingSeconds": None if state == "missing" else (0 if state == "expired" else 81000),
     }
 
 
 def snapshot() -> dict[str, object]:
     return {
-        "schemaVersion": "v0.10.6",
+        "schemaVersion": "v0.10.7",
         "application": "demo-api",
         "operation": "resume",
         "policy": "reviewed",
@@ -104,14 +111,17 @@ def snapshot() -> dict[str, object]:
         "capturedMainRevision": "d" * 40,
         "observedMainRevision": "d" * 40,
         "requestedReleaseId": None,
+        "retryAttempt": None,
         "testRolloutGate": "reviewed-and-completed",
         "activeRelease": copy.deepcopy(identity),
+        "releaseOrderState": "current",
+        "supersedingRelease": None,
         "releases": {
             "aws-dev": {"path": "apps/demo-api/helm/values/releases/aws-dev.yaml", "sha256": "3" * 64, "identity": copy.deepcopy(identity)},
             "aws-test": {"path": "apps/demo-api/helm/values/releases/aws-test.yaml", "sha256": "4" * 64, "identity": copy.deepcopy(identity)},
             "aws-prod": {"path": "apps/demo-api/helm/values/releases/aws-prod.yaml", "sha256": "5" * 64, "identity": copy.deepcopy(old)},
         },
-        "evidence": {environment: {"static": fact(), "runtime": fact()} for environment in ("aws-dev", "aws-test")},
+        "evidence": {environment: {"static": evidence_fact(), "runtime": evidence_fact()} for environment in ("aws-dev", "aws-test")},
         "qualificationBundles": {"aws-dev": fact("fresh", "aws-dev"), "aws-test": fact("fresh")},
         "pullRequests": [],
         "environmentAvailability": {environment: "unknown" for environment in ("aws-dev", "aws-test", "aws-prod")},
@@ -168,12 +178,12 @@ require(
 )
 
 value = snapshot()
-value["qualificationBundles"]["aws-test"] = fact("stale")
+value["qualificationBundles"]["aws-test"] = fact("expired")
 decision = planner.derive(value)
 require(
     (decision["phase"], decision["status"], decision["recommendedAction"], decision["dispatchAuthorized"])
-    == ("test-qualification", "blocked", "qualify-aws-test", True),
-    "Stale test Bundle was allowed to prepare production",
+    == ("test-qualification", "progressing", "qualify-aws-test", True),
+    "Expired test Bundle was allowed to prepare production",
 )
 
 print("Controlled test-to-production Promotion contracts passed.")

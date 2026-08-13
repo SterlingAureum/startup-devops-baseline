@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aureumstack.com/schemas/orchestration-decision-v0.10.6.json",
+  "$id": "https://aureumstack.com/schemas/orchestration-decision-v0.10.7.json",
   "title": "Derived demo-api orchestration decision",
   "type": "object",
   "additionalProperties": false,
@@ -15,6 +15,7 @@
     "recommendedAction",
     "targetEnvironment",
     "openPullRequest",
+    "supersededByReleaseId",
     "executionMode",
     "dispatchAuthorized",
     "capturedMainRevision",
@@ -23,7 +24,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "v0.10.6"
+      "const": "v0.10.7"
     },
     "application": {
       "const": "demo-api"
@@ -32,7 +33,8 @@
       "enum": [
         "start",
         "status",
-        "resume"
+        "resume",
+        "retry"
       ]
     },
     "releaseId": {
@@ -87,6 +89,7 @@
         "prepare-prod-promotion",
         "restore-environment",
         "retry-after-main-stabilizes",
+        "review-and-close-superseded-pr",
         "none"
       ]
     },
@@ -126,6 +129,13 @@
           "type": "null"
         }
       ]
+    },
+    "supersededByReleaseId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
     },
     "executionMode": {
       "const": "bounded-reviewed-promotion"

@@ -266,7 +266,8 @@ jobs:
               exit 1
             fi
             ./scripts/validate-demo-api-qualification-bundle.py \
-              --bundle "${qualification_bundle_snapshot}"
+              --bundle "${qualification_bundle_snapshot}" \
+              --minimum-remaining-seconds 3600
             jq --exit-status \
               --arg environment "${SOURCE_ENVIRONMENT}" \
               --arg release_id "${RELEASE_ID}" \

@@ -1,12 +1,13 @@
 {
-  "schemaVersion": "v0.10.6",
+  "schemaVersion": "v0.10.7",
   "application": "demo-api",
   "workflow": ".github/workflows/demo-api-release-orchestrator.yaml",
   "protectedRef": "refs/heads/main",
   "operations": [
     "start",
     "status",
-    "resume"
+    "resume",
+    "retry"
   ],
   "eventModel": {
     "pushMain": [
@@ -18,7 +19,8 @@
     "workflowDispatch": [
       "start",
       "status",
-      "resume"
+      "resume",
+      "retry"
     ],
     "workflowRunChaining": false,
     "pullRequestCode": false
@@ -26,6 +28,8 @@
   "stateDerivation": {
     "snapshotSchema": "delivery/contracts/orchestration-snapshot.schema.json",
     "decisionSchema": "delivery/contracts/orchestration-decision.schema.json",
+    "attemptSchema": "delivery/contracts/orchestration-attempt.schema.json",
+    "failureRecoveryPolicy": "delivery/contracts/demo-api-failure-recovery-policy.json",
     "collector": "scripts/collect-demo-api-orchestration-snapshot.py",
     "planner": "scripts/derive-demo-api-orchestration-plan.py",
     "stateIsRecomputed": true,
@@ -57,7 +61,8 @@
     "deriveRunner": "github-hosted",
     "derivePermissions": [
       "contents-read",
-      "pull-requests-read"
+      "pull-requests-read",
+      "actions-read-for-explicit-retry-attempt"
     ],
     "deriveAwsCredentials": "none",
     "deriveClusterAccess": false,
@@ -88,12 +93,25 @@
     "activationValue": "true",
     "staticMode": "artifact-only",
     "sameRunArtifactsRequired": true,
+    "sameAttemptArtifactsRequired": true,
+    "statusDispatchAuthorized": false,
     "deferredActivation": {
       "trustedRuntime": "v0.10.3",
       "awsDev": "v0.10.4",
       "awsTest": "v0.10.5",
       "awsProd": "v0.10.6"
     }
+  },
+  "failureRecovery": {
+    "attemptArtifactRetentionDays": 14,
+    "attemptIsPromotionEvidence": false,
+    "retryRequiresExactPriorAttempt": true,
+    "nativePartialRerunAcceptedForBundle": false,
+    "supersedeDetection": "source-ancestry-then-build-run",
+    "automaticSupersededPullRequestClose": false,
+    "minimumPromotionBundleRemainingSeconds": 3600,
+    "rollbackCandidateResolver": "scripts/resolve-demo-api-rollback-candidate.py",
+    "rollbackDispatchAuthorized": false
   },
   "qualificationBundle": {
     "workflow": ".github/workflows/demo-api-record-qualification-bundle.yaml",

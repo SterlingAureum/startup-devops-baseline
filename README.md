@@ -91,11 +91,17 @@ Bundle PR. v0.10.6 consumes that merged, still-fresh test Bundle to prepare a
 reviewed test-to-prod release-only PR behind the protected `aws-prod` GitHub
 Environment. The workflow never merges the PR, obtains production runtime
 access, or writes Kubernetes.
+v0.10.7 hardens recovery: manual `status` is now strictly read-only, `retry`
+accepts only the exact prior safely retryable Attempt, newer Releases supersede
+older unfinished work without automatically closing PRs, Bundle expiry and
+drift are explicit, and selected dev/test runtime failures can produce a
+read-only governed rollback handoff. The orchestrator still never dispatches a
+rollback, merges a PR, or gains production runtime access.
 
 ## Current Version
 
 ```text
-v0.10.6-controlled-test-to-production-promotion
+v0.10.7-failure-recovery-supersede-governed-rollback-handoff
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -169,6 +175,13 @@ aws-test Qualification Bundle, enters the protected `aws-prod` Environment,
 and may change only the aws-prod release values file. Production runtime access,
 cluster creation, Kubernetes writes, rollback, and automatic merge remain
 forbidden.
+v0.10.7 adds secret-free short-retention Attempt artifacts, exact new-run retry
+lineage, source-ancestry Release supersede, `fresh/expiring/expired/scope_drift/
+release_drift/invalid` Bundle states, a one-hour Promotion validity floor, and
+an optional manual dev/test rollback handoff. `status` can no longer dispatch
+even when activation variables are enabled. All PR closure, merge, rollback,
+Kubernetes mutation, environment creation, and production runtime operations
+remain human or explicitly out of scope.
 
 ## Platform Architecture
 

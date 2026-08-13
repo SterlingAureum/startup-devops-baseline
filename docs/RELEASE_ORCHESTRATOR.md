@@ -5,7 +5,7 @@ recomputes the current phase, status, blocker, open pull request, and recommende
 next action from durable Git and GitHub facts. It does not keep a mutable
 `current-state.json` file and does not wait inside one long-running workflow.
 
-v0.10.6 preserves the read-only derivation job and authorizes four bounded,
+v0.10.7 preserves the read-only derivation job and authorizes four bounded,
 repository-variable-gated actions: `qualify-aws-dev`,
 `prepare-test-promotion`, `qualify-aws-test`, and `prepare-prod-promotion`.
 They may create only a target release-only PR or a qualification-only dev/test
@@ -15,13 +15,14 @@ qualification.
 ## Scope
 
 The orchestrator runs for relevant changes on protected `main` and supports
-three manual operations:
+four manual operations:
 
 | Operation | Purpose |
 | --- | --- |
 | `start` | Treat the current protected-main revision as a new source candidate. |
-| `status` | Recompute and report state without changing the release. |
+| `status` | Recompute and report state; always `dispatchAuthorized=false`. |
 | `resume` | Recompute a waiting or blocked release after its external fact changed. |
+| `retry` | Start a new Attempt from one exact safely retryable failed Attempt. |
 
 Execution additionally requires the exact variable for the recommended action:
 
@@ -55,6 +56,15 @@ Manual commands are:
 gh workflow run demo-api-release-orchestrator.yaml \
   --ref main \
   -f operation=status \
+  -f policy=reviewed
+
+gh workflow run demo-api-release-orchestrator.yaml \
+  --ref main \
+  -f operation=retry \
+  -f release_id=<release-id> \
+  -f retry_run_id=<prior-run-id> \
+  -f retry_run_attempt=<prior-run-attempt> \
+  -f test_rollout_gate=not-reviewed \
   -f policy=reviewed
 
 gh workflow run demo-api-release-orchestrator.yaml \
@@ -114,7 +124,7 @@ already completed earlier transition does not move the release backwards. For
 example, an aws-prod release remains complete after its old dev evidence expires.
 Freshness is evaluated only for the next transition that has not yet occurred.
 
-## Idempotency and Resume
+## Idempotency, Retry, and Recovery
 
 Every run begins from current durable facts. Re-running `status` or `resume`
 does not create a second Qualification Bundle PR when one already exists. The
@@ -127,13 +137,21 @@ release derivation halfway through. The workflow captures checked-out `main`,
 rechecks the remote protected ref after derivation, and converts a changed ref
 into the resumable `stale-main` blocker.
 
+Every derived run records a secret-free Attempt artifact for 14 days. It is
+diagnostic data, not Promotion evidence. `retry` accepts only the same repository
+and Release, a `blocked` or `failed` outcome, and `safe-new-attempt` retry class.
+A partial GitHub job re-run is not a valid same-run, same-attempt qualification
+retry. Bundle expiry/drift, supersede, and rollback handoff details are in
+[Release Failure Recovery](RELEASE_FAILURE_RECOVERY.md).
+
 ## Security Boundary
 
-The v0.10.6 derivation job still has only:
+The v0.10.7 derivation job still has only:
 
 ```text
 contents: read
 pull-requests: read
+actions: read (only to download an explicitly named retry Attempt)
 ```
 
 The complete workflow may additionally prepare one aws-test or aws-prod

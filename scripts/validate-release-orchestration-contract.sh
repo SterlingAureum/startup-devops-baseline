@@ -90,7 +90,7 @@ def require(condition: bool, message: str) -> None:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.6", "Bad schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.7", "Bad schemaVersion")
 
     application = contract.get("application")
     require(isinstance(application, dict), "application must be an object")
@@ -126,6 +126,16 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
         == ".github/workflows/demo-api-record-qualification-bundle.yaml",
         "Qualification Bundle workflow is not linked",
     )
+    require(
+        application.get("orchestrationAttemptSchema")
+        == "delivery/contracts/orchestration-attempt.schema.json",
+        "Attempt schema is not linked",
+    )
+    require(
+        application.get("failureRecoveryPolicy")
+        == "delivery/contracts/demo-api-failure-recovery-policy.json",
+        "Failure recovery policy is not linked",
+    )
     if check_files:
         for field in (
             "orchestratorContract",
@@ -133,6 +143,8 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
             "qualificationScopeContract",
             "testQualificationScopeContract",
             "qualificationBundleWorkflow",
+            "orchestrationAttemptSchema",
+            "failureRecoveryPolicy",
         ):
             require((root / application[field]).is_file(), f"Application file is missing: {field}")
     template = application.get("releaseIdTemplate")

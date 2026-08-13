@@ -140,6 +140,7 @@ require("DEMO_API_AWS_TEST_QUALIFICATION_ENABLED" in workflow, "Test qualificati
 require("qualification_mode: qualification-bundle" in workflow, "Orchestrator does not use Bundle mode")
 require("qualification-bundle" in promotion and "legacy-evidence" in promotion, "Promotion dual-mode contract is missing")
 require("Legacy and Qualification Bundle inputs may not be mixed" in promotion, "Promotion does not reject mixed evidence")
+require("--minimum-remaining-seconds 3600" in promotion, "Promotion accepts a nearly expired Bundle")
 require("aws-dev-\\>aws-test|aws-test-\\>aws-prod" in promotion, "Bundle mode ordered edges are not exact")
 require("gh pr merge" not in promotion and "--auto" not in promotion, "Promotion may merge itself")
 require("kubectl" not in promotion and "configure-aws-credentials" not in promotion, "Promotion gained cluster access")
@@ -168,6 +169,18 @@ def fact(state: str = "missing") -> dict[str, object]:
     return {"state": state, "id": "500-3", "ref": "evidence/fixture.json", "sha256": "9" * 64}
 
 
+def bundle_fact(state: str = "missing") -> dict[str, object]:
+    return {
+        "state": state,
+        "reason": "not_found" if state == "missing" else "valid",
+        "id": None if state == "missing" else "500-3",
+        "ref": None if state == "missing" else "evidence/fixture.json",
+        "sha256": None if state == "missing" else "9" * 64,
+        "expiresAt": None if state == "missing" else "2026-08-13T00:30:00Z",
+        "remainingSeconds": None if state == "missing" else 81000,
+    }
+
+
 def snapshot() -> dict[str, object]:
     old = copy.deepcopy(identity)
     old["releaseId"] = f"demo-api-{'a' * 12}-{'1' * 12}"
@@ -175,7 +188,7 @@ def snapshot() -> dict[str, object]:
     old["imageTag"] = "sha-aaaaaaa"
     old["imageDigest"] = "sha256:" + "1" * 64
     return {
-        "schemaVersion": "v0.10.6",
+        "schemaVersion": "v0.10.7",
         "application": "demo-api",
         "operation": "resume",
         "policy": "reviewed",
@@ -183,15 +196,18 @@ def snapshot() -> dict[str, object]:
         "capturedMainRevision": "d" * 40,
         "observedMainRevision": "d" * 40,
         "requestedReleaseId": None,
+        "retryAttempt": None,
         "testRolloutGate": "not-reviewed",
         "activeRelease": copy.deepcopy(identity),
+        "releaseOrderState": "current",
+        "supersedingRelease": None,
         "releases": {
             "aws-dev": {"path": "apps/demo-api/helm/values/releases/aws-dev.yaml", "sha256": "3" * 64, "identity": copy.deepcopy(identity)},
             "aws-test": {"path": "apps/demo-api/helm/values/releases/aws-test.yaml", "sha256": "4" * 64, "identity": copy.deepcopy(identity)},
             "aws-prod": {"path": "apps/demo-api/helm/values/releases/aws-prod.yaml", "sha256": "5" * 64, "identity": old},
         },
         "evidence": {environment: {"static": fact(), "runtime": fact()} for environment in ("aws-dev", "aws-test")},
-        "qualificationBundles": {"aws-dev": fact("fresh"), "aws-test": fact()},
+        "qualificationBundles": {"aws-dev": bundle_fact("fresh"), "aws-test": bundle_fact()},
         "pullRequests": [],
         "environmentAvailability": {environment: "unknown" for environment in ("aws-dev", "aws-test", "aws-prod")},
         "derivedAt": "2026-08-12T02:00:00Z",
@@ -212,7 +228,7 @@ require(
     == ("test-qualification", "progressing", "qualify-aws-test", True),
     "Reviewed test gate did not authorize qualification",
 )
-value["qualificationBundles"]["aws-test"] = fact("fresh")
+value["qualificationBundles"]["aws-test"] = bundle_fact("fresh")
 decision = planner.derive(value)
 require(
     (decision["phase"], decision["status"], decision["recommendedAction"], decision["dispatchAuthorized"])

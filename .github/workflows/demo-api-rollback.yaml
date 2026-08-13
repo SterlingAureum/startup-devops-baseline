@@ -11,6 +11,10 @@ on:
         description: Full historical target-release-only desired-state commit
         required: true
         type: string
+      expected_current_release_id:
+        description: Optional failed Release ID that must still be current
+        required: false
+        type: string
     outputs:
       status:
         description: Rollback PR stage status
@@ -43,6 +47,10 @@ on:
       rollback_to_revision:
         description: Full historical target-release-only desired-state commit
         required: true
+        type: string
+      expected_current_release_id:
+        description: Failed Release ID currently carried by the target environment; required for v0.10.7 handoff
+        required: false
         type: string
 
 permissions:
@@ -99,6 +107,7 @@ jobs:
         env:
           TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
           ROLLBACK_TO_REVISION: ${{ inputs.rollback_to_revision }}
+          EXPECTED_CURRENT_RELEASE_ID: ${{ inputs.expected_current_release_id }}
           EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
         run: |
           if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
@@ -121,6 +130,27 @@ jobs:
           git fetch --no-tags origin \
             "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
           base_revision="$(git rev-parse "origin/${BASE_BRANCH}")"
+          if [[ -n "${EXPECTED_CURRENT_RELEASE_ID}" ]]; then
+            if [[ ! "${EXPECTED_CURRENT_RELEASE_ID}" =~ ^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$ ]]; then
+              echo "::error::expected_current_release_id violates the deterministic identity contract."
+              exit 1
+            fi
+            current_release_path="apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml"
+            current_source_commit="$(
+              git show "origin/${BASE_BRANCH}:${current_release_path}" |
+                awk '/^  sourceCommit:/{gsub(/[\"'\'' ]/, "", $2); print $2}'
+            )"
+            current_image_digest="$(
+              git show "origin/${BASE_BRANCH}:${current_release_path}" |
+                awk '/^  digest:/{gsub(/[\"'\'' ]/, "", $2); print $2}'
+            )"
+            current_release_id="demo-api-${current_source_commit:0:12}-${current_image_digest#sha256:}"
+            current_release_id="${current_release_id:0:34}"
+            if [[ "${current_release_id}" != "${EXPECTED_CURRENT_RELEASE_ID}" ]]; then
+              echo "::error::Target environment no longer carries the failed Release ID."
+              exit 1
+            fi
+          fi
           if ! git cat-file -e "${ROLLBACK_TO_REVISION}^{commit}" 2>/dev/null; then
             echo "::error::Rollback target is unavailable in repository history."
             exit 1

@@ -62,12 +62,12 @@ bundle_workflow = read(".github/workflows/demo-api-record-qualification-bundle.y
 
 
 def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
-    require(value.get("schemaVersion") == "v0.10.6", "Bad orchestrator schema version")
+    require(value.get("schemaVersion") == "v0.10.7", "Bad orchestrator schema version")
     require(value.get("application") == "demo-api", "Unexpected orchestrator application")
     require(value.get("protectedRef") == "refs/heads/main", "Protected main boundary changed")
-    require(value.get("operations") == ["start", "status", "resume"], "Operation set changed")
+    require(value.get("operations") == ["start", "status", "resume", "retry"], "Operation set changed")
     events = value.get("eventModel", {})
-    require(events.get("workflowDispatch") == ["start", "status", "resume"], "Manual operations changed")
+    require(events.get("workflowDispatch") == ["start", "status", "resume", "retry"], "Manual operations changed")
     require(events.get("workflowRunChaining") is False, "workflow_run chaining is forbidden")
     require(events.get("pullRequestCode") is False, "PR code cannot enter orchestration")
 
@@ -79,7 +79,7 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
         "aws-dev": "delivery/contracts/demo-api-qualification-scope.json",
         "aws-test": "delivery/contracts/demo-api-qualification-scope-aws-test.json",
     }, "Scope contracts changed")
-    for field in ("snapshotSchema", "decisionSchema", "collector", "planner"):
+    for field in ("snapshotSchema", "decisionSchema", "attemptSchema", "failureRecoveryPolicy", "collector", "planner"):
         require(isinstance(derivation.get(field), str) and derivation[field], f"Missing {field}")
         if check_files:
             require((root / derivation[field]).is_file(), f"Missing orchestration file: {derivation[field]}")
@@ -102,7 +102,7 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
 
     boundary = value.get("executionBoundary", {})
     require(boundary.get("deriveRunner") == "github-hosted", "Derivation runner changed")
-    require(boundary.get("derivePermissions") == ["contents-read", "pull-requests-read"], "Derivation permissions widened")
+    require(boundary.get("derivePermissions") == ["contents-read", "pull-requests-read", "actions-read-for-explicit-retry-attempt"], "Derivation permissions widened")
     require(boundary.get("deriveAwsCredentials") == "none", "Derivation received AWS credentials")
     require(boundary.get("deriveClusterAccess") is False, "Derivation received EKS access")
     require(boundary.get("runtimeRunner") == "ephemeral-self-hosted", "Runtime runner changed")
@@ -124,6 +124,16 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
     require(execution.get("activationValue") == "true", "Activation value changed")
     require(execution.get("staticMode") == "artifact-only", "Static stage may create an intermediate PR")
     require(execution.get("sameRunArtifactsRequired") is True, "Cross-run artifacts were enabled")
+    require(execution.get("sameAttemptArtifactsRequired") is True, "Cross-attempt artifacts were enabled")
+    require(execution.get("statusDispatchAuthorized") is False, "status may dispatch a stage")
+
+    recovery = value.get("failureRecovery", {})
+    require(recovery.get("attemptArtifactRetentionDays") == 14, "Attempt retention changed")
+    require(recovery.get("attemptIsPromotionEvidence") is False, "Attempt became Promotion evidence")
+    require(recovery.get("retryRequiresExactPriorAttempt") is True, "Retry lineage is optional")
+    require(recovery.get("automaticSupersededPullRequestClose") is False, "Superseded PRs may close automatically")
+    require(recovery.get("minimumPromotionBundleRemainingSeconds") == 3600, "Bundle validity floor changed")
+    require(recovery.get("rollbackDispatchAuthorized") is False, "Rollback dispatch was authorized")
 
     bundle = value.get("qualificationBundle", {})
     require(bundle.get("workflow") == ".github/workflows/demo-api-record-qualification-bundle.yaml", "Bundle workflow changed")
@@ -165,10 +175,10 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
 
 
 validate_contract(contract)
-require(snapshot_schema["properties"]["schemaVersion"]["const"] == "v0.10.6", "Snapshot schema version changed")
+require(snapshot_schema["properties"]["schemaVersion"]["const"] == "v0.10.7", "Snapshot schema version changed")
 require("qualificationBundles" in snapshot_schema["required"], "Snapshot omits Qualification Bundles")
 require("testRolloutGate" in snapshot_schema["required"], "Snapshot omits the test Rollout gate")
-require(decision_schema["properties"]["schemaVersion"]["const"] == "v0.10.6", "Decision schema version changed")
+require(decision_schema["properties"]["schemaVersion"]["const"] == "v0.10.7", "Decision schema version changed")
 require(decision_schema["properties"]["executionMode"]["const"] == "bounded-reviewed-promotion", "Decision execution mode changed")
 require(decision_schema["properties"]["dispatchAuthorized"]["type"] == "boolean", "Dispatch authorization is not explicit")
 require("qualify-aws-dev" in decision_schema["properties"]["recommendedAction"]["enum"], "aws-dev action missing")
@@ -192,7 +202,7 @@ require("mode: artifact-only" in action_block, "Static stage is not artifact-onl
 require("demo-api-runtime-qualification.yaml" in action_block, "Trusted runtime stage is not dispatched")
 require("demo-api-record-qualification-bundle.yaml" in action_block, "Bundle stage is not dispatched")
 require("demo-api-promote-environment.yaml" in action_block, "Reviewed test Promotion stage is not dispatched")
-require("demo-api-rollback.yaml" not in workflow, "v0.10.6 dispatches rollback")
+require("uses: ./.github/workflows/demo-api-rollback.yaml" not in workflow, "v0.10.7 dispatches rollback")
 require("gh pr merge" not in workflow and "--auto" not in workflow, "Orchestrator can merge a PR")
 
 require("mode:" in static_workflow and "artifact-only" in static_workflow, "Static artifact mode missing")
@@ -257,9 +267,21 @@ def fact(state: str = "missing") -> dict[str, Any]:
     return {"state": state, "id": "300-1", "ref": "evidence/fixture.json", "sha256": "9" * 64}
 
 
+def bundle_fact(state: str = "missing") -> dict[str, Any]:
+    return {
+        "state": state,
+        "reason": "not_found" if state == "missing" else "valid",
+        "id": None if state == "missing" else "300-1",
+        "ref": None if state == "missing" else "evidence/fixture.json",
+        "sha256": None if state == "missing" else "9" * 64,
+        "expiresAt": None if state == "missing" else "2026-08-13T00:00:00Z",
+        "remainingSeconds": None if state == "missing" else 86400,
+    }
+
+
 def base() -> dict[str, Any]:
     return {
-        "schemaVersion": "v0.10.6",
+        "schemaVersion": "v0.10.7",
         "application": "demo-api",
         "operation": "resume",
         "policy": "reviewed",
@@ -267,8 +289,11 @@ def base() -> dict[str, Any]:
         "capturedMainRevision": "c" * 40,
         "observedMainRevision": "c" * 40,
         "requestedReleaseId": None,
+        "retryAttempt": None,
         "testRolloutGate": "not-reviewed",
         "activeRelease": copy.deepcopy(new),
+        "releaseOrderState": "current",
+        "supersedingRelease": None,
         "releases": {
             environment: {
                 "path": f"apps/demo-api/helm/values/releases/{environment}.yaml",
@@ -281,7 +306,7 @@ def base() -> dict[str, Any]:
             environment: {"static": fact(), "runtime": fact()}
             for environment in ("aws-dev", "aws-test")
         },
-        "qualificationBundles": {"aws-dev": fact(), "aws-test": fact()},
+        "qualificationBundles": {"aws-dev": bundle_fact(), "aws-test": bundle_fact()},
         "pullRequests": [],
         "environmentAvailability": {environment: "unknown" for environment in ("aws-dev", "aws-test", "aws-prod")},
         "derivedAt": "2026-08-12T00:00:00Z",
@@ -322,8 +347,12 @@ cases.append(("bundle review", value, ("dev-qualification", "waiting_review", "w
 
 value = copy.deepcopy(value)
 value["pullRequests"] = []
-value["qualificationBundles"]["aws-dev"] = fact("fresh")
+value["qualificationBundles"]["aws-dev"] = bundle_fact("fresh")
 cases.append(("test boundary", value, ("test-release", "progressing", "prepare-test-promotion", True)))
+
+value = copy.deepcopy(value)
+value["operation"] = "status"
+cases.append(("strict read-only status", value, ("test-release", "progressing", "prepare-test-promotion", False)))
 
 value = base()
 value["observedMainRevision"] = "d" * 40

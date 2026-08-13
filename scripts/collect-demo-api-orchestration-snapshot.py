@@ -16,6 +16,7 @@ from typing import Any
 
 from demo_api_qualification_scope import calculate as calculate_qualification_scope
 from demo_api_qualification_bundle import validate as validate_qualification_bundle
+from demo_api_orchestration_attempt import load as load_attempt
 
 
 ENVIRONMENTS = ("aws-dev", "aws-test", "aws-prod")
@@ -301,6 +302,18 @@ def empty_evidence() -> dict[str, Any]:
     return {"state": "missing", "id": None, "ref": None, "sha256": None}
 
 
+def empty_bundle() -> dict[str, Any]:
+    return {
+        "state": "missing",
+        "reason": "not_found",
+        "id": None,
+        "ref": None,
+        "sha256": None,
+        "expiresAt": None,
+        "remainingSeconds": None,
+    }
+
+
 def matching_evidence(
     root: Path,
     environment: str,
@@ -361,22 +374,17 @@ def matching_bundle(
     now: datetime,
 ) -> dict[str, Any]:
     if identity is None:
-        return empty_evidence()
+        return empty_bundle()
     directory = root / f"evidence/demo-api/qualification/{environment}/{identity['releaseId']}"
-    candidates: list[tuple[datetime, Path, dict[str, Any]]] = []
+    candidates: list[tuple[datetime, Path, dict[str, Any], str, str]] = []
     if directory.is_dir():
         for path in directory.glob("*.json"):
             try:
                 document = json.loads(path.read_text())
                 recorded_at = parse_utc(document["recordedAt"])
                 expires_at = parse_utc(document["expiresAt"])
-                validate_qualification_bundle(
-                    document,
-                    root=root,
-                    now=now,
-                    require_fresh=False,
-                )
             except (KeyError, TypeError, ValueError, json.JSONDecodeError):
+                candidates.append((datetime.min.replace(tzinfo=timezone.utc), path, {}, "invalid", "malformed"))
                 continue
             bundle_identity = document.get("identity", {})
             if (
@@ -387,20 +395,96 @@ def matching_bundle(
                 and document.get("status") == "qualified"
                 and bundle_identity.get("sourceCommit") == identity["sourceCommit"]
                 and bundle_identity.get("imageDigest") == identity["imageDigest"]
-                and document.get("release", {}).get("sha256") == release_sha256
-                and document.get("qualificationScope", {}).get("scopeSha256") == scope_sha256
             ):
-                candidates.append((recorded_at, path, {**document, "_expiresAt": expires_at}))
+                if document.get("release", {}).get("sha256") != release_sha256:
+                    candidates.append((recorded_at, path, document, "release_drift", "release_sha256_changed"))
+                    continue
+                if document.get("qualificationScope", {}).get("scopeSha256") != scope_sha256:
+                    candidates.append((recorded_at, path, document, "scope_drift", "qualification_scope_changed"))
+                    continue
+                try:
+                    validate_qualification_bundle(document, root=None, now=now, require_fresh=False)
+                except (KeyError, TypeError, ValueError):
+                    candidates.append((recorded_at, path, document, "invalid", "validation_failed"))
+                    continue
+                remaining = int((expires_at - now).total_seconds())
+                if now > expires_at:
+                    state, reason = "expired", "time_expired"
+                elif remaining < 3600:
+                    state, reason = "expiring", "less_than_one_hour_remaining"
+                else:
+                    state, reason = "fresh", "valid"
+                candidates.append((recorded_at, path, document, state, reason))
     if not candidates:
-        return empty_evidence()
-    recorded_at, path, document = max(candidates, key=lambda item: item[0])
-    state = "fresh" if recorded_at <= now <= document["_expiresAt"] else "stale"
+        return empty_bundle()
+    usable = [item for item in candidates if item[3] in {"fresh", "expiring"}]
+    recorded_at, path, document, state, reason = max(
+        usable or candidates,
+        key=lambda item: item[0],
+    )
+    expires_at = document.get("expiresAt")
+    remaining = None
+    if expires_at:
+        try:
+            remaining = int((parse_utc(expires_at) - now).total_seconds())
+        except ValueError:
+            pass
+    orchestration = document.get("orchestration", {})
+    run_id = orchestration.get("workflowRunId")
+    run_attempt = orchestration.get("workflowRunAttempt")
     return {
         "state": state,
-        "id": f"{document['orchestration']['workflowRunId']}-{document['orchestration']['workflowRunAttempt']}",
+        "reason": reason,
+        "id": f"{run_id}-{run_attempt}" if run_id and run_attempt else None,
         "ref": str(path.relative_to(root)),
         "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "expiresAt": expires_at,
+        "remainingSeconds": remaining,
     }
+
+
+def is_ancestor(root: Path, older: str, newer: str) -> bool:
+    result = subprocess.run(
+        ["git", "-C", str(root), "merge-base", "--is-ancestor", older, newer],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0
+
+
+def release_order(
+    root: Path,
+    selected: dict[str, str] | None,
+    releases: dict[str, dict[str, Any]],
+    prs: list[dict[str, Any]],
+) -> tuple[str, dict[str, str] | None]:
+    if selected is None:
+        return "current", None
+    candidates = [releases["aws-dev"]["identity"]]
+    candidates.extend(
+        item["_identity"]
+        for item in prs
+        if item["kind"] == "environment-release" and item["targetEnvironment"] == "aws-dev"
+    )
+    newer: list[dict[str, str]] = []
+    ambiguous = False
+    for candidate in candidates:
+        if candidate["releaseId"] == selected["releaseId"]:
+            continue
+        if candidate["sourceCommit"] == selected["sourceCommit"]:
+            if int(candidate["buildWorkflowRunId"]) > int(selected["buildWorkflowRunId"]):
+                newer.append(candidate)
+            continue
+        if is_ancestor(root, selected["sourceCommit"], candidate["sourceCommit"]):
+            newer.append(candidate)
+        elif not is_ancestor(root, candidate["sourceCommit"], selected["sourceCommit"]):
+            ambiguous = True
+    if newer:
+        return "superseded", max(newer, key=lambda item: int(item["buildWorkflowRunId"]))
+    if ambiguous:
+        return "ambiguous", None
+    return "current", None
 
 
 def choose_active(
@@ -433,7 +517,7 @@ def choose_active(
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", default=str(Path(__file__).resolve().parent.parent))
-    parser.add_argument("--operation", required=True, choices=("start", "status", "resume"))
+    parser.add_argument("--operation", required=True, choices=("start", "status", "resume", "retry"))
     parser.add_argument("--policy", default="reviewed", choices=("reviewed", "continuous-nonprod"))
     parser.add_argument("--event-name", required=True, choices=("push", "workflow_dispatch", "fixture"))
     parser.add_argument("--ref", required=True)
@@ -442,6 +526,9 @@ def main() -> None:
     parser.add_argument("--observed-main-revision", required=True)
     parser.add_argument("--repository", required=True)
     parser.add_argument("--requested-release-id")
+    parser.add_argument("--retry-attempt-json", type=Path)
+    parser.add_argument("--retry-run-id")
+    parser.add_argument("--retry-run-attempt", type=int)
     parser.add_argument(
         "--test-rollout-gate",
         default="not-reviewed",
@@ -475,6 +562,32 @@ def main() -> None:
         releases,
         classified,
     )
+    retry_attempt = None
+    if args.operation == "retry":
+        if not args.requested_release_id or not args.retry_attempt_json:
+            fail("retry requires release_id and a prior Attempt artifact")
+        prior = load_attempt(args.retry_attempt_json)
+        if prior["run"]["repository"] != args.repository:
+            fail("Retry Attempt belongs to another repository")
+        if str(prior["run"]["id"]) != str(args.retry_run_id) or prior["run"]["attempt"] != args.retry_run_attempt:
+            fail("Retry Attempt identity differs from requested run and attempt")
+        if prior["releaseId"] != args.requested_release_id:
+            fail("Retry Attempt belongs to another Release ID")
+        if prior["execution"]["outcome"] not in {"blocked", "failed"}:
+            fail("Only blocked or failed Attempts may be retried")
+        if prior["execution"]["retryClass"] != "safe-new-attempt":
+            fail("Prior Attempt requires resume or manual investigation, not retry")
+        retry_attempt = {
+            "runId": str(prior["run"]["id"]),
+            "runAttempt": prior["run"]["attempt"],
+            "releaseId": prior["releaseId"],
+            "outcome": prior["execution"]["outcome"],
+            "retryClass": prior["execution"]["retryClass"],
+            "recommendedAction": prior["decision"]["recommendedAction"],
+            "controlPlaneSha": prior["controlPlaneSha"],
+        }
+    elif args.retry_attempt_json or args.retry_run_id or args.retry_run_attempt:
+        fail("Retry Attempt inputs are accepted only for operation=retry")
     now = parse_utc(args.now) if args.now else datetime.now(timezone.utc)
 
     evidence = {}
@@ -499,13 +612,14 @@ def main() -> None:
         )
         for environment in ("aws-dev", "aws-test")
     }
+    order_state, superseding_release = release_order(root, active, releases, classified)
 
     public_prs = []
     for item in classified:
         public_prs.append({key: value for key, value in item.items() if not key.startswith("_")})
 
     snapshot = {
-        "schemaVersion": "v0.10.6",
+        "schemaVersion": "v0.10.7",
         "application": "demo-api",
         "operation": args.operation,
         "policy": args.policy,
@@ -517,8 +631,11 @@ def main() -> None:
         "capturedMainRevision": args.captured_main_revision,
         "observedMainRevision": args.observed_main_revision,
         "requestedReleaseId": args.requested_release_id,
+        "retryAttempt": retry_attempt,
         "testRolloutGate": args.test_rollout_gate,
         "activeRelease": active,
+        "releaseOrderState": order_state,
+        "supersedingRelease": superseding_release,
         "releases": releases,
         "evidence": evidence,
         "qualificationBundles": qualification_bundles,

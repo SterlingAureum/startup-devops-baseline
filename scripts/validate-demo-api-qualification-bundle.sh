@@ -210,7 +210,7 @@ open_prs = work / "open-prs.json"
 open_prs.write_text("[]\n")
 
 
-def collect(name):
+def collect(name, observed_at="2026-08-12T02:00:00Z"):
     output = work / f"snapshot-{name}.json"
     subprocess.run(
         [
@@ -225,7 +225,7 @@ def collect(name):
             "--observed-main-revision", "c" * 40,
             "--repository", "SterlingAureum/startup-devops-baseline",
             "--open-prs-json", str(open_prs),
-            "--now", "2026-08-12T02:00:00Z",
+            "--now", observed_at,
             "--output", str(output),
         ],
         check=True,
@@ -237,6 +237,12 @@ def collect(name):
 snapshot = collect("fresh")
 if snapshot["qualificationBundles"]["aws-dev"]["state"] != "fresh":
     raise SystemExit("Collector did not recognize the fresh reviewed Qualification Bundle")
+snapshot = collect("expiring", "2026-08-13T00:00:01Z")
+if snapshot["qualificationBundles"]["aws-dev"]["state"] != "expiring":
+    raise SystemExit("Collector did not identify a Bundle with less than one hour remaining")
+snapshot = collect("expired", "2026-08-13T00:30:01Z")
+if snapshot["qualificationBundles"]["aws-dev"]["state"] != "expired":
+    raise SystemExit("Collector did not identify an expired Bundle")
 scoped_file = fixture_root / scope["files"][0]["path"]
 scoped_file.write_bytes(scoped_file.read_bytes() + b"\n# mutation\n")
 try:
@@ -246,8 +252,8 @@ except ValueError:
 else:
     raise SystemExit("A changed deployment input did not invalidate the Qualification Bundle")
 snapshot = collect("scope-mutated")
-if snapshot["qualificationBundles"]["aws-dev"]["state"] != "missing":
-    raise SystemExit("Collector accepted a Qualification Bundle after its deployment scope changed")
+if snapshot["qualificationBundles"]["aws-dev"]["state"] != "scope_drift":
+    raise SystemExit("Collector did not classify deployment-scope drift")
 
 print("Qualification Bundle positive, negative, and scope invalidation tests passed.")
 PY

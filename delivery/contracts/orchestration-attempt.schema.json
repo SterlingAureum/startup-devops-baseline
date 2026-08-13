@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aureumstack.com/schemas/orchestration-attempt-v0.10.7.json",
+  "title": "demo-api release orchestration attempt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "application",
+    "releaseId",
+    "operation",
+    "controlPlaneSha",
+    "run",
+    "decision",
+    "execution",
+    "retryOf",
+    "rollbackHandoff",
+    "startedAt",
+    "completedAt"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "v0.10.7" },
+    "application": { "const": "demo-api" },
+    "releaseId": {
+      "type": ["string", "null"],
+      "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+    },
+    "operation": { "enum": ["start", "status", "resume", "retry"] },
+    "controlPlaneSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "workflow", "id", "attempt", "actor", "url"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "workflow": { "const": ".github/workflows/demo-api-release-orchestrator.yaml" },
+        "id": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+        "attempt": { "type": "integer", "minimum": 1 },
+        "actor": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "minLength": 1 }
+      }
+    },
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["phase", "status", "recommendedAction", "targetEnvironment", "dispatchAuthorized"],
+      "properties": {
+        "phase": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "minLength": 1 },
+        "recommendedAction": { "type": "string", "minLength": 1 },
+        "targetEnvironment": { "type": ["string", "null"], "enum": [null, "aws-dev", "aws-test", "aws-prod"] },
+        "dispatchAuthorized": { "type": "boolean" }
+      }
+    },
+    "execution": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "outcome", "reason", "retryClass", "recommendedRecovery", "stageResult"],
+      "properties": {
+        "stage": { "type": "string", "minLength": 1 },
+        "outcome": { "enum": ["succeeded", "waiting", "blocked", "failed", "superseded", "no_action", "automation_disabled"] },
+        "reason": { "type": "string", "minLength": 1 },
+        "retryClass": { "enum": ["none", "safe-new-attempt", "resume-after-change", "manual-investigation"] },
+        "recommendedRecovery": { "type": "string", "minLength": 1 },
+        "stageResult": { "type": "object" }
+      }
+    },
+    "retryOf": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["runId", "runAttempt"],
+          "properties": {
+            "runId": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+            "runAttempt": { "type": "integer", "minimum": 1 }
+          }
+        }
+      ]
+    },
+    "rollbackHandoff": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["targetEnvironment", "failedReleaseId", "currentReleaseSha256", "rollbackToRevision", "previousReleaseId", "previousImageDigest", "failureReason", "manualWorkflowCommand"],
+          "properties": {
+            "targetEnvironment": { "enum": ["aws-dev", "aws-test"] },
+            "failedReleaseId": { "type": "string", "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$" },
+            "currentReleaseSha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+            "rollbackToRevision": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+            "previousReleaseId": { "type": "string", "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$" },
+            "previousImageDigest": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+            "failureReason": { "type": "string", "minLength": 1 },
+            "manualWorkflowCommand": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" }
+  }
+}

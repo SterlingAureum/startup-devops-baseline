@@ -10,6 +10,9 @@
 /evidence/v0.9/ @SterlingAureum
 /.github/CODEOWNERS @SterlingAureum
 /.github/workflows/demo-api-*.yaml @SterlingAureum
+/.github/workflows/validate.yaml @SterlingAureum
+/delivery/contracts/demo-api-failure-recovery-policy.json @SterlingAureum
+/delivery/contracts/orchestration-attempt.schema.json @SterlingAureum
 /delivery/contracts/demo-api-qualification-scope.json @SterlingAureum
 /delivery/contracts/demo-api-qualification-scope-aws-test.json @SterlingAureum
 /delivery/contracts/qualification-bundle.schema.json @SterlingAureum
@@ -19,6 +22,11 @@
 /scripts/write-demo-api-qualification-bundle.py @SterlingAureum
 /scripts/validate-demo-api-qualification-bundle.py @SterlingAureum
 /scripts/validate-demo-api-aws-prod-orchestration.sh @SterlingAureum
+/scripts/demo_api_orchestration_attempt.py @SterlingAureum
+/scripts/write-demo-api-orchestration-attempt.py @SterlingAureum
+/scripts/validate-demo-api-orchestration-attempt.py @SterlingAureum
+/scripts/validate-demo-api-release-pr-currentness.py @SterlingAureum
+/scripts/resolve-demo-api-rollback-candidate.py @SterlingAureum
 /scripts/promote-demo-api-release.sh @SterlingAureum
 /scripts/prepare-demo-api-rollback.sh @SterlingAureum
 /scripts/write-demo-api-release-evidence.sh @SterlingAureum

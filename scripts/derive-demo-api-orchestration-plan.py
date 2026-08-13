@@ -11,7 +11,7 @@ from typing import Any
 
 
 ENVIRONMENTS = ("aws-dev", "aws-test", "aws-prod")
-OPERATIONS = ("start", "status", "resume")
+OPERATIONS = ("start", "status", "resume", "retry")
 RELEASE_ID_PATTERN = re.compile(r"^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$")
 SHA_PATTERN = re.compile(r"^[0-9a-f]{40}$")
 
@@ -58,8 +58,11 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
         "capturedMainRevision",
         "observedMainRevision",
         "requestedReleaseId",
+        "retryAttempt",
         "testRolloutGate",
         "activeRelease",
+        "releaseOrderState",
+        "supersedingRelease",
         "releases",
         "evidence",
         "qualificationBundles",
@@ -68,7 +71,7 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
         "derivedAt",
     }
     require(set(snapshot) == required, "Snapshot fields are missing or unknown")
-    require(snapshot["schemaVersion"] == "v0.10.6", "Unsupported snapshot schema")
+    require(snapshot["schemaVersion"] == "v0.10.7", "Unsupported snapshot schema")
     require(snapshot["application"] == "demo-api", "Unexpected application")
     require(snapshot["operation"] in OPERATIONS, "Unsupported operation")
     require(snapshot["policy"] in {"reviewed", "continuous-nonprod"}, "Unsupported policy")
@@ -77,12 +80,32 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
     require(SHA_PATTERN.fullmatch(snapshot["observedMainRevision"]) is not None, "Invalid observed main")
     if snapshot["requestedReleaseId"] is not None:
         require(RELEASE_ID_PATTERN.fullmatch(snapshot["requestedReleaseId"]) is not None, "Bad requested release ID")
+    retry_attempt = snapshot["retryAttempt"]
+    if snapshot["operation"] == "retry":
+        require(isinstance(retry_attempt, dict), "retry lacks a validated prior Attempt")
+        require(set(retry_attempt) == {
+            "runId", "runAttempt", "releaseId", "outcome", "retryClass",
+            "recommendedAction", "controlPlaneSha",
+        }, "Invalid retry Attempt summary")
+        require(retry_attempt["releaseId"] == snapshot["requestedReleaseId"], "Retry release mismatch")
+        require(retry_attempt["outcome"] in {"blocked", "failed"}, "Retry source is not failed or blocked")
+        require(retry_attempt["retryClass"] == "safe-new-attempt", "Retry source is not safely retryable")
+        require(SHA_PATTERN.fullmatch(retry_attempt["controlPlaneSha"]) is not None, "Invalid retry control plane")
+    else:
+        require(retry_attempt is None, "Non-retry snapshot cites a prior Attempt")
     require(
         snapshot["testRolloutGate"] in {"not-reviewed", "reviewed-and-completed"},
         "Invalid aws-test Rollout gate",
     )
     if snapshot["activeRelease"] is not None:
         validate_identity(snapshot["activeRelease"])
+    require(snapshot["releaseOrderState"] in {"current", "superseded", "ambiguous"}, "Bad release order state")
+    if snapshot["supersedingRelease"] is not None:
+        validate_identity(snapshot["supersedingRelease"])
+    require(
+        (snapshot["releaseOrderState"] == "superseded") == (snapshot["supersedingRelease"] is not None),
+        "Supersede identity and state disagree",
+    )
     require(set(snapshot["releases"]) == set(ENVIRONMENTS), "Release environment set changed")
     for environment, fact in snapshot["releases"].items():
         require(fact["path"] == f"apps/demo-api/helm/values/releases/{environment}.yaml", "Wrong release path")
@@ -95,7 +118,13 @@ def validate_snapshot(snapshot: dict[str, Any]) -> None:
             require(fact.get("state") in {"missing", "fresh", "stale"}, "Bad evidence state")
     require(set(snapshot["qualificationBundles"]) == {"aws-dev", "aws-test"}, "Qualification Bundle environment set changed")
     for bundle in snapshot["qualificationBundles"].values():
-        require(bundle.get("state") in {"missing", "fresh", "stale"}, "Bad Qualification Bundle state")
+        require(bundle.get("state") in {
+            "missing", "fresh", "expiring", "expired", "scope_drift",
+            "release_drift", "invalid",
+        }, "Bad Qualification Bundle state")
+        require(set(bundle) == {
+            "state", "reason", "id", "ref", "sha256", "expiresAt", "remainingSeconds",
+        }, "Bad Qualification Bundle fact")
     require(set(snapshot["environmentAvailability"]) == set(ENVIRONMENTS), "Availability set changed")
     for value in snapshot["environmentAvailability"].values():
         require(value in {"present", "absent", "unknown"}, "Bad environment availability")
@@ -147,7 +176,7 @@ def decision(
 ) -> dict[str, Any]:
     active = snapshot["activeRelease"]
     return {
-        "schemaVersion": "v0.10.6",
+        "schemaVersion": "v0.10.7",
         "application": "demo-api",
         "operation": snapshot["operation"],
         "releaseId": active["releaseId"] if active else None,
@@ -157,12 +186,27 @@ def decision(
         "recommendedAction": action,
         "targetEnvironment": target,
         "openPullRequest": {"number": pr["number"], "url": pr["url"]} if pr else None,
+        "supersededByReleaseId": (
+            snapshot["supersedingRelease"]["releaseId"]
+            if snapshot["supersedingRelease"] is not None
+            else None
+        ),
         "executionMode": "bounded-reviewed-promotion",
         "dispatchAuthorized": (
-            (action == "qualify-aws-dev" and target == "aws-dev")
-            or (action == "prepare-test-promotion" and target == "aws-test")
-            or (action == "qualify-aws-test" and target == "aws-test")
-            or (action == "prepare-prod-promotion" and target == "aws-prod")
+            snapshot["operation"] != "status"
+            and (
+                snapshot["operation"] != "retry"
+                or (
+                    snapshot["retryAttempt"] is not None
+                    and snapshot["retryAttempt"]["recommendedAction"] == action
+                )
+            )
+            and (
+                (action == "qualify-aws-dev" and target == "aws-dev")
+                or (action == "prepare-test-promotion" and target == "aws-test")
+                or (action == "qualify-aws-test" and target == "aws-test")
+                or (action == "prepare-prod-promotion" and target == "aws-prod")
+            )
         ),
         "capturedMainRevision": snapshot["capturedMainRevision"],
         "observedMainRevision": snapshot["observedMainRevision"],
@@ -200,21 +244,21 @@ def qualify_environment(
         )
     bundle = snapshot["qualificationBundles"][environment]
     action = "qualify-aws-dev" if environment == "aws-dev" else "qualify-aws-test"
-    if bundle["state"] == "stale":
+    if bundle["state"] == "invalid":
         return decision(
             snapshot,
             phase,
             "blocked",
-            "qualification-stale",
-            action,
+            "qualification-invalid",
+            "none",
             environment,
         )
-    if bundle["state"] == "missing":
+    if bundle["state"] != "fresh":
         return decision(
             snapshot,
             phase,
             "progressing",
-            "qualification-missing",
+            f"qualification-{bundle['state'].replace('_', '-')}",
             action,
             environment,
         )
@@ -247,6 +291,34 @@ def derive(snapshot: dict[str, Any]) -> dict[str, Any]:
     release_id = active["releaseId"]
     if matches_release(snapshot, "aws-prod", release_id):
         return decision(snapshot, "complete", "completed", None, "none", None)
+
+    if snapshot["operation"] == "retry" and snapshot["retryAttempt"]["controlPlaneSha"] != snapshot["capturedMainRevision"]:
+        return decision(
+            snapshot,
+            "image",
+            "blocked",
+            "retry-control-plane-changed",
+            "none",
+            None,
+        )
+    if snapshot["releaseOrderState"] == "ambiguous":
+        return decision(
+            snapshot,
+            "image",
+            "blocked",
+            "release-order-ambiguous",
+            "none",
+            None,
+        )
+    if snapshot["releaseOrderState"] == "superseded":
+        return decision(
+            snapshot,
+            "image",
+            "superseded",
+            "newer-release-active",
+            "review-and-close-superseded-pr",
+            None,
+        )
 
     dev_pr = open_pr(snapshot, release_id, "aws-dev", {"environment-release"})
     if not matches_release(snapshot, "aws-dev", release_id):

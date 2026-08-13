@@ -2,6 +2,38 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.7
+
+### Added
+
+- Exact failed-Attempt `retry` using the prior orchestrator run ID, run attempt,
+  Release ID, repository identity, and safe retry class.
+- Secret-free 14-day orchestration Attempt artifacts containing decision,
+  execution outcome, stable reason, recovery class, and optional rollback
+  handoff. Attempts are diagnostics and never Promotion evidence.
+- Git source-ancestry and same-source build-run supersede handling, including
+  ambiguous-order blocking and an explicit human PR-close recommendation.
+- Qualification Bundle states for `expiring`, `expired`, `scope_drift`,
+  `release_drift`, and `invalid`, plus a 3600-second Promotion validity floor.
+- A read-only dev/test rollback candidate resolver and failed Release identity
+  recheck in the existing Environment-approved rollback Workflow.
+- `docs/RELEASE_FAILURE_RECOVERY.md` and offline retry, Attempt, supersede,
+  expiry/drift, and rollback-handoff behavior tests.
+
+### Fixed
+
+- Made `operation=status` strictly read-only. It now always returns
+  `dispatchAuthorized=false`, and every stage/disabled-report job also rejects
+  status execution even when repository activation variables are enabled.
+
+### Boundary
+
+- v0.10.7 never automatically closes or merges a PR, dispatches or merges a
+  rollback, writes Kubernetes, creates an AWS environment, runs production
+  qualification, or accepts a partial GitHub job re-run as unified evidence.
+- Live interrupted-run, supersede, expiry, rollback, cost cleanup, and final
+  clean-room acceptance remain in v0.10.8.
+
 ## v0.10.6
 
 ### Added

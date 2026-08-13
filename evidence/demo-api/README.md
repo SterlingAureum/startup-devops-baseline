@@ -43,3 +43,7 @@ after the explicit reviewed Canary gate. v0.10.6 accepts that merged, fresh
 aws-test Bundle as the sole automated source qualification for the reviewed
 test-to-prod release PR. It does not create a prod Bundle or claim production
 runtime qualification.
+
+Orchestration Attempt artifacts introduced in v0.10.7 are not stored in this
+directory. They are secret-free, short-retention diagnostics and are never
+reviewed Qualification Bundles or Promotion evidence.

@@ -136,6 +136,7 @@ EXPECTED = {
         "inputs": {
             "target_environment": "string",
             "rollback_to_revision": "string",
+            "expected_current_release_id": "string",
         },
         "outputs": [
             "status",
@@ -167,7 +168,7 @@ def workflow_call_block(text: str) -> str:
 
 
 def validate_contract(contract: dict[str, Any], check_files: bool = True) -> None:
-    require(contract.get("schemaVersion") == "v0.10.6", "Bad application schemaVersion")
+    require(contract.get("schemaVersion") == "v0.10.7", "Bad application schemaVersion")
     require(contract.get("application") == "demo-api", "Unexpected application")
     require(contract.get("defaultRef") == "refs/heads/main", "Default ref must be main")
 
@@ -242,6 +243,9 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     )
     require(orchestration.get("executionMode") == "bounded-reviewed-promotion", "Unexpected execution mode")
     require(orchestration.get("stageDispatch") is True, "reviewed stage dispatch is not active")
+    require(orchestration.get("statusDispatchAuthorized") is False, "status may dispatch a stage")
+    require(orchestration.get("retryRequiresPriorAttempt") is True, "retry lineage is optional")
+    require(orchestration.get("attemptArtifact") == "secret-free-short-retention", "Attempt durability changed")
     if check_files:
         require((root / orchestration["contract"]).is_file(), "Orchestrator contract is missing")
 
@@ -250,6 +254,7 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     require(deferred.get("runtimeQualification") == "v0.10.5-dispatched-aws-dev-and-aws-test", "Runtime qualification integration state changed")
     require(deferred.get("qualificationBundle") == "v0.10.5-implemented-dev-and-test", "Qualification Bundle state changed")
     require(deferred.get("productionPromotion") == "v0.10.6-reviewed-pr-preparation", "Production preparation state changed")
+    require(deferred.get("failureRecovery") == "v0.10.7-attempt-retry-supersede-and-rollback-handoff", "Failure recovery state changed")
 
 
 contract = load_json(contract_path)

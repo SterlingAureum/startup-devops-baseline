@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://aureumstack.com/schemas/orchestration-snapshot-v0.10.6.json",
+  "$id": "https://aureumstack.com/schemas/orchestration-snapshot-v0.10.7.json",
   "title": "Read-only demo-api orchestration fact snapshot",
   "type": "object",
   "additionalProperties": false,
@@ -13,8 +13,11 @@
     "capturedMainRevision",
     "observedMainRevision",
     "requestedReleaseId",
+    "retryAttempt",
     "testRolloutGate",
     "activeRelease",
+    "releaseOrderState",
+    "supersedingRelease",
     "releases",
     "evidence",
     "qualificationBundles",
@@ -24,7 +27,7 @@
   ],
   "properties": {
     "schemaVersion": {
-      "const": "v0.10.6"
+      "const": "v0.10.7"
     },
     "application": {
       "const": "demo-api"
@@ -33,7 +36,8 @@
       "enum": [
         "start",
         "status",
-        "resume"
+        "resume",
+        "retry"
       ]
     },
     "policy": {
@@ -85,6 +89,25 @@
       ],
       "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
     },
+    "retryAttempt": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["runId", "runAttempt", "releaseId", "outcome", "retryClass", "recommendedAction", "controlPlaneSha"],
+          "properties": {
+            "runId": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+            "runAttempt": { "type": "integer", "minimum": 1 },
+            "releaseId": { "type": "string", "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$" },
+            "outcome": { "enum": ["blocked", "failed"] },
+            "retryClass": { "const": "safe-new-attempt" },
+            "recommendedAction": { "type": "string", "minLength": 1 },
+            "controlPlaneSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+          }
+        }
+      ]
+    },
     "testRolloutGate": {
       "enum": [
         "not-reviewed",
@@ -92,6 +115,12 @@
       ]
     },
     "activeRelease": {
+      "$ref": "#/$defs/nullableIdentity"
+    },
+    "releaseOrderState": {
+      "enum": ["current", "superseded", "ambiguous"]
+    },
+    "supersedingRelease": {
       "$ref": "#/$defs/nullableIdentity"
     },
     "releases": {
@@ -139,10 +168,10 @@
       ],
       "properties": {
         "aws-dev": {
-          "$ref": "#/$defs/evidenceFact"
+          "$ref": "#/$defs/bundleFact"
         },
         "aws-test": {
-          "$ref": "#/$defs/evidenceFact"
+          "$ref": "#/$defs/bundleFact"
         }
       }
     },
@@ -312,6 +341,22 @@
         "runtime": {
           "$ref": "#/$defs/evidenceFact"
         }
+      }
+    },
+    "bundleFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reason", "id", "ref", "sha256", "expiresAt", "remainingSeconds"],
+      "properties": {
+        "state": {
+          "enum": ["missing", "fresh", "expiring", "expired", "scope_drift", "release_drift", "invalid"]
+        },
+        "reason": { "type": "string", "minLength": 1 },
+        "id": { "type": ["string", "null"] },
+        "ref": { "type": ["string", "null"] },
+        "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+        "remainingSeconds": { "type": ["integer", "null"] }
       }
     },
     "pullRequest": {

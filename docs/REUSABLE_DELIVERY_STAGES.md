@@ -129,14 +129,14 @@ cluster access simply because it can call reusable delivery stages.
 
 ## Retry and Idempotency Scope
 
-v0.10.1 makes each stage independently callable and exposes enough output to
-resume at a later event. It does not yet claim end-to-end idempotent
-orchestration. Deterministic orchestration keys, duplicate-PR reconciliation,
-supersede handling, and interrupted-run recovery are implemented and tested in
-the later orchestration and failure-hardening increments.
+v0.10.7 adds exact failed-Attempt retry lineage, source-ancestry supersede
+handling, Bundle expiry/drift classification, and a read-only rollback candidate
+resolver. Every retry is a new orchestrator run and attempt; qualification
+artifacts may never be mixed across attempts.
 
-Until then, manual stage retries retain the existing stale-main and diff-scope
-guards. A retry never authorizes an automatic production change.
+Manual stage retries retain the stale-main and diff-scope guards. A retry never
+authorizes an automatic production change. Rollback remains an Environment-
+approved, reviewable release-only PR initiated from the handoff by a person.
 
 ## Validation
 

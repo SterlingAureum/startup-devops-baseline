@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.6",
+  "schemaVersion": "v0.10.7",
   "application": {
     "name": "demo-api",
     "sourceRepository": "SterlingAureum/startup-devops-baseline",
@@ -14,6 +14,8 @@
     "qualificationScopeContract": "delivery/contracts/demo-api-qualification-scope.json",
     "testQualificationScopeContract": "delivery/contracts/demo-api-qualification-scope-aws-test.json",
     "qualificationBundleWorkflow": ".github/workflows/demo-api-record-qualification-bundle.yaml",
+    "orchestrationAttemptSchema": "delivery/contracts/orchestration-attempt.schema.json",
+    "failureRecoveryPolicy": "delivery/contracts/demo-api-failure-recovery-policy.json",
     "buildOnce": true
   },
   "environments": [
@@ -229,6 +231,10 @@
     "stateIsDerived": true,
     "mutableCurrentStateFile": false,
     "resumeWithoutRebuild": true,
+    "statusIsStrictlyReadOnly": true,
+    "retryRequiresPriorAttempt": true,
+    "automaticSupersededPullRequestClose": false,
+    "rollbackHandoffOnly": true,
     "environmentAbsenceIsWaiting": true,
     "awsDevQualificationVariable": "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
     "awsTestPromotionVariable": "DEMO_API_AWS_TEST_PROMOTION_ENABLED",

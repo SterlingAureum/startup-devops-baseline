@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "v0.10.7",
+  "application": "demo-api",
+  "attemptRetentionDays": 14,
+  "minimumPromotionBundleRemainingSeconds": 3600,
+  "operations": {
+    "status": {
+      "mutationAllowed": false,
+      "priorAttemptRequired": false
+    },
+    "resume": {
+      "mutationAllowed": true,
+      "priorAttemptRequired": false
+    },
+    "retry": {
+      "mutationAllowed": true,
+      "priorAttemptRequired": true,
+      "allowedPriorOutcomes": [
+        "blocked",
+        "failed"
+      ],
+      "allowedRetryClass": "safe-new-attempt"
+    },
+    "start": {
+      "mutationAllowed": true,
+      "priorAttemptRequired": false
+    }
+  },
+  "runtimeReasons": {
+    "environment_absent": "resume-after-change",
+    "main_advanced": "resume-after-change",
+    "oidc_denied": "resume-after-change",
+    "endpoint_unreachable": "safe-new-attempt",
+    "executor_unavailable": "safe-new-attempt",
+    "argo_not_converged": "safe-new-attempt",
+    "https_validation_failed": "manual-investigation",
+    "rollout_unhealthy": "manual-investigation",
+    "analysis_failed": "manual-investigation",
+    "digest_mismatch": "manual-investigation",
+    "rbac_boundary_failed": "manual-investigation",
+    "input_mismatch": "manual-investigation"
+  },
+  "rollbackEligibleReasons": [
+    "rollout_unhealthy",
+    "analysis_failed",
+    "digest_mismatch",
+    "https_validation_failed"
+  ],
+  "automaticPullRequestClose": false,
+  "releasePullRequestCurrentnessCheck": {
+    "workflow": ".github/workflows/validate.yaml",
+    "job": "demo-api release currentness",
+    "validator": "scripts/validate-demo-api-release-pr-currentness.py",
+    "requiredByBranchProtection": true
+  },
+  "automaticMerge": false,
+  "automaticRollback": false,
+  "productionRuntimeQualification": false
+}

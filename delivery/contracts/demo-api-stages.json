@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "v0.10.6",
+  "schemaVersion": "v0.10.7",
   "application": "demo-api",
   "defaultRef": "refs/heads/main",
   "executionBoundary": {
@@ -166,7 +166,8 @@
       "requiresProtectedMainForOrchestration": true,
       "inputs": {
         "target_environment": "string",
-        "rollback_to_revision": "string"
+        "rollback_to_revision": "string",
+        "expected_current_release_id": "string"
       },
       "allowedEnvironments": [
         "aws-dev",
@@ -193,11 +194,15 @@
   "orchestration": {
     "contract": "delivery/contracts/demo-api-orchestrator.json",
     "executionMode": "bounded-reviewed-promotion",
-    "stageDispatch": true
+    "stageDispatch": true,
+    "attemptArtifact": "secret-free-short-retention",
+    "statusDispatchAuthorized": false,
+    "retryRequiresPriorAttempt": true
   },
   "deferredStages": {
     "runtimeQualification": "v0.10.5-dispatched-aws-dev-and-aws-test",
     "qualificationBundle": "v0.10.5-implemented-dev-and-test",
-    "productionPromotion": "v0.10.6-reviewed-pr-preparation"
+    "productionPromotion": "v0.10.6-reviewed-pr-preparation",
+    "failureRecovery": "v0.10.7-attempt-retry-supersede-and-rollback-handoff"
   }
 }

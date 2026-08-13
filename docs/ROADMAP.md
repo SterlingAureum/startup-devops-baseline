@@ -248,8 +248,9 @@ Incremental scope:
   reviewed aws-test Qualification Bundle evidence - delivered
 - v0.10.6 - automatic production Promotion preparation with retained aws-prod
   Environment approval and reviewed release-only PR merge - delivered
-- v0.10.7 - retry, resume, supersede, evidence expiry, failure diagnostics,
-  and governed rollback handoff - planned
+- v0.10.7 - strictly read-only status, exact failed-Attempt retry, secret-free
+  attempt diagnostics, source-ancestry supersede handling, explicit Bundle
+  expiry/drift states, and governed dev/test rollback handoff - delivered
 - v0.10.8 - clean-room dev/test/prod-static acceptance, interrupted-run
   recovery, cost cleanup, closure evidence, and final Runbook - planned
 

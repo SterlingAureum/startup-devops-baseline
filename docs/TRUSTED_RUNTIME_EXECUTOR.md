@@ -165,6 +165,13 @@ An absent cluster never triggers Terraform. A failed result never promotes or
 aborts a Rollout, syncs Argo CD, changes a Secret, commits to Git, or opens a
 PR.
 
+v0.10.7 embeds the runtime status/reason in a short-retention orchestrator
+Attempt. Only transient reasons classified `safe-new-attempt` may use the new
+exact-lineage `retry` operation. External configuration problems require
+correction followed by `resume`; unsafe runtime failures require investigation
+and may produce only a manual dev/test rollback handoff. Runtime artifacts from
+different workflow attempts are never combined into one Qualification Bundle.
+
 ## Branch-stage validation
 
 No AWS environment or runner is required for this increment:

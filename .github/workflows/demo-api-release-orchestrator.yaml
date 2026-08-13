@@ -16,6 +16,8 @@ on:
       - 'delivery/contracts/demo-api-qualification-scope.json'
       - 'delivery/contracts/demo-api-qualification-scope-aws-test.json'
       - 'delivery/contracts/qualification-bundle.schema.json'
+      - 'delivery/contracts/orchestration-attempt.schema.json'
+      - 'delivery/contracts/demo-api-failure-recovery-policy.json'
       - 'scripts/collect-demo-api-orchestration-snapshot.py'
       - 'scripts/derive-demo-api-orchestration-plan.py'
       - 'scripts/demo_api_qualification_scope.py'
@@ -23,10 +25,13 @@ on:
       - 'scripts/calculate-demo-api-qualification-scope.py'
       - 'scripts/write-demo-api-qualification-bundle.py'
       - 'scripts/validate-demo-api-qualification-bundle.py'
+      - 'scripts/demo_api_orchestration_attempt.py'
+      - 'scripts/write-demo-api-orchestration-attempt.py'
+      - 'scripts/resolve-demo-api-rollback-candidate.py'
   workflow_dispatch:
     inputs:
       operation:
-        description: Recompute a new release, inspect current state, or resume a waiting release
+        description: Start, inspect, resume changed facts, or retry one safe failed Attempt
         required: true
         default: status
         type: choice
@@ -34,8 +39,17 @@ on:
           - start
           - status
           - resume
+          - retry
       release_id:
         description: Optional deterministic release ID to inspect or resume
+        required: false
+        type: string
+      retry_run_id:
+        description: Prior orchestrator run ID; required only for retry
+        required: false
+        type: string
+      retry_run_attempt:
+        description: Prior orchestrator run attempt; required only for retry
         required: false
         type: string
       test_rollout_gate:
@@ -56,6 +70,7 @@ on:
           - continuous-nonprod
 
 permissions:
+  actions: read
   contents: read
   pull-requests: read
 
@@ -83,6 +98,9 @@ jobs:
       release-file-sha256: ${{ steps.finalize.outputs.release-file-sha256 }}
       qualification-bundle-path: ${{ steps.finalize.outputs.qualification-bundle-path }}
       qualification-bundle-sha256: ${{ steps.finalize.outputs.qualification-bundle-sha256 }}
+      started-at: ${{ steps.context.outputs.started-at }}
+      retry-run-id: ${{ steps.context.outputs.retry-run-id }}
+      retry-run-attempt: ${{ steps.context.outputs.retry-run-attempt }}
     steps:
       - name: Checkout protected main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -96,6 +114,8 @@ jobs:
           REQUESTED_OPERATION: ${{ inputs.operation }}
           REQUESTED_POLICY: ${{ inputs.policy }}
           REQUESTED_RELEASE_ID: ${{ inputs.release_id }}
+          REQUESTED_RETRY_RUN_ID: ${{ inputs.retry_run_id }}
+          REQUESTED_RETRY_RUN_ATTEMPT: ${{ inputs.retry_run_attempt }}
           BEFORE_REVISION: ${{ github.event.before }}
           REQUESTED_TEST_ROLLOUT_GATE: ${{ inputs.test_rollout_gate }}
         run: |
@@ -126,7 +146,7 @@ jobs:
           fi
 
           case "${operation}" in
-            start|status|resume) ;;
+            start|status|resume|retry) ;;
             *)
               echo "::error::Unsupported orchestration operation: ${operation}"
               exit 1
@@ -144,6 +164,17 @@ jobs:
             echo "::error::release_id does not satisfy the deterministic release identity contract."
             exit 1
           fi
+          if [[ "${operation}" == "retry" ]]; then
+            if [[ -z "${REQUESTED_RELEASE_ID}" || \
+                  ! "${REQUESTED_RETRY_RUN_ID}" =~ ^[1-9][0-9]*$ || \
+                  ! "${REQUESTED_RETRY_RUN_ATTEMPT}" =~ ^[1-9][0-9]*$ ]]; then
+              echo "::error::retry requires release_id, retry_run_id, and retry_run_attempt."
+              exit 1
+            fi
+          elif [[ -n "${REQUESTED_RETRY_RUN_ID}${REQUESTED_RETRY_RUN_ATTEMPT}" ]]; then
+            echo "::error::Retry lineage inputs are accepted only for operation=retry."
+            exit 1
+          fi
 
           {
             echo "operation=${operation}"
@@ -152,7 +183,37 @@ jobs:
             echo "captured-main=${captured_main}"
             echo "requested-release-id=${REQUESTED_RELEASE_ID}"
             echo "test-rollout-gate=${REQUESTED_TEST_ROLLOUT_GATE:-not-reviewed}"
+            echo "retry-run-id=${REQUESTED_RETRY_RUN_ID}"
+            echo "retry-run-attempt=${REQUESTED_RETRY_RUN_ATTEMPT}"
+            echo "started-at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           } >> "${GITHUB_OUTPUT}"
+
+      - name: Download and validate the exact retry Attempt
+        if: steps.context.outputs.operation == 'retry'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RETRY_RUN_ID: ${{ steps.context.outputs.retry-run-id }}
+          RETRY_RUN_ATTEMPT: ${{ steps.context.outputs.retry-run-attempt }}
+        run: |
+          run_metadata="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${RETRY_RUN_ID}")"
+          jq --exit-status \
+            --arg repository "${GITHUB_REPOSITORY}" \
+            --argjson attempt "${RETRY_RUN_ATTEMPT}" '
+              .path == ".github/workflows/demo-api-release-orchestrator.yaml" and
+              .head_repository.full_name == $repository and
+              .run_attempt == $attempt
+            ' <<< "${run_metadata}" >/dev/null || {
+              echo "::error::Retry source is not the exact orchestrator run attempt in this repository."
+              exit 1
+            }
+          artifact="demo-api-orchestration-attempt-${RETRY_RUN_ID}-${RETRY_RUN_ATTEMPT}"
+          destination="${RUNNER_TEMP}/retry-attempt"
+          gh run download "${RETRY_RUN_ID}" \
+            --name "${artifact}" \
+            --dir "${destination}"
+          attempt="${destination}/result.json"
+          ./scripts/validate-demo-api-orchestration-attempt.py --attempt "${attempt}"
+          echo "RETRY_ATTEMPT_PATH=${attempt}" >> "${GITHUB_ENV}"
 
       - name: Collect read-only Git and pull-request facts
         env:
@@ -163,6 +224,8 @@ jobs:
           CAPTURED_MAIN: ${{ steps.context.outputs.captured-main }}
           REQUESTED_RELEASE_ID: ${{ steps.context.outputs.requested-release-id }}
           TEST_ROLLOUT_GATE: ${{ steps.context.outputs.test-rollout-gate }}
+          RETRY_RUN_ID: ${{ steps.context.outputs.retry-run-id }}
+          RETRY_RUN_ATTEMPT: ${{ steps.context.outputs.retry-run-attempt }}
         run: |
           arguments=(
             --operation "${OPERATION}"
@@ -180,6 +243,13 @@ jobs:
           fi
           if [[ -n "${REQUESTED_RELEASE_ID}" ]]; then
             arguments+=(--requested-release-id "${REQUESTED_RELEASE_ID}")
+          fi
+          if [[ "${OPERATION}" == "retry" ]]; then
+            arguments+=(
+              --retry-attempt-json "${RETRY_ATTEMPT_PATH}"
+              --retry-run-id "${RETRY_RUN_ID}"
+              --retry-run-attempt "${RETRY_RUN_ATTEMPT}"
+            )
           fi
           ./scripts/collect-demo-api-orchestration-snapshot.py "${arguments[@]}"
 
@@ -267,7 +337,7 @@ jobs:
               echo "- Existing pull request: ${pr_url}"
             fi
             echo
-            echo "v0.10.6 may prepare reviewed dev-to-test or test-to-prod release PRs after their explicit gates. It never merges, writes Kubernetes, creates an environment, or performs production runtime qualification."
+            echo "v0.10.7 makes status strictly read-only, accepts only exact safe retry lineage, and records a secret-free Attempt. It never closes or merges a PR, writes Kubernetes, creates an environment, runs production qualification, or dispatches rollback."
           } >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Upload derived snapshot and decision
@@ -285,6 +355,7 @@ jobs:
     needs: derive
     if: >-
       needs.derive.outputs.recommended-action == 'prepare-test-promotion' &&
+      needs.derive.outputs.operation != 'status' &&
       needs.derive.outputs.dispatch-authorized == 'true' &&
       vars.DEMO_API_AWS_TEST_PROMOTION_ENABLED == 'true'
     permissions:
@@ -306,6 +377,7 @@ jobs:
     needs: derive
     if: >-
       needs.derive.outputs.recommended-action == 'prepare-test-promotion' &&
+      needs.derive.outputs.operation != 'status' &&
       vars.DEMO_API_AWS_TEST_PROMOTION_ENABLED != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -329,6 +401,7 @@ jobs:
     needs: derive
     if: >-
       needs.derive.outputs.recommended-action == 'prepare-prod-promotion' &&
+      needs.derive.outputs.operation != 'status' &&
       needs.derive.outputs.dispatch-authorized == 'true' &&
       vars.DEMO_API_AWS_PROD_PROMOTION_ENABLED == 'true'
     permissions:
@@ -350,6 +423,7 @@ jobs:
     needs: derive
     if: >-
       needs.derive.outputs.recommended-action == 'prepare-prod-promotion' &&
+      needs.derive.outputs.operation != 'status' &&
       vars.DEMO_API_AWS_PROD_PROMOTION_ENABLED != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -374,6 +448,7 @@ jobs:
     if: >-
       (needs.derive.outputs.recommended-action == 'qualify-aws-dev' ||
        needs.derive.outputs.recommended-action == 'qualify-aws-test') &&
+      needs.derive.outputs.operation != 'status' &&
       needs.derive.outputs.dispatch-authorized == 'true' &&
       ((needs.derive.outputs.target-environment == 'aws-dev' &&
         vars.DEMO_API_AWS_DEV_QUALIFICATION_ENABLED == 'true') ||
@@ -394,6 +469,7 @@ jobs:
     if: >-
       (needs.derive.outputs.recommended-action == 'qualify-aws-dev' ||
        needs.derive.outputs.recommended-action == 'qualify-aws-test') &&
+      needs.derive.outputs.operation != 'status' &&
       ((needs.derive.outputs.target-environment == 'aws-dev' &&
         vars.DEMO_API_AWS_DEV_QUALIFICATION_ENABLED != 'true') ||
        (needs.derive.outputs.target-environment == 'aws-test' &&
@@ -454,3 +530,165 @@ jobs:
       control_plane_sha: ${{ needs.derive.outputs.control-plane-sha }}
       static_artifact_name: ${{ needs.static-qualification.outputs.artifact_name }}
       runtime_artifact_name: ${{ needs.runtime-qualification.outputs.artifact_name }}
+
+  record-attempt:
+    name: Record secret-free orchestration Attempt
+    needs:
+      - derive
+      - prepare-test-promotion
+      - test-promotion-disabled
+      - prepare-prod-promotion
+      - prod-promotion-disabled
+      - static-qualification
+      - qualification-disabled
+      - runtime-qualification
+      - record-qualification-bundle
+    if: always() && needs.derive.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout the derived control plane
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.derive.outputs.control-plane-sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download same-run decision artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: demo-api-orchestration-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/orchestration
+
+      - name: Assemble stage result facts
+        env:
+          TEST_PROMOTION_RESULT: ${{ needs.prepare-test-promotion.result }}
+          TEST_PROMOTION_STATUS: ${{ needs.prepare-test-promotion.outputs.status }}
+          TEST_PROMOTION_URL: ${{ needs.prepare-test-promotion.outputs.pr_url }}
+          TEST_DISABLED_RESULT: ${{ needs.test-promotion-disabled.result }}
+          PROD_PROMOTION_RESULT: ${{ needs.prepare-prod-promotion.result }}
+          PROD_PROMOTION_STATUS: ${{ needs.prepare-prod-promotion.outputs.status }}
+          PROD_PROMOTION_URL: ${{ needs.prepare-prod-promotion.outputs.pr_url }}
+          PROD_DISABLED_RESULT: ${{ needs.prod-promotion-disabled.result }}
+          STATIC_RESULT: ${{ needs.static-qualification.result }}
+          STATIC_STATUS: ${{ needs.static-qualification.outputs.status }}
+          QUALIFICATION_DISABLED_RESULT: ${{ needs.qualification-disabled.result }}
+          RUNTIME_RESULT: ${{ needs.runtime-qualification.result }}
+          RUNTIME_STATUS: ${{ needs.runtime-qualification.outputs.status }}
+          RUNTIME_REASON: ${{ needs.runtime-qualification.outputs.reason }}
+          BUNDLE_RESULT: ${{ needs.record-qualification-bundle.result }}
+          BUNDLE_STATUS: ${{ needs.record-qualification-bundle.outputs.status }}
+          BUNDLE_URL: ${{ needs.record-qualification-bundle.outputs.pr_url }}
+          OUTPUT_FILE: ${{ runner.temp }}/stage-results.json
+        run: |
+          python3 - "${OUTPUT_FILE}" <<'PY'
+          import json
+          import os
+          import sys
+
+          def stage(prefix):
+              return {
+                  "result": os.environ.get(f"{prefix}_RESULT", ""),
+                  "status": os.environ.get(f"{prefix}_STATUS", ""),
+                  "reason": os.environ.get(f"{prefix}_REASON", ""),
+                  "url": os.environ.get(f"{prefix}_URL", ""),
+              }
+
+          value = {
+              "testPromotion": stage("TEST_PROMOTION"),
+              "prodPromotion": stage("PROD_PROMOTION"),
+              "static": stage("STATIC"),
+              "runtime": stage("RUNTIME"),
+              "bundle": stage("BUNDLE"),
+              "disabled": {
+                  "testPromotion": os.environ.get("TEST_DISABLED_RESULT", ""),
+                  "prodPromotion": os.environ.get("PROD_DISABLED_RESULT", ""),
+                  "qualification": os.environ.get("QUALIFICATION_DISABLED_RESULT", ""),
+              },
+          }
+          with open(sys.argv[1], "w", encoding="utf-8") as output:
+              json.dump(value, output, indent=2, sort_keys=True)
+              output.write("\n")
+          PY
+
+      - name: Resolve optional governed rollback handoff
+        id: rollback
+        if: >-
+          (needs.derive.outputs.target-environment == 'aws-dev' ||
+           needs.derive.outputs.target-environment == 'aws-test') &&
+          contains(fromJSON('["rollout_unhealthy","analysis_failed","digest_mismatch","https_validation_failed"]'),
+                   needs.runtime-qualification.outputs.reason)
+        continue-on-error: true
+        env:
+          TARGET_ENVIRONMENT: ${{ needs.derive.outputs.target-environment }}
+          RELEASE_ID: ${{ needs.derive.outputs.release-id }}
+          FAILURE_REASON: ${{ needs.runtime-qualification.outputs.reason }}
+        run: |
+          ./scripts/resolve-demo-api-rollback-candidate.py \
+            --environment "${TARGET_ENVIRONMENT}" \
+            --failed-release-id "${RELEASE_ID}" \
+            --failure-reason "${FAILURE_REASON}" \
+            --base-revision "${{ needs.derive.outputs.control-plane-sha }}" \
+            --output "${RUNNER_TEMP}/rollback-handoff.json"
+
+      - name: Write and validate Attempt artifact
+        env:
+          OPERATION: ${{ needs.derive.outputs.operation }}
+          CONTROL_PLANE_SHA: ${{ needs.derive.outputs.control-plane-sha }}
+          STARTED_AT: ${{ needs.derive.outputs.started-at }}
+          RETRY_RUN_ID: ${{ needs.derive.outputs.retry-run-id }}
+          RETRY_RUN_ATTEMPT: ${{ needs.derive.outputs.retry-run-attempt }}
+        run: |
+          arguments=(
+            --decision "${RUNNER_TEMP}/orchestration/demo-api-orchestration-decision.json"
+            --stage-results "${RUNNER_TEMP}/stage-results.json"
+            --operation "${OPERATION}"
+            --control-plane-sha "${CONTROL_PLANE_SHA}"
+            --repository "${GITHUB_REPOSITORY}"
+            --run-id "${GITHUB_RUN_ID}"
+            --run-attempt "${GITHUB_RUN_ATTEMPT}"
+            --actor "${GITHUB_ACTOR}"
+            --run-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            --started-at "${STARTED_AT}"
+            --output "${RUNNER_TEMP}/attempt/result.json"
+          )
+          if [[ "${OPERATION}" == "retry" ]]; then
+            arguments+=(
+              --retry-run-id "${RETRY_RUN_ID}"
+              --retry-run-attempt "${RETRY_RUN_ATTEMPT}"
+            )
+          fi
+          if [[ -f "${RUNNER_TEMP}/rollback-handoff.json" ]]; then
+            arguments+=(--rollback-handoff "${RUNNER_TEMP}/rollback-handoff.json")
+          fi
+          ./scripts/write-demo-api-orchestration-attempt.py "${arguments[@]}"
+          ./scripts/validate-demo-api-orchestration-attempt.py \
+            --attempt "${RUNNER_TEMP}/attempt/result.json"
+
+      - name: Publish recovery summary
+        run: |
+          attempt="${RUNNER_TEMP}/attempt/result.json"
+          {
+            echo "### demo-api orchestration Attempt"
+            echo
+            echo "- Outcome: \`$(jq -r '.execution.outcome' "${attempt}")\`"
+            echo "- Reason: \`$(jq -r '.execution.reason' "${attempt}")\`"
+            echo "- Retry class: \`$(jq -r '.execution.retryClass' "${attempt}")\`"
+            echo "- Recovery: \`$(jq -r '.execution.recommendedRecovery' "${attempt}")\`"
+            if [[ "$(jq -r '.rollbackHandoff != null' "${attempt}")" == "true" ]]; then
+              echo "- Rollback: governed manual handoff available in the Attempt artifact"
+            fi
+            echo
+            echo "This short-retention diagnostic is not Promotion evidence and cannot dispatch rollback."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Upload Attempt artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: demo-api-orchestration-attempt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/attempt/result.json
+          if-no-files-found: error
+          retention-days: 14

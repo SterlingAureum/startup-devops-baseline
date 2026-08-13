@@ -25,6 +25,7 @@ expected = {
     "clusters/aws/base/platform/external-secrets-startup-apps.yaml": "main",
     "clusters/aws/base/platform/namespace-guardrails.yaml": "main",
     "clusters/aws/base/platform/postgresql-baseline.yaml": "main",
+    "clusters/aws/base/platform/runtime-qualification-rbac/application.yaml": "main",
     "clusters/aws/base/platform/startup-apps-network-policy.yaml": "main",
 }
 

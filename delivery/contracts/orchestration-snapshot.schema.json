@@ -1,0 +1,417 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aureumstack.com/schemas/orchestration-snapshot-v0.10.7.json",
+  "title": "Read-only demo-api orchestration fact snapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "application",
+    "operation",
+    "policy",
+    "trigger",
+    "capturedMainRevision",
+    "observedMainRevision",
+    "requestedReleaseId",
+    "retryAttempt",
+    "testRolloutGate",
+    "activeRelease",
+    "releaseOrderState",
+    "supersedingRelease",
+    "releases",
+    "evidence",
+    "qualificationBundles",
+    "pullRequests",
+    "environmentAvailability",
+    "derivedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "v0.10.7"
+    },
+    "application": {
+      "const": "demo-api"
+    },
+    "operation": {
+      "enum": [
+        "start",
+        "status",
+        "resume",
+        "retry"
+      ]
+    },
+    "policy": {
+      "enum": [
+        "reviewed",
+        "continuous-nonprod"
+      ]
+    },
+    "trigger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "eventName",
+        "ref",
+        "sourceCommit"
+      ],
+      "properties": {
+        "eventName": {
+          "enum": [
+            "push",
+            "workflow_dispatch",
+            "fixture"
+          ]
+        },
+        "ref": {
+          "const": "refs/heads/main"
+        },
+        "sourceCommit": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{40}$"
+        }
+      }
+    },
+    "capturedMainRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "observedMainRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "requestedReleaseId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+    },
+    "retryAttempt": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["runId", "runAttempt", "releaseId", "outcome", "retryClass", "recommendedAction", "controlPlaneSha"],
+          "properties": {
+            "runId": { "type": "string", "pattern": "^[1-9][0-9]*$" },
+            "runAttempt": { "type": "integer", "minimum": 1 },
+            "releaseId": { "type": "string", "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$" },
+            "outcome": { "enum": ["blocked", "failed"] },
+            "retryClass": { "const": "safe-new-attempt" },
+            "recommendedAction": { "type": "string", "minLength": 1 },
+            "controlPlaneSha": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+          }
+        }
+      ]
+    },
+    "testRolloutGate": {
+      "enum": [
+        "not-reviewed",
+        "reviewed-and-completed"
+      ]
+    },
+    "activeRelease": {
+      "$ref": "#/$defs/nullableIdentity"
+    },
+    "releaseOrderState": {
+      "enum": ["current", "superseded", "ambiguous"]
+    },
+    "supersedingRelease": {
+      "$ref": "#/$defs/nullableIdentity"
+    },
+    "releases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aws-dev",
+        "aws-test",
+        "aws-prod"
+      ],
+      "properties": {
+        "aws-dev": {
+          "$ref": "#/$defs/releaseFact"
+        },
+        "aws-test": {
+          "$ref": "#/$defs/releaseFact"
+        },
+        "aws-prod": {
+          "$ref": "#/$defs/releaseFact"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aws-dev",
+        "aws-test"
+      ],
+      "properties": {
+        "aws-dev": {
+          "$ref": "#/$defs/evidencePair"
+        },
+        "aws-test": {
+          "$ref": "#/$defs/evidencePair"
+        }
+      }
+    },
+    "qualificationBundles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aws-dev",
+        "aws-test"
+      ],
+      "properties": {
+        "aws-dev": {
+          "$ref": "#/$defs/bundleFact"
+        },
+        "aws-test": {
+          "$ref": "#/$defs/bundleFact"
+        }
+      }
+    },
+    "pullRequests": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/pullRequest"
+      }
+    },
+    "environmentAvailability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aws-dev",
+        "aws-test",
+        "aws-prod"
+      ],
+      "properties": {
+        "aws-dev": {
+          "$ref": "#/$defs/availability"
+        },
+        "aws-test": {
+          "$ref": "#/$defs/availability"
+        },
+        "aws-prod": {
+          "$ref": "#/$defs/availability"
+        }
+      }
+    },
+    "derivedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "availability": {
+      "enum": [
+        "present",
+        "absent",
+        "unknown"
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "releaseId",
+        "sourceRepository",
+        "sourceCommit",
+        "imageRepository",
+        "imageTag",
+        "imageDigest",
+        "buildWorkflowRunId"
+      ],
+      "properties": {
+        "releaseId": {
+          "type": "string",
+          "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+        },
+        "sourceRepository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sourceCommit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "imageRepository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "imageTag": {
+          "type": "string",
+          "pattern": "^sha-[0-9a-f]{7,40}$"
+        },
+        "imageDigest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "buildWorkflowRunId": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        }
+      }
+    },
+    "nullableIdentity": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/identity"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "releaseFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "sha256",
+        "identity"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "identity": {
+          "$ref": "#/$defs/identity"
+        }
+      }
+    },
+    "evidenceFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "id",
+        "ref",
+        "sha256"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "missing",
+            "fresh",
+            "stale"
+          ]
+        },
+        "id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "ref": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "sha256": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "evidencePair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "static",
+        "runtime"
+      ],
+      "properties": {
+        "static": {
+          "$ref": "#/$defs/evidenceFact"
+        },
+        "runtime": {
+          "$ref": "#/$defs/evidenceFact"
+        }
+      }
+    },
+    "bundleFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "reason", "id", "ref", "sha256", "expiresAt", "remainingSeconds"],
+      "properties": {
+        "state": {
+          "enum": ["missing", "fresh", "expiring", "expired", "scope_drift", "release_drift", "invalid"]
+        },
+        "reason": { "type": "string", "minLength": 1 },
+        "id": { "type": ["string", "null"] },
+        "ref": { "type": ["string", "null"] },
+        "sha256": { "type": ["string", "null"], "pattern": "^[0-9a-f]{64}$" },
+        "expiresAt": { "type": ["string", "null"], "format": "date-time" },
+        "remainingSeconds": { "type": ["integer", "null"] }
+      }
+    },
+    "pullRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "number",
+        "url",
+        "kind",
+        "targetEnvironment",
+        "releaseId",
+        "releaseSha256",
+        "headRefName",
+        "baseRefName"
+      ],
+      "properties": {
+        "number": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "enum": [
+            "environment-release",
+            "static-evidence",
+            "runtime-evidence",
+            "qualification-bundle"
+          ]
+        },
+        "targetEnvironment": {
+          "enum": [
+            "aws-dev",
+            "aws-test",
+            "aws-prod"
+          ]
+        },
+        "releaseId": {
+          "type": "string",
+          "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+        },
+        "releaseSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "headRefName": {
+          "type": "string",
+          "minLength": 1
+        },
+        "baseRefName": {
+          "const": "main"
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,50 @@
 name: demo-api release qualification evidence
 
 on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Non-production release to qualify statically
+        required: true
+        type: string
+      mode:
+        description: Return a same-run artifact or create the legacy reviewed evidence PR
+        required: false
+        default: reviewed-pr
+        type: string
+      expected_control_plane_sha:
+        description: Optional protected-main revision required by an orchestrated call
+        required: false
+        default: ''
+        type: string
+    outputs:
+      status:
+        description: qualified for artifact-only or created for reviewed-pr
+        value: ${{ jobs.record-evidence.outputs.status || jobs.qualify.outputs.status }}
+      pr_url:
+        description: Created evidence PR URL in reviewed-pr mode
+        value: ${{ jobs.record-evidence.outputs.pr-url }}
+      evidence_file:
+        description: Append-only static evidence path
+        value: ${{ jobs.qualify.outputs.evidence-file }}
+      image_reference:
+        description: Qualified immutable image reference
+        value: ${{ jobs.qualify.outputs.image-reference }}
+      base_revision:
+        description: Main revision qualified by this stage
+        value: ${{ jobs.qualify.outputs.base-revision }}
+      artifact_name:
+        description: Same-run secret-free static qualification artifact
+        value: ${{ jobs.qualify.outputs.artifact-name }}
+      source_commit:
+        description: Full release source commit
+        value: ${{ jobs.qualify.outputs.source-commit }}
+      image_digest:
+        description: Full immutable image digest
+        value: ${{ jobs.qualify.outputs.image-digest }}
+      release_file_sha256:
+        description: SHA-256 of the exact qualified release file
+        value: ${{ jobs.qualify.outputs.release-file-sha256 }}
   workflow_dispatch:
     inputs:
       environment:
@@ -10,6 +54,18 @@ on:
         options:
           - aws-dev
           - aws-test
+      mode:
+        description: Manual compatibility mode
+        required: true
+        default: reviewed-pr
+        type: choice
+        options:
+          - reviewed-pr
+          - artifact-only
+      expected_control_plane_sha:
+        description: Optional full protected-main SHA
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -22,23 +78,29 @@ env:
   BASE_BRANCH: main
 
 jobs:
-  record-evidence:
-    name: Record reviewed release evidence
+  qualify:
+    name: Qualify immutable release statically
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    environment:
-      name: ${{ inputs.environment }}
-      deployment: false
     permissions:
-      contents: write
+      contents: read
       packages: read
-      pull-requests: write
+    outputs:
+      status: ${{ steps.evidence.outputs.status }}
+      evidence-file: ${{ steps.evidence.outputs.evidence-file }}
+      image-reference: ${{ steps.evidence.outputs.image-reference }}
+      base-revision: ${{ steps.evidence.outputs.base-revision }}
+      artifact-name: ${{ steps.evidence.outputs.artifact-name }}
+      source-commit: ${{ steps.evidence.outputs.source-commit }}
+      image-digest: ${{ steps.evidence.outputs.image-digest }}
+      release-file-sha256: ${{ steps.evidence.outputs.release-file-sha256 }}
     steps:
-      - name: Checkout main with repository history
+      - name: Checkout protected main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Setup Helm
         uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
@@ -53,17 +115,38 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Qualify the current source release
+      - name: Produce secret-free static qualification
         id: evidence
         env:
           ENVIRONMENT: ${{ inputs.environment }}
+          MODE: ${{ inputs.mode || 'reviewed-pr' }}
+          EXPECTED_CONTROL_PLANE_SHA: ${{ inputs.expected_control_plane_sha }}
           EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
           EVIDENCE_RUN_ID: ${{ github.run_id }}
           EVIDENCE_RUN_ATTEMPT: ${{ github.run_attempt }}
           EVIDENCE_ACTOR: ${{ github.actor }}
         run: |
           if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
-            echo "::error::Release evidence must be dispatched from main."
+            echo "::error::Release qualification must execute protected main."
+            exit 1
+          fi
+          case "${ENVIRONMENT}" in
+            aws-dev|aws-test) ;;
+            *)
+              echo "::error::Only aws-dev and aws-test static qualification is implemented."
+              exit 1
+              ;;
+          esac
+          case "${MODE}" in
+            artifact-only|reviewed-pr) ;;
+            *)
+              echo "::error::Unsupported static qualification mode: ${MODE}"
+              exit 1
+              ;;
+          esac
+          if [[ "${MODE}" == "artifact-only" && \
+                ! "${EXPECTED_CONTROL_PLANE_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::artifact-only mode requires a full expected control-plane SHA."
             exit 1
           fi
 
@@ -74,10 +157,17 @@ jobs:
             echo "::error::Checked-out main is stale before qualification."
             exit 1
           fi
+          if [[ -n "${EXPECTED_CONTROL_PLANE_SHA}" && \
+                "${base_revision}" != "${EXPECTED_CONTROL_PLANE_SHA}" ]]; then
+            echo "::error::Protected main differs from the orchestrated revision."
+            exit 1
+          fi
 
           environment_values="apps/demo-api/helm/values/environments/${ENVIRONMENT}.yaml"
           release_file="apps/demo-api/helm/values/releases/${ENVIRONMENT}.yaml"
+          result_file="${RUNNER_TEMP}/static-qualification/result.json"
           evidence_file="evidence/demo-api/${ENVIRONMENT}/${EVIDENCE_RUN_ID}.json"
+          artifact_name="demo-api-static-${ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           expected_image_repository="ghcr.io/${GITHUB_REPOSITORY,,}/demo-api"
 
           helm lint apps/demo-api/helm \
@@ -88,118 +178,127 @@ jobs:
             --values "${release_file}" >/dev/null
 
           RELEASE_FILE="${release_file}" \
-          OUTPUT_FILE="${evidence_file}" \
+          OUTPUT_FILE="${result_file}" \
           VALIDATED_REPOSITORY_REVISION="${base_revision}" \
           EXPECTED_IMAGE_REPOSITORY="${expected_image_repository}" \
             ./scripts/write-demo-api-release-evidence.sh
 
-          image_reference="$(
-            python3 -c \
-              'import json,sys; d=json.load(open(sys.argv[1])); print(d["release"]["imageRepository"]+"@"+d["release"]["imageDigest"])' \
-              "${evidence_file}"
-          )"
+          image_reference="$(jq -r '.release.imageRepository + "@" + .release.imageDigest' "${result_file}")"
           docker buildx imagetools inspect "${image_reference}" >/dev/null
 
           EXPECTED_ENVIRONMENT="${ENVIRONMENT}" \
           EXPECTED_EVIDENCE_RUN_ID="${EVIDENCE_RUN_ID}" \
-          EVIDENCE_FILE="${evidence_file}" \
+          EVIDENCE_FILE="${result_file}" \
           RELEASE_FILE="${release_file}" \
           EXPECTED_IMAGE_REPOSITORY="${expected_image_repository}" \
             ./scripts/validate-demo-api-release-evidence.sh
-          git diff --check
-
-          evidence_branch="evidence/demo-api-${ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
-          git switch --create "${evidence_branch}" "origin/${BASE_BRANCH}"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "${evidence_file}"
-          git commit -m "evidence: qualify ${ENVIRONMENT} demo-api release"
 
           {
+            echo "status=qualified"
             echo "base-revision=${base_revision}"
-            echo "evidence-branch=${evidence_branch}"
             echo "evidence-file=${evidence_file}"
             echo "image-reference=${image_reference}"
+            echo "artifact-name=${artifact_name}"
+            echo "source-commit=$(jq -r '.release.sourceCommit' "${result_file}")"
+            echo "image-digest=$(jq -r '.release.imageDigest' "${result_file}")"
+            echo "release-file-sha256=$(jq -r '.release.sha256' "${result_file}")"
           } >> "${GITHUB_OUTPUT}"
 
-      - name: Reject stale main and push evidence branch
+      - name: Upload same-run static result
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.evidence.outputs.artifact-name }}
+          path: ${{ runner.temp }}/static-qualification/result.json
+          if-no-files-found: error
+          retention-days: 14
+
+  record-evidence:
+    name: Create legacy reviewed static evidence PR
+    if: inputs.mode == 'reviewed-pr' || inputs.mode == ''
+    needs: qualify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: ${{ inputs.environment }}
+      deployment: false
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      status: ${{ steps.pull-request.outputs.status }}
+      pr-url: ${{ steps.pull-request.outputs.url }}
+    steps:
+      - name: Checkout qualified protected main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.qualify.outputs.base-revision }}
+          fetch-depth: 0
+
+      - name: Download same-run static result
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ needs.qualify.outputs.artifact-name }}
+          path: ${{ runner.temp }}/static-qualification
+
+      - name: Prepare evidence-only branch
+        id: branch
         env:
-          BASE_REVISION: ${{ steps.evidence.outputs.base-revision }}
-          EVIDENCE_BRANCH: ${{ steps.evidence.outputs.evidence-branch }}
+          BASE_REVISION: ${{ needs.qualify.outputs.base-revision }}
+          EVIDENCE_FILE: ${{ needs.qualify.outputs.evidence-file }}
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
-          git fetch --no-tags origin \
-            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
-          if [[ "$(git rev-parse "origin/${BASE_BRANCH}")" != "${BASE_REVISION}" ]]; then
-            echo "::error::main changed while evidence was being prepared; qualify again."
+          git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+          if [[ "$(git rev-parse origin/main)" != "${BASE_REVISION}" ]]; then
+            echo "::error::main changed while static evidence was being prepared."
             exit 1
           fi
-          git push origin "HEAD:refs/heads/${EVIDENCE_BRANCH}"
+          mkdir -p "$(dirname "${EVIDENCE_FILE}")"
+          cp "${RUNNER_TEMP}/static-qualification/result.json" "${EVIDENCE_FILE}"
+          EXPECTED_ENVIRONMENT="${ENVIRONMENT}" \
+          EXPECTED_EVIDENCE_RUN_ID="${GITHUB_RUN_ID}" \
+          EVIDENCE_FILE="${EVIDENCE_FILE}" \
+          RELEASE_FILE="apps/demo-api/helm/values/releases/${ENVIRONMENT}.yaml" \
+            ./scripts/validate-demo-api-release-evidence.sh
+
+          evidence_branch="evidence/demo-api-${ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git switch --create "${evidence_branch}" "origin/main"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${EVIDENCE_FILE}"
+          git commit -m "evidence: qualify ${ENVIRONMENT} demo-api release"
+          git push origin "HEAD:refs/heads/${evidence_branch}"
+          {
+            echo "branch=${evidence_branch}"
+            echo "file=${EVIDENCE_FILE}"
+          } >> "${GITHUB_OUTPUT}"
 
       - name: Create evidence pull request
         id: pull-request
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BASE_REVISION: ${{ steps.evidence.outputs.base-revision }}
-          EVIDENCE_BRANCH: ${{ steps.evidence.outputs.evidence-branch }}
-          EVIDENCE_FILE: ${{ steps.evidence.outputs.evidence-file }}
-          IMAGE_REFERENCE: ${{ steps.evidence.outputs.image-reference }}
+          EVIDENCE_BRANCH: ${{ steps.branch.outputs.branch }}
+          EVIDENCE_FILE: ${{ steps.branch.outputs.file }}
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
-          git fetch --no-tags origin \
-            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
-          if [[ "$(git rev-parse "origin/${BASE_BRANCH}")" != "${BASE_REVISION}" ]]; then
-            echo "::error::main changed before evidence PR creation; qualify again."
-            exit 1
-          fi
-
-          mapfile -t changed_files < <(
-            git diff --name-only "origin/${BASE_BRANCH}" HEAD
-          )
-          if [[ "${#changed_files[@]}" != "1" || \
-                "${changed_files[0]}" != "${EVIDENCE_FILE}" ]]; then
+          mapfile -t changed_files < <(git diff --name-only origin/main HEAD)
+          if [[ "${#changed_files[@]}" != "1" || "${changed_files[0]}" != "${EVIDENCE_FILE}" ]]; then
             echo "::error::Evidence branch may add only ${EVIDENCE_FILE}."
-            printf 'Unexpected evidence diff: %s\n' "${changed_files[@]}"
             exit 1
           fi
-
           body_file="$(mktemp)"
-          {
-            echo "## demo-api release qualification evidence"
-            echo
-            echo "- Environment: \`${ENVIRONMENT}\`"
-            echo "- Image: \`${IMAGE_REFERENCE}\`"
-            echo "- Evidence record: \`${EVIDENCE_FILE}\`"
-            echo "- Qualified main revision: \`${BASE_REVISION}\`"
-            echo "- Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-            echo
-            echo "This PR records reviewed static release qualification. It does not deploy, merge itself, or access EKS. Cross-environment promotion additionally requires separate v0.9.5 AWS runtime evidence collected through the restricted local operations path."
-          } > "${body_file}"
-
-          if ! pr_url="$(
-            gh pr create \
-              --base "${BASE_BRANCH}" \
-              --head "${EVIDENCE_BRANCH}" \
-              --title "evidence: qualify demo-api ${ENVIRONMENT} release" \
-              --body-file "${body_file}"
-          )"; then
-            echo "::error::Could not create the evidence PR. Enable repository Actions permission to create pull requests, then rerun the workflow."
-            exit 1
-          fi
-
+          printf '%s\n' \
+            '## demo-api release qualification evidence' \
+            '' \
+            "- Environment: \`${ENVIRONMENT}\`" \
+            "- Evidence record: \`${EVIDENCE_FILE}\`" \
+            "- Qualified main revision: \`${{ needs.qualify.outputs.base-revision }}\`" \
+            '' \
+            'This compatibility PR records static evidence only. Promotion still requires separate v0.9.5 AWS runtime evidence. It does not deploy, merge itself, or access EKS.' \
+            > "${body_file}"
+          pr_url="$(gh pr create \
+            --base main \
+            --head "${EVIDENCE_BRANCH}" \
+            --title "evidence: qualify demo-api ${ENVIRONMENT} release" \
+            --body-file "${body_file}")"
           echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
-
-      - name: Publish evidence summary
-        env:
-          PR_URL: ${{ steps.pull-request.outputs.url }}
-          EVIDENCE_FILE: ${{ steps.evidence.outputs.evidence-file }}
-          IMAGE_REFERENCE: ${{ steps.evidence.outputs.image-reference }}
-          ENVIRONMENT: ${{ inputs.environment }}
-        run: |
-          {
-            echo "### demo-api release qualification evidence"
-            echo
-            echo "- Environment: \`${ENVIRONMENT}\`"
-            echo "- Image: \`${IMAGE_REFERENCE}\`"
-            echo "- Evidence record: \`${EVIDENCE_FILE}\`"
-            echo "- Pull request: ${PR_URL}"
-          } >> "${GITHUB_STEP_SUMMARY}"
+          echo "status=created" >> "${GITHUB_OUTPUT}"

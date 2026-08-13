@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "v0.10.5",
+  "application": "demo-api",
+  "workflow": ".github/workflows/demo-api-runtime-qualification.yaml",
+  "resultSchema": "delivery/contracts/runtime-qualification.schema.json",
+  "controlPlane": {
+    "allowedRef": "refs/heads/main",
+    "requireCurrentMainSha": true,
+    "allowPullRequestCode": false,
+    "automaticEnvironmentCreation": false
+  },
+  "executor": {
+    "kind": "ephemeral-self-hosted",
+    "fallbackToGitHubHosted": false,
+    "requiredLabels": [
+      "self-hosted",
+      "linux",
+      "x64",
+      "trusted-runtime"
+    ],
+    "credentials": "github-oidc-short-lived",
+    "persistentAwsCredentials": false,
+    "singleJob": true,
+    "unavailableBehavior": "remain-waiting-runtime"
+  },
+  "environments": {
+    "aws-dev": {
+      "githubEnvironment": "aws-dev-runtime",
+      "runnerLabel": "aws-dev",
+      "clusterName": "startup-devops-baseline-dev",
+      "namespace": "startup-apps",
+      "argoNamespace": "argocd",
+      "argoApplication": "demo-api-aws-dev",
+      "workloadKind": "Deployment",
+      "workloadName": "demo-api",
+      "httpsHostname": "demo.dev.aureumstack.com",
+      "oidcSubject": "repo:SterlingAureum/startup-devops-baseline:environment:aws-dev-runtime"
+    },
+    "aws-test": {
+      "githubEnvironment": "aws-test-runtime",
+      "runnerLabel": "aws-test",
+      "clusterName": "startup-devops-baseline-test",
+      "namespace": "startup-apps",
+      "argoNamespace": "argocd",
+      "argoApplication": "demo-api-aws-test",
+      "workloadKind": "Rollout",
+      "workloadName": "demo-api",
+      "httpsHostname": "demo.test.aureumstack.com",
+      "oidcSubject": "repo:SterlingAureum/startup-devops-baseline:environment:aws-test-runtime"
+    }
+  },
+  "inputs": [
+    "environment",
+    "release_id",
+    "control_plane_sha",
+    "expected_source_commit",
+    "expected_image_digest",
+    "expected_release_file_sha256"
+  ],
+  "forbiddenInputs": [
+    "cluster_name",
+    "namespace",
+    "argo_application",
+    "https_url",
+    "role_arn"
+  ],
+  "awsPermissions": {
+    "allowedActions": [
+      "sts:GetCallerIdentity",
+      "eks:DescribeCluster"
+    ],
+    "environmentIsolatedRoles": true
+  },
+  "kubernetesPermissions": {
+    "verbs": [
+      "get",
+      "list",
+      "watch"
+    ],
+    "namespaces": [
+      "argocd",
+      "startup-apps"
+    ],
+    "forbiddenResources": [
+      "secrets",
+      "pods/exec"
+    ]
+  },
+  "outcomes": {
+    "qualified": [
+      "all_checks_passed"
+    ],
+    "blocked": [
+      "environment_absent",
+      "executor_unavailable",
+      "main_advanced",
+      "oidc_denied",
+      "endpoint_unreachable"
+    ],
+    "failed": [
+      "input_mismatch",
+      "argo_not_converged",
+      "rollout_unhealthy",
+      "analysis_failed",
+      "digest_mismatch",
+      "https_validation_failed",
+      "rbac_boundary_failed"
+    ]
+  },
+  "artifact": {
+    "pathTemplate": "artifacts/runtime-qualification/{environment}/{release_id}.json",
+    "retentionDays": 14,
+    "durableEvidence": false,
+    "allowCredentials": false,
+    "allowKubeconfig": false
+  },
+  "convergenceWait": {
+    "maximumSeconds": 900,
+    "intervalSeconds": 15,
+    "passiveOnly": true,
+    "argoSyncAllowed": false,
+    "rolloutMutationAllowed": false
+  },
+  "production": {
+    "enabled": false,
+    "environment": "aws-prod",
+    "automaticQualification": false
+  }
+}

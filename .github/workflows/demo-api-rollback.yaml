@@ -1,6 +1,39 @@
 name: demo-api environment GitOps rollback
 
 on:
+  workflow_call:
+    inputs:
+      target_environment:
+        description: Environment whose release identity will be restored
+        required: true
+        type: string
+      rollback_to_revision:
+        description: Full historical target-release-only desired-state commit
+        required: true
+        type: string
+      expected_current_release_id:
+        description: Optional failed Release ID that must still be current
+        required: false
+        type: string
+    outputs:
+      status:
+        description: Rollback PR stage status
+        value: ${{ jobs.prepare-rollback.outputs.status }}
+      pr_url:
+        description: Created rollback PR URL
+        value: ${{ jobs.prepare-rollback.outputs.pr-url }}
+      target_environment:
+        description: Environment selected for rollback
+        value: ${{ jobs.prepare-rollback.outputs.target-environment }}
+      target_revision:
+        description: Historical desired-state revision restored by the PR
+        value: ${{ jobs.prepare-rollback.outputs.target-revision }}
+      image_tag:
+        description: Restored image tag
+        value: ${{ jobs.prepare-rollback.outputs.image-tag }}
+      image_digest:
+        description: Restored immutable image digest
+        value: ${{ jobs.prepare-rollback.outputs.image-digest }}
   workflow_dispatch:
     inputs:
       target_environment:
@@ -14,6 +47,10 @@ on:
       rollback_to_revision:
         description: Full historical target-release-only desired-state commit
         required: true
+        type: string
+      expected_current_release_id:
+        description: Failed Release ID currently carried by the target environment; required for v0.10.7 handoff
+        required: false
         type: string
 
 permissions:
@@ -38,6 +75,13 @@ jobs:
       contents: write
       packages: read
       pull-requests: write
+    outputs:
+      status: ${{ steps.pull-request.outputs.status || 'already-restored' }}
+      pr-url: ${{ steps.pull-request.outputs.url }}
+      target-environment: ${{ steps.rollback.outputs.target-environment }}
+      target-revision: ${{ steps.rollback.outputs.target-revision }}
+      image-tag: ${{ steps.rollback.outputs.image-tag }}
+      image-digest: ${{ steps.rollback.outputs.image-digest }}
     steps:
       - name: Checkout main with repository history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -63,6 +107,7 @@ jobs:
         env:
           TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
           ROLLBACK_TO_REVISION: ${{ inputs.rollback_to_revision }}
+          EXPECTED_CURRENT_RELEASE_ID: ${{ inputs.expected_current_release_id }}
           EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
         run: |
           if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
@@ -85,6 +130,27 @@ jobs:
           git fetch --no-tags origin \
             "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
           base_revision="$(git rev-parse "origin/${BASE_BRANCH}")"
+          if [[ -n "${EXPECTED_CURRENT_RELEASE_ID}" ]]; then
+            if [[ ! "${EXPECTED_CURRENT_RELEASE_ID}" =~ ^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$ ]]; then
+              echo "::error::expected_current_release_id violates the deterministic identity contract."
+              exit 1
+            fi
+            current_release_path="apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml"
+            current_source_commit="$(
+              git show "origin/${BASE_BRANCH}:${current_release_path}" |
+                awk '/^  sourceCommit:/{gsub(/[\"'\'' ]/, "", $2); print $2}'
+            )"
+            current_image_digest="$(
+              git show "origin/${BASE_BRANCH}:${current_release_path}" |
+                awk '/^  digest:/{gsub(/[\"'\'' ]/, "", $2); print $2}'
+            )"
+            current_release_id="demo-api-${current_source_commit:0:12}-${current_image_digest#sha256:}"
+            current_release_id="${current_release_id:0:34}"
+            if [[ "${current_release_id}" != "${EXPECTED_CURRENT_RELEASE_ID}" ]]; then
+              echo "::error::Target environment no longer carries the failed Release ID."
+              exit 1
+            fi
+          fi
           if ! git cat-file -e "${ROLLBACK_TO_REVISION}^{commit}" 2>/dev/null; then
             echo "::error::Rollback target is unavailable in repository history."
             exit 1

@@ -1,6 +1,63 @@
 name: demo-api ordered environment promotion
 
 on:
+  workflow_call:
+    inputs:
+      source_environment:
+        description: Reviewed source environment
+        required: true
+        type: string
+      target_environment:
+        description: Next environment in the declared promotion chain
+        required: true
+        type: string
+      qualification_mode:
+        description: legacy-evidence or qualification-bundle
+        required: true
+        type: string
+      evidence_run_id:
+        description: Reviewed static qualification workflow run ID
+        required: false
+        type: string
+      runtime_evidence_id:
+        description: Reviewed AWS runtime evidence ID
+        required: false
+        type: string
+      qualification_bundle_path:
+        description: Reviewed Qualification Bundle path derived from main
+        required: false
+        type: string
+      qualification_bundle_sha256:
+        description: SHA-256 of the reviewed Qualification Bundle
+        required: false
+        type: string
+      release_id:
+        description: Deterministic release ID bound by the Bundle
+        required: false
+        type: string
+      control_plane_sha:
+        description: Protected-main SHA captured by the orchestrator
+        required: false
+        type: string
+    outputs:
+      status:
+        description: Promotion PR stage status
+        value: ${{ jobs.prepare-promotion.outputs.status }}
+      pr_url:
+        description: Created promotion PR URL
+        value: ${{ jobs.prepare-promotion.outputs.pr-url }}
+      target_release_path:
+        description: Only release file the stage may change
+        value: ${{ jobs.prepare-promotion.outputs.target-release-path }}
+      image_tag:
+        description: Promoted image tag
+        value: ${{ jobs.prepare-promotion.outputs.image-tag }}
+      image_digest:
+        description: Promoted immutable image digest
+        value: ${{ jobs.prepare-promotion.outputs.image-digest }}
+      source_commit:
+        description: Source commit bound to the promoted image
+        value: ${{ jobs.prepare-promotion.outputs.source-commit }}
   workflow_dispatch:
     inputs:
       source_environment:
@@ -51,6 +108,13 @@ jobs:
       contents: write
       packages: read
       pull-requests: write
+    outputs:
+      status: ${{ steps.pull-request.outputs.status || 'already-promoted' }}
+      pr-url: ${{ steps.pull-request.outputs.url }}
+      target-release-path: ${{ steps.promotion.outputs.target-release-path }}
+      image-tag: ${{ steps.promotion.outputs.image-tag }}
+      image-digest: ${{ steps.promotion.outputs.image-digest }}
+      source-commit: ${{ steps.promotion.outputs.source-commit }}
     steps:
       - name: Checkout main with repository history
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -76,8 +140,13 @@ jobs:
         env:
           SOURCE_ENVIRONMENT: ${{ inputs.source_environment }}
           TARGET_ENVIRONMENT: ${{ inputs.target_environment }}
+          QUALIFICATION_MODE: ${{ inputs.qualification_mode || 'legacy-evidence' }}
           EVIDENCE_RUN_ID: ${{ inputs.evidence_run_id }}
           RUNTIME_EVIDENCE_ID: ${{ inputs.runtime_evidence_id }}
+          QUALIFICATION_BUNDLE_PATH: ${{ inputs.qualification_bundle_path }}
+          QUALIFICATION_BUNDLE_SHA256: ${{ inputs.qualification_bundle_sha256 }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
           EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
         run: |
           if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
@@ -98,25 +167,60 @@ jobs:
               ;;
           esac
 
-          if [[ ! "${EVIDENCE_RUN_ID}" =~ ^[0-9]+$ ]]; then
-            echo "::error::evidence_run_id must contain only decimal digits."
-            exit 1
-          fi
-          if [[ ! "${RUNTIME_EVIDENCE_ID}" =~ ^[0-9]{14}$ ]]; then
-            echo "::error::runtime_evidence_id must use UTC YYYYMMDDHHMMSS digits."
-            exit 1
-          fi
+          case "${QUALIFICATION_MODE}" in
+            legacy-evidence)
+              if [[ ! "${EVIDENCE_RUN_ID}" =~ ^[0-9]+$ || \
+                    ! "${RUNTIME_EVIDENCE_ID}" =~ ^[0-9]{14}$ ]]; then
+                echo "::error::Legacy mode requires evidence_run_id and runtime_evidence_id."
+                exit 1
+              fi
+              if [[ -n "${QUALIFICATION_BUNDLE_PATH}${QUALIFICATION_BUNDLE_SHA256}${RELEASE_ID}${CONTROL_PLANE_SHA}" ]]; then
+                echo "::error::Legacy and Qualification Bundle inputs may not be mixed."
+                exit 1
+              fi
+              ;;
+            qualification-bundle)
+              case "${SOURCE_ENVIRONMENT}->${TARGET_ENVIRONMENT}" in
+                aws-dev-\>aws-test|aws-test-\>aws-prod) ;;
+                *)
+                  echo "::error::Automated Bundle mode permits only aws-dev -> aws-test or aws-test -> aws-prod."
+                  exit 1
+                  ;;
+              esac
+              if [[ -n "${EVIDENCE_RUN_ID}${RUNTIME_EVIDENCE_ID}" ]]; then
+                echo "::error::Qualification Bundle mode rejects legacy evidence inputs."
+                exit 1
+              fi
+              if [[ ! "${RELEASE_ID}" =~ ^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$ || \
+                    ! "${CONTROL_PLANE_SHA}" =~ ^[0-9a-f]{40}$ || \
+                    ! "${QUALIFICATION_BUNDLE_SHA256}" =~ ^[0-9a-f]{64}$ || \
+                    ! "${QUALIFICATION_BUNDLE_PATH}" =~ ^evidence/demo-api/qualification/${SOURCE_ENVIRONMENT}/${RELEASE_ID}/[1-9][0-9]*-[1-9][0-9]*\.json$ ]]; then
+                echo "::error::Qualification Bundle inputs violate the immutable identity contract."
+                exit 1
+              fi
+              ;;
+            *)
+              echo "::error::Unsupported qualification mode: ${QUALIFICATION_MODE}"
+              exit 1
+              ;;
+          esac
 
           git fetch --no-tags origin \
             "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
           base_revision="$(git rev-parse "origin/${BASE_BRANCH}")"
+          if [[ "${QUALIFICATION_MODE}" == "qualification-bundle" && \
+                "${base_revision}" != "${CONTROL_PLANE_SHA}" ]]; then
+            echo "::error::Protected main differs from the orchestrator control-plane SHA."
+            exit 1
+          fi
           source_release_path="apps/demo-api/helm/values/releases/${SOURCE_ENVIRONMENT}.yaml"
           target_release_path="apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml"
           source_release_snapshot="${RUNNER_TEMP}/demo-api-${SOURCE_ENVIRONMENT}-release.yaml"
           evidence_snapshot="${RUNNER_TEMP}/demo-api-${SOURCE_ENVIRONMENT}-evidence.json"
-          evidence_path="evidence/demo-api/${SOURCE_ENVIRONMENT}/${EVIDENCE_RUN_ID}.json"
+          evidence_path=""
           runtime_evidence_snapshot="${RUNNER_TEMP}/demo-api-${SOURCE_ENVIRONMENT}-runtime-evidence.json"
-          runtime_evidence_path="evidence/demo-api/runtime/${SOURCE_ENVIRONMENT}/${RUNTIME_EVIDENCE_ID}.json"
+          runtime_evidence_path=""
+          qualification_bundle_snapshot="${RUNNER_TEMP}/demo-api-${SOURCE_ENVIRONMENT}-qualification-bundle.json"
 
           source_release_blob="$(
             git rev-parse "origin/${BASE_BRANCH}:${source_release_path}"
@@ -126,31 +230,57 @@ jobs:
           )"
           git show "origin/${BASE_BRANCH}:${source_release_path}" \
             > "${source_release_snapshot}"
-          if ! git show "origin/${BASE_BRANCH}:${evidence_path}" \
-            > "${evidence_snapshot}"; then
-            echo "::error::Reviewed release evidence is missing from main: ${evidence_path}"
-            exit 1
-          fi
-          if ! git show "origin/${BASE_BRANCH}:${runtime_evidence_path}" \
-            > "${runtime_evidence_snapshot}"; then
-            echo "::error::Reviewed AWS runtime evidence is missing from main: ${runtime_evidence_path}"
-            exit 1
-          fi
           source_release_sha256="$(sha256sum "${source_release_snapshot}" | awk '{print $1}')"
-
-          EXPECTED_ENVIRONMENT="${SOURCE_ENVIRONMENT}" \
-          EXPECTED_EVIDENCE_RUN_ID="${EVIDENCE_RUN_ID}" \
-          EVIDENCE_FILE="${evidence_snapshot}" \
-          RELEASE_FILE="${source_release_snapshot}" \
-          EXPECTED_IMAGE_REPOSITORY="ghcr.io/${GITHUB_REPOSITORY,,}/demo-api" \
-          EXPECTED_SOURCE_REPOSITORY="${EXPECTED_SOURCE_REPOSITORY}" \
-            ./scripts/validate-demo-api-release-evidence.sh
-
-          EXPECTED_ENVIRONMENT="${SOURCE_ENVIRONMENT}" \
-          EXPECTED_EVIDENCE_ID="${RUNTIME_EVIDENCE_ID}" \
-          EVIDENCE_FILE="${runtime_evidence_snapshot}" \
-          RELEASE_FILE="${source_release_snapshot}" \
-            ./scripts/validate-demo-api-runtime-evidence.sh
+          if [[ "${QUALIFICATION_MODE}" == "legacy-evidence" ]]; then
+            evidence_path="evidence/demo-api/${SOURCE_ENVIRONMENT}/${EVIDENCE_RUN_ID}.json"
+            runtime_evidence_path="evidence/demo-api/runtime/${SOURCE_ENVIRONMENT}/${RUNTIME_EVIDENCE_ID}.json"
+            git show "origin/${BASE_BRANCH}:${evidence_path}" > "${evidence_snapshot}" || {
+              echo "::error::Reviewed release evidence is missing from main: ${evidence_path}"
+              exit 1
+            }
+            git show "origin/${BASE_BRANCH}:${runtime_evidence_path}" > "${runtime_evidence_snapshot}" || {
+              echo "::error::Reviewed AWS runtime evidence is missing from main: ${runtime_evidence_path}"
+              exit 1
+            }
+            EXPECTED_ENVIRONMENT="${SOURCE_ENVIRONMENT}" \
+            EXPECTED_EVIDENCE_RUN_ID="${EVIDENCE_RUN_ID}" \
+            EVIDENCE_FILE="${evidence_snapshot}" \
+            RELEASE_FILE="${source_release_snapshot}" \
+            EXPECTED_IMAGE_REPOSITORY="ghcr.io/${GITHUB_REPOSITORY,,}/demo-api" \
+            EXPECTED_SOURCE_REPOSITORY="${EXPECTED_SOURCE_REPOSITORY}" \
+              ./scripts/validate-demo-api-release-evidence.sh
+            EXPECTED_ENVIRONMENT="${SOURCE_ENVIRONMENT}" \
+            EXPECTED_EVIDENCE_ID="${RUNTIME_EVIDENCE_ID}" \
+            EVIDENCE_FILE="${runtime_evidence_snapshot}" \
+            RELEASE_FILE="${source_release_snapshot}" \
+              ./scripts/validate-demo-api-runtime-evidence.sh
+          else
+            git show "origin/${BASE_BRANCH}:${QUALIFICATION_BUNDLE_PATH}" \
+              > "${qualification_bundle_snapshot}" || {
+                echo "::error::Reviewed Qualification Bundle is missing from main: ${QUALIFICATION_BUNDLE_PATH}"
+                exit 1
+              }
+            if [[ "$(sha256sum "${qualification_bundle_snapshot}" | awk '{print $1}')" != \
+                  "${QUALIFICATION_BUNDLE_SHA256}" ]]; then
+              echo "::error::Qualification Bundle SHA-256 differs from the orchestrator snapshot."
+              exit 1
+            fi
+            ./scripts/validate-demo-api-qualification-bundle.py \
+              --bundle "${qualification_bundle_snapshot}" \
+              --minimum-remaining-seconds 3600
+            jq --exit-status \
+              --arg environment "${SOURCE_ENVIRONMENT}" \
+              --arg release_id "${RELEASE_ID}" \
+              --arg release_sha "${source_release_sha256}" '
+                .environment == $environment and
+                .releaseId == $release_id and
+                .release.sha256 == $release_sha and
+                .status == "qualified"
+              ' "${qualification_bundle_snapshot}" >/dev/null || {
+                echo "::error::Qualification Bundle does not bind the current ${SOURCE_ENVIRONMENT} release."
+                exit 1
+              }
+          fi
 
           promotion_branch="release/demo-api-${SOURCE_ENVIRONMENT}-to-${TARGET_ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           git switch --create "${promotion_branch}" "origin/${BASE_BRANCH}"
@@ -197,6 +327,9 @@ jobs:
             echo "target-release-path=${target_release_path}"
             echo "evidence-path=${evidence_path}"
             echo "runtime-evidence-path=${runtime_evidence_path}"
+            echo "qualification-mode=${QUALIFICATION_MODE}"
+            echo "qualification-bundle-path=${QUALIFICATION_BUNDLE_PATH}"
+            echo "qualification-bundle-sha256=${QUALIFICATION_BUNDLE_SHA256}"
             echo "promotion-branch=${promotion_branch}"
             echo "changed=${changed}"
           } >> "${GITHUB_OUTPUT}"
@@ -243,6 +376,9 @@ jobs:
           EVIDENCE_RUN_ID: ${{ inputs.evidence_run_id }}
           RUNTIME_EVIDENCE_PATH: ${{ steps.promotion.outputs.runtime-evidence-path }}
           RUNTIME_EVIDENCE_ID: ${{ inputs.runtime_evidence_id }}
+          QUALIFICATION_MODE: ${{ steps.promotion.outputs.qualification-mode }}
+          QUALIFICATION_BUNDLE_PATH: ${{ steps.promotion.outputs.qualification-bundle-path }}
+          QUALIFICATION_BUNDLE_SHA256: ${{ steps.promotion.outputs.qualification-bundle-sha256 }}
         run: |
           git fetch --no-tags origin \
             "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
@@ -269,14 +405,20 @@ jobs:
             echo "- Image tag: \`${IMAGE_TAG}\`"
             echo "- Image digest: \`${IMAGE_DIGEST}\`"
             echo "- Source commit: \`${SOURCE_COMMIT}\`"
-            echo "- Reviewed evidence: \`${EVIDENCE_PATH}\`"
-            echo "- Evidence workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${EVIDENCE_RUN_ID}"
-            echo "- Reviewed AWS runtime evidence: \`${RUNTIME_EVIDENCE_PATH}\`"
-            echo "- Runtime evidence ID: \`${RUNTIME_EVIDENCE_ID}\`"
+            echo "- Qualification mode: \`${QUALIFICATION_MODE}\`"
+            if [[ "${QUALIFICATION_MODE}" == "qualification-bundle" ]]; then
+              echo "- Reviewed Qualification Bundle: \`${QUALIFICATION_BUNDLE_PATH}\`"
+              echo "- Qualification Bundle SHA-256: \`${QUALIFICATION_BUNDLE_SHA256}\`"
+            else
+              echo "- Reviewed evidence: \`${EVIDENCE_PATH}\`"
+              echo "- Evidence workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${EVIDENCE_RUN_ID}"
+              echo "- Reviewed AWS runtime evidence: \`${RUNTIME_EVIDENCE_PATH}\`"
+              echo "- Runtime evidence ID: \`${RUNTIME_EVIDENCE_ID}\`"
+            fi
             echo "- Captured main revision: \`${BASE_REVISION}\`"
             echo "- Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
-            echo "This PR copies the immutable release identity from the current main source environment after separate static and AWS runtime evidence review. It changes only the target release file, never merges itself, and never accesses EKS."
+            echo "This PR copies the immutable release identity from the current main source environment after the selected reviewed qualification gate. It changes only the target release file, never merges itself, and never accesses EKS."
           } > "${body_file}"
 
           if ! pr_url="$(
@@ -304,6 +446,8 @@ jobs:
           IMAGE_DIGEST: ${{ steps.promotion.outputs.image-digest }}
           EVIDENCE_RUN_ID: ${{ inputs.evidence_run_id }}
           RUNTIME_EVIDENCE_ID: ${{ inputs.runtime_evidence_id }}
+          QUALIFICATION_MODE: ${{ steps.promotion.outputs.qualification-mode }}
+          QUALIFICATION_BUNDLE_PATH: ${{ steps.promotion.outputs.qualification-bundle-path }}
         run: |
           if [[ "${CHANGED}" == "true" ]]; then
             status="${PR_STATUS}"
@@ -316,8 +460,13 @@ jobs:
             echo "- Status: \`${status}\`"
             echo "- Edge: \`${SOURCE_ENVIRONMENT} -> ${TARGET_ENVIRONMENT}\`"
             echo "- Image: \`${IMAGE_TAG}@${IMAGE_DIGEST}\`"
-            echo "- Evidence workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${EVIDENCE_RUN_ID}"
-            echo "- Runtime evidence ID: \`${RUNTIME_EVIDENCE_ID}\`"
+            echo "- Qualification mode: \`${QUALIFICATION_MODE}\`"
+            if [[ "${QUALIFICATION_MODE}" == "qualification-bundle" ]]; then
+              echo "- Qualification Bundle: \`${QUALIFICATION_BUNDLE_PATH}\`"
+            else
+              echo "- Evidence workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${EVIDENCE_RUN_ID}"
+              echo "- Runtime evidence ID: \`${RUNTIME_EVIDENCE_ID}\`"
+            fi
             if [[ -n "${PR_URL}" ]]; then
               echo "- Pull request: ${PR_URL}"
             fi

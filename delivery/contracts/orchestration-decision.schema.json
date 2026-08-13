@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aureumstack.com/schemas/orchestration-decision-v0.10.7.json",
+  "title": "Derived demo-api orchestration decision",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "application",
+    "operation",
+    "releaseId",
+    "phase",
+    "status",
+    "reason",
+    "recommendedAction",
+    "targetEnvironment",
+    "openPullRequest",
+    "supersededByReleaseId",
+    "executionMode",
+    "dispatchAuthorized",
+    "capturedMainRevision",
+    "observedMainRevision",
+    "derivedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "v0.10.7"
+    },
+    "application": {
+      "const": "demo-api"
+    },
+    "operation": {
+      "enum": [
+        "start",
+        "status",
+        "resume",
+        "retry"
+      ]
+    },
+    "releaseId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+    },
+    "phase": {
+      "enum": [
+        "source",
+        "image",
+        "dev-release",
+        "dev-qualification",
+        "test-release",
+        "test-qualification",
+        "prod-approval",
+        "prod-release",
+        "complete"
+      ]
+    },
+    "status": {
+      "enum": [
+        "progressing",
+        "waiting_review",
+        "waiting_runtime",
+        "waiting_environment",
+        "blocked",
+        "failed",
+        "superseded",
+        "completed"
+      ]
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "recommendedAction": {
+      "enum": [
+        "publish-image-and-prepare-dev",
+        "prepare-dev-release",
+        "wait-for-review",
+        "collect-runtime-evidence",
+        "record-static-evidence",
+        "qualify-aws-dev",
+        "prepare-test-promotion",
+        "review-and-complete-test-canary",
+        "qualify-aws-test",
+        "prepare-prod-promotion",
+        "restore-environment",
+        "retry-after-main-stabilizes",
+        "review-and-close-superseded-pr",
+        "none"
+      ]
+    },
+    "targetEnvironment": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        null,
+        "aws-dev",
+        "aws-test",
+        "aws-prod"
+      ]
+    },
+    "openPullRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "number",
+            "url"
+          ],
+          "properties": {
+            "number": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "url": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "supersededByReleaseId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$"
+    },
+    "executionMode": {
+      "const": "bounded-reviewed-promotion"
+    },
+    "dispatchAuthorized": {
+      "type": "boolean"
+    },
+    "capturedMainRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "observedMainRevision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "derivedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

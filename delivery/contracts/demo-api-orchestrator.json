@@ -1,0 +1,160 @@
+{
+  "schemaVersion": "v0.10.7",
+  "application": "demo-api",
+  "workflow": ".github/workflows/demo-api-release-orchestrator.yaml",
+  "protectedRef": "refs/heads/main",
+  "operations": [
+    "start",
+    "status",
+    "resume",
+    "retry"
+  ],
+  "eventModel": {
+    "pushMain": [
+      "application-source-change",
+      "environment-release-change",
+      "reviewed-evidence-change",
+      "reviewed-qualification-bundle-change"
+    ],
+    "workflowDispatch": [
+      "start",
+      "status",
+      "resume",
+      "retry"
+    ],
+    "workflowRunChaining": false,
+    "pullRequestCode": false
+  },
+  "stateDerivation": {
+    "snapshotSchema": "delivery/contracts/orchestration-snapshot.schema.json",
+    "decisionSchema": "delivery/contracts/orchestration-decision.schema.json",
+    "attemptSchema": "delivery/contracts/orchestration-attempt.schema.json",
+    "failureRecoveryPolicy": "delivery/contracts/demo-api-failure-recovery-policy.json",
+    "collector": "scripts/collect-demo-api-orchestration-snapshot.py",
+    "planner": "scripts/derive-demo-api-orchestration-plan.py",
+    "stateIsRecomputed": true,
+    "mutableStateFile": false,
+    "releaseIdIsEnvironmentIndependent": true,
+    "qualificationScopes": {
+      "aws-dev": "delivery/contracts/demo-api-qualification-scope.json",
+      "aws-test": "delivery/contracts/demo-api-qualification-scope-aws-test.json"
+    }
+  },
+  "pullRequestDiscovery": {
+    "mode": "read-only",
+    "baseBranch": "main",
+    "matchReleaseIdentityFromChangedFile": true,
+    "reuseOpenPullRequest": true,
+    "duplicatePreparationAllowed": false
+  },
+  "concurrency": {
+    "scope": "application-and-release",
+    "cancelInProgress": false
+  },
+  "staleMain": {
+    "captureBeforeDerivation": true,
+    "recheckAfterDerivation": true,
+    "recheckBeforeEveryMutation": true,
+    "onChange": "blocked-resumable"
+  },
+  "executionBoundary": {
+    "deriveRunner": "github-hosted",
+    "derivePermissions": [
+      "contents-read",
+      "pull-requests-read",
+      "actions-read-for-explicit-retry-attempt"
+    ],
+    "deriveAwsCredentials": "none",
+    "deriveClusterAccess": false,
+    "runtimeRunner": "ephemeral-self-hosted",
+    "runtimeEnvironments": [
+      "aws-dev",
+      "aws-test"
+    ],
+    "repositoryMutation": "target-release-only-or-qualification-bundle-only-pr",
+    "automaticMerge": false,
+    "automaticEnvironmentCreation": false
+  },
+  "actionExecution": {
+    "mode": "bounded-reviewed-promotion",
+    "dispatchReusableStages": true,
+    "authorizedActions": [
+      "qualify-aws-dev",
+      "prepare-test-promotion",
+      "qualify-aws-test",
+      "prepare-prod-promotion"
+    ],
+    "activationVariables": {
+      "qualify-aws-dev": "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
+      "prepare-test-promotion": "DEMO_API_AWS_TEST_PROMOTION_ENABLED",
+      "qualify-aws-test": "DEMO_API_AWS_TEST_QUALIFICATION_ENABLED",
+      "prepare-prod-promotion": "DEMO_API_AWS_PROD_PROMOTION_ENABLED"
+    },
+    "activationValue": "true",
+    "staticMode": "artifact-only",
+    "sameRunArtifactsRequired": true,
+    "sameAttemptArtifactsRequired": true,
+    "statusDispatchAuthorized": false,
+    "deferredActivation": {
+      "trustedRuntime": "v0.10.3",
+      "awsDev": "v0.10.4",
+      "awsTest": "v0.10.5",
+      "awsProd": "v0.10.6"
+    }
+  },
+  "failureRecovery": {
+    "attemptArtifactRetentionDays": 14,
+    "attemptIsPromotionEvidence": false,
+    "retryRequiresExactPriorAttempt": true,
+    "nativePartialRerunAcceptedForBundle": false,
+    "supersedeDetection": "source-ancestry-then-build-run",
+    "automaticSupersededPullRequestClose": false,
+    "minimumPromotionBundleRemainingSeconds": 3600,
+    "rollbackCandidateResolver": "scripts/resolve-demo-api-rollback-candidate.py",
+    "rollbackDispatchAuthorized": false
+  },
+  "qualificationBundle": {
+    "workflow": ".github/workflows/demo-api-record-qualification-bundle.yaml",
+    "schema": "delivery/contracts/qualification-bundle.schema.json",
+    "scopes": {
+      "aws-dev": "delivery/contracts/demo-api-qualification-scope.json",
+      "aws-test": "delivery/contracts/demo-api-qualification-scope-aws-test.json"
+    },
+    "pathTemplate": "evidence/demo-api/qualification/{environment}/{releaseId}/{runtimeRunId}-{runtimeRunAttempt}.json",
+    "automaticMerge": false,
+    "legacyEvidenceAcceptedForAutomation": false
+  },
+  "testPromotion": {
+    "workflow": ".github/workflows/demo-api-promote-environment.yaml",
+    "source": "aws-dev",
+    "target": "aws-test",
+    "qualificationMode": "qualification-bundle",
+    "releaseOnlyPullRequest": true,
+    "automaticMerge": false
+  },
+  "testCanaryGate": {
+    "confirmation": "reviewed-and-completed",
+    "helper": "scripts/complete-aws-test-rollout.sh",
+    "runtimeMutationByAutomation": false,
+    "qualificationBeforeConfirmation": false
+  },
+  "productionPromotion": {
+    "workflow": ".github/workflows/demo-api-promote-environment.yaml",
+    "source": "aws-test",
+    "target": "aws-prod",
+    "qualificationMode": "qualification-bundle",
+    "sourceBundleRequired": true,
+    "environmentApprovalRequired": true,
+    "releaseOnlyPullRequest": true,
+    "automaticMerge": false,
+    "runtimeQualification": false
+  },
+  "productionBoundary": {
+    "environmentApprovalRequired": true,
+    "reviewedPullRequestRequired": true,
+    "automaticMerge": false,
+    "automaticRollback": false,
+    "automaticPromotionPreparation": true,
+    "runtimeAccess": false
+  }
+}

@@ -23,6 +23,10 @@ expected_actions = {
     "actions/checkout": "3d3c42e5aac5ba805825da76410c181273ba90b1",
     "actions/download-artifact": "37930b1c2abaa49bbe596cd826c3c89aef350131",
     "actions/upload-artifact": "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+    "aws-actions/configure-aws-credentials": (
+        "e6de054238d6b7531b4e"
+        "fff3b6587d9aade6a06c"
+    ),
     "aquasecurity/trivy-action": "ed142fd0673e97e23eac54620cfb913e5ce36c25",
     "azure/setup-helm": "9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310",
     "docker/build-push-action": "53b7df96c91f9c12dcc8a07bcb9ccacbed38856a",

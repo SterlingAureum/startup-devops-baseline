@@ -207,7 +207,7 @@ Incremental scope:
 
 ## v0.10 - Release Orchestration and Delivery Automation
 
-Status: Planned
+Status: Implementation delivered; completed when reviewed final evidence exists
 
 Goal:
 
@@ -215,18 +215,51 @@ Turn the existing build, GitOps release, runtime evidence, qualification, and
 ordered promotion controls into one resumable delivery workflow while
 retaining human production approval.
 
-Planned scope:
+Incremental scope:
 
-- automatic immutable image build after accepted application changes
-- automatic aws-dev release PR preparation
-- deployment, Rollout, and AnalysisRun readiness orchestration
-- automatic runtime and qualification evidence chaining
-- automatic aws-dev to aws-test Promotion PR preparation
-- automatic aws-test to aws-prod Promotion preparation
-- retained aws-prod Environment approval and reviewed PR merge
-- concurrency, idempotency, retry, stale-state, and resume controls
-- failure diagnostics and governed rollback handoff
-- no automatic EKS creation for every application commit
+- v0.10.0 - deterministic release identity, machine-readable application
+  contract and release-state schema, derived phase/status model, execution and
+  production safety boundaries, resumable transition contract, and offline
+  positive/negative validation - delivered
+- v0.10.1 - reusable image, static qualification, Promotion, evidence, and
+  rollback stages with typed workflow-call interfaces, stable outputs,
+  CI-provider-neutral script primitives, and offline boundary validation -
+  delivered
+- v0.10.2 - event-driven start, status, and resume orchestration with
+  read-only Git/GitHub fact snapshots, idempotent open-PR discovery,
+  deterministic next-action planning, concurrency, stale-main handling, and
+  offline positive/negative behavior validation - delivered
+- v0.10.3 - protected-main trusted runtime qualification, ephemeral
+  self-hosted execution, AWS OIDC, environment-isolated IAM and Kubernetes
+  RBAC, immutable runtime artifacts, and safe absent/unavailable handling -
+  delivered
+- v0.10.3.1 - Terraform formatting and load-restriction-safe dev/test runtime
+  RBAC Application assembly, with prod exclusion and render regressions -
+  delivered
+- v0.10.3.2 - storage-bounded trusted-runtime mutation fixtures that exclude
+  local Terraform caches, state, plans, and real variable files while
+  retaining dependency locks and tracked configuration - delivered
+- v0.10.4 - repository-variable-gated post-release aws-dev static
+  qualification, passive GitOps convergence, trusted runtime validation,
+  deterministic deployment-scope hashing, and reviewed unified Qualification
+  Bundle evidence - delivered
+- v0.10.5 - automatic aws-dev to aws-test Promotion preparation, reviewed
+  Canary progression, AnalysisRun verification, test scope hashing, and
+  reviewed aws-test Qualification Bundle evidence - delivered
+- v0.10.6 - automatic production Promotion preparation with retained aws-prod
+  Environment approval and reviewed release-only PR merge - delivered
+- v0.10.7 - strictly read-only status, exact failed-Attempt retry, secret-free
+  attempt diagnostics, source-ancestry supersede handling, explicit Bundle
+  expiry/drift states, and governed dev/test rollback handoff - delivered
+- v0.10.8 - clean-room dev/test/prod-static acceptance contract,
+  interrupted-run and environment-restoration procedure, deterministic
+  expiry/retry/rollback-handoff checks, cost cleanup, tamper-evident closure
+  evidence, and final command-by-command Runbook - delivered; live acceptance
+  is recorded only after the evidence-only PR merges
+
+The application release path does not automatically create EKS environments.
+An absent disposable environment is a resumable wait, and production approval
+and PR merge remain human controls throughout v0.10.
 
 ## v0.11 - Observability and Production Readiness Baseline
 

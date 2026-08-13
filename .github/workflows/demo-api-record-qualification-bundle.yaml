@@ -1,0 +1,211 @@
+name: demo-api unified qualification bundle
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: Qualification target; aws-dev and aws-test only
+        required: true
+        type: string
+      release_id:
+        description: Deterministic environment-independent Release ID
+        required: true
+        type: string
+      control_plane_sha:
+        description: Protected-main revision qualified by both same-run results
+        required: true
+        type: string
+      static_artifact_name:
+        description: Static result artifact produced in this caller run
+        required: true
+        type: string
+      runtime_artifact_name:
+        description: Runtime result artifact produced in this caller run
+        required: true
+        type: string
+    outputs:
+      status:
+        description: Qualification Bundle PR stage status
+        value: ${{ jobs.record-bundle.outputs.status }}
+      pr_url:
+        description: Qualification-only pull request URL
+        value: ${{ jobs.record-bundle.outputs.pr-url }}
+      bundle_file:
+        description: Append-only durable Qualification Bundle path
+        value: ${{ jobs.record-bundle.outputs.bundle-file }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-api-qualification-bundle-${{ inputs.environment }}-${{ inputs.release_id }}
+  cancel-in-progress: false
+
+jobs:
+  record-bundle:
+    name: Record reviewed ${{ inputs.environment }} qualification
+    if: inputs.environment == 'aws-dev' || inputs.environment == 'aws-test'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+    outputs:
+      status: ${{ steps.pull-request.outputs.status }}
+      pr-url: ${{ steps.pull-request.outputs.url }}
+      bundle-file: ${{ steps.bundle.outputs.bundle-file }}
+    steps:
+      - name: Checkout the qualified protected-main revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.control_plane_sha }}
+          fetch-depth: 0
+
+      - name: Download same-run static result
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ inputs.static_artifact_name }}
+          path: ${{ runner.temp }}/qualification/static
+
+      - name: Download same-run trusted runtime result
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ inputs.runtime_artifact_name }}
+          path: ${{ runner.temp }}/qualification/runtime
+
+      - name: Verify protected main and compose the Bundle
+        id: bundle
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
+        run: |
+          if [[ "${GITHUB_REF}" != "refs/heads/main" || \
+                ! "${CONTROL_PLANE_SHA}" =~ ^[0-9a-f]{40}$ || \
+                ! "${RELEASE_ID}" =~ ^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$ ]]; then
+            echo "::error::Qualification Bundle request violates the protected-main identity contract."
+            exit 1
+          fi
+          case "${ENVIRONMENT}" in
+            aws-dev|aws-test) ;;
+            *)
+              echo "::error::Qualification Bundle target must be aws-dev or aws-test."
+              exit 1
+              ;;
+          esac
+          if [[ "$(git rev-parse HEAD)" != "${CONTROL_PLANE_SHA}" ]]; then
+            echo "::error::Checked-out control-plane revision differs from the request."
+            exit 1
+          fi
+          git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+          if [[ "$(git rev-parse origin/main)" != "${CONTROL_PLANE_SHA}" ]]; then
+            echo "::error::Protected main advanced before Bundle creation."
+            exit 1
+          fi
+
+          static_result="${RUNNER_TEMP}/qualification/static/result.json"
+          runtime_result="${RUNNER_TEMP}/qualification/runtime/result.json"
+          for result in "${static_result}" "${runtime_result}"; do
+            [[ -f "${result}" ]] || {
+              echo "::error::Expected same-run qualification result is missing: ${result}"
+              exit 1
+            }
+          done
+
+          scope_result="${RUNNER_TEMP}/qualification/scope.json"
+          bundle_file="evidence/demo-api/qualification/${ENVIRONMENT}/${RELEASE_ID}/${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}.json"
+          ./scripts/calculate-demo-api-qualification-scope.py \
+            --environment "${ENVIRONMENT}" \
+            --output "${scope_result}"
+          ./scripts/write-demo-api-qualification-bundle.py \
+            --environment "${ENVIRONMENT}" \
+            --static-result "${static_result}" \
+            --runtime-result "${runtime_result}" \
+            --scope-result "${scope_result}" \
+            --control-plane-sha "${CONTROL_PLANE_SHA}" \
+            --workflow-run-id "${GITHUB_RUN_ID}" \
+            --workflow-run-attempt "${GITHUB_RUN_ATTEMPT}" \
+            --actor "${GITHUB_ACTOR}" \
+            --output "${bundle_file}"
+          ./scripts/validate-demo-api-qualification-bundle.py --bundle "${bundle_file}"
+          git diff --check
+          {
+            echo "bundle-file=${bundle_file}"
+            echo "scope-sha256=$(jq -r '.qualificationScope.scopeSha256' "${bundle_file}")"
+            echo "expires-at=$(jq -r '.expiresAt' "${bundle_file}")"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Push a qualification-only branch
+        id: branch
+        env:
+          CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
+          BUNDLE_FILE: ${{ steps.bundle.outputs.bundle-file }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          git fetch --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+          if [[ "$(git rev-parse origin/main)" != "${CONTROL_PLANE_SHA}" ]]; then
+            echo "::error::Protected main advanced after Bundle composition."
+            exit 1
+          fi
+          branch="qualification/demo-api-${ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          git switch --create "${branch}" "origin/main"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${BUNDLE_FILE}"
+          git commit -m "evidence: qualify ${ENVIRONMENT} ${RELEASE_ID}"
+          mapfile -t changed_files < <(git diff --name-only "origin/main" HEAD)
+          if [[ "${#changed_files[@]}" != "1" || "${changed_files[0]}" != "${BUNDLE_FILE}" ]]; then
+            echo "::error::Qualification branch may add only ${BUNDLE_FILE}."
+            exit 1
+          fi
+          git push origin "HEAD:refs/heads/${branch}"
+          echo "branch=${branch}" >> "${GITHUB_OUTPUT}"
+
+      - name: Create reviewed Qualification Bundle pull request
+        id: pull-request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: ${{ steps.branch.outputs.branch }}
+          BUNDLE_FILE: ${{ steps.bundle.outputs.bundle-file }}
+          RELEASE_ID: ${{ inputs.release_id }}
+          CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
+          SCOPE_SHA256: ${{ steps.bundle.outputs.scope-sha256 }}
+          EXPIRES_AT: ${{ steps.bundle.outputs.expires-at }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          body_file="$(mktemp)"
+          printf '%s\n' \
+            "## demo-api unified ${ENVIRONMENT} qualification" \
+            '' \
+            "- Release: \`${RELEASE_ID}\`" \
+            "- Qualified control plane: \`${CONTROL_PLANE_SHA}\`" \
+            "- Qualification scope: \`${SCOPE_SHA256}\`" \
+            "- Bundle: \`${BUNDLE_FILE}\`" \
+            "- Expires: \`${EXPIRES_AT}\`" \
+            '' \
+            'This PR records a same-run static and trusted runtime qualification. It does not deploy, promote, merge itself, access production, or create an environment.' \
+            > "${body_file}"
+          pr_url="$(gh pr create \
+            --base main \
+            --head "${BRANCH}" \
+            --title "evidence: qualify demo-api ${ENVIRONMENT} ${RELEASE_ID}" \
+            --body-file "${body_file}")"
+          echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+          echo "status=created" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish Bundle summary
+        env:
+          PR_URL: ${{ steps.pull-request.outputs.url }}
+          BUNDLE_FILE: ${{ steps.bundle.outputs.bundle-file }}
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          {
+            echo "### demo-api unified ${ENVIRONMENT} qualification"
+            echo
+            echo "- Release: \`${{ inputs.release_id }}\`"
+            echo "- Bundle: \`${BUNDLE_FILE}\`"
+            echo "- Pull request: ${PR_URL}"
+            echo
+            echo "Review and merge remain human actions. Production Promotion is outside v0.10.5."
+          } >> "${GITHUB_STEP_SUMMARY}"

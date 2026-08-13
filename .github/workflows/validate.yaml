@@ -9,11 +9,41 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 concurrency:
   group: validate-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  demo-api-release-currentness:
+    name: demo-api release currentness
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - name: Checkout protected main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Reject superseded or ambiguous release PRs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [[ ! -x ./scripts/validate-demo-api-release-pr-currentness.py ]]; then
+            echo "Currentness validator is not yet present on protected main; this is the v0.10.7 bootstrap PR."
+            exit 0
+          fi
+          ./scripts/validate-demo-api-release-pr-currentness.py \
+            --repository "${GITHUB_REPOSITORY}" \
+            --pr-number "${PR_NUMBER}"
+
   quality-gates:
     uses: ./.github/workflows/reusable-quality-gates.yaml

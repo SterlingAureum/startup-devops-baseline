@@ -1,6 +1,41 @@
 name: demo-api image publish
 
 on:
+  workflow_call:
+    inputs:
+      caller_ref:
+        description: Calling workflow ref; reusable orchestration requires protected main
+        required: true
+        type: string
+      create_promotion_pr:
+        description: Create or reuse the aws-dev release PR after publishing
+        required: false
+        default: false
+        type: boolean
+      promotion_base_branch:
+        description: Protected base branch for the aws-dev release PR
+        required: false
+        default: main
+        type: string
+    outputs:
+      image_repository:
+        description: Published lowercase GHCR repository
+        value: ${{ jobs.build-and-push.outputs.image-repository }}
+      image_tag:
+        description: Immutable commit-derived image tag
+        value: ${{ jobs.build-and-push.outputs.image-tag }}
+      image_digest:
+        description: Published immutable image digest
+        value: ${{ jobs.build-and-push.outputs.image-digest }}
+      metadata_artifact_name:
+        description: Image identity metadata artifact
+        value: ${{ jobs.build-and-push.outputs.metadata-artifact-name }}
+      promotion_status:
+        description: aws-dev release PR stage status when requested
+        value: ${{ jobs.promote-aws-dev.outputs.status }}
+      promotion_pr_url:
+        description: Created or reused aws-dev release PR URL
+        value: ${{ jobs.promote-aws-dev.outputs.pr-url }}
   push:
     branches:
       - main
@@ -59,6 +94,17 @@ jobs:
       image-digest: ${{ steps.identity.outputs.image-digest }}
       metadata-artifact-name: ${{ steps.identity.outputs.artifact-name }}
     steps:
+      - name: Enforce protected main for reusable invocation
+        if: inputs.caller_ref != ''
+        env:
+          CALLER_REF: ${{ inputs.caller_ref }}
+        run: |
+          if [[ "${CALLER_REF}" != "refs/heads/main" || \
+                "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "::error::The reusable image stage may be called only from protected main."
+            exit 1
+          fi
+
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
@@ -220,17 +266,21 @@ jobs:
       - build-and-push
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      (github.event_name == 'workflow_dispatch' && inputs.create_promotion_pr)
+      inputs.create_promotion_pr
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       actions: read
       contents: write
       pull-requests: write
+    outputs:
+      status: ${{ steps.pull-request.outputs.status }}
+      pr-url: ${{ steps.pull-request.outputs.url }}
+      promotion-branch: ${{ steps.promotion.outputs.promotion-branch }}
+      changed: ${{ steps.promotion.outputs.changed }}
     env:
       PROMOTION_BASE_BRANCH: >-
-        ${{ github.event_name == 'workflow_dispatch' &&
-            inputs.promotion_base_branch ||
+        ${{ inputs.promotion_base_branch ||
             github.event.repository.default_branch }}
       METADATA_ARTIFACT_NAME: ${{ needs.build-and-push.outputs.metadata-artifact-name }}
       METADATA_DIRECTORY: .promotion/demo-api-image

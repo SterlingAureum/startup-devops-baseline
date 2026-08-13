@@ -2,6 +2,347 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.8
+
+### Added
+
+- Machine-readable final acceptance contract for protected-main
+  dev/test/prod-static acceptance, interruption recovery, supersede, manual
+  rollback boundary, disposable-environment cleanup, and closure ordering.
+- Strict v0.10 final-evidence schema, repository-bound writer, reference/hash
+  validator, operator input template, and append-only `evidence/v0.10/` layout.
+- `docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md` with GitHub settings, activation
+  variables, exact orchestrator commands, environment rebuild, Canary review,
+  prod-static Promotion, destroy/audit, evidence-only PR, and tag procedure.
+- Offline positive/negative acceptance tests for required checkpoints,
+  placeholder identities, duplicate PR claims, cleanup residuals, active
+  runners, production runtime/cluster claims, and automatic rollback.
+
+### Changed
+
+- Integrated the v0.10 final acceptance validator into repository quality
+  gates and protected its contracts, scripts, Runbook, and evidence through
+  CODEOWNERS.
+- Marked the v0.10 Roadmap implementation complete. Live acceptance remains an
+  explicit post-merge operation and is represented only by its reviewed final
+  evidence record.
+
+### Boundary
+
+- v0.10.8 adds no application workflow dispatch path, Terraform/IAM/RBAC,
+  Helm runtime change, automatic merge, automatic environment creation,
+  production cluster/runtime access, Kubernetes write, or automatic rollback.
+- Bundle expiry and exact retry/rollback-handoff failure classes use
+  deterministic clock/history validation. Live acceptance proves the normal
+  Qualification/Promotion path without keeping EKS running for 24 hours or
+  deliberately damaging a workload.
+
+## v0.10.7
+
+### Added
+
+- Exact failed-Attempt `retry` using the prior orchestrator run ID, run attempt,
+  Release ID, repository identity, and safe retry class.
+- Secret-free 14-day orchestration Attempt artifacts containing decision,
+  execution outcome, stable reason, recovery class, and optional rollback
+  handoff. Attempts are diagnostics and never Promotion evidence.
+- Git source-ancestry and same-source build-run supersede handling, including
+  ambiguous-order blocking and an explicit human PR-close recommendation.
+- Qualification Bundle states for `expiring`, `expired`, `scope_drift`,
+  `release_drift`, and `invalid`, plus a 3600-second Promotion validity floor.
+- A read-only dev/test rollback candidate resolver and failed Release identity
+  recheck in the existing Environment-approved rollback Workflow.
+- `docs/RELEASE_FAILURE_RECOVERY.md` and offline retry, Attempt, supersede,
+  expiry/drift, and rollback-handoff behavior tests.
+
+### Fixed
+
+- Made `operation=status` strictly read-only. It now always returns
+  `dispatchAuthorized=false`, and every stage/disabled-report job also rejects
+  status execution even when repository activation variables are enabled.
+
+### Boundary
+
+- v0.10.7 never automatically closes or merges a PR, dispatches or merges a
+  rollback, writes Kubernetes, creates an AWS environment, runs production
+  qualification, or accepts a partial GitHub job re-run as unified evidence.
+- Live interrupted-run, supersede, expiry, rollback, cost cleanup, and final
+  clean-room acceptance remain in v0.10.8.
+
+## v0.10.6
+
+### Added
+
+- Repository-variable-gated `aws-test -> aws-prod` Promotion preparation from
+  the merged, fresh, scope-valid aws-test Qualification Bundle.
+- A required protected `aws-prod` GitHub Environment approval before the
+  release-only PR preparation job can execute.
+- Offline production orchestration tests covering fresh/stale test Bundles,
+  exact ordered edges, source-bound Bundle paths, existing prod PR reuse,
+  completed GitOps state, and forbidden runtime/merge behavior.
+- `docs/AWS_PROD_CONTROLLED_PROMOTION.md` with GitHub setup, state semantics,
+  accepted facts, permissions, and validation commands.
+
+### Changed
+
+- Upgraded application, stage, orchestrator, snapshot, and decision contracts
+  to v0.10.6 while retaining the v0.10.5 Qualification Bundle format so
+  existing reviewed test Bundles remain consumable.
+- Extended Bundle-mode Promotion to the two exact ordered edges:
+  `aws-dev -> aws-test` and `aws-test -> aws-prod`.
+- Authorized `prepare-prod-promotion` only after test qualification succeeds;
+  the orchestrator selects the aws-test Bundle path and SHA-256 from the same
+  protected-main snapshot.
+
+### Boundary
+
+- v0.10.6 may prepare a production release-only PR after Environment approval.
+  It never merges the PR, accesses AWS/EKS, writes Kubernetes, creates an
+  environment, runs production qualification, applies Terraform, triggers
+  rollback, or mutates Secrets/databases. `complete` means the GitOps release
+  file reached prod, not that production runtime was validated.
+
+## v0.10.5
+
+### Added
+
+- Repository-variable-gated preparation of the reviewed `aws-dev -> aws-test`
+  release-only PR from a merged, fresh, scope-valid aws-dev Qualification
+  Bundle.
+- A separate `DEMO_API_AWS_TEST_QUALIFICATION_ENABLED` switch plus the explicit
+  `reviewed-and-completed` resume input after the existing guarded Canary
+  completion helper.
+- Deterministic aws-test qualification Scope, dev/test Bundle schema support,
+  same-run test static/runtime composition, and append-only reviewed aws-test
+  Bundle PRs.
+- Offline positive and negative tests for Bundle/legacy input isolation,
+  Canary-gate bypass, Rollout and AnalysisRun identity checks, stale main,
+  duplicate PRs, automatic merge, Kubernetes writes, and production dispatch.
+
+### Changed
+
+- Upgraded application, stage, orchestrator, snapshot, decision, runtime, Scope,
+  and Bundle contracts to v0.10.5.
+- Extended the planner with `prepare-test-promotion`,
+  `review-and-complete-test-canary`, and `qualify-aws-test` transitions while
+  preserving the historical manual static/runtime evidence Promotion mode.
+- Generalized Qualification Bundle collection and validation to `aws-dev` and
+  `aws-test`; each environment retains an independent deployment Scope.
+
+### Boundary
+
+- v0.10.5 creates only reviewed PRs. It never merges a PR, promotes or aborts a
+  Rollout, syncs Argo CD, writes Kubernetes, creates an EKS environment, applies
+  Terraform, rebuilds an image, triggers rollback, or prepares aws-prod.
+
+## v0.10.4
+
+### Added
+
+- Repository-variable-gated `qualify-aws-dev` orchestration after a reviewed
+  aws-dev release reaches protected `main`.
+- Static `artifact-only` qualification mode bound to the exact orchestrated
+  control-plane SHA, while retaining the v0.9 reviewed static-evidence PR mode.
+- Deterministic aws-dev qualification-scope contract and path/content hashing
+  across Helm, release/environment values, Argo Application/overlay,
+  ExternalSecret, NetworkPolicy, and runtime RBAC inputs.
+- Self-contained Qualification Bundle schema, writer, validator, same-run
+  artifact binding, append-only evidence path, and qualification-only PR
+  Workflow.
+- Positive and negative offline tests for cross-run artifacts, wrong
+  environment/identity, stale release/scope, extended expiry, secret-like
+  fields, duplicate Bundle PRs, Promotion dispatch, production access, and
+  automatic merge.
+
+### Changed
+
+- Upgraded orchestration snapshot and decision contracts to v0.10.4 and made
+  reviewed aws-dev Bundles the durable qualification fact for the automated
+  path.
+- Added a shared 900-second passive convergence window with 15-second polling
+  for exact Argo revision and workload readiness.
+- Updated reusable-stage and application contracts, quality gates, README,
+  Roadmap, trusted-runtime guidance, evidence layout, and orchestrator docs.
+
+### Boundary
+
+- v0.10.4 does not rebuild images, dispatch aws-test/aws-prod Promotion or
+  qualification, merge PRs, create EKS environments, apply Terraform, sync
+  Argo CD, mutate Rollouts/Secrets/databases, or trigger rollback.
+
+## v0.10.3.2
+
+### Fixed
+
+- Replaced full repository copies in trusted-runtime mutation tests with a
+  filtered validation-tree copy that excludes local Terraform provider caches,
+  state, plans, and real variable files.
+- Added a self-contained fixture regression proving local artifacts are
+  excluded while `.terraform.lock.hcl` and tracked Terraform configuration are
+  retained.
+- Removed each mutation workspace immediately after its expected rejection so
+  disk use remains bounded for the duration of the validator.
+
+### Boundary
+
+- v0.10.3.2 changes only offline validation workspace construction. It changes
+  no Workflow, OIDC trust, IAM permission, EKS access entry, Kubernetes RBAC,
+  runtime result, Promotion, evidence, or production-access behavior.
+
+## v0.10.3.1
+
+### Fixed
+
+- Formatted the GitHub Actions runtime identity module with canonical
+  `terraform fmt` alignment.
+- Repackaged the runtime qualification RBAC Application as an independent
+  Kustomize directory so dev/test overlays no longer load an individual YAML
+  file outside their build root.
+- Updated active-revision and trusted-runtime validation for the new
+  Application path.
+- Added negative coverage for direct cross-directory YAML loading and rendered
+  assertions that runtime qualification RBAC exists in dev/test but not prod.
+
+### Boundary
+
+- v0.10.3.1 changes no Workflow, IAM, EKS access-entry, Kubernetes RBAC, or
+  production-access semantics. It is a packaging and validation repair for
+  v0.10.3.
+
+## v0.10.3
+
+### Added
+
+- Protected-main demo-api runtime qualification Workflow with separate
+  GitHub-hosted preflight and environment-labeled ephemeral self-hosted
+  execution jobs.
+- Machine-readable trusted executor and runtime-result contracts covering
+  dev/test identities, immutable inputs, qualified/blocked/failed outcomes,
+  artifact hygiene, and production exclusion.
+- GitHub OIDC IAM and EKS access-entry module with exact repository Environment
+  subjects, exact-cluster `eks:DescribeCluster`, and dev/test-isolated roles.
+- GitOps-managed `argocd` and `startup-apps` read-only Roles and RoleBindings
+  for Argo Application, Deployment/Rollout, AnalysisRun, Pod imageID, Service,
+  Ingress, and Event facts.
+- Runtime collector and secret-field-rejecting result writer covering current
+  main, release identity, cluster presence, endpoint reachability, negative
+  RBAC checks, Argo convergence, rollout/analysis health, Pod digest, and HTTPS
+  identity.
+- Offline positive and negative validation for GitHub-hosted fallback,
+  untrusted triggers, arbitrary target inputs, production access, wildcard
+  OIDC trust, IAM/Kubernetes writes, Secret access, Terraform execution, and
+  sensitive artifact fields.
+- Trusted runtime setup, security, result, queue behavior, branch validation,
+  and post-merge live acceptance documentation.
+
+### Changed
+
+- Linked the v0.10 application contract to the runtime executor Workflow and
+  result contracts.
+- Added the trusted runtime validator to the repository-wide quality gate and
+  reviewed the pinned AWS credential Action.
+- Added optional, disabled-by-default runtime identity instances and outputs to
+  the aws-dev and aws-test Terraform roots only.
+- Marked v0.10.3 delivered and made it the repository's current checkpoint.
+
+### Boundary
+
+- v0.10.3 does not dispatch runtime qualification from the orchestrator,
+  create or merge PRs, create EKS environments, register persistent runners,
+  store long-lived AWS keys, write durable qualification evidence, mutate
+  Kubernetes, or provide aws-prod runtime access. Those automation and
+  evidence integrations remain v0.10.4 through v0.10.8.
+
+## v0.10.2
+
+### Added
+
+- Event-driven demo-api release orchestrator for protected-main source,
+  release, and evidence changes plus manual `start`, `status`, and `resume`.
+- Read-only Git and GitHub fact collector that derives release identities from
+  exact release/evidence content and discovers matching open PRs targeting
+  `main`.
+- Deterministic plan engine covering source, dev/test/prod release, runtime and
+  static qualification, absent-environment, production approval, stale-main,
+  duplicate-PR, and complete states.
+- Machine-readable orchestrator, snapshot, and decision contracts plus an
+  offline validator with positive scenarios and unsafe negative mutations.
+- Release-orchestrator documentation covering operations, fact sources,
+  idempotency, resume, evidence freshness, concurrency, and security boundaries.
+
+### Changed
+
+- Linked the application and reusable-stage contracts to the implemented
+  v0.10.2 orchestrator contract.
+- Added the event-driven orchestrator validator to the repository-wide CI
+  quality gate.
+- Marked v0.10.2 delivered and made it the repository's current checkpoint.
+
+### Boundary
+
+- v0.10.2 is plan-only. It does not dispatch reusable delivery stages, create
+  or merge PRs, access AWS/EKS, create environments, collect trusted runtime
+  evidence, or bypass production Environment and reviewed-PR controls.
+
+## v0.10.1
+
+### Added
+
+- Machine-readable reusable delivery-stage contract for image publishing,
+  static qualification, ordered environment Promotion, and rollback handoff.
+- Typed `workflow_call` inputs and stable workflow outputs on the four existing
+  delivery workflows while retaining their v0.9 push or manual entrypoints.
+- Offline reusable-stage validator with positive checks and negative mutations
+  for unsafe runner access, AWS credentials, automatic merge, environment
+  creation, skipped test Promotion, PR-code execution, missing production
+  coverage, and incomplete stage outputs.
+- Reusable delivery-stage documentation covering compatibility, stage
+  interfaces, durable results, retry scope, and the deferred trusted-runtime
+  boundary.
+
+### Changed
+
+- Linked the v0.10 application contract to the reusable stage contract.
+- Added the reusable-stage validator to the repository-wide CI quality gate.
+- Marked v0.10.1 delivered and made it the repository's current checkpoint.
+
+### Boundary
+
+- This increment makes the existing GitHub-hosted workflows reusable but does
+  not add the event-driven orchestrator, automatic PR merge, AWS OIDC/IAM/RBAC,
+  EKS access, runtime qualification workflow, or unified qualification bundle.
+
+## v0.10.0
+
+### Added
+
+- Machine-readable demo-api release-orchestration contract defining the
+  environment chain, immutable release identity, execution policies, runner
+  boundaries, production controls, and resumable phase transitions.
+- Draft 2020-12 release-state JSON Schema plus a derived-state example that
+  separates release phase from progressing, waiting, blocked, failed,
+  superseded, and completed status.
+- Offline contract validator with positive checks and in-memory negative
+  mutations for environment skipping, production auto-merge, automatic EKS
+  creation, unsafe runner access, duplicate release paths, unsafe release IDs,
+  missing production approval, and invalid state transitions.
+- Release orchestration model documentation covering durable fact sources,
+  idempotency, resume, absent-environment behavior, execution boundaries, and
+  deferred implementation scope.
+
+### Changed
+
+- Started the v0.10 roadmap while retaining v0.9 as a completed version line.
+- Added the release-orchestration contract validator to the repository-wide CI
+  quality gate before Docker- and Helm-dependent validation.
+
+### Boundary
+
+- This increment adds contracts, documentation, a state example, and offline
+  validation only. It does not add an orchestration Workflow, automatic PR
+  merge, AWS OIDC/IAM/RBAC, runner registration, EKS creation, or live cluster
+  access from GitHub Actions.
+
 ## v0.9.8
 
 ### Added

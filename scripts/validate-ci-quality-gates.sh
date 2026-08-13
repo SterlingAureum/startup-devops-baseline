@@ -21,6 +21,24 @@ while IFS= read -r script; do
   bash -n "${script}"
 done < <(find "${ROOT_DIR}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
 
+echo "==> Validating release orchestration contracts"
+"${ROOT_DIR}/scripts/validate-release-orchestration-contract.sh"
+
+echo "==> Validating reusable delivery stage contracts"
+"${ROOT_DIR}/scripts/validate-reusable-delivery-stages.sh"
+
+echo "==> Validating event-driven release orchestrator"
+"${ROOT_DIR}/scripts/validate-demo-api-release-orchestrator.sh"
+
+echo "==> Validating unified dev/test Qualification Bundles"
+"${ROOT_DIR}/scripts/validate-demo-api-qualification-bundle.sh"
+
+echo "==> Validating trusted runtime qualification executor"
+"${ROOT_DIR}/scripts/validate-trusted-runtime-executor.sh"
+
+echo "==> Validating v0.10 final clean-room acceptance contracts"
+"${ROOT_DIR}/scripts/validate-v0.10-final-acceptance.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

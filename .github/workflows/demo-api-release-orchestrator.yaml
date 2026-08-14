@@ -455,8 +455,9 @@ jobs:
        (needs.derive.outputs.target-environment == 'aws-test' &&
         vars.DEMO_API_AWS_TEST_QUALIFICATION_ENABLED == 'true'))
     permissions:
-      contents: read
+      contents: write
       packages: read
+      pull-requests: write
     uses: ./.github/workflows/demo-api-record-release-evidence.yaml
     with:
       environment: ${{ needs.derive.outputs.target-environment }}

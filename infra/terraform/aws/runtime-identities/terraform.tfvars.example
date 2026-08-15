@@ -1,0 +1,13 @@
+aws_region   = "us-east-1"
+project_name = "startup-devops-baseline"
+
+github_repository = "SterlingAureum/startup-devops-baseline"
+
+# Existing account-level provider. Never create one copy per disposable EKS
+# environment.
+github_actions_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+
+additional_tags = {
+  Owner      = "replace-me"
+  Repository = "startup-devops-baseline"
+}

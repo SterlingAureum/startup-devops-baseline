@@ -18,9 +18,14 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "cluster_arn" {
-  description = "Exact EKS cluster ARN allowed by the IAM policy."
+variable "runtime_role_arn" {
+  description = "Persistent account-bootstrap runtime role mapped into the live EKS cluster."
   type        = string
+
+  validation {
+    condition     = can(regex("^arn:[^:]+:iam::[0-9]{12}:role/[A-Za-z0-9+=,.@_/-]+$", var.runtime_role_arn))
+    error_message = "runtime_role_arn must identify one IAM role."
+  }
 }
 
 variable "github_repository" {
@@ -34,18 +39,8 @@ variable "github_repository" {
   }
 }
 
-variable "github_oidc_provider_arn" {
-  description = "ARN of the account-level token.actions.githubusercontent.com OIDC provider."
-  type        = string
-
-  validation {
-    condition     = can(regex("^arn:[^:]+:iam::[0-9]{12}:oidc-provider/token\\.actions\\.githubusercontent\\.com$", var.github_oidc_provider_arn))
-    error_message = "github_oidc_provider_arn must identify the exact GitHub Actions OIDC provider."
-  }
-}
-
 variable "tags" {
-  description = "Additional tags applied to runtime identity resources."
+  description = "Additional tags applied to the EKS access entry."
   type        = map(string)
   default     = {}
 }

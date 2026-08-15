@@ -6,6 +6,7 @@ CONTRACT="${ROOT_DIR}/delivery/contracts/v0.10-final-acceptance.json"
 SCHEMA="${ROOT_DIR}/delivery/contracts/v0.10-final-evidence.schema.json"
 EXAMPLE="${ROOT_DIR}/delivery/contracts/examples/v0.10-final-evidence-input.example.json"
 RUNBOOK="${ROOT_DIR}/docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md"
+RELEASE_ID_HELPER="${ROOT_DIR}/scripts/derive-demo-api-release-id.py"
 
 for command in bash git jq python3; do
   command -v "${command}" >/dev/null 2>&1 || {
@@ -94,6 +95,7 @@ jq --exit-status '
 
 echo "==> Compiling final evidence tools"
 python3 -m py_compile \
+  "${RELEASE_ID_HELPER}" \
   "${ROOT_DIR}/scripts/v010_final_evidence.py" \
   "${ROOT_DIR}/scripts/write-v0.10-final-evidence.py" \
   "${ROOT_DIR}/scripts/validate-v0.10-final-evidence.py"
@@ -215,6 +217,42 @@ if len(scope_hash) != 64 or scope_count < 20:
     raise SystemExit("Final acceptance Scope is unexpectedly small")
 PY
 
+echo "==> Exercising deterministic Release ID derivation"
+expected_source="$(python3 - "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml" <<'PY'
+from pathlib import Path
+import json, sys
+section = None
+for raw in Path(sys.argv[1]).read_text().splitlines():
+    if raw and not raw.startswith(" ") and raw.rstrip().endswith(":"):
+        section = raw.strip()[:-1]
+    elif section == "delivery" and raw.startswith("  sourceCommit:"):
+        print(json.loads(raw.split(":", 1)[1].strip()))
+        break
+PY
+)"
+expected_digest="$(python3 - "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml" <<'PY'
+from pathlib import Path
+import json, sys
+section = None
+for raw in Path(sys.argv[1]).read_text().splitlines():
+    if raw and not raw.startswith(" ") and raw.rstrip().endswith(":"):
+        section = raw.strip()[:-1]
+    elif section == "image" and raw.startswith("  digest:"):
+        print(json.loads(raw.split(":", 1)[1].strip()))
+        break
+PY
+)"
+expected_release_id="demo-api-${expected_source:0:12}-${expected_digest#sha256:}"
+expected_release_id="${expected_release_id:0:34}"
+actual_release_id="$(
+  "${RELEASE_ID_HELPER}" \
+    --release-file "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml"
+)"
+[[ "${actual_release_id}" == "${expected_release_id}" ]] || {
+  echo "Release ID helper returned an unexpected identity." >&2
+  exit 1
+}
+
 echo "==> Validating Runbook command and safety coverage"
 python3 - "${RUNBOOK}" <<'PY'
 from pathlib import Path
@@ -225,7 +263,14 @@ required = [
     "operation=status",
     "operation=resume",
     "Release supersede",
+    "Approve and run",
+    "derive-demo-api-release-id.py",
+    "RELEASE_A_ID",
+    "RELEASE_B_ID",
     "environment_absent",
+    "infra/terraform/aws/runtime-identities",
+    "aws_dev_runtime_role_arn",
+    "github_actions_runtime_role_arn",
     "DEMO_API_AWS_DEV_QUALIFICATION_ENABLED",
     "DEMO_API_AWS_TEST_PROMOTION_ENABLED",
     "DEMO_API_AWS_TEST_QUALIFICATION_ENABLED",

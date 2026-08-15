@@ -230,9 +230,13 @@ expect_mutation_failure production-runtime \
 expect_mutation_failure arbitrary-cluster-input \
   'sed -i '\''/      environment:/i\      cluster_name:\n        required: true\n        type: string'\'' "$1/.github/workflows/demo-api-runtime-qualification.yaml"'
 expect_mutation_failure oidc-wildcard \
-  'sed -i '\''s#repo:${var.github_repository}:environment:#repo:*:environment:#'\'' "$1/infra/terraform/aws/modules/github-actions-runtime-identity/main.tf"'
+  'sed -i '\''s#repo:${var.github_repository}:environment:#repo:*:environment:#'\'' "$1/infra/terraform/aws/modules/github-actions-runtime-role/main.tf"'
 expect_mutation_failure iam-write \
-  'sed -i '\''s/"eks:DescribeCluster"/"eks:DescribeCluster", "eks:UpdateClusterConfig"/'\'' "$1/infra/terraform/aws/modules/github-actions-runtime-identity/main.tf"'
+  'sed -i '\''s/"eks:DescribeCluster"/"eks:DescribeCluster", "eks:UpdateClusterConfig"/'\'' "$1/infra/terraform/aws/modules/github-actions-runtime-role/main.tf"'
+expect_mutation_failure environment-owned-role \
+  'printf "\nresource \"aws_iam_role\" \"unsafe\" { name = \"unsafe\" assume_role_policy = \"{}\" }\n" >> "$1/infra/terraform/aws/modules/github-actions-runtime-identity/main.tf"'
+expect_mutation_failure missing-persistent-root \
+  'rm -f "$1/infra/terraform/aws/runtime-identities/main.tf"'
 expect_mutation_failure rbac-write \
   'sed -i '\''0,/verbs: \["get", "list", "watch"\]/s//verbs: ["get", "list", "watch", "patch"]/'\'' "$1/clusters/aws/base/security/runtime-qualification/rbac.yaml"'
 expect_mutation_failure rbac-secret \

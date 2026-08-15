@@ -17,6 +17,7 @@
 /delivery/contracts/demo-api-qualification-scope.json @SterlingAureum
 /delivery/contracts/demo-api-qualification-scope-aws-test.json @SterlingAureum
 /delivery/contracts/qualification-bundle.schema.json @SterlingAureum
+/delivery/contracts/runtime-executor.json @SterlingAureum
 /delivery/contracts/v0.10-final-acceptance.json @SterlingAureum
 /delivery/contracts/v0.10-final-evidence.schema.json @SterlingAureum
 /delivery/contracts/examples/v0.10-final-evidence-input.example.json @SterlingAureum
@@ -39,6 +40,10 @@
 /scripts/write-v0.10-final-evidence.py @SterlingAureum
 /scripts/validate-v0.10-final-evidence.py @SterlingAureum
 /scripts/validate-v0.10-final-acceptance.sh @SterlingAureum
+/scripts/derive-demo-api-release-id.py @SterlingAureum
+/scripts/validate-trusted-runtime-executor.py @SterlingAureum
+/scripts/validate-trusted-runtime-executor.sh @SterlingAureum
+/scripts/validate-terraform.sh @SterlingAureum
 /scripts/record-demo-api-runtime-evidence-aws.sh @SterlingAureum
 /scripts/write-demo-api-runtime-evidence.sh @SterlingAureum
 /scripts/validate-demo-api-runtime-evidence.sh @SterlingAureum
@@ -51,3 +56,7 @@
 /scripts/write-v0.9-final-evidence.sh @SterlingAureum
 /scripts/validate-v0.9-final-evidence.sh @SterlingAureum
 /docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md @SterlingAureum
+/docs/TRUSTED_RUNTIME_EXECUTOR.md @SterlingAureum
+/infra/terraform/aws/runtime-identities/ @SterlingAureum
+/infra/terraform/aws/modules/github-actions-runtime-role/ @SterlingAureum
+/infra/terraform/aws/modules/github-actions-runtime-identity/ @SterlingAureum

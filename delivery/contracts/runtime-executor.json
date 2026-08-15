@@ -69,7 +69,10 @@
       "sts:GetCallerIdentity",
       "eks:DescribeCluster"
     ],
-    "environmentIsolatedRoles": true
+    "environmentIsolatedRoles": true,
+    "roleLifecycle": "account-bootstrap-persistent",
+    "accessEntryLifecycle": "environment-disposable",
+    "absentProbeBeforeEnvironmentApply": true
   },
   "kubernetesPermissions": {
     "verbs": [

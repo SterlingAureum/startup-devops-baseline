@@ -53,7 +53,10 @@ committed to Git and cannot replace a merged Qualification Bundle.
 | `manual-investigation` | Runtime behavior may be unsafe. | Investigate, then retry or use the rollback handoff. |
 | `none` | No retry applies. | Follow the derived human or durable-fact action. |
 
-Absent environments remain resumable and are never created automatically.
+Absent environments remain resumable and are never created automatically. A
+live `environment_absent` result requires the persistent account-bootstrap
+runtime role to exist before the disposable cluster; otherwise the earlier
+OIDC step correctly reports `oidc_denied` and cannot prove cluster absence.
 
 ## Superseded releases
 

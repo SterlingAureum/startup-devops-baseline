@@ -14,7 +14,10 @@ coordinate runtime-only values such as the management `/32`, the ALB Alias,
 and database credential transitions.
 
 The dev, test, and prod directories are independent Terraform roots. They use
-the same reviewed modules but never share local state or CLI workspaces.
+the same reviewed modules but never share local state or CLI workspaces. A
+fourth account-bootstrap root, `runtime-identities`, owns the dev/test GitHub
+OIDC runtime roles independently from disposable environment state. The
+environment roots own only the corresponding EKS access entries.
 
 | Profile | VPC | Service CIDR | Logs | Secret recovery | Backup destroy |
 |---|---|---|---:|---:|---|
@@ -70,7 +73,8 @@ without a mandatory v0.9 apply.
 
 ## Plan
 
-`validate-terraform.sh` formats and validates all three roots with backend
+`validate-terraform.sh` formats and validates the account-bootstrap root plus
+all three environment roots with backend
 initialization disabled. Do not put a workstation address in any tracked
 tfvars. The guarded apply entrypoint currently defaults to dev:
 

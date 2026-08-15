@@ -106,10 +106,9 @@ module "github_actions_runtime_identity" {
   count  = var.enable_github_actions_runtime_identity ? 1 : 0
   source = "../../modules/github-actions-runtime-identity"
 
-  project_name             = var.project_name
-  environment              = "aws-test"
-  cluster_name             = module.eks.cluster_name
-  cluster_arn              = module.eks.cluster_arn
-  github_oidc_provider_arn = var.github_actions_oidc_provider_arn
-  tags                     = var.additional_tags
+  project_name     = var.project_name
+  environment      = "aws-test"
+  cluster_name     = module.eks.cluster_name
+  runtime_role_arn = var.github_actions_runtime_role_arn
+  tags             = var.additional_tags
 }

@@ -235,13 +235,13 @@ variable "external_secrets_recovery_window_in_days" {
 }
 
 variable "enable_github_actions_runtime_identity" {
-  description = "Create the aws-dev GitHub OIDC runtime read role and EKS access entry."
+  description = "Map the persistent aws-dev GitHub runtime role into this EKS cluster."
   type        = bool
   default     = false
 }
 
-variable "github_actions_oidc_provider_arn" {
-  description = "Account-level GitHub Actions OIDC provider ARN; required when runtime identity is enabled."
+variable "github_actions_runtime_role_arn" {
+  description = "Persistent account-bootstrap aws-dev runtime role ARN; required when runtime access is enabled."
   type        = string
   default     = null
   nullable    = true
@@ -249,11 +249,11 @@ variable "github_actions_oidc_provider_arn" {
   validation {
     condition = (
       !var.enable_github_actions_runtime_identity ||
-      (var.github_actions_oidc_provider_arn != null && can(regex(
-        "^arn:[^:]+:iam::[0-9]{12}:oidc-provider/token\\.actions\\.githubusercontent\\.com$",
-        var.github_actions_oidc_provider_arn,
+      (var.github_actions_runtime_role_arn != null && can(regex(
+        "^arn:[^:]+:iam::[0-9]{12}:role/[A-Za-z0-9+=,.@_/-]+$",
+        var.github_actions_runtime_role_arn,
       )))
     )
-    error_message = "Enable runtime identity only with the exact GitHub Actions OIDC provider ARN."
+    error_message = "Enable runtime access only with the persistent aws-dev runtime role ARN."
   }
 }

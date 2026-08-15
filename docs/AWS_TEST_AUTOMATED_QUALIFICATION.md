@@ -34,8 +34,9 @@ DEMO_API_AWS_TEST_QUALIFICATION_ENABLED=true
 
 The first permits only preparation of the aws-test release file PR. It needs no
 AWS credentials or cluster access. The second should be enabled only when the
-aws-test cluster, `aws-test-runtime` GitHub Environment, isolated OIDC role, and
-ephemeral runner labeled `trusted-runtime` and `aws-test` are ready.
+aws-test cluster, `aws-test-runtime` GitHub Environment, persistent isolated
+OIDC role, environment-owned EKS access entry, and ephemeral runner labeled
+`trusted-runtime` and `aws-test` are ready.
 
 Neither switch creates or restores EKS. A missing disposable environment is a
 recoverable wait/block and must be restored through the existing operator

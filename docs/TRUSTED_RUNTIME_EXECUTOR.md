@@ -58,8 +58,8 @@ References:
 
 | Runtime environment | GitHub Environment | Runner label | IAM role output | EKS cluster |
 | --- | --- | --- | --- | --- |
-| `aws-dev` | `aws-dev-runtime` | `aws-dev` | `github_actions_runtime_role_arn` from dev | `startup-devops-baseline-dev` |
-| `aws-test` | `aws-test-runtime` | `aws-test` | `github_actions_runtime_role_arn` from test | `startup-devops-baseline-test` |
+| `aws-dev` | `aws-dev-runtime` | `aws-dev` | `aws_dev_runtime_role_arn` from `runtime-identities` | `startup-devops-baseline-dev` |
+| `aws-test` | `aws-test-runtime` | `aws-test` | `aws_test_runtime_role_arn` from `runtime-identities` | `startup-devops-baseline-test` |
 
 `aws-prod` has no runtime Workflow option, Terraform module instance, access
 entry, runner label, or RBAC overlay in v0.10.3.
@@ -76,10 +76,18 @@ sub = repo:SterlingAureum/startup-devops-baseline:environment:<aws-dev-runtime|a
 ```
 
 The IAM policy contains only `sts:GetCallerIdentity` and
-`eks:DescribeCluster`; the latter is scoped to the exact environment cluster
-ARN. The access entry maps the role to
+`eks:DescribeCluster`; the latter is scoped to the exact deterministic
+environment cluster ARN. The role is owned by the independent account-bootstrap
+`infra/terraform/aws/runtime-identities` root and therefore exists before or
+after a disposable cluster. The environment Terraform root owns only the EKS
+access entry, which maps the persistent role to
 `demo-api-runtime-qualification`. GitOps-managed Roles bind that group in
 `argocd` and `startup-apps` with `get`, `list`, and `watch` only.
+
+This lifecycle split is required for a truthful absent-environment check. If
+the role were destroyed with EKS, the workflow would fail OIDC before it could
+call `eks:DescribeCluster`, producing `oidc_denied` instead of
+`environment_absent`.
 
 The Argo CD Application that installs those bindings is packaged as its own
 Kustomize resource directory at
@@ -103,23 +111,39 @@ Perform this only when live acceptance is scheduled:
 
 1. Create or identify the account-level
    `token.actions.githubusercontent.com` IAM OIDC provider.
-2. In the selected dev/test Terraform root, set:
+2. Copy the account-bootstrap variables example to the untracked live file and
+   set the existing provider ARN:
+
+   ```bash
+   cp infra/terraform/aws/runtime-identities/terraform.tfvars.example \
+     infra/terraform/aws/runtime-identities/terraform.tfvars
+   ```
 
    ```hcl
-   enable_github_actions_runtime_identity = true
    github_actions_oidc_provider_arn = "arn:aws:iam::<account-id>:oidc-provider/token.actions.githubusercontent.com"
    ```
 
-3. Apply that environment through the existing reviewed Terraform procedure.
-4. Allow Argo CD to sync the dev/test runtime RBAC overlay.
-5. Create `aws-dev-runtime` and/or `aws-test-runtime` GitHub Environments.
-   Restrict deployment branches to `main` and set these Environment variables:
+3. Plan, review, and apply `infra/terraform/aws/runtime-identities`. Its local
+   state is independent from dev/test state and must not be destroyed during an
+   ordinary environment cleanup.
+4. Create `aws-dev-runtime` and/or `aws-test-runtime` GitHub Environments.
+   Restrict deployment branches to `main` and set these Environment variables
+   from `aws_dev_runtime_role_arn` or `aws_test_runtime_role_arn`:
 
    ```text
    AWS_RUNTIME_ROLE_ARN=<matching Terraform output>
    AWS_REGION=us-east-1
    ```
 
+5. Before applying a selected dev/test environment, set its untracked input:
+
+   ```hcl
+   enable_github_actions_runtime_identity = true
+   github_actions_runtime_role_arn = "<matching persistent role ARN>"
+   ```
+
+   The environment apply creates the EKS access entry; Argo CD then syncs the
+   dev/test runtime RBAC overlay.
 6. Start a single-job ephemeral runner with the common labels plus the exact
    environment label. Do not use a runner attached to the target EKS cluster.
 
@@ -161,7 +185,9 @@ a reviewed aws-dev Qualification Bundle.
 | `blocked` | `environment_absent`, `main_advanced`, `oidc_denied`, `endpoint_unreachable`, `executor_unavailable` | Safe pause; correct the condition and resume. |
 | `failed` | `argo_not_converged`, `rollout_unhealthy`, `analysis_failed`, `digest_mismatch`, `https_validation_failed`, `rbac_boundary_failed`, `input_mismatch` | Environment exists but qualification is not acceptable. |
 
-An absent cluster never triggers Terraform. A failed result never promotes or
+An absent cluster never triggers Terraform. The persistent role must already
+exist so the collector can distinguish `ResourceNotFoundException` from an
+OIDC failure. A failed result never promotes or
 aborts a Rollout, syncs Argo CD, changes a Secret, commits to Git, or opens a
 PR.
 

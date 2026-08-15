@@ -1,16 +1,15 @@
-# GitHub Actions Runtime Identity
+# GitHub Actions Runtime Access Identity
 
-Creates one non-production, environment-isolated IAM role and EKS access
-entry for trusted runtime qualification. The role accepts only the exact
-GitHub Environment OIDC subject for this repository, can describe only the
-target EKS cluster, and maps into the
+Maps one persistent, environment-isolated runtime IAM role into a live dev or
+test EKS cluster through an access entry and the
 `demo-api-runtime-qualification` Kubernetes group.
 
-The account-level `token.actions.githubusercontent.com` OIDC provider is an
-input because it is shared account infrastructure and must not be duplicated
-by disposable dev and test roots. The matching namespaced Kubernetes Roles
-and RoleBindings are GitOps-managed from
-`clusters/aws/base/security/runtime-qualification` in dev and test only.
+The IAM role and OIDC trust are owned separately by the account-bootstrap
+`runtime-identities` root. Keeping only the access entry here means ordinary
+environment destroy removes cluster access without deleting the role needed to
+prove `environment_absent` before the next clean-room rebuild.
 
-The module does not create a runner, mutate a cluster workload, grant access
-to Secrets, or create any production identity.
+Matching namespaced Kubernetes Roles and RoleBindings are GitOps-managed from
+`clusters/aws/base/security/runtime-qualification` in dev and test only. This
+module does not create a runner, mutate a workload, grant access to Secrets, or
+create any production identity.

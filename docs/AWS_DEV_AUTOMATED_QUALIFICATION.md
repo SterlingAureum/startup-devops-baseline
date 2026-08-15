@@ -49,7 +49,8 @@ the static or runtime Jobs and does not create a Bundle PR.
 Enable it only after all of the following are ready:
 
 - the aws-dev EKS cluster exists;
-- the v0.10.3 OIDC role, EKS access entry, and dev runtime RBAC are applied;
+- the persistent account-bootstrap OIDC role exists, and the environment-owned
+  EKS access entry plus dev runtime RBAC are applied;
 - the `aws-dev-runtime` GitHub Environment has `AWS_RUNTIME_ROLE_ARN` and
   `AWS_REGION` variables;
 - an ephemeral self-hosted runner with `self-hosted`, `linux`, `x64`,

@@ -4,6 +4,22 @@ All notable changes to this repository are documented in this file.
 
 ## v0.10.8
 
+### Fixed after clean-room execution
+
+- Split the trusted runtime IAM lifecycle from disposable EKS access: the new
+  account-bootstrap `runtime-identities` root retains exact-subject,
+  exact-cluster read roles while dev/test roots own only EKS access entries.
+  This lets the live pre-create probe report `blocked / environment_absent`
+  instead of failing earlier as `oidc_denied` after a complete environment
+  destroy.
+- Expanded the final Runbook with the exact source-A/source-B/release-A/
+  release-B ordering, GitHub bot workflow approval timing, deterministic
+  Release ID extraction, final evidence field mapping, and the practical
+  single-maintainer review limitation.
+- Added `scripts/derive-demo-api-release-id.py` and structural negative tests
+  that reject environment-owned runtime roles, missing persistent identity
+  state, wildcard OIDC trust, or widened IAM permissions.
+
 ### Added
 
 - Machine-readable final acceptance contract for protected-main

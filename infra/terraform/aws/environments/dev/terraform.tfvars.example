@@ -69,7 +69,7 @@ cnpg_backup_force_destroy = true
 # environment. Use 7-30 days for persistent environments.
 external_secrets_recovery_window_in_days = 0
 
-# Enable only after the shared account-level GitHub Actions OIDC provider and
-# the aws-dev-runtime GitHub Environment have been configured.
+# Enable only after infra/terraform/aws/runtime-identities has created the
+# persistent role. The environment root owns only the EKS access entry.
 enable_github_actions_runtime_identity = false
-# github_actions_oidc_provider_arn = "arn:aws:iam::123456789012:oidc-provider/token.actions.githubusercontent.com"
+# github_actions_runtime_role_arn = "arn:aws:iam::123456789012:role/startup-devops-baseline-dev-github-runtime-read-role"

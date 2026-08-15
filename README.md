@@ -157,10 +157,13 @@ workflow artifacts are diagnostic observations rather than mutable release
 state. Actual stage dispatch remains deferred to v0.10.4 through v0.10.6, after
 the v0.10.3 trusted runtime boundary exists.
 v0.10.3 adds `.github/workflows/demo-api-runtime-qualification.yaml`, the
-runtime executor/result contracts, a short-lived OIDC IAM and EKS access-entry
-module for dev/test, GitOps-managed read-only Roles, and deterministic runtime
-collection. An unavailable runner or absent disposable environment remains a
-safe wait; no GitHub-hosted fallback or automatic Terraform apply is allowed.
+runtime executor/result contracts, short-lived OIDC access, GitOps-managed
+read-only Roles, and deterministic runtime collection. The v0.10.8 clean-room
+repair separates persistent account-bootstrap runtime IAM roles from
+environment-owned EKS access entries, so an absent disposable environment is
+distinguished from OIDC failure before cluster creation. An unavailable runner
+or absent environment remains a safe wait; no GitHub-hosted fallback or
+automatic Terraform apply is allowed.
 The temporary runtime result becomes unified qualification evidence in
 v0.10.4.
 v0.10.4 adds deterministic qualification-scope hashing, same-run artifact
@@ -190,9 +193,12 @@ remain human or explicitly out of scope.
 v0.10.8 adds `docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md`, a machine-readable final
 acceptance contract, strict closure-evidence schema/writer/validator, and an
 offline negative gate that rejects unsafe production claims or incomplete
-cleanup. Live run IDs, PR numbers, Qualification Bundles, and cleanup times are
-recorded later through one reviewed evidence-only PR. The final tag is created
-only after that record merges; aws-prod remains desired-state-only.
+cleanup. Its clean-room repair also documents exact supersede/approval ordering
+and Release ID derivation while moving trusted runtime roles into an
+independent `runtime-identities` state. Live run IDs, PR numbers, Qualification
+Bundles, and cleanup times are recorded later through one reviewed evidence-only
+PR. The final tag is created only after that record merges; aws-prod remains
+desired-state-only.
 
 ## Platform Architecture
 

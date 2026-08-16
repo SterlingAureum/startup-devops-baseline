@@ -135,6 +135,18 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
     require(recovery.get("minimumPromotionBundleRemainingSeconds") == 3600, "Bundle validity floor changed")
     require(recovery.get("rollbackDispatchAuthorized") is False, "Rollback dispatch was authorized")
 
+    require(value.get("acceptanceInterruption") == {
+        "input": "acceptance_interrupt_checkpoint",
+        "armedValue": "armed",
+        "defaultValue": "disabled",
+        "allowedOperation": "resume",
+        "requiredPolicy": "reviewed",
+        "releaseIdRequired": True,
+        "checkpoint": "post-runtime-pre-bundle",
+        "maximumHoldSeconds": 540,
+        "bundleCreationWhileArmed": False,
+    }, "Acceptance interruption boundary changed")
+
     bundle = value.get("qualificationBundle", {})
     require(bundle.get("workflow") == ".github/workflows/demo-api-record-qualification-bundle.yaml", "Bundle workflow changed")
     require(bundle.get("schema") == "delivery/contracts/qualification-bundle.schema.json", "Bundle schema changed")
@@ -201,6 +213,18 @@ require("DEMO_API_AWS_PROD_PROMOTION_ENABLED" in action_block, "Prod Promotion v
 require("mode: artifact-only" in action_block, "Static stage is not artifact-only")
 require("demo-api-runtime-qualification.yaml" in action_block, "Trusted runtime stage is not dispatched")
 require("demo-api-record-qualification-bundle.yaml" in action_block, "Bundle stage is not dispatched")
+require("acceptance_interrupt_checkpoint:" in workflow, "Deterministic interruption input is missing")
+require("The acceptance interruption checkpoint requires a reviewed manual resume with an explicit release_id." in derive_block, "Armed checkpoint request is not narrowly validated")
+for marker in ('"${GITHUB_EVENT_NAME}" != "workflow_dispatch"', '"${operation}" != "resume"', '"${policy}" != "reviewed"'):
+    require(marker in derive_block, f"Armed checkpoint guard is missing: {marker}")
+require("qualification-durability-checkpoint:" in action_block, "Post-runtime interruption checkpoint is missing")
+require("needs.qualification-durability-checkpoint.outputs.permit-bundle == 'true'" in action_block, "Bundle creation can bypass the interruption checkpoint")
+require("The armed interruption checkpoint was not cancelled within nine minutes." in action_block, "Armed checkpoint does not fail closed")
+require(
+    action_block.index("qualification-durability-checkpoint:")
+    < action_block.index("record-qualification-bundle:"),
+    "Interruption checkpoint appears after durable Bundle creation",
+)
 require("demo-api-promote-environment.yaml" in action_block, "Reviewed test Promotion stage is not dispatched")
 require("uses: ./.github/workflows/demo-api-rollback.yaml" not in workflow, "v0.10.7 dispatches rollback")
 require("gh pr merge" not in workflow and "--auto" not in workflow, "Orchestrator can merge a PR")
@@ -229,6 +253,8 @@ mutations = [
     ("runtime scope", lambda c: c["executionBoundary"]["runtimeEnvironments"].append("aws-prod")),
     ("automatic merge", lambda c: c["qualificationBundle"].__setitem__("automaticMerge", True)),
     ("production runtime", lambda c: c["productionBoundary"].__setitem__("runtimeAccess", True)),
+    ("armed bundle creation", lambda c: c["acceptanceInterruption"].__setitem__("bundleCreationWhileArmed", True)),
+    ("unbounded hold", lambda c: c["acceptanceInterruption"].__setitem__("maximumHoldSeconds", 0)),
 ]
 for name, mutate in mutations:
     candidate = copy.deepcopy(contract)

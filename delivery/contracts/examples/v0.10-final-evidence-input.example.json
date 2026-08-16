@@ -26,6 +26,22 @@
       "testQualification": 0,
       "prodPromotion": 0,
       "rollbackBoundary": 0
+    },
+    "runnerIsolation": {
+      "validator": "scripts/validate-demo-api-runner-isolation.sh",
+      "automaticUnregistrationVerified": true,
+      "interrupted": {
+        "runId": "REPLACE_WITH_RUN_ID",
+        "runAttempt": 0,
+        "runnerId": 0,
+        "runnerName": "REPLACE_WITH_RUNNER_NAME"
+      },
+      "resumed": {
+        "runId": "REPLACE_WITH_RUN_ID",
+        "runAttempt": 0,
+        "runnerId": 0,
+        "runnerName": "REPLACE_WITH_RUNNER_NAME"
+      }
     }
   },
   "recovery": {

@@ -41,6 +41,18 @@ def main() -> None:
     require(contract["executor"]["fallbackToGitHubHosted"] is False, "GitHub-hosted EKS fallback is forbidden")
     require(contract["executor"]["persistentAwsCredentials"] is False, "Persistent AWS credentials are forbidden")
     require(contract["executor"]["requiredLabels"] == ["self-hosted", "linux", "x64", "trusted-runtime"], "Runner labels changed")
+    require(contract["executor"]["singleJob"] is True, "Runtime runner may accept multiple Jobs")
+    require(contract["executor"]["automaticUnregistrationRequired"] is True, "Ephemeral unregistration is optional")
+    require(contract["executor"]["distinctRegistrationRequiredForRecovery"] is True, "Recovery may reuse one runner registration")
+    require(contract["executor"]["runnerIdentityField"] == "runner_id", "Runner identity is confused with workflow run ID")
+    require(contract["executor"]["runnerIsolationValidator"] == "scripts/validate-demo-api-runner-isolation.sh", "Runner isolation validator changed")
+    for runner_validator in (
+        "scripts/demo_api_runner_isolation.py",
+        "scripts/validate-demo-api-runner-isolation.py",
+        "scripts/validate-demo-api-runner-isolation.sh",
+        "scripts/validate-demo-api-runner-isolation-fixtures.sh",
+    ):
+        read(root, runner_validator)
     require(contract["awsPermissions"]["allowedActions"] == ["sts:GetCallerIdentity", "eks:DescribeCluster"], "AWS permissions widened")
     require(contract["awsPermissions"]["roleLifecycle"] == "account-bootstrap-persistent", "Runtime role lifecycle is not persistent")
     require(contract["awsPermissions"]["accessEntryLifecycle"] == "environment-disposable", "EKS access entry lifecycle changed")

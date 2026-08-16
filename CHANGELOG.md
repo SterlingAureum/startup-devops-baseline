@@ -6,6 +6,18 @@ All notable changes to this repository are documented in this file.
 
 ### Fixed after clean-room execution
 
+- Added a deterministic post-runtime/pre-Bundle interruption checkpoint so a
+  healthy environment cannot complete too quickly to exercise cancellation.
+- Distinguished workflow `run ID` from self-hosted `runner_id`, added live and
+  offline runner-isolation validation, and made distinct automatically
+  unregistered runner registrations part of final acceptance evidence.
+- Documented the append-only recovery path when a same-runner Bundle was
+  already merged: preserve it, wait for a legitimate requalification state,
+  then repeat both interruption and resume with clean `--ephemeral`
+  registrations.
+- Corrected first-create aws-dev instructions to use the guarded EKS endpoint
+  CIDR helper, explicit cost-controlled logging input, and current runtime-role
+  fields in the untracked Terraform variables.
 - Split the trusted runtime IAM lifecycle from disposable EKS access: the new
   account-bootstrap `runtime-identities` root retains exact-subject,
   exact-cluster read roles while dev/test roots own only EKS access entries.
@@ -45,9 +57,11 @@ All notable changes to this repository are documented in this file.
 
 ### Boundary
 
-- v0.10.8 adds no application workflow dispatch path, Terraform/IAM/RBAC,
-  Helm runtime change, automatic merge, automatic environment creation,
-  production cluster/runtime access, Kubernetes write, or automatic rollback.
+- v0.10.8 adds no Terraform/IAM/RBAC, Helm runtime change, automatic merge,
+  automatic environment creation, production cluster/runtime access,
+  Kubernetes write, or automatic rollback. Its acceptance-only workflow input
+  can only hold a reviewed manual resume after runtime qualification and fails
+  closed before durable Bundle creation.
 - Bundle expiry and exact retry/rollback-handoff failure classes use
   deterministic clock/history validation. Live acceptance proves the normal
   Qualification/Promotion path without keeping EKS running for 24 hours or

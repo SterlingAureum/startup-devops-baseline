@@ -146,6 +146,74 @@ Perform this only when live acceptance is scheduled:
    dev/test runtime RBAC overlay.
 6. Start a single-job ephemeral runner with the common labels plus the exact
    environment label. Do not use a runner attached to the target EKS cluster.
+   Restarting `run.sh` from an already configured directory is not a new
+   runner: GitHub keeps the same registered `runner_id`.
+
+## Fresh single-job runner registration
+
+`github.run_id` identifies one workflow execution. The Jobs API `runner_id`
+identifies the registered self-hosted runner that accepted a Job. They are not
+interchangeable. An interrupted/resumed acceptance pair must have different
+workflow run IDs **and** different positive `runner_id` values.
+
+Use a clean extracted runner directory for every Job. The directory must not
+contain `.runner`, `.credentials`, or an earlier `_work` tree. Obtain a new
+short-lived registration token and configure the runner with `--ephemeral`:
+
+Before the first repaired run, stop any persistent runner process and remove
+its existing registration from **Settings -> Actions -> Runners**. In
+particular, do not leave the previously reused registration online as a second
+eligible target; GitHub scheduling could assign the Job to it instead of the
+new ephemeral registration. Do not manually delete only `.runner` or
+`.credentials` as a substitute for server-side removal.
+
+```bash
+export RUNNER_HOME=/absolute/path/to/clean/actions-runner-aws-dev-a
+export RUNNER_NAME="aureum-aws-dev-$(date -u +%Y%m%d%H%M%S)"
+export RUNNER_REGISTRATION_TOKEN="$(
+  gh api \
+    --method POST \
+    repos/SterlingAureum/startup-devops-baseline/actions/runners/registration-token \
+    --jq .token
+)"
+
+cd "${RUNNER_HOME}"
+test ! -e .runner
+test ! -e .credentials
+test ! -e _work
+
+./config.sh \
+  --unattended \
+  --ephemeral \
+  --url https://github.com/SterlingAureum/startup-devops-baseline \
+  --token "${RUNNER_REGISTRATION_TOKEN}" \
+  --name "${RUNNER_NAME}" \
+  --labels trusted-runtime,aws-dev
+
+unset RUNNER_REGISTRATION_TOKEN
+./run.sh
+```
+
+For aws-test, use another clean directory and replace the custom label with
+`aws-test`. Do not use `--replace`, do not reuse an existing `.runner`
+configuration, and do not store the registration token in the repository or
+shell history. The registration must disappear automatically after its one
+Job. Reconfigure from a new clean directory and token for the next Job.
+
+After an interrupted/resumed pair, validate the GitHub run conclusions, Job
+labels, distinct runner registrations, and automatic unregistration:
+
+```bash
+ENVIRONMENT=aws-dev \
+INTERRUPTED_RUN_ID="${INTERRUPTED_RUN_ID}" \
+RESUMED_RUN_ID="${RESUMED_RUN_ID}" \
+OUTPUT_FILE=/tmp/v0.10-aws-dev-runner-isolation.json \
+  ./scripts/validate-demo-api-runner-isolation.sh
+```
+
+The validator rejects the pair when both Jobs used the same `runner_id`, when
+either runner is still registered, when the interrupted workflow was not
+cancelled, or when the resumed workflow did not succeed.
 
 ## Qualification checks
 

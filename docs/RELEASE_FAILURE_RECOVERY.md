@@ -138,4 +138,8 @@ manual rollback-workflow, cost-cleanup, and dev/test/prod-static acceptance in
 handoff classification remain deterministic clock/history tests so disposable
 clusters are not retained or deliberately damaged merely to manufacture a
 failure. The append-only final evidence distinguishes those deterministic
-checks from the live GitHub/AWS checkpoints.
+checks from the live GitHub/AWS checkpoints. Interrupted-run recovery uses a
+bounded post-runtime/pre-Bundle checkpoint and must prove different self-hosted
+`runner_id` registrations plus automatic unregistration. A workflow run ID is
+not a runner identity, and restarting one persistent runner does not satisfy
+the recovery boundary.

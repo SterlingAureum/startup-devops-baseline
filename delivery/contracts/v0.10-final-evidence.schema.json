@@ -60,6 +60,17 @@
       "type": "integer",
       "minimum": 1
     },
+    "runnerFact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "runAttempt", "runnerId", "runnerName"],
+      "properties": {
+        "runId": { "$ref": "#/$defs/runId" },
+        "runAttempt": { "type": "integer", "minimum": 1 },
+        "runnerId": { "type": "integer", "minimum": 1 },
+        "runnerName": { "type": "string", "minLength": 1 }
+      }
+    },
     "fileReference": {
       "type": "object",
       "additionalProperties": false,
@@ -106,7 +117,7 @@
     "github": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["runs", "pullRequests"],
+      "required": ["runs", "pullRequests", "runnerIsolation"],
       "properties": {
         "runs": {
           "type": "object",
@@ -154,6 +165,17 @@
             "testQualification": { "$ref": "#/$defs/pullRequest" },
             "prodPromotion": { "$ref": "#/$defs/pullRequest" },
             "rollbackBoundary": { "$ref": "#/$defs/pullRequest" }
+          }
+        },
+        "runnerIsolation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["validator", "automaticUnregistrationVerified", "interrupted", "resumed"],
+          "properties": {
+            "validator": { "const": "scripts/validate-demo-api-runner-isolation.sh" },
+            "automaticUnregistrationVerified": { "const": true },
+            "interrupted": { "$ref": "#/$defs/runnerFact" },
+            "resumed": { "$ref": "#/$defs/runnerFact" }
           }
         }
       }

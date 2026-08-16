@@ -139,6 +139,13 @@ any other mutation.
 | `main` advances | stale run stops; recompute from current `main` |
 | Scope changes after Bundle merge | Bundle becomes stale; run aws-dev qualification again |
 
+An interrupted/resumed final-acceptance pair additionally requires two
+different registered `runner_id` values. Starting `run.sh` twice from the same
+configured runner directory does not satisfy this boundary. Use clean
+`--ephemeral` registrations and validate them with
+`scripts/validate-demo-api-runner-isolation.sh` before merging the replacement
+Bundle PR.
+
 Manual resume command:
 
 ```bash

@@ -101,7 +101,10 @@ v0.10.8 closes the version line with a protected-main clean-room acceptance
 contract, exact dev/test/prod-static Runbook, interruption and environment
 restoration checkpoints, deterministic expiry/retry/rollback-handoff tests,
 dependency-aware dev/test cost cleanup, and repository-bound append-only final
-evidence. No success evidence is included before the real live sequence runs.
+evidence. The interruption checkpoint is a bounded post-runtime/pre-Bundle
+hold, and final evidence rejects an interrupted/resumed pair that reused the
+same registered self-hosted `runner_id` or left either runner registered. No
+success evidence is included before the real live sequence runs.
 
 ## Current Version
 

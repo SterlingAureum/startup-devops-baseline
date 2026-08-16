@@ -40,6 +40,13 @@
     "aws-dev",
     "aws-test"
   ],
+  "runtimeRunnerIsolation": {
+    "workflowRunIdIsRunnerId": false,
+    "distinctRunnerIdsRequiredAcrossInterruptedResume": true,
+    "automaticUnregistrationRequired": true,
+    "validator": "scripts/validate-demo-api-runner-isolation.sh",
+    "deterministicInterruptionCheckpoint": "post-runtime-pre-bundle"
+  },
   "productionBoundary": {
     "mode": "prod-static",
     "environmentApprovalRequired": true,
@@ -78,6 +85,7 @@
     "delivery/contracts/runtime-qualification.schema.json",
     "delivery/contracts/v0.10-final-*.json",
     "scripts/*demo-api*",
+    "scripts/demo_api_runner_isolation.py",
     "scripts/*trusted-runtime*",
     "scripts/derive-demo-api-release-id.py",
     "scripts/validate-terraform.sh",

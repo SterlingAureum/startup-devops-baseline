@@ -55,6 +55,13 @@ jq --exit-status '
     "validate / demo-api release currentness"
   ] and
   .runtimeEnvironments == ["aws-dev", "aws-test"] and
+  .runtimeRunnerIsolation == {
+    "workflowRunIdIsRunnerId": false,
+    "distinctRunnerIdsRequiredAcrossInterruptedResume": true,
+    "automaticUnregistrationRequired": true,
+    "validator": "scripts/validate-demo-api-runner-isolation.sh",
+    "deterministicInterruptionCheckpoint": "post-runtime-pre-bundle"
+  } and
   .productionBoundary == {
     "mode": "prod-static",
     "environmentApprovalRequired": true,
@@ -89,6 +96,10 @@ jq --exit-status '
   .schemaVersion == "v0.10.8-input" and
   .validatedControlPlaneSha == "REPLACE_WITH_40_CHARACTER_MAIN_SHA" and
   .github.pullRequests.prodPromotion == 0 and
+  .github.runnerIsolation.validator == "scripts/validate-demo-api-runner-isolation.sh" and
+  .github.runnerIsolation.automaticUnregistrationVerified == true and
+  .github.runnerIsolation.interrupted.runnerId == 0 and
+  .github.runnerIsolation.resumed.runnerId == 0 and
   .production.mode == "prod-static" and
   .production.runtimeQualificationPerformed == false
 ' "${EXAMPLE}" >/dev/null
@@ -97,6 +108,8 @@ echo "==> Compiling final evidence tools"
 python3 -m py_compile \
   "${RELEASE_ID_HELPER}" \
   "${ROOT_DIR}/scripts/v010_final_evidence.py" \
+  "${ROOT_DIR}/scripts/demo_api_runner_isolation.py" \
+  "${ROOT_DIR}/scripts/validate-demo-api-runner-isolation.py" \
   "${ROOT_DIR}/scripts/write-v0.10-final-evidence.py" \
   "${ROOT_DIR}/scripts/validate-v0.10-final-evidence.py"
 
@@ -151,6 +164,16 @@ document = {
                 "testQualification", "prodPromotion", "rollbackBoundary",
             ), start=1)
         },
+        "runnerIsolation": {
+            "validator": "scripts/validate-demo-api-runner-isolation.sh",
+            "automaticUnregistrationVerified": True,
+            "interrupted": {
+                "runId": "4", "runAttempt": 1, "runnerId": 21, "runnerName": "aureum",
+            },
+            "resumed": {
+                "runId": "5", "runAttempt": 1, "runnerId": 22, "runnerName": "aureum",
+            },
+        },
     },
     "recovery": {
         "statusReadOnlyNoDispatch": True,
@@ -199,6 +222,9 @@ mutations = [
     ("rollback merge", lambda d: d["recovery"].__setitem__("rollbackPullRequestMerged", True)),
     ("cleanup residual", lambda d: d["cleanup"]["aws-test"].__setitem__("status", "residual-found")),
     ("runner leak", lambda d: d["cleanup"].__setitem__("ephemeralRunnersStopped", False)),
+    ("runner id reused", lambda d: d["github"]["runnerIsolation"]["resumed"].__setitem__("runnerId", 21)),
+    ("runner still registered", lambda d: d["github"]["runnerIsolation"].__setitem__("automaticUnregistrationVerified", False)),
+    ("runner run mismatch", lambda d: d["github"]["runnerIsolation"]["resumed"].__setitem__("runId", "999")),
     ("placeholder run", lambda d: d["github"]["runs"].__setitem__("statusReadOnly", "REPLACE_ME")),
     ("placeholder PR", lambda d: d["github"]["pullRequests"].__setitem__("prodPromotion", 0)),
 ]
@@ -216,6 +242,9 @@ scope_hash, scope_count = acceptance_scope(root, contract)
 if len(scope_hash) != 64 or scope_count < 20:
     raise SystemExit("Final acceptance Scope is unexpectedly small")
 PY
+
+echo "==> Exercising runner registration isolation fixtures"
+"${ROOT_DIR}/scripts/validate-demo-api-runner-isolation-fixtures.sh"
 
 echo "==> Exercising deterministic Release ID derivation"
 expected_source="$(python3 - "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml" <<'PY'
@@ -262,12 +291,15 @@ text = Path(sys.argv[1]).read_text()
 required = [
     "operation=status",
     "operation=resume",
+    "acceptance_interrupt_checkpoint=armed",
     "Release supersede",
     "Approve and run",
     "derive-demo-api-release-id.py",
     "RELEASE_A_ID",
     "RELEASE_B_ID",
     "environment_absent",
+    "runner_id",
+    "validate-demo-api-runner-isolation.sh",
     "infra/terraform/aws/runtime-identities",
     "aws_dev_runtime_role_arn",
     "github_actions_runtime_role_arn",

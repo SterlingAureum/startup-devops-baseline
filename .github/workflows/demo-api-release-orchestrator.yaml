@@ -52,6 +52,14 @@ on:
         description: Prior orchestrator run attempt; required only for retry
         required: false
         type: string
+      acceptance_interrupt_checkpoint:
+        description: Acceptance-only post-runtime hold; arm only when this run will be cancelled before Bundle creation
+        required: true
+        default: disabled
+        type: choice
+        options:
+          - disabled
+          - armed
       test_rollout_gate:
         description: Explicit human confirmation after the guarded aws-test Canary helper completed
         required: true
@@ -101,6 +109,7 @@ jobs:
       started-at: ${{ steps.context.outputs.started-at }}
       retry-run-id: ${{ steps.context.outputs.retry-run-id }}
       retry-run-attempt: ${{ steps.context.outputs.retry-run-attempt }}
+      acceptance-interrupt-checkpoint: ${{ steps.context.outputs.acceptance-interrupt-checkpoint }}
     steps:
       - name: Checkout protected main
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -116,12 +125,14 @@ jobs:
           REQUESTED_RELEASE_ID: ${{ inputs.release_id }}
           REQUESTED_RETRY_RUN_ID: ${{ inputs.retry_run_id }}
           REQUESTED_RETRY_RUN_ATTEMPT: ${{ inputs.retry_run_attempt }}
+          REQUESTED_INTERRUPT_CHECKPOINT: ${{ inputs.acceptance_interrupt_checkpoint }}
           BEFORE_REVISION: ${{ github.event.before }}
           REQUESTED_TEST_ROLLOUT_GATE: ${{ inputs.test_rollout_gate }}
         run: |
           captured_main="$(git rev-parse HEAD)"
           operation="${REQUESTED_OPERATION:-}"
           policy="${REQUESTED_POLICY:-reviewed}"
+          interrupt_checkpoint="${REQUESTED_INTERRUPT_CHECKPOINT:-disabled}"
           source_commit=""
 
           if [[ "${GITHUB_EVENT_NAME}" == "push" ]]; then
@@ -159,6 +170,13 @@ jobs:
               exit 1
               ;;
           esac
+          case "${interrupt_checkpoint}" in
+            disabled|armed) ;;
+            *)
+              echo "::error::Unsupported acceptance interruption checkpoint: ${interrupt_checkpoint}"
+              exit 1
+              ;;
+          esac
           if [[ -n "${REQUESTED_RELEASE_ID}" && \
                 ! "${REQUESTED_RELEASE_ID}" =~ ^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$ ]]; then
             echo "::error::release_id does not satisfy the deterministic release identity contract."
@@ -175,6 +193,15 @@ jobs:
             echo "::error::Retry lineage inputs are accepted only for operation=retry."
             exit 1
           fi
+          if [[ "${interrupt_checkpoint}" == "armed" ]]; then
+            if [[ "${GITHUB_EVENT_NAME}" != "workflow_dispatch" || \
+                  "${operation}" != "resume" || \
+                  "${policy}" != "reviewed" || \
+                  -z "${REQUESTED_RELEASE_ID}" ]]; then
+              echo "::error::The acceptance interruption checkpoint requires a reviewed manual resume with an explicit release_id."
+              exit 1
+            fi
+          fi
 
           {
             echo "operation=${operation}"
@@ -185,6 +212,7 @@ jobs:
             echo "test-rollout-gate=${REQUESTED_TEST_ROLLOUT_GATE:-not-reviewed}"
             echo "retry-run-id=${REQUESTED_RETRY_RUN_ID}"
             echo "retry-run-attempt=${REQUESTED_RETRY_RUN_ATTEMPT}"
+            echo "acceptance-interrupt-checkpoint=${interrupt_checkpoint}"
             echo "started-at=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           } >> "${GITHUB_OUTPUT}"
 
@@ -329,6 +357,7 @@ jobs:
             echo "- Recommended action: \`${action}\`"
             echo "- Target environment: \`${target}\`"
             echo "- Dispatch authorized by plan: \`${dispatch}\`"
+            echo "- Acceptance interruption checkpoint: \`${{ steps.context.outputs.acceptance-interrupt-checkpoint }}\`"
             echo "- aws-dev qualification enabled: \`${{ vars.DEMO_API_AWS_DEV_QUALIFICATION_ENABLED == 'true' }}\`"
             echo "- aws-test Promotion enabled: \`${{ vars.DEMO_API_AWS_TEST_PROMOTION_ENABLED == 'true' }}\`"
             echo "- aws-test qualification enabled: \`${{ vars.DEMO_API_AWS_TEST_QUALIFICATION_ENABLED == 'true' }}\`"
@@ -512,15 +541,67 @@ jobs:
       expected_image_digest: ${{ needs.derive.outputs.image-digest }}
       expected_release_file_sha256: ${{ needs.derive.outputs.release-file-sha256 }}
 
+  qualification-durability-checkpoint:
+    name: Gate durable Qualification Bundle creation
+    needs:
+      - derive
+      - runtime-qualification
+    if: >-
+      needs.runtime-qualification.result == 'success' &&
+      needs.runtime-qualification.outputs.status == 'qualified'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      permit-bundle: ${{ steps.mode.outputs.permit-bundle }}
+    steps:
+      - name: Resolve acceptance checkpoint mode
+        id: mode
+        env:
+          CHECKPOINT_MODE: ${{ needs.derive.outputs.acceptance-interrupt-checkpoint }}
+        run: |
+          case "${CHECKPOINT_MODE}" in
+            disabled)
+              echo "permit-bundle=true" >> "${GITHUB_OUTPUT}"
+              ;;
+            armed)
+              echo "permit-bundle=false" >> "${GITHUB_OUTPUT}"
+              ;;
+            *)
+              echo "::error::Unexpected acceptance checkpoint mode: ${CHECKPOINT_MODE}"
+              exit 1
+              ;;
+          esac
+
+      - name: Hold after runtime qualification for deterministic cancellation
+        if: needs.derive.outputs.acceptance-interrupt-checkpoint == 'armed'
+        run: |
+          {
+            echo "### Acceptance interruption checkpoint armed"
+            echo
+            echo "The trusted runtime Job completed, but no Qualification Bundle branch or PR has been created."
+            echo "Cancel the entire orchestrator run now. This bounded hold fails closed if it is not cancelled."
+          } >> "${GITHUB_STEP_SUMMARY}"
+          for _ in $(seq 1 36); do
+            sleep 15
+          done
+          echo "::error::The armed interruption checkpoint was not cancelled within nine minutes."
+          exit 1
+
   record-qualification-bundle:
     name: Prepare reviewed non-production Qualification Bundle
     needs:
       - derive
       - static-qualification
       - runtime-qualification
+      - qualification-durability-checkpoint
     if: >-
+      always() &&
       needs.runtime-qualification.result == 'success' &&
-      needs.runtime-qualification.outputs.status == 'qualified'
+      needs.runtime-qualification.outputs.status == 'qualified' &&
+      needs.qualification-durability-checkpoint.result == 'success' &&
+      needs.qualification-durability-checkpoint.outputs.permit-bundle == 'true'
     permissions:
       contents: write
       pull-requests: write
@@ -543,6 +624,7 @@ jobs:
       - static-qualification
       - qualification-disabled
       - runtime-qualification
+      - qualification-durability-checkpoint
       - record-qualification-bundle
     if: always() && needs.derive.result == 'success'
     runs-on: ubuntu-latest
@@ -580,6 +662,7 @@ jobs:
           RUNTIME_RESULT: ${{ needs.runtime-qualification.result }}
           RUNTIME_STATUS: ${{ needs.runtime-qualification.outputs.status }}
           RUNTIME_REASON: ${{ needs.runtime-qualification.outputs.reason }}
+          CHECKPOINT_RESULT: ${{ needs.qualification-durability-checkpoint.result }}
           BUNDLE_RESULT: ${{ needs.record-qualification-bundle.result }}
           BUNDLE_STATUS: ${{ needs.record-qualification-bundle.outputs.status }}
           BUNDLE_URL: ${{ needs.record-qualification-bundle.outputs.pr_url }}
@@ -603,6 +686,7 @@ jobs:
               "prodPromotion": stage("PROD_PROMOTION"),
               "static": stage("STATIC"),
               "runtime": stage("RUNTIME"),
+              "interruptCheckpoint": {"result": os.environ.get("CHECKPOINT_RESULT", "")},
               "bundle": stage("BUNDLE"),
               "disabled": {
                   "testPromotion": os.environ.get("TEST_DISABLED_RESULT", ""),

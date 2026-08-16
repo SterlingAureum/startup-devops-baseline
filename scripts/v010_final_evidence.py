@@ -35,6 +35,7 @@ PR_KEYS = {
     "prodPromotion",
     "rollbackBoundary",
 }
+RUNNER_PHASES = {"interrupted", "resumed"}
 SHA = re.compile(r"^[0-9a-f]{40}$")
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -236,7 +237,7 @@ def validate_structure(document: dict[str, Any]) -> None:
         require(SHA256.fullmatch(reference["sha256"]) is not None, "Invalid Bundle hash")
 
     github = document["github"]
-    require(set(github) == {"runs", "pullRequests"}, "Invalid GitHub evidence")
+    require(set(github) == {"runs", "pullRequests", "runnerIsolation"}, "Invalid GitHub evidence")
     require(set(github["runs"]) == RUN_KEYS, "GitHub run set changed")
     require(
         all(RUN_ID.fullmatch(str(value)) for value in github["runs"].values()),
@@ -246,6 +247,45 @@ def validate_structure(document: dict[str, Any]) -> None:
     require(
         all(isinstance(value, int) and not isinstance(value, bool) and value > 0 for value in github["pullRequests"].values()),
         "Invalid GitHub pull-request number",
+    )
+    runner_isolation = github["runnerIsolation"]
+    require(
+        set(runner_isolation)
+        == {"validator", "automaticUnregistrationVerified", "interrupted", "resumed"},
+        "Invalid runtime runner-isolation evidence",
+    )
+    require(
+        runner_isolation["validator"] == "scripts/validate-demo-api-runner-isolation.sh",
+        "Unexpected runner-isolation validator",
+    )
+    require(
+        runner_isolation["automaticUnregistrationVerified"] is True,
+        "Ephemeral runner unregistration was not verified",
+    )
+    for phase in RUNNER_PHASES:
+        fact = runner_isolation[phase]
+        require(
+            set(fact) == {"runId", "runAttempt", "runnerId", "runnerName"},
+            f"Invalid {phase} runner fact",
+        )
+        require(fact["runId"] == github["runs"][phase], f"{phase} runner fact cites another run")
+        require(
+            isinstance(fact["runAttempt"], int)
+            and not isinstance(fact["runAttempt"], bool)
+            and fact["runAttempt"] > 0,
+            f"Invalid {phase} run attempt",
+        )
+        require(
+            isinstance(fact["runnerId"], int)
+            and not isinstance(fact["runnerId"], bool)
+            and fact["runnerId"] > 0,
+            f"Invalid {phase} runner_id",
+        )
+        require(isinstance(fact["runnerName"], str) and fact["runnerName"], f"Invalid {phase} runner name")
+    require(
+        runner_isolation["interrupted"]["runnerId"]
+        != runner_isolation["resumed"]["runnerId"],
+        "Interrupted and resumed runs reused one registered runner_id",
     )
 
     recovery = document["recovery"]
@@ -353,6 +393,23 @@ def verify_references(document: dict[str, Any], root: Path) -> None:
             and bundle["identity"]["imageDigest"] == document["release"]["imageDigest"],
             "Bundle immutable identity mismatch",
         )
+        orchestration = bundle["orchestration"]
+        run_key = "devQualification" if environment == "aws-dev" else "testQualification"
+        require(
+            str(orchestration["workflowRunId"]) == document["github"]["runs"][run_key],
+            f"{environment} Bundle does not belong to the recorded qualification run",
+        )
+        if environment == "aws-dev":
+            require(
+                document["github"]["runs"]["resumed"]
+                == document["github"]["runs"]["devQualification"],
+                "The resumed run must be the accepted aws-dev qualification run",
+            )
+            require(
+                int(orchestration["workflowRunAttempt"])
+                == document["github"]["runnerIsolation"]["resumed"]["runAttempt"],
+                "aws-dev Bundle run attempt differs from runner-isolation evidence",
+            )
 
 
 def build_document(source: dict[str, Any], root: Path) -> dict[str, Any]:

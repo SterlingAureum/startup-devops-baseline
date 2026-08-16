@@ -113,6 +113,17 @@
     "rollbackCandidateResolver": "scripts/resolve-demo-api-rollback-candidate.py",
     "rollbackDispatchAuthorized": false
   },
+  "acceptanceInterruption": {
+    "input": "acceptance_interrupt_checkpoint",
+    "armedValue": "armed",
+    "defaultValue": "disabled",
+    "allowedOperation": "resume",
+    "requiredPolicy": "reviewed",
+    "releaseIdRequired": true,
+    "checkpoint": "post-runtime-pre-bundle",
+    "maximumHoldSeconds": 540,
+    "bundleCreationWhileArmed": false
+  },
   "qualificationBundle": {
     "workflow": ".github/workflows/demo-api-record-qualification-bundle.yaml",
     "schema": "delivery/contracts/qualification-bundle.schema.json",

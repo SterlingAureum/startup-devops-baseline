@@ -21,6 +21,10 @@
     "credentials": "github-oidc-short-lived",
     "persistentAwsCredentials": false,
     "singleJob": true,
+    "automaticUnregistrationRequired": true,
+    "distinctRegistrationRequiredForRecovery": true,
+    "runnerIdentityField": "runner_id",
+    "runnerIsolationValidator": "scripts/validate-demo-api-runner-isolation.sh",
     "unavailableBehavior": "remain-waiting-runtime"
   },
   "environments": {

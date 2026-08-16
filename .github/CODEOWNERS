@@ -24,6 +24,10 @@
 /scripts/calculate-demo-api-qualification-scope.py @SterlingAureum
 /scripts/demo_api_qualification_bundle.py @SterlingAureum
 /scripts/demo_api_qualification_scope.py @SterlingAureum
+/scripts/demo_api_runner_isolation.py @SterlingAureum
+/scripts/validate-demo-api-runner-isolation.py @SterlingAureum
+/scripts/validate-demo-api-runner-isolation.sh @SterlingAureum
+/scripts/validate-demo-api-runner-isolation-fixtures.sh @SterlingAureum
 /scripts/write-demo-api-qualification-bundle.py @SterlingAureum
 /scripts/validate-demo-api-qualification-bundle.py @SterlingAureum
 /scripts/validate-demo-api-aws-prod-orchestration.sh @SterlingAureum

@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from src import main
 
 ## test/prove-release-supersede-a-4
+## test/prove-release-supersede-b-4
 
 class ApplicationEndpointTests(unittest.TestCase):
     def test_health_reports_ok(self) -> None:

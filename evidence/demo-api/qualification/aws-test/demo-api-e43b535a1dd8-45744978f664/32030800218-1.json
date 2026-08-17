@@ -1,0 +1,267 @@
+{
+  "application": "demo-api",
+  "environment": "aws-test",
+  "expiresAt": "2026-08-18T12:39:33Z",
+  "identity": {
+    "buildWorkflowRunId": "31950329805",
+    "imageDigest": "sha256:45744978f664522cc3c952eba6e358aba261640338fa6d39820f165c18dbc5b0",
+    "imageRepository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "imageTag": "sha-e43b535",
+    "sourceCommit": "e43b535a1dd802c221a24c0bfde3c471c6a5df5f",
+    "sourceRepository": "SterlingAureum/startup-devops-baseline"
+  },
+  "orchestration": {
+    "actor": "SterlingAureum",
+    "ref": "refs/heads/main",
+    "repository": "SterlingAureum/startup-devops-baseline",
+    "revision": "b691c939c22cb2064e7e2ecc900f9562ad243f6d",
+    "workflow": ".github/workflows/demo-api-release-orchestrator.yaml",
+    "workflowRunAttempt": "1",
+    "workflowRunId": "32030800218"
+  },
+  "qualificationScope": {
+    "algorithm": "sha256-path-content-v1",
+    "contract": "delivery/contracts/demo-api-qualification-scope-aws-test.json",
+    "contractSha256": "89722ffdd968d6071e14c2988803e5d5a514c824e1d1f2da4cbed21f3e0c2503",
+    "files": [
+      {
+        "path": "apps/demo-api/helm/.helmignore",
+        "sha256": "a8cde439d17550a6dfec399b0d7eef1a91c5942415fe9b168ce60b04d2847cd9"
+      },
+      {
+        "path": "apps/demo-api/helm/Chart.yaml",
+        "sha256": "fd0bd1f24dc504de303c9d56041bf9bc7b8b36c2351d57e0e5273b5e33746f6b"
+      },
+      {
+        "path": "apps/demo-api/helm/templates/.gitkeep",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "apps/demo-api/helm/templates/NOTES.txt",
+        "sha256": "1a57bb3e1ca8dc53d2ce7a45a110020fc61046599dd5559f3415e8183488f7bc"
+      },
+      {
+        "path": "apps/demo-api/helm/templates/_helpers.tpl",
+        "sha256": "00117fa2ff08f0cf01c0f16f133a4ffd77956833777f81135d4cedb2a058616a"
+      },
+      {
+        "path": "apps/demo-api/helm/templates/analysis-template.yaml",
+        "sha256": "2555b0a9f058c3be8863602320e58ff240a82fac6a89ed893967d300580fb306"
+      },
+      {
+        "path": "apps/demo-api/helm/templates/deployment.yaml",
+        "sha256": "090b19b53e976cea884cbb199eb6eb165934ed4eca52b306788591bb97bd4e8c"
+      },
+      {
+        "path": "apps/demo-api/helm/templates/ingress.yaml",
+        "sha256": "f2cdfcb8b7e3e46d721fb3e283838d4d119d22d14303ed3c2c988fecd2ac8b06"
+      },
+      {
+        "path": "apps/demo-api/helm/templates/rollout.yaml",
+        "sha256": "26796700f863a28e8386de25f2ba22131c24de4c1eed2a988875d6a1e6535056"
+      },
+      {
+        "path": "apps/demo-api/helm/templates/service.yaml",
+        "sha256": "df5c3435e4cf5513e263c8f7fed8b5ad604da9a22651f4b3185950b20fa0544e"
+      },
+      {
+        "path": "apps/demo-api/helm/templates/serviceaccount.yaml",
+        "sha256": "330c92d48727bcb98658ad50989897622d6ea375a060818a13d221a1e713cefc"
+      },
+      {
+        "path": "apps/demo-api/helm/values.yaml",
+        "sha256": "5c5c5819575ab2a5d661d8b8dfadb86d2861bdfee53bca1132fb037ebdff2d38"
+      },
+      {
+        "path": "apps/demo-api/helm/values/environments/aws-test.yaml",
+        "sha256": "2cc0345b244cfc7087dd68072d6cab10898fc63d9e72628b5d2c2e6c8fed1c6a"
+      },
+      {
+        "path": "apps/demo-api/helm/values/releases/aws-test.yaml",
+        "sha256": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22"
+      },
+      {
+        "path": "clusters/aws/base/kustomization.yaml",
+        "sha256": "90f89f79733314e627066e7369d93ae080d4edd5806ad105517be9cad1e4993b"
+      },
+      {
+        "path": "clusters/aws/base/platform/demo-api.yaml",
+        "sha256": "39dde604f28efdd85782373517343ea3184ca75df2db4bd2c96c6f04b70824dc"
+      },
+      {
+        "path": "clusters/aws/base/platform/external-secrets-startup-apps.yaml",
+        "sha256": "7cced6cf1225bf56df253863e304ee601fee8b83f7222357786df6a2e0abee41"
+      },
+      {
+        "path": "clusters/aws/base/platform/kustomization.yaml",
+        "sha256": "4a87b769eb332ff04cbe9feeabe583d31674a9aaf0f45b1a0f805376a109e2fb"
+      },
+      {
+        "path": "clusters/aws/base/platform/runtime-qualification-rbac/application.yaml",
+        "sha256": "cb0b3c9b9f2578aa9aa69a0a22c52f85204bb5028423b687e8d9809b7a4865d4"
+      },
+      {
+        "path": "clusters/aws/base/platform/runtime-qualification-rbac/kustomization.yaml",
+        "sha256": "a4d79b5adefa00ab9474b3f57c7c92abd958e5ae4eff935da6cd851905d6a909"
+      },
+      {
+        "path": "clusters/aws/base/platform/startup-apps-network-policy.yaml",
+        "sha256": "dc8ea5c479b0edc6e8f0671012fdc8e5dbef48a21c2a18fc39306ff350749b42"
+      },
+      {
+        "path": "clusters/aws/base/security/external-secrets/startup-apps/demo-api-postgresql.yaml",
+        "sha256": "b10aa34f356b0ef1e4cd2da26dd90e01b5108aec8e3e64d334ef18395c09a1a0"
+      },
+      {
+        "path": "clusters/aws/base/security/external-secrets/startup-apps/kustomization.yaml",
+        "sha256": "4483c1eb85bfe25bbabd4fc8d1ef545a8b56c60fdbcabf646876b1b28db2f1b4"
+      },
+      {
+        "path": "clusters/aws/base/security/external-secrets/startup-apps/secret-store.yaml",
+        "sha256": "40790daf99de314df0d1495f5f8d7520d30a2ae31c42dfabce8351d84264ceb2"
+      },
+      {
+        "path": "clusters/aws/base/security/network-policies/startup-apps/kustomization.yaml",
+        "sha256": "42f4be29988839231e0fc1f0ba72db8ad31ba9dde9123e24465b02333567762f"
+      },
+      {
+        "path": "clusters/aws/base/security/network-policies/startup-apps/policies.yaml",
+        "sha256": "bdad2268c2f8e4fb072e99bf4ca5ebfe3bbf0ba22bf48704a3dbb04d737b07e1"
+      },
+      {
+        "path": "clusters/aws/base/security/runtime-qualification/kustomization.yaml",
+        "sha256": "9d94b7d73aa521d50c03f08ae0b7ae5d28082ba7c66bde735505dcb52d1b4796"
+      },
+      {
+        "path": "clusters/aws/base/security/runtime-qualification/rbac.yaml",
+        "sha256": "65175526c399163af8638eb0cb785bbc854fc637df05e4817a4bca509fd1d72b"
+      },
+      {
+        "path": "clusters/aws/overlays/test/data-platform/postgresql/kustomization.yaml",
+        "sha256": "b27cc4cb5c7c8baa729d5c0d0eb1a520c3ae4ee9c5e80bf185b1bc523390634b"
+      },
+      {
+        "path": "clusters/aws/overlays/test/kustomization.yaml",
+        "sha256": "e3514b778f7b0cb1d6aad4fdc7a3f7ebe6c43b54e946d3b4169e5c3195ab101f"
+      },
+      {
+        "path": "clusters/aws/overlays/test/root-app.yaml",
+        "sha256": "3a0d0d15c03524d6255019bec7591b2b00b514f08e394582d34ce3a42ce2c5e4"
+      },
+      {
+        "path": "clusters/aws/overlays/test/security/external-secrets/startup-apps/kustomization.yaml",
+        "sha256": "63b383fb771c68afd691a6b2e39ae537239e0e2610cfdb7d3e2f29c391a1f920"
+      },
+      {
+        "path": "clusters/aws/overlays/test/security/network-policies/data-platform/kustomization.yaml",
+        "sha256": "49c12552c66e9dd5c20763de389579cbde0739efa0d0cb680395855972952b7c"
+      },
+      {
+        "path": "clusters/aws/overlays/test/security/network-policies/startup-apps/kustomization.yaml",
+        "sha256": "d9c7d9748da84316010cdb789d2747240e67beb3004f987204afcfbcc67dabd5"
+      }
+    ],
+    "scopeSha256": "bd28885ab26213317468badd9443533f2c233b6a1aa5a7f4536e500e82290416"
+  },
+  "recordedAt": "2026-08-17T12:40:03Z",
+  "release": {
+    "path": "apps/demo-api/helm/values/releases/aws-test.yaml",
+    "sha256": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22"
+  },
+  "releaseId": "demo-api-e43b535a1dd8-45744978f664",
+  "runtimeQualification": {
+    "result": {
+      "application": "demo-api",
+      "controlPlane": {
+        "ref": "refs/heads/main",
+        "releaseFile": "apps/demo-api/helm/values/releases/aws-test.yaml",
+        "releaseFileSha256": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22",
+        "repository": "SterlingAureum/startup-devops-baseline",
+        "revision": "b691c939c22cb2064e7e2ecc900f9562ad243f6d"
+      },
+      "environment": "aws-test",
+      "executor": {
+        "awsCallerArn": "arn:aws:sts::542478884409:assumed-role/startup-devops-baseline-test-github-runtime-read-role/runtime-32030800218-1",
+        "clusterName": "startup-devops-baseline-test",
+        "githubEnvironment": "aws-test-runtime",
+        "kind": "ephemeral-self-hosted",
+        "runnerName": "aureum",
+        "workflowRunAttempt": "1",
+        "workflowRunId": "32030800218"
+      },
+      "expected": {
+        "imageDigest": "sha256:45744978f664522cc3c952eba6e358aba261640338fa6d39820f165c18dbc5b0",
+        "imageReference": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api@sha256:45744978f664522cc3c952eba6e358aba261640338fa6d39820f165c18dbc5b0",
+        "sourceCommit": "e43b535a1dd802c221a24c0bfde3c471c6a5df5f"
+      },
+      "expiresAt": "2026-08-18T12:39:33Z",
+      "reason": "all_checks_passed",
+      "recordedAt": "2026-08-17T12:39:33Z",
+      "releaseId": "demo-api-e43b535a1dd8-45744978f664",
+      "runtime": {
+        "analysisRunName": "demo-api-5d8956c5df-2-2",
+        "analysisRunPhase": "Successful",
+        "argoApplication": "demo-api-aws-test",
+        "argoRevision": "b691c939c22cb2064e7e2ecc900f9562ad243f6d",
+        "checks": [
+          "argocd-synced-healthy",
+          "release-annotations-match",
+          "all-pods-ready",
+          "immutable-pod-image-id-match",
+          "https-health",
+          "https-ready-database",
+          "https-version-identity",
+          "read-only-rbac-boundary"
+        ],
+        "httpsHostname": "demo.test.aureumstack.com",
+        "observedImageIds": [
+          "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api@sha256:45744978f664522cc3c952eba6e358aba261640338fa6d39820f165c18dbc5b0"
+        ],
+        "readyPodCount": 2,
+        "rolloutPhase": "Healthy",
+        "workloadKind": "Rollout",
+        "workloadName": "demo-api"
+      },
+      "schemaVersion": "v0.10.3",
+      "status": "qualified"
+    },
+    "sha256": "cb3c900f3ec5b430416dc3c3230c90358d1aaef845fa8258bbfc1ce525d7411e"
+  },
+  "schemaVersion": "v0.10.5",
+  "staticQualification": {
+    "expiresAt": "2026-08-24T12:38:16Z",
+    "result": {
+      "application": "demo-api",
+      "environment": "aws-test",
+      "qualification": {
+        "actor": "SterlingAureum",
+        "checks": [
+          "release-schema",
+          "helm-lint",
+          "helm-render",
+          "immutable-artifact-exists"
+        ],
+        "mode": "static-release-qualification",
+        "recordedAt": "2026-08-17T12:38:16Z",
+        "repositoryRevision": "b691c939c22cb2064e7e2ecc900f9562ad243f6d",
+        "workflowRunAttempt": 1,
+        "workflowRunId": "32030800218"
+      },
+      "release": {
+        "applicationVersion": "sha-e43b535",
+        "buildWorkflowRunId": "31950329805",
+        "imageDigest": "sha256:45744978f664522cc3c952eba6e358aba261640338fa6d39820f165c18dbc5b0",
+        "imageRepository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+        "imageTag": "sha-e43b535",
+        "path": "apps/demo-api/helm/values/releases/aws-test.yaml",
+        "sha256": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22",
+        "sourceCommit": "e43b535a1dd802c221a24c0bfde3c471c6a5df5f",
+        "sourceRepository": "SterlingAureum/startup-devops-baseline"
+      },
+      "schemaVersion": "v0.9.4",
+      "status": "passed"
+    },
+    "sha256": "3ed9195dd64abf36c6a13b0482da87a8c9feb185ceb8c590a2d42441ed012328"
+  },
+  "status": "qualified"
+}

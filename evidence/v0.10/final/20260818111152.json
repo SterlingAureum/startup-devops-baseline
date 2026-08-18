@@ -1,0 +1,108 @@
+{
+  "cleanup": {
+    "activationVariablesDisabled": true,
+    "aws-dev": {
+      "completedAt": "2026-08-18T04:40:21Z",
+      "status": "residual-cost-audit-passed"
+    },
+    "aws-test": {
+      "completedAt": "2026-08-18T04:37:45Z",
+      "status": "residual-cost-audit-passed"
+    },
+    "ephemeralRunnersStopped": true
+  },
+  "github": {
+    "pullRequests": {
+      "devQualification": 53,
+      "prodPromotion": 59,
+      "rollbackBoundary": 58,
+      "supersededRelease": 50,
+      "testPromotion": 54,
+      "testQualification": 55
+    },
+    "runnerIsolation": {
+      "automaticUnregistrationVerified": true,
+      "interrupted": {
+        "runAttempt": 1,
+        "runId": "32006747177",
+        "runnerId": 23,
+        "runnerName": "aureum"
+      },
+      "resumed": {
+        "runAttempt": 1,
+        "runId": "32007576475",
+        "runnerId": 24,
+        "runnerName": "aureum"
+      },
+      "validator": "scripts/validate-demo-api-runner-isolation.sh"
+    },
+    "runs": {
+      "devQualification": "32007576475",
+      "environmentAbsent": "31985084045",
+      "interrupted": "32006747177",
+      "prodPromotion": "32089084089",
+      "resumed": "32007576475",
+      "rollbackBoundary": "32087261364",
+      "statusReadOnly": "31945096203",
+      "supersedeStatus": "31950845980",
+      "testPromotion": "32028431050",
+      "testQualification": "32030800218"
+    }
+  },
+  "production": {
+    "automaticMerge": false,
+    "automaticRollback": false,
+    "clusterCreated": false,
+    "environmentApprovalPassed": true,
+    "kubernetesWritesPerformed": false,
+    "mode": "prod-static",
+    "releaseOnlyPullRequestMerged": true,
+    "runtimeQualificationPerformed": false
+  },
+  "protectedRef": "refs/heads/main",
+  "qualificationBundles": {
+    "aws-dev": {
+      "path": "evidence/demo-api/qualification/aws-dev/demo-api-e43b535a1dd8-45744978f664/32007576475-1.json",
+      "sha256": "4ab578974e747a404d3fbb64687a4c3ba38a6a03d5b9e46732e34daec77124b2"
+    },
+    "aws-test": {
+      "path": "evidence/demo-api/qualification/aws-test/demo-api-e43b535a1dd8-45744978f664/32030800218-1.json",
+      "sha256": "7431655e2da7c692bb9c2f0c6043447577f3dcc6fc764723e78bbe55d816958e"
+    }
+  },
+  "recordedAt": "2026-08-18T11:06:25Z",
+  "recovery": {
+    "duplicatePullRequestCreated": false,
+    "environmentAbsentResumed": true,
+    "expiryValidationMode": "deterministic-time-shift",
+    "interruptedRunRecovered": true,
+    "requalificationBehaviorValidated": true,
+    "rollbackAutomaticallyDispatched": false,
+    "rollbackHandoffMode": "deterministic-handoff-plus-live-manual-pr",
+    "rollbackPullRequestMerged": false,
+    "statusReadOnlyNoDispatch": true,
+    "supersededPullRequestClosedByHuman": true,
+    "supersededReleaseBlocked": true
+  },
+  "release": {
+    "environmentReleaseSha256": {
+      "aws-dev": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22",
+      "aws-prod": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22",
+      "aws-test": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22"
+    },
+    "imageDigest": "sha256:45744978f664522cc3c952eba6e358aba261640338fa6d39820f165c18dbc5b0",
+    "releaseId": "demo-api-e43b535a1dd8-45744978f664",
+    "sourceCommit": "e43b535a1dd802c221a24c0bfde3c471c6a5df5f"
+  },
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "schemaVersion": "v0.10.8",
+  "status": "accepted",
+  "validatedControlPlaneSha": "28f7e45ac0b97260df17fdaa390a60259066959f",
+  "verification": {
+    "acceptanceContractSha256": "98f39ed21d063c8092d7e935ff213c22b77fc897f423bf7df8db8bad3e2893df",
+    "acceptanceScopeFileCount": 127,
+    "acceptanceScopeSha256": "e0397802be897fe1fa99b45be312e137183fc7cee396bc2a7cfb26f3b91b6e00",
+    "offlineGate": "scripts/validate-v0.10-final-acceptance.sh"
+  },
+  "version": "v0.10"
+}

@@ -207,7 +207,7 @@ Incremental scope:
 
 ## v0.10 - Release Orchestration and Delivery Automation
 
-Status: Implementation delivered; completed when reviewed final evidence exists
+Status: Completed
 
 Goal:
 

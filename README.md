@@ -110,11 +110,16 @@ the required currentness gate now distinguishes a workflow-proven historical
 rollback from a superseded ordinary Promotion without trusting a branch prefix
 alone, and the final Runbook provides the exact operator commands and evidence
 mapping for the close-without-merge rollback drill.
+v0.10.8.4 repairs the live cleanup boundary: interrupted destroys can continue
+after EKS is already absent, Karpenter Instant Fleet request records are
+retired, and exact EC2 checks distinguish active cost-bearing resources from
+eventually consistent tag history. Final acceptance now captures each passing
+cleanup audit's actual UTC timestamp with executable commands.
 
 ## Current Version
 
 ```text
-v0.10.8.3-governed-rollback-currentness-and-runbook-repair
+v0.10.8.4-destroy-recovery-and-cost-audit-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

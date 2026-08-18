@@ -2,6 +2,35 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.8.3
+
+### Fixed after live rollback-boundary execution
+
+- Distinguished an intentionally historical, workflow-proven rollback PR from
+  an obsolete ordinary Promotion PR in the required release-currentness check.
+  Stale, superseded, ambiguous, and cross-environment Promotion identities
+  remain rejected.
+- Bound the rollback exception to the exact target-only historical commit,
+  expected current Release ID, captured `main` SHA, restored immutable
+  identity, PR title/body metadata, rollback branch run ID/attempt, and the
+  originating manual `demo-api-rollback.yaml` workflow run. A `rollback/`
+  prefix alone grants no bypass.
+- Made `expected_current_release_id` mandatory and exposed the documented
+  reusable rollback outputs from the job boundary.
+- Added positive governed-rollback fixtures plus negative missing-provenance
+  and wrong-workflow fixtures so the live PR/currentness conflict cannot
+  regress behind otherwise-passing rollback-generation tests.
+- Rewrote final-acceptance section 14 as a command-by-command procedure for
+  Release derivation, historical candidate resolution, dispatch, run/PR
+  identity recording, required-check review, and close-without-merge closure.
+
+### Boundary
+
+- This repair changes no Demo workload, Helm release identity, Qualification
+  Scope, Terraform, IAM, RBAC, AWS resource, automatic merge, automatic
+  rollback, or Kubernetes access. A real rollback still requires a protected
+  PR and human merge; the final acceptance drill still closes its PR.
+
 ## v0.10.8
 
 ### Fixed after clean-room execution

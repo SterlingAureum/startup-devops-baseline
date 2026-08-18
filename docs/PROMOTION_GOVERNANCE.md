@@ -110,6 +110,7 @@ Dispatch `demo-api environment GitOps rollback` from `main` with:
 ```text
 target_environment = aws-dev | aws-test | aws-prod
 rollback_to_revision = <full historical commit SHA>
+expected_current_release_id = <current target Release ID>
 ```
 
 The selected commit must:
@@ -126,6 +127,14 @@ profile, proves the old GHCR digest still exists, enters the target Environment,
 rejects stale `main`, and creates a release-only rollback PR. Environment
 configuration, Secrets, databases, Terraform state, and other environments are
 never modified.
+
+The required release-currentness check does not treat the intentionally older
+rollback identity as a stale Promotion. It requires the generated PR metadata,
+the exact rollback branch run ID/attempt, the selected historical commit, the
+expected current Release, and the originating manual rollback workflow run to
+agree. Naming an ordinary branch `rollback/*` is not sufficient to enter this
+mode. The PR must pass both protected checks before it is eligible for a real
+human-approved merge.
 
 Rollback is a new forward Git commit after review. It does not rewrite history
 and does not bypass Argo CD.

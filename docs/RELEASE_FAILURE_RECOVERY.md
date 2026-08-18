@@ -119,6 +119,26 @@ Release is still current, verifies the historical immutable image, and creates
 one release-only PR. It never merges the PR, writes Kubernetes, syncs Argo CD,
 aborts a Rollout, changes a Secret/database, or performs automatic rollback.
 
+The protected `validate / demo-api release currentness` check has two explicit
+modes. An ordinary Promotion PR must still carry the current aws-dev Release
+and is rejected when superseded. A governed rollback PR is expected to carry
+an older Release, so it is accepted only after the validator proves all of the
+following together:
+
+- the exact `rollback/demo-api-<environment>-<run-id>-<attempt>` branch shape;
+- one target Release file and no unrelated path;
+- a historical target-release-only commit contained in captured `main`;
+- an expected current Release ID that still matches the target environment;
+- restored tag, digest, source commit, title, and PR metadata consistency; and
+- a matching manual `demo-api-rollback.yaml` workflow run on captured `main`.
+
+A `rollback/` branch name by itself grants no exception. If protected `main`
+advances, the workflow identity is missing, the historical content differs, or
+the current target Release changes, the PR fails closed and the operator must
+rerun the manual workflow. This distinction prevents the supersede gate from
+making every legitimate historical rollback unmergeable while preserving the
+ordinary Promotion rule.
+
 Production rollback remains a separately reviewed manual operation; the
 orchestrator does not generate a production rollback handoff.
 

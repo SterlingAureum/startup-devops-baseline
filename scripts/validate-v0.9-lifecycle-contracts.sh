@@ -44,6 +44,8 @@ required = {
         'AWS_ENVIRONMENT}" == "aws-prod"',
         "CONFIRM_AWS_ENVIRONMENT_DESTROY",
         "EKS_PUBLIC_ACCESS_CIDRS_JSON",
+        "Skipping Kubernetes pre-destroy cleanup",
+        "delete-fleets",
         "validate-aws-cost-cleanup.sh",
     ),
     "scripts/validate-aws-cost-cleanup.sh": (
@@ -54,6 +56,7 @@ required = {
         "DescribeFleetInstances",
         "describe-nat-gateways",
         "describe-volumes",
+        "describe-network-interfaces",
         "elbv2.k8s.aws/cluster",
         "head-bucket",
         ".DeletedDate != null",
@@ -89,6 +92,10 @@ set -euo pipefail
 if [[ "$*" == *"state list"* ]]; then
   exit 0
 fi
+if [[ "$*" == *"destroy"* && "${MOCK_TERRAFORM_DESTROY:-}" == "true" ]]; then
+  echo "Mock Terraform destroy completed."
+  exit 0
+fi
 exit 1
 MOCK
 
@@ -99,9 +106,15 @@ service="${1:-}"
 operation="${2:-}"
 case "${service}:${operation}" in
   sts:get-caller-identity) echo "123456789012" ;;
-  eks:describe-cluster) exit 254 ;;
+  eks:describe-cluster)
+    echo 'An error occurred (ResourceNotFoundException) when calling the DescribeCluster operation' >&2
+    exit 254
+    ;;
   ec2:describe-instances|ec2:describe-volumes|ec2:describe-addresses|ec2:describe-vpcs)
     echo "0"
+    ;;
+  ec2:describe-network-interfaces)
+    if [[ "${MOCK_AWS_RESIDUAL:-}" == "eni" ]]; then echo "1"; else echo "0"; fi
     ;;
   ec2:describe-nat-gateways)
     if [[ "${MOCK_AWS_RESIDUAL:-}" == "nat" ]]; then echo "1"; else echo "0"; fi
@@ -131,6 +144,15 @@ case "${service}:${operation}" in
       echo "0"
     elif [[ "${MOCK_AWS_RESIDUAL:-}" == fleet-* ]]; then
       echo '{"ResourceTagMappingList":[{"ResourceARN":"arn:aws:ec2:us-east-1:123456789012:fleet/fleet-00000000-0000-0000-0000-000000000001","Tags":[]}]}'
+    elif [[ "${MOCK_AWS_RESIDUAL:-}" == "tag-stale-known" ]]; then
+      echo '{"ResourceTagMappingList":[
+        {"ResourceARN":"arn:aws:ec2:us-east-1:123456789012:instance/i-stale","Tags":[]},
+        {"ResourceARN":"arn:aws:ec2:us-east-1:123456789012:volume/vol-stale","Tags":[]},
+        {"ResourceARN":"arn:aws:ec2:us-east-1:123456789012:network-interface/eni-stale","Tags":[]},
+        {"ResourceARN":"arn:aws:ec2:us-east-1:123456789012:natgateway/nat-stale","Tags":[]}
+      ]}'
+    elif [[ "${MOCK_AWS_RESIDUAL:-}" == "tag-unexpected" ]]; then
+      echo '{"ResourceTagMappingList":[{"ResourceARN":"arn:aws:ec2:us-east-1:123456789012:security-group/sg-live","Tags":[]}]}'
     else
       echo '{"ResourceTagMappingList":[]}'
     fi
@@ -139,6 +161,14 @@ case "${service}:${operation}" in
 esac
 MOCK
 chmod +x "${WORK_DIR}/bin/aws" "${WORK_DIR}/bin/terraform"
+
+cat >"${WORK_DIR}/bin/kubectl" <<'MOCK'
+#!/usr/bin/env bash
+set -euo pipefail
+echo "kubectl must not run when the EKS cluster is already absent: $*" >&2
+exit 1
+MOCK
+chmod +x "${WORK_DIR}/bin/kubectl"
 
 PATH="${WORK_DIR}/bin:${PATH}" \
 AWS_ENVIRONMENT="aws-test" \
@@ -151,6 +181,30 @@ if PATH="${WORK_DIR}/bin:${PATH}" \
    MOCK_AWS_RESIDUAL="nat" \
      "${ROOT_DIR}/scripts/validate-aws-cost-cleanup.sh" >/dev/null 2>&1; then
   echo "Cleanup audit accepted a residual NAT Gateway." >&2
+  exit 1
+fi
+
+if PATH="${WORK_DIR}/bin:${PATH}" \
+   AWS_ENVIRONMENT="aws-test" \
+   TF_DIR="${WORK_DIR}/tf" \
+   MOCK_AWS_RESIDUAL="eni" \
+     "${ROOT_DIR}/scripts/validate-aws-cost-cleanup.sh" >/dev/null 2>&1; then
+  echo "Cleanup audit accepted a live tagged network interface." >&2
+  exit 1
+fi
+
+PATH="${WORK_DIR}/bin:${PATH}" \
+AWS_ENVIRONMENT="aws-test" \
+TF_DIR="${WORK_DIR}/tf" \
+MOCK_AWS_RESIDUAL="tag-stale-known" \
+  "${ROOT_DIR}/scripts/validate-aws-cost-cleanup.sh" >/dev/null
+
+if PATH="${WORK_DIR}/bin:${PATH}" \
+   AWS_ENVIRONMENT="aws-test" \
+   TF_DIR="${WORK_DIR}/tf" \
+   MOCK_AWS_RESIDUAL="tag-unexpected" \
+     "${ROOT_DIR}/scripts/validate-aws-cost-cleanup.sh" >/dev/null 2>&1; then
+  echo "Cleanup audit accepted an unexpected tagged AWS resource." >&2
   exit 1
 fi
 
@@ -168,6 +222,30 @@ if PATH="${WORK_DIR}/bin:${PATH}" \
    MOCK_AWS_RESIDUAL="fleet-active" \
      "${ROOT_DIR}/scripts/validate-aws-cost-cleanup.sh" >/dev/null 2>&1; then
   echo "Cleanup audit accepted an active EC2 Fleet." >&2
+  exit 1
+fi
+
+destroy_output="$(
+  PATH="${WORK_DIR}/bin:${PATH}" \
+  AWS_ENVIRONMENT="aws-test" \
+  TF_DIR="${WORK_DIR}/tf" \
+  CONFIRM_AWS_ENVIRONMENT_DESTROY="destroy-aws-test-with-backups" \
+  MOCK_TERRAFORM_DESTROY="true" \
+    "${ROOT_DIR}/scripts/destroy-aws-dev.sh"
+)"
+for marker in \
+  "Confirmation supplied through CONFIRM_AWS_ENVIRONMENT_DESTROY" \
+  "EKS cluster startup-devops-baseline-test is already absent" \
+  "Skipping Kubernetes pre-destroy cleanup and resuming Terraform teardown" \
+  "Mock Terraform destroy completed" \
+  "aws-test destroy completed"; do
+  if [[ "${destroy_output}" != *"${marker}"* ]]; then
+    echo "Cluster-absent destroy recovery missed: ${marker}" >&2
+    exit 1
+  fi
+done
+if [[ "${destroy_output}" == *"Type 'destroy-aws-test-with-backups'"* ]]; then
+  echo "Environment-confirmed destroy still printed an interactive prompt." >&2
   exit 1
 fi
 

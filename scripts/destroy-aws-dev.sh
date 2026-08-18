@@ -56,32 +56,44 @@ if [[ "${AWS_ENVIRONMENT}" == "aws-dev" ]]; then
 else
   expected_confirmation="destroy-aws-test-with-backups"
 fi
-echo "Type '${expected_confirmation}' to continue:"
-
 if [[ -n "${CONFIRM_AWS_ENVIRONMENT_DESTROY:-}" ]]; then
   confirmation="${CONFIRM_AWS_ENVIRONMENT_DESTROY}"
+  echo "Confirmation supplied through CONFIRM_AWS_ENVIRONMENT_DESTROY; continuing."
 else
-  read -r confirmation
+  read -r -p "Type '${expected_confirmation}' to continue: " confirmation
 fi
 if [[ "${confirmation}" != "${expected_confirmation}" ]]; then
   echo "Destroy cancelled."
   exit 0
 fi
 
-EKS_PUBLIC_ACCESS_CIDRS_JSON="$(aws eks describe-cluster \
+CLUSTER_AVAILABLE=false
+EKS_PUBLIC_ACCESS_CIDRS_JSON="[]"
+if cluster_json="$(aws eks describe-cluster \
   --region "${AWS_REGION}" \
   --name "${CLUSTER_NAME}" \
-  --query 'cluster.resourcesVpcConfig.publicAccessCidrs' \
-  --output json | jq -c '.')"
-jq --exit-status '
-  type == "array" and length > 0 and
-  all(.[]; test("^[0-9./]+$") and . != "0.0.0.0/0")
-' <<<"${EKS_PUBLIC_ACCESS_CIDRS_JSON}" >/dev/null || {
-  echo "The live EKS public endpoint allowlist is empty, open, or invalid." >&2
+  --output json 2>&1)"; then
+  CLUSTER_AVAILABLE=true
+  EKS_PUBLIC_ACCESS_CIDRS_JSON="$(jq -c \
+    '.cluster.resourcesVpcConfig.publicAccessCidrs' <<<"${cluster_json}")"
+  jq --exit-status '
+    type == "array" and length > 0 and
+    all(.[]; test("^[0-9./]+$") and . != "0.0.0.0/0")
+  ' <<<"${EKS_PUBLIC_ACCESS_CIDRS_JSON}" >/dev/null || {
+    echo "The live EKS public endpoint allowlist is empty, open, or invalid." >&2
+    exit 1
+  }
+elif grep -q 'ResourceNotFoundException' <<<"${cluster_json}"; then
+  echo "EKS cluster ${CLUSTER_NAME} is already absent."
+  echo "Skipping Kubernetes pre-destroy cleanup and resuming Terraform teardown."
+else
+  echo "Unable to determine whether EKS cluster ${CLUSTER_NAME} exists:" >&2
+  printf '%s\n' "${cluster_json}" >&2
   exit 1
-}
+fi
 
-aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
+if [[ "${CLUSTER_AVAILABLE}" == "true" ]]; then
+  aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
 
 ROOT_APPLICATION_EXISTS=false
 if kubectl get application "${ROOT_APPLICATION}" -n "${ARGOCD_NAMESPACE}" >/dev/null 2>&1; then
@@ -238,8 +250,58 @@ done
 
 sleep 30
 kubectl get service -A --field-selector spec.type=LoadBalancer || true
+fi
+
 terraform -chdir="${TF_DIR}" destroy \
   -var="eks_public_access_cidrs=${EKS_PUBLIC_ACCESS_CIDRS_JSON}"
+
+echo "==> Retiring Karpenter Instant Fleet request records"
+TAGGED_FLEET_JSON="$(aws resourcegroupstaggingapi get-resources \
+  --region "${AWS_REGION}" \
+  --resource-type-filters ec2:fleet \
+  --tag-filters \
+    "Key=Project,Values=${PROJECT_NAME}" \
+    "Key=Environment,Values=${ENVIRONMENT_SHORT}" \
+  --output json)"
+while IFS= read -r fleet_id; do
+  [[ -n "${fleet_id}" ]] || continue
+  if fleet_json="$(aws ec2 describe-fleets \
+    --region "${AWS_REGION}" \
+    --fleet-ids "${fleet_id}" \
+    --output json 2>&1)"; then
+    fleet_type="$(jq -r '.Fleets[0].Type // empty' <<<"${fleet_json}")"
+    fleet_state="$(jq -r '.Fleets[0].FleetState // empty' <<<"${fleet_json}")"
+    case "${fleet_state}" in
+      deleted|deleted_terminating)
+        echo "EC2 Fleet ${fleet_id} is already terminal (${fleet_state})."
+        ;;
+      active)
+        if [[ "${fleet_type}" != "instant" ]]; then
+          echo "Refusing to delete unexpected active EC2 Fleet ${fleet_id} (${fleet_type:-unknown})." >&2
+          exit 1
+        fi
+        echo "Deleting terminal-capacity Instant Fleet record ${fleet_id}."
+        aws ec2 delete-fleets \
+          --region "${AWS_REGION}" \
+          --fleet-ids "${fleet_id}" \
+          --terminate-instances >/dev/null
+        ;;
+      *)
+        echo "EC2 Fleet ${fleet_id} has unexpected state ${fleet_state:-unknown}." >&2
+        exit 1
+        ;;
+    esac
+  elif grep -q 'InvalidFleetId\.NotFound' <<<"${fleet_json}"; then
+    echo "EC2 Fleet ${fleet_id} has already expired."
+  else
+    echo "Unable to classify EC2 Fleet ${fleet_id}:" >&2
+    printf '%s\n' "${fleet_json}" >&2
+    exit 1
+  fi
+done < <(
+  jq -r '.ResourceTagMappingList[].ResourceARN' <<<"${TAGGED_FLEET_JSON}" |
+    sed -n 's#^.*/\(fleet-[[:alnum:]-]*\)$#\1#p'
+)
 
 echo "${AWS_ENVIRONMENT} destroy completed."
 echo "Next: AWS_ENVIRONMENT=${AWS_ENVIRONMENT} ./scripts/validate-aws-cost-cleanup.sh"

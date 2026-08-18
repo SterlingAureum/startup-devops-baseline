@@ -171,7 +171,7 @@ AWS_ENVIRONMENT=aws-test \
   ./scripts/validate-aws-cost-cleanup.sh
 ```
 
-The audit checks Terraform state, EKS, VPC, non-terminated EC2, EBS, NAT
+The audit checks Terraform state, EKS, VPC, non-terminated EC2, EBS, ENIs, NAT
 Gateways, Elastic IPs, the backup bucket, the EKS log group, ACM certificate,
 Route 53 Alias, and currently tagged regional resources. The aws-test Secret
 uses a seven-day recovery window: a returned `DeletedDate` is an accepted
@@ -183,8 +183,11 @@ recovery window:
 <https://docs.aws.amazon.com/secretsmanager/latest/userguide/manage_delete-secret.html>.
 
 The Resource Groups Tagging API is a secondary sweep, not the only inventory
-source, because it returns tagged resources supported by that API. Exact
-service checks remain authoritative:
+source, because recently deleted EC2 identities can remain visible while its
+index converges. Exact native checks remain authoritative for instances,
+volumes, ENIs, and non-deleted NAT Gateways; their stale tagged ARNs are
+accepted only after those exact checks report no live resource. Unknown tagged
+resource types still fail closed:
 <https://docs.aws.amazon.com/cli/latest/reference/resourcegroupstaggingapi/get-resources.html>.
 
 Karpenter-created Instant Fleet history is classified separately. Fleet state
@@ -192,6 +195,12 @@ Karpenter-created Instant Fleet history is classified separately. Fleet state
 accepted after the exact instance and infrastructure checks pass. Active,
 unknown, or unclassifiable Fleet state remains a cleanup failure. Do not repeat
 `delete-fleets` for terminal history; wait for AWS to expire the record.
+
+The destroy entrypoint retires active environment-tagged Karpenter Instant
+Fleet request records after Terraform completes. If an interrupted earlier
+destroy already removed EKS, rerun the same entrypoint: it skips Kubernetes
+pre-cleanup, resumes Terraform with the same environment state, and performs
+Fleet retirement. It does not recreate the cluster or replace Terraform state.
 
 If the audit fails, do not mark v0.9 complete. Resolve the named residual and
 rerun the audit; do not delete Terraform state to hide it.

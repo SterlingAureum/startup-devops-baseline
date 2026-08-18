@@ -2,6 +2,29 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.8.4
+
+### Fixed after live disposable-environment cleanup
+
+- Made environment-variable destroy confirmation explicit instead of printing
+  an interactive prompt that the script had already satisfied.
+- Added an interrupted-destroy continuation path: when EKS is already absent,
+  the entrypoint skips Kubernetes pre-cleanup, resumes the existing Terraform
+  destroy, and retires environment-tagged Karpenter Instant Fleet records.
+- Added exact ENI inventory and made EC2-native instance, volume, ENI, and NAT
+  checks authoritative over eventually consistent Resource Groups Tagging API
+  history. Unknown tagged resource types and active Fleets still fail closed.
+- Added offline regression cases for missing-cluster continuation, stale tagged
+  EC2 history, live ENIs, active/terminal Fleets, and unexpected tagged types.
+- Expanded final-acceptance sections 16 and 17 with executable UTC cleanup
+  timestamp capture, persistence, validation, and final-evidence population.
+
+### Boundary
+
+- This repair does not recreate EKS, delete Terraform state, weaken residual
+  checks, change application desired state, or alter Promotion, Qualification,
+  rollback, IAM, RBAC, or production behavior.
+
 ## v0.10.8.3
 
 ### Fixed after live rollback-boundary execution

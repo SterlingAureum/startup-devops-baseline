@@ -63,6 +63,9 @@ record_count "non-terminated EC2 instances" "$(aws ec2 describe-instances \
 record_count "EBS volumes" "$(aws ec2 describe-volumes \
   --region "${AWS_REGION}" --filters "${TAG_FILTERS[@]}" \
   --query 'length(Volumes)' --output text)"
+record_count "network interfaces" "$(aws ec2 describe-network-interfaces \
+  --region "${AWS_REGION}" --filters "${TAG_FILTERS[@]}" \
+  --query 'length(NetworkInterfaces)' --output text)"
 record_count "NAT Gateways" "$(aws ec2 describe-nat-gateways \
   --region "${AWS_REGION}" --filter "${TAG_FILTERS[@]}" \
   --query 'length(NatGateways[?State!=`deleted`])' --output text)"
@@ -146,6 +149,17 @@ REMAINING_TAGGED_ARNS=()
 TERMINAL_FLEET_COUNT=0
 while IFS= read -r resource_arn; do
   [[ -n "${resource_arn}" ]] || continue
+
+  # The Resource Groups Tagging API is eventually consistent after deletion.
+  # These EC2 identities have already been checked authoritatively above with
+  # service-native APIs. A returned ARN can therefore be terminal history even
+  # though the resource no longer exists. Live instances, volumes, ENIs, and
+  # non-deleted NAT Gateways have already been recorded as exact failures.
+  if [[ "${resource_arn}" =~ :(instance|volume|network-interface|natgateway)/ ]]; then
+    echo "Ignoring terminal or stale tagged EC2 record already covered by exact checks: ${resource_arn}"
+    continue
+  fi
+
   if [[ "${resource_arn}" =~ :fleet/(fleet-[[:alnum:]-]+)$ ]]; then
     fleet_id="${BASH_REMATCH[1]}"
     fleet_error_file="${WORK_DIR}/${fleet_id}.stderr"

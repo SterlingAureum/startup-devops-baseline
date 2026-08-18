@@ -45,7 +45,11 @@ Terraform destroys the remaining AWS infrastructure
 ./scripts/destroy-aws-dev.sh
 ```
 
-The script requires typing `destroy-with-backups` before continuing.
+Interactive use requires typing `destroy-with-backups`. When the documented
+`CONFIRM_AWS_ENVIRONMENT_DESTROY=destroy-with-backups` environment variable is
+present, that value is the script-level confirmation and no input is expected
+at that stage. Terraform subsequently displays its own destroy plan and still
+requires typing `yes`.
 
 Do not start a new FIS experiment while destroy is running. If an experiment is
 already active, wait for it to reach a terminal state and confirm the targeted
@@ -128,8 +132,17 @@ AWS_ENVIRONMENT=aws-dev \
   ./scripts/validate-aws-cost-cleanup.sh
 ```
 
-The tag sweep can still see Karpenter Instant Fleet records after their
-capacity is gone. `deleted`, `deleted_terminating`, and expired `NotFound`
-records are accepted as terminal history. Any active, unknown, or
-unclassifiable Fleet remains a failure. Terminal Fleet records require waiting,
-not another deletion attempt.
+The tag sweep can still see recently deleted instances, volumes, ENIs, NAT
+Gateways, and Karpenter Instant Fleet records after their capacity is gone.
+The audit uses EC2-native checks as the authority for the first four resource
+types and accepts their stale tagged ARNs only after the native checks prove no
+live resource remains. Fleet state `deleted`, `deleted_terminating`, and expired
+`NotFound` are accepted as terminal history. Any active, unknown, or
+unclassifiable Fleet remains a failure.
+
+After Terraform completes, the destroy script deletes active, environment-
+tagged Karpenter Instant Fleet request records. Terminal Fleet records require
+waiting, not another deletion attempt. If EKS was already removed by a prior
+partial destroy, rerun the same entrypoint; it skips the unavailable Kubernetes
+phase and continues Terraform plus Fleet cleanup instead of failing at
+`DescribeCluster`.

@@ -38,3 +38,4 @@ jobs:
           scanners: misconfig
           severity: HIGH,CRITICAL
           exit-code: 1
+          version: v0.74.0

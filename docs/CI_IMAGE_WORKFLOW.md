@@ -14,6 +14,10 @@ evidence, target GitHub Environment gates, CODEOWNERS, and dev/test/prod
 rollback governance. v0.9.5 adds an independent reviewed AWS runtime evidence
 gate and ALB/Argo Rollouts progressive delivery declarations for test and
 production.
+The post-v0.10 security repair prevents repository version tags from rebuilding
+an application image, pins the CI scanner behavior to Trivy v0.74.0, refreshes
+fixable Debian packages before application installation, and forces BuildKit to
+check the configured base image on every publish candidate.
 
 For exact operator commands, GitHub repository settings, evidence ID handling,
 ordered dev-to-test and test-to-prod execution, and pause/resume procedures,
@@ -75,6 +79,12 @@ quality-gates
 If any shell, Helm, test, or runtime-image build check fails, the GHCR publish
 job does not start.
 
+The automatic publish trigger is restricted to application, Dockerfile,
+dependency, and delivery-tool changes pushed to `main`. Repository tags never
+rebuild the image: GitHub does not evaluate `paths` for tag pushes, and a
+version tag must continue to identify the already reviewed immutable Release
+rather than produce new bytes from a mutable base-image tag.
+
 After a successful build, the publishing job captures the digest output,
 uploads structured identity metadata, and attaches signed build provenance to
 the GHCR image. For a `main` push, the promotion job downloads that exact
@@ -107,6 +117,24 @@ base
 The `test` stage adds the test suite and executes it. The final `runtime` stage
 inherits only the installed dependencies and application source from `base`;
 the test files are not included in the deployed image.
+
+The base stage runs the current Debian security upgrade before installing the
+application dependencies. The publish build uses `pull: true`; the Trivy gate
+then scans the merged runtime filesystem before any registry login or push.
+
+To rescan a local candidate or the immutable digest from the newest v0.10 final
+evidence with the same HIGH/CRITICAL, fixable-only policy:
+
+```bash
+IMAGE_REFERENCE=demo-api:local \
+  ./scripts/scan-demo-api-image.sh
+
+# Omit IMAGE_REFERENCE to scan the newest final-evidence digest.
+./scripts/scan-demo-api-image.sh
+```
+
+The script requires Trivy 0.74.0 and uses `--pkg-types`; the deprecated
+`--vuln-type` flag is not part of the repository contract.
 
 ## Promotion Boundary
 

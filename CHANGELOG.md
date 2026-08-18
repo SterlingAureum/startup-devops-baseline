@@ -2,6 +2,33 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.8.7
+
+### Post-tag image security hotfix
+
+- Removed the `v*` tag trigger from demo-api image publication because GitHub
+  does not evaluate path filters for tag pushes; repository closure tags now
+  retain the already accepted image identity without rebuilding it.
+- Added a Debian security refresh to the runtime base stage and forced BuildKit
+  to pull the configured base before building a publish candidate.
+- Pinned Trivy CLI behavior to v0.74.0 in CI and added an optional local exact-
+  digest scan using the non-deprecated `--pkg-types` flag.
+- Added static negative contracts for tag-triggered builds, missing base pulls,
+  missing OS security refreshes, and scanner-version drift.
+- Changed closed final-evidence validation to replay each append-only record
+  against its recorded historical control-plane SHA, allowing later security
+  changes without rewriting v0.10 acceptance history.
+
+### Security finding
+
+- The accepted v0.10.8 digest was rescanned on 2026-08-18 and reported
+  CVE-2026-53615 in nine binary packages from Debian's `util-linux` source
+  package. All were HIGH, none were CRITICAL, and Debian supplied the fixed
+  trixie security version `2.41.5-0+deb13u1`.
+- The final tag and evidence remain immutable historical records. This hotfix
+  creates a new scanned image candidate; it does not mutate the accepted
+  digest, recreate an AWS environment, or claim a new live Qualification.
+
 ## v0.10.8.6
 
 ### Fixed chapter 17 evidence-only PR validation

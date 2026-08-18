@@ -39,8 +39,6 @@ on:
   push:
     branches:
       - main
-    tags:
-      - 'v*'
     paths:
       - 'apps/demo-api/src/**'
       - 'apps/demo-api/tests/**'
@@ -129,7 +127,6 @@ jobs:
           images: ${{ steps.image.outputs.name }}
           tags: |
             type=sha,prefix=sha-,format=short
-            type=ref,event=tag
             type=raw,value=latest,enable={{is_default_branch}}
           labels: |
             org.opencontainers.image.title=demo-api
@@ -144,6 +141,7 @@ jobs:
           file: apps/demo-api/Dockerfile
           load: true
           push: false
+          pull: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -161,6 +159,7 @@ jobs:
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: 1
+          version: v0.74.0
 
       - name: Generate SPDX JSON SBOM
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0

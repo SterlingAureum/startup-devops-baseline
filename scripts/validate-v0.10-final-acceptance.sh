@@ -8,7 +8,7 @@ EXAMPLE="${ROOT_DIR}/delivery/contracts/examples/v0.10-final-evidence-input.exam
 RUNBOOK="${ROOT_DIR}/docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md"
 RELEASE_ID_HELPER="${ROOT_DIR}/scripts/derive-demo-api-release-id.py"
 
-for command in bash git jq python3; do
+for command in bash cmp git jq python3 realpath tar; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -350,8 +350,9 @@ if text.index("evidence PR is merged") > text.index("git tag -a v0.10.8"):
 PY
 
 validate_final_evidence_lifecycle() {
-  local evidence_dir="$1"
-  local validator="$2"
+  local repository_root="$1"
+  local evidence_dir="$2"
+  local validator="$3"
   local -a evidence_files=()
 
   if [[ -d "${evidence_dir}" ]]; then
@@ -366,32 +367,125 @@ validate_final_evidence_lifecycle() {
   fi
 
   for evidence_file in "${evidence_files[@]}"; do
-    "${validator}" --evidence "${evidence_file}"
+    local relative_path
+    relative_path="$(realpath --relative-to "${repository_root}" "${evidence_file}")"
+    [[ "${relative_path}" != ../* && "${relative_path}" != ".." ]] || {
+      echo "Final evidence escaped the repository: ${evidence_file}" >&2
+      return 1
+    }
+    git -C "${repository_root}" ls-files --error-unmatch \
+      "${relative_path}" >/dev/null 2>&1 || {
+        echo "Final evidence is not tracked: ${relative_path}" >&2
+        return 1
+      }
+
+    local -a addition_commits=()
+    while IFS= read -r addition_commit; do
+      [[ -n "${addition_commit}" ]] && addition_commits+=("${addition_commit}")
+    done < <(
+      git -C "${repository_root}" log \
+        --format='%H' --diff-filter=A -- "${relative_path}"
+    )
+    ((${#addition_commits[@]} == 1)) || {
+      echo "Final evidence must have exactly one addition commit: ${relative_path}" >&2
+      return 1
+    }
+    git -C "${repository_root}" show \
+      "${addition_commits[0]}:${relative_path}" |
+      cmp --silent - "${evidence_file}" || {
+        echo "Append-only final evidence was modified: ${relative_path}" >&2
+        return 1
+      }
+
+    local validated_sha
+    validated_sha="$(
+      jq --exit-status --raw-output \
+        '.validatedControlPlaneSha |
+         select(type == "string" and test("^[0-9a-f]{40}$"))' \
+        "${evidence_file}"
+    )" || {
+      echo "Final evidence has an invalid control-plane SHA: ${relative_path}" >&2
+      return 1
+    }
+    git -C "${repository_root}" cat-file -e \
+      "${validated_sha}^{commit}" 2>/dev/null || {
+        echo "Recorded control-plane commit is unavailable: ${validated_sha}" >&2
+        return 1
+      }
+    git -C "${repository_root}" merge-base --is-ancestor \
+      "${validated_sha}" HEAD || {
+        echo "Recorded control-plane commit is not an ancestor: ${validated_sha}" >&2
+        return 1
+      }
+
+    local historical_root
+    historical_root="$(mktemp -d)"
+    if ! git -C "${repository_root}" archive "${validated_sha}" |
+      tar -x -C "${historical_root}"; then
+      rm -rf -- "${historical_root}"
+      echo "Could not materialize recorded control plane: ${validated_sha}" >&2
+      return 1
+    fi
+    if ! "${validator}" \
+      --root "${historical_root}" \
+      --evidence "${evidence_file}"; then
+      rm -rf -- "${historical_root}"
+      return 1
+    fi
+    rm -rf -- "${historical_root}"
+    printf 'Historical final evidence passed: %s @ %s\n' \
+      "${relative_path}" "${validated_sha}"
   done
 }
 
-echo "==> Exercising final evidence lifecycle dispatch"
-fixture_dir="$(mktemp -d)"
+echo "==> Exercising historical final evidence lifecycle"
+fixture_root="$(mktemp -d)"
 cleanup_fixture() {
-  rm -rf -- "${fixture_dir}"
+  rm -rf -- "${fixture_root}"
 }
 trap cleanup_fixture EXIT
-printf '{}\n' > "${fixture_dir}/fixture.json"
+git -C "${fixture_root}" init --quiet
+git -C "${fixture_root}" config user.name fixture
+git -C "${fixture_root}" config user.email fixture@example.invalid
+printf 'historical scope\n' > "${fixture_root}/scope.txt"
+git -C "${fixture_root}" add scope.txt
+git -C "${fixture_root}" commit --quiet -m baseline
+fixture_validated_sha="$(git -C "${fixture_root}" rev-parse HEAD)"
+mkdir -p "${fixture_root}/evidence/v0.10/final"
+printf '{"validatedControlPlaneSha":"%s"}\n' "${fixture_validated_sha}" \
+  > "${fixture_root}/evidence/v0.10/final/fixture.json"
+git -C "${fixture_root}" add evidence/v0.10/final/fixture.json
+git -C "${fixture_root}" commit --quiet -m evidence
 fixture_validator_calls=0
 validate_fixture_evidence() {
-  [[ "$1" == "--evidence" && "$2" == "${fixture_dir}/fixture.json" ]] || return 1
+  [[ "$1" == "--root" && -f "$2/scope.txt" && \
+     "$3" == "--evidence" && \
+     "$4" == "${fixture_root}/evidence/v0.10/final/fixture.json" ]] || return 1
   fixture_validator_calls=$((fixture_validator_calls + 1))
 }
-validate_final_evidence_lifecycle "${fixture_dir}" validate_fixture_evidence >/dev/null
+validate_final_evidence_lifecycle \
+  "${fixture_root}" \
+  "${fixture_root}/evidence/v0.10/final" \
+  validate_fixture_evidence >/dev/null
 [[ "${fixture_validator_calls}" -eq 1 ]] || {
-  echo "Final evidence lifecycle did not validate an evidence-present fixture." >&2
+  echo "Historical final evidence fixture was not validated." >&2
   exit 1
 }
+printf '{"validatedControlPlaneSha":"0000000000000000000000000000000000000000"}\n' \
+  > "${fixture_root}/evidence/v0.10/final/fixture.json"
+if validate_final_evidence_lifecycle \
+  "${fixture_root}" \
+  "${fixture_root}/evidence/v0.10/final" \
+  validate_fixture_evidence >/dev/null 2>&1; then
+  echo "Modified append-only final evidence was accepted." >&2
+  exit 1
+fi
 cleanup_fixture
 trap - EXIT
 
 echo "==> Validating final evidence lifecycle"
 validate_final_evidence_lifecycle \
+  "${ROOT_DIR}" \
   "${ROOT_DIR}/evidence/v0.10/final" \
   "${ROOT_DIR}/scripts/validate-v0.10-final-evidence.py"
 

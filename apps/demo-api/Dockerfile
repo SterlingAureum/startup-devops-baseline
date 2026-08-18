@@ -12,7 +12,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-RUN groupadd --gid "${APP_GID}" demo-api \
+RUN apt-get update \
+    && apt-get upgrade --yes \
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid "${APP_GID}" demo-api \
     && useradd \
         --uid "${APP_UID}" \
         --gid "${APP_GID}" \

@@ -17,6 +17,8 @@ root = Path(sys.argv[1])
 workflow_dir = root / ".github" / "workflows"
 publish_path = workflow_dir / "demo-api-image-publish.yaml"
 quality_path = workflow_dir / "reusable-quality-gates.yaml"
+dockerfile_path = root / "apps" / "demo-api" / "Dockerfile"
+local_scan_path = root / "scripts" / "scan-demo-api-image.sh"
 
 expected_actions = {
     "actions/attest": "f7c74d28b9d84cb8768d0b8ca14a4bac6ef463e6",
@@ -125,11 +127,17 @@ require(
         "scanners: misconfig",
         "severity: HIGH,CRITICAL",
         "exit-code: 1",
+        "version: v0.74.0",
     ],
     "Trivy configuration gate",
 )
 
 publish = publish_path.read_text()
+push_trigger = publish.split("permissions:", 1)[0]
+if re.search(r"(?m)^\s+tags:\s*$", push_trigger):
+    raise SystemExit("Version tags must not rebuild the demo-api image")
+if "type=ref,event=tag" in publish:
+    raise SystemExit("Image metadata must not create a tag-event image alias")
 ordered_steps = [
     "Build security candidate",
     "Scan image for fixable high and critical vulnerabilities",
@@ -154,7 +162,7 @@ if positions != sorted(positions):
 build = step_block(publish, "Build security candidate")
 require(
     build,
-    ["load: true", "push: false"],
+    ["load: true", "push: false", "pull: true"],
     "Pre-publication image build",
 )
 
@@ -169,6 +177,7 @@ require(
         "severity: HIGH,CRITICAL",
         "ignore-unfixed: true",
         "exit-code: 1",
+        "version: v0.74.0",
     ],
     "Trivy image gate",
 )
@@ -222,6 +231,33 @@ if not re.search(
     raise SystemExit(
         "Promotion PR job must depend on the complete scanned image job"
     )
+
+dockerfile = dockerfile_path.read_text()
+require(
+    dockerfile,
+    [
+        "apt-get update",
+        "apt-get upgrade --yes",
+        "rm -rf /var/lib/apt/lists/*",
+    ],
+    "Debian security refresh",
+)
+
+local_scan = local_scan_path.read_text()
+require(
+    local_scan,
+    [
+        "EXPECTED_TRIVY_VERSION:-0.74.0",
+        "--pkg-types os,library",
+        "--severity HIGH,CRITICAL",
+        "--ignore-unfixed",
+        "--exit-code 1",
+        ".release.imageDigest",
+    ],
+    "Immutable local image scan",
+)
+if "--vuln-type" in local_scan:
+    raise SystemExit("Local image scan uses deprecated --vuln-type")
 PY
 
 echo "demo-api security supply-chain validation passed."

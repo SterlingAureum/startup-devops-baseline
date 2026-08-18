@@ -123,11 +123,15 @@ commands.
 v0.10.8.6 fixes the final closure lifecycle so an empty directory is accepted
 before chapter 17 and a proposed or committed final JSON is fully validated
 during the evidence-only PR instead of being rejected merely for existing.
+v0.10.8.7 is the post-tag image-security hotfix: closure tags no longer rebuild
+demo-api, Debian fixable security updates are installed before publication,
+Trivy v0.74.0 behavior is reproducible locally and in CI, and sealed v0.10
+evidence is replayed against its recorded historical control plane.
 
 ## Current Version
 
 ```text
-v0.10.8.6-final-evidence-pr-lifecycle-validation-repair
+v0.10.8.7-post-tag-image-security-hotfix
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

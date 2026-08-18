@@ -2,6 +2,29 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.8.6
+
+### Fixed chapter 17 evidence-only PR validation
+
+- Replaced the unconditional empty-final-directory rejection with an explicit
+  two-state lifecycle: no record is valid before closure, while every proposed
+  or committed record must pass the full final-evidence validator.
+- Added an evidence-present dispatch fixture so the quality gate exercises the
+  chapter 17 state instead of testing only an empty repository.
+- Documented the separate repair-PR and regenerated evidence-only PR sequence
+  when the obsolete empty-directory rule has already rejected an unmerged
+  final record.
+
+### Boundary
+
+- This repair does not accept a record merely because it exists. Invalid
+  structure, stale Scope, mismatched Release or Bundle identity, and unsafe
+  acceptance claims still fail through
+  `scripts/validate-v0.10-final-evidence.py`.
+- No live checkpoint, AWS environment, runner, Promotion, rollback, Bundle, or
+  cleanup audit must be repeated. The regenerated final input changes only the
+  current reviewed `main` SHA and actual recording time.
+
 ## v0.10.8.5
 
 ### Clarified before final evidence creation

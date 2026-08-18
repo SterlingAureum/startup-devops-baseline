@@ -120,11 +120,14 @@ checkpoint now identifies the exact workflow run and PR to record, Release PR
 A is distinguished from selected Release PR B, and the final input has
 executable current-main, UTC timestamp, and placeholder/zero-value preflight
 commands.
+v0.10.8.6 fixes the final closure lifecycle so an empty directory is accepted
+before chapter 17 and a proposed or committed final JSON is fully validated
+during the evidence-only PR instead of being rejected merely for existing.
 
 ## Current Version
 
 ```text
-v0.10.8.5-final-evidence-field-mapping-runbook-repair
+v0.10.8.6-final-evidence-pr-lifecycle-validation-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

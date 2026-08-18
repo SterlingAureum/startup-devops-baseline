@@ -327,6 +327,7 @@ required = [
     "FINAL_RECORDED_AT",
     'startswith("REPLACE_WITH")',
     '(.github.pullRequests | all(.[]; type == "number" and . > 0))',
+    "The offline acceptance gate supports both valid lifecycle states",
     "write-v0.10-final-evidence.py",
     "validate-v0.10-final-evidence.py",
     "prod-static",
@@ -348,10 +349,50 @@ if text.index("evidence PR is merged") > text.index("git tag -a v0.10.8"):
     raise SystemExit("Final tag appears before evidence merge")
 PY
 
-echo "==> Checking final evidence directory remains unclaimed before live acceptance"
-if find "${ROOT_DIR}/evidence/v0.10/final" -type f -name '*.json' -print -quit 2>/dev/null | grep -q .; then
-  echo "A final v0.10 success record exists before live acceptance." >&2
+validate_final_evidence_lifecycle() {
+  local evidence_dir="$1"
+  local validator="$2"
+  local -a evidence_files=()
+
+  if [[ -d "${evidence_dir}" ]]; then
+    while IFS= read -r -d '' evidence_file; do
+      evidence_files+=("${evidence_file}")
+    done < <(find "${evidence_dir}" -maxdepth 1 -type f -name '*.json' -print0 | sort -z)
+  fi
+
+  if ((${#evidence_files[@]} == 0)); then
+    echo "No final v0.10 evidence exists; pre-closure validation passed."
+    return
+  fi
+
+  for evidence_file in "${evidence_files[@]}"; do
+    "${validator}" --evidence "${evidence_file}"
+  done
+}
+
+echo "==> Exercising final evidence lifecycle dispatch"
+fixture_dir="$(mktemp -d)"
+cleanup_fixture() {
+  rm -rf -- "${fixture_dir}"
+}
+trap cleanup_fixture EXIT
+printf '{}\n' > "${fixture_dir}/fixture.json"
+fixture_validator_calls=0
+validate_fixture_evidence() {
+  [[ "$1" == "--evidence" && "$2" == "${fixture_dir}/fixture.json" ]] || return 1
+  fixture_validator_calls=$((fixture_validator_calls + 1))
+}
+validate_final_evidence_lifecycle "${fixture_dir}" validate_fixture_evidence >/dev/null
+[[ "${fixture_validator_calls}" -eq 1 ]] || {
+  echo "Final evidence lifecycle did not validate an evidence-present fixture." >&2
   exit 1
-fi
+}
+cleanup_fixture
+trap - EXIT
+
+echo "==> Validating final evidence lifecycle"
+validate_final_evidence_lifecycle \
+  "${ROOT_DIR}/evidence/v0.10/final" \
+  "${ROOT_DIR}/scripts/validate-v0.10-final-evidence.py"
 
 echo "v0.10.8 final acceptance contracts and offline behavior passed."

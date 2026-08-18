@@ -2,6 +2,32 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.10.8.5
+
+### Clarified before final evidence creation
+
+- Added one run/PR identity convention that distinguishes top-level workflow
+  run IDs from Job IDs, `runner_id`, PR validation runs, image-publish runs,
+  and PR numbers.
+- Reworked sections 6, 12, 13, and 15 into dispatch, observe, record, review,
+  merge, and refresh checkpoints with explicit final-input field names.
+- Defined `supersededRelease` as stale, human-closed Release PR A; the selected
+  and merged PR B has no independent final-input field.
+- Added a complete section-to-field mapping for every required run and PR,
+  including the aws-test Promotion run/PR distinction.
+- Made `validatedControlPlaneSha` the clean latest `main` after all acceptance
+  repair merges and made `recordedAt` the actual UTC time immediately before
+  final evidence writing.
+- Added an executable final-input preflight that rejects placeholders, zero PR
+  numbers, malformed run IDs, stale main SHA, and malformed UTC timestamps.
+
+### Boundary
+
+- This documentation and contract-test repair changes no Qualification Scope,
+  existing Bundle, Release identity, application, AWS resource, Terraform,
+  runner, IAM, RBAC, Promotion, rollback, or cleanup fact. Earlier live
+  checkpoints do not need to be repeated.
+
 ## v0.10.8.4
 
 ### Fixed after live disposable-environment cleanup

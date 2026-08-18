@@ -115,11 +115,16 @@ after EKS is already absent, Karpenter Instant Fleet request records are
 retired, and exact EC2 checks distinguish active cost-bearing resources from
 eventually consistent tag history. Final acceptance now captures each passing
 cleanup audit's actual UTC timestamp with executable commands.
+v0.10.8.5 completes the operator evidence mapping before closure: every
+checkpoint now identifies the exact workflow run and PR to record, Release PR
+A is distinguished from selected Release PR B, and the final input has
+executable current-main, UTC timestamp, and placeholder/zero-value preflight
+commands.
 
 ## Current Version
 
 ```text
-v0.10.8.4-destroy-recovery-and-cost-audit-repair
+v0.10.8.5-final-evidence-field-mapping-runbook-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

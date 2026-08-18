@@ -51,7 +51,15 @@
     "workflow": ".github/workflows/validate.yaml",
     "job": "demo-api release currentness",
     "validator": "scripts/validate-demo-api-release-pr-currentness.py",
-    "requiredByBranchProtection": true
+    "requiredByBranchProtection": true,
+    "ordinaryPromotionMode": "reject-superseded-ambiguous-or-cross-environment-release",
+    "governedRollbackMode": {
+      "metadataSchema": "v0.10.8.3",
+      "requiresHistoricalTargetReleaseOnlyCommit": true,
+      "requiresExpectedCurrentReleaseIdentity": true,
+      "requiresRollbackWorkflowRunProvenance": true,
+      "branchPrefixAloneIsTrusted": false
+    }
   },
   "automaticMerge": false,
   "automaticRollback": false,

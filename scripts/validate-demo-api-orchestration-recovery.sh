@@ -20,6 +20,7 @@ import copy
 import importlib.util
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
@@ -43,6 +44,10 @@ require(policy["operations"]["status"]["mutationAllowed"] is False, "status muta
 require(policy["operations"]["retry"]["priorAttemptRequired"] is True, "retry lineage is optional")
 require(policy["automaticPullRequestClose"] is False, "Superseded PR auto-close enabled")
 require(policy["releasePullRequestCurrentnessCheck"]["requiredByBranchProtection"] is True, "Supersede PR check is not required")
+rollback_gate = policy["releasePullRequestCurrentnessCheck"]["governedRollbackMode"]
+require(rollback_gate["metadataSchema"] == "v0.10.8.3", "Rollback currentness metadata schema changed")
+require(rollback_gate["requiresRollbackWorkflowRunProvenance"] is True, "Rollback workflow provenance is optional")
+require(rollback_gate["branchPrefixAloneIsTrusted"] is False, "Rollback branch prefix bypasses provenance")
 require(policy["automaticRollback"] is False, "Automatic rollback enabled")
 require(policy["productionRuntimeQualification"] is False, "Production runtime enabled")
 
@@ -292,10 +297,134 @@ handoff_value = json.loads(handoff.read_text())
 require(handoff_value["rollbackToRevision"] == old_revision, "Rollback handoff did not select the prior target-only release")
 require(handoff_value["previousReleaseId"] == older["releaseId"], "Rollback previous identity changed")
 
+rollback_gate_repo = work / "rollback-currentness-repo"
+rollback_gate_repo.mkdir()
+run("git", "init", "-q", cwd=rollback_gate_repo)
+run("git", "config", "user.name", "Fixture", cwd=rollback_gate_repo)
+run("git", "config", "user.email", "fixture@example.invalid", cwd=rollback_gate_repo)
+(rollback_gate_repo / "source.txt").write_text("old\n")
+run("git", "add", "source.txt", cwd=rollback_gate_repo)
+run("git", "commit", "-q", "-m", "old source", cwd=rollback_gate_repo)
+rollback_old_source = subprocess.check_output(
+    ["git", "rev-parse", "HEAD"], cwd=rollback_gate_repo, text=True
+).strip()
+(rollback_gate_repo / "source.txt").write_text("new\n")
+run("git", "add", "source.txt", cwd=rollback_gate_repo)
+run("git", "commit", "-q", "-m", "new source", cwd=rollback_gate_repo)
+rollback_new_source = subprocess.check_output(
+    ["git", "rev-parse", "HEAD"], cwd=rollback_gate_repo, text=True
+).strip()
+rollback_old = identity(rollback_old_source, "6" * 64, "20")
+rollback_current = identity(rollback_new_source, "7" * 64, "21")
+rollback_release_path = rollback_gate_repo / "apps/demo-api/helm/values/releases/aws-test.yaml"
+rollback_release_path.parent.mkdir(parents=True)
+rollback_release_path.write_text(release_text(rollback_old))
+run("git", "add", str(rollback_release_path.relative_to(rollback_gate_repo)), cwd=rollback_gate_repo)
+run("git", "commit", "-q", "-m", "release: old test", cwd=rollback_gate_repo)
+rollback_target = subprocess.check_output(
+    ["git", "rev-parse", "HEAD"], cwd=rollback_gate_repo, text=True
+).strip()
+rollback_release_path.write_text(release_text(rollback_current))
+run("git", "add", str(rollback_release_path.relative_to(rollback_gate_repo)), cwd=rollback_gate_repo)
+run("git", "commit", "-q", "-m", "release: current test", cwd=rollback_gate_repo)
+rollback_base = subprocess.check_output(
+    ["git", "rev-parse", "HEAD"], cwd=rollback_gate_repo, text=True
+).strip()
+
+rollback_run_id = 900
+rollback_run_attempt = 1
+rollback_body = f'''## aws-test demo-api rollback
+
+- Rollback metadata schema: `v0.10.8.3`
+- Target environment: `aws-test`
+- Historical desired-state commit: `{rollback_target}`
+- Expected current Release ID: `{rollback_current["releaseId"]}`
+- Restored image tag: `{rollback_old["imageTag"]}`
+- Restored image digest: `{rollback_old["imageDigest"]}`
+- Restored source commit: `{rollback_old["sourceCommit"]}`
+- Captured main revision: `{rollback_base}`
+- Workflow run ID: `{rollback_run_id}`
+- Workflow run attempt: `{rollback_run_attempt}`
+- Workflow: https://github.com/SterlingAureum/startup-devops-baseline/actions/runs/{rollback_run_id}
+'''
+rollback_pr = {
+    "number": 20,
+    "headRefOid": "d" * 40,
+    "headRefName": f"rollback/demo-api-aws-test-{rollback_run_id}-{rollback_run_attempt}",
+    "baseRefName": "main",
+    "title": f'release: roll back demo-api aws-test to {rollback_old["imageTag"]}',
+    "body": rollback_body,
+    "files": [{
+        "path": "apps/demo-api/helm/values/releases/aws-test.yaml",
+        "content": release_text(rollback_old),
+    }],
+}
+rollback_run = {
+    "id": rollback_run_id,
+    "event": "workflow_dispatch",
+    "head_branch": "main",
+    "head_sha": rollback_base,
+    "run_attempt": rollback_run_attempt,
+    "path": ".github/workflows/demo-api-rollback.yaml",
+    "status": "completed",
+    "conclusion": "success",
+    "repository": {"full_name": "SterlingAureum/startup-devops-baseline"},
+}
+require(
+    currentness.validate_currentness(
+        rollback_gate_repo,
+        "SterlingAureum/startup-devops-baseline",
+        20,
+        rollback_pr,
+        [rollback_pr],
+        run_lookup=lambda run_id: rollback_run,
+    ) == "governed-rollback",
+    "Required PR gate rejected a workflow-proven governed rollback",
+)
+
+spoofed = copy.deepcopy(rollback_pr)
+spoofed["body"] = spoofed["body"].replace(
+    f"- Workflow run ID: `{rollback_run_id}`\n", ""
+)
+try:
+    currentness.validate_currentness(
+        rollback_gate_repo,
+        "SterlingAureum/startup-devops-baseline",
+        20,
+        spoofed,
+        [spoofed],
+        run_lookup=lambda run_id: rollback_run,
+    )
+except SystemExit:
+    pass
+else:
+    raise SystemExit("Required PR gate accepted a rollback-prefix spoof without provenance")
+
+wrong_workflow = copy.deepcopy(rollback_run)
+wrong_workflow["path"] = ".github/workflows/demo-api-release-orchestrator.yaml"
+try:
+    currentness.validate_currentness(
+        rollback_gate_repo,
+        "SterlingAureum/startup-devops-baseline",
+        20,
+        rollback_pr,
+        [rollback_pr],
+        run_lookup=lambda run_id: wrong_workflow,
+    )
+except SystemExit:
+    pass
+else:
+    raise SystemExit("Required PR gate accepted rollback metadata from another workflow")
+
 workflow = (root / ".github/workflows/demo-api-release-orchestrator.yaml").read_text()
 rollback = (root / ".github/workflows/demo-api-rollback.yaml").read_text()
 require("uses: ./.github/workflows/demo-api-rollback.yaml" not in workflow, "Orchestrator dispatches rollback")
 require("expected_current_release_id:" in rollback, "Rollback does not recheck the failed release")
+require(
+    len(re.findall(r"(?ms)^      expected_current_release_id:\s*$.*?^        required: true\s*$", rollback)) == 2,
+    "Rollback expected current Release input is optional",
+)
+require("Rollback metadata schema: \\`v0.10.8.3\\`" in rollback, "Rollback PR lacks machine-readable provenance")
 require("gh pr merge" not in workflow and "gh pr merge" not in rollback, "Recovery may merge a PR")
 require("gh pr close" not in workflow, "Superseded PRs close automatically")
 

@@ -12,8 +12,8 @@ on:
         required: true
         type: string
       expected_current_release_id:
-        description: Optional failed Release ID that must still be current
-        required: false
+        description: Failed Release ID that must still be current
+        required: true
         type: string
     outputs:
       status:
@@ -50,7 +50,7 @@ on:
         type: string
       expected_current_release_id:
         description: Failed Release ID currently carried by the target environment; required for v0.10.7 handoff
-        required: false
+        required: true
         type: string
 
 permissions:
@@ -130,26 +130,24 @@ jobs:
           git fetch --no-tags origin \
             "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
           base_revision="$(git rev-parse "origin/${BASE_BRANCH}")"
-          if [[ -n "${EXPECTED_CURRENT_RELEASE_ID}" ]]; then
-            if [[ ! "${EXPECTED_CURRENT_RELEASE_ID}" =~ ^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$ ]]; then
-              echo "::error::expected_current_release_id violates the deterministic identity contract."
-              exit 1
-            fi
-            current_release_path="apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml"
-            current_source_commit="$(
-              git show "origin/${BASE_BRANCH}:${current_release_path}" |
-                awk '/^  sourceCommit:/{gsub(/[\"'\'' ]/, "", $2); print $2}'
-            )"
-            current_image_digest="$(
-              git show "origin/${BASE_BRANCH}:${current_release_path}" |
-                awk '/^  digest:/{gsub(/[\"'\'' ]/, "", $2); print $2}'
-            )"
-            current_release_id="demo-api-${current_source_commit:0:12}-${current_image_digest#sha256:}"
-            current_release_id="${current_release_id:0:34}"
-            if [[ "${current_release_id}" != "${EXPECTED_CURRENT_RELEASE_ID}" ]]; then
-              echo "::error::Target environment no longer carries the failed Release ID."
-              exit 1
-            fi
+          if [[ ! "${EXPECTED_CURRENT_RELEASE_ID}" =~ ^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$ ]]; then
+            echo "::error::expected_current_release_id violates the deterministic identity contract."
+            exit 1
+          fi
+          current_release_path="apps/demo-api/helm/values/releases/${TARGET_ENVIRONMENT}.yaml"
+          current_source_commit="$(
+            git show "origin/${BASE_BRANCH}:${current_release_path}" |
+              awk '/^  sourceCommit:/{gsub(/[\"'\'' ]/, "", $2); print $2}'
+          )"
+          current_image_digest="$(
+            git show "origin/${BASE_BRANCH}:${current_release_path}" |
+              awk '/^  digest:/{gsub(/[\"'\'' ]/, "", $2); print $2}'
+          )"
+          current_release_id="demo-api-${current_source_commit:0:12}-${current_image_digest#sha256:}"
+          current_release_id="${current_release_id:0:34}"
+          if [[ "${current_release_id}" != "${EXPECTED_CURRENT_RELEASE_ID}" ]]; then
+            echo "::error::Target environment no longer carries the failed Release ID."
+            exit 1
           fi
           if ! git cat-file -e "${ROLLBACK_TO_REVISION}^{commit}" 2>/dev/null; then
             echo "::error::Rollback target is unavailable in repository history."
@@ -211,6 +209,7 @@ jobs:
             echo "environment-values-path=${environment_values_path}"
             echo "values-path=${values_path}"
             echo "image-reference=${image_reference}"
+            echo "expected-current-release-id=${EXPECTED_CURRENT_RELEASE_ID}"
             echo "changed=${changed}"
           } >> "${GITHUB_OUTPUT}"
 
@@ -248,6 +247,7 @@ jobs:
           TARGET_ENVIRONMENT: ${{ steps.rollback.outputs.target-environment }}
           VALUES_PATH: ${{ steps.rollback.outputs.values-path }}
           TARGET_REVISION: ${{ steps.rollback.outputs.target-revision }}
+          EXPECTED_CURRENT_RELEASE_ID: ${{ steps.rollback.outputs.expected-current-release-id }}
           IMAGE_TAG: ${{ steps.rollback.outputs.image-tag }}
           IMAGE_DIGEST: ${{ steps.rollback.outputs.image-digest }}
           SOURCE_COMMIT: ${{ steps.rollback.outputs.source-commit }}
@@ -273,11 +273,16 @@ jobs:
           {
             echo "## ${TARGET_ENVIRONMENT} demo-api rollback"
             echo
+            echo "- Rollback metadata schema: \`v0.10.8.3\`"
+            echo "- Target environment: \`${TARGET_ENVIRONMENT}\`"
             echo "- Historical desired-state commit: \`${TARGET_REVISION}\`"
+            echo "- Expected current Release ID: \`${EXPECTED_CURRENT_RELEASE_ID}\`"
             echo "- Restored image tag: \`${IMAGE_TAG}\`"
             echo "- Restored image digest: \`${IMAGE_DIGEST}\`"
             echo "- Restored source commit: \`${SOURCE_COMMIT}\`"
             echo "- Captured main revision: \`${BASE_REVISION}\`"
+            echo "- Workflow run ID: \`${GITHUB_RUN_ID}\`"
+            echo "- Workflow run attempt: \`${GITHUB_RUN_ATTEMPT}\`"
             echo "- Workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
             echo "This PR restores a previously reviewed target-release-only commit. It never changes environment configuration, merges itself, or accesses EKS."

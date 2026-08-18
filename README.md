@@ -105,11 +105,16 @@ evidence. The interruption checkpoint is a bounded post-runtime/pre-Bundle
 hold, and final evidence rejects an interrupted/resumed pair that reused the
 same registered self-hosted `runner_id` or left either runner registered. No
 success evidence is included before the real live sequence runs.
+v0.10.8.3 repairs the live rollback boundary discovered during that sequence:
+the required currentness gate now distinguishes a workflow-proven historical
+rollback from a superseded ordinary Promotion without trusting a branch prefix
+alone, and the final Runbook provides the exact operator commands and evidence
+mapping for the close-without-merge rollback drill.
 
 ## Current Version
 
 ```text
-v0.10.8-clean-room-acceptance-closure-final-runbook
+v0.10.8.3-governed-rollback-currentness-and-runbook-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

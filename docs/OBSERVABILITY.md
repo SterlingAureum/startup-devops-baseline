@@ -1,40 +1,52 @@
 # Observability
 
-The v0.1 baseline includes basic Prometheus monitoring.
+The active v0.11.1 metrics foundation uses Prometheus Operator through the
+GitOps-managed `kube-prometheus-stack` release. The original hand-written
+Prometheus resources remain under `platform/monitoring/prometheus` as
+historical v0.1 material and are no longer referenced by an active Argo CD
+Application.
 
-The goal is not to provide a full production observability stack. The goal is to prove that the demo workload exposes metrics and that Prometheus can scrape and query them.
-
-## Components
-
-```text
-monitoring namespace
-  |
-  +-- prometheus Deployment
-  +-- prometheus Service
-  +-- prometheus ConfigMap
-```
-
-Prometheus resources are stored under:
+## Active Components
 
 ```text
-platform/monitoring/prometheus/
+observability Namespace
+  Prometheus Operator
+  Prometheus StatefulSet
+  kube-state-metrics
+  node-exporter DaemonSet
+  ServiceMonitor resources
 ```
 
-The Argo CD Application is stored at:
+Grafana, Alertmanager, default alert rules, Loki, Alloy, tracing, Thanos, and
+remote write are not part of v0.11.1.
+
+The local Application is:
 
 ```text
 clusters/local/platform/monitoring.yaml
 ```
 
-## demo-api Metrics
-
-The demo API exposes Prometheus metrics at:
+The AWS base Application and environment patches are:
 
 ```text
-/metrics
+clusters/aws/base/platform/monitoring.yaml
+clusters/aws/overlays/dev/kustomization.yaml
+clusters/aws/overlays/test/kustomization.yaml
+clusters/aws/overlays/prod/kustomization.yaml
 ```
 
-Example metrics:
+## demo-api Metrics
+
+demo-api exposes `/metrics`. The compatibility ServiceMonitor discovers the
+existing `demo-api`, `demo-api-stable`, and `demo-api-canary` Services and uses
+their Service names as the Prometheus `job` label. This keeps the original
+Canary query valid:
+
+```promql
+sum(up{job="demo-api-canary"})
+```
+
+Example application metrics include:
 
 ```text
 demo_api_requests_total
@@ -44,95 +56,38 @@ process_max_fds
 python_info
 ```
 
-## Check Monitoring Resources
+## Check the Local Stack
 
 ```bash
-kubectl get pods -n monitoring
-kubectl get svc -n monitoring
 kubectl get application monitoring -n argocd
+kubectl get pods -n observability
+kubectl get servicemonitors -n observability
+./scripts/check-monitoring.sh
 ```
 
-Expected Application status:
+Generate demo-api traffic if the application metric is not visible yet, then
+wait for the next scrape interval.
 
-```text
-monitoring   Synced   Healthy
-```
-
-## Query Prometheus Manually
-
-Port-forward Prometheus:
+## Query Prometheus
 
 ```bash
-kubectl -n monitoring port-forward svc/prometheus 19090:9090
+kubectl -n observability port-forward \
+  svc/observability-metrics-prometheus 19090:9090
 ```
 
 Then query:
 
 ```bash
-curl http://localhost:19090/-/ready
-curl 'http://localhost:19090/api/v1/query?query=demo_api_requests_total'
+curl -fsS http://127.0.0.1:19090/-/ready
+curl -fsS --get http://127.0.0.1:19090/api/v1/query \
+  --data-urlencode 'query=demo_api_requests_total'
 ```
 
-Generate demo-api traffic if the metric is not visible yet:
+`scripts/validate.sh` creates its own temporary port-forward unless
+`SKIP_PROMETHEUS_HTTP=true` is set.
 
-```bash
-curl -H "Host: demo-api.local" http://localhost/health
-curl -H "Host: demo-api.local" http://localhost/ready
-curl -H "Host: demo-api.local" http://localhost/version
-```
+## Detailed v0.11 Contracts
 
-Wait for the next Prometheus scrape interval, then query again.
-
-## validate.sh Behavior
-
-The validation script automatically creates a temporary port-forward for Prometheus checks. It does not rely on fixed `localhost:9090`, because that port may already be used by another local Prometheus.
-
-Run:
-
-```bash
-./scripts/validate.sh
-```
-
-Skip Prometheus HTTP checks:
-
-```bash
-SKIP_PROMETHEUS_HTTP=true ./scripts/validate.sh
-```
-
-Use an external Prometheus endpoint explicitly:
-
-```bash
-PROMETHEUS_HTTP_MODE=external \
-PROMETHEUS_BASE_URL=http://localhost:9090 \
-./scripts/validate.sh
-```
-
-## Current Limitations
-
-v0.1 does not include:
-
-- Grafana dashboards.
-- Alertmanager.
-- Prometheus Operator.
-- ServiceMonitor CRDs.
-- kube-state-metrics.
-- node-exporter.
-- Loki or log aggregation.
-- Alert routing.
-
-These can be added in future versions.
-
-## v0.11 Direction
-
-The production-oriented evolution is now defined in:
-
-```text
-docs/V0.11_OBSERVABILITY_SRE_DESIGN.md
-```
-
-v0.11 replaces neither this historical local baseline nor its validation in a
-single change. It incrementally introduces an operator-managed metrics stack,
-stable release-correlated telemetry, dashboards, actionable alerts and
-Runbooks, centralized structured logs, a minimal extensible OpenTelemetry
-path, service SLOs, telemetry-aware Rollout gates, environment qualification,
-and clean-room end-to-end acceptance.
+- `docs/V0.11_OBSERVABILITY_SRE_DESIGN.md` defines the complete v0.11 line.
+- `docs/V0.11.1_METRICS_FOUNDATION.md` defines the current metrics deployment,
+  migration, storage, scheduling, NetworkPolicy, and live-validation steps.

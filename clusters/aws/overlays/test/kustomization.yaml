@@ -11,6 +11,27 @@ patches:
       group: argoproj.io
       version: v1alpha1
       kind: Application
+      name: monitoring-aws-dev
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: monitoring-aws-test
+      - op: replace
+        path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/retention
+        value: 48h
+      - op: replace
+        path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/externalLabels/environment
+        value: aws-test
+      - op: replace
+        path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/externalLabels/cluster
+        value: startup-devops-baseline-test
+      - op: replace
+        path: /spec/source/helm/valuesObject/extraManifests/0/parameters/tagSpecification_2
+        value: Environment=test
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
       name: runtime-qualification-rbac-aws-dev
     patch: |-
       - op: replace

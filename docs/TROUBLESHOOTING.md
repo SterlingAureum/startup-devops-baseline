@@ -169,7 +169,8 @@ Fix:
 Use a different local port:
 
 ```bash
-kubectl -n monitoring port-forward svc/prometheus 19090:9090
+kubectl -n observability port-forward \
+  svc/observability-metrics-prometheus 19090:9090
 ```
 
 The optimized `validate.sh` automatically finds a free local port for Prometheus checks.

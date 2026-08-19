@@ -66,6 +66,9 @@ require(
         "kubernetes.io/metadata.name: argo-rollouts",
         "app.kubernetes.io/name: argo-rollouts",
         "port: 8080",
+        "name: allow-observability-to-demo-api",
+        "kubernetes.io/metadata.name: observability",
+        "app.kubernetes.io/name: prometheus",
         "name: allow-demo-api-to-postgresql",
         "kubernetes.io/metadata.name: data-platform",
         "platform.startup.dev/tier: data",
@@ -76,9 +79,9 @@ require(
 )
 
 policy_content = policy.read_text()
-if policy_content.count("kind: NetworkPolicy") != 5:
+if policy_content.count("kind: NetworkPolicy") != 6:
     raise SystemExit(
-        f"{policy.relative_to(root)}: expected exactly five NetworkPolicy objects."
+        f"{policy.relative_to(root)}: expected exactly six NetworkPolicy objects."
     )
 if "cidr: 10.20.0.0/16" in policy_content:
     raise SystemExit(

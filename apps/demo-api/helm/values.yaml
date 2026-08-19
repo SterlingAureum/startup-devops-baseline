@@ -140,7 +140,7 @@ analysis:
   enabled: true
   provider: prometheus
   prometheus:
-    address: http://prometheus.monitoring.svc.cluster.local:9090
+    address: http://observability-metrics-prometheus.observability.svc.cluster.local:9090
   web:
     readyUrl: http://demo-api-canary.startup-apps.svc.cluster.local/ready
     versionUrl: http://demo-api-canary.startup-apps.svc.cluster.local/version

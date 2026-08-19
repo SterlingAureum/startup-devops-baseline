@@ -11,8 +11,9 @@ INGRESS_CONTROLLER_DEPLOYMENT="${INGRESS_CONTROLLER_DEPLOYMENT:-ingress-nginx-co
 INGRESS_HOST="${INGRESS_HOST:-demo-api.local}"
 INGRESS_BASE_URL="${INGRESS_BASE_URL:-http://localhost}"
 MONITORING_APP_NAME="${MONITORING_APP_NAME:-monitoring}"
-MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-monitoring}"
-PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-prometheus}"
+MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-observability}"
+PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
+PROMETHEUS_POD_SELECTOR="${PROMETHEUS_POD_SELECTOR:-app.kubernetes.io/name=prometheus}"
 PROMETHEUS_QUERY="${PROMETHEUS_QUERY:-demo_api_requests_total}"
 PROMETHEUS_HTTP_MODE="${PROMETHEUS_HTTP_MODE:-port-forward}"
 PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19090}"
@@ -484,7 +485,10 @@ check_http_endpoint "/metrics" "demo_api_requests_total" "metrics"
 
 print_section "Monitoring checks"
 check_namespace "$MONITORING_NAMESPACE"
-wait_deployment_ready "$MONITORING_NAMESPACE" prometheus "Prometheus"
+wait_pods_ready_by_label \
+  "$MONITORING_NAMESPACE" \
+  "$PROMETHEUS_POD_SELECTOR" \
+  "Prometheus"
 
 if kubectl -n "$MONITORING_NAMESPACE" get service "$PROMETHEUS_SERVICE" >/dev/null 2>&1; then
   pass "service exists: ${MONITORING_NAMESPACE}/${PROMETHEUS_SERVICE}"

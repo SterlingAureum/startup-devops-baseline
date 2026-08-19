@@ -24,7 +24,7 @@ spec:
       successCondition: result[0] >= 1
       provider:
         prometheus:
-          address: {{ $prometheus.address | default "http://prometheus.monitoring.svc.cluster.local:9090" | quote }}
+          address: {{ $prometheus.address | default "http://observability-metrics-prometheus.observability.svc.cluster.local:9090" | quote }}
           query: |
             sum(up{job="demo-api-canary"})
     {{- else if eq $analysis.provider "web" }}

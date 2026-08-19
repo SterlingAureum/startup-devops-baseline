@@ -21,6 +21,7 @@ resources:
   - karpenter-nodepool-spot-fis.yaml
   - karpenter-nodepool-spot.yaml
   - karpenter.yaml
+  - monitoring.yaml
   - namespace-guardrails.yaml
   - postgresql-baseline.yaml
   - startup-apps-network-policy.yaml

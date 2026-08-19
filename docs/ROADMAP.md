@@ -278,7 +278,9 @@ Incremental scope:
   foundation, explicit security and automation boundaries, and offline
   positive/negative contract validation - delivered
 - v0.11.1 - Prometheus Operator and production-oriented metrics foundation,
-  with local and cost-aware AWS environment profiles - planned
+  with a pinned kube-prometheus-stack release, ServiceMonitor compatibility,
+  system-node placement, NetworkPolicy, and bounded local/AWS storage profiles
+  - delivered offline; live local and aws-dev evidence pending
 - v0.11.2 - demo-api and platform telemetry, stable resource attributes,
   release correlation, and bounded-cardinality SLI inputs - planned
 - v0.11.3 - Grafana dashboards, recording rules, and operator-oriented views

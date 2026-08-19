@@ -1,10 +1,10 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: monitoring
+  name: monitoring-aws-dev
   namespace: argocd
   annotations:
-    argocd.argoproj.io/sync-wave: "5"
+    argocd.argoproj.io/sync-wave: "20"
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
@@ -37,6 +37,12 @@ spec:
         kubeProxy:
           enabled: false
         prometheusOperator:
+          nodeSelector:
+            workload: system
+          admissionWebhooks:
+            patch:
+              nodeSelector:
+                workload: system
           resources:
             requests:
               cpu: 100m
@@ -45,6 +51,8 @@ spec:
               cpu: 500m
               memory: 512Mi
         kube-state-metrics:
+          nodeSelector:
+            workload: system
           resources:
             requests:
               cpu: 50m
@@ -69,12 +77,14 @@ spec:
             type: ClusterIP
           prometheusSpec:
             replicas: 1
-            retention: 6h
-            retentionSize: 2GiB
+            retention: 24h
+            retentionSize: 8GiB
             enableAdminAPI: false
+            nodeSelector:
+              workload: system
             externalLabels:
-              environment: local
-              cluster: startup-devops-local
+              environment: aws-dev
+              cluster: startup-devops-baseline-dev
             serviceMonitorSelectorNilUsesHelmValues: false
             serviceMonitorSelector: {}
             serviceMonitorNamespaceSelector: {}
@@ -92,8 +102,14 @@ spec:
                 cpu: "1"
                 memory: 1Gi
             storageSpec:
-              emptyDir:
-                sizeLimit: 2Gi
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: gp3-observability
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 10Gi
           additionalServiceMonitors:
             - name: demo-api-compatibility
               selector:
@@ -119,6 +135,29 @@ spec:
                       targetLabel: job
                       action: replace
         extraManifests:
+          - apiVersion: storage.k8s.io/v1
+            kind: StorageClass
+            metadata:
+              name: gp3-observability
+              annotations:
+                argocd.argoproj.io/sync-wave: "-1"
+                argocd.argoproj.io/sync-options: Prune=false
+              labels:
+                app.kubernetes.io/part-of: startup-devops-baseline
+                app.kubernetes.io/managed-by: argocd
+            provisioner: ebs.csi.aws.com
+            parameters:
+              type: gp3
+              encrypted: "true"
+              iops: "3000"
+              throughput: "125"
+              csi.storage.k8s.io/fstype: ext4
+              tagSpecification_1: Project=startup-devops-baseline
+              tagSpecification_2: Environment=dev
+              tagSpecification_3: Component=observability-prometheus
+            reclaimPolicy: Delete
+            allowVolumeExpansion: true
+            volumeBindingMode: WaitForFirstConsumer
           - apiVersion: networking.k8s.io/v1
             kind: NetworkPolicy
             metadata:

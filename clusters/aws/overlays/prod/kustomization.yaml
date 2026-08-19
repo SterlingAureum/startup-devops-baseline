@@ -10,6 +10,33 @@ patches:
       group: argoproj.io
       version: v1alpha1
       kind: Application
+      name: monitoring-aws-dev
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: monitoring-aws-prod
+      - op: replace
+        path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/retention
+        value: 7d
+      - op: replace
+        path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/retentionSize
+        value: 16GiB
+      - op: replace
+        path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/storageSpec/volumeClaimTemplate/spec/resources/requests/storage
+        value: 20Gi
+      - op: replace
+        path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/externalLabels/environment
+        value: aws-prod
+      - op: replace
+        path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/externalLabels/cluster
+        value: startup-devops-baseline-prod
+      - op: replace
+        path: /spec/source/helm/valuesObject/extraManifests/0/parameters/tagSpecification_2
+        value: Environment=prod
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
       name: application-admission-policies-aws-dev
     patch: |-
       - op: replace

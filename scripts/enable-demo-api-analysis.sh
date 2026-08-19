@@ -63,7 +63,7 @@ if "\nanalysis:\n" not in text:
 analysis:
   enabled: true
   prometheus:
-    address: http://prometheus.monitoring.svc.cluster.local:9090
+    address: http://observability-metrics-prometheus.observability.svc.cluster.local:9090
   metrics:
     canaryTargetUp:
       interval: 15s

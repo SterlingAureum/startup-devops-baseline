@@ -107,6 +107,7 @@ for policy in \
   default-deny \
   allow-dns-egress \
   allow-alb-to-demo-api \
+  allow-observability-to-demo-api \
   allow-demo-api-to-postgresql; do
   kubectl get networkpolicy "${policy}" \
     --namespace "${APP_NAMESPACE}" >/dev/null

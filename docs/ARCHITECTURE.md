@@ -126,15 +126,17 @@ Stable and canary Services allow Argo Rollouts to direct traffic to separate Rep
 
 ## 6. Monitoring and Analysis
 
-A lightweight Prometheus deployment is stored under:
+The active v0.11.1 metrics foundation is an Operator-managed
+`kube-prometheus-stack` release in the `observability` Namespace. It provides
+Prometheus, kube-state-metrics, and node-exporter with bounded local and AWS
+profiles. The original `platform/monitoring/prometheus/` resources are retained
+only as historical v0.1 material.
 
-```text
-platform/monitoring/prometheus/
-```
-
-Prometheus scrapes stable and canary demo-api targets. The current AnalysisTemplate verifies that the canary target is available to Prometheus.
-
-This is intentionally a baseline health gate. Error-rate, latency, saturation, and business-level signals are deferred until richer application metrics are available.
+A compatibility ServiceMonitor scrapes the existing stable and canary
+demo-api Services and preserves their Service names as Prometheus `job`
+labels. The current AnalysisTemplate can therefore continue to verify the
+canary target with its existing query. Error-rate, latency, and SLO-based
+release gates remain v0.11.2 through v0.11.6 work.
 
 ## 7. CI and Image Publishing
 

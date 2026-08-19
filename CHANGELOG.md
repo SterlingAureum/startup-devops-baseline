@@ -2,6 +2,42 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.1
+
+### Added
+
+- Added a pinned `kube-prometheus-stack` `88.5.0` Argo CD Application for the
+  active local environment and shared AWS dev/test/prod declarations.
+- Added Prometheus Operator, Prometheus, kube-state-metrics, node-exporter,
+  CRDs, bounded resources, environment-specific retention, and a
+  compatibility ServiceMonitor that preserves the current stable/canary job
+  names.
+- Added encrypted `gp3-observability` storage with environment and cleanup
+  tags, system-node placement, all-worker node-exporter toleration, and
+  Prometheus/application scrape NetworkPolicy paths.
+- Added a machine-readable v0.11.1 contract, positive/negative offline
+  validator, migration guide, local runtime checks, and AWS live-validation
+  boundary.
+
+### Changed
+
+- Moved the active metrics namespace from `monitoring` to `observability` and
+  changed the local AnalysisTemplate endpoint to the stable Operator-managed
+  Prometheus Service.
+- Updated monitoring, restart, analysis-enablement, and full local validation
+  helpers so they no longer assume a hand-written `deployment/prometheus`.
+- Retained `platform/monitoring/prometheus` only as historical v0.1 material;
+  no active Argo CD Application references it.
+
+### Boundary
+
+- Grafana, Alertmanager, default alert rules, Loki, Alloy, tracing, SLOs,
+  SLI-based Rollout gates, Thanos, and remote write remain deferred.
+- v0.11.1 claims offline implementation only. Local and AWS live facts must be
+  recorded after deployment; no v0.10 release-orchestration, production
+  approval, automatic merge, environment creation, or rollback boundary is
+  changed.
+
 ## v0.11.0
 
 ### Added

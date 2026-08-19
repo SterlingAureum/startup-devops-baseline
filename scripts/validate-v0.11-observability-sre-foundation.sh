@@ -291,11 +291,14 @@ for marker in (
     require(marker in design, f"Design marker missing: {marker}")
 
 readme = (root / "README.md").read_text()
-require("v0.11.0-observability-sre-design-foundation" in readme, "README current version is stale")
+require(
+    re.search(r"v0\.11\.[1-8][a-z0-9.-]*", readme) is not None,
+    "README current version did not advance beyond the v0.11.0 design checkpoint",
+)
 require("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md" in readme, "README does not link the design")
 
 observability = (root / "docs/OBSERVABILITY.md").read_text()
-require("## v0.11 Direction" in observability, "Observability guide is not linked to v0.11")
+require("## Detailed v0.11 Contracts" in observability, "Observability guide is not linked to v0.11")
 require("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md" in observability, "Observability guide does not link the design")
 
 active_documents = [

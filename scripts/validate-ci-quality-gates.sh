@@ -42,6 +42,9 @@ echo "==> Validating v0.10 final clean-room acceptance contracts"
 echo "==> Validating v0.11 Observability and SRE design foundation"
 "${ROOT_DIR}/scripts/validate-v0.11-observability-sre-foundation.sh"
 
+echo "==> Validating v0.11.1 metrics foundation"
+"${ROOT_DIR}/scripts/validate-v0.11.1-metrics-foundation.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

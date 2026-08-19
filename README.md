@@ -132,11 +132,18 @@ contract, stable telemetry and release-correlation conventions, an extensible
 OpenTelemetry foundation, explicit cost and security profiles, and preserved
 human production controls. It deploys no monitoring component and changes no
 v0.10 acceptance evidence or release-orchestration behavior.
+v0.11.1 replaces the active hand-written local Prometheus deployment with a
+pinned Prometheus Operator metrics foundation and adds cost-aware AWS
+dev/test/prod declarations. The stack includes Prometheus,
+kube-state-metrics, node-exporter, bounded retention, encrypted gp3 storage,
+explicit scrape NetworkPolicy, and compatibility with the existing local
+Canary query. Grafana, Alertmanager, logs, tracing, SLOs, and telemetry-based
+release gates remain later v0.11 increments.
 
 ## Current Version
 
 ```text
-v0.11.0-observability-sre-design-foundation
+v0.11.1-production-metrics-foundation
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

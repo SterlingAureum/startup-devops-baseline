@@ -14,7 +14,6 @@ repository = "https://github.com/SterlingAureum/startup-devops-baseline.git"
 expected = {
     "clusters/local/root-app.yaml": "HEAD",
     "clusters/local/platform/demo-api.yaml": "HEAD",
-    "clusters/local/platform/monitoring.yaml": "HEAD",
     "clusters/local/platform/namespace-guardrails.yaml": "HEAD",
     "clusters/aws/overlays/dev/root-app.yaml": "main",
     "clusters/aws/overlays/test/root-app.yaml": "main",

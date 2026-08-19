@@ -126,17 +126,17 @@ Stable and canary Services allow Argo Rollouts to direct traffic to separate Rep
 
 ## 6. Monitoring and Analysis
 
-The active v0.11.1 metrics foundation is an Operator-managed
+The active v0.11.2 telemetry foundation uses the Operator-managed
 `kube-prometheus-stack` release in the `observability` Namespace. It provides
 Prometheus, kube-state-metrics, and node-exporter with bounded local and AWS
 profiles. The original `platform/monitoring/prometheus/` resources are retained
 only as historical v0.1 material.
 
-A compatibility ServiceMonitor scrapes the existing stable and canary
-demo-api Services and preserves their Service names as Prometheus `job`
-labels. The current AnalysisTemplate can therefore continue to verify the
-canary target with its existing query. Error-rate, latency, and SLO-based
-release gates remain v0.11.2 through v0.11.6 work.
+The demo-api Chart owns its ServiceMonitor, preserves Service names as
+Prometheus `job` labels, and derives release correlation from the selected Pod.
+This keeps stable and canary ReplicaSet identities correct during a Rollout.
+The current AnalysisTemplate can continue to verify the canary target with its
+existing query. SLO-based release gates remain v0.11.6 work.
 
 ## 7. CI and Image Publishing
 

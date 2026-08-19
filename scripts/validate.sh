@@ -14,7 +14,7 @@ MONITORING_APP_NAME="${MONITORING_APP_NAME:-monitoring}"
 MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-observability}"
 PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
 PROMETHEUS_POD_SELECTOR="${PROMETHEUS_POD_SELECTOR:-app.kubernetes.io/name=prometheus}"
-PROMETHEUS_QUERY="${PROMETHEUS_QUERY:-demo_api_requests_total}"
+PROMETHEUS_QUERY="${PROMETHEUS_QUERY:-demo_api_http_requests_total}"
 PROMETHEUS_HTTP_MODE="${PROMETHEUS_HTTP_MODE:-port-forward}"
 PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19090}"
 PROMETHEUS_BASE_URL="${PROMETHEUS_BASE_URL:-http://127.0.0.1:${PROMETHEUS_LOCAL_PORT}}"
@@ -384,7 +384,7 @@ check_prometheus_http() {
 
   local response
   if response="$(curl -fsS --get "${PROMETHEUS_BASE_URL}/api/v1/query" --data-urlencode "query=${PROMETHEUS_QUERY}" 2>/dev/null)"; then
-    if printf '%s' "$response" | grep -q '"status":"success"' && printf '%s' "$response" | grep -q 'demo_api_requests_total'; then
+    if printf '%s' "$response" | grep -q '"status":"success"' && printf '%s' "$response" | grep -q 'demo_api_http_requests_total'; then
       pass "Prometheus can query demo-api metrics: ${PROMETHEUS_QUERY}"
     else
       warn "Prometheus query succeeded but demo-api metric was not found yet: ${PROMETHEUS_QUERY}"
@@ -481,7 +481,7 @@ print_section "HTTP checks through ingress"
 check_http_endpoint "/health" '"status":"ok"' "health"
 check_http_endpoint "/ready" '"status":"ready"' "readiness"
 check_http_endpoint "/version" '"name":"demo-api"' "version"
-check_http_endpoint "/metrics" "demo_api_requests_total" "metrics"
+check_http_endpoint "/metrics" "demo_api_http_requests_total" "metrics"
 
 print_section "Monitoring checks"
 check_namespace "$MONITORING_NAMESPACE"

@@ -179,7 +179,15 @@ The optimized `validate.sh` automatically finds a free local port for Prometheus
 
 Cause:
 
-Prometheus may not have scraped demo-api yet, or there has been no recent traffic.
+Prometheus may not have scraped demo-api yet, the application-owned
+ServiceMonitor may not be reconciled, or there has been no recent traffic.
+
+Check discovery:
+
+```bash
+kubectl -n startup-apps get servicemonitor demo-api
+kubectl -n observability get prometheus
+```
 
 Generate traffic:
 
@@ -190,6 +198,16 @@ curl -H "Host: demo-api.local" http://localhost/version
 ```
 
 Wait for the next scrape interval and query again.
+
+The active metric name is `demo_api_http_requests_total`. If only
+`demo_api_requests_total` is present, the running image is older than v0.11.2.
+
+For a complete target, identity-label, application-metric, and platform-metric
+check, run:
+
+```bash
+./scripts/check-monitoring.sh
+```
 
 ## Full Validation
 

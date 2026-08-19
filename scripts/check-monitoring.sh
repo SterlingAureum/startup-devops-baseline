@@ -1,68 +1,104 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 
 MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-observability}"
+APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
 PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
 PROMETHEUS_POD_SELECTOR="${PROMETHEUS_POD_SELECTOR:-app.kubernetes.io/name=prometheus}"
 PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19090}"
-PROMETHEUS_BASE_URL="${PROMETHEUS_BASE_URL:-http://localhost:${PROMETHEUS_LOCAL_PORT}}"
-QUERY="${QUERY:-demo_api_requests_total}"
+PROMETHEUS_BASE_URL="${PROMETHEUS_BASE_URL:-http://127.0.0.1:${PROMETHEUS_LOCAL_PORT}}"
+SERVICE_MONITOR="${SERVICE_MONITOR:-demo-api}"
+ROLLOUT_ENABLED="${ROLLOUT_ENABLED:-true}"
 TIMEOUT="${TIMEOUT:-180s}"
+PF_PID=""
+PF_LOG=""
 
-require_cmd() {
-  local cmd="$1"
-  if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "ERROR: required command not found: $cmd" >&2
-    exit 1
+cleanup() {
+  if [[ -n "${PF_PID}" ]] && kill -0 "${PF_PID}" >/dev/null 2>&1; then
+    kill "${PF_PID}" >/dev/null 2>&1 || true
+    wait "${PF_PID}" >/dev/null 2>&1 || true
+  fi
+  if [[ -n "${PF_LOG}" && -f "${PF_LOG}" ]]; then
+    rm -f -- "${PF_LOG}"
   fi
 }
+trap cleanup EXIT
 
-require_cmd kubectl
-require_cmd curl
-require_cmd jq
+for command in kubectl curl jq; do
+  command -v "${command}" >/dev/null 2>&1 || {
+    echo "Required command not found: ${command}" >&2
+    exit 1
+  }
+done
 
-if ! kubectl get namespace "$MONITORING_NAMESPACE" >/dev/null 2>&1; then
-  echo "ERROR: namespace not found: $MONITORING_NAMESPACE" >&2
-  exit 1
-fi
+query_prometheus() {
+  local query="$1"
+  local description="$2"
+  local response
 
-echo "Checking Prometheus Operator-managed Pod..."
-if ! kubectl -n "$MONITORING_NAMESPACE" get pods \
-  -l "$PROMETHEUS_POD_SELECTOR" --no-headers | grep -q .; then
-  echo "ERROR: no Prometheus Pod found with selector: ${PROMETHEUS_POD_SELECTOR}" >&2
-  exit 1
-fi
-kubectl -n "$MONITORING_NAMESPACE" wait \
+  response="$(curl -fsS --get "${PROMETHEUS_BASE_URL}/api/v1/query" --data-urlencode "query=${query}")"
+  if jq --exit-status '.status == "success" and (.data.result | length) > 0' <<<"${response}" >/dev/null; then
+    echo "PASS: ${description}"
+    return 0
+  fi
+
+  echo "FAIL: ${description}; query returned no series: ${query}" >&2
+  jq . <<<"${response}" >&2 || true
+  return 1
+}
+
+echo "==> Checking Operator-managed Prometheus and application ServiceMonitor"
+kubectl get namespace "${MONITORING_NAMESPACE}" >/dev/null
+kubectl get namespace "${APP_NAMESPACE}" >/dev/null
+kubectl -n "${MONITORING_NAMESPACE}" wait \
   --for=condition=Ready pod \
-  -l "$PROMETHEUS_POD_SELECTOR" \
-  --timeout="$TIMEOUT"
+  -l "${PROMETHEUS_POD_SELECTOR}" \
+  --timeout="${TIMEOUT}"
+kubectl -n "${MONITORING_NAMESPACE}" get service "${PROMETHEUS_SERVICE}" >/dev/null
+kubectl -n "${APP_NAMESPACE}" get servicemonitor "${SERVICE_MONITOR}" >/dev/null
 
-echo "Checking Prometheus service..."
-kubectl -n "$MONITORING_NAMESPACE" get service "$PROMETHEUS_SERVICE"
+if ! curl -fsS "${PROMETHEUS_BASE_URL}/-/ready" >/dev/null 2>&1; then
+  PF_LOG="$(mktemp)"
+  kubectl -n "${MONITORING_NAMESPACE}" port-forward \
+    "svc/${PROMETHEUS_SERVICE}" \
+    "${PROMETHEUS_LOCAL_PORT}:9090" >"${PF_LOG}" 2>&1 &
+  PF_PID="$!"
 
-cat <<EOF_CHECK
+  for _ in $(seq 1 30); do
+    if curl -fsS "${PROMETHEUS_BASE_URL}/-/ready" >/dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+  done
+fi
 
-Prometheus should be available through port-forward before HTTP checks.
-Run this in another terminal if it is not already running:
-
-  kubectl -n ${MONITORING_NAMESPACE} port-forward svc/${PROMETHEUS_SERVICE} ${PROMETHEUS_LOCAL_PORT}:9090
-
-EOF_CHECK
-
-echo "Checking Prometheus readiness endpoint..."
-curl -fsS "${PROMETHEUS_BASE_URL}/-/ready" >/dev/null
-
-echo "Querying Prometheus for demo-api metrics..."
-RESPONSE="$(curl -fsS --get "${PROMETHEUS_BASE_URL}/api/v1/query" --data-urlencode "query=${QUERY}")"
-
-if jq --exit-status \
-  '.status == "success" and (.data.result | length) > 0' \
-  <<<"$RESPONSE" >/dev/null; then
-  echo "Prometheus query succeeded: ${QUERY}"
-else
-  echo "ERROR: Prometheus query returned no matching series." >&2
-  echo "$RESPONSE" >&2
+if ! curl -fsS "${PROMETHEUS_BASE_URL}/-/ready" >/dev/null 2>&1; then
+  echo "Prometheus did not become ready through ${PROMETHEUS_BASE_URL}." >&2
+  [[ -n "${PF_LOG}" ]] && sed -n '1,80p' "${PF_LOG}" >&2 || true
   exit 1
 fi
 
-echo "Monitoring check completed."
+echo "==> Checking demo-api discovery and bounded application signals"
+if [[ "${ROLLOUT_ENABLED}" == "true" ]]; then
+  query_prometheus 'sum(up{job="demo-api-stable"})' "stable Service target is discovered"
+  query_prometheus 'sum(up{job="demo-api-canary"})' "canary Service target is discovered"
+else
+  query_prometheus 'sum(up{job="demo-api"})' "demo-api Service target is discovered"
+fi
+query_prometheus 'sum(demo_api_http_requests_total)' "bounded HTTP request metric exists"
+query_prometheus 'sum(demo_api_dependency_checks_total)' "bounded PostgreSQL dependency metric exists"
+
+identity_query='count(demo_api_http_requests_total{service_name!="",service_version!="",deployment_environment_name!="",platform_release_id!="",platform_source_commit!="",container_image_digest!=""})'
+query_prometheus "${identity_query}" "all six release-correlation labels exist"
+
+echo "==> Checking core platform telemetry"
+for metric in \
+  kube_pod_status_ready \
+  kube_pod_container_resource_requests \
+  node_cpu_seconds_total \
+  node_memory_MemAvailable_bytes \
+  prometheus_tsdb_head_series; do
+  query_prometheus "${metric}" "platform metric exists: ${metric}"
+done
+
+echo "v0.11.2 monitoring live check completed successfully."

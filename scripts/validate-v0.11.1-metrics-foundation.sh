@@ -197,9 +197,6 @@ def validate_repository() -> None:
             "retention: 6h",
             "retentionSize: 2GiB",
             "emptyDir:",
-            "name: demo-api-compatibility",
-            "- __meta_kubernetes_service_name",
-            "targetLabel: job",
             "name: prometheus-cluster-only",
             "type: ClusterIP",
             "enableAdminAPI: false",
@@ -232,6 +229,24 @@ def validate_repository() -> None:
         require(re.search(r"(?ms)defaultRules:\n\s+create: false", text) is not None, f"{label}: default rules enabled")
         require(re.search(r"(?ms)alertmanager:\n\s+enabled: false", text) is not None, f"{label}: Alertmanager enabled")
         require(re.search(r"(?ms)grafana:\n\s+enabled: false", text) is not None, f"{label}: Grafana enabled")
+
+    successor_monitor = root / "apps/demo-api/helm/templates/servicemonitor.yaml"
+    if successor_monitor.is_file():
+        for text, label in ((local, "local"), (aws, "AWS")):
+            require("demo-api-compatibility" not in text, f"{label}: transitional application monitor remains")
+            require("additionalServiceMonitors:" not in text, f"{label}: application telemetry remains platform-owned")
+        require_markers(
+            "apps/demo-api/helm/templates/servicemonitor.yaml",
+            (
+                "kind: ServiceMonitor",
+                "- __meta_kubernetes_service_name",
+                "targetLabel: job",
+                "- __meta_kubernetes_pod_annotation_platform_startup_dev_release_id",
+            ),
+        )
+    else:
+        for marker in ("name: demo-api-compatibility", "- __meta_kubernetes_service_name", "targetLabel: job"):
+            require(marker in local, f"local: missing transitional compatibility marker {marker!r}")
 
     base = require_markers(
         "clusters/aws/base/platform/kustomization.yaml",

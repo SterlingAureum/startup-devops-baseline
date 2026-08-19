@@ -94,30 +94,6 @@ spec:
             storageSpec:
               emptyDir:
                 sizeLimit: 2Gi
-          additionalServiceMonitors:
-            - name: demo-api-compatibility
-              selector:
-                matchLabels:
-                  app.kubernetes.io/name: demo-api
-                  app.kubernetes.io/instance: demo-api
-              namespaceSelector:
-                matchNames:
-                  - startup-apps
-              endpoints:
-                - port: http
-                  path: /metrics
-                  interval: 15s
-                  scrapeTimeout: 10s
-                  sampleLimit: 50000
-                  targetLimit: 10
-                  labelLimit: 100
-                  labelNameLengthLimit: 128
-                  labelValueLengthLimit: 512
-                  relabelings:
-                    - sourceLabels:
-                        - __meta_kubernetes_service_name
-                      targetLabel: job
-                      action: replace
         extraManifests:
           - apiVersion: networking.k8s.io/v1
             kind: NetworkPolicy

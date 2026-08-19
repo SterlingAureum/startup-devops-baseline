@@ -2,6 +2,34 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.2
+
+### Added
+
+- Added bounded HTTP request and PostgreSQL dependency counters and histograms
+  suitable for later availability, error-rate, and latency SLIs.
+- Added an application-owned ServiceMonitor with scrape limits, stable
+  `demo-api`, `demo-api-stable`, and `demo-api-canary` job names, and six
+  Pod-derived release-correlation target labels.
+- Added the v0.11.2 machine-readable contract, positive/negative validator,
+  implementation guide, and one-command local live telemetry check.
+
+### Changed
+
+- Moved demo-api scrape ownership out of kube-prometheus-stack
+  `additionalServiceMonitors` and into the demo-api Helm Chart.
+- Reused the accepted v0.10 deterministic release ID rather than changing
+  image publication, environment Promotion, rollback, or release values.
+- Advanced the demo-api Chart to `0.5.0` and updated active observability and
+  validation documentation for the new metric schema.
+
+### Boundary
+
+- v0.11.2 claims offline implementation only; local and aws-dev live evidence
+  remain required.
+- Grafana, recording rules, Alertmanager, centralized logs, tracing, SLOs,
+  specialized controller monitors, and SLI-based Rollout gates remain deferred.
+
 ## v0.11.1
 
 ### Added

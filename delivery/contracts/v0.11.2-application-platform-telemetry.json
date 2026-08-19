@@ -1,0 +1,178 @@
+{
+  "schemaVersion": "v0.11.2",
+  "version": "v0.11.2",
+  "status": "offline-implemented",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "foundationContract": "delivery/contracts/v0.11-observability-sre-foundation.json",
+  "metricsFoundationContract": "delivery/contracts/v0.11.1-metrics-foundation.json",
+  "deliveryContract": "delivery/contracts/demo-api.json",
+  "designDocument": "docs/V0.11.2_APPLICATION_PLATFORM_TELEMETRY.md",
+  "liveAcceptanceClaimed": false,
+  "applicationTelemetry": {
+    "owner": "apps/demo-api/helm",
+    "serviceMonitor": "apps/demo-api/helm/templates/servicemonitor.yaml",
+    "metricsPath": "/metrics",
+    "servicePort": "http",
+    "discoveryNamespace": "release-namespace",
+    "honorLabels": false,
+    "jobLabelSource": "__meta_kubernetes_service_name",
+    "requiredJobs": [
+      "demo-api",
+      "demo-api-stable",
+      "demo-api-canary"
+    ],
+    "legacyCanaryQuery": "sum(up{job=\"demo-api-canary\"})"
+  },
+  "metrics": [
+    {
+      "name": "demo_api_http_requests_total",
+      "type": "counter",
+      "labels": [
+        "method",
+        "route",
+        "status_class"
+      ]
+    },
+    {
+      "name": "demo_api_http_request_duration_seconds",
+      "type": "histogram",
+      "labels": [
+        "method",
+        "route"
+      ]
+    },
+    {
+      "name": "demo_api_dependency_checks_total",
+      "type": "counter",
+      "labels": [
+        "dependency",
+        "outcome"
+      ]
+    },
+    {
+      "name": "demo_api_dependency_check_duration_seconds",
+      "type": "histogram",
+      "labels": [
+        "dependency"
+      ]
+    }
+  ],
+  "boundedDimensions": {
+    "method": [
+      "GET",
+      "POST",
+      "PUT",
+      "PATCH",
+      "DELETE",
+      "HEAD",
+      "OPTIONS",
+      "OTHER"
+    ],
+    "route": [
+      "/",
+      "/health",
+      "/ready",
+      "/db/health",
+      "/version",
+      "/metrics",
+      "__unmatched__"
+    ],
+    "status_class": [
+      "2xx",
+      "3xx",
+      "4xx",
+      "5xx",
+      "unknown"
+    ],
+    "dependency": [
+      "postgresql"
+    ],
+    "outcome": [
+      "success",
+      "failure",
+      "disabled"
+    ]
+  },
+  "releaseCorrelation": {
+    "releaseIdTemplate": "demo-api-{sourceCommit12}-{imageDigest12}",
+    "authoritativeContractPath": "delivery/contracts/demo-api.json",
+    "source": "target-pod-annotations",
+    "serviceMetadataIsAuthoritativeDuringCanary": false,
+    "requiredTargetLabels": [
+      "service_name",
+      "service_version",
+      "deployment_environment_name",
+      "platform_release_id",
+      "platform_source_commit",
+      "container_image_digest"
+    ],
+    "localFallback": {
+      "releaseIdTemplate": "demo-api-local-{applicationVersion}",
+      "sourceCommit": "local-unavailable",
+      "imageDigest": "local-unpinned",
+      "productionClaim": false
+    }
+  },
+  "scrapeLimits": {
+    "interval": "15s",
+    "scrapeTimeout": "10s",
+    "sampleLimit": 50000,
+    "targetLimit": 10,
+    "labelLimit": 100,
+    "labelNameLengthLimit": 128,
+    "labelValueLengthLimit": 512
+  },
+  "platformTelemetry": {
+    "requiredMetrics": [
+      "kube_pod_status_ready",
+      "kube_pod_container_resource_requests",
+      "node_cpu_seconds_total",
+      "node_memory_MemAvailable_bytes",
+      "prometheus_tsdb_head_series"
+    ],
+    "specializedControllerMonitorsAdded": false,
+    "scope": "existing-kube-prometheus-stack-core-targets"
+  },
+  "forbiddenDimensions": [
+    "raw-url",
+    "url-query",
+    "request-body",
+    "authorization-header",
+    "database-parameter",
+    "user-identifier",
+    "exception-message",
+    "trace-id"
+  ],
+  "automationBoundary": {
+    "releaseOrchestratorChanged": false,
+    "imagePublishWorkflowChanged": false,
+    "promotionWorkflowChanged": false,
+    "rollbackWorkflowChanged": false,
+    "automaticEnvironmentCreation": false,
+    "automaticProductionWrite": false,
+    "productionApprovalPreserved": true
+  },
+  "acceptance": {
+    "offlineValidationRequired": true,
+    "localLiveValidationRequiredBeforeTag": true,
+    "awsDevLiveValidationRequiredBeforeFinalV011Acceptance": true,
+    "requiredLocalQueries": [
+      "sum(up{job=\"demo-api-stable\"})",
+      "sum(up{job=\"demo-api-canary\"})",
+      "sum(demo_api_http_requests_total)",
+      "sum(demo_api_dependency_checks_total)"
+    ],
+    "awsValidationMayShareOneWindowWithV0111": true
+  },
+  "deferred": [
+    "grafana-dashboards",
+    "recording-rules",
+    "alertmanager-routing",
+    "centralized-logging",
+    "opentelemetry-tracing",
+    "service-slos",
+    "sli-based-rollout-gates",
+    "multi-environment-observability-qualification",
+    "clean-room-end-to-end-acceptance"
+  ]
+}

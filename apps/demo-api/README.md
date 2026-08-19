@@ -21,6 +21,18 @@ the repository can focus on platform workflows.
 `/health` is process-only. `/ready` includes PostgreSQL when
 `DATABASE_ENABLED=true`. `/db/health` never returns a password, URI, or DSN.
 
+The v0.11.2 Prometheus contract exposes bounded HTTP and dependency signals:
+
+| Metric | Labels |
+| --- | --- |
+| `demo_api_http_requests_total` | `method`, `route`, `status_class` |
+| `demo_api_http_request_duration_seconds` | `method`, `route` |
+| `demo_api_dependency_checks_total` | `dependency`, `outcome` |
+| `demo_api_dependency_check_duration_seconds` | `dependency` |
+
+Unknown routes collapse to `__unmatched__`; raw URLs, query strings, database
+parameters, and exception details are never exported as labels.
+
 ## Local Development
 
 Run locally with Python:

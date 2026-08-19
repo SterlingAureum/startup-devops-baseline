@@ -139,11 +139,17 @@ kube-state-metrics, node-exporter, bounded retention, encrypted gp3 storage,
 explicit scrape NetworkPolicy, and compatibility with the existing local
 Canary query. Grafana, Alertmanager, logs, tracing, SLOs, and telemetry-based
 release gates remain later v0.11 increments.
+v0.11.2 moves demo-api discovery into its own Helm Chart and adds bounded HTTP
+and PostgreSQL dependency metrics. Prometheus target labels now correlate each
+selected Pod with its environment, application version, deterministic release
+ID, source commit, and image digest without changing the accepted v0.10 build,
+Promotion, rollback, or production-approval workflows. Dashboard, alerting,
+logging, tracing, and SLO work remains deferred.
 
 ## Current Version
 
 ```text
-v0.11.1-production-metrics-foundation
+v0.11.2-application-platform-telemetry
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

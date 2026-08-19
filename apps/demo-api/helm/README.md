@@ -91,6 +91,23 @@ The chart projects delivery identity into workload and Pod annotations under
 ./scripts/validate-demo-api-delivery-trace.sh
 ```
 
+v0.11.2 also renders an application-owned ServiceMonitor. Its target relabeling
+copies the application version, environment, deterministic release ID, source
+commit, and image digest from each selected Pod. Pod metadata is intentional:
+during a Canary, the stable and canary Services can select different
+ReplicaSets and must not receive one Service-level release identity.
+
+Configure bounded discovery under:
+
+```yaml
+telemetry:
+  metrics:
+    serviceMonitor:
+```
+
+The Prometheus control plane discovers this resource; the monitoring
+Application no longer embeds demo-api-specific scrape configuration.
+
 aws-test and aws-prod enable Argo Rollouts ALB traffic routing. Their Ingress
 uses the `use-annotation` action backend, while Rollouts owns the stable/canary
 weights and Service selectors. The inline Web AnalysisRun checks canary

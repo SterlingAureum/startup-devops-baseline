@@ -31,19 +31,26 @@ app.kubernetes.io/name: {{ include "demo-api.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
+{{- define "demo-api.releaseId" -}}
+{{- $sourceCommit := default "" .Values.delivery.sourceCommit -}}
+{{- $digestHex := trimPrefix "sha256:" (default "" .Values.image.digest) -}}
+{{- if and (regexMatch "^[0-9a-f]{40}$" $sourceCommit) (regexMatch "^[0-9a-f]{64}$" $digestHex) -}}
+{{- printf "demo-api-%s-%s" (trunc 12 $sourceCommit) (trunc 12 $digestHex) -}}
+{{- else -}}
+{{- printf "demo-api-local-%s" (required "release.applicationVersion is required" .Values.release.applicationVersion) -}}
+{{- end -}}
+{{- end -}}
+
 {{- define "demo-api.deliveryAnnotations" -}}
 platform.startup.dev/image-tag: {{ required "image.tag is required" .Values.image.tag | quote }}
 platform.startup.dev/application-version: {{ required "release.applicationVersion is required" .Values.release.applicationVersion | quote }}
 platform.startup.dev/environment: {{ required "env.APP_ENV is required" .Values.env.APP_ENV | quote }}
-{{- with .Values.image.digest }}
-platform.startup.dev/image-digest: {{ . | quote }}
-{{- end }}
+platform.startup.dev/release-id: {{ include "demo-api.releaseId" . | quote }}
+platform.startup.dev/image-digest: {{ default "local-unpinned" .Values.image.digest | quote }}
 {{- with .Values.delivery.sourceRepository }}
 platform.startup.dev/source-repository: {{ . | quote }}
 {{- end }}
-{{- with .Values.delivery.sourceCommit }}
-platform.startup.dev/source-commit: {{ . | quote }}
-{{- end }}
+platform.startup.dev/source-commit: {{ default "local-unavailable" .Values.delivery.sourceCommit | quote }}
 {{- with .Values.delivery.workflowRunId }}
 platform.startup.dev/workflow-run-id: {{ . | quote }}
 {{- end }}

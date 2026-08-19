@@ -45,6 +45,9 @@ echo "==> Validating v0.11 Observability and SRE design foundation"
 echo "==> Validating v0.11.1 metrics foundation"
 "${ROOT_DIR}/scripts/validate-v0.11.1-metrics-foundation.sh"
 
+echo "==> Validating v0.11.2 application and platform telemetry"
+"${ROOT_DIR}/scripts/validate-v0.11.2-application-platform-telemetry.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

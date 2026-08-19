@@ -132,6 +132,19 @@ database:
   retryAttempts: 3
   retryDelaySeconds: 1
 
+telemetry:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 15s
+      scrapeTimeout: 10s
+      sampleLimit: 50000
+      targetLimit: 10
+      labelLimit: 100
+      labelNameLengthLimit: 128
+      labelValueLengthLimit: 512
+
 nodeSelector: {}
 tolerations: []
 affinity: {}

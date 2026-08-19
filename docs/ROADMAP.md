@@ -282,7 +282,9 @@ Incremental scope:
   system-node placement, NetworkPolicy, and bounded local/AWS storage profiles
   - delivered offline; live local and aws-dev evidence pending
 - v0.11.2 - demo-api and platform telemetry, stable resource attributes,
-  release correlation, and bounded-cardinality SLI inputs - planned
+  application-owned ServiceMonitor, Pod-derived release correlation, and
+  bounded-cardinality SLI inputs - delivered offline; live local and aws-dev
+  evidence pending
 - v0.11.3 - Grafana dashboards, recording rules, and operator-oriented views
   for application, delivery, data, platform, capacity, and cost health - planned
 - v0.11.4 - Alertmanager routing, actionable alerts, inhibition, severity

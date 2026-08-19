@@ -121,3 +121,18 @@ v0.1 does not include:
 - Alert routing.
 
 These can be added in future versions.
+
+## v0.11 Direction
+
+The production-oriented evolution is now defined in:
+
+```text
+docs/V0.11_OBSERVABILITY_SRE_DESIGN.md
+```
+
+v0.11 replaces neither this historical local baseline nor its validation in a
+single change. It incrementally introduces an operator-managed metrics stack,
+stable release-correlated telemetry, dashboards, actionable alerts and
+Runbooks, centralized structured logs, a minimal extensible OpenTelemetry
+path, service SLOs, telemetry-aware Rollout gates, environment qualification,
+and clean-room end-to-end acceptance.

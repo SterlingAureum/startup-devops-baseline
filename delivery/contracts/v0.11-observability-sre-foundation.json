@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "v0.11.0",
+  "version": "v0.11",
+  "status": "design-foundation",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "goal": "observable-measurable-and-operationally-actionable-multi-environment-platform",
+  "designDocument": "docs/V0.11_OBSERVABILITY_SRE_DESIGN.md",
+  "roadmapDocument": "docs/ROADMAP.md",
+  "previousVersionBoundary": {
+    "version": "v0.10",
+    "acceptanceEvidenceImmutable": true,
+    "contractsRemainAuthoritativeForV010": true,
+    "orchestratorBehaviorChangedByV0110": false,
+    "workflowPermissionsChangedByV0110": false
+  },
+  "increments": [
+    {
+      "id": "v0.11.0",
+      "name": "observability-sre-design-foundation",
+      "status": "delivered"
+    },
+    {
+      "id": "v0.11.1",
+      "name": "production-metrics-foundation",
+      "status": "planned"
+    },
+    {
+      "id": "v0.11.2",
+      "name": "application-and-platform-telemetry",
+      "status": "planned"
+    },
+    {
+      "id": "v0.11.3",
+      "name": "dashboards-and-recording-rules",
+      "status": "planned"
+    },
+    {
+      "id": "v0.11.4",
+      "name": "actionable-alerting-and-runbooks",
+      "status": "planned"
+    },
+    {
+      "id": "v0.11.5",
+      "name": "centralized-logging-and-extensible-tracing",
+      "status": "planned"
+    },
+    {
+      "id": "v0.11.6",
+      "name": "sli-slo-and-progressive-delivery-gates",
+      "status": "planned"
+    },
+    {
+      "id": "v0.11.7",
+      "name": "multi-environment-observability-qualification",
+      "status": "planned"
+    },
+    {
+      "id": "v0.11.8",
+      "name": "clean-room-end-to-end-acceptance",
+      "status": "planned"
+    }
+  ],
+  "signals": {
+    "required": [
+      "metrics",
+      "logs",
+      "traces"
+    ],
+    "metrics": {
+      "controlPlane": "prometheus-operator",
+      "applicationDiscovery": "service-monitor",
+      "platformDiscovery": "service-monitor-or-pod-monitor",
+      "ruleResources": [
+        "prometheus-rule",
+        "recording-rule"
+      ]
+    },
+    "logs": {
+      "applicationFormat": "structured-json-stdout-stderr",
+      "collector": "grafana-alloy",
+      "backend": "loki",
+      "includeKubernetesEvents": true,
+      "independentFromPodAndNodeLifecycle": true
+    },
+    "traces": {
+      "scope": "minimal-extensible-foundation",
+      "protocol": "otlp",
+      "propagation": "w3c-trace-context",
+      "collectorBoundary": "alloy-or-upstream-opentelemetry-collector",
+      "applicationBackendCoupling": false,
+      "initialPath": "http-to-demo-api-to-postgresql",
+      "samplingConfiguredOutsideApplicationCode": true,
+      "fullDistributedTracingPlatformRequired": false
+    }
+  },
+  "resourceAttributes": {
+    "required": [
+      "service.name",
+      "service.version",
+      "deployment.environment.name",
+      "platform.release.id",
+      "platform.source.commit",
+      "container.image.digest"
+    ],
+    "logCorrelation": [
+      "trace_id",
+      "span_id",
+      "platform.release.id"
+    ],
+    "forbiddenHighCardinalityDimensions": [
+      "http.request.body",
+      "http.request.header.authorization",
+      "db.query.parameter",
+      "enduser.id",
+      "raw.url.query"
+    ]
+  },
+  "environmentProfiles": [
+    {
+      "environment": "local",
+      "profile": "lightweight",
+      "persistence": "disposable",
+      "retention": "short",
+      "productionClaim": false
+    },
+    {
+      "environment": "aws-dev",
+      "profile": "cost-optimized",
+      "persistence": "bounded",
+      "retention": "short",
+      "productionClaim": false
+    },
+    {
+      "environment": "aws-test",
+      "profile": "cost-optimized-production-parity",
+      "persistence": "bounded",
+      "retention": "short",
+      "productionClaim": false
+    },
+    {
+      "environment": "aws-prod",
+      "profile": "production-parity",
+      "persistence": "explicit",
+      "retention": "policy-controlled",
+      "productionClaim": "requires-live-v0.11-acceptance"
+    }
+  ],
+  "sreModel": {
+    "goldenSignals": [
+      "latency",
+      "traffic",
+      "errors",
+      "saturation"
+    ],
+    "serviceLevelIndicators": [
+      "request-availability",
+      "request-success-rate",
+      "request-latency",
+      "database-dependency-availability"
+    ],
+    "serviceLevelObjectives": "defined-from-measured-baseline",
+    "errorBudgetRequired": true,
+    "burnRateAlertingRequired": true,
+    "alertsRequireRunbooks": true,
+    "releaseAnalysisUsesServiceSignals": true
+  },
+  "securityAndCost": {
+    "credentialsInTelemetry": false,
+    "requestBodiesInTelemetryByDefault": false,
+    "authorizationHeadersInTelemetry": false,
+    "rawSqlParametersInTelemetry": false,
+    "boundedLabelCardinality": true,
+    "explicitRetentionRequired": true,
+    "environmentSpecificSizingRequired": true,
+    "networkPolicyRequired": true,
+    "secretManagement": "external-secrets-or-runtime-generated",
+    "publicObservabilityEndpoints": false
+  },
+  "automationBoundary": {
+    "automaticEnvironmentCreation": false,
+    "automaticPullRequestMerge": false,
+    "automaticProductionRolloutProgression": false,
+    "automaticRollback": false,
+    "productionEnvironmentApprovalRequired": true,
+    "productionPullRequestReviewRequired": true,
+    "productionRuntimeObservation": "approval-protected-read-only",
+    "productionKubernetesWriteByQualification": false,
+    "productionAwsMutationByQualification": false,
+    "humanRecoveryDecisionRequired": true
+  },
+  "finalAcceptance": {
+    "increment": "v0.11.8",
+    "mode": "clean-room-dev-test-prod-live-observability",
+    "candidate": "post-v0.10.8.7-security-hotfix-image",
+    "buildOnce": true,
+    "sameDigestAcrossEnvironments": true,
+    "liveEnvironments": [
+      "aws-dev",
+      "aws-test",
+      "aws-prod"
+    ],
+    "requiredCheckpoints": [
+      "successful-end-to-end-release",
+      "intentionally-failed-canary-analysis",
+      "actionable-alert-observed",
+      "metric-log-trace-release-correlation",
+      "aws-prod-read-only-observability-qualification",
+      "reviewed-final-evidence",
+      "disposable-environment-teardown",
+      "residual-cost-audit"
+    ],
+    "humanControls": [
+      "pull-request-review-and-merge",
+      "aws-test-canary-completion",
+      "aws-prod-environment-approval",
+      "production-recovery-decision"
+    ],
+    "automaticClusterCreation": false,
+    "automaticMerge": false,
+    "automaticRollback": false
+  },
+  "deferredToV012": [
+    "remote-terraform-state-and-locking",
+    "state-backup-and-recovery",
+    "platform-upgrade-lifecycle",
+    "clean-room-infrastructure-rebuild-capstone",
+    "measured-rto-rpo",
+    "break-glass-and-production-access-review",
+    "repository-wide-production-readiness-acceptance"
+  ],
+  "repositoryBoundary": {
+    "aiInfrastructureRepository": "SterlingAureum/ai-infra-blueprints",
+    "thisRepositoryOwns": [
+      "general-platform-observability-contracts",
+      "general-application-sli-slo-patterns",
+      "release-telemetry-correlation",
+      "human-governed-operational-response"
+    ],
+    "deferredToAiInfrastructureRepository": [
+      "gpu-node-pools",
+      "nvidia-drivers-and-operators",
+      "vllm-model-serving",
+      "model-artifact-lifecycle",
+      "gpu-and-inference-benchmarking",
+      "slurm-training-infrastructure"
+    ],
+    "openClawIntegration": false,
+    "aiopsImplementationInV011": false
+  }
+}

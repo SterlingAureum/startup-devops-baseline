@@ -64,7 +64,7 @@ The AnalysisRun also stores the image digest and source commit as arguments.
 The runtime collector requires a Successful AnalysisRun whose four identity
 arguments match the current release. This provides a release-bound canary
 check without deploying the full Prometheus/Grafana/Alertmanager platform
-planned for v1.0.
+planned for v0.11.
 
 The startup-apps default-deny policy permits this check only from Pods labeled
 as the Argo Rollouts controller in the `argo-rollouts` namespace, and only to

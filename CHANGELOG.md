@@ -2,6 +2,43 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.0
+
+### Added
+
+- Added the v0.11 Observability and SRE design foundation with an incremental
+  metrics, telemetry, dashboard, alerting, logging, tracing, SLO,
+  environment-qualification, and final-acceptance sequence.
+- Added a machine-readable foundation contract for environment profiles,
+  stable resource attributes, release correlation, extensible OpenTelemetry
+  transport, cardinality and privacy controls, production governance, and
+  clean-room dev/test/prod-live acceptance.
+- Added offline positive and negative validation that rejects automatic
+  environment creation, automatic merge or rollback, production Kubernetes
+  writes, missing production approval, backend-coupled application tracing,
+  unbounded telemetry dimensions, AI infrastructure ownership drift, and
+  accidental v0.10 evidence mutation claims.
+
+### Changed
+
+- Split the former combined v0.11 scope into v0.11 Observability and SRE plus
+  v0.12 Production Readiness Capstone, and reserved v1.0 for the stabilized
+  production-ready commercial baseline.
+- Recast v1.1 as integration with the separate `ai-infra-blueprints`
+  repository and moved lightweight, human-governed AIOps to v1.2.
+- Corrected active documentation that still referred to observability as a
+  v1.0 capability while preserving historical Changelog and archive text.
+- Registered the v0.11.0 contract validator in reusable CI quality gates and
+  protected the new design boundary through CODEOWNERS.
+
+### Boundary
+
+- v0.11.0 deploys no Prometheus, Grafana, Alertmanager, Loki, Alloy,
+  OpenTelemetry Collector, or tracing backend and changes no application,
+  Terraform, AWS, Kubernetes, GitHub workflow permission, or release value.
+- The accepted v0.10 evidence remains immutable. Environment creation, pull-
+  request merge, production mutation, and rollback remain outside automation.
+
 ## v0.10.8.7
 
 ### Post-tag image security hotfix

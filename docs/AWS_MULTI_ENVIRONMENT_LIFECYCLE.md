@@ -226,7 +226,8 @@ EVIDENCE_FILE=evidence/v0.9/final/<id>.json \
 
 The final record must be reviewed and merged. It proves the sequential
 portfolio lifecycle; it does not claim that aws-prod was created or that the
-repository has the full v1.0 observability and remote-state platform.
+repository has the v0.11 observability platform or v0.12 remote-state and
+production-readiness capabilities.
 
 ## Failure recovery
 

@@ -261,60 +261,119 @@ The application release path does not automatically create EKS environments.
 An absent disposable environment is a resumable wait, and production approval
 and PR merge remain human controls throughout v0.10.
 
-## v0.11 - Observability and Production Readiness Baseline
+## v0.11 - Observability and SRE Baseline
+
+Status: In Progress
+
+Goal:
+
+Make the multi-environment platform observable, establish measurable
+reliability objectives, and use trusted telemetry to support alerting,
+diagnosis, progressive delivery, and operational response.
+
+Incremental scope:
+
+- v0.11.0 - version-boundary correction, environment-aware observability
+  architecture, telemetry and correlation conventions, extensible tracing
+  foundation, explicit security and automation boundaries, and offline
+  positive/negative contract validation - delivered
+- v0.11.1 - Prometheus Operator and production-oriented metrics foundation,
+  with local and cost-aware AWS environment profiles - planned
+- v0.11.2 - demo-api and platform telemetry, stable resource attributes,
+  release correlation, and bounded-cardinality SLI inputs - planned
+- v0.11.3 - Grafana dashboards, recording rules, and operator-oriented views
+  for application, delivery, data, platform, capacity, and cost health - planned
+- v0.11.4 - Alertmanager routing, actionable alerts, inhibition, severity
+  policy, and version-controlled Runbooks with positive/negative drills - planned
+- v0.11.5 - centralized structured logging plus an extensible OpenTelemetry
+  tracing foundation for the HTTP to demo-api to PostgreSQL path - planned
+- v0.11.6 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
+  Rollouts analysis gates - planned
+- v0.11.7 - environment-scoped observability qualification, including an
+  approval-protected, read-only aws-prod runtime observation boundary - planned
+- v0.11.8 - clean-room dev/test/prod-live end-to-end release, successful and
+  intentionally failed Canary checks, telemetry correlation, reviewed closure
+  evidence, environment teardown, and residual-cost audit - planned
+
+v0.11 does not automatically create an EKS environment, merge a pull request,
+perform a production Kubernetes write, dispatch a rollback, or remove the
+existing production approval boundary. Full remote Terraform state, platform
+upgrade lifecycle, recovery objectives, and repository-wide production
+readiness remain v0.12 work.
+
+## v0.12 - Production Readiness Capstone
 
 Status: Planned
 
 Goal:
 
-Make the multi-environment baseline observable and operationally sustainable.
+Prove that the complete platform can be rebuilt, upgraded, recovered,
+operated, and reviewed as a production-oriented commercial baseline.
 
 Planned scope:
 
-- Prometheus production deployment
-- Grafana dashboards
-- Alertmanager and actionable alert routing
-- centralized logging
-- application SLI/SLO metrics
-- platform health monitoring
-- remote Terraform state bootstrap and locking
-- platform upgrade and dependency lifecycle
+- encrypted remote Terraform state bootstrap and S3-native locking
+- state backup, recovery, and operator-access boundaries
+- EKS and platform dependency upgrade lifecycle
 - clean-room infrastructure and GitOps rebuild
-- recovery objectives and operational readiness review
-- end-to-end security, observability, delivery, and cost validation
+- measured recovery objectives and disaster-recovery review
+- production access, break-glass, capacity, availability, and cost review
+- repository-wide security, delivery, observability, recovery, and
+  documentation acceptance
 
-## v1.0 - AI Infrastructure Extension
-
-Status: Planned
-
-Goal:
-
-Extend the platform toward AI workloads.
-
-Planned scope:
-
-- GPU node pool
-- NVIDIA device plugin
-- GPU scheduling and isolation
-- GPU monitoring
-- vLLM inference service
-- OpenAI-compatible API serving
-- model storage workflow
-
-## v1.1 - AIOps Operations Extension
+## v1.0 - Production-ready Commercial Baseline
 
 Status: Planned
 
 Goal:
 
-Introduce AI-assisted platform operations.
+Stabilize and publish the completed general-purpose DevOps, GitOps, security,
+delivery, observability, and SRE baseline without introducing a new workload
+domain during release closure.
 
 Planned scope:
 
-- alert summarization
-- incident triage
-- GitOps diagnosis
-- rollout failure analysis
-- runbook automation
+- v0.1 through v0.12 architecture and documentation consistency review
+- stable supported-version and upgrade matrix
+- final commercial deployment, operation, and teardown guidance
+- final clean repository, acceptance evidence, and release packaging
+- explicit supported, optional, and out-of-scope capability boundaries
+
+## v1.1 - AI Infrastructure Integration
+
+Status: Planned
+
+Goal:
+
+Define how the general platform contracts integrate with the separate
+`ai-infra-blueprints` repository without duplicating GPU, model-serving, or
+training infrastructure in this repository.
+
+Planned scope:
+
+- cross-repository release, telemetry, SLO, cost, and evidence conventions
+- model-serving workload integration contract
+- GPU and model identity extension points
+- OpenAI-compatible endpoint qualification example
+- documented ownership boundary for GPU nodes, NVIDIA components, vLLM,
+  model storage, inference benchmarking, and Slurm
+
+## v1.2 - Lightweight AIOps Extension
+
+Status: Planned
+
+Goal:
+
+Introduce AI-assisted, evidence-grounded operations after deterministic
+observability, Runbooks, and production-readiness controls are established.
+
+Planned scope:
+
+- alert summarization and evidence correlation
+- incident triage and likely-cause ranking
+- GitOps and rollout failure diagnosis
+- version-controlled Runbook recommendation
+- reviewable issue, pull-request, or rollback-handoff preparation
 - human-approved remediation workflows
-- AIOps safety boundaries
+- no direct production mutation, automatic merge, or approval bypass
+- AIOps safety, audit, and fallback boundaries

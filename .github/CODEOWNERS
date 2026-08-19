@@ -20,6 +20,7 @@
 /delivery/contracts/runtime-executor.json @SterlingAureum
 /delivery/contracts/v0.10-final-acceptance.json @SterlingAureum
 /delivery/contracts/v0.10-final-evidence.schema.json @SterlingAureum
+/delivery/contracts/v0.11-observability-sre-foundation.json @SterlingAureum
 /delivery/contracts/examples/v0.10-final-evidence-input.example.json @SterlingAureum
 /scripts/calculate-demo-api-qualification-scope.py @SterlingAureum
 /scripts/demo_api_qualification_bundle.py @SterlingAureum
@@ -44,6 +45,7 @@
 /scripts/write-v0.10-final-evidence.py @SterlingAureum
 /scripts/validate-v0.10-final-evidence.py @SterlingAureum
 /scripts/validate-v0.10-final-acceptance.sh @SterlingAureum
+/scripts/validate-v0.11-observability-sre-foundation.sh @SterlingAureum
 /scripts/derive-demo-api-release-id.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.sh @SterlingAureum
@@ -60,6 +62,7 @@
 /scripts/write-v0.9-final-evidence.sh @SterlingAureum
 /scripts/validate-v0.9-final-evidence.sh @SterlingAureum
 /docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md @SterlingAureum
+/docs/V0.11_OBSERVABILITY_SRE_DESIGN.md @SterlingAureum
 /docs/TRUSTED_RUNTIME_EXECUTOR.md @SterlingAureum
 /infra/terraform/aws/runtime-identities/ @SterlingAureum
 /infra/terraform/aws/modules/github-actions-runtime-role/ @SterlingAureum

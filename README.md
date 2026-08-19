@@ -127,11 +127,16 @@ v0.10.8.7 is the post-tag image-security hotfix: closure tags no longer rebuild
 demo-api, Debian fixable security updates are installed before publication,
 Trivy v0.74.0 behavior is reproducible locally and in CI, and sealed v0.10
 evidence is replayed against its recorded historical control plane.
+v0.11.0 begins the Observability and SRE line with an environment-aware design
+contract, stable telemetry and release-correlation conventions, an extensible
+OpenTelemetry foundation, explicit cost and security profiles, and preserved
+human production controls. It deploys no monitoring component and changes no
+v0.10 acceptance evidence or release-orchestration behavior.
 
 ## Current Version
 
 ```text
-v0.10.8.7-post-tag-image-security-hotfix
+v0.11.0-observability-sre-design-foundation
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -343,6 +348,7 @@ startup-devops-baseline/
 - `docs/AWS_EKS_ARCHITECTURE.md`
 - `docs/ENVIRONMENT_MODEL.md`
 - `docs/MULTI_ENVIRONMENT_GITOPS_MODEL.md`
+- `docs/V0.11_OBSERVABILITY_SRE_DESIGN.md`
 
 ### Deployment and Operations
 

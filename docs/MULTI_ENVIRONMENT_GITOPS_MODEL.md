@@ -314,7 +314,7 @@ v0.9.5 delivers:
   environment identity, and release drift.
 
 It does not create test or production resources, claim a live canary passed,
-deploy the v1.0 observability platform, merge a Promotion PR, or widen the EKS
+deploy the v0.11 observability platform, merge a Promotion PR, or widen the EKS
 endpoint allowlist. Clean-room live execution and cost cleanup were deferred to
 v0.9.6.
 
@@ -338,15 +338,19 @@ v0.9.6 delivers:
 The implementation does not claim that aws-test was created merely because
 the scripts and CI pass. v0.9 reaches final acceptance only after the live
 sequence, reviewed evidence, destroy, and cleanup audit complete. It does not
-apply aws-prod, add remote Terraform state, deploy the v1.0 observability
-platform, or make test a permanent cost source.
+apply aws-prod, deploy the v0.11 observability platform, add the v0.12 remote
+Terraform state and production-readiness capabilities, or make test a
+permanent cost source.
 
 ## Deferred Decisions
 
 The following work belongs to later increments:
 
 - end-to-end release orchestration and mechanical evidence chaining in v0.10;
-- full observability, SLOs, and long-term operational readiness in v0.11.
+- observability, SLOs, alerting, diagnosis, and telemetry-aware delivery in
+  v0.11;
+- remote state, upgrade, recovery, and repository-wide production readiness
+  in v0.12.
 
 ## v0.9.7 Operational Closure
 

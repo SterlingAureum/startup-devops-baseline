@@ -87,6 +87,43 @@ REPO_URL=https://github.com/<your-user>/startup-devops-baseline.git \
   ./scripts/deploy-root-app.sh
 ```
 
+## Root Is OutOfSync During Feature Validation
+
+Symptoms:
+
+- `startup-devops-root` is `OutOfSync / Healthy`;
+- `demo-api` is synced to a feature revision;
+- syncing the Root changes `demo-api` back to `HEAD`;
+- the deployed Chart or ServiceMonitor unexpectedly returns to the mainline
+  version.
+
+Cause:
+
+The tracked child Application declarations intentionally use `HEAD`. A live
+feature revision on a child therefore differs from the Root's desired child
+Application object. Root self-heal or a manual Root sync restores `HEAD`.
+
+Fix:
+
+Do not sync the Root Application after child feature overrides. Use the
+ordered workflow instead:
+
+```bash
+TARGET_REVISION=feature/v0.11-observability-sre-baseline \
+IMAGE_TAG=v0.11.3-local \
+  ./scripts/deploy-local-feature-gitops.sh
+```
+
+The expected validation state is Root `OutOfSync / Healthy` and feature child
+Applications `Synced`. Restore the stable declaration afterward:
+
+```bash
+./scripts/restore-local-gitops-head.sh
+```
+
+If `demo-api` is `Suspended`, inspect the latest AnalysisRun. Promote normally
+only after it is `Successful`; never use full promotion to hide a failed gate.
+
 ## Argo CD Cannot Pull Repository
 
 Symptoms:

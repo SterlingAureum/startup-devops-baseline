@@ -113,6 +113,20 @@ REPO_URL=https://github.com/<your-user>/startup-devops-baseline.git \
   ./scripts/deploy-root-app.sh
 ```
 
+For a local feature-revision acceptance run, the Root must not continuously
+self-heal child Application revisions back to `HEAD`. Use the ordered and
+reversible workflow instead of applying child YAML manually:
+
+```bash
+TARGET_REVISION=feature/v0.11-observability-sre-baseline \
+IMAGE_TAG=v0.11.3-local \
+  ./scripts/deploy-local-feature-gitops.sh
+```
+
+The temporary Root `OutOfSync` state is expected. After validation, run
+`./scripts/restore-local-gitops-head.sh`. The active Git declarations remain
+`HEAD`; no feature branch name is committed to them.
+
 Debug-only fallback:
 
 ```bash

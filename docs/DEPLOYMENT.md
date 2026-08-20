@@ -97,6 +97,19 @@ REPO_URL=https://github.com/<your-user>/startup-devops-baseline.git \
   ./scripts/deploy-root-app.sh
 ```
 
+The command above is the stable `HEAD` path. For a pushed feature revision and
+an image already loaded into kind, use the branch-aware local workflow:
+
+```bash
+TARGET_REVISION=feature/v0.11-observability-sre-baseline \
+IMAGE_TAG=v0.11.3-local \
+  ./scripts/deploy-local-feature-gitops.sh
+```
+
+This intentionally leaves the Root `OutOfSync / Healthy` while its
+same-repository children use the feature revision. Do not resync the Root until
+restoring the stable declaration with `./scripts/restore-local-gitops-head.sh`.
+
 The root app syncs the platform applications under:
 
 ```text

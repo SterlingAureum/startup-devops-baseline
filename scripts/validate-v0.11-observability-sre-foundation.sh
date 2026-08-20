@@ -53,11 +53,12 @@ def load_json(path: Path) -> dict[str, Any]:
     return value
 
 
-EXPECTED_INCREMENTS = [f"v0.11.{index}" for index in range(9)]
+EXPECTED_INCREMENTS = [f"v0.11.{index}" for index in range(10)]
 EXPECTED_INCREMENT_NAMES = [
     "observability-sre-design-foundation",
     "production-metrics-foundation",
     "application-and-platform-telemetry",
+    "local-feature-gitops-validation",
     "dashboards-and-recording-rules",
     "actionable-alerting-and-runbooks",
     "centralized-logging-and-extensible-tracing",
@@ -190,7 +191,7 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
 
     acceptance = contract.get("finalAcceptance")
     require(isinstance(acceptance, dict), "Missing final acceptance")
-    require(acceptance.get("increment") == "v0.11.8", "Final acceptance increment changed")
+    require(acceptance.get("increment") == "v0.11.9", "Final acceptance increment changed")
     require(acceptance.get("mode") == "clean-room-dev-test-prod-live-observability", "Acceptance mode changed")
     require(acceptance.get("candidate") == "post-v0.10.8.7-security-hotfix-image", "Acceptance candidate changed")
     require(acceptance.get("liveEnvironments") == ["aws-dev", "aws-test", "aws-prod"], "Live environment order changed")

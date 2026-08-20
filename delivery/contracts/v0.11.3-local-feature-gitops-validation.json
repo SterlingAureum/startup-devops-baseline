@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "v0.11.3",
+  "version": "v0.11.3",
+  "status": "offline-implemented",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.3_LOCAL_FEATURE_GITOPS_VALIDATION.md",
+  "liveAcceptanceClaimed": false,
+  "stableDeclaration": {
+    "rootRevision": "HEAD",
+    "sameRepositoryChildRevision": "HEAD",
+    "featureRevisionCommittedToActiveManifests": false,
+    "activeRevisionValidatorPreserved": true
+  },
+  "featureValidation": {
+    "revisionInput": "TARGET_REVISION",
+    "revisionInputRequired": true,
+    "rootSyncMode": "manual",
+    "rootSyncedBeforeChildOverrides": true,
+    "sameRepositoryApplications": [
+      "startup-devops-root",
+      "namespace-guardrails",
+      "demo-api"
+    ],
+    "localImageInputs": [
+      "IMAGE_REPOSITORY",
+      "IMAGE_TAG",
+      "APPLICATION_VERSION"
+    ],
+    "sourceConfigurationOverrides": [
+      "image.repository",
+      "image.tag",
+      "image.pullPolicy",
+      "release.applicationVersion"
+    ],
+    "prometheusAddressOverridden": false,
+    "expectedRootSyncStatusAfterChildOverrides": "OutOfSync",
+    "expectedRootHealthStatus": "Healthy",
+    "rootResyncDuringValidationAllowed": false
+  },
+  "runtimeAssertions": {
+    "applicationTargetRevision": true,
+    "rootAutomationDisabled": true,
+    "chartVersionMatchesLocalCheckout": true,
+    "serviceMonitorExists": true,
+    "prometheusAddressMatchesExpected": true,
+    "rolloutAutoPromoted": false,
+    "rolloutFullPromotionAllowed": false
+  },
+  "restoration": {
+    "script": "scripts/restore-local-gitops-head.sh",
+    "rootRevision": "HEAD",
+    "rootSyncMode": "automated",
+    "sameRepositoryChildrenRestored": true,
+    "liveHelmParametersRemovedByDeclarativeRootSync": true,
+    "rootSelfHealRestored": true
+  },
+  "scripts": {
+    "rootDeployment": "scripts/deploy-root-app.sh",
+    "featureDeployment": "scripts/deploy-local-feature-gitops.sh",
+    "headRestoration": "scripts/restore-local-gitops-head.sh",
+    "offlineValidator": "scripts/validate-v0.11.3-local-feature-gitops.sh"
+  },
+  "automationBoundary": {
+    "trackedManifestMutation": false,
+    "hardcodedFeatureRevision": false,
+    "awsMutation": false,
+    "releaseOrchestratorChanged": false,
+    "imagePublishWorkflowChanged": false,
+    "promotionWorkflowChanged": false,
+    "rollbackWorkflowChanged": false,
+    "automaticCanaryPromotion": false,
+    "automaticProductionWrite": false
+  },
+  "acceptance": {
+    "offlineValidationRequired": true,
+    "localFeatureLiveValidationRequiredBeforeTag": true,
+    "requiredFeatureState": [
+      "root-feature-manual",
+      "children-feature-synced",
+      "demo-api-chart-current",
+      "service-monitor-present",
+      "analysis-prometheus-address-current",
+      "canary-analysis-successful",
+      "rollout-manually-promoted",
+      "validate-sh-passed",
+      "check-monitoring-sh-passed"
+    ],
+    "headRestorationRequiredAfterFeatureValidation": true,
+    "awsValidationRequired": false
+  },
+  "roadmapShift": {
+    "dashboardsAndRecordingRules": "v0.11.4",
+    "actionableAlerting": "v0.11.5",
+    "loggingAndTracing": "v0.11.6",
+    "sloAndRolloutGates": "v0.11.7",
+    "environmentQualification": "v0.11.8",
+    "finalAcceptance": "v0.11.9"
+  }
+}

@@ -2,6 +2,38 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.3
+
+### Added
+
+- Added a parameterized local feature-revision GitOps workflow that sets the
+  Root to manual sync, synchronizes it once, and then pins same-repository child
+  Applications to the same requested revision.
+- Added local image injection plus exact revision, Chart, ServiceMonitor and
+  AnalysisTemplate Prometheus-address assertions without masking telemetry
+  values from Git.
+- Added declarative restoration of the local `HEAD` baseline, automated Root
+  sync and self-heal, together with a machine-readable contract, positive and
+  negative validation, and an operator Runbook.
+
+### Changed
+
+- Added `TARGET_REVISION` and `ROOT_SYNC_MODE` support to
+  `scripts/deploy-root-app.sh`; `HEAD` remains the stable default and non-HEAD
+  revisions default to manual Root sync.
+- Documented Root `OutOfSync / Healthy` as the expected bounded state after
+  feature child overrides and prohibited Root resync until validation ends.
+- Inserted the recovery increment before observability UI work: dashboards now
+  begin at v0.11.4 and clean-room final acceptance moves to v0.11.9.
+
+### Boundary
+
+- Active local manifests still declare `HEAD`; no feature branch is committed.
+- The workflow does not publish images, mutate AWS, auto-promote a Canary,
+  change v0.10 orchestration, or claim v0.11.3 live acceptance.
+- The completed v0.11.2 local telemetry path is operator-validated; AWS live
+  telemetry evidence remains pending for later bounded qualification.
+
 ## v0.11.2
 
 ### Added

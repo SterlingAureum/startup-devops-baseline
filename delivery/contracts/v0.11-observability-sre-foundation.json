@@ -31,31 +31,36 @@
     },
     {
       "id": "v0.11.3",
-      "name": "dashboards-and-recording-rules",
+      "name": "local-feature-gitops-validation",
       "status": "planned"
     },
     {
       "id": "v0.11.4",
-      "name": "actionable-alerting-and-runbooks",
+      "name": "dashboards-and-recording-rules",
       "status": "planned"
     },
     {
       "id": "v0.11.5",
-      "name": "centralized-logging-and-extensible-tracing",
+      "name": "actionable-alerting-and-runbooks",
       "status": "planned"
     },
     {
       "id": "v0.11.6",
-      "name": "sli-slo-and-progressive-delivery-gates",
+      "name": "centralized-logging-and-extensible-tracing",
       "status": "planned"
     },
     {
       "id": "v0.11.7",
-      "name": "multi-environment-observability-qualification",
+      "name": "sli-slo-and-progressive-delivery-gates",
       "status": "planned"
     },
     {
       "id": "v0.11.8",
+      "name": "multi-environment-observability-qualification",
+      "status": "planned"
+    },
+    {
+      "id": "v0.11.9",
       "name": "clean-room-end-to-end-acceptance",
       "status": "planned"
     }
@@ -189,7 +194,7 @@
     "humanRecoveryDecisionRequired": true
   },
   "finalAcceptance": {
-    "increment": "v0.11.8",
+    "increment": "v0.11.9",
     "mode": "clean-room-dev-test-prod-live-observability",
     "candidate": "post-v0.10.8.7-security-hotfix-image",
     "buildOnce": true,

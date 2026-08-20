@@ -136,7 +136,7 @@ The demo-api Chart owns its ServiceMonitor, preserves Service names as
 Prometheus `job` labels, and derives release correlation from the selected Pod.
 This keeps stable and canary ReplicaSet identities correct during a Rollout.
 The current AnalysisTemplate can continue to verify the canary target with its
-existing query. SLO-based release gates remain v0.11.6 work.
+existing query. SLO-based release gates remain v0.11.7 work.
 
 ## 7. CI and Image Publishing
 

@@ -283,19 +283,23 @@ Incremental scope:
   - delivered offline; live local and aws-dev evidence pending
 - v0.11.2 - demo-api and platform telemetry, stable resource attributes,
   application-owned ServiceMonitor, Pod-derived release correlation, and
-  bounded-cardinality SLI inputs - delivered offline; live local and aws-dev
-  evidence pending
-- v0.11.3 - Grafana dashboards, recording rules, and operator-oriented views
+  bounded-cardinality SLI inputs - delivered offline; the local path is
+  operator-validated and formal aws-dev evidence remains pending
+- v0.11.3 - parameterized local root deployment, safe feature-revision child
+  overrides, local-image injection, revision/Chart/ServiceMonitor verification,
+  explicit Root OutOfSync semantics, and declarative HEAD restoration - delivered
+  offline; live execution of the new reusable workflow remains required
+- v0.11.4 - Grafana dashboards, recording rules, and operator-oriented views
   for application, delivery, data, platform, capacity, and cost health - planned
-- v0.11.4 - Alertmanager routing, actionable alerts, inhibition, severity
+- v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity
   policy, and version-controlled Runbooks with positive/negative drills - planned
-- v0.11.5 - centralized structured logging plus an extensible OpenTelemetry
+- v0.11.6 - centralized structured logging plus an extensible OpenTelemetry
   tracing foundation for the HTTP to demo-api to PostgreSQL path - planned
-- v0.11.6 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
+- v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned
-- v0.11.7 - environment-scoped observability qualification, including an
+- v0.11.8 - environment-scoped observability qualification, including an
   approval-protected, read-only aws-prod runtime observation boundary - planned
-- v0.11.8 - clean-room dev/test/prod-live end-to-end release, successful and
+- v0.11.9 - clean-room dev/test/prod-live end-to-end release, successful and
   intentionally failed Canary checks, telemetry correlation, reviewed closure
   evidence, environment teardown, and residual-cost audit - planned
 

@@ -145,11 +145,17 @@ selected Pod with its environment, application version, deterministic release
 ID, source commit, and image digest without changing the accepted v0.10 build,
 Promotion, rollback, or production-approval workflows. Dashboard, alerting,
 logging, tracing, and SLO work remains deferred.
+v0.11.3 adds a parameterized and reversible local feature-revision GitOps
+workflow. It prevents Root self-heal from silently returning same-repository
+children to `HEAD`, verifies the deployed revision, Chart, ServiceMonitor and
+Prometheus address, preserves manual Canary progression, and restores the
+stable automated `HEAD` declaration after testing. Dashboard work moves to
+v0.11.4 and the clean-room v0.11 acceptance remains the final v0.11.9 increment.
 
 ## Current Version
 
 ```text
-v0.11.2-application-platform-telemetry
+v0.11.3-local-feature-gitops-validation
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

@@ -2,6 +2,31 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.3.1
+
+### Fixed
+
+- Removed the Root create/apply auto-sync race by rendering manual feature and
+  restoration modes without `spec.syncPolicy.automated` before Kubernetes sees
+  the Application.
+- Serialized Argo CD operations, paused child automation during overrides, and
+  explicitly removed stale live Helm parameters that could mask the
+  Git-declared AnalysisTemplate Prometheus address.
+- Corrected the Rollout retry example to include the required `rollout`
+  resource type and documented that the observed recovery occurred through
+  revision 15 reconciliation, not the rejected retry command.
+
+### Added
+
+- Added an exact four-parameter feature allowlist, empty-parameter restoration
+  assertion, negative recovery validation, incident contract, and a dependency
+  map from Root GitOps through Prometheus-backed Canary analysis.
+
+### Boundary
+
+- This patch changes no application telemetry, monitoring stack, Canary steps,
+  AWS state, production automation, or stable tracked `HEAD` revision.
+
 ## v0.11.3
 
 ### Added

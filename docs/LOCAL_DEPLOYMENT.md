@@ -58,10 +58,12 @@ IMAGE_TAG=v0.11.3-local \
   ./scripts/deploy-local-feature-gitops.sh
 ```
 
-The script switches the Root to manual mode, syncs it once, and then pins the
-same-repository child Applications to the requested revision. The Root becomes
-`OutOfSync / Healthy` after the child overrides; that is expected. Do not sync
-the Root again during feature validation.
+The script creates or applies the Root in manual mode, waits for any prior Argo
+CD operation, and then pins the same-repository child Applications to the
+requested revision. It pauses child automation and removes stale non-image
+Helm parameters before applying the exact local-image allowlist. The Root
+becomes `OutOfSync / Healthy` after the child overrides; that is expected. Do
+not sync the Root again during feature validation.
 
 After manual Canary completion and validation, restore the declarative mode:
 
@@ -70,7 +72,9 @@ After manual Canary completion and validation, restore the declarative mode:
 ```
 
 See `docs/V0.11.3_LOCAL_FEATURE_GITOPS_VALIDATION.md` for the state model and
-acceptance commands.
+acceptance commands, and
+`docs/V0.11.3.1_LOCAL_FEATURE_GITOPS_RECOVERY.md` for recovery details and the
+component dependency map.
 
 ### 5. Validate the baseline
 
@@ -143,6 +147,7 @@ Typical commands:
 kubectl argo rollouts get rollout demo-api -n startup-apps --watch
 kubectl argo rollouts promote demo-api -n startup-apps
 kubectl argo rollouts abort demo-api -n startup-apps
+kubectl argo rollouts retry rollout demo-api -n startup-apps
 ```
 
 The current canary analysis checks whether Prometheus can scrape the canary service:

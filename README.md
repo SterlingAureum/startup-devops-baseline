@@ -2,6 +2,12 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
+Current development checkpoint: `v0.11.3.1-local-feature-gitops-recovery`.
+It serializes local Argo CD operations, removes stale live Helm overrides, and
+keeps feature validation reversible without changing the stable tracked
+`HEAD` declarations. See
+`docs/V0.11.3.1_LOCAL_FEATURE_GITOPS_RECOVERY.md`.
+
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
 The repository now contains the completed local progressive-delivery and AWS

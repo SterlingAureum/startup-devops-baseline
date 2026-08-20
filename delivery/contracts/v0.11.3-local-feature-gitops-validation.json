@@ -15,7 +15,10 @@
     "revisionInput": "TARGET_REVISION",
     "revisionInputRequired": true,
     "rootSyncMode": "manual",
+    "rootManifestAppliedManualBeforeCreation": true,
     "rootSyncedBeforeChildOverrides": true,
+    "applicationOperationsSerialized": true,
+    "childAutomationPausedDuringOverrides": true,
     "sameRepositoryApplications": [
       "startup-devops-root",
       "namespace-guardrails",
@@ -33,6 +36,7 @@
       "release.applicationVersion"
     ],
     "prometheusAddressOverridden": false,
+    "helmParameterAllowlistEnforced": true,
     "expectedRootSyncStatusAfterChildOverrides": "OutOfSync",
     "expectedRootHealthStatus": "Healthy",
     "rootResyncDuringValidationAllowed": false
@@ -49,9 +53,11 @@
   "restoration": {
     "script": "scripts/restore-local-gitops-head.sh",
     "rootRevision": "HEAD",
-    "rootSyncMode": "automated",
+    "rootSyncModeDuringCleanup": "manual",
+    "rootSyncModeAfterCleanup": "automated",
     "sameRepositoryChildrenRestored": true,
-    "liveHelmParametersRemovedByDeclarativeRootSync": true,
+    "liveHelmParametersRemovedExplicitly": true,
+    "emptyHelmParameterSetAsserted": true,
     "rootSelfHealRestored": true
   },
   "scripts": {

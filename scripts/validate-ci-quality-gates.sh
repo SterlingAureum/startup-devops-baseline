@@ -51,6 +51,9 @@ echo "==> Validating v0.11.2 application and platform telemetry"
 echo "==> Validating v0.11.3 local feature GitOps workflow"
 "${ROOT_DIR}/scripts/validate-v0.11.3-local-feature-gitops.sh"
 
+echo "==> Validating v0.11.3.1 local feature GitOps recovery guards"
+"${ROOT_DIR}/scripts/validate-v0.11.3.1-local-feature-gitops-recovery.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

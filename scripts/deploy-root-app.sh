@@ -58,7 +58,8 @@ kubectl get namespace "$ARGOCD_NAMESPACE" >/dev/null 2>&1 || {
 }
 
 TMP_FILE="$(mktemp)"
-trap 'rm -f "$TMP_FILE"' EXIT
+SYNC_MODE_FILE=""
+trap 'rm -f "$TMP_FILE" "${SYNC_MODE_FILE:-}"' EXIT
 
 echo "Using repository URL: ${REPO_URL}"
 echo "Using target revision: ${TARGET_REVISION}"
@@ -67,6 +68,15 @@ sed \
   -e "s#^[[:space:]]*repoURL: .*\$#    repoURL: ${REPO_URL}#" \
   -e "s#^[[:space:]]*targetRevision: .*\$#    targetRevision: ${TARGET_REVISION}#" \
   "${ROOT_APP_FILE}" >"${TMP_FILE}"
+
+if [ "${ROOT_SYNC_MODE}" = "manual" ]; then
+  SYNC_MODE_FILE="$(mktemp)"
+  sed '/^    automated:/,/^    syncOptions:/ {
+    /^    syncOptions:/!d
+  }' "${TMP_FILE}" >"${SYNC_MODE_FILE}"
+  mv "${SYNC_MODE_FILE}" "${TMP_FILE}"
+  SYNC_MODE_FILE=""
+fi
 
 echo "Applying Argo CD root application..."
 kubectl apply -f "${TMP_FILE}"

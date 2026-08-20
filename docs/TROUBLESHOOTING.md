@@ -124,6 +124,42 @@ Applications `Synced`. Restore the stable declaration afterward:
 If `demo-api` is `Suspended`, inspect the latest AnalysisRun. Promote normally
 only after it is `Successful`; never use full promotion to hide a failed gate.
 
+## Argo CD Reports Another Operation Is Already in Progress
+
+Cause:
+
+An automated Application operation was still running when a manual sync was
+requested. In older local feature flows, applying the automated Root and then
+patching it to manual mode left a small race window.
+
+Fix:
+
+Use the v0.11.3.1 scripts. Manual mode is present in the manifest before apply,
+and the workflow waits for Application operations to become idle. Do not run a
+second `argocd app sync` concurrently.
+
+## AnalysisTemplate Keeps an Old Prometheus Address
+
+Cause:
+
+A live `spec.source.helm.parameters` entry such as
+`analysis.prometheus.address` survived from an earlier manual override. A Root
+sync does not reliably delete a child Helm parameter that its Git manifest
+does not declare.
+
+Fix:
+
+Rerun `deploy-local-feature-gitops.sh`. It explicitly unsets unexpected
+parameters and accepts only the four local-image parameters. After validation,
+`restore-local-gitops-head.sh` unsets all live Helm parameters and asserts an
+empty set.
+
+For an actually aborted Rollout, the retry syntax includes the resource type:
+
+```bash
+kubectl argo rollouts retry rollout demo-api -n startup-apps
+```
+
 ## Argo CD Cannot Pull Repository
 
 Symptoms:

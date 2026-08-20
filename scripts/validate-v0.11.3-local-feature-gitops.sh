@@ -80,13 +80,17 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     require(feature.get("revisionInput") == "TARGET_REVISION", "Feature revision input changed")
     require(feature.get("revisionInputRequired") is True, "Feature revision input became optional")
     require(feature.get("rootSyncMode") == "manual", "Feature root is not manual")
+    require(feature.get("rootManifestAppliedManualBeforeCreation") is True, "Root manifest can auto-sync before manual mode")
     require(feature.get("rootSyncedBeforeChildOverrides") is True, "Unsafe sync ordering")
+    require(feature.get("applicationOperationsSerialized") is True, "Application operations are not serialized")
+    require(feature.get("childAutomationPausedDuringOverrides") is True, "Child automation is not paused")
     require(
         feature.get("sameRepositoryApplications")
         == ["startup-devops-root", "namespace-guardrails", "demo-api"],
         "Same-repository Application set changed",
     )
     require(feature.get("prometheusAddressOverridden") is False, "Source telemetry configuration is masked")
+    require(feature.get("helmParameterAllowlistEnforced") is True, "Helm parameter allowlist is not enforced")
     require(feature.get("expectedRootSyncStatusAfterChildOverrides") == "OutOfSync", "Root drift semantics changed")
     require(feature.get("rootResyncDuringValidationAllowed") is False, "Root resync is allowed")
 
@@ -106,7 +110,10 @@ def validate_contract(contract: dict[str, Any], check_files: bool = True) -> Non
     restoration = contract.get("restoration")
     require(isinstance(restoration, dict), "Missing restoration")
     require(restoration.get("rootRevision") == "HEAD", "Restoration does not use HEAD")
-    require(restoration.get("rootSyncMode") == "automated", "Restoration does not restore automation")
+    require(restoration.get("rootSyncModeDuringCleanup") == "manual", "Restoration cleanup is not deterministic")
+    require(restoration.get("rootSyncModeAfterCleanup") == "automated", "Restoration does not restore automation")
+    require(restoration.get("liveHelmParametersRemovedExplicitly") is True, "Live Helm parameters are not explicitly removed")
+    require(restoration.get("emptyHelmParameterSetAsserted") is True, "Empty Helm parameter state is not asserted")
     require(restoration.get("rootSelfHealRestored") is True, "Root self-heal not restored")
 
     boundary = contract.get("automationBoundary")
@@ -149,6 +156,8 @@ def validate_repository() -> None:
             'targetRevision: .*\\$#    targetRevision:',
             'targetRevision: ${TARGET_REVISION}',
             "automated\":null",
+            "SYNC_MODE_FILE",
+            "Applying Argo CD root application",
         ),
     )
     require("TARGET_REVISION:-main" not in root_deploy, "Local default changed from HEAD")
@@ -159,19 +168,23 @@ def validate_repository() -> None:
             'TARGET_REVISION="${TARGET_REVISION:-}"',
             "TARGET_REVISION is required for feature validation",
             "ROOT_SYNC_MODE=manual",
-            'argocd app sync "${ROOT_APP_NAME}"',
+            'sync_application_if_needed "${ROOT_APP_NAME}"',
             'argocd app set "${GUARDRAILS_APP_NAME}" --revision "${TARGET_REVISION}"',
             'argocd app set "${DEMO_APP_NAME}"',
             "image.pullPolicy=Never",
             "resolved source commit",
-            "analysis.prometheus.address must come from the feature revision",
+            "remove_unexpected_demo_parameters",
+            "demo-api local Helm parameter allowlist",
+            "wait_for_application_idle",
+            "--operation",
             "get servicemonitor",
             "provider.prometheus.address",
             "Do not sync ${ROOT_APP_NAME} again during feature validation.",
+            "kubectl argo rollouts retry rollout",
         ),
     )
     require(
-        feature.index('argocd app sync "${ROOT_APP_NAME}"')
+        feature.index('sync_application_if_needed "${ROOT_APP_NAME}"')
         < feature.index('argocd app set "${DEMO_APP_NAME}"'),
         "Root is not synced before child override",
     )
@@ -189,8 +202,10 @@ def validate_repository() -> None:
         "scripts/restore-local-gitops-head.sh",
         (
             "TARGET_REVISION=HEAD",
-            "ROOT_SYNC_MODE=automated",
-            'argocd app sync "${ROOT_APP_NAME}"',
+            "ROOT_SYNC_MODE=manual",
+            'sync_application_if_needed "${ROOT_APP_NAME}"',
+            "remove_all_demo_parameters",
+            'set_application_automation "${ROOT_APP_NAME}" automated',
             'assert_head_revision "${DEMO_APP_NAME}"',
             "root automated self-heal was not restored",
         ),
@@ -248,6 +263,8 @@ negative_cases: list[tuple[str, Callable[[dict[str, Any]], None]]] = [
     ("live acceptance claim", lambda value: value.update(liveAcceptanceClaimed=True)),
     ("feature revision committed", lambda value: value["stableDeclaration"].update(featureRevisionCommittedToActiveManifests=True)),
     ("automatic feature root", lambda value: value["featureValidation"].update(rootSyncMode="automated")),
+    ("unserialized Argo operations", lambda value: value["featureValidation"].update(applicationOperationsSerialized=False)),
+    ("Helm allowlist disabled", lambda value: value["featureValidation"].update(helmParameterAllowlistEnforced=False)),
     ("root resync allowed", lambda value: value["featureValidation"].update(rootResyncDuringValidationAllowed=True)),
     ("Prometheus source masked", lambda value: value["featureValidation"].update(prometheusAddressOverridden=True)),
     ("automatic Canary promotion", lambda value: value["automationBoundary"].update(automaticCanaryPromotion=True)),

@@ -288,7 +288,12 @@ Incremental scope:
 - v0.11.3 - parameterized local root deployment, safe feature-revision child
   overrides, local-image injection, revision/Chart/ServiceMonitor verification,
   explicit Root OutOfSync semantics, and declarative HEAD restoration - delivered
-  offline; live execution of the new reusable workflow remains required
+  offline and live-replayed; repaired by v0.11.3.1 after recovery findings
+- v0.11.3.1 - serialize local Argo CD operations, render manual Root mode before
+  apply, explicitly remove stale live Helm parameters, enforce the feature
+  allowlist, harden HEAD restoration, and document the observed revision 15
+  recovery plus demo-api dependency graph - implemented; one clean replay and
+  HEAD restoration are required before tagging
 - v0.11.4 - Grafana dashboards, recording rules, and operator-oriented views
   for application, delivery, data, platform, capacity, and cost health - planned
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity

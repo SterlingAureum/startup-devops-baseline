@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "v0.11.3.1",
+  "version": "v0.11.3.1",
+  "status": "offline-implemented-live-recovery-observed",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.3.1_LOCAL_FEATURE_GITOPS_RECOVERY.md",
+  "incident": {
+    "failedRevision": 14,
+    "recoveredRevision": 15,
+    "recoveredRolloutPhase": "Healthy",
+    "recoveredAnalysisPhase": "Successful",
+    "analysisMeasurements": 2,
+    "retryCommandCausedRecovery": false,
+    "wrongRetryCommand": "kubectl argo rollouts retry demo-api -n startup-apps",
+    "correctRetryCommand": "kubectl argo rollouts retry rollout demo-api -n startup-apps"
+  },
+  "causes": {
+    "staleHelmParameterCouldMaskGitTelemetry": true,
+    "rootAutoSyncCouldRaceManualSync": true,
+    "rootResyncCouldResetChildRevisionToHead": true
+  },
+  "controls": {
+    "manualRootRenderedBeforeCreateOrApply": true,
+    "applicationOperationIdleWait": true,
+    "applicationOperationSerialization": true,
+    "childAutomationPausedDuringMutation": true,
+    "featureHelmParameterAllowlist": [
+      "image.pullPolicy",
+      "image.repository",
+      "image.tag",
+      "release.applicationVersion"
+    ],
+    "unexpectedHelmParametersExplicitlyUnset": true,
+    "restorationRemovesAllLiveHelmParameters": true,
+    "restorationAssertsEmptyHelmParameterSet": true,
+    "rootAutomationRestoredLast": true
+  },
+  "boundaries": {
+    "trackedActiveRevisionChanged": false,
+    "applicationTelemetryChanged": false,
+    "monitoringStackChanged": false,
+    "canaryStrategyChanged": false,
+    "awsMutation": false,
+    "automaticCanaryPromotion": false
+  },
+  "acceptance": {
+    "offlineValidatorRequired": true,
+    "cleanFeatureReplayRequiredBeforeTag": true,
+    "headRestorationRequired": true,
+    "historicalFailedRevisionMayRemain": true
+  }
+}

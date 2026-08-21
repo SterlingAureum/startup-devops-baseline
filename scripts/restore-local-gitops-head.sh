@@ -20,6 +20,19 @@ require_cmd() {
   }
 }
 
+wait_for_application() {
+  local application_name="$1"
+  local deadline=$((SECONDS + WAIT_TIMEOUT_SECONDS))
+
+  until kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" >/dev/null 2>&1; do
+    if [ "${SECONDS}" -ge "${deadline}" ]; then
+      echo "ERROR: timed out waiting for Application/${application_name}." >&2
+      exit 1
+    fi
+    sleep 2
+  done
+}
+
 assert_head_revision() {
   local application_name="$1"
   local revision
@@ -60,21 +73,6 @@ sync_application_if_needed() {
   wait_for_application_idle "${application_name}"
 }
 
-remove_all_demo_parameters() {
-  local parameter_name
-
-  while IFS= read -r parameter_name; do
-    [ -n "${parameter_name}" ] || continue
-    echo "Removing local demo-api Helm parameter: ${parameter_name}"
-    run_argocd_mutation_with_retry \
-      "${DEMO_APP_NAME}" \
-      argocd app unset "${DEMO_APP_NAME}" -p "${parameter_name}"
-  done < <(
-    kubectl -n "${ARGOCD_NAMESPACE}" get application "${DEMO_APP_NAME}" \
-      -o jsonpath='{range .spec.source.helm.parameters[*]}{.name}{"\n"}{end}'
-  )
-}
-
 for command_name in argocd kubectl; do
   require_cmd "${command_name}"
 done
@@ -83,25 +81,20 @@ validate_argocd_operation_settings
 
 cd "${ROOT_DIR}"
 
-echo "==> Restoring the declarative local HEAD baseline"
+echo "==> Restoring the declarative local HEAD baseline through the Root App-of-Apps"
 TARGET_REVISION=HEAD \
+GIT_TARGET_REVISION=HEAD \
 ROOT_SYNC_MODE=manual \
+LOCAL_IMAGE_ENABLED=false \
 REPO_URL="${REPO_URL}" \
   "${ROOT_DIR}/scripts/deploy-root-app.sh"
 
 sync_application_if_needed "${ROOT_APP_NAME}"
 
-set_application_automation "${GUARDRAILS_APP_NAME}" manual
-set_application_automation "${DEMO_APP_NAME}" manual
-wait_for_application_idle "${GUARDRAILS_APP_NAME}"
-wait_for_application_idle "${DEMO_APP_NAME}"
-
-remove_all_demo_parameters
-
-for application_name in "${GUARDRAILS_APP_NAME}" "${DEMO_APP_NAME}"; do
-  sync_application_if_needed "${application_name}"
-  set_application_automation "${application_name}" automated
-done
+wait_for_application "${GUARDRAILS_APP_NAME}"
+wait_for_application "${DEMO_APP_NAME}"
+sync_application_if_needed "${GUARDRAILS_APP_NAME}"
+sync_application_if_needed "${DEMO_APP_NAME}"
 
 set_application_automation "${ROOT_APP_NAME}" automated
 
@@ -109,18 +102,36 @@ assert_head_revision "${ROOT_APP_NAME}"
 assert_head_revision "${GUARDRAILS_APP_NAME}"
 assert_head_revision "${DEMO_APP_NAME}"
 
+root_child_revision="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.spec.source.helm.parameters[?(@.name=="git.targetRevision")].value}')"
+if [ "${root_child_revision}" != "HEAD" ]; then
+  echo "ERROR: Root-rendered child revision did not return to HEAD: ${root_child_revision:-<empty>}." >&2
+  exit 1
+fi
+
+root_local_image_enabled="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.spec.source.helm.parameters[?(@.name=="demoApi.localImage.enabled")].value}')"
+if [ "${root_local_image_enabled}" != "false" ]; then
+  echo "ERROR: Root local-image mode was not disabled." >&2
+  exit 1
+fi
+
 helm_parameter_names="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${DEMO_APP_NAME}" -o jsonpath='{range .spec.source.helm.parameters[*]}{.name}{"\n"}{end}')"
 if [ -n "${helm_parameter_names}" ]; then
-  echo "ERROR: demo-api still has live Helm parameters after HEAD restoration:" >&2
+  echo "ERROR: demo-api still has live Helm parameters after declarative HEAD restoration:" >&2
   printf '%s\n' "${helm_parameter_names}" >&2
   exit 1
 fi
 
 self_heal="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.spec.syncPolicy.automated.selfHeal}')"
 if [ "${self_heal}" != "true" ]; then
-  echo "ERROR: root automated self-heal was not restored." >&2
+  echo "ERROR: Root automated self-heal was not restored." >&2
+  exit 1
+fi
+
+root_sync_status="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.status.sync.status}')"
+if [ "${root_sync_status}" != "Synced" ]; then
+  echo "ERROR: Root did not remain Synced after declarative HEAD restoration: ${root_sync_status:-<empty>}." >&2
   exit 1
 fi
 
 echo "Local GitOps HEAD baseline restored."
-echo "The demo-api image and Helm parameters now come only from the HEAD declaration."
+echo "Root and same-repository children use HEAD, local image parameters are empty, and Root automation is enabled."

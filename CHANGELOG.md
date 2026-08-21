@@ -2,6 +2,33 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.3.4
+
+### Changed
+
+- Converted the local platform App-of-Apps directory into a lightweight Helm
+  Chart with one `git.targetRevision` value for same-repository Applications
+  and independently pinned external Chart versions.
+- Resolved the operator-supplied `TARGET_REVISION` once to a full remote commit
+  SHA, required the local checkout to match it, and supplied that immutable SHA
+  to the Root, namespace guardrails, and demo-api.
+- Moved the exact four local demo-api image parameters under Root ownership so
+  feature deployment and HEAD restoration no longer directly `set` or `unset`
+  child Application fields.
+- Replaced the bounded Root `OutOfSync` feature state with declarative Root
+  `Synced` ownership; Root resync is now safe during feature validation.
+
+### Added
+
+- Added stable/feature Root rendering tests, remote-branch resolution tests,
+  optional Helm lint/render assertions, a machine-readable contract, and a
+  clean replay Runbook.
+
+### Boundary
+
+- The demo-api Chart, image, telemetry, Prometheus gate, Canary strategy,
+  external Chart versions, AWS state, and production automation are unchanged.
+
 ## v0.11.3.3
 
 ### Fixed

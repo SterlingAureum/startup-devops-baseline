@@ -106,9 +106,10 @@ IMAGE_TAG=v0.11.3-local \
   ./scripts/deploy-local-feature-gitops.sh
 ```
 
-This intentionally leaves the Root `OutOfSync / Healthy` while its
-same-repository children use the feature revision. Do not resync the Root until
-restoring the stable declaration with `./scripts/restore-local-gitops-head.sh`.
+The workflow resolves the branch to one full commit SHA and renders it through
+the Root Helm App-of-Apps into every same-repository child. Root remains manual
+but `Synced`; a Root resync is safe. Restore stable `HEAD` ownership afterward
+with `./scripts/restore-local-gitops-head.sh`.
 
 The root app syncs the platform applications under:
 

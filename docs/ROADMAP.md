@@ -302,8 +302,13 @@ Incremental scope:
 - v0.11.3.3 - centralize Application operation serialization, retry only the
   exact operation-busy failure with a five-attempt bound, fail all other errors
   immediately, emit exhaustion diagnostics, and execute transient/permanent
-  busy regression tests - implemented; clean feature replay and HEAD
-  restoration remain required before tagging
+  busy regression tests - implemented; the next replay identified the need to
+  remove split Root/child source ownership in v0.11.3.4
+- v0.11.3.4 - render local child Applications from a Helm App-of-Apps Chart,
+  resolve one remote feature input to an immutable commit shared by Root and
+  same-repository children, keep external Chart versions independent, and make
+  feature image parameters plus HEAD cleanup declaratively Root-owned -
+  implemented; clean feature replay and HEAD restoration remain required
 - v0.11.4 - Grafana dashboards, recording rules, and operator-oriented views
   for application, delivery, data, platform, capacity, and cost health - planned
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity

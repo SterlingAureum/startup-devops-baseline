@@ -8,9 +8,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://kubernetes.github.io/ingress-nginx
+    repoURL: {{ .Values.externalCharts.ingressNginx.repoURL | quote }}
     chart: ingress-nginx
-    targetRevision: 4.11.3
+    targetRevision: {{ .Values.externalCharts.ingressNginx.version | quote }}
     helm:
       releaseName: ingress-nginx
       values: |

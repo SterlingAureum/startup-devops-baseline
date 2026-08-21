@@ -32,16 +32,17 @@ It points Argo CD to:
 clusters/local/platform/
 ```
 
-That directory contains child Argo CD Application manifests.
+That directory is a lightweight Helm App-of-Apps Chart. Its templates render
+the child Argo CD Applications.
 
 ## Child Applications
 
 Child applications include:
 
 ```text
-clusters/local/platform/demo-api.yaml
-clusters/local/platform/ingress-nginx.yaml
-clusters/local/platform/monitoring.yaml
+clusters/local/platform/templates/demo-api.yaml
+clusters/local/platform/templates/ingress-nginx.yaml
+clusters/local/platform/templates/monitoring.yaml
 ```
 
 Each child Application points to its own source path or Helm chart.
@@ -113,9 +114,8 @@ REPO_URL=https://github.com/<your-user>/startup-devops-baseline.git \
   ./scripts/deploy-root-app.sh
 ```
 
-For a local feature-revision acceptance run, the Root must not continuously
-self-heal child Application revisions back to `HEAD`. Use the ordered and
-reversible workflow instead of applying child YAML manually:
+For a local feature-revision acceptance run, use the unified Root-rendered
+workflow instead of applying a child template manually:
 
 ```bash
 TARGET_REVISION=feature/v0.11-observability-sre-baseline \
@@ -123,14 +123,16 @@ IMAGE_TAG=v0.11.3-local \
   ./scripts/deploy-local-feature-gitops.sh
 ```
 
-The temporary Root `OutOfSync` state is expected. After validation, run
-`./scripts/restore-local-gitops-head.sh`. The active Git declarations remain
-`HEAD`; no feature branch name is committed to them.
+The workflow resolves the branch to one immutable commit and renders that same
+commit into Root, namespace guardrails, and demo-api. Root remains manual but
+`Synced`, and a Root resync is safe. After validation, run
+`./scripts/restore-local-gitops-head.sh`. Stable Git values remain `HEAD`; no
+feature branch name is committed to them.
 
-Debug-only fallback:
+Debug-only render inspection:
 
 ```bash
-kubectl apply -f clusters/local/platform/demo-api.yaml
+helm template local-platform clusters/local/platform
 ```
 
 ## Multi-Repository Extension

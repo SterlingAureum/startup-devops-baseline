@@ -7,6 +7,12 @@ ROOT_APP_FILE="clusters/local/root-app.yaml"
 DEFAULT_REPO_URL="https://github.com/SterlingAureum/startup-devops-baseline.git"
 REPO_URL="${REPO_URL:-$DEFAULT_REPO_URL}"
 TARGET_REVISION="${TARGET_REVISION:-HEAD}"
+GIT_TARGET_REVISION="${GIT_TARGET_REVISION:-${TARGET_REVISION}}"
+LOCAL_IMAGE_ENABLED="${LOCAL_IMAGE_ENABLED:-false}"
+IMAGE_REPOSITORY="${IMAGE_REPOSITORY:-startup-devops-baseline/demo-api}"
+IMAGE_TAG="${IMAGE_TAG:-}"
+IMAGE_PULL_POLICY="${IMAGE_PULL_POLICY:-Never}"
+APPLICATION_VERSION="${APPLICATION_VERSION:-${IMAGE_TAG}}"
 ROOT_SYNC_MODE="${ROOT_SYNC_MODE:-}"
 
 if [ -z "${ROOT_SYNC_MODE}" ]; then
@@ -25,10 +31,53 @@ require_cmd() {
   fi
 }
 
-require_cmd kubectl
+for command_name in awk kubectl sed; do
+  require_cmd "${command_name}"
+done
 
 if ! [[ "${TARGET_REVISION}" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ ]]; then
   echo "ERROR: TARGET_REVISION contains unsupported characters: ${TARGET_REVISION}" >&2
+  exit 1
+fi
+
+if ! [[ "${GIT_TARGET_REVISION}" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ ]]; then
+  echo "ERROR: GIT_TARGET_REVISION contains unsupported characters: ${GIT_TARGET_REVISION}" >&2
+  exit 1
+fi
+
+case "${LOCAL_IMAGE_ENABLED}" in
+  true|false) ;;
+  *)
+    echo "ERROR: LOCAL_IMAGE_ENABLED must be true or false." >&2
+    exit 1
+    ;;
+esac
+
+if ! [[ "${IMAGE_REPOSITORY}" =~ ^[A-Za-z0-9][A-Za-z0-9._/:@-]*$ ]]; then
+  echo "ERROR: IMAGE_REPOSITORY contains unsupported characters: ${IMAGE_REPOSITORY}" >&2
+  exit 1
+fi
+
+if [ -n "${IMAGE_TAG}" ] && ! [[ "${IMAGE_TAG}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+  echo "ERROR: IMAGE_TAG contains unsupported characters: ${IMAGE_TAG}" >&2
+  exit 1
+fi
+
+case "${IMAGE_PULL_POLICY}" in
+  Always|IfNotPresent|Never) ;;
+  *)
+    echo "ERROR: IMAGE_PULL_POLICY must be Always, IfNotPresent, or Never." >&2
+    exit 1
+    ;;
+esac
+
+if [ -n "${APPLICATION_VERSION}" ] && ! [[ "${APPLICATION_VERSION}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+  echo "ERROR: APPLICATION_VERSION contains unsupported characters: ${APPLICATION_VERSION}" >&2
+  exit 1
+fi
+
+if [ "${LOCAL_IMAGE_ENABLED}" = "true" ] && { [ -z "${IMAGE_TAG}" ] || [ -z "${APPLICATION_VERSION}" ]; }; then
+  echo "ERROR: IMAGE_TAG and APPLICATION_VERSION are required when LOCAL_IMAGE_ENABLED=true." >&2
   exit 1
 fi
 
@@ -40,7 +89,7 @@ case "${ROOT_SYNC_MODE}" in
     ;;
 esac
 
-if [[ "${REPO_URL}" == *$'\n'* || "${REPO_URL}" == *$'\r'* || "${REPO_URL}" == *'#'* ]]; then
+if ! [[ "${REPO_URL}" =~ ^https?://[A-Za-z0-9._~:/-]+$ ]]; then
   echo "ERROR: REPO_URL contains unsupported characters." >&2
   exit 1
 fi
@@ -59,15 +108,74 @@ kubectl get namespace "$ARGOCD_NAMESPACE" >/dev/null 2>&1 || {
 
 TMP_FILE="$(mktemp)"
 SYNC_MODE_FILE=""
-trap 'rm -f "$TMP_FILE" "${SYNC_MODE_FILE:-}"' EXIT
+PARAMETER_FILE=""
+trap 'rm -f "$TMP_FILE" "${SYNC_MODE_FILE:-}" "${PARAMETER_FILE:-}"' EXIT
 
 echo "Using repository URL: ${REPO_URL}"
-echo "Using target revision: ${TARGET_REVISION}"
+echo "Using root target revision: ${TARGET_REVISION}"
+echo "Using same-repository child revision: ${GIT_TARGET_REVISION}"
+echo "Using local image override: ${LOCAL_IMAGE_ENABLED}"
 echo "Using root sync mode: ${ROOT_SYNC_MODE}"
 sed \
   -e "s#^[[:space:]]*repoURL: .*\$#    repoURL: ${REPO_URL}#" \
   -e "s#^[[:space:]]*targetRevision: .*\$#    targetRevision: ${TARGET_REVISION}#" \
   "${ROOT_APP_FILE}" >"${TMP_FILE}"
+
+PARAMETER_FILE="$(mktemp)"
+awk \
+  -v repo_url="${REPO_URL}" \
+  -v git_revision="${GIT_TARGET_REVISION}" \
+  -v local_image_enabled="${LOCAL_IMAGE_ENABLED}" \
+  -v image_repository="${IMAGE_REPOSITORY}" \
+  -v image_tag="${IMAGE_TAG}" \
+  -v image_pull_policy="${IMAGE_PULL_POLICY}" \
+  -v application_version="${APPLICATION_VERSION}" '
+  $0 == "        - name: git.repoURL" {
+    print
+    getline
+    print "          value: \"" repo_url "\""
+    next
+  }
+  $0 == "        - name: git.targetRevision" {
+    print
+    getline
+    print "          value: \"" git_revision "\""
+    next
+  }
+  $0 == "        - name: demoApi.localImage.enabled" {
+    print
+    getline
+    print "          value: \"" local_image_enabled "\""
+    next
+  }
+  $0 == "        - name: demoApi.localImage.repository" {
+    print
+    getline
+    print "          value: \"" image_repository "\""
+    next
+  }
+  $0 == "        - name: demoApi.localImage.tag" {
+    print
+    getline
+    print "          value: \"" image_tag "\""
+    next
+  }
+  $0 == "        - name: demoApi.localImage.pullPolicy" {
+    print
+    getline
+    print "          value: \"" image_pull_policy "\""
+    next
+  }
+  $0 == "        - name: demoApi.localImage.applicationVersion" {
+    print
+    getline
+    print "          value: \"" application_version "\""
+    next
+  }
+  { print }
+' "${TMP_FILE}" >"${PARAMETER_FILE}"
+mv "${PARAMETER_FILE}" "${TMP_FILE}"
+PARAMETER_FILE=""
 
 if [ "${ROOT_SYNC_MODE}" = "manual" ]; then
   SYNC_MODE_FILE="$(mktemp)"

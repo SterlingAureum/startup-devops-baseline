@@ -1,0 +1,22 @@
+git:
+  repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
+  targetRevision: HEAD
+
+demoApi:
+  localImage:
+    enabled: false
+    repository: startup-devops-baseline/demo-api
+    tag: ""
+    pullPolicy: Never
+    applicationVersion: ""
+
+externalCharts:
+  argoRollouts:
+    repoURL: https://argoproj.github.io/argo-helm
+    version: 2.41.0
+  ingressNginx:
+    repoURL: https://kubernetes.github.io/ingress-nginx
+    version: 4.11.3
+  monitoring:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    version: 88.5.0

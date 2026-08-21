@@ -1,17 +1,20 @@
-# Local Platform Applications
+# Local Platform App-of-Apps Chart
 
-This directory is the target path for the Argo CD root application.
+This Helm Chart is the source path of `Application/startup-devops-root`. It
+renders the five local child Applications.
 
-The root application is defined in:
+`git.targetRevision` applies only to child Applications that read this Git
+repository: `namespace-guardrails` and `demo-api`. The Root source revision is
+rendered by `scripts/deploy-root-app.sh` from the same value during feature
+acceptance.
 
-```text
-clusters/local/root-app.yaml
-```
+External Helm sources remain independently pinned in `values.yaml`:
 
-Future batches will add child Argo CD application manifests here, such as:
+- Argo Rollouts `2.41.0`;
+- ingress-nginx `4.11.3`;
+- kube-prometheus-stack `88.5.0`.
 
-- ingress-nginx
-- monitoring
-- demo-api
-
-The directory is intentionally lightweight in the current batch so that the kind + Argo CD control-plane loop can be validated before deploying additional workloads.
+Stable values use `HEAD` and render `demo-api` Helm parameters as an explicit
+empty list. Feature mode is supplied only through the Root Application and
+renders the exact four local-image parameters. Do not commit a feature branch
+or feature SHA into this Chart.

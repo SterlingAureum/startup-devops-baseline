@@ -78,10 +78,9 @@ for marker in ("SYNC_MODE_FILE", "if [ \"${ROOT_SYNC_MODE}\" = \"manual\" ]", "a
 for marker in (
     'source "${ROOT_DIR}/scripts/lib/argocd-operation.sh"',
     "run_argocd_mutation_with_retry",
-    "remove_unexpected_demo_parameters",
-    "argocd app unset",
-    "demo-api local Helm parameter allowlist",
-    "set_application_automation \"${DEMO_APP_NAME}\" manual",
+    'GIT_TARGET_REVISION="${resolved_target_revision}"',
+    "LOCAL_IMAGE_ENABLED=true",
+    "Root-rendered Helm parameter allowlist",
     "kubectl argo rollouts retry rollout",
 ):
     require(marker in feature, f"Feature recovery guard missing: {marker}")
@@ -92,16 +91,13 @@ for marker in ("wait_for_application_idle", "argocd app wait", "--operation"):
 
 for marker in (
     "ROOT_SYNC_MODE=manual",
-    "remove_all_demo_parameters",
-    "argocd app unset",
-    "still has live Helm parameters",
+    "GIT_TARGET_REVISION=HEAD",
+    "LOCAL_IMAGE_ENABLED=false",
+    "still has live Helm parameters after declarative HEAD restoration",
     "set_application_automation \"${ROOT_APP_NAME}\" automated",
 ):
     require(marker in restore, f"Restore recovery guard missing: {marker}")
-require(
-    restore.index("remove_all_demo_parameters") < restore.index("set_application_automation \"${ROOT_APP_NAME}\" automated"),
-    "Root automation is restored before parameter cleanup",
-)
+require("argocd app unset" not in restore, "Direct restoration cleanup returned")
 
 for name, mutate in (
     ("retry credited", lambda v: v["incident"].update(retryCommandCausedRecovery=True)),

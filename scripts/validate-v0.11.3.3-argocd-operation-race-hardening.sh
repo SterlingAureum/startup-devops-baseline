@@ -87,11 +87,12 @@ for name, script in (("feature", feature), ("restore", restore)):
     require('source "${ROOT_DIR}/scripts/lib/argocd-operation.sh"' in script, f"{name} does not source helper")
     require("run_argocd_mutation_with_retry" in script, f"{name} does not use bounded retry")
     require("argocd app sync" in script, f"{name} sync path missing")
-    require("argocd app unset" in script, f"{name} unset path missing")
 
-require("argocd app set" in feature, "Feature set path missing")
-require(feature.count("run_argocd_mutation_with_retry") >= 4, "Feature mutation coverage incomplete")
-require(restore.count("run_argocd_mutation_with_retry") >= 2, "Restore mutation coverage incomplete")
+require("argocd app set" not in feature, "Feature returned to direct child set")
+require("argocd app unset" not in feature, "Feature returned to direct child unset")
+require("argocd app unset" not in restore, "Restore returned to direct child unset")
+require(feature.count("run_argocd_mutation_with_retry") >= 1, "Feature sync retry coverage missing")
+require(restore.count("run_argocd_mutation_with_retry") >= 1, "Restore sync retry coverage missing")
 
 for name, mutate in (
     ("unbounded retry", lambda v: v["controls"].update(boundedAttempts=0)),

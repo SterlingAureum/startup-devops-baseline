@@ -187,11 +187,11 @@ def require_markers(relative: str, markers: tuple[str, ...]) -> str:
 
 def validate_repository() -> None:
     local = require_markers(
-        "clusters/local/platform/monitoring.yaml",
+        "clusters/local/platform/templates/monitoring.yaml",
         (
-            "repoURL: https://prometheus-community.github.io/helm-charts",
+            ".Values.externalCharts.monitoring.repoURL",
             "chart: kube-prometheus-stack",
-            "targetRevision: 88.5.0",
+            ".Values.externalCharts.monitoring.version",
             "releaseName: observability-metrics",
             "namespace: observability",
             "retention: 6h",
@@ -201,6 +201,10 @@ def validate_repository() -> None:
             "type: ClusterIP",
             "enableAdminAPI: false",
         ),
+    )
+    require_markers(
+        "clusters/local/platform/values.yaml",
+        ("monitoring:", "version: 88.5.0"),
     )
     aws = require_markers(
         "clusters/aws/base/platform/monitoring.yaml",

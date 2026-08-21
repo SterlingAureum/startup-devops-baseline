@@ -302,7 +302,7 @@ def validate_repository() -> None:
     require("version: 0.4.0" not in chart, "Chart version was not advanced")
 
     for relative in (
-        "clusters/local/platform/monitoring.yaml",
+        "clusters/local/platform/templates/monitoring.yaml",
         "clusters/aws/base/platform/monitoring.yaml",
     ):
         monitoring = read(relative)

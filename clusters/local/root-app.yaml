@@ -11,8 +11,22 @@ spec:
     repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
     targetRevision: HEAD
     path: clusters/local/platform
-    directory:
-      recurse: true
+    helm:
+      parameters:
+        - name: git.repoURL
+          value: https://github.com/SterlingAureum/startup-devops-baseline.git
+        - name: git.targetRevision
+          value: HEAD
+        - name: demoApi.localImage.enabled
+          value: "false"
+        - name: demoApi.localImage.repository
+          value: startup-devops-baseline/demo-api
+        - name: demoApi.localImage.tag
+          value: ""
+        - name: demoApi.localImage.pullPolicy
+          value: Never
+        - name: demoApi.localImage.applicationVersion
+          value: ""
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

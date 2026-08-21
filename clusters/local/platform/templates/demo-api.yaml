@@ -10,11 +10,24 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
-    targetRevision: HEAD
+    repoURL: {{ .Values.git.repoURL | quote }}
+    targetRevision: {{ .Values.git.targetRevision | quote }}
     path: apps/demo-api/helm
     helm:
       releaseName: demo-api
+{{ if .Values.demoApi.localImage.enabled }}
+      parameters:
+        - name: image.repository
+          value: {{ .Values.demoApi.localImage.repository | quote }}
+        - name: image.tag
+          value: {{ .Values.demoApi.localImage.tag | quote }}
+        - name: image.pullPolicy
+          value: {{ .Values.demoApi.localImage.pullPolicy | quote }}
+        - name: release.applicationVersion
+          value: {{ .Values.demoApi.localImage.applicationVersion | quote }}
+{{ else }}
+      parameters: []
+{{ end }}
   destination:
     server: https://kubernetes.default.svc
     namespace: startup-apps

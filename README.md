@@ -2,11 +2,11 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.3.3-argocd-operation-race-hardening`.
-It preserves the v0.11.3.2 fail-closed Prometheus gate and adds exact,
-bounded retry for the short Argo CD server-side operation lock that may remain
-after an Application appears idle. See
-`docs/V0.11.3.3_ARGOCD_OPERATION_RACE_HARDENING.md`.
+Current development checkpoint: `v0.11.3.4-unified-feature-revision-rendering`.
+It keeps the v0.11.3.3 bounded Argo CD operation guard and replaces live child
+revision overrides with one Helm-rendered, immutable commit shared by the Root
+and every same-repository child Application. See
+`docs/V0.11.3.4_UNIFIED_FEATURE_REVISION_RENDERING.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 

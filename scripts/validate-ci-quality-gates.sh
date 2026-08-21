@@ -60,6 +60,9 @@ echo "==> Validating v0.11.3.2 Prometheus no-data hardening"
 echo "==> Validating v0.11.3.3 Argo CD operation race hardening"
 "${ROOT_DIR}/scripts/validate-v0.11.3.3-argocd-operation-race-hardening.sh"
 
+echo "==> Validating v0.11.3.4 unified feature revision rendering"
+"${ROOT_DIR}/scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

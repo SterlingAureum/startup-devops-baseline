@@ -23,7 +23,7 @@ remote write are not part of v0.11.2.
 The local Application is:
 
 ```text
-clusters/local/platform/monitoring.yaml
+clusters/local/platform/templates/monitoring.yaml
 ```
 
 The AWS base Application and environment patches are:

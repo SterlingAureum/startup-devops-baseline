@@ -58,12 +58,11 @@ IMAGE_TAG=v0.11.3-local \
   ./scripts/deploy-local-feature-gitops.sh
 ```
 
-The script creates or applies the Root in manual mode, waits for any prior Argo
-CD operation, and then pins the same-repository child Applications to the
-requested revision. It pauses child automation and removes stale non-image
-Helm parameters before applying the exact local-image allowlist. The Root
-becomes `OutOfSync / Healthy` after the child overrides; that is expected. Do
-not sync the Root again during feature validation.
+The script resolves the pushed feature branch to one full commit SHA, requires
+the local checkout to match it, and passes that SHA through the Root Helm
+App-of-Apps to every same-repository child. The exact local-image allowlist is
+also rendered by the Root. The Root remains manual but must be `Synced`; a Root
+resync is safe because it no longer resets feature children to `HEAD`.
 
 After manual Canary completion and validation, restore the declarative mode:
 
@@ -73,8 +72,8 @@ After manual Canary completion and validation, restore the declarative mode:
 
 See `docs/V0.11.3_LOCAL_FEATURE_GITOPS_VALIDATION.md` for the state model and
 acceptance commands, and
-`docs/V0.11.3.1_LOCAL_FEATURE_GITOPS_RECOVERY.md` for recovery details and the
-component dependency map.
+`docs/V0.11.3.4_UNIFIED_FEATURE_REVISION_RENDERING.md` for unified source
+ownership and declarative HEAD restoration.
 
 ### 5. Validate the baseline
 

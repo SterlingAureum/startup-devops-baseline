@@ -13,8 +13,6 @@ repository = "https://github.com/SterlingAureum/startup-devops-baseline.git"
 
 expected = {
     "clusters/local/root-app.yaml": "HEAD",
-    "clusters/local/platform/demo-api.yaml": "HEAD",
-    "clusters/local/platform/namespace-guardrails.yaml": "HEAD",
     "clusters/aws/overlays/dev/root-app.yaml": "main",
     "clusters/aws/overlays/test/root-app.yaml": "main",
     "clusters/aws/overlays/prod/root-app.yaml": "main",
@@ -31,6 +29,8 @@ expected = {
 found = {}
 for path in sorted((root / "clusters").rglob("*.yaml")):
     text = path.read_text()
+    if not re.search(r"^kind:\s*Application$", text, re.MULTILINE):
+        continue
     if f"repoURL: {repository}" not in text:
         continue
 
@@ -57,6 +57,20 @@ errors = [
 if errors:
     raise SystemExit("\n".join(errors))
 
+platform_values = (root / "clusters/local/platform/values.yaml").read_text()
+if "repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git" not in platform_values:
+    raise SystemExit("clusters/local/platform/values.yaml: stable repository URL changed")
+if not re.search(r"^  targetRevision: HEAD$", platform_values, re.MULTILINE):
+    raise SystemExit("clusters/local/platform/values.yaml: stable child revision is not HEAD")
+
+for relative in (
+    "clusters/local/platform/templates/demo-api.yaml",
+    "clusters/local/platform/templates/namespace-guardrails.yaml",
+):
+    text = (root / relative).read_text()
+    if ".Values.git.repoURL" not in text or ".Values.git.targetRevision" not in text:
+        raise SystemExit(f"{relative}: same-repository source is not parameterized")
+
 for base in (root / "clusters", root / "scripts"):
     for path in sorted(base.rglob("*")):
         if not path.is_file():
@@ -72,7 +86,7 @@ for base in (root / "clusters", root / "scripts"):
 
 print(
     "Active GitOps revision validation passed: "
-    f"{sum(path.startswith('clusters/local/') for path in found)} local Applications use HEAD; "
+    f"{sum(path.startswith('clusters/local/') for path in found) + 2} local Applications use HEAD; "
     f"{sum(path.startswith('clusters/aws/') for path in found)} AWS base/root Applications use main."
 )
 PY

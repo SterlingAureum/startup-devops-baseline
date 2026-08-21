@@ -99,14 +99,13 @@ Symptoms:
 
 Cause:
 
-The tracked child Application declarations intentionally use `HEAD`. A live
-feature revision on a child therefore differs from the Root's desired child
-Application object. Root self-heal or a manual Root sync restores `HEAD`.
+This is the pre-v0.11.3.4 model: live child revisions were patched away from
+the Root's tracked `HEAD` declarations. A Root sync correctly restored its own
+desired state and therefore reset the children.
 
 Fix:
 
-Do not sync the Root Application after child feature overrides. Use the
-ordered workflow instead:
+Use the v0.11.3.4 unified workflow:
 
 ```bash
 TARGET_REVISION=feature/v0.11-observability-sre-baseline \
@@ -114,8 +113,13 @@ IMAGE_TAG=v0.11.3-local \
   ./scripts/deploy-local-feature-gitops.sh
 ```
 
-The expected validation state is Root `OutOfSync / Healthy` and feature child
-Applications `Synced`. Restore the stable declaration afterward:
+The branch is resolved to one full commit SHA and rendered by the Root into
+both same-repository children. Root and children must remain `Synced`; a Root
+resync is now safe. If Root remains `OutOfSync`, confirm that the platform path
+contains `Chart.yaml`, that no legacy raw Application YAML remains beside it,
+and that Root carries the `git.targetRevision` Helm parameter.
+
+Restore the stable declaration afterward:
 
 ```bash
 ./scripts/restore-local-gitops-head.sh

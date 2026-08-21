@@ -10,9 +10,9 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://argoproj.github.io/argo-helm
+    repoURL: {{ .Values.externalCharts.argoRollouts.repoURL | quote }}
     chart: argo-rollouts
-    targetRevision: 2.41.0
+    targetRevision: {{ .Values.externalCharts.argoRollouts.version | quote }}
     helm:
       releaseName: argo-rollouts
       values: |

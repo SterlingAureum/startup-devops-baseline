@@ -149,12 +149,14 @@ def validate_repository() -> None:
         "scripts/deploy-root-app.sh",
         (
             'TARGET_REVISION="${TARGET_REVISION:-HEAD}"',
+            'GIT_TARGET_REVISION="${GIT_TARGET_REVISION:-${TARGET_REVISION}}"',
+            'LOCAL_IMAGE_ENABLED="${LOCAL_IMAGE_ENABLED:-false}"',
             'ROOT_SYNC_MODE="${ROOT_SYNC_MODE:-}"',
             'ROOT_SYNC_MODE="manual"',
             'ROOT_SYNC_MODE="automated"',
             'repoURL: .*\\$#    repoURL:',
             'targetRevision: .*\\$#    targetRevision:',
-            'targetRevision: ${TARGET_REVISION}',
+            'demoApi.localImage.enabled',
             "automated\":null",
             "SYNC_MODE_FILE",
             "Applying Argo CD root application",
@@ -168,18 +170,19 @@ def validate_repository() -> None:
             'TARGET_REVISION="${TARGET_REVISION:-}"',
             "TARGET_REVISION is required for feature validation",
             "ROOT_SYNC_MODE=manual",
+            "resolve_remote_git_revision",
+            "resolved_target_revision",
+            'GIT_TARGET_REVISION="${resolved_target_revision}"',
+            "LOCAL_IMAGE_ENABLED=true",
             'sync_application_if_needed "${ROOT_APP_NAME}"',
-            'argocd app set "${GUARDRAILS_APP_NAME}" --revision "${TARGET_REVISION}"',
-            'argocd app set "${DEMO_APP_NAME}"',
-            "image.pullPolicy=Never",
-            "resolved source commit",
-            "remove_unexpected_demo_parameters",
-            "demo-api local Helm parameter allowlist",
+            "IMAGE_PULL_POLICY=Never",
+            "Root-rendered Helm parameter allowlist",
             'source "${ROOT_DIR}/scripts/lib/argocd-operation.sh"',
+            'source "${ROOT_DIR}/scripts/lib/git-revision.sh"',
             "run_argocd_mutation_with_retry",
             "get servicemonitor",
             "provider.prometheus.address",
-            "Do not sync ${ROOT_APP_NAME} again during feature validation.",
+            "A Root resync is safe during this feature validation",
             "kubectl argo rollouts retry rollout",
         ),
     )
@@ -187,14 +190,11 @@ def validate_repository() -> None:
         "scripts/lib/argocd-operation.sh",
         ("wait_for_application_idle", "--operation", "run_argocd_mutation_with_retry"),
     )
-    require(
-        feature.index('sync_application_if_needed "${ROOT_APP_NAME}"')
-        < feature.index('argocd app set "${DEMO_APP_NAME}"'),
-        "Root is not synced before child override",
-    )
     for forbidden in (
         "feature/v0.11-observability-sre-baseline",
         "analysis.prometheus.address=",
+        "argocd app set",
+        "argocd app unset",
         "kubectl argo rollouts promote",
         "--full",
         "sed -i",
@@ -206,30 +206,35 @@ def validate_repository() -> None:
         "scripts/restore-local-gitops-head.sh",
         (
             "TARGET_REVISION=HEAD",
+            "GIT_TARGET_REVISION=HEAD",
+            "LOCAL_IMAGE_ENABLED=false",
             "ROOT_SYNC_MODE=manual",
             'sync_application_if_needed "${ROOT_APP_NAME}"',
-            "remove_all_demo_parameters",
             'set_application_automation "${ROOT_APP_NAME}" automated',
             'assert_head_revision "${DEMO_APP_NAME}"',
-            "root automated self-heal was not restored",
+            "Root automated self-heal was not restored",
         ),
     )
+    require("argocd app unset" not in restore, "Restoration returned to direct child cleanup")
     require("TARGET_REVISION=main" not in restore, "Local restoration changed to main")
 
+    root_application = read("clusters/local/root-app.yaml")
+    platform_values = read("clusters/local/platform/values.yaml")
+    require("targetRevision: HEAD" in root_application, "Stable Root HEAD declaration changed")
+    require("targetRevision: HEAD" in platform_values, "Stable child HEAD value changed")
     for relative in (
-        "clusters/local/root-app.yaml",
-        "clusters/local/platform/demo-api.yaml",
-        "clusters/local/platform/namespace-guardrails.yaml",
+        "clusters/local/platform/templates/demo-api.yaml",
+        "clusters/local/platform/templates/namespace-guardrails.yaml",
     ):
         text = read(relative)
-        require("targetRevision: HEAD" in text, f"{relative}: stable HEAD declaration changed")
+        require(".Values.git.targetRevision" in text, f"{relative}: shared revision value missing")
         require(re.search(r"targetRevision:\s*feature/", text) is None, f"{relative}: feature branch committed")
 
     require_markers(
         "docs/V0.11.3_LOCAL_FEATURE_GITOPS_VALIDATION.md",
         (
-            "Root Application becomes",
-            "OutOfSync while remaining Healthy",
+            "v0.11.3.4",
+            "resolved commit SHA",
             "deploy-local-feature-gitops.sh",
             "restore-local-gitops-head.sh",
             "feature/v0.11-observability-sre-baseline",
@@ -247,7 +252,7 @@ def validate_repository() -> None:
     )
     require_markers(
         "docs/TROUBLESHOOTING.md",
-        ("Root Is OutOfSync During Feature Validation", "Do not sync the Root Application"),
+        ("Root Is OutOfSync During Feature Validation", "v0.11.3.4"),
     )
     require_markers(
         ".github/CODEOWNERS",

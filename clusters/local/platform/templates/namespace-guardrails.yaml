@@ -10,8 +10,8 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
-    targetRevision: HEAD
+    repoURL: {{ .Values.git.repoURL | quote }}
+    targetRevision: {{ .Values.git.targetRevision | quote }}
     path: platform/security/namespace-guardrails/startup-apps
     directory:
       recurse: true

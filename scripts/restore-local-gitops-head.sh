@@ -9,6 +9,9 @@ GUARDRAILS_APP_NAME="${GUARDRAILS_APP_NAME:-namespace-guardrails}"
 REPO_URL="${REPO_URL:-https://github.com/SterlingAureum/startup-devops-baseline.git}"
 WAIT_TIMEOUT_SECONDS="${WAIT_TIMEOUT_SECONDS:-180}"
 
+# shellcheck source=scripts/lib/argocd-operation.sh
+source "${ROOT_DIR}/scripts/lib/argocd-operation.sh"
+
 require_cmd() {
   local command_name="$1"
   command -v "${command_name}" >/dev/null 2>&1 || {
@@ -25,32 +28,6 @@ assert_head_revision() {
     echo "ERROR: Application/${application_name} did not return to HEAD: ${revision:-<empty>}." >&2
     exit 1
   fi
-}
-
-wait_for_application_idle() {
-  local application_name="$1"
-  local deadline=$((SECONDS + WAIT_TIMEOUT_SECONDS))
-  local idle_observations=0
-  local operation
-  local phase
-
-  while [ "${SECONDS}" -lt "${deadline}" ]; do
-    operation="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.operation}' 2>/dev/null || true)"
-    phase="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.status.operationState.phase}' 2>/dev/null || true)"
-    if [ -z "${operation}" ] && [ "${phase}" != "Running" ]; then
-      idle_observations=$((idle_observations + 1))
-      if [ "${idle_observations}" -ge 2 ]; then
-        return 0
-      fi
-    else
-      idle_observations=0
-      argocd app wait "${application_name}" --operation --timeout "${WAIT_TIMEOUT_SECONDS}" >/dev/null || true
-    fi
-    sleep 1
-  done
-
-  echo "ERROR: timed out waiting for Application/${application_name} to become idle." >&2
-  exit 1
 }
 
 set_application_automation() {
@@ -76,7 +53,9 @@ sync_application_if_needed() {
   argocd app get "${application_name}" --hard-refresh >/dev/null
   sync_status="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.status.sync.status}')"
   if [ "${sync_status}" != "Synced" ]; then
-    argocd app sync "${application_name}"
+    run_argocd_mutation_with_retry \
+      "${application_name}" \
+      argocd app sync "${application_name}"
   fi
   wait_for_application_idle "${application_name}"
 }
@@ -87,7 +66,9 @@ remove_all_demo_parameters() {
   while IFS= read -r parameter_name; do
     [ -n "${parameter_name}" ] || continue
     echo "Removing local demo-api Helm parameter: ${parameter_name}"
-    argocd app unset "${DEMO_APP_NAME}" -p "${parameter_name}"
+    run_argocd_mutation_with_retry \
+      "${DEMO_APP_NAME}" \
+      argocd app unset "${DEMO_APP_NAME}" -p "${parameter_name}"
   done < <(
     kubectl -n "${ARGOCD_NAMESPACE}" get application "${DEMO_APP_NAME}" \
       -o jsonpath='{range .spec.source.helm.parameters[*]}{.name}{"\n"}{end}'
@@ -97,6 +78,8 @@ remove_all_demo_parameters() {
 for command_name in argocd kubectl; do
   require_cmd "${command_name}"
 done
+
+validate_argocd_operation_settings
 
 cd "${ROOT_DIR}"
 

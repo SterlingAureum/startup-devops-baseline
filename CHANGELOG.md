@@ -2,6 +2,30 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.3.3
+
+### Fixed
+
+- Added exact, bounded retry when Argo CD rejects a `sync`, `set`, or `unset`
+  mutation with `another operation is already in progress` after the
+  Application custom resource already appears idle.
+- Unified feature deployment and HEAD restoration on one operation
+  serialization helper, increased stable idle observations to three, and
+  added Application diagnostics when the five-attempt bound is exhausted.
+- Kept permission, validation, repository, and all non-busy errors as immediate
+  failures instead of hiding them behind retries.
+
+### Added
+
+- Added executable transient-busy, permanent-busy, non-busy-error, and invalid
+  configuration regression cases plus a machine-readable incident contract and
+  clean live-replay acceptance Runbook.
+
+### Boundary
+
+- This patch changes no Chart, image, telemetry, Prometheus gate, Canary steps,
+  AWS state, production automation, or active tracked GitOps revision.
+
 ## v0.11.3.2
 
 ### Fixed

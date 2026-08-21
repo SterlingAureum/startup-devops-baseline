@@ -26,6 +26,7 @@
 /delivery/contracts/v0.11.3-local-feature-gitops-validation.json @SterlingAureum
 /delivery/contracts/v0.11.3.1-local-feature-gitops-recovery.json @SterlingAureum
 /delivery/contracts/v0.11.3.2-prometheus-no-data-hardening.json @SterlingAureum
+/delivery/contracts/v0.11.3.3-argocd-operation-race-hardening.json @SterlingAureum
 /delivery/contracts/examples/v0.10-final-evidence-input.example.json @SterlingAureum
 /scripts/calculate-demo-api-qualification-scope.py @SterlingAureum
 /scripts/demo_api_qualification_bundle.py @SterlingAureum
@@ -56,6 +57,8 @@
 /scripts/validate-v0.11.3-local-feature-gitops.sh @SterlingAureum
 /scripts/validate-v0.11.3.1-local-feature-gitops-recovery.sh @SterlingAureum
 /scripts/validate-v0.11.3.2-prometheus-no-data-hardening.sh @SterlingAureum
+/scripts/validate-v0.11.3.3-argocd-operation-race-hardening.sh @SterlingAureum
+/scripts/lib/argocd-operation.sh @SterlingAureum
 /scripts/derive-demo-api-release-id.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.sh @SterlingAureum
@@ -78,6 +81,7 @@
 /docs/V0.11.3_LOCAL_FEATURE_GITOPS_VALIDATION.md @SterlingAureum
 /docs/V0.11.3.1_LOCAL_FEATURE_GITOPS_RECOVERY.md @SterlingAureum
 /docs/V0.11.3.2_PROMETHEUS_NO_DATA_HARDENING.md @SterlingAureum
+/docs/V0.11.3.3_ARGOCD_OPERATION_RACE_HARDENING.md @SterlingAureum
 /clusters/local/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /docs/TRUSTED_RUNTIME_EXECUTOR.md @SterlingAureum

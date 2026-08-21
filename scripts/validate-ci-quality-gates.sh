@@ -19,7 +19,7 @@ done
 echo "==> Checking shell script syntax"
 while IFS= read -r script; do
   bash -n "${script}"
-done < <(find "${ROOT_DIR}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
+done < <(find "${ROOT_DIR}/scripts" -type f -name '*.sh' | sort)
 
 echo "==> Validating release orchestration contracts"
 "${ROOT_DIR}/scripts/validate-release-orchestration-contract.sh"
@@ -56,6 +56,9 @@ echo "==> Validating v0.11.3.1 local feature GitOps recovery guards"
 
 echo "==> Validating v0.11.3.2 Prometheus no-data hardening"
 "${ROOT_DIR}/scripts/validate-v0.11.3.2-prometheus-no-data-hardening.sh"
+
+echo "==> Validating v0.11.3.3 Argo CD operation race hardening"
+"${ROOT_DIR}/scripts/validate-v0.11.3.3-argocd-operation-race-hardening.sh"
 
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"

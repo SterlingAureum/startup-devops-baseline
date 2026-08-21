@@ -16,6 +16,9 @@ EXPECTED_PROMETHEUS_ADDRESS="${EXPECTED_PROMETHEUS_ADDRESS:-http://observability
 EXPECTED_CHART_VERSION="${EXPECTED_CHART_VERSION:-}"
 WAIT_TIMEOUT_SECONDS="${WAIT_TIMEOUT_SECONDS:-180}"
 
+# shellcheck source=scripts/lib/argocd-operation.sh
+source "${ROOT_DIR}/scripts/lib/argocd-operation.sh"
+
 require_cmd() {
   local command_name="$1"
   command -v "${command_name}" >/dev/null 2>&1 || {
@@ -35,33 +38,6 @@ wait_for_application() {
     fi
     sleep 2
   done
-}
-
-wait_for_application_idle() {
-  local application_name="$1"
-  local deadline=$((SECONDS + WAIT_TIMEOUT_SECONDS))
-  local idle_observations=0
-  local operation
-  local phase
-
-  while [ "${SECONDS}" -lt "${deadline}" ]; do
-    operation="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.operation}' 2>/dev/null || true)"
-    phase="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.status.operationState.phase}' 2>/dev/null || true)"
-
-    if [ -z "${operation}" ] && [ "${phase}" != "Running" ]; then
-      idle_observations=$((idle_observations + 1))
-      if [ "${idle_observations}" -ge 2 ]; then
-        return 0
-      fi
-    else
-      idle_observations=0
-      argocd app wait "${application_name}" --operation --timeout "${WAIT_TIMEOUT_SECONDS}" >/dev/null || true
-    fi
-    sleep 1
-  done
-
-  echo "ERROR: timed out waiting for Application/${application_name} to become idle." >&2
-  exit 1
 }
 
 set_application_automation() {
@@ -87,7 +63,9 @@ sync_application_if_needed() {
   argocd app get "${application_name}" --hard-refresh >/dev/null
   sync_status="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.status.sync.status}')"
   if [ "${sync_status}" != "Synced" ]; then
-    argocd app sync "${application_name}"
+    run_argocd_mutation_with_retry \
+      "${application_name}" \
+      argocd app sync "${application_name}"
   fi
   wait_for_application_idle "${application_name}"
 }
@@ -102,7 +80,9 @@ remove_unexpected_demo_parameters() {
         ;;
       *)
         echo "Removing stale demo-api Helm parameter: ${parameter_name}"
-        argocd app unset "${DEMO_APP_NAME}" -p "${parameter_name}"
+        run_argocd_mutation_with_retry \
+          "${DEMO_APP_NAME}" \
+          argocd app unset "${DEMO_APP_NAME}" -p "${parameter_name}"
         ;;
     esac
   done < <(
@@ -125,6 +105,8 @@ assert_equals() {
 for command_name in argocd awk grep kubectl sort; do
   require_cmd "${command_name}"
 done
+
+validate_argocd_operation_settings
 
 if [ -z "${TARGET_REVISION}" ]; then
   echo "ERROR: TARGET_REVISION is required for feature validation." >&2
@@ -177,13 +159,17 @@ echo "==> Removing stale non-image Helm parameters from demo-api"
 remove_unexpected_demo_parameters
 
 echo "==> Pinning same-repository child Applications to ${TARGET_REVISION}"
-argocd app set "${GUARDRAILS_APP_NAME}" --revision "${TARGET_REVISION}"
-argocd app set "${DEMO_APP_NAME}" \
-  --revision "${TARGET_REVISION}" \
-  --helm-set "image.repository=${IMAGE_REPOSITORY}" \
-  --helm-set "image.tag=${IMAGE_TAG}" \
-  --helm-set "image.pullPolicy=Never" \
-  --helm-set "release.applicationVersion=${APPLICATION_VERSION}"
+run_argocd_mutation_with_retry \
+  "${GUARDRAILS_APP_NAME}" \
+  argocd app set "${GUARDRAILS_APP_NAME}" --revision "${TARGET_REVISION}"
+run_argocd_mutation_with_retry \
+  "${DEMO_APP_NAME}" \
+  argocd app set "${DEMO_APP_NAME}" \
+    --revision "${TARGET_REVISION}" \
+    --helm-set "image.repository=${IMAGE_REPOSITORY}" \
+    --helm-set "image.tag=${IMAGE_TAG}" \
+    --helm-set "image.pullPolicy=Never" \
+    --helm-set "release.applicationVersion=${APPLICATION_VERSION}"
 
 sync_application_if_needed "${GUARDRAILS_APP_NAME}"
 sync_application_if_needed "${DEMO_APP_NAME}"

@@ -175,13 +175,17 @@ def validate_repository() -> None:
             "resolved source commit",
             "remove_unexpected_demo_parameters",
             "demo-api local Helm parameter allowlist",
-            "wait_for_application_idle",
-            "--operation",
+            'source "${ROOT_DIR}/scripts/lib/argocd-operation.sh"',
+            "run_argocd_mutation_with_retry",
             "get servicemonitor",
             "provider.prometheus.address",
             "Do not sync ${ROOT_APP_NAME} again during feature validation.",
             "kubectl argo rollouts retry rollout",
         ),
+    )
+    require_markers(
+        "scripts/lib/argocd-operation.sh",
+        ("wait_for_application_idle", "--operation", "run_argocd_mutation_with_retry"),
     )
     require(
         feature.index('sync_application_if_needed "${ROOT_APP_NAME}"')

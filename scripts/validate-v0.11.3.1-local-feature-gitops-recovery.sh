@@ -70,14 +70,14 @@ validate_contract(contract)
 root_deploy = read("scripts/deploy-root-app.sh")
 feature = read("scripts/deploy-local-feature-gitops.sh")
 restore = read("scripts/restore-local-gitops-head.sh")
+operation_helper = read("scripts/lib/argocd-operation.sh")
 
 for marker in ("SYNC_MODE_FILE", "if [ \"${ROOT_SYNC_MODE}\" = \"manual\" ]", "automated:/,/^    syncOptions:"):
     require(marker in root_deploy, f"Root manual-render guard missing: {marker}")
 
 for marker in (
-    "wait_for_application_idle",
-    "argocd app wait",
-    "--operation",
+    'source "${ROOT_DIR}/scripts/lib/argocd-operation.sh"',
+    "run_argocd_mutation_with_retry",
     "remove_unexpected_demo_parameters",
     "argocd app unset",
     "demo-api local Helm parameter allowlist",
@@ -86,6 +86,9 @@ for marker in (
 ):
     require(marker in feature, f"Feature recovery guard missing: {marker}")
 require("kubectl argo rollouts retry ${DEMO_APP_NAME}" not in feature, "Invalid retry syntax returned")
+
+for marker in ("wait_for_application_idle", "argocd app wait", "--operation"):
+    require(marker in operation_helper, f"Shared operation guard missing: {marker}")
 
 for marker in (
     "ROOT_SYNC_MODE=manual",

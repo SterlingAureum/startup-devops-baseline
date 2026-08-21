@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "v0.11.3.3",
+  "version": "v0.11.3.3",
+  "status": "offline-implemented-live-replay-required",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.3.3_ARGOCD_OPERATION_RACE_HARDENING.md",
+  "incident": {
+    "workflow": "scripts/deploy-local-feature-gitops.sh",
+    "application": "startup-devops-root",
+    "failedCommand": "argocd app sync startup-devops-root",
+    "errorClass": "FailedPrecondition",
+    "errorMessage": "another operation is already in progress",
+    "failurePoint": "before-child-feature-mutations",
+    "previousIdleObservationWasInsufficient": true
+  },
+  "controls": {
+    "sharedOperationHelper": "scripts/lib/argocd-operation.sh",
+    "busyErrorMatchedExactly": true,
+    "boundedAttempts": 5,
+    "retryDelaySeconds": 2,
+    "stableIdleObservations": 3,
+    "protectedMutations": [
+      "sync",
+      "set",
+      "unset"
+    ],
+    "featureAndRestorationUseSameHelper": true,
+    "nonBusyErrorsFailImmediately": true,
+    "exhaustionPrintsApplicationDiagnostics": true
+  },
+  "dynamicValidation": {
+    "transientBusyThenSuccess": true,
+    "permanentBusyStopsAtBound": true,
+    "nonBusyFailureIsNotRetried": true,
+    "invalidRetryConfigurationRejected": true
+  },
+  "boundaries": {
+    "applicationTelemetryChanged": false,
+    "monitoringStackChanged": false,
+    "canaryStrategyChanged": false,
+    "imageIdentityChanged": false,
+    "activeGitOpsRevisionChanged": false,
+    "awsMutation": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidatorRequired": true,
+    "cleanHeadToFeatureReplayRequired": true,
+    "headRestorationRequired": true,
+    "noConcurrentOperationFailureRequired": true
+  }
+}

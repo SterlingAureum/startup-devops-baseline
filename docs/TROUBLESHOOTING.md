@@ -128,15 +128,28 @@ only after it is `Successful`; never use full promotion to hide a failed gate.
 
 Cause:
 
-An automated Application operation was still running when a manual sync was
+An automated Application operation may still be running when a manual sync is
 requested. In older local feature flows, applying the automated Root and then
-patching it to manual mode left a small race window.
+patching it to manual mode left a race window. Even after that creation race
+was removed, the Argo CD API's server-side operation lock may briefly outlive
+the idle state visible in the Application custom resource.
 
 Fix:
 
-Use the v0.11.3.1 scripts. Manual mode is present in the manifest before apply,
-and the workflow waits for Application operations to become idle. Do not run a
-second `argocd app sync` concurrently.
+Use the v0.11.3.3 scripts. Manual mode is rendered before apply, and `sync`,
+`set`, and `unset` retry only the exact operation-busy failure with a bounded
+wait. Do not run a second manual sync concurrently and do not terminate a valid
+operation to force acceptance.
+
+Inspect a persistent failure with:
+
+```bash
+kubectl -n argocd get application startup-devops-root \
+  -o custom-columns='NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,OPERATION:.status.operationState.phase,MESSAGE:.status.operationState.message'
+```
+
+If the five-attempt bound is exhausted, preserve the output and diagnose the
+operation instead of increasing the retry count without evidence.
 
 ## AnalysisTemplate Keeps an Old Prometheus Address
 

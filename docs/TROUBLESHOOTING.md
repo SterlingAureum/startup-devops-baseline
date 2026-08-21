@@ -160,6 +160,28 @@ For an actually aborted Rollout, the retry syntax includes the resource type:
 kubectl argo rollouts retry rollout demo-api -n startup-apps
 ```
 
+## AnalysisRun Reports reflect: slice index out of range
+
+Symptoms:
+
+- the Prometheus address and resolved query are correct;
+- `ServiceMonitor/demo-api` was recently created;
+- the metric records repeated `reflect: slice index out of range` errors;
+- the Rollout aborts after the consecutive error limit.
+
+Cause:
+
+Prometheus returned an empty vector before the new Canary target produced a
+sample, and an older AnalysisTemplate evaluated `result[0]` without checking
+the vector length.
+
+Fix:
+
+Use Chart `0.5.1` or later. The metric waits before its first measurement and
+uses `len(result) > 0 && result[0] >= 1`, so no-data fails closed without an
+expression Error. Do not use full promotion. Preserve the failed AnalysisRun,
+apply the fix through Git, restore HEAD, and perform a new clean feature replay.
+
 ## Argo CD Cannot Pull Repository
 
 Symptoms:

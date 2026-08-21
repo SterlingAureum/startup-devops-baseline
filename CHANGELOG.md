@@ -2,6 +2,28 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.3.2
+
+### Fixed
+
+- Added a configurable 60-second metric `initialDelay` so Prometheus Operator
+  discovery and the first Canary scrape can converge before analysis begins.
+- Replaced unsafe direct `result[0]` access with a fail-closed vector-length
+  guard. An empty Prometheus result now becomes a failed measurement instead of
+  `reflect: slice index out of range`, and it is never accepted as success.
+- Advanced the demo-api Chart to `0.5.1` and recorded the revision 22 cold-start
+  AnalysisRun failure that exposed the defect.
+
+### Added
+
+- Added a machine-readable no-data policy, positive and negative validation,
+  operator recovery guidance, and a clean-replay acceptance boundary.
+
+### Boundary
+
+- The Prometheus query, metric schema, ServiceMonitor, Canary step sequence,
+  manual Promotion, AWS declarations, and production automation are unchanged.
+
 ## v0.11.3.1
 
 ### Fixed

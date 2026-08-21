@@ -18,10 +18,11 @@ spec:
   metrics:
     {{- if eq ($analysis.provider | default "prometheus") "prometheus" }}
     - name: canary-prometheus-target-up
+      initialDelay: {{ $canaryTargetUp.initialDelay | default "60s" }}
       interval: {{ $canaryTargetUp.interval | default "15s" }}
       count: {{ $canaryTargetUp.count | default 2 }}
       failureLimit: {{ $canaryTargetUp.failureLimit | default 1 }}
-      successCondition: result[0] >= 1
+      successCondition: len(result) > 0 && result[0] >= 1
       provider:
         prometheus:
           address: {{ $prometheus.address | default "http://observability-metrics-prometheus.observability.svc.cluster.local:9090" | quote }}

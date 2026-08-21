@@ -55,13 +55,16 @@ The v0.3.3 baseline uses:
 sum(up{job="demo-api-canary"})
 ```
 
-Success condition:
+The current metric waits an additional 60 seconds for target discovery and
+fails closed if Prometheus still returns an empty vector:
 
 ```text
-result[0] >= 1
+initialDelay: 60s
+len(result) > 0 && result[0] >= 1
 ```
 
-This checks whether Prometheus can scrape the canary service.
+This checks whether Prometheus can scrape the canary service without treating
+no-data as success or indexing a missing vector element.
 
 ## Rollout progression
 
@@ -73,13 +76,14 @@ The current intended flow is:
 3. Argo Rollouts creates a new ReplicaSet
 4. 20% canary traffic is routed to the new ReplicaSet
 5. rollout pauses for 60 seconds
-6. AnalysisRun queries Prometheus
-7. if successful, rollout continues
-8. rollout reaches manual pause at 50%
-9. operator runs promote
-10. rollout moves to 100%
-11. new ReplicaSet becomes stable
-12. old ReplicaSet is scaled down
+6. AnalysisRun waits for its bounded metric initial delay
+7. AnalysisRun queries Prometheus
+8. if two measurements are successful, rollout continues
+9. rollout reaches manual pause at 50%
+10. operator runs promote
+11. rollout moves to 100%
+12. new ReplicaSet becomes stable
+13. old ReplicaSet is scaled down
 ```
 
 ## Why a successful AnalysisRun may still show Rollout Paused

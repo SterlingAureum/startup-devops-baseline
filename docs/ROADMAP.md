@@ -292,8 +292,12 @@ Incremental scope:
 - v0.11.3.1 - serialize local Argo CD operations, render manual Root mode before
   apply, explicitly remove stale live Helm parameters, enforce the feature
   allowlist, harden HEAD restoration, and document the observed revision 15
-  recovery plus demo-api dependency graph - implemented; one clean replay and
-  HEAD restoration are required before tagging
+  recovery plus demo-api dependency graph - implemented; clean replay exposed
+  a Prometheus empty-vector defect repaired by v0.11.3.2
+- v0.11.3.2 - add bounded Prometheus metric warm-up, reject empty vectors
+  without expression errors, retain fail-closed Canary semantics, and require a
+  new clean HEAD-to-feature replay after the revision 22 failure - implemented;
+  live replay and HEAD restoration remain required before tagging
 - v0.11.4 - Grafana dashboards, recording rules, and operator-oriented views
   for application, delivery, data, platform, capacity, and cost health - planned
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity

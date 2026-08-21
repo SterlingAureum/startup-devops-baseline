@@ -298,7 +298,7 @@ def validate_repository() -> None:
     )
     require("assertNotIn" in tests, "Sensitive metric negative tests missing")
 
-    chart = require_markers("apps/demo-api/helm/Chart.yaml", ("version: 0.5.0", 'appVersion: "0.3.0"'))
+    chart = require_markers("apps/demo-api/helm/Chart.yaml", ("version: 0.5.1", 'appVersion: "0.3.0"'))
     require("version: 0.4.0" not in chart, "Chart version was not advanced")
 
     for relative in (

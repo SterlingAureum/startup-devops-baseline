@@ -162,6 +162,7 @@ analysis:
     failureLimit: 1
   metrics:
     canaryTargetUp:
+      initialDelay: 60s
       interval: 15s
       count: 2
       failureLimit: 1

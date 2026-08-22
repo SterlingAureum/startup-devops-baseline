@@ -202,21 +202,27 @@ def validate_repository() -> None:
     ):
         require(forbidden not in feature, f"Feature script contains forbidden behavior: {forbidden}")
 
-    restore = require_markers(
+    restore_head = require_markers(
         "scripts/restore-local-gitops-head.sh",
         (
             "TARGET_REVISION=HEAD",
-            "GIT_TARGET_REVISION=HEAD",
+            "restore-local-gitops-baseline.sh",
+        ),
+    )
+    restore = require_markers(
+        "scripts/restore-local-gitops-baseline.sh",
+        (
+            'GIT_TARGET_REVISION="${TARGET_REVISION}"',
             "LOCAL_IMAGE_ENABLED=false",
             "ROOT_SYNC_MODE=manual",
             'sync_application_if_needed "${ROOT_APP_NAME}"',
-            'set_application_automation "${ROOT_APP_NAME}" automated',
-            'assert_head_revision "${DEMO_APP_NAME}"',
+            'set_application_automation "${ROOT_APP_NAME}"',
+            'assert_revision "${DEMO_APP_NAME}"',
             "Root automated self-heal was not restored",
         ),
     )
     require("argocd app unset" not in restore, "Restoration returned to direct child cleanup")
-    require("TARGET_REVISION=main" not in restore, "Local restoration changed to main")
+    require("TARGET_REVISION=main" not in restore_head, "Local restoration changed to main")
 
     root_application = read("clusters/local/root-app.yaml")
     platform_values = read("clusters/local/platform/values.yaml")

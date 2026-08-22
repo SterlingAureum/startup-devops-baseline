@@ -69,7 +69,7 @@ validate_contract(contract)
 
 root_deploy = read("scripts/deploy-root-app.sh")
 feature = read("scripts/deploy-local-feature-gitops.sh")
-restore = read("scripts/restore-local-gitops-head.sh")
+restore = read("scripts/restore-local-gitops-baseline.sh")
 operation_helper = read("scripts/lib/argocd-operation.sh")
 
 for marker in ("SYNC_MODE_FILE", "if [ \"${ROOT_SYNC_MODE}\" = \"manual\" ]", "automated:/,/^    syncOptions:"):
@@ -91,10 +91,10 @@ for marker in ("wait_for_application_idle", "argocd app wait", "--operation"):
 
 for marker in (
     "ROOT_SYNC_MODE=manual",
-    "GIT_TARGET_REVISION=HEAD",
+    'GIT_TARGET_REVISION="${TARGET_REVISION}"',
     "LOCAL_IMAGE_ENABLED=false",
-    "still has live Helm parameters after declarative HEAD restoration",
-    "set_application_automation \"${ROOT_APP_NAME}\" automated",
+    "still has live Helm parameters after declarative baseline restoration",
+    'set_application_automation "${ROOT_APP_NAME}"',
 ):
     require(marker in restore, f"Restore recovery guard missing: {marker}")
 require("argocd app unset" not in restore, "Direct restoration cleanup returned")
@@ -123,6 +123,21 @@ cleanup() {
 trap cleanup EXIT
 
 mkdir -p "${WORK_DIR}/bin"
+cat >"${WORK_DIR}/bin/git" <<'SH'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+case "${1:-}" in
+  ls-remote)
+    printf '%s\t%s\n' 'fedcba9876543210fedcba9876543210fedcba98' "${4:-HEAD}"
+    ;;
+  fetch|cat-file)
+    exit 0
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+SH
 cat >"${WORK_DIR}/bin/kubectl" <<'SH'
 #!/usr/bin/env bash
 set -Eeuo pipefail
@@ -135,7 +150,7 @@ if [ "${1:-}" = "apply" ] && [ "${2:-}" = "-f" ]; then
 fi
 exit 0
 SH
-chmod +x "${WORK_DIR}/bin/kubectl"
+chmod +x "${WORK_DIR}/bin/git" "${WORK_DIR}/bin/kubectl"
 
 echo "==> Exercising Root manual/automated render boundary with a fake kubectl"
 TEST_REVISION="feature/test"

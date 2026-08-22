@@ -28,6 +28,8 @@
 /delivery/contracts/v0.11.3.2-prometheus-no-data-hardening.json @SterlingAureum
 /delivery/contracts/v0.11.3.3-argocd-operation-race-hardening.json @SterlingAureum
 /delivery/contracts/v0.11.3.4-unified-feature-revision-rendering.json @SterlingAureum
+/delivery/contracts/v0.11.3.5-pre-merge-baseline-restoration.json @SterlingAureum
+/delivery/contracts/v0.11.3.6-helm-migration-validator-coverage.json @SterlingAureum
 /delivery/contracts/examples/v0.10-final-evidence-input.example.json @SterlingAureum
 /scripts/calculate-demo-api-qualification-scope.py @SterlingAureum
 /scripts/demo_api_qualification_bundle.py @SterlingAureum
@@ -60,6 +62,11 @@
 /scripts/validate-v0.11.3.2-prometheus-no-data-hardening.sh @SterlingAureum
 /scripts/validate-v0.11.3.3-argocd-operation-race-hardening.sh @SterlingAureum
 /scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh @SterlingAureum
+/scripts/validate-v0.11.3.5-pre-merge-baseline-restoration.sh @SterlingAureum
+/scripts/validate-v0.11.3.6-helm-migration-validator-coverage.sh @SterlingAureum
+/scripts/restore-local-feature-baseline.sh @SterlingAureum
+/scripts/restore-local-gitops-baseline.sh @SterlingAureum
+/scripts/restore-local-gitops-head.sh @SterlingAureum
 /scripts/lib/argocd-operation.sh @SterlingAureum
 /scripts/lib/git-revision.sh @SterlingAureum
 /scripts/derive-demo-api-release-id.py @SterlingAureum
@@ -86,6 +93,8 @@
 /docs/V0.11.3.2_PROMETHEUS_NO_DATA_HARDENING.md @SterlingAureum
 /docs/V0.11.3.3_ARGOCD_OPERATION_RACE_HARDENING.md @SterlingAureum
 /docs/V0.11.3.4_UNIFIED_FEATURE_REVISION_RENDERING.md @SterlingAureum
+/docs/V0.11.3.5_PRE_MERGE_BASELINE_RESTORATION.md @SterlingAureum
+/docs/V0.11.3.6_HELM_MIGRATION_VALIDATOR_COVERAGE.md @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /docs/TRUSTED_RUNTIME_EXECUTOR.md @SterlingAureum

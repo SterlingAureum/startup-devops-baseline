@@ -119,11 +119,44 @@ resync is now safe. If Root remains `OutOfSync`, confirm that the platform path
 contains `Chart.yaml`, that no legacy raw Application YAML remains beside it,
 and that Root carries the `git.targetRevision` Helm parameter.
 
-Restore the stable declaration afterward:
+Before merge, restore the clean feature baseline afterward:
 
 ```bash
-./scripts/restore-local-gitops-head.sh
+TARGET_REVISION=feature/v0.11-observability-sre-baseline \
+  ./scripts/restore-local-feature-baseline.sh
 ```
+
+Use `./scripts/restore-local-gitops-head.sh` only after the platform Chart has
+reached remote HEAD.
+
+## Root Helm Source Reports Chart.yaml Does Not Exist
+
+Symptoms:
+
+- Root uses `spec.source.helm`;
+- Root targets `HEAD`;
+- Argo CD reports `clusters/local/platform/Chart.yaml: no such file or directory`;
+- child Applications may appear with `requiresPruning: true`.
+
+Cause:
+
+The live Root has already adopted the new Helm source shape while remote HEAD
+still points to a pre-migration directory source. The cached comparison error
+is evidence of a real Git content mismatch, not a cache defect.
+
+Fix:
+
+Do not prune or delete the child Applications. Commit and push the repair to
+the feature branch, then restore the immutable feature baseline:
+
+```bash
+TARGET_REVISION=feature/v0.11-observability-sre-baseline \
+  ./scripts/restore-local-feature-baseline.sh
+```
+
+The v0.11.3.5 Root source preflight rejects a revision that lacks the platform
+Chart before contacting Kubernetes. HEAD restoration becomes valid only after
+that Chart reaches remote HEAD.
 
 If `demo-api` is `Suspended`, inspect the latest AnalysisRun. Promote normally
 only after it is `Successful`; never use full promotion to hide a failed gate.
@@ -166,10 +199,10 @@ does not declare.
 
 Fix:
 
-Rerun `deploy-local-feature-gitops.sh`. It explicitly unsets unexpected
-parameters and accepts only the four local-image parameters. After validation,
-`restore-local-gitops-head.sh` unsets all live Helm parameters and asserts an
-empty set.
+Rerun `deploy-local-feature-gitops.sh`. The Root declaratively renders only the
+four local-image parameters. The applicable feature or HEAD baseline restore
+renders `parameters: []` and asserts an empty live set without direct child
+`set` or `unset` operations.
 
 For an actually aborted Rollout, the retry syntax includes the resource type:
 
@@ -197,7 +230,8 @@ Fix:
 Use Chart `0.5.1` or later. The metric waits before its first measurement and
 uses `len(result) > 0 && result[0] >= 1`, so no-data fails closed without an
 expression Error. Do not use full promotion. Preserve the failed AnalysisRun,
-apply the fix through Git, restore HEAD, and perform a new clean feature replay.
+apply the fix through Git, restore the applicable pre-merge feature or
+post-merge HEAD baseline, and perform a new clean feature replay.
 
 ## Argo CD Cannot Pull Repository
 

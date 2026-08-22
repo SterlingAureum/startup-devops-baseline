@@ -71,7 +71,7 @@ validate_contract(contract)
 
 helper = read("scripts/lib/argocd-operation.sh")
 feature = read("scripts/deploy-local-feature-gitops.sh")
-restore = read("scripts/restore-local-gitops-head.sh")
+restore = read("scripts/restore-local-gitops-baseline.sh")
 
 for marker in (
     "OPERATION_BUSY_MAX_ATTEMPTS",

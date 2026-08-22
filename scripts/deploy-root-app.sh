@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 ROOT_APP_NAME="${ROOT_APP_NAME:-startup-devops-root}"
 ROOT_APP_FILE="clusters/local/root-app.yaml"
@@ -14,6 +15,10 @@ IMAGE_TAG="${IMAGE_TAG:-}"
 IMAGE_PULL_POLICY="${IMAGE_PULL_POLICY:-Never}"
 APPLICATION_VERSION="${APPLICATION_VERSION:-${IMAGE_TAG}}"
 ROOT_SYNC_MODE="${ROOT_SYNC_MODE:-}"
+REQUIRED_ROOT_SOURCE_PATH="${REQUIRED_ROOT_SOURCE_PATH:-clusters/local/platform/Chart.yaml}"
+
+# shellcheck source=scripts/lib/git-revision.sh
+source "${ROOT_DIR}/scripts/lib/git-revision.sh"
 
 if [ -z "${ROOT_SYNC_MODE}" ]; then
   if [ "${TARGET_REVISION}" = "HEAD" ]; then
@@ -31,7 +36,7 @@ require_cmd() {
   fi
 }
 
-for command_name in awk kubectl sed; do
+for command_name in awk git kubectl sed wc; do
   require_cmd "${command_name}"
 done
 
@@ -100,6 +105,13 @@ if [ ! -f "$ROOT_APP_FILE" ]; then
   exit 1
 fi
 
+resolved_root_revision="$(resolve_remote_git_revision "${REPO_URL}" "${TARGET_REVISION}")"
+assert_remote_git_revision_contains_path \
+  "${REPO_URL}" \
+  "${TARGET_REVISION}" \
+  "${resolved_root_revision}" \
+  "${REQUIRED_ROOT_SOURCE_PATH}"
+
 kubectl get namespace "$ARGOCD_NAMESPACE" >/dev/null 2>&1 || {
   echo "ERROR: namespace not found: $ARGOCD_NAMESPACE" >&2
   echo "Run ./scripts/install-argocd.sh first." >&2
@@ -113,6 +125,7 @@ trap 'rm -f "$TMP_FILE" "${SYNC_MODE_FILE:-}" "${PARAMETER_FILE:-}"' EXIT
 
 echo "Using repository URL: ${REPO_URL}"
 echo "Using root target revision: ${TARGET_REVISION}"
+echo "Resolved root source commit: ${resolved_root_revision}"
 echo "Using same-repository child revision: ${GIT_TARGET_REVISION}"
 echo "Using local image override: ${LOCAL_IMAGE_ENABLED}"
 echo "Using root sync mode: ${ROOT_SYNC_MODE}"

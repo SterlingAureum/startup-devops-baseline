@@ -125,9 +125,11 @@ IMAGE_TAG=v0.11.3-local \
 
 The workflow resolves the branch to one immutable commit and renders that same
 commit into Root, namespace guardrails, and demo-api. Root remains manual but
-`Synced`, and a Root resync is safe. After validation, run
-`./scripts/restore-local-gitops-head.sh`. Stable Git values remain `HEAD`; no
-feature branch name is committed to them.
+`Synced`, and a Root resync is safe. Before merge, run
+`TARGET_REVISION=feature/v0.11-observability-sre-baseline
+./scripts/restore-local-feature-baseline.sh`. After the platform Chart reaches
+remote HEAD, run `./scripts/restore-local-gitops-head.sh`. Stable tracked Git
+values remain `HEAD`; no feature branch name is committed to them.
 
 Debug-only render inspection:
 

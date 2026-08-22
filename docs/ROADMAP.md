@@ -308,7 +308,17 @@ Incremental scope:
   resolve one remote feature input to an immutable commit shared by Root and
   same-repository children, keep external Chart versions independent, and make
   feature image parameters plus HEAD cleanup declaratively Root-owned -
-  implemented; clean feature replay and HEAD restoration remain required
+  implemented; pre-merge HEAD restoration exposed a source-schema mismatch
+  repaired by v0.11.3.5
+- v0.11.3.5 - verify the selected remote revision contains the platform Chart
+  before Kubernetes access, separate immutable pre-merge feature restoration
+  from post-merge HEAD restoration, and block sync on ComparisonError -
+  implemented; complete quality-gate replay exposed historical validator paths
+  repaired by v0.11.3.6
+- v0.11.3.6 - align namespace guardrail validation with the Helm template and
+  stable values model, recursively enforce the local admission-policy boundary,
+  and reject both legacy and nested negative fixtures - implemented; complete
+  quality-gate replay and v0.11.3.5 live recovery remain required
 - v0.11.4 - Grafana dashboards, recording rules, and operator-oriented views
   for application, delivery, data, platform, capacity, and cost health - planned
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity

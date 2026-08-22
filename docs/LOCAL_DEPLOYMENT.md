@@ -31,7 +31,7 @@ IMAGE_DIGEST="sha256:<64-character-digest>" \
 
 ### 4. Deploy the root application
 
-#### Stable HEAD deployment
+#### Stable HEAD deployment after merge
 
 Use your real GitHub repository URL:
 
@@ -41,7 +41,10 @@ REPO_URL=https://github.com/<your-user>/startup-devops-baseline.git \
 ```
 
 The stable default is `TARGET_REVISION=HEAD` with automated Root sync and
-self-heal.
+self-heal. The Root source preflight requires remote HEAD to contain
+`clusters/local/platform/Chart.yaml` before Kubernetes is contacted. During a
+platform source migration, do not use this path until the migration reaches
+remote HEAD.
 
 #### Feature-revision validation
 
@@ -64,16 +67,21 @@ App-of-Apps to every same-repository child. The exact local-image allowlist is
 also rendered by the Root. The Root remains manual but must be `Synced`; a Root
 resync is safe because it no longer resets feature children to `HEAD`.
 
-After manual Canary completion and validation, restore the declarative mode:
+After manual Canary completion and validation, use the feature baseline while
+the increment is still unmerged:
 
 ```bash
-./scripts/restore-local-gitops-head.sh
+TARGET_REVISION=feature/v0.11-observability-sre-baseline \
+  ./scripts/restore-local-feature-baseline.sh
 ```
+
+After the platform Chart reaches remote HEAD, use
+`./scripts/restore-local-gitops-head.sh` for the stable main baseline.
 
 See `docs/V0.11.3_LOCAL_FEATURE_GITOPS_VALIDATION.md` for the state model and
 acceptance commands, and
-`docs/V0.11.3.4_UNIFIED_FEATURE_REVISION_RENDERING.md` for unified source
-ownership and declarative HEAD restoration.
+`docs/V0.11.3.5_PRE_MERGE_BASELINE_RESTORATION.md` for revision content
+preflight and the pre-merge/post-merge restoration boundary.
 
 ### 5. Validate the baseline
 

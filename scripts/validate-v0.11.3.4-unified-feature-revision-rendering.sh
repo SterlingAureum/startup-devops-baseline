@@ -91,7 +91,9 @@ chart = read("clusters/local/platform/Chart.yaml")
 values = read("clusters/local/platform/values.yaml")
 root_app = read("clusters/local/root-app.yaml")
 feature = read("scripts/deploy-local-feature-gitops.sh")
-restore = read("scripts/restore-local-gitops-head.sh")
+restore_head = read("scripts/restore-local-gitops-head.sh")
+restore_feature = read("scripts/restore-local-feature-baseline.sh")
+restore = read("scripts/restore-local-gitops-baseline.sh")
 root_deploy = read("scripts/deploy-root-app.sh")
 revision_helper = read("scripts/lib/git-revision.sh")
 
@@ -195,14 +197,16 @@ for forbidden in ("argocd app set", "argocd app unset", "remove_unexpected_demo_
     require(forbidden not in feature, f"Imperative feature child mutation returned: {forbidden}")
 
 for marker in (
-    "GIT_TARGET_REVISION=HEAD",
+    'GIT_TARGET_REVISION="${TARGET_REVISION}"',
     "LOCAL_IMAGE_ENABLED=false",
     'sync_application_if_needed "${ROOT_APP_NAME}"',
     'sync_application_if_needed "${DEMO_APP_NAME}"',
-    'set_application_automation "${ROOT_APP_NAME}" automated',
+    'set_application_automation "${ROOT_APP_NAME}"',
     "Root did not remain Synced",
 ):
     require(marker in restore, f"Declarative restoration guard missing: {marker}")
+require("TARGET_REVISION=HEAD" in restore_head, "Post-merge HEAD wrapper changed")
+require("resolve_remote_git_revision" in restore_feature, "Feature baseline is not immutable")
 for forbidden in ("argocd app set", "argocd app unset", "remove_all_demo_parameters"):
     require(forbidden not in restore, f"Imperative restoration returned: {forbidden}")
 
@@ -234,6 +238,21 @@ cleanup() {
 trap cleanup EXIT
 
 mkdir -p "${WORK_DIR}/bin"
+cat >"${WORK_DIR}/bin/git" <<'SH'
+#!/usr/bin/env bash
+set -Eeuo pipefail
+case "${1:-}" in
+  ls-remote)
+    printf '%s\t%s\n' 'fedcba9876543210fedcba9876543210fedcba98' 'HEAD'
+    ;;
+  fetch|cat-file)
+    exit 0
+    ;;
+  *)
+    exit 1
+    ;;
+esac
+SH
 cat >"${WORK_DIR}/bin/kubectl" <<'SH'
 #!/usr/bin/env bash
 set -Eeuo pipefail
@@ -246,7 +265,7 @@ if [ "${1:-}" = "apply" ] && [ "${2:-}" = "-f" ]; then
 fi
 exit 0
 SH
-chmod +x "${WORK_DIR}/bin/kubectl"
+chmod +x "${WORK_DIR}/bin/git" "${WORK_DIR}/bin/kubectl"
 
 FEATURE_SHA="0123456789abcdef0123456789abcdef01234567"
 
@@ -371,7 +390,7 @@ if (
   echo "Missing remote branch was accepted." >&2
   exit 1
 fi
-grep -q 'remote feature branch not found' "${WORK_DIR}/missing.err"
+grep -q 'remote Git revision not found' "${WORK_DIR}/missing.err"
 
 mkdir -p "${WORK_DIR}/feature-bin"
 cat >"${WORK_DIR}/feature-bin/git" <<'SH'
@@ -385,6 +404,9 @@ case "${1:-}" in
     printf '%s\n' '0123456789abcdef0123456789abcdef01234567'
     ;;
   diff)
+    exit 0
+    ;;
+  fetch|cat-file)
     exit 0
     ;;
   *)

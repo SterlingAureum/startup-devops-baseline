@@ -2,6 +2,51 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.3.6
+
+### Fixed
+
+- Updated namespace guardrail validation to inspect the Helm Application
+  template and its stable Git values instead of the removed raw local YAML.
+- Rejected reintroduction of the legacy raw namespace guardrail Application.
+- Changed the local admission-policy boundary scan from shallow to recursive so
+  forbidden strict-digest Applications cannot hide under Helm templates.
+
+### Added
+
+- Added dynamic negative fixtures for both migration failure modes plus a
+  machine-readable contract and focused validation Runbook.
+
+### Boundary
+
+- This repair changes validation and documentation only. It changes no
+  namespace resource, admission policy, platform Chart, application, telemetry,
+  Canary behavior, AWS desired state, or production automation.
+
+## v0.11.3.5
+
+### Fixed
+
+- Prevented a Helm-shaped Root Application from targeting an older remote
+  revision that does not contain `clusters/local/platform/Chart.yaml`.
+- Added a remote revision content preflight before any Kubernetes access, so a
+  pre-merge `HEAD` mismatch fails without changing the live Root Application.
+- Split restoration into an immutable pre-merge feature baseline and a
+  post-merge HEAD baseline backed by one shared declarative implementation.
+- Blocked restoration sync while an Application has `ComparisonError`; child
+  prune indicators produced by failed manifest generation remain non-actions.
+
+### Added
+
+- Added positive and negative fake-client regression cases, a machine-readable
+  incident contract, and an exact recovery and acceptance Runbook.
+
+### Boundary
+
+- This repair changes no platform or demo-api Chart, image, telemetry,
+  Prometheus gate, Canary strategy, external Chart version, AWS state, release
+  orchestrator, or production automation.
+
 ## v0.11.3.4
 
 ### Changed

@@ -21,6 +21,7 @@ expected = {
     "clusters/aws/base/platform/demo-api.yaml": "main",
     "clusters/aws/base/platform/external-secrets-startup-apps.yaml": "main",
     "clusters/aws/base/platform/namespace-guardrails.yaml": "main",
+    "clusters/aws/base/platform/observability-views.yaml": "main",
     "clusters/aws/base/platform/postgresql-baseline.yaml": "main",
     "clusters/aws/base/platform/runtime-qualification-rbac/application.yaml": "main",
     "clusters/aws/base/platform/startup-apps-network-policy.yaml": "main",
@@ -66,6 +67,7 @@ if not re.search(r"^  targetRevision: HEAD$", platform_values, re.MULTILINE):
 for relative in (
     "clusters/local/platform/templates/demo-api.yaml",
     "clusters/local/platform/templates/namespace-guardrails.yaml",
+    "clusters/local/platform/templates/observability-views.yaml",
 ):
     text = (root / relative).read_text()
     if ".Values.git.repoURL" not in text or ".Values.git.targetRevision" not in text:
@@ -86,7 +88,7 @@ for base in (root / "clusters", root / "scripts"):
 
 print(
     "Active GitOps revision validation passed: "
-    f"{sum(path.startswith('clusters/local/') for path in found) + 2} local Applications use HEAD; "
+    f"{sum(path.startswith('clusters/local/') for path in found) + 3} local Applications use HEAD; "
     f"{sum(path.startswith('clusters/aws/') for path in found)} AWS base/root Applications use main."
 )
 PY

@@ -6,6 +6,7 @@ ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 ROOT_APP_NAME="${ROOT_APP_NAME:-startup-devops-root}"
 DEMO_APP_NAME="${DEMO_APP_NAME:-demo-api}"
 GUARDRAILS_APP_NAME="${GUARDRAILS_APP_NAME:-namespace-guardrails}"
+OBSERVABILITY_VIEWS_APP_NAME="${OBSERVABILITY_VIEWS_APP_NAME:-observability-views}"
 REPO_URL="${REPO_URL:-https://github.com/SterlingAureum/startup-devops-baseline.git}"
 TARGET_REVISION="${TARGET_REVISION:-}"
 BASELINE_LABEL="${BASELINE_LABEL:-GitOps baseline}"
@@ -118,14 +119,17 @@ sync_application_if_needed "${ROOT_APP_NAME}"
 
 wait_for_application "${GUARDRAILS_APP_NAME}"
 wait_for_application "${DEMO_APP_NAME}"
+wait_for_application "${OBSERVABILITY_VIEWS_APP_NAME}"
 sync_application_if_needed "${GUARDRAILS_APP_NAME}"
 sync_application_if_needed "${DEMO_APP_NAME}"
+sync_application_if_needed "${OBSERVABILITY_VIEWS_APP_NAME}"
 
 set_application_automation "${ROOT_APP_NAME}"
 
 assert_revision "${ROOT_APP_NAME}"
 assert_revision "${GUARDRAILS_APP_NAME}"
 assert_revision "${DEMO_APP_NAME}"
+assert_revision "${OBSERVABILITY_VIEWS_APP_NAME}"
 
 root_child_revision="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.spec.source.helm.parameters[?(@.name=="git.targetRevision")].value}')"
 if [ "${root_child_revision}" != "${TARGET_REVISION}" ]; then

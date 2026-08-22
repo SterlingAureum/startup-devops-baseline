@@ -1,0 +1,81 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-api-operator-recording-rules
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: recording-rules
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ .Values.environment | quote }}
+spec:
+  groups:
+    - name: demo-api.operator.v0.11.4.0
+      interval: {{ .Values.recordingRules.evaluationInterval }}
+      rules:
+        - record: demo_api:http_requests:rate5m
+          expr: |
+            sum by (deployment_environment_name, service_name, service_version, platform_release_id) (
+              rate(demo_api_http_requests_total{job=~"demo-api|demo-api-stable|demo-api-canary"}[5m])
+            )
+        - record: demo_api:http_errors:rate5m
+          expr: |
+            sum by (deployment_environment_name, service_name, service_version, platform_release_id) (
+              rate(demo_api_http_requests_total{job=~"demo-api|demo-api-stable|demo-api-canary",status_class="5xx"}[5m])
+            )
+        - record: demo_api:http_success_ratio:rate5m
+          expr: |
+            1 - (
+              demo_api:http_errors:rate5m
+              /
+              clamp_min(demo_api:http_requests:rate5m, 0.000000001)
+            )
+        - record: demo_api:http_request_duration_seconds:p50_5m
+          expr: |
+            histogram_quantile(
+              0.50,
+              sum by (le, deployment_environment_name, service_name, service_version, platform_release_id) (
+                rate(demo_api_http_request_duration_seconds_bucket{job=~"demo-api|demo-api-stable|demo-api-canary"}[5m])
+              )
+            )
+        - record: demo_api:http_request_duration_seconds:p95_5m
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum by (le, deployment_environment_name, service_name, service_version, platform_release_id) (
+                rate(demo_api_http_request_duration_seconds_bucket{job=~"demo-api|demo-api-stable|demo-api-canary"}[5m])
+              )
+            )
+        - record: demo_api:http_request_duration_seconds:p99_5m
+          expr: |
+            histogram_quantile(
+              0.99,
+              sum by (le, deployment_environment_name, service_name, service_version, platform_release_id) (
+                rate(demo_api_http_request_duration_seconds_bucket{job=~"demo-api|demo-api-stable|demo-api-canary"}[5m])
+              )
+            )
+        - record: demo_api:dependency_checks:rate5m
+          expr: |
+            sum by (deployment_environment_name, service_name, service_version, platform_release_id, dependency, outcome) (
+              rate(demo_api_dependency_checks_total{job=~"demo-api|demo-api-stable|demo-api-canary"}[5m])
+            )
+        - record: demo_api:dependency_success_ratio:rate5m
+          expr: |
+            sum by (deployment_environment_name, service_name, service_version, platform_release_id, dependency) (
+              rate(demo_api_dependency_checks_total{job=~"demo-api|demo-api-stable|demo-api-canary",outcome="success"}[5m])
+            )
+            /
+            clamp_min(
+              sum by (deployment_environment_name, service_name, service_version, platform_release_id, dependency) (
+                rate(demo_api_dependency_checks_total{job=~"demo-api|demo-api-stable|demo-api-canary",outcome=~"success|failure"}[5m])
+              ),
+              0.000000001
+            )
+        - record: demo_api:dependency_check_duration_seconds:p95_5m
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum by (le, deployment_environment_name, service_name, service_version, platform_release_id, dependency) (
+                rate(demo_api_dependency_check_duration_seconds_bucket{job=~"demo-api|demo-api-stable|demo-api-canary"}[5m])
+              )
+            )

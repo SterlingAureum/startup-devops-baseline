@@ -1,0 +1,10 @@
+environment: local
+cluster: startup-devops-local
+
+grafana:
+  dashboardLabel: grafana_dashboard
+  dashboardLabelValue: "1"
+  datasourceUid: prometheus
+
+recordingRules:
+  evaluationInterval: 30s

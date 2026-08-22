@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "v0.11.4.0",
+  "version": "v0.11.4.0",
+  "status": "offline-implemented-local-live-required",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.4.0_GRAFANA_RECORDING_RULES.md",
+  "sourceModel": {
+    "viewsChart": "platform/observability/helm",
+    "viewsChartVersion": "0.1.0",
+    "localPlatformChartVersion": "0.2.0",
+    "localApplication": "clusters/local/platform/templates/observability-views.yaml",
+    "awsApplication": "clusters/aws/base/platform/observability-views.yaml",
+    "sameRepositoryApplications": [
+      "startup-devops-root",
+      "namespace-guardrails",
+      "demo-api",
+      "observability-views"
+    ],
+    "featureRevisionInheritedFromRoot": true,
+    "stableLocalRevision": "HEAD",
+    "stableAwsRevision": "main"
+  },
+  "grafana": {
+    "managedBy": "kube-prometheus-stack",
+    "enabledProfiles": ["local", "aws-dev", "aws-test", "aws-prod"],
+    "datasourceUid": "prometheus",
+    "defaultDashboardsEnabled": false,
+    "gitProvisionedDashboards": true,
+    "anonymousAccess": false,
+    "publicIngress": false,
+    "serviceType": "ClusterIP",
+    "persistenceRequired": false,
+    "plaintextAdminCredentialCommitted": false,
+    "awsSystemPlacement": true
+  },
+  "dashboard": {
+    "path": "platform/observability/helm/dashboards/service-overview.json",
+    "uid": "startup-devops-service-overview",
+    "title": "Startup DevOps / Service Overview",
+    "editable": false,
+    "variables": ["environment", "release"],
+    "panels": [
+      "HTTP Success Ratio",
+      "Request Rate",
+      "HTTP Request Latency",
+      "Dependency Success Ratio",
+      "Active Release Identity"
+    ]
+  },
+  "recordingRules": {
+    "path": "platform/observability/helm/templates/recording-rules.yaml",
+    "evaluationInterval": "30s",
+    "names": [
+      "demo_api:http_requests:rate5m",
+      "demo_api:http_errors:rate5m",
+      "demo_api:http_success_ratio:rate5m",
+      "demo_api:http_request_duration_seconds:p50_5m",
+      "demo_api:http_request_duration_seconds:p95_5m",
+      "demo_api:http_request_duration_seconds:p99_5m",
+      "demo_api:dependency_checks:rate5m",
+      "demo_api:dependency_success_ratio:rate5m",
+      "demo_api:dependency_check_duration_seconds:p95_5m"
+    ],
+    "alertRulesAdded": false,
+    "missingDataCoercedToHealthyZero": false,
+    "podIdentityUsedForAggregation": false,
+    "rawUrlUsedForAggregation": false
+  },
+  "securityAndCost": {
+    "grafanaNetworkPolicy": true,
+    "resourceRequestsAndLimits": true,
+    "localDisposableStorage": true,
+    "awsGrafanaPersistence": false,
+    "kubecostAdded": false,
+    "awsBillingIntegrationAdded": false,
+    "realCurrencyCostClaimed": false
+  },
+  "boundaries": {
+    "alertmanagerEnabled": false,
+    "alertRulesAdded": false,
+    "lokiAdded": false,
+    "tracingAdded": false,
+    "sloTargetAdded": false,
+    "burnRateAdded": false,
+    "rolloutGateChanged": false,
+    "demoApiTelemetryChanged": false,
+    "releaseOrchestratorChanged": false,
+    "awsMutationPerformed": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.4.0-grafana-recording-rules.sh",
+    "liveValidator": "scripts/check-observability-views.sh",
+    "completeQualityGateRequired": true,
+    "localLiveReplayRequiredBeforeTag": true,
+    "awsLiveEvidenceDeferredTo": "v0.11.8"
+  }
+}

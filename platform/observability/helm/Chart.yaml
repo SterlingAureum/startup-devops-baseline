@@ -1,0 +1,6 @@
+apiVersion: v2
+name: startup-devops-observability-views
+description: GitOps-managed recording rules and Grafana dashboards for startup-devops-baseline
+type: application
+version: 0.1.0
+appVersion: "v0.11.4.0"

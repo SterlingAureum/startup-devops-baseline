@@ -2,6 +2,54 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.4.0.1
+
+### Fixed
+
+- Made the v0.11.3.4 Helm-render regression successor-aware so the accepted
+  local child set includes `observability-views` when the v0.11.4.0 contract is
+  present.
+- Verified `observability-views` uses `HEAD` in the stable render and the same
+  resolved full SHA as other same-repository children in the feature render.
+
+### Added
+
+- Added a deterministic fake-Helm regression that executes the previously
+  skipped branch even when Helm is unavailable in the package producer.
+
+### Boundary
+
+- This repair changes validation, contracts, and documentation only. It changes
+  no runtime resource, Grafana setting, Dashboard, recording rule, Argo CD
+  Application, AWS desired state, or production automation.
+
+## v0.11.4.0
+
+### Added
+
+- Enabled private, resource-bounded Grafana profiles for local and AWS without
+  public ingress or persistent UI state.
+- Added the repository-owned `observability-views` Helm Chart and Argo CD
+  Applications with unified local feature-revision ownership.
+- Added nine bounded demo-api recording rules and one immutable service overview
+  Dashboard provisioned from Git.
+- Added focused offline validation, negative boundary cases, and an executable
+  local Grafana and recording-rule acceptance check.
+
+### Changed
+
+- Advanced the local App-of-Apps Chart to `0.2.0` and extended feature
+  deployment, baseline restoration, and active-revision validation to the new
+  same-repository observability Application.
+- Made the v0.11.1 and v0.11.3.4 historical validators successor-aware without
+  rewriting their historical contracts.
+
+### Boundary
+
+- This increment adds no Alertmanager, alert rule, centralized log backend,
+  trace backend, SLO target, burn-rate policy, Kubecost deployment, billing
+  integration, Rollout gate, AWS runtime mutation, or production automation.
+
 ## v0.11.3.6
 
 ### Fixed

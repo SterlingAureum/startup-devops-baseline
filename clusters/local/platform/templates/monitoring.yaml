@@ -25,7 +25,39 @@ spec:
         alertmanager:
           enabled: false
         grafana:
-          enabled: false
+          enabled: true
+          defaultDashboardsEnabled: false
+          ingress:
+            enabled: false
+          service:
+            type: ClusterIP
+          persistence:
+            enabled: false
+          sidecar:
+            dashboards:
+              enabled: true
+              label: grafana_dashboard
+              labelValue: "1"
+              searchNamespace: observability
+            datasources:
+              enabled: true
+              defaultDatasourceEnabled: true
+              uid: prometheus
+          grafana.ini:
+            analytics:
+              check_for_updates: false
+              reporting_enabled: false
+            auth.anonymous:
+              enabled: false
+            users:
+              allow_sign_up: false
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
         windowsMonitoring:
           enabled: false
         kubeEtcd:
@@ -130,6 +162,49 @@ spec:
                       port: 10250
                     - protocol: TCP
                       port: 9100
+          - apiVersion: networking.k8s.io/v1
+            kind: NetworkPolicy
+            metadata:
+              name: grafana-cluster-only
+              namespace: observability
+              labels:
+                app.kubernetes.io/part-of: startup-devops-baseline
+            spec:
+              podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: grafana
+              policyTypes:
+                - Ingress
+                - Egress
+              ingress:
+                - from:
+                    - namespaceSelector: {}
+                  ports:
+                    - protocol: TCP
+                      port: 3000
+              egress:
+                - to:
+                    - ipBlock:
+                        cidr: 0.0.0.0/0
+                  ports:
+                    - protocol: TCP
+                      port: 443
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                  ports:
+                    - protocol: TCP
+                      port: 9090
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: kube-system
+                  ports:
+                    - protocol: UDP
+                      port: 53
+                    - protocol: TCP
+                      port: 53
   destination:
     server: https://kubernetes.default.svc
     namespace: observability

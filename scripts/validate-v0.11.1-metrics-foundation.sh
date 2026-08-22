@@ -227,12 +227,17 @@ def validate_repository() -> None:
         ),
     )
 
+    grafana_successor = (root / "delivery/contracts/v0.11.4.0-grafana-recording-rules.json").is_file()
     for text, label in ((local, "local"), (aws, "AWS")):
         for marker in ("kind: Ingress", "type: LoadBalancer", "type: NodePort"):
             require(marker not in text, f"{label} metrics stack exposes {marker}")
         require(re.search(r"(?ms)defaultRules:\n\s+create: false", text) is not None, f"{label}: default rules enabled")
         require(re.search(r"(?ms)alertmanager:\n\s+enabled: false", text) is not None, f"{label}: Alertmanager enabled")
-        require(re.search(r"(?ms)grafana:\n\s+enabled: false", text) is not None, f"{label}: Grafana enabled")
+        if grafana_successor:
+            require(re.search(r"(?ms)grafana:\n\s+enabled: true", text) is not None, f"{label}: v0.11.4 Grafana successor missing")
+            require("defaultDashboardsEnabled: false" in text, f"{label}: uncontrolled default dashboards enabled")
+        else:
+            require(re.search(r"(?ms)grafana:\n\s+enabled: false", text) is not None, f"{label}: Grafana enabled before v0.11.4")
 
     successor_monitor = root / "apps/demo-api/helm/templates/servicemonitor.yaml"
     if successor_monitor.is_file():

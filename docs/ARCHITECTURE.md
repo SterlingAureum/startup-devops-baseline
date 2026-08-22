@@ -23,6 +23,7 @@ startup-devops-root Application
    +-- ingress-nginx Application
    +-- argo-rollouts Application
    +-- monitoring Application
+   +-- observability-views Application
    +-- demo-api Application
           |
           +-- Rollout/demo-api
@@ -72,7 +73,8 @@ It watches:
 clusters/local/platform/
 ```
 
-That directory contains child Application definitions for ingress-nginx, Argo Rollouts, monitoring, and demo-api.
+That directory contains child Application definitions for ingress-nginx, Argo
+Rollouts, monitoring, namespace guardrails, observability views, and demo-api.
 
 ## 3. Application Delivery
 
@@ -131,6 +133,12 @@ The active v0.11.2 telemetry foundation uses the Operator-managed
 Prometheus, kube-state-metrics, and node-exporter with bounded local and AWS
 profiles. The original `platform/monitoring/prometheus/` resources are retained
 only as historical v0.1 material.
+
+v0.11.4.0 enables the private Grafana component in the same pinned stack. A
+separate repository-owned `observability-views` Chart provisions bounded
+recording rules and immutable Dashboard ConfigMaps. It is a same-repository
+Application and therefore inherits the exact Root revision during feature
+validation.
 
 The demo-api Chart owns its ServiceMonitor, preserves Service names as
 Prometheus `job` labels, and derives release correlation from the selected Pod.

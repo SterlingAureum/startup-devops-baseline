@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "v0.11.4.0.1",
+  "version": "v0.11.4.0.1",
+  "status": "offline-implemented-complete-quality-gate-required",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.4.0.1_HELM_SUCCESSOR_COVERAGE.md",
+  "incident": {
+    "failedValidator": "scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh",
+    "failedPhase": "stable-and-feature-platform-helm-render",
+    "error": "Stable child Application set changed",
+    "runtimeResourceDefect": false,
+    "observabilityViewsMustBeRemoved": false,
+    "producerCause": "helm-unavailable-skipped-successor-branch"
+  },
+  "repair": {
+    "historicalBaseSetRetainedWithoutSuccessor": true,
+    "successorContract": "delivery/contracts/v0.11.4.0-grafana-recording-rules.json",
+    "successorApplication": "observability-views",
+    "stableChildCount": 6,
+    "featureChildCount": 6,
+    "stableObservabilityRevision": "HEAD",
+    "featureObservabilityRevision": "resolved-feature-sha",
+    "externalChartVersionsRemainIndependent": true
+  },
+  "dynamicRegression": {
+    "fakeHelmExercisesRenderBranch": true,
+    "stableSetValidated": true,
+    "featureSetValidated": true,
+    "sameRepositoryRevisionValidated": true
+  },
+  "boundaries": {
+    "runtimeResourceChanged": false,
+    "grafanaConfigurationChanged": false,
+    "recordingRuleChanged": false,
+    "dashboardChanged": false,
+    "argoApplicationChanged": false,
+    "awsDesiredStateChanged": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "focusedValidator": "scripts/validate-v0.11.4.0.1-helm-successor-coverage.sh",
+    "completeQualityGateRequired": true,
+    "resumeOriginalV0.11.4.0ApplyRunbook": true
+  }
+}

@@ -30,6 +30,8 @@
 /delivery/contracts/v0.11.3.4-unified-feature-revision-rendering.json @SterlingAureum
 /delivery/contracts/v0.11.3.5-pre-merge-baseline-restoration.json @SterlingAureum
 /delivery/contracts/v0.11.3.6-helm-migration-validator-coverage.json @SterlingAureum
+/delivery/contracts/v0.11.4.0-grafana-recording-rules.json @SterlingAureum
+/delivery/contracts/v0.11.4.0.1-helm-successor-coverage.json @SterlingAureum
 /delivery/contracts/examples/v0.10-final-evidence-input.example.json @SterlingAureum
 /scripts/calculate-demo-api-qualification-scope.py @SterlingAureum
 /scripts/demo_api_qualification_bundle.py @SterlingAureum
@@ -64,6 +66,9 @@
 /scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh @SterlingAureum
 /scripts/validate-v0.11.3.5-pre-merge-baseline-restoration.sh @SterlingAureum
 /scripts/validate-v0.11.3.6-helm-migration-validator-coverage.sh @SterlingAureum
+/scripts/validate-v0.11.4.0-grafana-recording-rules.sh @SterlingAureum
+/scripts/validate-v0.11.4.0.1-helm-successor-coverage.sh @SterlingAureum
+/scripts/check-observability-views.sh @SterlingAureum
 /scripts/restore-local-feature-baseline.sh @SterlingAureum
 /scripts/restore-local-gitops-baseline.sh @SterlingAureum
 /scripts/restore-local-gitops-head.sh @SterlingAureum
@@ -95,8 +100,12 @@
 /docs/V0.11.3.4_UNIFIED_FEATURE_REVISION_RENDERING.md @SterlingAureum
 /docs/V0.11.3.5_PRE_MERGE_BASELINE_RESTORATION.md @SterlingAureum
 /docs/V0.11.3.6_HELM_MIGRATION_VALIDATOR_COVERAGE.md @SterlingAureum
+/docs/V0.11.4.0_GRAFANA_RECORDING_RULES.md @SterlingAureum
+/docs/V0.11.4.0.1_HELM_SUCCESSOR_COVERAGE.md @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
+/clusters/aws/base/platform/observability-views.yaml @SterlingAureum
+/platform/observability/ @SterlingAureum
 /docs/TRUSTED_RUNTIME_EXECUTOR.md @SterlingAureum
 /infra/terraform/aws/runtime-identities/ @SterlingAureum
 /infra/terraform/aws/modules/github-actions-runtime-role/ @SterlingAureum

@@ -69,6 +69,12 @@ echo "==> Validating v0.11.3.5 pre-merge baseline restoration"
 echo "==> Validating v0.11.3.6 Helm migration validator coverage"
 "${ROOT_DIR}/scripts/validate-v0.11.3.6-helm-migration-validator-coverage.sh"
 
+echo "==> Validating v0.11.4.0 Grafana and recording rules"
+"${ROOT_DIR}/scripts/validate-v0.11.4.0-grafana-recording-rules.sh"
+
+echo "==> Validating v0.11.4.0.1 Helm successor coverage"
+"${ROOT_DIR}/scripts/validate-v0.11.4.0.1-helm-successor-coverage.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

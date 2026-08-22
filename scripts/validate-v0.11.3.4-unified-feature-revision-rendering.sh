@@ -88,6 +88,7 @@ contract = json.loads(read("delivery/contracts/v0.11.3.4-unified-feature-revisio
 validate_contract(contract)
 
 chart = read("clusters/local/platform/Chart.yaml")
+observability_successor = (root / "delivery/contracts/v0.11.4.0-grafana-recording-rules.json").is_file()
 values = read("clusters/local/platform/values.yaml")
 root_app = read("clusters/local/root-app.yaml")
 feature = read("scripts/deploy-local-feature-gitops.sh")
@@ -97,7 +98,12 @@ restore = read("scripts/restore-local-gitops-baseline.sh")
 root_deploy = read("scripts/deploy-root-app.sh")
 revision_helper = read("scripts/lib/git-revision.sh")
 
-for marker in ("name: startup-devops-local-platform", "version: 0.1.0", 'appVersion: "v0.11.3.4"'):
+chart_markers = (
+    "name: startup-devops-local-platform",
+    "version: 0.2.0" if observability_successor else "version: 0.1.0",
+    'appVersion: "v0.11.4.0"' if observability_successor else 'appVersion: "v0.11.3.4"',
+)
+for marker in chart_markers:
     require(marker in chart, f"Platform Chart marker missing: {marker}")
 
 for marker in (
@@ -530,7 +536,11 @@ if command -v helm >/dev/null 2>&1; then
     --set-string demoApi.localImage.applicationVersion=v0.11.3-local \
     >"${WORK_DIR}/feature-platform.yaml"
 
-  python3 - "${WORK_DIR}/stable-platform.yaml" "${WORK_DIR}/feature-platform.yaml" "${FEATURE_SHA}" <<'PY'
+  python3 - \
+    "${WORK_DIR}/stable-platform.yaml" \
+    "${WORK_DIR}/feature-platform.yaml" \
+    "${FEATURE_SHA}" \
+    "${ROOT_DIR}/delivery/contracts/v0.11.4.0-grafana-recording-rules.json" <<'PY'
 from pathlib import Path
 import re
 import sys
@@ -539,6 +549,7 @@ import sys
 stable = Path(sys.argv[1]).read_text()
 feature = Path(sys.argv[2]).read_text()
 sha = sys.argv[3]
+observability_successor = Path(sys.argv[4]).is_file()
 
 
 def require(condition: bool, message: str) -> None:
@@ -560,6 +571,10 @@ def applications(text: str) -> dict[str, str]:
 stable_apps = applications(stable)
 feature_apps = applications(feature)
 expected_names = {"argo-rollouts", "ingress-nginx", "monitoring", "namespace-guardrails", "demo-api"}
+same_repository_names = ["namespace-guardrails", "demo-api"]
+if observability_successor:
+    expected_names.add("observability-views")
+    same_repository_names.append("observability-views")
 require(set(stable_apps) == expected_names, "Stable child Application set changed")
 require(set(feature_apps) == expected_names, "Feature child Application set changed")
 
@@ -570,7 +585,7 @@ def revision(document: str) -> str:
     return match.group(1)
 
 
-for name in ("namespace-guardrails", "demo-api"):
+for name in same_repository_names:
     require(revision(stable_apps[name]) == "HEAD", f"Stable {name} revision changed")
     require(revision(feature_apps[name]) == sha, f"Feature {name} revision is not unified")
 

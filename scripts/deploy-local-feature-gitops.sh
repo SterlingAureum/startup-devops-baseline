@@ -6,6 +6,7 @@ ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 ROOT_APP_NAME="${ROOT_APP_NAME:-startup-devops-root}"
 DEMO_APP_NAME="${DEMO_APP_NAME:-demo-api}"
 GUARDRAILS_APP_NAME="${GUARDRAILS_APP_NAME:-namespace-guardrails}"
+OBSERVABILITY_VIEWS_APP_NAME="${OBSERVABILITY_VIEWS_APP_NAME:-observability-views}"
 APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
 REPO_URL="${REPO_URL:-https://github.com/SterlingAureum/startup-devops-baseline.git}"
 TARGET_REVISION="${TARGET_REVISION:-}"
@@ -131,11 +132,13 @@ sync_application_if_needed "${ROOT_APP_NAME}"
 
 wait_for_application "${GUARDRAILS_APP_NAME}"
 wait_for_application "${DEMO_APP_NAME}"
+wait_for_application "${OBSERVABILITY_VIEWS_APP_NAME}"
 sync_application_if_needed "${GUARDRAILS_APP_NAME}"
 sync_application_if_needed "${DEMO_APP_NAME}"
+sync_application_if_needed "${OBSERVABILITY_VIEWS_APP_NAME}"
 
 echo "==> Verifying immutable feature ownership and v0.11 telemetry resources"
-for application_name in "${ROOT_APP_NAME}" "${GUARDRAILS_APP_NAME}" "${DEMO_APP_NAME}"; do
+for application_name in "${ROOT_APP_NAME}" "${GUARDRAILS_APP_NAME}" "${DEMO_APP_NAME}" "${OBSERVABILITY_VIEWS_APP_NAME}"; do
   assert_equals \
     "$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.spec.source.targetRevision}')" \
     "${resolved_target_revision}" \

@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.2 telemetry foundation uses Prometheus Operator through the
+The active v0.11.4.0 telemetry and operator-view foundation uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -15,10 +15,13 @@ observability Namespace
   kube-state-metrics
   node-exporter DaemonSet
   ServiceMonitor resources
+  Grafana Deployment and private ClusterIP Service
+  Git-provisioned Dashboard ConfigMaps
+  PrometheusRule recording rules
 ```
 
-Grafana, Alertmanager, default alert rules, Loki, Alloy, tracing, Thanos, and
-remote write are not part of v0.11.2.
+Alertmanager, alert rules, Loki, Alloy, tracing, Thanos, remote write, Kubecost,
+and cloud billing integration are not part of v0.11.4.0.
 
 The local Application is:
 
@@ -33,6 +36,14 @@ clusters/aws/base/platform/monitoring.yaml
 clusters/aws/overlays/dev/kustomization.yaml
 clusters/aws/overlays/test/kustomization.yaml
 clusters/aws/overlays/prod/kustomization.yaml
+```
+
+The repository-owned views Chart and local/AWS Applications are:
+
+```text
+platform/observability/helm
+clusters/local/platform/templates/observability-views.yaml
+clusters/aws/base/platform/observability-views.yaml
 ```
 
 ## demo-api Metrics
@@ -65,6 +76,7 @@ kubectl get application monitoring -n argocd
 kubectl get pods -n observability
 kubectl get servicemonitors -n startup-apps
 ./scripts/check-monitoring.sh
+./scripts/check-observability-views.sh
 ```
 
 Generate demo-api traffic if the application metric is not visible yet, then
@@ -95,4 +107,7 @@ curl -fsS --get http://127.0.0.1:19090/api/v1/query \
   migration, storage, scheduling, NetworkPolicy, and live-validation steps.
 - `docs/V0.11.2_APPLICATION_PLATFORM_TELEMETRY.md` defines application-owned
   discovery, bounded metrics, Pod-derived release correlation, and telemetry
+  acceptance.
+- `docs/V0.11.4.0_GRAFANA_RECORDING_RULES.md` defines private Grafana,
+  repository-owned views, recording rules, Dashboard provisioning, and local
   acceptance.

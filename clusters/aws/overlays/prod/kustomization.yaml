@@ -37,6 +37,21 @@ patches:
       group: argoproj.io
       version: v1alpha1
       kind: Application
+      name: observability-views-aws-dev
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: observability-views-aws-prod
+      - op: replace
+        path: /spec/source/helm/parameters/0/value
+        value: aws-prod
+      - op: replace
+        path: /spec/source/helm/parameters/1/value
+        value: startup-devops-baseline-prod
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
       name: application-admission-policies-aws-dev
     patch: |-
       - op: replace

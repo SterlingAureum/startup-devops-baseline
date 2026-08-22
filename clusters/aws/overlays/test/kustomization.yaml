@@ -32,6 +32,21 @@ patches:
       group: argoproj.io
       version: v1alpha1
       kind: Application
+      name: observability-views-aws-dev
+    patch: |-
+      - op: replace
+        path: /metadata/name
+        value: observability-views-aws-test
+      - op: replace
+        path: /spec/source/helm/parameters/0/value
+        value: aws-test
+      - op: replace
+        path: /spec/source/helm/parameters/1/value
+        value: startup-devops-baseline-test
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
       name: runtime-qualification-rbac-aws-dev
     patch: |-
       - op: replace

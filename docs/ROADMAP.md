@@ -318,9 +318,23 @@ Incremental scope:
 - v0.11.3.6 - align namespace guardrail validation with the Helm template and
   stable values model, recursively enforce the local admission-policy boundary,
   and reject both legacy and nested negative fixtures - implemented; complete
-  quality-gate replay and v0.11.3.5 live recovery remain required
+  quality-gate and local live recovery accepted
 - v0.11.4 - Grafana dashboards, recording rules, and operator-oriented views
-  for application, delivery, data, platform, capacity, and cost health - planned
+  for application, delivery, data, platform, capacity, and cost health - in
+  progress
+  - v0.11.4.0 - private GitOps-managed Grafana, repository-owned views Chart,
+    bounded demo-api recording rules, immutable service overview Dashboard,
+    unified feature revision, and local live acceptance - implemented offline;
+    Helm replay exposed historical five-child validation repaired by
+    v0.11.4.0.1
+  - v0.11.4.0.1 - make the v0.11.3.4 Helm-render regression successor-aware,
+    require the sixth observability child and its stable/feature revisions, and
+    force the skipped branch through a fake-Helm regression - implemented;
+    complete quality-gate replay required
+  - v0.11.4.1 - delivery, data, and platform views plus version-verified
+    controller metrics discovery - planned
+  - v0.11.4.2 - capacity and resource-efficiency views, conditional no-data
+    hardening, and clean local replay - planned
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity
   policy, and version-controlled Runbooks with positive/negative drills - planned
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry

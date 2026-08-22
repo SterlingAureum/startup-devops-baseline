@@ -1,0 +1,18 @@
+{{- $root := . -}}
+{{- range $path, $_ := .Files.Glob "dashboards/*.json" }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ printf "observability-dashboard-%s" (base $path | trimSuffix ".json") | trunc 63 | trimSuffix "-" }}
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ $root.Release.Name }}
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ $root.Values.environment | quote }}
+    {{ $root.Values.grafana.dashboardLabel }}: {{ $root.Values.grafana.dashboardLabelValue | quote }}
+data:
+  {{ base $path }}: |-
+{{ $root.Files.Get $path | indent 4 }}
+{{- end }}

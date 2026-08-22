@@ -2,11 +2,11 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.3.6-helm-migration-validator-coverage`.
-It keeps the v0.11.3.5 pre-merge restoration guard and aligns historical
-namespace and admission-policy validation with the v0.11.3.4 Helm App-of-Apps
-layout, including recursive negative coverage. See
-`docs/V0.11.3.6_HELM_MIGRATION_VALIDATOR_COVERAGE.md`.
+Current development checkpoint: `v0.11.4.0.1-helm-successor-coverage`.
+It retains the v0.11.4.0 private Grafana, recording rules, Dashboard, and
+unified observability Application while repairing the historical Helm-render
+regression to accept and verify the sixth local child. See
+`docs/V0.11.4.0.1_HELM_SUCCESSOR_COVERAGE.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 

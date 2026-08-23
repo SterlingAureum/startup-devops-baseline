@@ -2,6 +2,32 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.4.1.0.1
+
+### Fixed
+
+- Changed labeled Pod validation to retry discovery before waiting for Ready,
+  and preserved the final Kubernetes API error instead of reporting every
+  transient list failure as an empty selector result.
+- Replaced the invalid named ConfigMap plus label-selector query in the local
+  observability acceptance script with an exact-name lookup followed by an
+  independent `grafana_dashboard=1` label assertion.
+
+### Added
+
+- Added focused static and behavioral regression coverage for transient Pod
+  discovery errors, empty first results, persistent API errors, missing Pods,
+  and the Grafana Dashboard ConfigMap lookup contract.
+- Documented the distinction between the pre-merge feature baseline and the
+  post-merge stable HEAD baseline.
+
+### Boundary
+
+- This repair changes validation scripts, contracts, and documentation only.
+  It changes no Kubernetes resource, Helm Chart, component version, metric,
+  recording rule, Dashboard, alert, AWS desired state, or production
+  automation.
+
 ## v0.11.4.1.0
 
 ### Added

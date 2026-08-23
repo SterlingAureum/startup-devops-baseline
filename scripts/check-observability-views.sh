@@ -9,6 +9,7 @@ VIEWS_APP="${VIEWS_APP:-observability-views}"
 PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
 GRAFANA_SERVICE="${GRAFANA_SERVICE:-observability-metrics-grafana}"
 GRAFANA_SECRET="${GRAFANA_SECRET:-observability-metrics-grafana}"
+GRAFANA_DASHBOARD_CONFIGMAP="${GRAFANA_DASHBOARD_CONFIGMAP:-observability-dashboard-service-overview}"
 PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19090}"
 GRAFANA_LOCAL_PORT="${GRAFANA_LOCAL_PORT:-13000}"
 TRAFFIC_LOCAL_PORT="${TRAFFIC_LOCAL_PORT:-18080}"
@@ -74,8 +75,12 @@ assert_application "${VIEWS_APP}"
 echo "==> Checking Grafana and observability resources"
 kubectl -n "${OBSERVABILITY_NAMESPACE}" rollout status deployment/observability-metrics-grafana --timeout=180s
 kubectl -n "${OBSERVABILITY_NAMESPACE}" get prometheusrule demo-api-operator-recording-rules >/dev/null
-kubectl -n "${OBSERVABILITY_NAMESPACE}" get configmap observability-dashboard-service-overview \
-  -l grafana_dashboard=1 >/dev/null
+dashboard_label="$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get configmap "${GRAFANA_DASHBOARD_CONFIGMAP}" \
+  -o jsonpath='{.metadata.labels.grafana_dashboard}')"
+[ "${dashboard_label}" = "1" ] || {
+  echo "ERROR: ConfigMap/${GRAFANA_DASHBOARD_CONFIGMAP} is not labeled grafana_dashboard=1." >&2
+  exit 1
+}
 
 traffic_service="demo-api-stable"
 if ! kubectl -n "${APP_NAMESPACE}" get service "${traffic_service}" >/dev/null 2>&1; then

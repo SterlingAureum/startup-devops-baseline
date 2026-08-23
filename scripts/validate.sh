@@ -25,6 +25,8 @@ ROLLOUT_NAME="${ROLLOUT_NAME:-$DEMO_APP_NAME}"
 STABLE_SERVICE_NAME="${STABLE_SERVICE_NAME:-demo-api-stable}"
 CANARY_SERVICE_NAME="${CANARY_SERVICE_NAME:-demo-api-canary}"
 TIMEOUT="${TIMEOUT:-180s}"
+POD_DISCOVERY_TIMEOUT_SECONDS="${POD_DISCOVERY_TIMEOUT_SECONDS:-30}"
+POD_DISCOVERY_RETRY_SECONDS="${POD_DISCOVERY_RETRY_SECONDS:-2}"
 SKIP_PROMETHEUS_HTTP="${SKIP_PROMETHEUS_HTTP:-false}"
 
 PASS_COUNT=0
@@ -74,17 +76,36 @@ wait_pods_ready_by_label() {
   local namespace="$1"
   local selector="$2"
   local description="$3"
+  local deadline=$((SECONDS + POD_DISCOVERY_TIMEOUT_SECONDS))
+  local list_output=""
+  local last_list_error=""
 
-  if kubectl -n "$namespace" get pods -l "$selector" --no-headers 2>/dev/null | grep -q .; then
-    if kubectl -n "$namespace" wait --for=condition=Ready pod -l "$selector" --timeout="$TIMEOUT" >/dev/null 2>&1; then
-      pass "$description pods are Ready"
+  while true; do
+    if list_output="$(kubectl -n "$namespace" get pods -l "$selector" --no-headers 2>&1)"; then
+      last_list_error=""
+      if printf '%s\n' "$list_output" | grep -q .; then
+        break
+      fi
     else
-      fail "$description pods are not Ready"
-      kubectl -n "$namespace" get pods -l "$selector" || true
+      last_list_error="$list_output"
+    fi
+
+    if [ "$SECONDS" -ge "$deadline" ]; then
+      if [ -n "$last_list_error" ]; then
+        fail "$description pod discovery failed for selector $selector: $last_list_error"
+      else
+        fail "$description pods not found with selector: $selector after ${POD_DISCOVERY_TIMEOUT_SECONDS}s"
+      fi
       return 1
     fi
+    sleep "$POD_DISCOVERY_RETRY_SECONDS"
+  done
+
+  if kubectl -n "$namespace" wait --for=condition=Ready pod -l "$selector" --timeout="$TIMEOUT" >/dev/null 2>&1; then
+    pass "$description pods are Ready"
   else
-    fail "$description pods not found with selector: $selector"
+    fail "$description pods are not Ready"
+    kubectl -n "$namespace" get pods -l "$selector" || true
     return 1
   fi
 }
@@ -409,6 +430,7 @@ info "Prometheus HTTP mode: $PROMETHEUS_HTTP_MODE"
 info "Prometheus local port start: $PROMETHEUS_LOCAL_PORT"
 info "Argo Rollouts namespace: $ARGO_ROLLOUTS_NAMESPACE"
 info "Timeout: $TIMEOUT"
+info "Pod discovery timeout: ${POD_DISCOVERY_TIMEOUT_SECONDS}s"
 
 print_section "Command checks"
 require_cmd kubectl

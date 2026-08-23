@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "v0.11.4.1.0.1",
+  "version": "v0.11.4.1.0.1",
+  "predecessor": "v0.11.4.1.0",
+  "status": "offline-implemented-local-live-required",
+  "designDocument": "docs/V0.11.4.1.0.1_ACCEPTANCE_STABILITY_REPAIR.md",
+  "podDiscovery": {
+    "script": "scripts/validate.sh",
+    "defaultTimeoutSeconds": 30,
+    "defaultRetrySeconds": 2,
+    "transientListErrorsRetried": true,
+    "emptyResultsRetried": true,
+    "lastApiErrorPreserved": true,
+    "readyWaitStartsAfterDiscovery": true
+  },
+  "observabilityDashboardConfigMap": {
+    "script": "scripts/check-observability-views.sh",
+    "name": "observability-dashboard-service-overview",
+    "lookupMode": "exact-name",
+    "requiredLabel": "grafana_dashboard=1",
+    "labelVerifiedSeparately": true,
+    "nameAndSelectorCombined": false
+  },
+  "baselineRestoration": {
+    "preMergeScript": "scripts/restore-local-feature-baseline.sh",
+    "preMergeRevision": "immutable-feature-commit",
+    "localImageOverridesRemoved": true,
+    "rootAutomationRestored": true,
+    "postMergeScript": "scripts/restore-local-gitops-head.sh",
+    "postMergeRevision": "remote-HEAD"
+  },
+  "boundaries": {
+    "runtimeResourceChanged": false,
+    "helmChartChanged": false,
+    "componentVersionChanged": false,
+    "metricChanged": false,
+    "recordingRuleChanged": false,
+    "dashboardChanged": false,
+    "alertingChanged": false,
+    "awsDesiredStateChanged": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.4.1.0.1-acceptance-stability-repair.sh",
+    "localValidateRequired": true,
+    "localObservabilityViewsRequired": true,
+    "localControllerMetricsRequired": true,
+    "completeQualityGateRequired": true
+  }
+}

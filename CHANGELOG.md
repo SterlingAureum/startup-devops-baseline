@@ -2,6 +2,33 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.4.1.0.2
+
+### Fixed
+
+- Anchored the HTTP error-rate zero fill to existing request-rate label sets so
+  successful traffic without a `5xx` series produces a success ratio of one
+  while a completely missing request stream remains no-data.
+- Applied the same bounded behavior to dependency success ratios so an
+  observed dependency with failures but no success series produces zero rather
+  than disappearing.
+- Replaced the generic ratio no-series hint with source-rule cardinality
+  diagnostics that distinguish warm-up from an expression mismatch.
+
+### Changed
+
+- Advanced the repository-owned observability views Chart from `0.2.0` to
+  `0.2.1` with application version `v0.11.4.1.0.2`.
+- Made historical v0.11.4.0 and v0.11.4.1.0 validators aware of the accepted
+  Chart successor without changing their historical contracts.
+
+### Boundary
+
+- This repair changes two recording-rule expressions and their acceptance
+  diagnostics only. It adds no rule name, Dashboard, alert, global
+  `or vector(0)` fallback, component upgrade, Grafana Deployment setting,
+  ReplicaSet cleanup, AWS state, or production automation.
+
 ## v0.11.4.1.0.1
 
 ### Fixed

@@ -82,10 +82,15 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
 
 contract = json.loads(read("delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json"))
 validate_contract(contract)
+ratio_no_series_successor = (root / "delivery/contracts/v0.11.4.1.0.2-ratio-no-series-repair.json").is_file()
 
 markers(
     "platform/observability/helm/Chart.yaml",
-    ("name: startup-devops-observability-views", "version: 0.2.0", 'appVersion: "v0.11.4.1.0"'),
+    (
+        "name: startup-devops-observability-views",
+        "version: 0.2.1" if ratio_no_series_successor else "version: 0.2.0",
+        'appVersion: "v0.11.4.1.0.2"' if ratio_no_series_successor else 'appVersion: "v0.11.4.1.0"',
+    ),
 )
 values = markers(
     "platform/observability/helm/values.yaml",

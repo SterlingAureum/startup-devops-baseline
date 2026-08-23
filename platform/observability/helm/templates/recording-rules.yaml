@@ -26,7 +26,11 @@ spec:
         - record: demo_api:http_success_ratio:rate5m
           expr: |
             1 - (
-              demo_api:http_errors:rate5m
+              (
+                demo_api:http_errors:rate5m
+                or
+                0 * demo_api:http_requests:rate5m
+              )
               /
               clamp_min(demo_api:http_requests:rate5m, 0.000000001)
             )
@@ -61,8 +65,14 @@ spec:
             )
         - record: demo_api:dependency_success_ratio:rate5m
           expr: |
-            sum by (deployment_environment_name, service_name, service_version, platform_release_id, dependency) (
-              rate(demo_api_dependency_checks_total{job=~"demo-api|demo-api-stable|demo-api-canary",outcome="success"}[5m])
+            (
+              sum by (deployment_environment_name, service_name, service_version, platform_release_id, dependency) (
+                rate(demo_api_dependency_checks_total{job=~"demo-api|demo-api-stable|demo-api-canary",outcome="success"}[5m])
+              )
+              or
+              0 * sum by (deployment_environment_name, service_name, service_version, platform_release_id, dependency) (
+                rate(demo_api_dependency_checks_total{job=~"demo-api|demo-api-stable|demo-api-canary",outcome=~"success|failure"}[5m])
+              )
             )
             /
             clamp_min(

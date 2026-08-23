@@ -120,13 +120,24 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
 contract = load_json("delivery/contracts/v0.11.4.0-grafana-recording-rules.json")
 validate_contract(contract)
 controller_metrics_successor = (root / "delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json").is_file()
+ratio_no_series_successor = (root / "delivery/contracts/v0.11.4.1.0.2-ratio-no-series-repair.json").is_file()
+
+if ratio_no_series_successor:
+    expected_views_chart_version = "version: 0.2.1"
+    expected_views_app_version = 'appVersion: "v0.11.4.1.0.2"'
+elif controller_metrics_successor:
+    expected_views_chart_version = "version: 0.2.0"
+    expected_views_app_version = 'appVersion: "v0.11.4.1.0"'
+else:
+    expected_views_chart_version = "version: 0.1.0"
+    expected_views_app_version = 'appVersion: "v0.11.4.0"'
 
 chart = markers(
     "platform/observability/helm/Chart.yaml",
     (
         "name: startup-devops-observability-views",
-        "version: 0.2.0" if controller_metrics_successor else "version: 0.1.0",
-        'appVersion: "v0.11.4.1.0"' if controller_metrics_successor else 'appVersion: "v0.11.4.0"',
+        expected_views_chart_version,
+        expected_views_app_version,
     ),
 )
 values = markers(

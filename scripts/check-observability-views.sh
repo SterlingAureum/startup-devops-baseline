@@ -63,9 +63,31 @@ query_nonempty() {
   payload="$(curl -fsS --get "http://127.0.0.1:${PROMETHEUS_LOCAL_PORT}/api/v1/query" --data-urlencode "query=${expression}")"
   jq -e '.status == "success" and (.data.result | length) > 0' <<<"${payload}" >/dev/null || {
     echo "ERROR: ${description} returned no series: ${expression}" >&2
-    echo "Generate demo-api traffic and increase RULE_WARMUP_SECONDS if the stack was just deployed." >&2
+    case "${expression}" in
+      demo_api:http_success_ratio:rate5m)
+        print_query_cardinality 'demo_api:http_requests:rate5m' "request-rate input"
+        print_query_cardinality 'demo_api:http_errors:rate5m' "error-rate input"
+        ;;
+      demo_api:dependency_success_ratio:rate5m)
+        print_query_cardinality 'demo_api:dependency_checks:rate5m' "dependency-rate input"
+        ;;
+    esac
+    echo "Generate demo-api traffic and increase RULE_WARMUP_SECONDS only when the source rate is also empty." >&2
     exit 1
   }
+}
+
+print_query_cardinality() {
+  local expression="$1"
+  local description="$2"
+  local payload count
+
+  if ! payload="$(curl -fsS --get "http://127.0.0.1:${PROMETHEUS_LOCAL_PORT}/api/v1/query" --data-urlencode "query=${expression}")"; then
+    echo "DIAGNOSTIC: ${description} query failed: ${expression}" >&2
+    return 0
+  fi
+  count="$(jq -r 'if .status == "success" then (.data.result | length) else "query-error" end' <<<"${payload}")"
+  echo "DIAGNOSTIC: ${description} series=${count}: ${expression}" >&2
 }
 
 echo "==> Checking Argo CD Applications"

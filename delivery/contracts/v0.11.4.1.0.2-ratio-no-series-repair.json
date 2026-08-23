@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "v0.11.4.1.0.2",
+  "version": "v0.11.4.1.0.2",
+  "predecessor": "v0.11.4.1.0.1",
+  "status": "offline-implemented-local-live-required",
+  "designDocument": "docs/V0.11.4.1.0.2_RATIO_NO_SERIES_REPAIR.md",
+  "chart": {
+    "path": "platform/observability/helm",
+    "previousVersion": "0.2.0",
+    "version": "0.2.1",
+    "applicationVersion": "v0.11.4.1.0.2"
+  },
+  "httpSuccessRatio": {
+    "record": "demo_api:http_success_ratio:rate5m",
+    "totalAnchor": "demo_api:http_requests:rate5m",
+    "optionalNumerator": "demo_api:http_errors:rate5m",
+    "missingNumeratorFill": "0 * demo_api:http_requests:rate5m",
+    "trafficWithoutErrorsResult": 1,
+    "trafficWithErrorsCalculated": true,
+    "noTrafficProducesSeries": false
+  },
+  "dependencySuccessRatio": {
+    "record": "demo_api:dependency_success_ratio:rate5m",
+    "totalAnchorSelector": "outcome=~success|failure",
+    "optionalNumeratorSelector": "outcome=success",
+    "missingNumeratorFill": "0 * total dependency rate",
+    "failuresWithoutSuccessResult": 0,
+    "mixedOutcomesCalculated": true,
+    "noDependencyChecksProduceSeries": false
+  },
+  "missingDataPolicy": {
+    "requestOrDependencyAnchoredFillRequired": true,
+    "globalVectorZeroForbidden": true,
+    "missingTargetRemainsNoData": true,
+    "inactiveWorkloadRemainsNoData": true
+  },
+  "diagnostics": {
+    "script": "scripts/check-observability-views.sh",
+    "httpInputCardinalityPrintedOnFailure": true,
+    "dependencyInputCardinalityPrintedOnFailure": true,
+    "warmupSuggestedOnlyWhenSourceRateEmpty": true
+  },
+  "boundaries": {
+    "recordingRuleExpressionsChanged": true,
+    "chartMetadataChanged": true,
+    "recordingRuleNamesChanged": false,
+    "dashboardChanged": false,
+    "alertingChanged": false,
+    "componentVersionChanged": false,
+    "grafanaDeploymentChanged": false,
+    "replicaSetCleanupAdded": false,
+    "awsDesiredStateChanged": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.4.1.0.2-ratio-no-series-repair.sh",
+    "completeQualityGateRequired": true,
+    "localObservabilityViewsRequired": true,
+    "localControllerMetricsRegressionRequired": true
+  }
+}

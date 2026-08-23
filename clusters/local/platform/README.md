@@ -10,13 +10,14 @@ acceptance.
 
 External Helm sources remain independently pinned in `values.yaml`:
 
-- Argo Rollouts `2.41.0`;
+- Argo Rollouts `2.41.1`;
 - ingress-nginx `4.11.3`;
 - kube-prometheus-stack `88.5.0`.
 
 The repository-owned `observability-views` Chart is not an external dependency;
-it inherits `git.targetRevision` from the Root and deploys recording rules and
-Dashboard ConfigMaps after the monitoring control plane.
+it inherits `git.targetRevision` from the Root and deploys recording rules,
+controller ServiceMonitors, and Dashboard ConfigMaps after the monitoring
+control plane. CloudNativePG PodMonitors remain disabled in the local profile.
 
 Stable values use `HEAD` and render `demo-api` Helm parameters as an explicit
 empty list. Feature mode is supplied only through the Root Application and

@@ -51,6 +51,7 @@ require(contract.get("acceptance", {}).get("resumeOriginalV0.11.4.0ApplyRunbook"
 validator = (root / "scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh").read_text()
 for marker in (
     "v0.11.4.0-grafana-recording-rules.json",
+    "v0.11.4.1.0-controller-metrics-discovery.json",
     'expected_names.add("observability-views")',
     'same_repository_names.append("observability-views")',
     "for name in same_repository_names:",
@@ -105,7 +106,7 @@ metadata:
   name: argo-rollouts
 spec:
   source:
-    targetRevision: 2.41.0
+    targetRevision: 2.41.1
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application

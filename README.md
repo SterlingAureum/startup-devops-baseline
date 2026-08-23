@@ -2,11 +2,11 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.4.0.1-helm-successor-coverage`.
-It retains the v0.11.4.0 private Grafana, recording rules, Dashboard, and
-unified observability Application while repairing the historical Helm-render
-regression to accept and verify the sixth local child. See
-`docs/V0.11.4.0.1_HELM_SUCCESSOR_COVERAGE.md`.
+Current development checkpoint: `v0.11.4.1.0-controller-metrics-discovery`.
+It verifies the monitored controller surface, enables Argo CD and Argo Rollouts
+discovery, adds AWS-only CloudNativePG monitors, and provides Delivery, Data,
+and Platform diagnostic recording rules before the corresponding Dashboards.
+See `docs/V0.11.4.1.0_CONTROLLER_METRICS_DISCOVERY.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 

@@ -8,3 +8,17 @@ grafana:
 
 recordingRules:
   evaluationInterval: 30s
+
+controllerMonitors:
+  scrapeInterval: 30s
+  argoCD:
+    enabled: true
+    namespace: argocd
+  argoRollouts:
+    enabled: true
+    namespace: argo-rollouts
+  cloudNativePG:
+    enabled: false
+    operatorNamespace: cnpg-system
+    clusterNamespace: data-platform
+    clusterName: postgresql-baseline

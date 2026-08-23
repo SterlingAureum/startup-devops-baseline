@@ -1,0 +1,140 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: operator-diagnostic-recording-rules
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: recording-rules
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ .Values.environment | quote }}
+spec:
+  groups:
+    - name: delivery.operator.v0.11.4.1.0
+      interval: {{ .Values.recordingRules.evaluationInterval }}
+      rules:
+        - record: delivery:argocd_applications:count
+          expr: |
+            sum by (namespace, sync_status, health_status) (
+              argocd_app_info
+            )
+        - record: delivery:argocd_applications_out_of_sync:count
+          expr: |
+            sum by (namespace) (
+              argocd_app_info{sync_status!="Synced"}
+            )
+        - record: delivery:argocd_applications_unhealthy:count
+          expr: |
+            sum by (namespace, health_status) (
+              argocd_app_info{health_status!~"Healthy|Progressing"}
+            )
+        - record: delivery:rollouts:count
+          expr: |
+            sum by (namespace, phase, strategy) (
+              rollout_info
+            )
+        - record: delivery:rollouts_problem:count
+          expr: |
+            sum by (namespace, phase) (
+              rollout_info{phase=~"Degraded|Error|InvalidSpec|Timeout|Abort|Aborted"}
+            )
+        - record: delivery:rollout_desired_replicas:count
+          expr: |
+            sum by (namespace, name) (
+              rollout_info_replicas_desired
+            )
+        - record: delivery:rollout_available_replicas:count
+          expr: |
+            sum by (namespace, name) (
+              rollout_info_replicas_available
+            )
+        - record: delivery:rollout_unavailable_replicas:count
+          expr: |
+            sum by (namespace, name) (
+              rollout_info_replicas_unavailable
+            )
+        - record: delivery:rollout_ready_replicas:ratio
+          expr: |
+            sum by (namespace, name) (
+              rollout_info_replicas_available
+            )
+            /
+            clamp_min(
+              sum by (namespace, name) (
+                rollout_info_replicas_desired
+              ),
+              1
+            )
+        - record: delivery:rollout_reconcile:rate5m
+          expr: |
+            sum by (namespace) (
+              rate(rollout_reconcile_count[5m])
+            )
+    - name: data.operator.v0.11.4.1.0
+      interval: {{ .Values.recordingRules.evaluationInterval }}
+      rules:
+        - record: data:demo_api_dependency_checks:rate5m
+          expr: |
+            sum by (deployment_environment_name, service_name, service_version, platform_release_id, dependency, outcome) (
+              demo_api:dependency_checks:rate5m
+            )
+        - record: data:postgresql_instances_up:min
+          expr: |
+            min by (cnpg_cluster) (
+              cnpg_collector_up
+            )
+        - record: data:postgresql_collection_errors:max
+          expr: |
+            max by (cnpg_cluster) (
+              cnpg_collector_last_collection_error
+            )
+        - record: data:postgresql_nodes_used:max
+          expr: |
+            max by (cnpg_cluster) (
+              cnpg_collector_nodes_used
+            )
+        - record: data:postgresql_manual_switchover_required:max
+          expr: |
+            max by (cnpg_cluster) (
+              cnpg_collector_manual_switchover_required
+            )
+    - name: platform.operator.v0.11.4.1.0
+      interval: {{ .Values.recordingRules.evaluationInterval }}
+      rules:
+        - record: platform:deployment_desired_replicas:count
+          expr: |
+            sum by (namespace, deployment) (
+              kube_deployment_spec_replicas
+            )
+        - record: platform:deployment_ready_replicas:ratio
+          expr: |
+            sum by (namespace, deployment) (
+              kube_deployment_status_replicas_available
+            )
+            /
+            clamp_min(
+              sum by (namespace, deployment) (
+                kube_deployment_spec_replicas
+              ),
+              1
+            )
+        - record: platform:deployment_unavailable_replicas:count
+          expr: |
+            sum by (namespace, deployment) (
+              kube_deployment_status_replicas_unavailable
+            )
+        - record: platform:pod_container_restarts:increase15m
+          expr: |
+            sum by (namespace, container) (
+              increase(kube_pod_container_status_restarts_total[15m])
+            )
+        - record: platform:prometheus_targets:count
+          expr: |
+            sum by (namespace, job) (
+              up
+            )
+        - record: platform:prometheus_targets_down:count
+          expr: |
+            sum by (namespace, job) (
+              up == 0
+            )

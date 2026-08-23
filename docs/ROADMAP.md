@@ -324,15 +324,21 @@ Incremental scope:
   progress
   - v0.11.4.0 - private GitOps-managed Grafana, repository-owned views Chart,
     bounded demo-api recording rules, immutable service overview Dashboard,
-    unified feature revision, and local live acceptance - implemented offline;
-    Helm replay exposed historical five-child validation repaired by
-    v0.11.4.0.1
+    unified feature revision, and local live acceptance - implemented and
+    accepted locally; Helm replay exposed historical five-child validation
+    repaired by v0.11.4.0.1
   - v0.11.4.0.1 - make the v0.11.3.4 Helm-render regression successor-aware,
     require the sixth observability child and its stable/feature revisions, and
-    force the skipped branch through a fake-Helm regression - implemented;
-    complete quality-gate replay required
+    force the skipped branch through a fake-Helm regression - implemented and
+    accepted
   - v0.11.4.1 - delivery, data, and platform views plus version-verified
-    controller metrics discovery - planned
+    controller metrics discovery - in progress
+    - v0.11.4.1.0 - observed semantic Argo CD identity, patched and pinned Argo
+      Rollouts, repository-owned controller and CloudNativePG monitors,
+      Delivery/Data/Platform diagnostic recording rules, and profile-aware
+      live discovery - implemented offline; local live acceptance required
+    - v0.11.4.1.1 - immutable Delivery, Data, and Platform Dashboards backed
+      only by the accepted v0.11.4.1.0 rules - planned
   - v0.11.4.2 - capacity and resource-efficiency views, conditional no-data
     hardening, and clean local replay - planned
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity

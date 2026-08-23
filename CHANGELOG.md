@@ -2,6 +2,36 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.4.1.0
+
+### Added
+
+- Added repository-owned ServiceMonitors for Argo CD and Argo Rollouts plus
+  AWS-only PodMonitors for the CloudNativePG operator and PostgreSQL instances.
+- Added twenty-one Delivery, Data, and Platform diagnostic recording rules and
+  a profile-aware live discovery check for controller versions, targets, raw
+  metrics, loaded rules, and required query results.
+- Added an exact machine-readable component and metric contract, focused
+  offline validation, negative boundary mutations, and a local/AWS acceptance
+  Runbook.
+
+### Changed
+
+- Added live Argo CD semantic-version observation without changing its
+  existing installation or Kubernetes-compatibility boundary.
+- Advanced Argo Rollouts from Chart `2.41.0` to `2.41.1`, enabled its metrics
+  Service, and pinned the resulting controller application version to
+  `v1.9.1`.
+- Advanced the local platform Chart to `0.3.0` and the repository-owned
+  observability views Chart to `0.2.0`.
+
+### Boundary
+
+- This increment adds no Dashboard, alert, Alertmanager routing, SLO, burn
+  rate, log backend, trace backend, cloud billing integration, Canary step, or
+  production automation. Delivery, Data, and Platform Dashboards continue in
+  v0.11.4.1.1.
+
 ## v0.11.4.0.1
 
 ### Fixed

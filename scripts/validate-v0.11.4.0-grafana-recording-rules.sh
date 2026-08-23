@@ -119,10 +119,15 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
 
 contract = load_json("delivery/contracts/v0.11.4.0-grafana-recording-rules.json")
 validate_contract(contract)
+controller_metrics_successor = (root / "delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json").is_file()
 
 chart = markers(
     "platform/observability/helm/Chart.yaml",
-    ("name: startup-devops-observability-views", "version: 0.1.0", 'appVersion: "v0.11.4.0"'),
+    (
+        "name: startup-devops-observability-views",
+        "version: 0.2.0" if controller_metrics_successor else "version: 0.1.0",
+        'appVersion: "v0.11.4.1.0"' if controller_metrics_successor else 'appVersion: "v0.11.4.0"',
+    ),
 )
 values = markers(
     "platform/observability/helm/values.yaml",
@@ -171,7 +176,13 @@ aws_app = markers(
 )
 require("feature/" not in local_app + aws_app, "Feature revision committed to an observability Application")
 
-markers("clusters/local/platform/Chart.yaml", ("version: 0.2.0", 'appVersion: "v0.11.4.0"'))
+markers(
+    "clusters/local/platform/Chart.yaml",
+    (
+        "version: 0.3.0" if controller_metrics_successor else "version: 0.2.0",
+        'appVersion: "v0.11.4.1.0"' if controller_metrics_successor else 'appVersion: "v0.11.4.0"',
+    ),
+)
 markers("clusters/aws/base/platform/kustomization.yaml", ("- observability-views.yaml",))
 for relative, name, environment, cluster in (
     ("clusters/aws/overlays/test/kustomization.yaml", "observability-views-aws-test", "aws-test", "startup-devops-baseline-test"),

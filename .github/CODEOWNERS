@@ -32,6 +32,7 @@
 /delivery/contracts/v0.11.3.6-helm-migration-validator-coverage.json @SterlingAureum
 /delivery/contracts/v0.11.4.0-grafana-recording-rules.json @SterlingAureum
 /delivery/contracts/v0.11.4.0.1-helm-successor-coverage.json @SterlingAureum
+/delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json @SterlingAureum
 /delivery/contracts/examples/v0.10-final-evidence-input.example.json @SterlingAureum
 /scripts/calculate-demo-api-qualification-scope.py @SterlingAureum
 /scripts/demo_api_qualification_bundle.py @SterlingAureum
@@ -68,7 +69,9 @@
 /scripts/validate-v0.11.3.6-helm-migration-validator-coverage.sh @SterlingAureum
 /scripts/validate-v0.11.4.0-grafana-recording-rules.sh @SterlingAureum
 /scripts/validate-v0.11.4.0.1-helm-successor-coverage.sh @SterlingAureum
+/scripts/validate-v0.11.4.1.0-controller-metrics-discovery.sh @SterlingAureum
 /scripts/check-observability-views.sh @SterlingAureum
+/scripts/check-controller-metrics.sh @SterlingAureum
 /scripts/restore-local-feature-baseline.sh @SterlingAureum
 /scripts/restore-local-gitops-baseline.sh @SterlingAureum
 /scripts/restore-local-gitops-head.sh @SterlingAureum
@@ -102,6 +105,7 @@
 /docs/V0.11.3.6_HELM_MIGRATION_VALIDATOR_COVERAGE.md @SterlingAureum
 /docs/V0.11.4.0_GRAFANA_RECORDING_RULES.md @SterlingAureum
 /docs/V0.11.4.0.1_HELM_SUCCESSOR_COVERAGE.md @SterlingAureum
+/docs/V0.11.4.1.0_CONTROLLER_METRICS_DISCOVERY.md @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

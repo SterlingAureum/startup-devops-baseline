@@ -89,6 +89,7 @@ validate_contract(contract)
 
 chart = read("clusters/local/platform/Chart.yaml")
 observability_successor = (root / "delivery/contracts/v0.11.4.0-grafana-recording-rules.json").is_file()
+controller_metrics_successor = (root / "delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json").is_file()
 values = read("clusters/local/platform/values.yaml")
 root_app = read("clusters/local/root-app.yaml")
 feature = read("scripts/deploy-local-feature-gitops.sh")
@@ -100,8 +101,8 @@ revision_helper = read("scripts/lib/git-revision.sh")
 
 chart_markers = (
     "name: startup-devops-local-platform",
-    "version: 0.2.0" if observability_successor else "version: 0.1.0",
-    'appVersion: "v0.11.4.0"' if observability_successor else 'appVersion: "v0.11.3.4"',
+    "version: 0.3.0" if controller_metrics_successor else ("version: 0.2.0" if observability_successor else "version: 0.1.0"),
+    'appVersion: "v0.11.4.1.0"' if controller_metrics_successor else ('appVersion: "v0.11.4.0"' if observability_successor else 'appVersion: "v0.11.3.4"'),
 )
 for marker in chart_markers:
     require(marker in chart, f"Platform Chart marker missing: {marker}")
@@ -109,7 +110,7 @@ for marker in chart_markers:
 for marker in (
     "targetRevision: HEAD",
     "enabled: false",
-    "version: 2.41.0",
+    "version: 2.41.1" if controller_metrics_successor else "version: 2.41.0",
     "version: 4.11.3",
     "version: 88.5.0",
 ):
@@ -540,7 +541,8 @@ if command -v helm >/dev/null 2>&1; then
     "${WORK_DIR}/stable-platform.yaml" \
     "${WORK_DIR}/feature-platform.yaml" \
     "${FEATURE_SHA}" \
-    "${ROOT_DIR}/delivery/contracts/v0.11.4.0-grafana-recording-rules.json" <<'PY'
+    "${ROOT_DIR}/delivery/contracts/v0.11.4.0-grafana-recording-rules.json" \
+    "${ROOT_DIR}/delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json" <<'PY'
 from pathlib import Path
 import re
 import sys
@@ -550,6 +552,7 @@ stable = Path(sys.argv[1]).read_text()
 feature = Path(sys.argv[2]).read_text()
 sha = sys.argv[3]
 observability_successor = Path(sys.argv[4]).is_file()
+controller_metrics_successor = Path(sys.argv[5]).is_file()
 
 
 def require(condition: bool, message: str) -> None:
@@ -589,7 +592,8 @@ for name in same_repository_names:
     require(revision(stable_apps[name]) == "HEAD", f"Stable {name} revision changed")
     require(revision(feature_apps[name]) == sha, f"Feature {name} revision is not unified")
 
-require(revision(feature_apps["argo-rollouts"]) == "2.41.0", "Argo Rollouts version changed")
+expected_rollouts_version = "2.41.1" if controller_metrics_successor else "2.41.0"
+require(revision(feature_apps["argo-rollouts"]) == expected_rollouts_version, "Argo Rollouts version changed")
 require(revision(feature_apps["ingress-nginx"]) == "4.11.3", "ingress-nginx version changed")
 require(revision(feature_apps["monitoring"]) == "88.5.0", "monitoring version changed")
 

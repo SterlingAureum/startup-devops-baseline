@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "v0.11.4.1.0",
+  "version": "v0.11.4.1.0",
+  "status": "offline-implemented-local-live-required",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.4.1.0_CONTROLLER_METRICS_DISCOVERY.md",
+  "componentVersions": {
+    "argoCD": {
+      "installationBoundaryChanged": false,
+      "runtimeSemverImageRequired": true,
+      "exactVersionOverride": "EXPECTED_ARGOCD_VERSION",
+      "metricsEndpoint": "argocd-metrics:8082/metrics",
+      "requiredMetric": "argocd_app_info"
+    },
+    "argoRollouts": {
+      "chartVersion": "2.41.1",
+      "applicationVersion": "v1.9.1",
+      "metricsPort": 8090,
+      "requiredMetrics": [
+        "rollout_info",
+        "rollout_info_replicas_desired",
+        "rollout_info_replicas_available",
+        "rollout_info_replicas_unavailable",
+        "rollout_reconcile_count"
+      ]
+    },
+    "cloudNativePG": {
+      "chartVersion": "0.29.0",
+      "applicationVersion": "1.30.0",
+      "metricsPort": 9187,
+      "awsOnly": true,
+      "requiredMetrics": [
+        "cnpg_collector_up",
+        "cnpg_collector_last_collection_error",
+        "cnpg_collector_nodes_used",
+        "cnpg_collector_manual_switchover_required"
+      ]
+    },
+    "kubePrometheusStack": {
+      "chartVersion": "88.5.0"
+    }
+  },
+  "monitors": {
+    "path": "platform/observability/helm/templates/controller-monitors.yaml",
+    "local": [
+      "ServiceMonitor/argocd-application-controller",
+      "ServiceMonitor/argo-rollouts-controller"
+    ],
+    "awsAdditional": [
+      "PodMonitor/cloudnative-pg-operator",
+      "PodMonitor/cloudnative-pg-cluster"
+    ],
+    "cloudNativePGMetricLabel": "cnpg_cluster",
+    "kubernetesClusterExternalLabelPreserved": true,
+    "scrapeInterval": "30s"
+  },
+  "recordingRules": {
+    "path": "platform/observability/helm/templates/operator-recording-rules.yaml",
+    "evaluationInterval": "30s",
+    "names": [
+      "delivery:argocd_applications:count",
+      "delivery:argocd_applications_out_of_sync:count",
+      "delivery:argocd_applications_unhealthy:count",
+      "delivery:rollouts:count",
+      "delivery:rollouts_problem:count",
+      "delivery:rollout_desired_replicas:count",
+      "delivery:rollout_available_replicas:count",
+      "delivery:rollout_unavailable_replicas:count",
+      "delivery:rollout_ready_replicas:ratio",
+      "delivery:rollout_reconcile:rate5m",
+      "data:demo_api_dependency_checks:rate5m",
+      "data:postgresql_instances_up:min",
+      "data:postgresql_collection_errors:max",
+      "data:postgresql_nodes_used:max",
+      "data:postgresql_manual_switchover_required:max",
+      "platform:deployment_desired_replicas:count",
+      "platform:deployment_ready_replicas:ratio",
+      "platform:deployment_unavailable_replicas:count",
+      "platform:pod_container_restarts:increase15m",
+      "platform:prometheus_targets:count",
+      "platform:prometheus_targets_down:count"
+    ],
+    "alertRulesAdded": false,
+    "missingDataCoercedToHealthyZero": false,
+    "dashboardAdded": false
+  },
+  "discovery": {
+    "liveScript": "scripts/check-controller-metrics.sh",
+    "componentImagesChecked": true,
+    "activeTargetsChecked": true,
+    "rawMetricNamesChecked": true,
+    "recordingRulesLoadedChecked": true,
+    "localRequiredDataChecked": true,
+    "awsCloudNativePGDataCheckedConditionally": true,
+    "argoCDObservedVersionPrinted": true
+  },
+  "boundaries": {
+    "grafanaExposureChanged": false,
+    "alertmanagerEnabled": false,
+    "alertRulesAdded": false,
+    "dashboardAdded": false,
+    "demoApiTelemetryChanged": false,
+    "canaryStepsChanged": false,
+    "rolloutAnalysisGateChanged": false,
+    "lokiAdded": false,
+    "tracingAdded": false,
+    "sloAdded": false,
+    "kubecostAdded": false,
+    "awsBillingIntegrationAdded": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.4.1.0-controller-metrics-discovery.sh",
+    "completeQualityGateRequired": true,
+    "localLiveDiscoveryRequired": true,
+    "cloudNativePGLiveEvidenceDeferredTo": "v0.11.8",
+    "dashboardsDeferredTo": "v0.11.4.1.1"
+  }
+}

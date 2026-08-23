@@ -1,0 +1,101 @@
+{{- if .Values.controllerMonitors.argoCD.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argocd-application-controller
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: controller-monitor
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ .Values.environment | quote }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.controllerMonitors.argoCD.namespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argocd-metrics
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: {{ .Values.controllerMonitors.scrapeInterval }}
+---
+{{- end }}
+{{- if .Values.controllerMonitors.argoRollouts.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argo-rollouts-controller
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: controller-monitor
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ .Values.environment | quote }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.controllerMonitors.argoRollouts.namespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: argo-rollouts
+      app.kubernetes.io/component: rollouts-controller
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: {{ .Values.controllerMonitors.scrapeInterval }}
+---
+{{- end }}
+{{- if .Values.controllerMonitors.cloudNativePG.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: cloudnative-pg-operator
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: controller-monitor
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ .Values.environment | quote }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.controllerMonitors.cloudNativePG.operatorNamespace }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cloudnative-pg
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: {{ .Values.controllerMonitors.scrapeInterval }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: cloudnative-pg-cluster
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: data-monitor
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ .Values.environment | quote }}
+spec:
+  namespaceSelector:
+    matchNames:
+      - {{ .Values.controllerMonitors.cloudNativePG.clusterNamespace }}
+  selector:
+    matchLabels:
+      cnpg.io/cluster: {{ .Values.controllerMonitors.cloudNativePG.clusterName }}
+  podMetricsEndpoints:
+    - port: metrics
+      path: /metrics
+      interval: {{ .Values.controllerMonitors.scrapeInterval }}
+      metricRelabelings:
+        - sourceLabels:
+            - cluster
+          targetLabel: cnpg_cluster
+          action: replace
+        - regex: cluster
+          action: labeldrop
+{{- end }}

@@ -75,6 +75,9 @@ echo "==> Validating v0.11.4.0 Grafana and recording rules"
 echo "==> Validating v0.11.4.0.1 Helm successor coverage"
 "${ROOT_DIR}/scripts/validate-v0.11.4.0.1-helm-successor-coverage.sh"
 
+echo "==> Validating v0.11.4.1.0 controller metrics discovery"
+"${ROOT_DIR}/scripts/validate-v0.11.4.1.0-controller-metrics-discovery.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

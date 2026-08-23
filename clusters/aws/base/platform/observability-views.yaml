@@ -20,6 +20,8 @@ spec:
           value: aws-dev
         - name: cluster
           value: startup-devops-baseline-dev
+        - name: controllerMonitors.cloudNativePG.enabled
+          value: "true"
   destination:
     server: https://kubernetes.default.svc
     namespace: observability

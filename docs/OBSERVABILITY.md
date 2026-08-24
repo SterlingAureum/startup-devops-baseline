@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.4.1.1 telemetry and operator-view foundation uses Prometheus Operator through the
+The active v0.11.4.2.0 telemetry and operator-view foundation uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -19,10 +19,11 @@ observability Namespace
   Grafana Deployment and private ClusterIP Service
   Git-provisioned Dashboard ConfigMaps
   PrometheusRule recording rules
+  Capacity and resource-efficiency recording rules
 ```
 
 Alertmanager, alert rules, Loki, Alloy, tracing, Thanos, remote write, Kubecost,
-and cloud billing integration are not part of v0.11.4.1.1.
+and cloud billing integration are not part of v0.11.4.2.0.
 
 The local Application is:
 
@@ -80,6 +81,7 @@ kubectl get servicemonitors -n startup-apps
 ./scripts/check-observability-views.sh
 PROFILE=local ./scripts/check-controller-metrics.sh
 PROFILE=local ./scripts/check-operator-dashboards.sh
+PROFILE=local ./scripts/check-capacity-signals.sh
 ```
 
 Generate demo-api traffic if the application metric is not visible yet, then
@@ -120,3 +122,6 @@ curl -fsS --get http://127.0.0.1:19090/api/v1/query \
 - `docs/V0.11.4.1.1_OPERATOR_DASHBOARDS.md` defines the immutable Delivery,
   Data, and Platform Dashboards, recording-rule query boundary, conditional
   CloudNativePG no-data behavior, and profile-aware live acceptance.
+- `docs/V0.11.4.2.0_CAPACITY_SIGNAL_FOUNDATION.md` defines existing-source
+  capacity and efficiency signals, active workload semantics, bounded request
+  coverage, cost boundaries, and profile-aware live discovery.

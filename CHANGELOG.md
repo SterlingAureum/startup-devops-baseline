@@ -2,6 +2,33 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.4.2.0
+
+### Added
+
+- Added twenty capacity and resource-efficiency recording rules for cluster
+  allocatable resources, active workload requests and limits, Pod capacity,
+  namespace usage-to-request ratios, and request coverage.
+- Added profile-aware live discovery for existing kube-state-metrics and
+  kubelet/cAdvisor sources, rule health, finite ratios, and `startup-apps`
+  request-coverage results.
+- Added an offline contract and focused validator for source ownership, active
+  workload semantics, bounded zero anchors, and scope boundaries.
+
+### Changed
+
+- Advanced the repository-owned observability views Chart from `0.2.2` to
+  `0.3.0` with application version `v0.11.4.2.0`.
+- Made historical v0.11.4 rule and Dashboard validators aware of the capacity
+  signal successor without changing their accepted rule or Dashboard sets.
+
+### Boundary
+
+- This increment reuses existing core monitoring targets. It adds no
+  Dashboard, monitor, exporter, alert, autoscaling action, Karpenter policy,
+  Kubecost, AWS Billing integration, currency-cost claim, Canary change, or
+  production automation.
+
 ## v0.11.4.1.1
 
 ### Added

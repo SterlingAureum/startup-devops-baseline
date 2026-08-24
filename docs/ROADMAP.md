@@ -343,10 +343,14 @@ Incremental scope:
         valid zero numerators to observed request and dependency series -
         implemented and accepted locally
     - v0.11.4.1.1 - immutable Delivery, Data, and Platform Dashboards backed
-      only by the accepted v0.11.4.1.0 rules - implemented offline; local live
-      acceptance required
+      only by the accepted v0.11.4.1.0 rules - implemented and accepted locally
   - v0.11.4.2 - capacity and resource-efficiency views, conditional no-data
-    hardening, and clean local replay - planned
+    hardening, and clean local replay - in progress
+    - v0.11.4.2.0 - existing-source capacity and efficiency recording rules,
+      bounded request coverage, and profile-aware live discovery - implemented
+      offline; local live acceptance required
+    - v0.11.4.2.1 - immutable Capacity and Resource Efficiency Dashboard backed
+      only by the accepted v0.11.4.2.0 rules - planned
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity
   policy, and version-controlled Runbooks with positive/negative drills - planned
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry

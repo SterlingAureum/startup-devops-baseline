@@ -1,0 +1,234 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: capacity-efficiency-recording-rules
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: recording-rules
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ .Values.environment | quote }}
+spec:
+  groups:
+    - name: capacity.foundation.v0.11.4.2.0
+      interval: {{ .Values.recordingRules.evaluationInterval }}
+      rules:
+        - record: capacity:node_cpu_allocatable_cores:sum
+          expr: |
+            sum(
+              kube_node_status_allocatable{resource="cpu",unit="core"}
+            )
+        - record: capacity:node_memory_allocatable_bytes:sum
+          expr: |
+            sum(
+              kube_node_status_allocatable{resource="memory",unit="byte"}
+            )
+        - record: capacity:node_pods_allocatable:sum
+          expr: |
+            sum(
+              kube_node_status_allocatable{resource="pods",unit="integer"}
+            )
+        - record: capacity:running_pods:count
+          expr: |
+            sum(
+              kube_pod_status_phase{phase="Running"} == 1
+            )
+            or
+            0 * sum(
+              kube_node_status_allocatable{resource="pods",unit="integer"}
+            )
+        - record: capacity:running_pods_to_allocatable:ratio
+          expr: |
+            capacity:running_pods:count
+            /
+            clamp_min(capacity:node_pods_allocatable:sum, 1)
+        - record: capacity:cpu_requests_cores:sum
+          expr: |
+            sum(
+              kube_pod_container_resource_requests{resource="cpu",unit="core"}
+              * on (namespace, pod) group_left
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+            or
+            0 * sum(
+              (kube_pod_container_info{container!=""} == 1)
+              and on (namespace, pod)
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+        - record: capacity:memory_requests_bytes:sum
+          expr: |
+            sum(
+              kube_pod_container_resource_requests{resource="memory",unit="byte"}
+              * on (namespace, pod) group_left
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+            or
+            0 * sum(
+              (kube_pod_container_info{container!=""} == 1)
+              and on (namespace, pod)
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+        - record: capacity:cpu_limits_cores:sum
+          expr: |
+            sum(
+              kube_pod_container_resource_limits{resource="cpu",unit="core"}
+              * on (namespace, pod) group_left
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+            or
+            0 * sum(
+              (kube_pod_container_info{container!=""} == 1)
+              and on (namespace, pod)
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+        - record: capacity:memory_limits_bytes:sum
+          expr: |
+            sum(
+              kube_pod_container_resource_limits{resource="memory",unit="byte"}
+              * on (namespace, pod) group_left
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+            or
+            0 * sum(
+              (kube_pod_container_info{container!=""} == 1)
+              and on (namespace, pod)
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+        - record: capacity:cpu_requests_to_allocatable:ratio
+          expr: |
+            capacity:cpu_requests_cores:sum
+            /
+            clamp_min(capacity:node_cpu_allocatable_cores:sum, 0.001)
+        - record: capacity:memory_requests_to_allocatable:ratio
+          expr: |
+            capacity:memory_requests_bytes:sum
+            /
+            clamp_min(capacity:node_memory_allocatable_bytes:sum, 1)
+    - name: efficiency.foundation.v0.11.4.2.0
+      interval: {{ .Values.recordingRules.evaluationInterval }}
+      rules:
+        - record: efficiency:namespace_cpu_requests_cores:sum
+          expr: |
+            sum by (namespace) (
+              kube_pod_container_resource_requests{resource="cpu",unit="core"}
+              * on (namespace, pod) group_left
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+            or
+            0 * count by (namespace) (
+              (kube_pod_container_info{container!=""} == 1)
+              and on (namespace, pod)
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+        - record: efficiency:namespace_memory_requests_bytes:sum
+          expr: |
+            sum by (namespace) (
+              kube_pod_container_resource_requests{resource="memory",unit="byte"}
+              * on (namespace, pod) group_left
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+            or
+            0 * count by (namespace) (
+              (kube_pod_container_info{container!=""} == 1)
+              and on (namespace, pod)
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+        - record: efficiency:namespace_cpu_usage_cores:rate5m
+          expr: |
+            sum by (namespace) (
+              rate(container_cpu_usage_seconds_total{namespace!="",container!="",container!="POD"}[5m])
+            )
+        - record: efficiency:namespace_memory_working_set_bytes:sum
+          expr: |
+            sum by (namespace) (
+              container_memory_working_set_bytes{namespace!="",container!="",container!="POD"}
+            )
+        - record: efficiency:namespace_cpu_usage_to_requests:ratio
+          expr: |
+            efficiency:namespace_cpu_usage_cores:rate5m
+            /
+            clamp_min(efficiency:namespace_cpu_requests_cores:sum, 0.001)
+            and on (namespace)
+            (efficiency:namespace_cpu_requests_cores:sum > 0)
+        - record: efficiency:namespace_memory_usage_to_requests:ratio
+          expr: |
+            efficiency:namespace_memory_working_set_bytes:sum
+            /
+            clamp_min(efficiency:namespace_memory_requests_bytes:sum, 1)
+            and on (namespace)
+            (efficiency:namespace_memory_requests_bytes:sum > 0)
+        - record: efficiency:namespace_active_containers:count
+          expr: |
+            count by (namespace) (
+              (kube_pod_container_info{container!=""} == 1)
+              and on (namespace, pod)
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+        - record: efficiency:namespace_containers_without_cpu_requests:count
+          expr: |
+            count by (namespace) (
+              (
+                (kube_pod_container_info{container!=""} == 1)
+                and on (namespace, pod)
+                max by (namespace, pod) (
+                  kube_pod_status_phase{phase=~"Pending|Running"} == 1
+                )
+              )
+              unless on (namespace, pod, container)
+              (kube_pod_container_resource_requests{resource="cpu",unit="core"} > 0)
+            )
+            or
+            0 * count by (namespace) (
+              (kube_pod_container_info{container!=""} == 1)
+              and on (namespace, pod)
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )
+        - record: efficiency:namespace_containers_without_memory_requests:count
+          expr: |
+            count by (namespace) (
+              (
+                (kube_pod_container_info{container!=""} == 1)
+                and on (namespace, pod)
+                max by (namespace, pod) (
+                  kube_pod_status_phase{phase=~"Pending|Running"} == 1
+                )
+              )
+              unless on (namespace, pod, container)
+              (kube_pod_container_resource_requests{resource="memory",unit="byte"} > 0)
+            )
+            or
+            0 * count by (namespace) (
+              (kube_pod_container_info{container!=""} == 1)
+              and on (namespace, pod)
+              max by (namespace, pod) (
+                kube_pod_status_phase{phase=~"Pending|Running"} == 1
+              )
+            )

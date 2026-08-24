@@ -87,6 +87,9 @@ echo "==> Validating v0.11.4.1.0.2 ratio no-series repair"
 echo "==> Validating v0.11.4.1.1 operator Dashboards"
 "${ROOT_DIR}/scripts/validate-v0.11.4.1.1-operator-dashboards.sh"
 
+echo "==> Validating v0.11.4.2.0 capacity signal foundation"
+"${ROOT_DIR}/scripts/validate-v0.11.4.2.0-capacity-signal-foundation.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

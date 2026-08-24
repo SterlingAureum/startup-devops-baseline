@@ -115,10 +115,16 @@ def recording_rule_names(queries: list[str]) -> set[str]:
 
 contract = load_json("delivery/contracts/v0.11.4.1.1-operator-dashboards.json")
 validate_contract(contract)
+capacity_signal_successor = (root / "delivery/contracts/v0.11.4.2.0-capacity-signal-foundation.json").is_file()
+
+expected_views_chart_version = "version: 0.3.0" if capacity_signal_successor else "version: 0.2.2"
+expected_views_app_version = (
+    'appVersion: "v0.11.4.2.0"' if capacity_signal_successor else 'appVersion: "v0.11.4.1.1"'
+)
 
 markers(
     "platform/observability/helm/Chart.yaml",
-    ("name: startup-devops-observability-views", "version: 0.2.2", 'appVersion: "v0.11.4.1.1"'),
+    ("name: startup-devops-observability-views", expected_views_chart_version, expected_views_app_version),
 )
 
 dashboard_dir = root / "platform/observability/helm/dashboards"
@@ -225,8 +231,8 @@ markers(
     "scripts/validate-v0.11.4.1.0.2-ratio-no-series-repair.sh",
     (
         "v0.11.4.1.1-operator-dashboards.json",
-        '"version: 0.2.2" if operator_dashboards_successor',
-        '\'appVersion: "v0.11.4.1.1"\' if operator_dashboards_successor',
+        'expected_views_chart_version = "version: 0.2.2"',
+        'expected_views_app_version = \'appVersion: "v0.11.4.1.1"\'',
     ),
 )
 

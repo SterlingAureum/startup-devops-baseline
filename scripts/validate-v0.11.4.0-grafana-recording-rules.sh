@@ -122,8 +122,12 @@ validate_contract(contract)
 controller_metrics_successor = (root / "delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json").is_file()
 ratio_no_series_successor = (root / "delivery/contracts/v0.11.4.1.0.2-ratio-no-series-repair.json").is_file()
 operator_dashboards_successor = (root / "delivery/contracts/v0.11.4.1.1-operator-dashboards.json").is_file()
+capacity_signal_successor = (root / "delivery/contracts/v0.11.4.2.0-capacity-signal-foundation.json").is_file()
 
-if operator_dashboards_successor:
+if capacity_signal_successor:
+    expected_views_chart_version = "version: 0.3.0"
+    expected_views_app_version = 'appVersion: "v0.11.4.2.0"'
+elif operator_dashboards_successor:
     expected_views_chart_version = "version: 0.2.2"
     expected_views_app_version = 'appVersion: "v0.11.4.1.1"'
 elif ratio_no_series_successor:

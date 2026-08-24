@@ -83,13 +83,24 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
 contract = json.loads(read("delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json"))
 validate_contract(contract)
 ratio_no_series_successor = (root / "delivery/contracts/v0.11.4.1.0.2-ratio-no-series-repair.json").is_file()
+operator_dashboards_successor = (root / "delivery/contracts/v0.11.4.1.1-operator-dashboards.json").is_file()
+
+if operator_dashboards_successor:
+    expected_views_chart_version = "version: 0.2.2"
+    expected_views_app_version = 'appVersion: "v0.11.4.1.1"'
+elif ratio_no_series_successor:
+    expected_views_chart_version = "version: 0.2.1"
+    expected_views_app_version = 'appVersion: "v0.11.4.1.0.2"'
+else:
+    expected_views_chart_version = "version: 0.2.0"
+    expected_views_app_version = 'appVersion: "v0.11.4.1.0"'
 
 markers(
     "platform/observability/helm/Chart.yaml",
     (
         "name: startup-devops-observability-views",
-        "version: 0.2.1" if ratio_no_series_successor else "version: 0.2.0",
-        'appVersion: "v0.11.4.1.0.2"' if ratio_no_series_successor else 'appVersion: "v0.11.4.1.0"',
+        expected_views_chart_version,
+        expected_views_app_version,
     ),
 )
 values = markers(
@@ -217,7 +228,15 @@ markers(
 )
 
 dashboard_paths = sorted((root / "platform/observability/helm/dashboards").glob("*.json"))
-require([path.name for path in dashboard_paths] == ["service-overview.json"], "Dashboard added before v0.11.4.1.1")
+expected_dashboard_names = ["service-overview.json"]
+if operator_dashboards_successor:
+    expected_dashboard_names = [
+        "data-overview.json",
+        "delivery-overview.json",
+        "platform-overview.json",
+        "service-overview.json",
+    ]
+require([path.name for path in dashboard_paths] == expected_dashboard_names, "Dashboard successor set changed")
 
 negative_cases: list[tuple[str, Callable[[dict[str, Any]], None]]] = [
     ("unobserved Argo CD", lambda value: value["componentVersions"]["argoCD"].update(runtimeSemverImageRequired=False)),

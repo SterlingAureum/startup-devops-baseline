@@ -336,9 +336,15 @@ Incremental scope:
     - v0.11.4.1.0 - observed semantic Argo CD identity, patched and pinned Argo
       Rollouts, repository-owned controller and CloudNativePG monitors,
       Delivery/Data/Platform diagnostic recording rules, and profile-aware
-      live discovery - implemented offline; local live acceptance required
+      live discovery - implemented and accepted locally
+      - v0.11.4.1.0.1 - stabilize transient Pod discovery and exact Dashboard
+        ConfigMap acceptance - implemented and accepted locally
+      - v0.11.4.1.0.2 - preserve no-data for absent sources while anchoring
+        valid zero numerators to observed request and dependency series -
+        implemented and accepted locally
     - v0.11.4.1.1 - immutable Delivery, Data, and Platform Dashboards backed
-      only by the accepted v0.11.4.1.0 rules - planned
+      only by the accepted v0.11.4.1.0 rules - implemented offline; local live
+      acceptance required
   - v0.11.4.2 - capacity and resource-efficiency views, conditional no-data
     hardening, and clean local replay - planned
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity

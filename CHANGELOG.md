@@ -2,6 +2,32 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.4.1.1
+
+### Added
+
+- Added immutable Delivery, Data, and Platform Grafana Dashboards backed only
+  by the twenty-one recording rules accepted in v0.11.4.1.0.
+- Added profile-aware live acceptance for Dashboard provisioning, Grafana API
+  immutability, and required Delivery, Data, and Platform rule results.
+- Added an offline contract and focused validator for Dashboard identity,
+  panel inventory, query ownership, conditional CloudNativePG no-data, and
+  scope boundaries.
+
+### Changed
+
+- Advanced the repository-owned observability views Chart from `0.2.1` to
+  `0.2.2` with application version `v0.11.4.1.1`.
+- Made historical v0.11.4.0, v0.11.4.1.0, and v0.11.4.1.0.2 validators aware
+  of the Dashboard successor without weakening their original contracts.
+
+### Boundary
+
+- This increment changes Dashboard JSON and Chart metadata only. It adds no
+  recording rule, monitor, alert, log or trace backend, SLO, capacity or cost
+  panel, Grafana exposure or persistence, AWS desired state, Canary behavior,
+  or production automation.
+
 ## v0.11.4.1.0.2
 
 ### Fixed

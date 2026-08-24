@@ -102,10 +102,15 @@ def dependency_success_ratio(total_rate: float | None, success_rate: float | Non
 
 contract = json.loads(read("delivery/contracts/v0.11.4.1.0.2-ratio-no-series-repair.json"))
 validate_contract(contract)
+operator_dashboards_successor = (root / "delivery/contracts/v0.11.4.1.1-operator-dashboards.json").is_file()
 
 markers(
     "platform/observability/helm/Chart.yaml",
-    ("name: startup-devops-observability-views", "version: 0.2.1", 'appVersion: "v0.11.4.1.0.2"'),
+    (
+        "name: startup-devops-observability-views",
+        "version: 0.2.2" if operator_dashboards_successor else "version: 0.2.1",
+        'appVersion: "v0.11.4.1.1"' if operator_dashboards_successor else 'appVersion: "v0.11.4.1.0.2"',
+    ),
 )
 rules = read("platform/observability/helm/templates/recording-rules.yaml")
 http = rule_segment(rules, "demo_api:http_success_ratio:rate5m")
@@ -152,8 +157,8 @@ markers(
     "scripts/validate-v0.11.4.1.0-controller-metrics-discovery.sh",
     (
         "v0.11.4.1.0.2-ratio-no-series-repair.json",
-        '"version: 0.2.1" if ratio_no_series_successor',
-        '\'appVersion: "v0.11.4.1.0.2"\' if ratio_no_series_successor',
+        'expected_views_chart_version = "version: 0.2.1"',
+        'expected_views_app_version = \'appVersion: "v0.11.4.1.0.2"\'',
     ),
 )
 

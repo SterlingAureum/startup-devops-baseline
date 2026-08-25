@@ -2,6 +2,38 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.5.1.1
+
+### Fixed
+
+- Replaced the target-down filter comparison with `up == bool 0`, so each up
+  target contributes zero and each down target contributes one before the
+  namespace/job aggregation.
+- Preserved absent target groups as no-data instead of inventing a zero series.
+
+### Added
+
+- Added `PrometheusTargetDown` as the ninth repository-owned actionable alert,
+  with critical severity, a 10-minute duration, stable routing labels, and one
+  reviewed English Runbook.
+- Added offline all-up, one-down, two-down, absent, and filter-regression
+  checks plus a live recorded-versus-direct Prometheus query cross-check.
+
+### Changed
+
+- Advanced the observability views Chart from `0.4.0` to `0.4.1` with
+  application version `v0.11.5.1.1`.
+- Updated historical v0.11.4 and v0.11.5 validators for the semantic-repair
+  successor while preserving the accepted eight-alert v0.11.5.1 contract.
+- Recorded v0.11.5.1 as accepted through local live validation.
+
+### Boundary
+
+- This repair changes one recording-rule expression and adds one alert and
+  Runbook. It changes no Dashboard, monitor, monitoring stack, Alertmanager
+  route, external receiver, credential, image, Rollout gate, SLO, AWS resource,
+  or production automation and does not deliberately fail a real target.
+
 ## v0.11.5.1
 
 ### Added

@@ -105,6 +105,9 @@ echo "==> Validating v0.11.5.0.1 Alertmanager matcher normalization repair"
 echo "==> Validating v0.11.5.1 actionable alerts and Runbooks"
 "${ROOT_DIR}/scripts/validate-v0.11.5.1-actionable-alerts-runbooks.sh"
 
+echo "==> Validating v0.11.5.1.1 Prometheus target-down semantics repair"
+"${ROOT_DIR}/scripts/validate-v0.11.5.1.1-prometheus-target-down-semantics-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

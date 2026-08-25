@@ -2,12 +2,13 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.5.1-actionable-alerts-runbooks`.
-It adds eight bounded, recording-rule-backed alerts and one reviewed English
-Runbook per alert on top of the accepted private environment-local
-Alertmanager routing foundation. External notification delivery and formal
-firing, inhibition, and resolution drills remain deferred. See
-`docs/V0.11.5.1_ACTIONABLE_ALERTS_RUNBOOKS.md`.
+Current development checkpoint:
+`v0.11.5.1.1-prometheus-target-down-semantics-repair`. It replaces the
+target-down filter comparison with Boolean counting, adds the repaired source
+as the ninth bounded actionable alert, and keeps absent target groups as
+no-data. External notification delivery and formal firing, inhibition, and
+resolution drills remain deferred. See
+`docs/V0.11.5.1.1_PROMETHEUS_TARGET_DOWN_SEMANTICS_REPAIR.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -184,12 +185,17 @@ redeployment. Its accepted checkpoint identity is
 v0.11.5.1 adds an exact eight-alert inventory for application, dependency,
 delivery, Kubernetes workload, and AWS-profile PostgreSQL collection health.
 Every alert has stable routing labels and one version-controlled Runbook; the
-clean local baseline must load all rules while keeping them inactive.
+clean local baseline must load all rules while keeping them inactive. Its
+accepted checkpoint identity is `v0.11.5.1-actionable-alerts-runbooks`.
+v0.11.5.1.1 repairs `platform:prometheus_targets_down:count` with
+`up == bool 0`, adds `PrometheusTargetDown` as the ninth alert, and introduces
+a live recorded-versus-direct query cross-check without deliberately failing
+a real target.
 
 ## Current Version
 
 ```text
-v0.11.5.1-actionable-alerts-runbooks
+v0.11.5.1.1-prometheus-target-down-semantics-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

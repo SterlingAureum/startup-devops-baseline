@@ -109,9 +109,13 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
 contract = load_json("delivery/contracts/v0.11.4.2.0-capacity-signal-foundation.json")
 validate_contract(contract)
 capacity_dashboard_successor = (root / "delivery/contracts/v0.11.4.2.1-capacity-efficiency-dashboard.json").is_file()
+semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()
 actionable_alerts_successor = (root / "delivery/contracts/v0.11.5.1-actionable-alerts-runbooks.json").is_file()
 
-if actionable_alerts_successor:
+if semantic_repair_successor:
+    expected_views_chart_version = "version: 0.4.1"
+    expected_views_app_version = 'appVersion: "v0.11.5.1.1"'
+elif actionable_alerts_successor:
     expected_views_chart_version = "version: 0.4.0"
     expected_views_app_version = 'appVersion: "v0.11.5.1"'
 elif capacity_dashboard_successor:

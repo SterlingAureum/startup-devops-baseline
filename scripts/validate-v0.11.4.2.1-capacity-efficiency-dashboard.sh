@@ -126,12 +126,18 @@ def recording_rule_names(queries: list[str]) -> set[str]:
 
 contract = load_json("delivery/contracts/v0.11.4.2.1-capacity-efficiency-dashboard.json")
 validate_contract(contract)
+semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()
 actionable_alerts_successor = (root / "delivery/contracts/v0.11.5.1-actionable-alerts-runbooks.json").is_file()
 
-expected_views_chart_version = "version: 0.4.0" if actionable_alerts_successor else "version: 0.3.1"
-expected_views_app_version = (
-    'appVersion: "v0.11.5.1"' if actionable_alerts_successor else 'appVersion: "v0.11.4.2.1"'
-)
+if semantic_repair_successor:
+    expected_views_chart_version = "version: 0.4.1"
+    expected_views_app_version = 'appVersion: "v0.11.5.1.1"'
+elif actionable_alerts_successor:
+    expected_views_chart_version = "version: 0.4.0"
+    expected_views_app_version = 'appVersion: "v0.11.5.1"'
+else:
+    expected_views_chart_version = "version: 0.3.1"
+    expected_views_app_version = 'appVersion: "v0.11.4.2.1"'
 
 markers(
     "platform/observability/helm/Chart.yaml",

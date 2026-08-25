@@ -56,6 +56,7 @@ expected_alerts='[
   "ArgoRolloutProblem",
   "ArgoCDApplicationUnhealthy",
   "KubernetesDeploymentUnavailable",
+  "PrometheusTargetDown",
   "PostgreSQLCollectionFailed"
 ]'
 
@@ -92,8 +93,8 @@ assert_rules_payload() {
 
   warning_count="$(jq '[.data.groups[].rules[] | select(.type == "alerting" and .labels.severity == "warning")] | length' <<<"${rules_payload}")"
   critical_count="$(jq '[.data.groups[].rules[] | select(.type == "alerting" and .labels.severity == "critical")] | length' <<<"${rules_payload}")"
-  if [ "${warning_count}" -ne 2 ] || [ "${critical_count}" -ne 6 ]; then
-    echo "ERROR: expected two warning and six critical alerts; found warning=${warning_count}, critical=${critical_count}." >&2
+  if [ "${warning_count}" -ne 2 ] || [ "${critical_count}" -ne 7 ]; then
+    echo "ERROR: expected two warning and seven critical alerts; found warning=${warning_count}, critical=${critical_count}." >&2
     return 1
   fi
 }
@@ -104,7 +105,7 @@ if [ -n "${ALERT_RULES_FIXTURE}" ]; then
     exit 1
   }
   assert_rules_payload "$(<"${ALERT_RULES_FIXTURE}")"
-  echo "v0.11.5.1 actionable alert API fixture acceptance passed."
+  echo "v0.11.5.1.1 actionable alert API fixture acceptance passed."
   exit 0
 fi
 
@@ -201,4 +202,4 @@ echo "==> Checking exact loaded alert inventory and clean state"
 rules_payload="$(curl -fsS "${prometheus_url}/api/v1/rules?type=alert")"
 assert_rules_payload "${rules_payload}"
 
-echo "v0.11.5.1 actionable alert inventory, metadata, rule health, and clean inactive-state acceptance passed."
+echo "v0.11.5.1.1 actionable alert inventory, metadata, rule health, and clean inactive-state acceptance passed."

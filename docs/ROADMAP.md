@@ -368,7 +368,11 @@ Incremental scope:
       diagnostics - implemented and accepted through the direct local live rerun
   - v0.11.5.1 - eight recording-rule-backed actionable alerts, stable routing
     labels, one reviewed English Runbook per alert, and clean inactive-baseline
-    acceptance - implemented offline; local live acceptance required
+    acceptance - implemented and accepted locally
+    - v0.11.5.1.1 - repair Prometheus target-down counting with Boolean
+      semantics, add the ninth actionable alert and Runbook, and cross-check
+      the recorded vector against the direct query - implemented offline;
+      local live acceptance required
   - v0.11.5.2 - firing, routing, inhibition, resolution, and environment-owned
     notification-path drills - planned
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry

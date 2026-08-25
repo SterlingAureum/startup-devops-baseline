@@ -53,8 +53,14 @@ chart_contract = contract.get("chart", {})
 require(chart_contract.get("previousVersion") == "0.3.1", "Wrong predecessor Chart version")
 require(chart_contract.get("version") == "0.4.0", "Wrong Chart version")
 require(chart_contract.get("applicationVersion") == "v0.11.5.1", "Wrong application version")
+semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()
 chart = read("platform/observability/helm/Chart.yaml")
-for marker in ("name: startup-devops-observability-views", "version: 0.4.0", 'appVersion: "v0.11.5.1"'):
+chart_markers = (
+    "name: startup-devops-observability-views",
+    "version: 0.4.1" if semantic_repair_successor else "version: 0.4.0",
+    'appVersion: "v0.11.5.1.1"' if semantic_repair_successor else 'appVersion: "v0.11.5.1"',
+)
+for marker in chart_markers:
     require(marker in chart, f"Chart is missing: {marker}")
 
 policy = contract.get("policy", {})
@@ -78,6 +84,9 @@ expected_alerts = {
     "ArgoCDApplicationUnhealthy": ("critical", "argocd", "gitops-application-health", ">0", "10m"),
     "KubernetesDeploymentUnavailable": ("critical", "kubernetes-workload", "deployment-availability", ">0", "10m"),
     "PostgreSQLCollectionFailed": ("critical", "cloudnative-pg", "postgresql-collection-health", ">0", "5m"),
+}
+successor_alert = {
+    "PrometheusTargetDown": ("critical", "prometheus", "monitoring-target-health", ">0", "10m"),
 }
 alerts = contract.get("alerts", [])
 require(len(alerts) == 8, "Contract must contain exactly eight alerts")
@@ -112,15 +121,24 @@ template = read(template_path)
 require("kind: PrometheusRule" in template, "Alert template is not a PrometheusRule")
 require("name: actionable-alerts" in template, "PrometheusRule name changed")
 blocks = re.split(r"(?m)^\s*- alert:\s*", template)[1:]
-require(len(blocks) == 8, "Rendered template source must define exactly eight alerts")
+runtime_expected_alerts = expected_alerts | (successor_alert if semantic_repair_successor else {})
+require(len(blocks) == len(runtime_expected_alerts), "Rendered template source has the wrong successor-aware alert count")
 template_names: list[str] = []
 recording_name_pattern = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?::[A-Za-z0-9_]+)+")
 contract_by_name = {alert["name"]: alert for alert in alerts}
+if semantic_repair_successor:
+    contract_by_name["PrometheusTargetDown"] = {
+        "severity": "critical",
+        "component": "prometheus",
+        "alertFamily": "monitoring-target-health",
+        "sourceRules": ["platform:prometheus_targets_down:count"],
+        "runbook": "docs/runbooks/alerts/prometheus-target-down.md",
+    }
 for block in blocks:
     name, _, body = block.partition("\n")
     name = name.strip()
     template_names.append(name)
-    require(name in expected_alerts, f"Unexpected alert in template: {name}")
+    require(name in runtime_expected_alerts, f"Unexpected alert in template: {name}")
     alert = contract_by_name[name]
     for marker in (
         f"severity: {alert['severity']}",
@@ -137,7 +155,7 @@ for block in blocks:
     found_sources = set(recording_name_pattern.findall(body))
     require(found_sources == set(alert["sourceRules"]), f"Alert source rules changed for {name}: {sorted(found_sources)}")
 
-require(set(template_names) == set(expected_alerts), "Template alert inventory changed")
+require(set(template_names) == set(runtime_expected_alerts), "Template alert inventory changed")
 for forbidden_raw in (
     "demo_api_http_requests_total",
     "demo_api_dependency_checks_total",
@@ -163,6 +181,8 @@ for marker in (
     "postgresqlCollectionFailedFor: 5m",
 ):
     require(marker in values, f"Alert value missing: {marker}")
+if semantic_repair_successor:
+    require("prometheusTargetDownFor: 10m" in values, "Prometheus target-down duration missing")
 
 all_template_alerts = []
 for path in (root / "platform/observability/helm/templates").glob("*.yaml"):
@@ -203,6 +223,21 @@ for relative in (
     require("v0.11.5.1-actionable-alerts-runbooks.json" in text, f"Historical validator is not successor-aware: {relative}")
     require("v0.11.5.1" in text and "0.4.0" in text, f"Historical Chart successor missing: {relative}")
 
+if semantic_repair_successor:
+    for relative in (
+        "scripts/validate-v0.11.4.0-grafana-recording-rules.sh",
+        "scripts/validate-v0.11.4.1.0-controller-metrics-discovery.sh",
+        "scripts/validate-v0.11.4.1.0.2-ratio-no-series-repair.sh",
+        "scripts/validate-v0.11.4.1.1-operator-dashboards.sh",
+        "scripts/validate-v0.11.4.2.0-capacity-signal-foundation.sh",
+        "scripts/validate-v0.11.4.2.1-capacity-efficiency-dashboard.sh",
+        "scripts/validate-v0.11.4.2.2-replay-diagnostics-repair.sh",
+        "scripts/validate-v0.11.5.0-alertmanager-foundation.sh",
+    ):
+        text = read(relative)
+        require("v0.11.5.1.1-prometheus-target-down-semantics-repair.json" in text, f"Historical validator lacks semantic-repair successor: {relative}")
+        require("v0.11.5.1.1" in text and "0.4.1" in text, f"Historical semantic-repair Chart successor missing: {relative}")
+
 for relative, marker in (
     ("scripts/check-actionable-alerts.sh", "clean inactive-state acceptance passed"),
     ("scripts/validate-ci-quality-gates.sh", "validate-v0.11.5.1-actionable-alerts-runbooks.sh"),
@@ -238,6 +273,7 @@ names = [
     "ArgoRolloutProblem",
     "ArgoCDApplicationUnhealthy",
     "KubernetesDeploymentUnavailable",
+    "PrometheusTargetDown",
     "PostgreSQLCollectionFailed",
 ]
 warning_names = {

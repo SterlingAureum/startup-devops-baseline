@@ -25,6 +25,7 @@ alerting:
   argoRolloutProblemFor: 5m
   argoCDApplicationUnhealthyFor: 10m
   kubernetesDeploymentUnavailableFor: 10m
+  prometheusTargetDownFor: 10m
   postgresqlCollectionFailedFor: 5m
 
 controllerMonitors:

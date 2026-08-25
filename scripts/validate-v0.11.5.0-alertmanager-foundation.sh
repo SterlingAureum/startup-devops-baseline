@@ -171,12 +171,13 @@ for text, label in ((local, "local"), (aws, "AWS")):
         require(forbidden not in text, f"{label}: forbidden Alertmanager boundary: {forbidden}")
 
 require_markers("clusters/local/platform/Chart.yaml", ("version: 0.4.0", 'appVersion: "v0.11.5.0"'))
+semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()
 actionable_alerts_successor = (root / "delivery/contracts/v0.11.5.1-actionable-alerts-runbooks.json").is_file()
 require_markers(
     "platform/observability/helm/Chart.yaml",
     (
-        "version: 0.4.0" if actionable_alerts_successor else "version: 0.3.1",
-        'appVersion: "v0.11.5.1"' if actionable_alerts_successor else 'appVersion: "v0.11.4.2.1"',
+        "version: 0.4.1" if semantic_repair_successor else ("version: 0.4.0" if actionable_alerts_successor else "version: 0.3.1"),
+        'appVersion: "v0.11.5.1.1"' if semantic_repair_successor else ('appVersion: "v0.11.5.1"' if actionable_alerts_successor else 'appVersion: "v0.11.4.2.1"'),
     ),
 )
 

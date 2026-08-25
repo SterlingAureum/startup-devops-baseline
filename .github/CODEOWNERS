@@ -95,9 +95,11 @@
 /scripts/lib/observability-live.sh @SterlingAureum
 /scripts/check-alertmanager.sh @SterlingAureum
 /scripts/check-actionable-alerts.sh @SterlingAureum
+/scripts/check-prometheus-target-counts.sh @SterlingAureum
 /scripts/validate-v0.11.5.0-alertmanager-foundation.sh @SterlingAureum
 /scripts/validate-v0.11.5.0.1-matcher-normalization-repair.sh @SterlingAureum
 /scripts/validate-v0.11.5.1-actionable-alerts-runbooks.sh @SterlingAureum
+/scripts/validate-v0.11.5.1.1-prometheus-target-down-semantics-repair.sh @SterlingAureum
 /scripts/derive-demo-api-release-id.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.sh @SterlingAureum
@@ -136,10 +138,12 @@
 /docs/V0.11.5.0_ALERTMANAGER_FOUNDATION.md @SterlingAureum
 /docs/V0.11.5.0.1_MATCHER_NORMALIZATION_REPAIR.md @SterlingAureum
 /docs/V0.11.5.1_ACTIONABLE_ALERTS_RUNBOOKS.md @SterlingAureum
+/docs/V0.11.5.1.1_PROMETHEUS_TARGET_DOWN_SEMANTICS_REPAIR.md @SterlingAureum
 /docs/runbooks/alerts/ @SterlingAureum
 /delivery/contracts/v0.11.5.0-alertmanager-foundation.json @SterlingAureum
 /delivery/contracts/v0.11.5.0.1-matcher-normalization-repair.json @SterlingAureum
 /delivery/contracts/v0.11.5.1-actionable-alerts-runbooks.json @SterlingAureum
+/delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

@@ -139,3 +139,22 @@ spec:
             summary: CloudNativePG metric collection is failing
             description: A CloudNativePG cluster collector has reported a collection error continuously for 5 minutes. This rule remains no-data in the local profile.
             runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "postgresql-collection-failed.md" | quote }}
+    - name: actionable.monitoring.v0.11.5.1.1
+      interval: {{ .Values.alerting.evaluationInterval }}
+      rules:
+        - alert: PrometheusTargetDown
+          expr: |
+            platform:prometheus_targets_down:count{
+              namespace=~"observability|startup-apps|argocd|argo-rollouts|data-platform|cnpg-system"
+            } > 0
+          for: {{ .Values.alerting.prometheusTargetDownFor }}
+          labels:
+            severity: critical
+            environment: {{ .Values.environment | quote }}
+            cluster: {{ .Values.cluster | quote }}
+            component: prometheus
+            alert_family: monitoring-target-health
+          annotations:
+            summary: a required Prometheus scrape target remains down
+            description: At least one required platform, application, delivery, or data scrape target has remained down for 10 minutes.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "prometheus-target-down.md" | quote }}

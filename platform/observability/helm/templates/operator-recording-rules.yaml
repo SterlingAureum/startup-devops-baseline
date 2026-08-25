@@ -136,5 +136,5 @@ spec:
         - record: platform:prometheus_targets_down:count
           expr: |
             sum by (namespace, job) (
-              up == 0
+              up == bool 0
             )

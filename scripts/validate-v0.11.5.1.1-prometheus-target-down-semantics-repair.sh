@@ -186,6 +186,20 @@ for relative, marker in (
 ):
     require(marker in read(relative), f"Required integration marker missing: {relative}: {marker}")
 
+acceptance_path_successor = root / "delivery/contracts/v0.11.5.1.1.1-local-acceptance-path-repair.json"
+if acceptance_path_successor.is_file():
+    repaired_check = read("scripts/check-prometheus-target-counts.sh")
+    require("operator-diagnostic-recording-rules" in repaired_check, "Correct PrometheusRule ownership is missing")
+    require("get prometheusrule operator-recording-rules" not in repaired_check, "Old PrometheusRule lookup remains")
+    repair_doc = read("docs/V0.11.5.1.1.1_LOCAL_ACCEPTANCE_PATH_REPAIR.md")
+    for marker in (
+        "scripts/build-load-demo-api-image.sh",
+        'APPLICATION_VERSION="${IMAGE_TAG}"',
+        "demo_api_http_requests_total",
+        "demo_api_dependency_checks_total",
+    ):
+        require(marker in repair_doc, f"Acceptance-path repair guidance missing: {marker}")
+
 print("v0.11.5.1.1 Boolean target-down semantics, ninth alert, Runbook, boundaries, and successor coverage passed.")
 PY
 

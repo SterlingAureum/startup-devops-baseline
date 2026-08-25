@@ -3,12 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.5.1.1-prometheus-target-down-semantics-repair`. It replaces the
-target-down filter comparison with Boolean counting, adds the repaired source
-as the ninth bounded actionable alert, and keeps absent target groups as
-no-data. External notification delivery and formal firing, inhibition, and
-resolution drills remain deferred. See
-`docs/V0.11.5.1.1_PROMETHEUS_TARGET_DOWN_SEMANTICS_REPAIR.md`.
+`v0.11.5.1.1.1-local-acceptance-path-repair`. It corrects the diagnostic
+PrometheusRule ownership check and requires a unique fresh local image after
+neutral-baseline restoration. The repaired target-down expression and exact
+nine-alert runtime remain unchanged. External notification delivery and formal
+firing, inhibition, and resolution drills remain deferred. See
+`docs/V0.11.5.1.1.1_LOCAL_ACCEPTANCE_PATH_REPAIR.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -190,12 +190,16 @@ accepted checkpoint identity is `v0.11.5.1-actionable-alerts-runbooks`.
 v0.11.5.1.1 repairs `platform:prometheus_targets_down:count` with
 `up == bool 0`, adds `PrometheusTargetDown` as the ninth alert, and introduces
 a live recorded-versus-direct query cross-check without deliberately failing
-a real target.
+a real target. Its checkpoint identity is
+`v0.11.5.1.1-prometheus-target-down-semantics-repair`.
+v0.11.5.1.1.1 corrects the live check to use
+`operator-diagnostic-recording-rules` and restores the already-required fresh
+image transition after the neutral pre-merge baseline.
 
 ## Current Version
 
 ```text
-v0.11.5.1.1-prometheus-target-down-semantics-repair
+v0.11.5.1.1.1-local-acceptance-path-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

@@ -372,7 +372,11 @@ Incremental scope:
     - v0.11.5.1.1 - repair Prometheus target-down counting with Boolean
       semantics, add the ninth actionable alert and Runbook, and cross-check
       the recorded vector against the direct query - implemented offline;
-      local live acceptance required
+      local live attempt confirmed fresh-image telemetry and exposed two
+      acceptance-path defects repaired by v0.11.5.1.1.1
+      - v0.11.5.1.1.1 - correct the diagnostic PrometheusRule ownership name
+        and require a unique current-source image after neutral-baseline
+        restoration - implemented offline; local live acceptance required
   - v0.11.5.2 - firing, routing, inhibition, resolution, and environment-owned
     notification-path drills - planned
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry

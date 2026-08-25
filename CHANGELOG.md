@@ -2,6 +2,30 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.5.1.1.1
+
+### Fixed
+
+- Corrected the target-count live preflight to query the Chart-declared
+  `operator-diagnostic-recording-rules` resource instead of the nonexistent
+  `operator-recording-rules` name.
+- Replaced stale-image reuse guidance with the required unique current-source
+  build and kind-load transition after neutral feature-baseline restoration.
+
+### Added
+
+- Added a focused contract and mutation check that bind the live script's
+  default resource identity to PrometheusRule template metadata.
+- Recorded the observed historical metric mismatch and the subsequent direct
+  confirmation of populated HTTP and PostgreSQL dependency metrics.
+
+### Boundary
+
+- This repair changes one live validation lookup plus contracts and
+  documentation. It changes no Kubernetes desired state, Chart version,
+  recording rule, alert, Dashboard, monitor, Alertmanager configuration,
+  application source, image content, AWS resource, or production automation.
+
 ## v0.11.5.1.1
 
 ### Fixed

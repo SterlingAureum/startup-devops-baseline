@@ -6,6 +6,7 @@ PROFILE="${PROFILE:-local}"
 AWS_ENVIRONMENT="${AWS_ENVIRONMENT:-aws-dev}"
 ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 OBSERVABILITY_NAMESPACE="${OBSERVABILITY_NAMESPACE:-observability}"
+OPERATOR_RECORDING_RULE_NAME="${OPERATOR_RECORDING_RULE_NAME:-operator-diagnostic-recording-rules}"
 PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
 PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19095}"
 RULE_MATCH_TIMEOUT_SECONDS="${RULE_MATCH_TIMEOUT_SECONDS:-75}"
@@ -161,7 +162,7 @@ assert_application() {
 echo "==> Checking GitOps Applications and recording-rule ownership"
 assert_application "${monitoring_application}"
 assert_application "${views_application}"
-kubectl -n "${OBSERVABILITY_NAMESPACE}" get prometheusrule operator-recording-rules >/dev/null
+kubectl -n "${OBSERVABILITY_NAMESPACE}" get prometheusrule "${OPERATOR_RECORDING_RULE_NAME}" >/dev/null
 
 selected_prometheus_port="$(find_available_port "${PROMETHEUS_LOCAL_PORT}")" || {
   echo "ERROR: no Prometheus port is available from ${PROMETHEUS_LOCAL_PORT} through $((PROMETHEUS_LOCAL_PORT + 100))." >&2

@@ -46,6 +46,14 @@ The shared preflight generates bounded application traffic, verifies populated
 HTTP and dependency metrics directly from the deployed image, and prints the
 active target `lastError` plus runtime image ownership when a check fails.
 
+The v0.11.5.1.1.1 acceptance repair makes the neutral feature baseline an
+explicit replay start state rather than a reusable observability image. Local
+acceptance builds a unique image from the exact feature commit and requires
+both `demo_api_http_requests_total` and `demo_api_dependency_checks_total`.
+The target-down live check validates ownership through the Chart-declared
+`PrometheusRule/operator-diagnostic-recording-rules`; it does not look for the
+nonexistent `operator-recording-rules` name.
+
 The local Application is:
 
 ```text

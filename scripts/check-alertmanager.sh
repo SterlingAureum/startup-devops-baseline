@@ -12,6 +12,61 @@ PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19090}"
 TIMEOUT="${TIMEOUT:-180s}"
 DISCOVERY_TIMEOUT_SECONDS="${DISCOVERY_TIMEOUT_SECONDS:-60}"
 REQUIRE_NO_ALERT_RULES="${REQUIRE_NO_ALERT_RULES:-false}"
+ALERTMANAGER_CONFIG_FIXTURE="${ALERTMANAGER_CONFIG_FIXTURE:-}"
+
+assert_active_alertmanager_config() {
+  local config_text="$1"
+  local marker severity matcher_pattern matcher_count
+
+  for marker in \
+    'receiver: platform-observation' \
+    'group_wait: 30s' \
+    'group_interval: 5m' \
+    'repeat_interval: 4h' \
+    'alert_family' \
+    'name: critical-observation' \
+    'name: warning-observation'; do
+    grep -F -- "${marker}" <<<"${config_text}" >/dev/null || {
+      echo "ERROR: active Alertmanager configuration is missing: ${marker}" >&2
+      return 1
+    }
+  done
+
+  # Alertmanager canonicalizes `severity = "critical"` to
+  # `severity="critical"` in /api/v2/status. Validate the matcher meaning,
+  # not the serializer's optional whitespace. Two occurrences are required:
+  # one route matcher and one inhibition matcher.
+  for severity in critical warning; do
+    matcher_pattern="^[[:space:]]*-[[:space:]]+severity[[:space:]]*=[[:space:]]*\"${severity}\"[[:space:]]*$"
+    matcher_count="$(grep -Ec -- "${matcher_pattern}" <<<"${config_text}" || true)"
+    if [ "${matcher_count}" -ne 2 ]; then
+      echo "ERROR: active Alertmanager configuration must contain exactly two ${severity} severity matchers; found ${matcher_count}." >&2
+      echo "Observed severity matcher lines:" >&2
+      grep -En -- 'severity[[:space:]]*=' <<<"${config_text}" >&2 || echo "  (none)" >&2
+      return 1
+    fi
+  done
+
+  for external_receiver in \
+    webhook_configs slack_configs email_configs pagerduty_configs sns_configs \
+    opsgenie_configs victorops_configs wechat_configs telegram_configs \
+    msteams_configs discord_configs; do
+    if grep -F -- "${external_receiver}:" <<<"${config_text}" >/dev/null; then
+      echo "ERROR: unexpected external receiver is active: ${external_receiver}" >&2
+      return 1
+    fi
+  done
+}
+
+if [ -n "${ALERTMANAGER_CONFIG_FIXTURE}" ]; then
+  [ -r "${ALERTMANAGER_CONFIG_FIXTURE}" ] || {
+    echo "ERROR: Alertmanager configuration fixture is not readable: ${ALERTMANAGER_CONFIG_FIXTURE}" >&2
+    exit 1
+  }
+  assert_active_alertmanager_config "$(<"${ALERTMANAGER_CONFIG_FIXTURE}")"
+  echo "Alertmanager active-configuration fixture acceptance passed."
+  exit 0
+fi
 
 for command_name in curl jq kubectl seq; do
   command -v "${command_name}" >/dev/null 2>&1 || {
@@ -126,31 +181,7 @@ fi
 
 status_payload="$(curl -fsS "${alertmanager_url}/api/v2/status")"
 config_text="$(jq -er '.config.original' <<<"${status_payload}")"
-for marker in \
-  'receiver: platform-observation' \
-  'group_wait: 30s' \
-  'group_interval: 5m' \
-  'repeat_interval: 4h' \
-  'severity = "critical"' \
-  'severity = "warning"' \
-  'alert_family' \
-  'name: critical-observation' \
-  'name: warning-observation'; do
-  grep -F -- "${marker}" <<<"${config_text}" >/dev/null || {
-    echo "ERROR: active Alertmanager configuration is missing: ${marker}" >&2
-    exit 1
-  }
-done
-
-for external_receiver in \
-  webhook_configs slack_configs email_configs pagerduty_configs sns_configs \
-  opsgenie_configs victorops_configs wechat_configs telegram_configs \
-  msteams_configs discord_configs; do
-  if grep -F -- "${external_receiver}:" <<<"${config_text}" >/dev/null; then
-    echo "ERROR: unexpected external receiver is active: ${external_receiver}" >&2
-    exit 1
-  fi
-done
+assert_active_alertmanager_config "${config_text}"
 
 echo "==> Checking Prometheus discovery of Alertmanager"
 start_port_forward \

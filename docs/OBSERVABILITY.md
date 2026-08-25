@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.5.0 telemetry and alert-routing foundation uses Prometheus Operator through the
+The active v0.11.5.0.1 telemetry and alert-routing foundation uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -27,6 +27,11 @@ observability Namespace
 Alert rules, external notification receivers, Loki, Alloy, tracing, Thanos,
 remote write, Kubecost, and cloud billing integration are not part of
 v0.11.5.0.
+
+The v0.11.5.0.1 repair changes only active-configuration acceptance: both the
+spaced repository matcher and Alertmanager's compact canonical matcher are
+accepted while route and inhibition cardinality remain exact. It changes no
+runtime resource and requires no redeployment.
 
 Local acceptance sources `scripts/lib/observability-live.sh`. A target must
 produce a numeric `up` value of at least one; discovery alone is insufficient.

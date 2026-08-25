@@ -99,6 +99,9 @@ echo "==> Validating v0.11.4.2.2 replay diagnostics repair"
 echo "==> Validating v0.11.5.0 Alertmanager foundation"
 "${ROOT_DIR}/scripts/validate-v0.11.5.0-alertmanager-foundation.sh"
 
+echo "==> Validating v0.11.5.0.1 Alertmanager matcher normalization repair"
+"${ROOT_DIR}/scripts/validate-v0.11.5.0.1-matcher-normalization-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

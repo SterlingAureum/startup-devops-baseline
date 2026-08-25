@@ -2,11 +2,13 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.5.0-alertmanager-foundation`.
+Current development checkpoint: `v0.11.5.0.1-matcher-normalization-repair`.
 It enables a private environment-local Alertmanager, stable severity routing,
 bounded alert-family inhibition, profile-specific storage, and direct
 Prometheus discovery validation without adding alert rules or external
-notification delivery. See `docs/V0.11.5.0_ALERTMANAGER_FOUNDATION.md`.
+notification delivery. The repair validates Alertmanager's canonical compact
+matcher output without changing the runtime. See
+`docs/V0.11.5.0.1_MATCHER_NORMALIZATION_REPAIR.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -175,11 +177,15 @@ routing, alert-family inhibition, and Prometheus discovery validation. It adds
 no alert rule, external notification integration, central Alertmanager, or HA
 claim; actionable alerts and Runbooks remain v0.11.5.1 work. The clean-room
 v0.11 acceptance remains the final v0.11.9 increment.
+v0.11.5.0.1 repairs the live acceptance check after Alertmanager serialized
+`severity = "critical"` as the equivalent canonical `severity="critical"`.
+It preserves exact route and inhibition cardinality and requires no runtime
+redeployment.
 
 ## Current Version
 
 ```text
-v0.11.5.0-alertmanager-foundation
+v0.11.5.0.1-matcher-normalization-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

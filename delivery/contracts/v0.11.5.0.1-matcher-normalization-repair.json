@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "v0.11.5.0.1",
+  "version": "v0.11.5.0.1",
+  "status": "offline-implemented-local-live-rerun-required",
+  "predecessor": "v0.11.5.0",
+  "designDocument": "docs/V0.11.5.0.1_MATCHER_NORMALIZATION_REPAIR.md",
+  "incident": {
+    "failedCheck": "scripts/check-alertmanager.sh",
+    "runtimeEndpoint": "/api/v2/status",
+    "declaredCriticalMatcher": "severity = \"critical\"",
+    "observedCanonicalCriticalMatcher": "severity=\"critical\"",
+    "declaredWarningMatcher": "severity = \"warning\"",
+    "observedCanonicalWarningMatcher": "severity=\"warning\"",
+    "runtimeConfigurationDefect": false,
+    "redeployRequired": false
+  },
+  "repair": {
+    "formatInsensitiveMatcherValidation": true,
+    "optionalWhitespaceAroundEquals": true,
+    "expectedCriticalMatcherCount": 2,
+    "expectedWarningMatcherCount": 2,
+    "routeAndInhibitionMatchersRequired": true,
+    "spacedFixtureAccepted": true,
+    "canonicalCompactFixtureAccepted": true,
+    "incompleteMatcherFixtureRejected": true,
+    "failurePrintsObservedMatcherLines": true
+  },
+  "boundaries": {
+    "alertmanagerRuntimeConfigurationChanged": false,
+    "kubernetesResourceChanged": false,
+    "monitoringHelmValuesChanged": false,
+    "routeOrReceiverChanged": false,
+    "alertRuleAdded": false,
+    "externalNotificationAdded": false,
+    "imageBuildRequired": false,
+    "gitOpsRedeployRequired": false,
+    "awsDesiredStateChanged": false,
+    "storageChanged": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.5.0.1-matcher-normalization-repair.sh",
+    "liveValidator": "scripts/check-alertmanager.sh",
+    "liveCommand": "REQUIRE_NO_ALERT_RULES=true ./scripts/check-alertmanager.sh",
+    "completeQualityGateRequired": true,
+    "localLiveRerunRequired": true,
+    "redeployBeforeLiveRerun": false
+  }
+}

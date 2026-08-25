@@ -2,6 +2,28 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.5.0.1
+
+### Fixed
+
+- Made live Alertmanager severity-matcher validation insensitive to optional
+  whitespace around the equals sign in the canonical `/api/v2/status` output.
+- Required exactly two critical and two warning matchers so both severity
+  routes and the critical-over-warning inhibition contract remain enforced.
+- Added observed matcher-line diagnostics for missing or duplicated matchers.
+
+### Added
+
+- Added shared offline/live configuration validation plus spaced, canonical
+  compact, and incomplete matcher regression fixtures.
+
+### Boundary
+
+- This repair changes validation, contracts, and documentation only. It
+  changes no Alertmanager runtime configuration, Kubernetes resource, route,
+  receiver, alert rule, image, storage, AWS desired state, or production
+  automation and requires no GitOps redeployment.
+
 ## v0.11.5.0
 
 ### Added

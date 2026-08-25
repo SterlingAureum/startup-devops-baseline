@@ -360,8 +360,12 @@ Incremental scope:
   policy, and version-controlled Runbooks with positive/negative drills - in progress
   - v0.11.5.0 - environment-local Alertmanager runtime, private exposure,
     bounded persistence, stable severity routing, alert-family inhibition, and
-    Prometheus discovery acceptance - implemented offline; local live
-    acceptance required
+    Prometheus discovery acceptance - implemented offline; local live replay
+    proved the runtime configuration and exposed a whitespace-sensitive
+    acceptance defect repaired by v0.11.5.0.1
+    - v0.11.5.0.1 - accept Alertmanager canonical matcher formatting while
+      retaining exact route-and-inhibition matcher cardinality and actionable
+      diagnostics - implemented offline; direct local live check rerun required
   - v0.11.5.1 - actionable alert rules and one reviewed Runbook per alert - planned
   - v0.11.5.2 - firing, routing, inhibition, resolution, and environment-owned
     notification-path drills - planned

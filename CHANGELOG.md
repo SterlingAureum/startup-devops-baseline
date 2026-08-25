@@ -2,6 +2,32 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.4.2.1
+
+### Added
+
+- Added an immutable Capacity and Resource Efficiency Grafana Dashboard that
+  consumes all twenty recording rules accepted in v0.11.4.2.0.
+- Added namespace filtering, resource-interpretation descriptions, request
+  coverage, and reservation-proxy panels without raw metric queries.
+- Added profile-aware live acceptance for the fifth Dashboard ConfigMap,
+  representative finite rule data, fixed Dashboard identities, panel counts,
+  immutability, tags, and variable contract.
+
+### Changed
+
+- Advanced the repository-owned observability views Chart from `0.3.0` to
+  `0.3.1` with application version `v0.11.4.2.1`.
+- Made historical v0.11.4 rule and Dashboard validators aware of the Capacity
+  Dashboard successor without weakening their accepted contracts.
+
+### Boundary
+
+- This increment adds one Dashboard and Chart metadata only. It adds no
+  recording rule, monitor, exporter, alert, autoscaling action, Karpenter
+  policy, Kubecost, AWS Billing integration, currency-cost claim, Canary
+  change, or production automation.
+
 ## v0.11.4.2.0
 
 ### Added

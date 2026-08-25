@@ -37,6 +37,7 @@
 /delivery/contracts/v0.11.4.1.0.2-ratio-no-series-repair.json @SterlingAureum
 /delivery/contracts/v0.11.4.1.1-operator-dashboards.json @SterlingAureum
 /delivery/contracts/v0.11.4.2.0-capacity-signal-foundation.json @SterlingAureum
+/delivery/contracts/v0.11.4.2.1-capacity-efficiency-dashboard.json @SterlingAureum
 /delivery/contracts/examples/v0.10-final-evidence-input.example.json @SterlingAureum
 /scripts/calculate-demo-api-qualification-scope.py @SterlingAureum
 /scripts/demo_api_qualification_bundle.py @SterlingAureum
@@ -78,10 +79,12 @@
 /scripts/validate-v0.11.4.1.0.2-ratio-no-series-repair.sh @SterlingAureum
 /scripts/validate-v0.11.4.1.1-operator-dashboards.sh @SterlingAureum
 /scripts/validate-v0.11.4.2.0-capacity-signal-foundation.sh @SterlingAureum
+/scripts/validate-v0.11.4.2.1-capacity-efficiency-dashboard.sh @SterlingAureum
 /scripts/check-observability-views.sh @SterlingAureum
 /scripts/check-controller-metrics.sh @SterlingAureum
 /scripts/check-operator-dashboards.sh @SterlingAureum
 /scripts/check-capacity-signals.sh @SterlingAureum
+/scripts/check-capacity-dashboard.sh @SterlingAureum
 /scripts/restore-local-feature-baseline.sh @SterlingAureum
 /scripts/restore-local-gitops-baseline.sh @SterlingAureum
 /scripts/restore-local-gitops-head.sh @SterlingAureum
@@ -120,6 +123,7 @@
 /docs/V0.11.4.1.0.2_RATIO_NO_SERIES_REPAIR.md @SterlingAureum
 /docs/V0.11.4.1.1_OPERATOR_DASHBOARDS.md @SterlingAureum
 /docs/V0.11.4.2.0_CAPACITY_SIGNAL_FOUNDATION.md @SterlingAureum
+/docs/V0.11.4.2.1_CAPACITY_EFFICIENCY_DASHBOARD.md @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

@@ -2,11 +2,11 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.4.2.0-capacity-signal-foundation`.
-It reuses the accepted kube-prometheus-stack core targets to record cluster
-allocatable resources, active requests and limits, Pod capacity, namespace
-usage-to-request ratios, and missing request coverage before the Capacity
-Dashboard is added. See `docs/V0.11.4.2.0_CAPACITY_SIGNAL_FOUNDATION.md`.
+Current development checkpoint: `v0.11.4.2.1-capacity-efficiency-dashboard`.
+It provisions an immutable Capacity and Resource Efficiency Dashboard backed
+only by the twenty accepted capacity rules, with namespace filtering,
+reservation-proxy interpretation, and bounded request coverage. See
+`docs/V0.11.4.2.1_CAPACITY_EFFICIENCY_DASHBOARD.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -162,14 +162,17 @@ acceptance requires delivery, demo-api dependency, and platform rule data while
 explicitly allowing CloudNativePG panels to remain no-data outside the AWS
 profile.
 v0.11.4.2.0 adds the capacity and resource-efficiency signal layer without a
-new exporter, cost system, Dashboard, or automation action. The immutable
-Capacity Dashboard remains v0.11.4.2.1 work, and the clean-room v0.11
-acceptance remains the final v0.11.9 increment.
+new exporter, cost system, Dashboard, or automation action.
+v0.11.4.2.1 adds the immutable Capacity and Resource Efficiency Dashboard and
+consumes all twenty accepted rules without raw metric, scheduler-exact,
+currency-cost, or automation claims. A clean local feature replay closes the
+v0.11.4.2 line, and the clean-room v0.11 acceptance remains the final v0.11.9
+increment.
 
 ## Current Version
 
 ```text
-v0.11.4.2.0-capacity-signal-foundation
+v0.11.4.2.1-capacity-efficiency-dashboard
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

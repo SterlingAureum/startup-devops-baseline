@@ -116,11 +116,17 @@ def recording_rule_names(queries: list[str]) -> set[str]:
 contract = load_json("delivery/contracts/v0.11.4.1.1-operator-dashboards.json")
 validate_contract(contract)
 capacity_signal_successor = (root / "delivery/contracts/v0.11.4.2.0-capacity-signal-foundation.json").is_file()
+capacity_dashboard_successor = (root / "delivery/contracts/v0.11.4.2.1-capacity-efficiency-dashboard.json").is_file()
 
-expected_views_chart_version = "version: 0.3.0" if capacity_signal_successor else "version: 0.2.2"
-expected_views_app_version = (
-    'appVersion: "v0.11.4.2.0"' if capacity_signal_successor else 'appVersion: "v0.11.4.1.1"'
-)
+if capacity_dashboard_successor:
+    expected_views_chart_version = "version: 0.3.1"
+    expected_views_app_version = 'appVersion: "v0.11.4.2.1"'
+elif capacity_signal_successor:
+    expected_views_chart_version = "version: 0.3.0"
+    expected_views_app_version = 'appVersion: "v0.11.4.2.0"'
+else:
+    expected_views_chart_version = "version: 0.2.2"
+    expected_views_app_version = 'appVersion: "v0.11.4.1.1"'
 
 markers(
     "platform/observability/helm/Chart.yaml",
@@ -134,6 +140,8 @@ expected_files = [
     "platform-overview.json",
     "service-overview.json",
 ]
+if capacity_dashboard_successor:
+    expected_files.insert(0, "capacity-overview.json")
 require(sorted(path.name for path in dashboard_dir.glob("*.json")) == expected_files, "Dashboard file set changed")
 
 loaded_dashboards: dict[str, dict[str, Any]] = {}

@@ -1,0 +1,193 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Cluster CPU allocatable reported by Kubernetes. This is not exact scheduler headroom.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "decimals": 2, "unit": "cores"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 4, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "capacity:node_cpu_allocatable_cores:sum", "legendFormat": "allocatable", "refId": "A"}],
+      "title": "CPU Allocatable",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Cluster memory allocatable reported by Kubernetes. This excludes no topology or fragmentation constraint.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "decimals": 1, "unit": "bytes"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 4, "x": 4, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "capacity:node_memory_allocatable_bytes:sum", "legendFormat": "allocatable", "refId": "A"}],
+      "title": "Memory Allocatable",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Running Pods divided by Kubernetes Pod allocatable capacity. Missing node capacity remains no-data.",
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "max": 1, "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.7}, {"color": "red", "value": 0.9}]}, "unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 4, "x": 8, "y": 0},
+      "id": 3,
+      "options": {"colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "capacity:running_pods_to_allocatable:ratio", "legendFormat": "pod capacity", "refId": "A"}],
+      "title": "Pod Capacity Utilization",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Active container CPU requests divided by cluster allocatable CPU. It is a reservation proxy, not exact schedulability.",
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.7}, {"color": "red", "value": 0.9}]}, "unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 4, "x": 12, "y": 0},
+      "id": 4,
+      "options": {"colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "capacity:cpu_requests_to_allocatable:ratio", "legendFormat": "requested", "refId": "A"}],
+      "title": "CPU Requested / Allocatable",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Active container memory requests divided by cluster allocatable memory. It is a reservation proxy, not currency cost.",
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "yellow", "value": 0.7}, {"color": "red", "value": 0.9}]}, "unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 4, "x": 16, "y": 0},
+      "id": 5,
+      "options": {"colorMode": "background", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "capacity:memory_requests_to_allocatable:ratio", "legendFormat": "requested", "refId": "A"}],
+      "title": "Memory Requested / Allocatable",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Observed Pending or Running application containers for the selected namespaces.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "decimals": 0, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 4, "x": 20, "y": 0},
+      "id": 6,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "sum(efficiency:namespace_active_containers:count{namespace=~\"$namespace\"})", "legendFormat": "active", "refId": "A"}],
+      "title": "Active Containers",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "CPU requests and limits for active containers compared with node allocatable CPU. Limits may exceed allocatable by policy.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "decimals": 2, "unit": "cores"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "id": 7,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"expr": "capacity:node_cpu_allocatable_cores:sum", "legendFormat": "allocatable", "refId": "A"},
+        {"expr": "capacity:cpu_requests_cores:sum", "legendFormat": "requests", "refId": "B"},
+        {"expr": "capacity:cpu_limits_cores:sum", "legendFormat": "limits", "refId": "C"}
+      ],
+      "title": "Cluster CPU Reservation Proxy",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Memory requests and limits for active containers compared with node allocatable memory. These values are not currency cost.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "decimals": 1, "unit": "bytes"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+      "id": 8,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"expr": "capacity:node_memory_allocatable_bytes:sum", "legendFormat": "allocatable", "refId": "A"},
+        {"expr": "capacity:memory_requests_bytes:sum", "legendFormat": "requests", "refId": "B"},
+        {"expr": "capacity:memory_limits_bytes:sum", "legendFormat": "limits", "refId": "C"}
+      ],
+      "title": "Cluster Memory Reservation Proxy",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Running Pods compared with node Pod allocatable capacity. This does not model topology, taints, or fragmentation.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "decimals": 0, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 9, "w": 8, "x": 0, "y": 14},
+      "id": 9,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"expr": "capacity:node_pods_allocatable:sum", "legendFormat": "allocatable", "refId": "A"},
+        {"expr": "capacity:running_pods:count", "legendFormat": "running", "refId": "B"}
+      ],
+      "title": "Running Pods and Pod Capacity",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "CPU usage-to-request ratio exists only for namespaces with positive CPU requests. Usage is a five-minute rate.",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}, "min": 0, "unit": "percentunit"},
+        "overrides": [
+          {"matcher": {"id": "byFrameRefID", "options": "B"}, "properties": [{"id": "unit", "value": "cores"}]},
+          {"matcher": {"id": "byFrameRefID", "options": "C"}, "properties": [{"id": "unit", "value": "cores"}]}
+        ]
+      },
+      "gridPos": {"h": 9, "w": 8, "x": 8, "y": 14},
+      "id": 10,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"expr": "efficiency:namespace_cpu_usage_to_requests:ratio{namespace=~\"$namespace\"}", "legendFormat": "ratio {{namespace}}", "refId": "A"},
+        {"expr": "efficiency:namespace_cpu_usage_cores:rate5m{namespace=~\"$namespace\"}", "legendFormat": "usage {{namespace}}", "refId": "B"},
+        {"expr": "efficiency:namespace_cpu_requests_cores:sum{namespace=~\"$namespace\"}", "legendFormat": "requests {{namespace}}", "refId": "C"}
+      ],
+      "title": "Namespace CPU Efficiency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Memory working-set-to-request ratio exists only for namespaces with positive memory requests.",
+      "fieldConfig": {
+        "defaults": {"color": {"mode": "palette-classic"}, "min": 0, "unit": "percentunit"},
+        "overrides": [
+          {"matcher": {"id": "byFrameRefID", "options": "B"}, "properties": [{"id": "unit", "value": "bytes"}]},
+          {"matcher": {"id": "byFrameRefID", "options": "C"}, "properties": [{"id": "unit", "value": "bytes"}]}
+        ]
+      },
+      "gridPos": {"h": 9, "w": 8, "x": 16, "y": 14},
+      "id": 11,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"expr": "efficiency:namespace_memory_usage_to_requests:ratio{namespace=~\"$namespace\"}", "legendFormat": "ratio {{namespace}}", "refId": "A"},
+        {"expr": "efficiency:namespace_memory_working_set_bytes:sum{namespace=~\"$namespace\"}", "legendFormat": "working set {{namespace}}", "refId": "B"},
+        {"expr": "efficiency:namespace_memory_requests_bytes:sum{namespace=~\"$namespace\"}", "legendFormat": "requests {{namespace}}", "refId": "C"}
+      ],
+      "title": "Namespace Memory Efficiency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "description": "Missing-request zeroes are scoped to observed active containers. No source inventory remains no-data.",
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "decimals": 0, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 23},
+      "id": 12,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"expr": "efficiency:namespace_active_containers:count{namespace=~\"$namespace\"}", "legendFormat": "active {{namespace}}", "refId": "A"},
+        {"expr": "efficiency:namespace_containers_without_cpu_requests:count{namespace=~\"$namespace\"}", "legendFormat": "missing CPU request {{namespace}}", "refId": "B"},
+        {"expr": "efficiency:namespace_containers_without_memory_requests:count{namespace=~\"$namespace\"}", "legendFormat": "missing memory request {{namespace}}", "refId": "C"}
+      ],
+      "title": "Namespace Request Coverage",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["startup-devops-baseline", "v0.11.4.2.1", "capacity", "efficiency"],
+  "templating": {
+    "list": [
+      {"current": {}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(efficiency:namespace_active_containers:count, namespace)", "hide": 0, "includeAll": true, "label": "Namespace", "multi": true, "name": "namespace", "options": [], "query": {"query": "label_values(efficiency:namespace_active_containers:count, namespace)", "refId": "PrometheusVariableQueryEditor-Namespace"}, "refresh": 1, "regex": "", "skipUrlSync": false, "sort": 1, "type": "query"}
+    ]
+  },
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Startup DevOps / Capacity & Efficiency Overview",
+  "uid": "startup-devops-capacity-overview",
+  "version": 1,
+  "weekStart": ""
+}

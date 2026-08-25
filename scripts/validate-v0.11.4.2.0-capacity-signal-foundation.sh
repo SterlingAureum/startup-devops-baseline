@@ -108,10 +108,16 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
 
 contract = load_json("delivery/contracts/v0.11.4.2.0-capacity-signal-foundation.json")
 validate_contract(contract)
+capacity_dashboard_successor = (root / "delivery/contracts/v0.11.4.2.1-capacity-efficiency-dashboard.json").is_file()
+
+expected_views_chart_version = "version: 0.3.1" if capacity_dashboard_successor else "version: 0.3.0"
+expected_views_app_version = (
+    'appVersion: "v0.11.4.2.1"' if capacity_dashboard_successor else 'appVersion: "v0.11.4.2.0"'
+)
 
 markers(
     "platform/observability/helm/Chart.yaml",
-    ("name: startup-devops-observability-views", "version: 0.3.0", 'appVersion: "v0.11.4.2.0"'),
+    ("name: startup-devops-observability-views", expected_views_chart_version, expected_views_app_version),
 )
 
 rules_path = contract["recordingRules"]["path"]
@@ -154,6 +160,8 @@ expected_dashboards = {
     "platform-overview.json": ("startup-devops-platform-overview", 6),
     "service-overview.json": ("startup-devops-service-overview", 5),
 }
+if capacity_dashboard_successor:
+    expected_dashboards["capacity-overview.json"] = ("startup-devops-capacity-overview", 12)
 dashboard_dir = root / "platform/observability/helm/dashboards"
 require(set(path.name for path in dashboard_dir.glob("*.json")) == set(expected_dashboards), "Dashboard set changed")
 for filename, (uid, panel_count) in expected_dashboards.items():
@@ -161,7 +169,12 @@ for filename, (uid, panel_count) in expected_dashboards.items():
     require(dashboard.get("uid") == uid, f"Dashboard UID changed: {filename}")
     require(len(dashboard.get("panels", [])) == panel_count, f"Dashboard panels changed: {filename}")
     text = json.dumps(dashboard)
-    require("capacity:" not in text and "efficiency:" not in text, f"Dashboard consumed capacity rules early: {filename}")
+    if filename == "capacity-overview.json":
+        pattern = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(?::[A-Za-z0-9_]+)+")
+        used_rules = set(pattern.findall(text))
+        require(used_rules == set(contract["recordingRules"]["names"]), "Capacity Dashboard rule set changed")
+    else:
+        require("capacity:" not in text and "efficiency:" not in text, f"Existing Dashboard consumed capacity rules: {filename}")
 
 live = markers(
     "scripts/check-capacity-signals.sh",
@@ -211,8 +224,8 @@ historical_dashboards = markers(
     "scripts/validate-v0.11.4.1.1-operator-dashboards.sh",
     (
         "v0.11.4.2.0-capacity-signal-foundation.json",
-        'expected_views_chart_version = "version: 0.3.0" if capacity_signal_successor',
-        '\'appVersion: "v0.11.4.2.0"\' if capacity_signal_successor',
+        'expected_views_chart_version = "version: 0.3.0"',
+        'expected_views_app_version = \'appVersion: "v0.11.4.2.0"\'',
     ),
 )
 require("capacity_signal_successor" in historical_dashboards, "v0.11.4.1.1 successor branch missing")

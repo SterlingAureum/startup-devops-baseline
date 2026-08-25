@@ -90,6 +90,9 @@ echo "==> Validating v0.11.4.1.1 operator Dashboards"
 echo "==> Validating v0.11.4.2.0 capacity signal foundation"
 "${ROOT_DIR}/scripts/validate-v0.11.4.2.0-capacity-signal-foundation.sh"
 
+echo "==> Validating v0.11.4.2.1 Capacity and Resource Efficiency Dashboard"
+"${ROOT_DIR}/scripts/validate-v0.11.4.2.1-capacity-efficiency-dashboard.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

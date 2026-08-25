@@ -123,8 +123,12 @@ controller_metrics_successor = (root / "delivery/contracts/v0.11.4.1.0-controlle
 ratio_no_series_successor = (root / "delivery/contracts/v0.11.4.1.0.2-ratio-no-series-repair.json").is_file()
 operator_dashboards_successor = (root / "delivery/contracts/v0.11.4.1.1-operator-dashboards.json").is_file()
 capacity_signal_successor = (root / "delivery/contracts/v0.11.4.2.0-capacity-signal-foundation.json").is_file()
+capacity_dashboard_successor = (root / "delivery/contracts/v0.11.4.2.1-capacity-efficiency-dashboard.json").is_file()
 
-if capacity_signal_successor:
+if capacity_dashboard_successor:
+    expected_views_chart_version = "version: 0.3.1"
+    expected_views_app_version = 'appVersion: "v0.11.4.2.1"'
+elif capacity_signal_successor:
     expected_views_chart_version = "version: 0.3.0"
     expected_views_app_version = 'appVersion: "v0.11.4.2.0"'
 elif operator_dashboards_successor:

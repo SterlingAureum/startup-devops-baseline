@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-observability}"
 APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
+ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
 PROMETHEUS_POD_SELECTOR="${PROMETHEUS_POD_SELECTOR:-app.kubernetes.io/name=prometheus}"
 PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19090}"
@@ -10,8 +12,13 @@ PROMETHEUS_BASE_URL="${PROMETHEUS_BASE_URL:-http://127.0.0.1:${PROMETHEUS_LOCAL_
 SERVICE_MONITOR="${SERVICE_MONITOR:-demo-api}"
 ROLLOUT_ENABLED="${ROLLOUT_ENABLED:-true}"
 TIMEOUT="${TIMEOUT:-180s}"
+TRAFFIC_LOCAL_PORT="${TRAFFIC_LOCAL_PORT:-18079}"
+RULE_WARMUP_SECONDS="${RULE_WARMUP_SECONDS:-45}"
 PF_PID=""
 PF_LOG=""
+
+# shellcheck source=scripts/lib/observability-live.sh
+source "${ROOT_DIR}/scripts/lib/observability-live.sh"
 
 cleanup() {
   if [[ -n "${PF_PID}" ]] && kill -0 "${PF_PID}" >/dev/null 2>&1; then
@@ -24,7 +31,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-for command in kubectl curl jq; do
+for command in curl grep jq kubectl seq; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -80,11 +87,18 @@ fi
 
 echo "==> Checking demo-api discovery and bounded application signals"
 if [[ "${ROLLOUT_ENABLED}" == "true" ]]; then
-  query_prometheus 'sum(up{job="demo-api-stable"})' "stable Service target is discovered"
-  query_prometheus 'sum(up{job="demo-api-canary"})' "canary Service target is discovered"
+  observability_assert_prometheus_jobs_up \
+    "${PROMETHEUS_BASE_URL}" demo-api-stable demo-api-canary
 else
-  query_prometheus 'sum(up{job="demo-api"})' "demo-api Service target is discovered"
+  observability_assert_prometheus_jobs_up "${PROMETHEUS_BASE_URL}" demo-api
 fi
+
+echo "==> Generating bounded demo-api telemetry"
+observability_generate_demo_api_metrics \
+  "${APP_NAMESPACE}" "${ARGOCD_NAMESPACE}" demo-api "${TRAFFIC_LOCAL_PORT}"
+echo "==> Waiting ${RULE_WARMUP_SECONDS}s for application scrape"
+sleep "${RULE_WARMUP_SECONDS}"
+
 query_prometheus 'sum(demo_api_http_requests_total)' "bounded HTTP request metric exists"
 query_prometheus 'sum(demo_api_dependency_checks_total)' "bounded PostgreSQL dependency metric exists"
 

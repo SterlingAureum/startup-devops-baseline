@@ -2,6 +2,26 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.4.2.2
+
+### Fixed
+
+- Rejected discovered demo-api Prometheus targets unless their numeric `up`
+  value is positive, instead of treating a non-empty zero result as healthy.
+- Added active-target `health`, scrape URL, `lastError`, and last-scrape
+  diagnostics for application telemetry failures.
+- Centralized bounded demo-api traffic and direct source-metric preflight so a
+  neutral-baseline or stale image fails before downstream recording rules.
+- Required a fresh local image tag and exact feature redeployment between
+  neutral-baseline restoration and clean-replay acceptance.
+
+### Boundary
+
+- This repair changes validation scripts, contracts, and documentation only.
+  It changes no Kubernetes resource, Dashboard, recording rule,
+  ServiceMonitor, image, Canary behavior, AWS desired state, or production
+  automation.
+
 ## v0.11.4.2.1
 
 ### Added

@@ -350,8 +350,12 @@ Incremental scope:
       bounded request coverage, and profile-aware live discovery - implemented
       and accepted locally
     - v0.11.4.2.1 - immutable Capacity and Resource Efficiency Dashboard backed
-      only by the accepted v0.11.4.2.0 rules - implemented offline; local live
-      acceptance and clean feature replay required
+      only by the accepted v0.11.4.2.0 rules - implemented and accepted locally;
+      clean replay exposed a neutral-baseline image transition and target
+      diagnostic defect repaired by v0.11.4.2.2
+    - v0.11.4.2.2 - fresh replay image transition, positive target-health
+      assertions, shared bounded telemetry preflight, and actionable scrape
+      diagnostics - implemented offline; one clean local feature replay required
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity
   policy, and version-controlled Runbooks with positive/negative drills - planned
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry

@@ -2,11 +2,11 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.4.2.1-capacity-efficiency-dashboard`.
-It provisions an immutable Capacity and Resource Efficiency Dashboard backed
-only by the twenty accepted capacity rules, with namespace filtering,
-reservation-proxy interpretation, and bounded request coverage. See
-`docs/V0.11.4.2.1_CAPACITY_EFFICIENCY_DASHBOARD.md`.
+Current development checkpoint: `v0.11.4.2.2-replay-diagnostics-repair`.
+It requires positive Prometheus target health, shared bounded application
+traffic, direct image telemetry preflight, and actionable scrape diagnostics
+after the neutral feature baseline is restored. See
+`docs/V0.11.4.2.2_REPLAY_DIAGNOSTICS_REPAIR.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -165,14 +165,15 @@ v0.11.4.2.0 adds the capacity and resource-efficiency signal layer without a
 new exporter, cost system, Dashboard, or automation action.
 v0.11.4.2.1 adds the immutable Capacity and Resource Efficiency Dashboard and
 consumes all twenty accepted rules without raw metric, scheduler-exact,
-currency-cost, or automation claims. A clean local feature replay closes the
-v0.11.4.2 line, and the clean-room v0.11 acceptance remains the final v0.11.9
-increment.
+currency-cost, or automation claims. v0.11.4.2.2 repairs the clean replay with
+a mandatory fresh local image transition, numeric target-health assertions,
+shared bounded telemetry preflight, and Prometheus scrape diagnostics. The
+clean-room v0.11 acceptance remains the final v0.11.9 increment.
 
 ## Current Version
 
 ```text
-v0.11.4.2.1-capacity-efficiency-dashboard
+v0.11.4.2.2-replay-diagnostics-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

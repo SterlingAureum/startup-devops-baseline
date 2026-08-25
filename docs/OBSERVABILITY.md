@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.4.2.1 telemetry and operator-view foundation uses Prometheus Operator through the
+The active v0.11.4.2.2 telemetry and operator-view foundation uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -23,7 +23,13 @@ observability Namespace
 ```
 
 Alertmanager, alert rules, Loki, Alloy, tracing, Thanos, remote write, Kubecost,
-and cloud billing integration are not part of v0.11.4.2.1.
+and cloud billing integration are not part of v0.11.4.2.2.
+
+Local acceptance sources `scripts/lib/observability-live.sh`. A target must
+produce a numeric `up` value of at least one; discovery alone is insufficient.
+The shared preflight generates bounded application traffic, verifies populated
+HTTP and dependency metrics directly from the deployed image, and prints the
+active target `lastError` plus runtime image ownership when a check fails.
 
 The local Application is:
 

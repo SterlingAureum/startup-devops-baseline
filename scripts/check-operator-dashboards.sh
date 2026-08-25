@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PROFILE="${PROFILE:-local}"
 AWS_ENVIRONMENT="${AWS_ENVIRONMENT:-aws-dev}"
 OBSERVABILITY_NAMESPACE="${OBSERVABILITY_NAMESPACE:-observability}"
@@ -14,6 +15,9 @@ GRAFANA_LOCAL_PORT="${GRAFANA_LOCAL_PORT:-13002}"
 TRAFFIC_LOCAL_PORT="${TRAFFIC_LOCAL_PORT:-18082}"
 RULE_WARMUP_SECONDS="${RULE_WARMUP_SECONDS:-45}"
 
+# shellcheck source=scripts/lib/observability-live.sh
+source "${ROOT_DIR}/scripts/lib/observability-live.sh"
+
 case "${PROFILE}" in
   local|aws) ;;
   *)
@@ -22,7 +26,7 @@ case "${PROFILE}" in
     ;;
 esac
 
-for command_name in base64 curl jq kubectl; do
+for command_name in base64 curl grep jq kubectl seq; do
   command -v "${command_name}" >/dev/null 2>&1 || {
     echo "ERROR: required command not found: ${command_name}" >&2
     exit 1
@@ -31,9 +35,8 @@ done
 
 prometheus_pid=""
 grafana_pid=""
-traffic_pid=""
 cleanup() {
-  for pid in "${traffic_pid}" "${grafana_pid}" "${prometheus_pid}"; do
+  for pid in "${grafana_pid}" "${prometheus_pid}"; do
     if [ -n "${pid}" ]; then
       kill "${pid}" >/dev/null 2>&1 || true
       wait "${pid}" >/dev/null 2>&1 || true
@@ -142,21 +145,8 @@ for configmap_name in \
 done
 
 echo "==> Generating bounded demo-api dependency traffic"
-traffic_service="demo-api-stable"
-if ! kubectl -n "${APP_NAMESPACE}" get service "${traffic_service}" >/dev/null 2>&1; then
-  traffic_service="demo-api"
-fi
-kubectl -n "${APP_NAMESPACE}" port-forward "service/${traffic_service}" \
-  "${TRAFFIC_LOCAL_PORT}:80" >/tmp/v0.11.4.1.1-traffic-port-forward.log 2>&1 &
-traffic_pid="$!"
-wait_http "http://127.0.0.1:${TRAFFIC_LOCAL_PORT}/health"
-for _ in $(seq 1 12); do
-  curl -fsS "http://127.0.0.1:${TRAFFIC_LOCAL_PORT}/health" >/dev/null
-  curl -fsS "http://127.0.0.1:${TRAFFIC_LOCAL_PORT}/ready" >/dev/null || true
-done
-kill "${traffic_pid}" >/dev/null 2>&1 || true
-wait "${traffic_pid}" >/dev/null 2>&1 || true
-traffic_pid=""
+observability_generate_demo_api_metrics \
+  "${APP_NAMESPACE}" "${ARGOCD_NAMESPACE}" demo-api "${TRAFFIC_LOCAL_PORT}"
 
 echo "==> Waiting ${RULE_WARMUP_SECONDS}s for scrape and rule evaluation"
 sleep "${RULE_WARMUP_SECONDS}"
@@ -165,6 +155,8 @@ kubectl -n "${OBSERVABILITY_NAMESPACE}" port-forward "service/${PROMETHEUS_SERVI
   "${PROMETHEUS_LOCAL_PORT}:9090" >/tmp/v0.11.4.1.1-prometheus-port-forward.log 2>&1 &
 prometheus_pid="$!"
 wait_http "http://127.0.0.1:${PROMETHEUS_LOCAL_PORT}/-/ready"
+observability_assert_prometheus_jobs_up \
+  "http://127.0.0.1:${PROMETHEUS_LOCAL_PORT}" demo-api-stable demo-api-canary
 
 echo "==> Checking required Delivery, Data, and Platform rule results"
 assert_query_nonempty 'delivery:argocd_applications:count' "Argo CD application inventory"

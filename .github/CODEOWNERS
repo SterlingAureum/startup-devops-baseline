@@ -38,6 +38,7 @@
 /delivery/contracts/v0.11.4.1.1-operator-dashboards.json @SterlingAureum
 /delivery/contracts/v0.11.4.2.0-capacity-signal-foundation.json @SterlingAureum
 /delivery/contracts/v0.11.4.2.1-capacity-efficiency-dashboard.json @SterlingAureum
+/delivery/contracts/v0.11.4.2.2-replay-diagnostics-repair.json @SterlingAureum
 /delivery/contracts/examples/v0.10-final-evidence-input.example.json @SterlingAureum
 /scripts/calculate-demo-api-qualification-scope.py @SterlingAureum
 /scripts/demo_api_qualification_bundle.py @SterlingAureum
@@ -80,6 +81,7 @@
 /scripts/validate-v0.11.4.1.1-operator-dashboards.sh @SterlingAureum
 /scripts/validate-v0.11.4.2.0-capacity-signal-foundation.sh @SterlingAureum
 /scripts/validate-v0.11.4.2.1-capacity-efficiency-dashboard.sh @SterlingAureum
+/scripts/validate-v0.11.4.2.2-replay-diagnostics-repair.sh @SterlingAureum
 /scripts/check-observability-views.sh @SterlingAureum
 /scripts/check-controller-metrics.sh @SterlingAureum
 /scripts/check-operator-dashboards.sh @SterlingAureum
@@ -90,6 +92,7 @@
 /scripts/restore-local-gitops-head.sh @SterlingAureum
 /scripts/lib/argocd-operation.sh @SterlingAureum
 /scripts/lib/git-revision.sh @SterlingAureum
+/scripts/lib/observability-live.sh @SterlingAureum
 /scripts/derive-demo-api-release-id.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.sh @SterlingAureum
@@ -124,6 +127,7 @@
 /docs/V0.11.4.1.1_OPERATOR_DASHBOARDS.md @SterlingAureum
 /docs/V0.11.4.2.0_CAPACITY_SIGNAL_FOUNDATION.md @SterlingAureum
 /docs/V0.11.4.2.1_CAPACITY_EFFICIENCY_DASHBOARD.md @SterlingAureum
+/docs/V0.11.4.2.2_REPLAY_DIAGNOSTICS_REPAIR.md @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

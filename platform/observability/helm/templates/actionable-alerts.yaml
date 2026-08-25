@@ -1,0 +1,141 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: actionable-alerts
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: alerting-rules
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ .Values.environment | quote }}
+spec:
+  groups:
+    - name: actionable.application.v0.11.5.1
+      interval: {{ .Values.alerting.evaluationInterval }}
+      rules:
+        - alert: DemoApiHttpSuccessRatioLowWarning
+          expr: |
+            demo_api:http_success_ratio:rate5m < {{ .Values.alerting.demoApiHttp.warningThreshold }}
+            and on (deployment_environment_name, service_name, service_version, platform_release_id)
+            demo_api:http_requests:rate5m > 0
+          for: {{ .Values.alerting.demoApiHttp.warningFor }}
+          labels:
+            severity: warning
+            environment: {{ .Values.environment | quote }}
+            cluster: {{ .Values.cluster | quote }}
+            component: demo-api
+            alert_family: demo-api-http-reliability
+          annotations:
+            summary: demo-api HTTP success ratio is degraded
+            description: demo-api HTTP success ratio has remained below 99 percent for 10 minutes while request traffic is present.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "demo-api-http-success-ratio-low-warning.md" | quote }}
+        - alert: DemoApiHttpSuccessRatioLowCritical
+          expr: |
+            demo_api:http_success_ratio:rate5m < {{ .Values.alerting.demoApiHttp.criticalThreshold }}
+            and on (deployment_environment_name, service_name, service_version, platform_release_id)
+            demo_api:http_requests:rate5m > 0
+          for: {{ .Values.alerting.demoApiHttp.criticalFor }}
+          labels:
+            severity: critical
+            environment: {{ .Values.environment | quote }}
+            cluster: {{ .Values.cluster | quote }}
+            component: demo-api
+            alert_family: demo-api-http-reliability
+          annotations:
+            summary: demo-api HTTP success ratio is critically low
+            description: demo-api HTTP success ratio has remained below 95 percent for 5 minutes while request traffic is present.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "demo-api-http-success-ratio-low-critical.md" | quote }}
+        - alert: DemoApiDependencySuccessRatioLowWarning
+          expr: |
+            demo_api:dependency_success_ratio:rate5m < {{ .Values.alerting.demoApiDependency.warningThreshold }}
+            and on (deployment_environment_name, service_name, service_version, platform_release_id, dependency)
+            sum by (deployment_environment_name, service_name, service_version, platform_release_id, dependency) (
+              demo_api:dependency_checks:rate5m
+            ) > 0
+          for: {{ .Values.alerting.demoApiDependency.warningFor }}
+          labels:
+            severity: warning
+            environment: {{ .Values.environment | quote }}
+            cluster: {{ .Values.cluster | quote }}
+            component: demo-api-dependency
+            alert_family: demo-api-dependency-reliability
+          annotations:
+            summary: demo-api dependency success ratio is degraded
+            description: A demo-api dependency success ratio has remained below 99 percent for 10 minutes while dependency checks are present.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "demo-api-dependency-success-ratio-low-warning.md" | quote }}
+        - alert: DemoApiDependencySuccessRatioLowCritical
+          expr: |
+            demo_api:dependency_success_ratio:rate5m < {{ .Values.alerting.demoApiDependency.criticalThreshold }}
+            and on (deployment_environment_name, service_name, service_version, platform_release_id, dependency)
+            sum by (deployment_environment_name, service_name, service_version, platform_release_id, dependency) (
+              demo_api:dependency_checks:rate5m
+            ) > 0
+          for: {{ .Values.alerting.demoApiDependency.criticalFor }}
+          labels:
+            severity: critical
+            environment: {{ .Values.environment | quote }}
+            cluster: {{ .Values.cluster | quote }}
+            component: demo-api-dependency
+            alert_family: demo-api-dependency-reliability
+          annotations:
+            summary: demo-api dependency success ratio is critically low
+            description: A demo-api dependency success ratio has remained below 90 percent for 5 minutes while dependency checks are present.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "demo-api-dependency-success-ratio-low-critical.md" | quote }}
+    - name: actionable.delivery-platform-data.v0.11.5.1
+      interval: {{ .Values.alerting.evaluationInterval }}
+      rules:
+        - alert: ArgoRolloutProblem
+          expr: delivery:rollouts_problem:count > 0
+          for: {{ .Values.alerting.argoRolloutProblemFor }}
+          labels:
+            severity: critical
+            environment: {{ .Values.environment | quote }}
+            cluster: {{ .Values.cluster | quote }}
+            component: argo-rollouts
+            alert_family: rollout-health
+          annotations:
+            summary: an Argo Rollout remains in a problem phase
+            description: At least one Argo Rollout has remained Degraded, Error, InvalidSpec, Timeout, Abort, or Aborted for 5 minutes.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "argo-rollout-problem.md" | quote }}
+        - alert: ArgoCDApplicationUnhealthy
+          expr: delivery:argocd_applications_unhealthy:count > 0
+          for: {{ .Values.alerting.argoCDApplicationUnhealthyFor }}
+          labels:
+            severity: critical
+            environment: {{ .Values.environment | quote }}
+            cluster: {{ .Values.cluster | quote }}
+            component: argocd
+            alert_family: gitops-application-health
+          annotations:
+            summary: an Argo CD Application remains unhealthy
+            description: At least one Argo CD Application has remained outside Healthy or Progressing for 10 minutes.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "argocd-application-unhealthy.md" | quote }}
+        - alert: KubernetesDeploymentUnavailable
+          expr: |
+            platform:deployment_unavailable_replicas:count{
+              namespace=~"observability|startup-apps|argocd|argo-rollouts|data-platform|cnpg-system"
+            } > 0
+          for: {{ .Values.alerting.kubernetesDeploymentUnavailableFor }}
+          labels:
+            severity: critical
+            environment: {{ .Values.environment | quote }}
+            cluster: {{ .Values.cluster | quote }}
+            component: kubernetes-workload
+            alert_family: deployment-availability
+          annotations:
+            summary: a required Kubernetes Deployment remains unavailable
+            description: A platform, application, delivery, or data Deployment has reported unavailable replicas for 10 minutes.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "kubernetes-deployment-unavailable.md" | quote }}
+        - alert: PostgreSQLCollectionFailed
+          expr: data:postgresql_collection_errors:max > 0
+          for: {{ .Values.alerting.postgresqlCollectionFailedFor }}
+          labels:
+            severity: critical
+            environment: {{ .Values.environment | quote }}
+            cluster: {{ .Values.cluster | quote }}
+            component: cloudnative-pg
+            alert_family: postgresql-collection-health
+          annotations:
+            summary: CloudNativePG metric collection is failing
+            description: A CloudNativePG cluster collector has reported a collection error continuously for 5 minutes. This rule remains no-data in the local profile.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "postgresql-collection-failed.md" | quote }}

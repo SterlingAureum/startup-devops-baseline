@@ -126,10 +126,16 @@ def recording_rule_names(queries: list[str]) -> set[str]:
 
 contract = load_json("delivery/contracts/v0.11.4.2.1-capacity-efficiency-dashboard.json")
 validate_contract(contract)
+actionable_alerts_successor = (root / "delivery/contracts/v0.11.5.1-actionable-alerts-runbooks.json").is_file()
+
+expected_views_chart_version = "version: 0.4.0" if actionable_alerts_successor else "version: 0.3.1"
+expected_views_app_version = (
+    'appVersion: "v0.11.5.1"' if actionable_alerts_successor else 'appVersion: "v0.11.4.2.1"'
+)
 
 markers(
     "platform/observability/helm/Chart.yaml",
-    ("name: startup-devops-observability-views", "version: 0.3.1", 'appVersion: "v0.11.4.2.1"'),
+    ("name: startup-devops-observability-views", expected_views_chart_version, expected_views_app_version),
 )
 
 expected_dashboards = {
@@ -249,7 +255,7 @@ historical_capacity = markers(
     "scripts/validate-v0.11.4.2.0-capacity-signal-foundation.sh",
     (
         "v0.11.4.2.1-capacity-efficiency-dashboard.json",
-        'expected_views_chart_version = "version: 0.3.1" if capacity_dashboard_successor',
+        'expected_views_chart_version = "version: 0.3.1"',
         'expected_dashboards["capacity-overview.json"]',
         "Capacity Dashboard rule set changed",
     ),

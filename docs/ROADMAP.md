@@ -365,8 +365,10 @@ Incremental scope:
     acceptance defect repaired by v0.11.5.0.1
     - v0.11.5.0.1 - accept Alertmanager canonical matcher formatting while
       retaining exact route-and-inhibition matcher cardinality and actionable
-      diagnostics - implemented offline; direct local live check rerun required
-  - v0.11.5.1 - actionable alert rules and one reviewed Runbook per alert - planned
+      diagnostics - implemented and accepted through the direct local live rerun
+  - v0.11.5.1 - eight recording-rule-backed actionable alerts, stable routing
+    labels, one reviewed English Runbook per alert, and clean inactive-baseline
+    acceptance - implemented offline; local live acceptance required
   - v0.11.5.2 - firing, routing, inhibition, resolution, and environment-owned
     notification-path drills - planned
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry

@@ -2,6 +2,37 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.5.1
+
+### Added
+
+- Added eight repository-owned actionable alerts covering demo-api HTTP and
+  dependency reliability, Argo Rollouts, Argo CD Application health,
+  Kubernetes Deployment availability, and AWS-profile CloudNativePG
+  collection health.
+- Added one English, version-controlled Runbook per alert with read-only first
+  response, release correlation, recovery verification, and preserved
+  production approval boundaries.
+- Added exact offline and local/AWS live acceptance for inventory, metadata,
+  rule health, stable inhibition labels, Runbook links, and a clean inactive
+  baseline.
+
+### Changed
+
+- Advanced the repository-owned observability views Chart from `0.3.1` to
+  `0.4.0` with application version `v0.11.5.1`.
+- Made historical v0.11.4 and v0.11.5.0 validators aware of the alert-rule
+  Chart successor without weakening their accepted contracts.
+- Recorded v0.11.5.0.1 as accepted through the direct local live rerun.
+
+### Boundary
+
+- This increment adds no default rule set, external receiver, notification
+  credential, Dashboard, recording rule, monitor, application image,
+  Alertmanager route, SLO, Rollout gate, AWS mutation, or production
+  automation. Firing, routing, inhibition, resolution, and notification-path
+  drills remain v0.11.5.2 work.
+
 ## v0.11.5.0.1
 
 ### Fixed

@@ -9,6 +9,24 @@ grafana:
 recordingRules:
   evaluationInterval: 30s
 
+alerting:
+  evaluationInterval: 30s
+  runbookBaseUrl: https://github.com/SterlingAureum/startup-devops-baseline/blob/main/docs/runbooks/alerts
+  demoApiHttp:
+    warningThreshold: 0.99
+    warningFor: 10m
+    criticalThreshold: 0.95
+    criticalFor: 5m
+  demoApiDependency:
+    warningThreshold: 0.99
+    warningFor: 10m
+    criticalThreshold: 0.90
+    criticalFor: 5m
+  argoRolloutProblemFor: 5m
+  argoCDApplicationUnhealthyFor: 10m
+  kubernetesDeploymentUnavailableFor: 10m
+  postgresqlCollectionFailedFor: 5m
+
 controllerMonitors:
   scrapeInterval: 30s
   argoCD:

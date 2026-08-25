@@ -87,8 +87,12 @@ ratio_no_series_successor = (root / "delivery/contracts/v0.11.4.1.0.2-ratio-no-s
 operator_dashboards_successor = (root / "delivery/contracts/v0.11.4.1.1-operator-dashboards.json").is_file()
 capacity_signal_successor = (root / "delivery/contracts/v0.11.4.2.0-capacity-signal-foundation.json").is_file()
 capacity_dashboard_successor = (root / "delivery/contracts/v0.11.4.2.1-capacity-efficiency-dashboard.json").is_file()
+actionable_alerts_successor = (root / "delivery/contracts/v0.11.5.1-actionable-alerts-runbooks.json").is_file()
 
-if capacity_dashboard_successor:
+if actionable_alerts_successor:
+    expected_views_chart_version = "version: 0.4.0"
+    expected_views_app_version = 'appVersion: "v0.11.5.1"'
+elif capacity_dashboard_successor:
     expected_views_chart_version = "version: 0.3.1"
     expected_views_app_version = 'appVersion: "v0.11.4.2.1"'
 elif capacity_signal_successor:

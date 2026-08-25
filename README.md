@@ -2,11 +2,11 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.4.2.2-replay-diagnostics-repair`.
-It requires positive Prometheus target health, shared bounded application
-traffic, direct image telemetry preflight, and actionable scrape diagnostics
-after the neutral feature baseline is restored. See
-`docs/V0.11.4.2.2_REPLAY_DIAGNOSTICS_REPAIR.md`.
+Current development checkpoint: `v0.11.5.0-alertmanager-foundation`.
+It enables a private environment-local Alertmanager, stable severity routing,
+bounded alert-family inhibition, profile-specific storage, and direct
+Prometheus discovery validation without adding alert rules or external
+notification delivery. See `docs/V0.11.5.0_ALERTMANAGER_FOUNDATION.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -168,12 +168,18 @@ consumes all twenty accepted rules without raw metric, scheduler-exact,
 currency-cost, or automation claims. v0.11.4.2.2 repairs the clean replay with
 a mandatory fresh local image transition, numeric target-health assertions,
 shared bounded telemetry preflight, and Prometheus scrape diagnostics. The
-clean-room v0.11 acceptance remains the final v0.11.9 increment.
+accepted replay closes v0.11.4.
+v0.11.5.0 enables one private environment-local Alertmanager per monitoring
+profile with bounded storage and resources, stable critical and warning
+routing, alert-family inhibition, and Prometheus discovery validation. It adds
+no alert rule, external notification integration, central Alertmanager, or HA
+claim; actionable alerts and Runbooks remain v0.11.5.1 work. The clean-room
+v0.11 acceptance remains the final v0.11.9 increment.
 
 ## Current Version
 
 ```text
-v0.11.4.2.2-replay-diagnostics-repair
+v0.11.5.0-alertmanager-foundation
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

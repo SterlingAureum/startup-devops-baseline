@@ -93,6 +93,8 @@
 /scripts/lib/argocd-operation.sh @SterlingAureum
 /scripts/lib/git-revision.sh @SterlingAureum
 /scripts/lib/observability-live.sh @SterlingAureum
+/scripts/check-alertmanager.sh @SterlingAureum
+/scripts/validate-v0.11.5.0-alertmanager-foundation.sh @SterlingAureum
 /scripts/derive-demo-api-release-id.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.sh @SterlingAureum
@@ -128,6 +130,8 @@
 /docs/V0.11.4.2.0_CAPACITY_SIGNAL_FOUNDATION.md @SterlingAureum
 /docs/V0.11.4.2.1_CAPACITY_EFFICIENCY_DASHBOARD.md @SterlingAureum
 /docs/V0.11.4.2.2_REPLAY_DIAGNOSTICS_REPAIR.md @SterlingAureum
+/docs/V0.11.5.0_ALERTMANAGER_FOUNDATION.md @SterlingAureum
+/delivery/contracts/v0.11.5.0-alertmanager-foundation.json @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

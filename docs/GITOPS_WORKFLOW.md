@@ -73,13 +73,16 @@ It allows the demo-api service to be reached through local HTTP ingress.
 
 ## monitoring Application
 
-The monitoring Application deploys a lightweight Prometheus stack into:
+The monitoring Application deploys the pinned Prometheus Operator stack into:
 
 ```text
-monitoring
+observability
 ```
 
-Prometheus is configured to scrape the demo-api `/metrics` endpoint.
+Prometheus scrapes the demo-api `/metrics` endpoint and the accepted platform
+targets. Private Grafana and Alertmanager Services provide environment-local
+views and alert routing. Repository-owned recording and future alert rules are
+deployed by the separate `observability-views` Application.
 
 ## Standard Deployment Flow
 

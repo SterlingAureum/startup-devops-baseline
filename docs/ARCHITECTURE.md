@@ -140,6 +140,13 @@ recording rules and immutable Dashboard ConfigMaps. It is a same-repository
 Application and therefore inherits the exact Root revision during feature
 validation.
 
+v0.11.5.0 enables one private environment-local Alertmanager in the monitoring
+Application. Prometheus sends alerts only to the Alertmanager in its own
+cluster. Git shares the routing and inhibition policy across environments,
+while alerts, silences, notification state, and storage remain isolated.
+External notification delivery and actionable alert rules remain later
+v0.11.5 increments.
+
 The demo-api Chart owns its ServiceMonitor, preserves Service names as
 Prometheus `job` labels, and derives release correlation from the selected Pod.
 This keeps stable and canary ReplicaSet identities correct during a Rollout.

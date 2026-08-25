@@ -96,6 +96,9 @@ echo "==> Validating v0.11.4.2.1 Capacity and Resource Efficiency Dashboard"
 echo "==> Validating v0.11.4.2.2 replay diagnostics repair"
 "${ROOT_DIR}/scripts/validate-v0.11.4.2.2-replay-diagnostics-repair.sh"
 
+echo "==> Validating v0.11.5.0 Alertmanager foundation"
+"${ROOT_DIR}/scripts/validate-v0.11.5.0-alertmanager-foundation.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

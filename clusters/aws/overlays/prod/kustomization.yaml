@@ -19,6 +19,12 @@ patches:
         path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/retention
         value: 7d
       - op: replace
+        path: /spec/source/helm/valuesObject/alertmanager/alertmanagerSpec/retention
+        value: 168h
+      - op: replace
+        path: /spec/source/helm/valuesObject/alertmanager/alertmanagerSpec/storage/volumeClaimTemplate/spec/resources/requests/storage
+        value: 5Gi
+      - op: replace
         path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/retentionSize
         value: 16GiB
       - op: replace
@@ -32,6 +38,9 @@ patches:
         value: startup-devops-baseline-prod
       - op: replace
         path: /spec/source/helm/valuesObject/extraManifests/0/parameters/tagSpecification_2
+        value: Environment=prod
+      - op: replace
+        path: /spec/source/helm/valuesObject/extraManifests/1/parameters/tagSpecification_2
         value: Environment=prod
   - target:
       group: argoproj.io

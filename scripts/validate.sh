@@ -14,6 +14,8 @@ MONITORING_APP_NAME="${MONITORING_APP_NAME:-monitoring}"
 MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-observability}"
 PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
 PROMETHEUS_POD_SELECTOR="${PROMETHEUS_POD_SELECTOR:-app.kubernetes.io/name=prometheus}"
+ALERTMANAGER_SERVICE="${ALERTMANAGER_SERVICE:-observability-metrics-alertmanager}"
+ALERTMANAGER_POD_SELECTOR="${ALERTMANAGER_POD_SELECTOR:-app.kubernetes.io/name=alertmanager}"
 PROMETHEUS_QUERY="${PROMETHEUS_QUERY:-demo_api_http_requests_total}"
 PROMETHEUS_HTTP_MODE="${PROMETHEUS_HTTP_MODE:-port-forward}"
 PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19090}"
@@ -517,6 +519,17 @@ if kubectl -n "$MONITORING_NAMESPACE" get service "$PROMETHEUS_SERVICE" >/dev/nu
 else
   fail "service not found: ${MONITORING_NAMESPACE}/${PROMETHEUS_SERVICE}"
   exit 1
+fi
+
+wait_pods_ready_by_label \
+  "$MONITORING_NAMESPACE" \
+  "$ALERTMANAGER_POD_SELECTOR" \
+  "Alertmanager"
+
+if [ "$(kubectl -n "$MONITORING_NAMESPACE" get service "$ALERTMANAGER_SERVICE" -o jsonpath='{.spec.type}' 2>/dev/null || true)" = "ClusterIP" ]; then
+  pass "private Alertmanager service exists: ${MONITORING_NAMESPACE}/${ALERTMANAGER_SERVICE}"
+else
+  fail "private Alertmanager service not found: ${MONITORING_NAMESPACE}/${ALERTMANAGER_SERVICE}"
 fi
 
 check_prometheus_http

@@ -14,6 +14,11 @@ External Helm sources remain independently pinned in `values.yaml`:
 - ingress-nginx `4.11.3`;
 - kube-prometheus-stack `88.5.0`.
 
+The monitoring Application enables private single-replica Prometheus,
+Grafana, and Alertmanager runtimes for local functional acceptance. Alert rules
+remain repository-owned by `platform/observability/helm` and are intentionally
+absent until v0.11.5.1.
+
 The repository-owned `observability-views` Chart is not an external dependency;
 it inherits `git.targetRevision` from the Root and deploys recording rules,
 controller ServiceMonitors, and Dashboard ConfigMaps after the monitoring

@@ -23,7 +23,71 @@ spec:
         defaultRules:
           create: false
         alertmanager:
-          enabled: false
+          enabled: true
+          ingress:
+            enabled: false
+          service:
+            type: ClusterIP
+          networkPolicy:
+            enabled: false
+          config:
+            global:
+              resolve_timeout: 5m
+            inhibit_rules:
+              - source_matchers:
+                  - 'severity = "critical"'
+                target_matchers:
+                  - 'severity = "warning"'
+                equal:
+                  - environment
+                  - cluster
+                  - component
+                  - alert_family
+            route:
+              receiver: platform-observation
+              group_by:
+                - environment
+                - cluster
+                - component
+                - alert_family
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 4h
+              routes:
+                - receiver: critical-observation
+                  matchers:
+                    - 'severity = "critical"'
+                - receiver: warning-observation
+                  matchers:
+                    - 'severity = "warning"'
+            receivers:
+              - name: platform-observation
+              - name: critical-observation
+              - name: warning-observation
+            templates:
+              - /etc/alertmanager/config/*.tmpl
+          alertmanagerSpec:
+            replicas: 1
+            retention: 24h
+            automountServiceAccountToken: false
+            nodeSelector:
+              workload: system
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: gp3-observability-alertmanager
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 2Gi
         grafana:
           enabled: true
           defaultDashboardsEnabled: false
@@ -168,6 +232,88 @@ spec:
             reclaimPolicy: Delete
             allowVolumeExpansion: true
             volumeBindingMode: WaitForFirstConsumer
+          - apiVersion: storage.k8s.io/v1
+            kind: StorageClass
+            metadata:
+              name: gp3-observability-alertmanager
+              annotations:
+                argocd.argoproj.io/sync-wave: "-1"
+                argocd.argoproj.io/sync-options: Prune=false
+              labels:
+                app.kubernetes.io/part-of: startup-devops-baseline
+                app.kubernetes.io/managed-by: argocd
+            provisioner: ebs.csi.aws.com
+            parameters:
+              type: gp3
+              encrypted: "true"
+              iops: "3000"
+              throughput: "125"
+              csi.storage.k8s.io/fstype: ext4
+              tagSpecification_1: Project=startup-devops-baseline
+              tagSpecification_2: Environment=dev
+              tagSpecification_3: Component=observability-alertmanager
+            reclaimPolicy: Delete
+            allowVolumeExpansion: true
+            volumeBindingMode: WaitForFirstConsumer
+          - apiVersion: networking.k8s.io/v1
+            kind: NetworkPolicy
+            metadata:
+              name: alertmanager-cluster-only
+              namespace: observability
+              labels:
+                app.kubernetes.io/part-of: startup-devops-baseline
+            spec:
+              podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: alertmanager
+              policyTypes:
+                - Ingress
+                - Egress
+              ingress:
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: prometheus
+                  ports:
+                    - protocol: TCP
+                      port: 9093
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: alertmanager
+                  ports:
+                    - protocol: TCP
+                      port: 9094
+                    - protocol: UDP
+                      port: 9094
+              egress:
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: alertmanager
+                  ports:
+                    - protocol: TCP
+                      port: 9094
+                    - protocol: UDP
+                      port: 9094
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: kube-system
+                  ports:
+                    - protocol: UDP
+                      port: 53
+                    - protocol: TCP
+                      port: 53
           - apiVersion: networking.k8s.io/v1
             kind: NetworkPolicy
             metadata:

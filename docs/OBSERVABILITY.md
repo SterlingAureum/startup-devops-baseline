@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.4.2.2 telemetry and operator-view foundation uses Prometheus Operator through the
+The active v0.11.5.0 telemetry and alert-routing foundation uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -20,10 +20,13 @@ observability Namespace
   Git-provisioned Dashboard ConfigMaps
   PrometheusRule recording rules
   Capacity and resource-efficiency recording rules
+  Alertmanager StatefulSet and private ClusterIP Service
+  Environment-local routing and inhibition configuration
 ```
 
-Alertmanager, alert rules, Loki, Alloy, tracing, Thanos, remote write, Kubecost,
-and cloud billing integration are not part of v0.11.4.2.2.
+Alert rules, external notification receivers, Loki, Alloy, tracing, Thanos,
+remote write, Kubecost, and cloud billing integration are not part of
+v0.11.5.0.
 
 Local acceptance sources `scripts/lib/observability-live.sh`. A target must
 produce a numeric `up` value of at least one; discovery alone is insufficient.
@@ -84,6 +87,7 @@ kubectl get application monitoring -n argocd
 kubectl get pods -n observability
 kubectl get servicemonitors -n startup-apps
 ./scripts/check-monitoring.sh
+REQUIRE_NO_ALERT_RULES=true ./scripts/check-alertmanager.sh
 ./scripts/check-observability-views.sh
 PROFILE=local ./scripts/check-controller-metrics.sh
 PROFILE=local ./scripts/check-operator-dashboards.sh

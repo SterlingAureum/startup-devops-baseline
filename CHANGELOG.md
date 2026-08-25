@@ -2,6 +2,37 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.5.0
+
+### Added
+
+- Enabled one environment-local Alertmanager for local, aws-dev, aws-test, and
+  aws-prod through the pinned kube-prometheus-stack `88.5.0` release.
+- Added exact environment, cluster, component, and alert-family grouping;
+  critical and warning observation routes; and bounded critical-over-warning
+  inhibition.
+- Added private ClusterIP exposure, least-privilege NetworkPolicy, bounded
+  resources, token-automount disablement, local ephemeral storage, and
+  dedicated encrypted AWS gp3 persistence profiles.
+- Added a focused offline contract and a live check for Alertmanager readiness,
+  active configuration, Prometheus endpoint discovery, and self-monitoring.
+
+### Changed
+
+- Advanced the local platform Chart from `0.3.0` to `0.4.0` with application
+  version `v0.11.5.0`.
+- Made historical metrics, feature-rendering, Grafana, and controller-metric
+  validators aware of the Alertmanager successor without changing their
+  accepted historical contracts.
+- Closed v0.11.4 after the accepted v0.11.4.2.2 clean local replay.
+
+### Boundary
+
+- The observation receivers contain no external notification integration.
+  This increment adds no alert rule, Runbook, Dashboard, recording rule,
+  application telemetry, central Alertmanager, HA claim, SLO, Rollout gate,
+  AWS mutation, or production automation.
+
 ## v0.11.4.2.2
 
 ### Fixed

@@ -345,7 +345,7 @@ Incremental scope:
     - v0.11.4.1.1 - immutable Delivery, Data, and Platform Dashboards backed
       only by the accepted v0.11.4.1.0 rules - implemented and accepted locally
   - v0.11.4.2 - capacity and resource-efficiency views, conditional no-data
-    hardening, and clean local replay - in progress
+    hardening, and clean local replay - implemented and accepted locally
     - v0.11.4.2.0 - existing-source capacity and efficiency recording rules,
       bounded request coverage, and profile-aware live discovery - implemented
       and accepted locally
@@ -355,9 +355,16 @@ Incremental scope:
       diagnostic defect repaired by v0.11.4.2.2
     - v0.11.4.2.2 - fresh replay image transition, positive target-health
       assertions, shared bounded telemetry preflight, and actionable scrape
-      diagnostics - implemented offline; one clean local feature replay required
+      diagnostics - implemented and accepted through one clean local feature replay
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity
-  policy, and version-controlled Runbooks with positive/negative drills - planned
+  policy, and version-controlled Runbooks with positive/negative drills - in progress
+  - v0.11.5.0 - environment-local Alertmanager runtime, private exposure,
+    bounded persistence, stable severity routing, alert-family inhibition, and
+    Prometheus discovery acceptance - implemented offline; local live
+    acceptance required
+  - v0.11.5.1 - actionable alert rules and one reviewed Runbook per alert - planned
+  - v0.11.5.2 - firing, routing, inhibition, resolution, and environment-owned
+    notification-path drills - planned
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry
   tracing foundation for the HTTP to demo-api to PostgreSQL path - planned
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo

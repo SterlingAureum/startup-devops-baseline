@@ -23,7 +23,63 @@ spec:
         defaultRules:
           create: false
         alertmanager:
-          enabled: false
+          enabled: true
+          ingress:
+            enabled: false
+          service:
+            type: ClusterIP
+          networkPolicy:
+            enabled: false
+          config:
+            global:
+              resolve_timeout: 5m
+            inhibit_rules:
+              - source_matchers:
+                  - 'severity = "critical"'
+                target_matchers:
+                  - 'severity = "warning"'
+                equal:
+                  - environment
+                  - cluster
+                  - component
+                  - alert_family
+            route:
+              receiver: platform-observation
+              group_by:
+                - environment
+                - cluster
+                - component
+                - alert_family
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 4h
+              routes:
+                - receiver: critical-observation
+                  matchers:
+                    - 'severity = "critical"'
+                - receiver: warning-observation
+                  matchers:
+                    - 'severity = "warning"'
+            receivers:
+              - name: platform-observation
+              - name: critical-observation
+              - name: warning-observation
+            templates:
+              - /etc/alertmanager/config/*.tmpl
+          alertmanagerSpec:
+            replicas: 1
+            retention: 6h
+            automountServiceAccountToken: false
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+            storage:
+              emptyDir:
+                sizeLimit: 512Mi
         grafana:
           enabled: true
           defaultDashboardsEnabled: false
@@ -127,6 +183,65 @@ spec:
               emptyDir:
                 sizeLimit: 2Gi
         extraManifests:
+          - apiVersion: networking.k8s.io/v1
+            kind: NetworkPolicy
+            metadata:
+              name: alertmanager-cluster-only
+              namespace: observability
+              labels:
+                app.kubernetes.io/part-of: startup-devops-baseline
+            spec:
+              podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: alertmanager
+              policyTypes:
+                - Ingress
+                - Egress
+              ingress:
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: prometheus
+                  ports:
+                    - protocol: TCP
+                      port: 9093
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: alertmanager
+                  ports:
+                    - protocol: TCP
+                      port: 9094
+                    - protocol: UDP
+                      port: 9094
+              egress:
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: alertmanager
+                  ports:
+                    - protocol: TCP
+                      port: 9094
+                    - protocol: UDP
+                      port: 9094
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: kube-system
+                  ports:
+                    - protocol: UDP
+                      port: 53
+                    - protocol: TCP
+                      port: 53
           - apiVersion: networking.k8s.io/v1
             kind: NetworkPolicy
             metadata:

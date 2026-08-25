@@ -158,8 +158,10 @@ kubectl get svc -n ingress-nginx
 Check monitoring:
 
 ```bash
-kubectl get pods -n monitoring
-kubectl get svc -n monitoring
+kubectl get pods -n observability
+kubectl get svc -n observability
+./scripts/check-monitoring.sh
+REQUIRE_NO_ALERT_RULES=true ./scripts/check-alertmanager.sh
 ```
 
 ## 7. Test demo-api Through Ingress

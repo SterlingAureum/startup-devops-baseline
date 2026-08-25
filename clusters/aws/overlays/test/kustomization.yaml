@@ -20,6 +20,9 @@ patches:
         path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/retention
         value: 48h
       - op: replace
+        path: /spec/source/helm/valuesObject/alertmanager/alertmanagerSpec/retention
+        value: 48h
+      - op: replace
         path: /spec/source/helm/valuesObject/prometheus/prometheusSpec/externalLabels/environment
         value: aws-test
       - op: replace
@@ -27,6 +30,9 @@ patches:
         value: startup-devops-baseline-test
       - op: replace
         path: /spec/source/helm/valuesObject/extraManifests/0/parameters/tagSpecification_2
+        value: Environment=test
+      - op: replace
+        path: /spec/source/helm/valuesObject/extraManifests/1/parameters/tagSpecification_2
         value: Environment=test
   - target:
       group: argoproj.io

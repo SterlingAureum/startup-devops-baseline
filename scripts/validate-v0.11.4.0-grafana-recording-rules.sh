@@ -120,6 +120,7 @@ def validate_contract(value: dict[str, Any], check_files: bool = True) -> None:
 contract = load_json("delivery/contracts/v0.11.4.0-grafana-recording-rules.json")
 validate_contract(contract)
 controller_metrics_successor = (root / "delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json").is_file()
+alertmanager_successor = (root / "delivery/contracts/v0.11.5.0-alertmanager-foundation.json").is_file()
 ratio_no_series_successor = (root / "delivery/contracts/v0.11.4.1.0.2-ratio-no-series-repair.json").is_file()
 operator_dashboards_successor = (root / "delivery/contracts/v0.11.4.1.1-operator-dashboards.json").is_file()
 capacity_signal_successor = (root / "delivery/contracts/v0.11.4.2.0-capacity-signal-foundation.json").is_file()
@@ -202,8 +203,8 @@ require("feature/" not in local_app + aws_app, "Feature revision committed to an
 markers(
     "clusters/local/platform/Chart.yaml",
     (
-        "version: 0.3.0" if controller_metrics_successor else "version: 0.2.0",
-        'appVersion: "v0.11.4.1.0"' if controller_metrics_successor else 'appVersion: "v0.11.4.0"',
+        "version: 0.4.0" if alertmanager_successor else ("version: 0.3.0" if controller_metrics_successor else "version: 0.2.0"),
+        'appVersion: "v0.11.5.0"' if alertmanager_successor else ('appVersion: "v0.11.4.1.0"' if controller_metrics_successor else 'appVersion: "v0.11.4.0"'),
     ),
 )
 markers("clusters/aws/base/platform/kustomization.yaml", ("- observability-views.yaml",))
@@ -237,7 +238,11 @@ for relative, label, aws in (
             "memory: 512Mi",
         ),
     )
-    require(re.search(r"(?ms)alertmanager:\n\s+enabled: false", text) is not None, f"{label}: Alertmanager enabled")
+    expected_alertmanager = "true" if alertmanager_successor else "false"
+    require(
+        re.search(rf"(?ms)alertmanager:\n\s+enabled: {expected_alertmanager}", text) is not None,
+        f"{label}: Alertmanager successor state changed",
+    )
     require(re.search(r"(?ms)auth\.anonymous:\n\s+enabled: false", text) is not None, f"{label}: anonymous Grafana access enabled")
     for forbidden in ("kind: Ingress", "type: LoadBalancer", "type: NodePort", "adminPassword:"):
         require(forbidden not in text, f"{label}: forbidden Grafana exposure or credential: {forbidden}")

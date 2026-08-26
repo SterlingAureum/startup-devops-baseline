@@ -2,6 +2,31 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.5.2.0.1
+
+### Fixed
+
+- Replaced the live plaintext webhook URL assertion with an exact two-line
+  `<secret>` assertion matching Alertmanager's `/api/v2/status`
+  representation.
+- Kept exact internal plaintext URL checks in desired-state and literal
+  fixtures instead of weakening the security boundary.
+
+### Added
+
+- Added exact redacted, missing-redaction, and mixed plaintext/redacted runtime
+  fixtures plus the observed first-run evidence contract.
+- Distinguished Alertmanager global provider API defaults from configured
+  external receiver blocks.
+
+### Boundary
+
+- This repair changes only the Alertmanager acceptance parser, contracts, and
+  documentation. It changes no Kubernetes desired state, Helm Chart,
+  Alertmanager route or receiver, NetworkPolicy, formal alert, webhook sink,
+  drill phase, application image, AWS resource, or production automation and
+  requires no monitoring redeployment.
+
 ## v0.11.5.2.0
 
 ### Added

@@ -3,12 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.5.2.0-alert-lifecycle-drill`. It adds guarded local firing, severity
-routing, positive and negative inhibition, resolved webhook delivery, and
-zero-residual cleanup through a restricted temporary in-cluster sink. The
-exact nine formal alerts remain unchanged, and no external notification
-provider or credential is configured. See
-`docs/V0.11.5.2.0_ALERT_LIFECYCLE_DRILL.md`.
+`v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair`. It repairs the live
+checker after Alertmanager represented both configured drill webhook URLs as
+`<secret>` in `/api/v2/status`. Desired-state and literal-fixture checks still
+require the exact internal URLs; runtime checks now require exactly two
+redacted URL lines. No monitoring redeployment or desired-state change is
+required. See
+`docs/V0.11.5.2.0.1_ALERTMANAGER_WEBHOOK_URL_REDACTION_REPAIR.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -201,12 +202,17 @@ signals and an internal-only webhook sink. Dedicated drill routes continue
 into the existing critical and warning routes, resolved payloads are required,
 critical-over-warning inhibition is checked in both equal and unequal scopes,
 and every temporary object must be removed. External provider delivery and AWS
-live execution remain deferred.
+live execution remain deferred. Its predecessor checkpoint identity is
+`v0.11.5.2.0-alert-lifecycle-drill`.
+v0.11.5.2.0.1 repairs only the runtime configuration parser after the first
+local attempt observed two correctly loaded webhook integrations whose URLs
+were rendered as `url: <secret>`. It preserves exact literal desired-state URL
+validation and requires no monitoring redeployment.
 
 ## Current Version
 
 ```text
-v0.11.5.2.0-alert-lifecycle-drill
+v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

@@ -14,11 +14,14 @@ TIMEOUT="${TIMEOUT:-180s}"
 DISCOVERY_TIMEOUT_SECONDS="${DISCOVERY_TIMEOUT_SECONDS:-60}"
 REQUIRE_NO_ALERT_RULES="${REQUIRE_NO_ALERT_RULES:-false}"
 ALERTMANAGER_CONFIG_FIXTURE="${ALERTMANAGER_CONFIG_FIXTURE:-}"
+ALERTMANAGER_CONFIG_FIXTURE_URL_MODE="${ALERTMANAGER_CONFIG_FIXTURE_URL_MODE:-auto}"
 
 assert_active_alertmanager_config() {
   local config_text="$1"
   local expect_drill="$2"
+  local url_mode="$3"
   local marker severity matcher_pattern matcher_count expected_matcher_count
+  local url_line_count redacted_url_count
 
   for marker in \
     'receiver: platform-observation' \
@@ -51,9 +54,7 @@ assert_active_alertmanager_config() {
       'continue: true' \
       'group_wait: 1s' \
       'group_interval: 2s' \
-      'send_resolved: true' \
-      'url: http://alert-lifecycle-drill-sink.observability.svc.cluster.local:8080/critical' \
-      'url: http://alert-lifecycle-drill-sink.observability.svc.cluster.local:8080/warning'; do
+      'send_resolved: true'; do
       grep -F -- "${marker}" <<<"${config_text}" >/dev/null || {
         echo "ERROR: active Alertmanager drill configuration is missing: ${marker}" >&2
         return 1
@@ -68,6 +69,39 @@ assert_active_alertmanager_config() {
       echo "ERROR: both drill webhook integrations must enable resolved delivery." >&2
       return 1
     }
+
+    case "${url_mode}" in
+      literal)
+        url_line_count="$(grep -Ec -- '^[[:space:]]+(-[[:space:]]+)?url:[[:space:]]+' <<<"${config_text}" || true)"
+        if [ "${url_line_count}" -ne 2 ]; then
+          echo "ERROR: Alertmanager drill fixture must contain exactly two literal webhook URL lines; found ${url_line_count}." >&2
+          return 1
+        fi
+        for marker in \
+          'url: http://alert-lifecycle-drill-sink.observability.svc.cluster.local:8080/critical' \
+          'url: http://alert-lifecycle-drill-sink.observability.svc.cluster.local:8080/warning'; do
+          grep -F -- "${marker}" <<<"${config_text}" >/dev/null || {
+            echo "ERROR: Alertmanager drill fixture is missing the exact internal URL: ${marker}" >&2
+            return 1
+          }
+        done
+        ;;
+      redacted)
+        # Alertmanager protects SecretURL values in /api/v2/status as exactly
+        # `url: <secret>`; desired-state and literal fixtures remain exact.
+        url_line_count="$(grep -Ec -- '^[[:space:]]+(-[[:space:]]+)?url:[[:space:]]+' <<<"${config_text}" || true)"
+        redacted_url_count="$(grep -Ec -- '^[[:space:]]+(-[[:space:]]+)?url:[[:space:]]+<secret>[[:space:]]*$' <<<"${config_text}" || true)"
+        if [ "${url_line_count}" -ne 2 ] || [ "${redacted_url_count}" -ne 2 ]; then
+          echo "ERROR: active Alertmanager configuration must contain exactly two redacted drill webhook URL lines; found url_lines=${url_line_count}, redacted=${redacted_url_count}." >&2
+          grep -En -- '^[[:space:]]+(-[[:space:]]+)?url:' <<<"${config_text}" >&2 || echo "  (none)" >&2
+          return 1
+        fi
+        ;;
+      *)
+        echo "ERROR: unsupported Alertmanager drill URL validation mode: ${url_mode}" >&2
+        return 1
+        ;;
+    esac
   elif grep -F -- 'webhook_configs:' <<<"${config_text}" >/dev/null; then
     echo "ERROR: webhook integrations are not allowed before the v0.11.5.2.0 drill successor." >&2
     return 1
@@ -102,10 +136,14 @@ if [ -n "${ALERTMANAGER_CONFIG_FIXTURE}" ]; then
   }
   fixture_config="$(<"${ALERTMANAGER_CONFIG_FIXTURE}")"
   fixture_expect_drill=false
+  fixture_url_mode="${ALERTMANAGER_CONFIG_FIXTURE_URL_MODE}"
   if grep -F -- 'name: critical-drill-webhook' <<<"${fixture_config}" >/dev/null; then
     fixture_expect_drill=true
   fi
-  assert_active_alertmanager_config "${fixture_config}" "${fixture_expect_drill}"
+  if [ "${fixture_url_mode}" = "auto" ]; then
+    fixture_url_mode=literal
+  fi
+  assert_active_alertmanager_config "${fixture_config}" "${fixture_expect_drill}" "${fixture_url_mode}"
   echo "Alertmanager active-configuration fixture acceptance passed."
   exit 0
 fi
@@ -227,7 +265,7 @@ expect_drill=false
 if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json" ]; then
   expect_drill=true
 fi
-assert_active_alertmanager_config "${config_text}" "${expect_drill}"
+assert_active_alertmanager_config "${config_text}" "${expect_drill}" redacted
 
 echo "==> Checking Prometheus discovery of Alertmanager"
 start_port_forward \
@@ -281,4 +319,8 @@ if [ "${REQUIRE_NO_ALERT_RULES}" = "true" ]; then
     }
 fi
 
-echo "v0.11.5.0 Alertmanager runtime, configuration, and Prometheus discovery acceptance passed."
+if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair.json" ]; then
+  echo "v0.11.5.2.0.1 Alertmanager redacted webhook URL, runtime configuration, and Prometheus discovery acceptance passed."
+else
+  echo "v0.11.5.0 Alertmanager runtime, configuration, and Prometheus discovery acceptance passed."
+fi

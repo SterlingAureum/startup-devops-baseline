@@ -56,6 +56,15 @@ The target-down live check validates ownership through the Chart-declared
 `PrometheusRule/operator-diagnostic-recording-rules`; it does not look for the
 nonexistent `operator-recording-rules` name.
 
+The first v0.11.5.2.0 live attempt confirmed both drill receivers, both webhook
+integrations, and both resolved-delivery settings. Alertmanager represented
+each active webhook URL as `url: <secret>` in `/api/v2/status`.
+v0.11.5.2.0.1 therefore separates exact literal desired-state validation from
+exact redacted runtime validation. Global defaults such as `slack_app_url` do
+not represent configured external receivers; actual external receiver blocks
+remain forbidden. No monitoring redeployment is required for the corrected
+checker rerun.
+
 The local Application is:
 
 ```text

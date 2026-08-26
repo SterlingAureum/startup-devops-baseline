@@ -382,7 +382,12 @@ Incremental scope:
     - v0.11.5.2.0 - guarded local synthetic warning and critical lifecycles,
       continued severity-route assignment, positive and negative inhibition,
       internal webhook firing and resolved delivery, and zero-residual cleanup
-      - implemented offline; local live acceptance required
+      - implemented offline; first local live attempt proved the runtime and
+      exposed URL-redaction parser behavior repaired by v0.11.5.2.0.1
+      - v0.11.5.2.0.1 - accept exactly two `<secret>` webhook URL lines in the
+        active Alertmanager status while retaining exact internal desired-state
+        URLs and negative public-URL fixtures - implemented offline; corrected
+        checker rerun and full local drill required
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry
   tracing foundation for the HTTP to demo-api to PostgreSQL path - planned
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo

@@ -104,6 +104,7 @@
 /scripts/check-alert-lifecycle-drill.sh @SterlingAureum
 /scripts/fixtures/alert-webhook-sink.py @SterlingAureum
 /scripts/validate-v0.11.5.2.0-alert-lifecycle-drill.sh @SterlingAureum
+/scripts/validate-v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair.sh @SterlingAureum
 /scripts/derive-demo-api-release-id.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.sh @SterlingAureum
@@ -145,6 +146,7 @@
 /docs/V0.11.5.1.1_PROMETHEUS_TARGET_DOWN_SEMANTICS_REPAIR.md @SterlingAureum
 /docs/V0.11.5.1.1.1_LOCAL_ACCEPTANCE_PATH_REPAIR.md @SterlingAureum
 /docs/V0.11.5.2.0_ALERT_LIFECYCLE_DRILL.md @SterlingAureum
+/docs/V0.11.5.2.0.1_ALERTMANAGER_WEBHOOK_URL_REDACTION_REPAIR.md @SterlingAureum
 /docs/runbooks/alerts/ @SterlingAureum
 /delivery/contracts/v0.11.5.0-alertmanager-foundation.json @SterlingAureum
 /delivery/contracts/v0.11.5.0.1-matcher-normalization-repair.json @SterlingAureum
@@ -152,6 +154,7 @@
 /delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json @SterlingAureum
 /delivery/contracts/v0.11.5.1.1.1-local-acceptance-path-repair.json @SterlingAureum
 /delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json @SterlingAureum
+/delivery/contracts/v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair.json @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

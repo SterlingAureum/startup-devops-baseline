@@ -3,14 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.5.2.0.2-alert-resolution-transition-repair`. It repairs the live alert
-drill after warning firing delivery succeeded but deleting the temporary rule
-did not provide a reliable resolved transition. The drill now retains the same
-alert identity, changes its expression to the empty-vector
-`vector(0) == 1`, waits for Prometheus clearing and resolved delivery, and only
-then deletes the rule. Global stale-drill-alert checks protect reruns. No
-monitoring redeployment, image rebuild, or desired-state change is required.
-See `docs/V0.11.5.2.0.2_ALERT_RESOLUTION_TRANSITION_REPAIR.md`.
+`v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair`. It repairs the
+final lifecycle-drill race after all four phases completed but Prometheus still
+exposed two healthy inactive temporary rules immediately after Kubernetes
+deletion. The drill now separates strict Kubernetes cleanup from bounded
+Prometheus rule-inventory convergence before asserting the exact nine formal
+alerts. No monitoring redeployment, image rebuild, or desired-state change is
+required. See
+`docs/V0.11.5.2.0.3_PROMETHEUS_RULE_CLEANUP_SYNCHRONIZATION_REPAIR.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -213,12 +213,18 @@ identity is `v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair`.
 v0.11.5.2.0.2 repairs the subsequent resolved-delivery phase by explicitly
 transitioning each synthetic alert to an empty result before cleanup. Rule
 deletion is no longer treated as the state transition, and reruns reject any
-active drill alert left in Alertmanager by an earlier failed attempt.
+active drill alert left in Alertmanager by an earlier failed attempt. Its
+predecessor checkpoint identity is
+`v0.11.5.2.0.2-alert-resolution-transition-repair`.
+v0.11.5.2.0.3 repairs the final cleanup synchronization boundary. After strict
+Kubernetes deletion, the drill waits until both temporary alert definitions
+disappear from the Prometheus rule inventory before requiring the exact nine
+healthy inactive formal alerts.
 
 ## Current Version
 
 ```text
-v0.11.5.2.0.2-alert-resolution-transition-repair
+v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

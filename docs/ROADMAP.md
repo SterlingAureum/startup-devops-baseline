@@ -392,8 +392,13 @@ Incremental scope:
         - v0.11.5.2.0.2 - retain the same temporary rule and alert identity,
           apply the empty-vector `vector(0) == 1`, wait for Prometheus clearing
           and resolved delivery, then delete only for cleanup; reject active
-          drill alerts from earlier failed runs - implemented offline; repaired
-          full local drill rerun required
+          drill alerts from earlier failed runs - all four repaired phases
+          completed locally; final baseline exposed an asynchronous rule-
+          inventory cleanup race repaired by v0.11.5.2.0.3
+          - v0.11.5.2.0.3 - make normal Kubernetes cleanup strict and wait
+            until both temporary alerts disappear from the Prometheus rule
+            inventory before asserting the exact nine formal alerts -
+            implemented offline; repaired final local drill rerun required
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry
   tracing foundation for the HTTP to demo-api to PostgreSQL path - planned
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo

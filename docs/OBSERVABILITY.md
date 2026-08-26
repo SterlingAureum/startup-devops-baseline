@@ -76,6 +76,16 @@ the rule only as cleanup. Preflight and final checks reject every active
 script-only repair requires neither monitoring redeployment nor an image
 rebuild.
 
+The v0.11.5.2.0.2 rerun completed all four phases and left both temporary
+alerts healthy and inactive. Its immediate final inventory check nevertheless
+observed those two definitions alongside the exact nine formal alerts.
+v0.11.5.2.0.3 distinguishes Kubernetes deletion from asynchronous Prometheus
+rule inventory convergence: normal final deletion is strict, and a bounded
+wait requires both temporary alert definitions to disappear before the formal
+baseline is checked. EXIT-trap cleanup remains best-effort so an earlier error
+is preserved while cleanup is still attempted. No runtime redeployment or
+image rebuild is required.
+
 The local Application is:
 
 ```text

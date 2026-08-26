@@ -2,6 +2,31 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.5.2.0.3
+
+### Fixed
+
+- Separated Kubernetes PrometheusRule deletion from asynchronous Prometheus
+  rule-inventory convergence before the exact nine-alert assertion.
+- Made the normal final Kubernetes cleanup strict so deletion failures are no
+  longer hidden by best-effort error suppression.
+
+### Added
+
+- Added a bounded wait after every phase deletion and before final baseline
+  validation for both temporary alert definitions to disappear from
+  `/api/v1/rules`.
+- Added timeout diagnostics and negative mutation coverage for a premature
+  formal-baseline check and best-effort final cleanup.
+
+### Boundary
+
+- This repair changes only the guarded local drill, contracts, and
+  documentation. It changes no Kubernetes desired state, monitoring Chart,
+  Alertmanager configuration, permanent rule, formal alert, webhook sink,
+  application image, AWS resource, or production automation and requires no
+  monitoring redeployment or image rebuild.
+
 ## v0.11.5.2.0.2
 
 ### Fixed

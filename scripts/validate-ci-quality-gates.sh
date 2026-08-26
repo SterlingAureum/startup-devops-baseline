@@ -120,6 +120,9 @@ echo "==> Validating v0.11.5.2.0.1 Alertmanager webhook URL redaction repair"
 echo "==> Validating v0.11.5.2.0.2 alert resolution transition repair"
 "${ROOT_DIR}/scripts/validate-v0.11.5.2.0.2-alert-resolution-transition-repair.sh"
 
+echo "==> Validating v0.11.5.2.0.3 Prometheus rule cleanup synchronization repair"
+"${ROOT_DIR}/scripts/validate-v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

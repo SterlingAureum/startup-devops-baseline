@@ -19,6 +19,7 @@ PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19110}"
 ALERTMANAGER_LOCAL_PORT="${ALERTMANAGER_LOCAL_PORT:-19113}"
 DISCOVERY_TIMEOUT_SECONDS="${DISCOVERY_TIMEOUT_SECONDS:-180}"
 RESOLUTION_TIMEOUT_SECONDS="${RESOLUTION_TIMEOUT_SECONDS:-180}"
+RULE_REMOVAL_TIMEOUT_SECONDS="${RULE_REMOVAL_TIMEOUT_SECONDS:-120}"
 INHIBITION_SETTLE_SECONDS="${INHIBITION_SETTLE_SECONDS:-10}"
 POLL_SECONDS="${POLL_SECONDS:-2}"
 
@@ -60,7 +61,7 @@ stop_port_forward() {
   fi
 }
 
-delete_drill_resources() {
+delete_drill_resources_best_effort() {
   kubectl -n "${OBSERVABILITY_NAMESPACE}" delete prometheusrule "${RULE_NAME}" \
     --ignore-not-found --wait=true >/dev/null 2>&1 || true
   kubectl -n "${OBSERVABILITY_NAMESPACE}" delete networkpolicy,service,deployment,configmap \
@@ -69,9 +70,18 @@ delete_drill_resources() {
   resources_created="false"
 }
 
+delete_drill_resources_strict() {
+  kubectl -n "${OBSERVABILITY_NAMESPACE}" delete prometheusrule "${RULE_NAME}" \
+    --ignore-not-found --wait=true >/dev/null
+  kubectl -n "${OBSERVABILITY_NAMESPACE}" delete networkpolicy,service,deployment,configmap \
+    -l platform.startup.dev/alert-lifecycle-drill=true \
+    --ignore-not-found --wait=true >/dev/null
+  resources_created="false"
+}
+
 cleanup() {
   if [ "${resources_created}" = "true" ]; then
-    delete_drill_resources
+    delete_drill_resources_best_effort
   fi
   stop_port_forward "${alertmanager_pid}" "${alertmanager_log}"
   stop_port_forward "${prometheus_pid}" "${prometheus_log}"
@@ -458,6 +468,38 @@ wait_prometheus_cleared() {
   done
 }
 
+wait_prometheus_drill_rules_removed() {
+  local deadline=$((SECONDS + RULE_REMOVAL_TIMEOUT_SECONDS))
+  local payload
+  while true; do
+    payload="$(curl -fsS "${prometheus_url}/api/v1/rules?type=alert")"
+    if jq -e '
+      [
+        (.data.groups // [])[].rules[]?
+        | select(
+            .type == "alerting" and
+            (.name == "AlertLifecycleDrillWarning" or .name == "AlertLifecycleDrillCritical")
+          )
+      ] | length == 0
+    ' <<<"${payload}" >/dev/null; then
+      return 0
+    fi
+    if [ "${SECONDS}" -ge "${deadline}" ]; then
+      echo "ERROR: temporary alert lifecycle drill rules remained in the Prometheus inventory after Kubernetes deletion." >&2
+      jq '[
+        (.data.groups // [])[].rules[]?
+        | select(
+            .type == "alerting" and
+            (.name == "AlertLifecycleDrillWarning" or .name == "AlertLifecycleDrillCritical")
+          )
+        | {name, health, state, lastError}
+      ]' <<<"${payload}" >&2 || true
+      return 1
+    fi
+    sleep "${POLL_SECONDS}"
+  done
+}
+
 wait_alertmanager_state() {
   local alert_name="$1"
   local expected_state="$2"
@@ -607,6 +649,7 @@ wait_prometheus_cleared AlertLifecycleDrillWarning
 wait_webhook_event /warning AlertLifecycleDrillWarning resolved "${RESOLUTION_TIMEOUT_SECONDS}"
 wait_no_drill_alerts
 remove_rule
+wait_prometheus_drill_rules_removed
 
 echo "==> Phase 2: critical firing, routing, and resolved delivery"
 reset_sink
@@ -619,6 +662,7 @@ wait_prometheus_cleared AlertLifecycleDrillCritical
 wait_webhook_event /critical AlertLifecycleDrillCritical resolved "${RESOLUTION_TIMEOUT_SECONDS}"
 wait_no_drill_alerts
 remove_rule
+wait_prometheus_drill_rules_removed
 
 echo "==> Phase 3: positive inhibition; critical inhibits an equal-scope warning"
 reset_sink
@@ -636,6 +680,7 @@ wait_prometheus_cleared AlertLifecycleDrillCritical
 wait_webhook_event /critical AlertLifecycleDrillCritical resolved "${RESOLUTION_TIMEOUT_SECONDS}"
 wait_no_drill_alerts
 remove_rule
+wait_prometheus_drill_rules_removed
 
 echo "==> Phase 4: unequal component labels prevent cross-scope inhibition"
 reset_sink
@@ -653,14 +698,18 @@ wait_webhook_event /warning AlertLifecycleDrillWarning resolved "${RESOLUTION_TI
 wait_webhook_event /critical AlertLifecycleDrillCritical resolved "${RESOLUTION_TIMEOUT_SECONDS}"
 wait_no_drill_alerts
 remove_rule
+wait_prometheus_drill_rules_removed
 
 echo "==> Cleanup: removing all temporary resources and rechecking the formal baseline"
-delete_drill_resources
+delete_drill_resources_strict
+wait_prometheus_drill_rules_removed
 assert_no_stale_resources
 assert_no_active_drill_alerts
 assert_clean_formal_alerts
 
-if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.5.2.0.2-alert-resolution-transition-repair.json" ]; then
+if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair.json" ]; then
+  echo "v0.11.5.2.0.3 local firing, resolved delivery, strict cleanup, Prometheus rule-inventory convergence, and exact nine-alert baseline acceptance passed."
+elif [ -f "${ROOT_DIR}/delivery/contracts/v0.11.5.2.0.2-alert-resolution-transition-repair.json" ]; then
   echo "v0.11.5.2.0.2 local firing, explicit inactive transition, routing, inhibition, resolved delivery, isolation, and zero-residual cleanup acceptance passed."
 else
   echo "v0.11.5.2.0 local firing, routing, inhibition, resolved delivery, isolation, and zero-residual cleanup acceptance passed."

@@ -106,6 +106,7 @@
 /scripts/validate-v0.11.5.2.0-alert-lifecycle-drill.sh @SterlingAureum
 /scripts/validate-v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair.sh @SterlingAureum
 /scripts/validate-v0.11.5.2.0.2-alert-resolution-transition-repair.sh @SterlingAureum
+/scripts/validate-v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair.sh @SterlingAureum
 /scripts/derive-demo-api-release-id.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.sh @SterlingAureum
@@ -158,6 +159,8 @@
 /delivery/contracts/v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair.json @SterlingAureum
 /delivery/contracts/v0.11.5.2.0.2-alert-resolution-transition-repair.json @SterlingAureum
 /docs/V0.11.5.2.0.2_ALERT_RESOLUTION_TRANSITION_REPAIR.md @SterlingAureum
+/delivery/contracts/v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair.json @SterlingAureum
+/docs/V0.11.5.2.0.3_PROMETHEUS_RULE_CLEANUP_SYNCHRONIZATION_REPAIR.md @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

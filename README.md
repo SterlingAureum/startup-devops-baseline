@@ -3,12 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.5.1.1.1-local-acceptance-path-repair`. It corrects the diagnostic
-PrometheusRule ownership check and requires a unique fresh local image after
-neutral-baseline restoration. The repaired target-down expression and exact
-nine-alert runtime remain unchanged. External notification delivery and formal
-firing, inhibition, and resolution drills remain deferred. See
-`docs/V0.11.5.1.1.1_LOCAL_ACCEPTANCE_PATH_REPAIR.md`.
+`v0.11.5.2.0-alert-lifecycle-drill`. It adds guarded local firing, severity
+routing, positive and negative inhibition, resolved webhook delivery, and
+zero-residual cleanup through a restricted temporary in-cluster sink. The
+exact nine formal alerts remain unchanged, and no external notification
+provider or credential is configured. See
+`docs/V0.11.5.2.0_ALERT_LIFECYCLE_DRILL.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -194,12 +194,19 @@ a real target. Its checkpoint identity is
 `v0.11.5.1.1-prometheus-target-down-semantics-repair`.
 v0.11.5.1.1.1 corrects the live check to use
 `operator-diagnostic-recording-rules` and restores the already-required fresh
-image transition after the neutral pre-merge baseline.
+image transition after the neutral pre-merge baseline. Its accepted checkpoint
+identity is `v0.11.5.1.1.1-local-acceptance-path-repair`.
+v0.11.5.2.0 proves the complete local alert lifecycle with temporary synthetic
+signals and an internal-only webhook sink. Dedicated drill routes continue
+into the existing critical and warning routes, resolved payloads are required,
+critical-over-warning inhibition is checked in both equal and unequal scopes,
+and every temporary object must be removed. External provider delivery and AWS
+live execution remain deferred.
 
 ## Current Version
 
 ```text
-v0.11.5.1.1.1-local-acceptance-path-repair
+v0.11.5.2.0-alert-lifecycle-drill
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

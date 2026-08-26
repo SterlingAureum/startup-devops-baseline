@@ -376,9 +376,13 @@ Incremental scope:
       acceptance-path defects repaired by v0.11.5.1.1.1
       - v0.11.5.1.1.1 - correct the diagnostic PrometheusRule ownership name
         and require a unique current-source image after neutral-baseline
-        restoration - implemented offline; local live acceptance required
+        restoration - implemented and accepted locally
   - v0.11.5.2 - firing, routing, inhibition, resolution, and environment-owned
-    notification-path drills - planned
+    notification-path drills - in progress
+    - v0.11.5.2.0 - guarded local synthetic warning and critical lifecycles,
+      continued severity-route assignment, positive and negative inhibition,
+      internal webhook firing and resolved delivery, and zero-residual cleanup
+      - implemented offline; local live acceptance required
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry
   tracing foundation for the HTTP to demo-api to PostgreSQL path - planned
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo

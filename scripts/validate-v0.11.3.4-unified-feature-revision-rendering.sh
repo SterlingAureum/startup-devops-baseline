@@ -91,6 +91,7 @@ chart = read("clusters/local/platform/Chart.yaml")
 observability_successor = (root / "delivery/contracts/v0.11.4.0-grafana-recording-rules.json").is_file()
 controller_metrics_successor = (root / "delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json").is_file()
 alertmanager_successor = (root / "delivery/contracts/v0.11.5.0-alertmanager-foundation.json").is_file()
+alert_lifecycle_drill_successor = (root / "delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json").is_file()
 values = read("clusters/local/platform/values.yaml")
 root_app = read("clusters/local/root-app.yaml")
 feature = read("scripts/deploy-local-feature-gitops.sh")
@@ -102,8 +103,8 @@ revision_helper = read("scripts/lib/git-revision.sh")
 
 chart_markers = (
     "name: startup-devops-local-platform",
-    "version: 0.4.0" if alertmanager_successor else ("version: 0.3.0" if controller_metrics_successor else ("version: 0.2.0" if observability_successor else "version: 0.1.0")),
-    'appVersion: "v0.11.5.0"' if alertmanager_successor else ('appVersion: "v0.11.4.1.0"' if controller_metrics_successor else ('appVersion: "v0.11.4.0"' if observability_successor else 'appVersion: "v0.11.3.4"')),
+    "version: 0.4.1" if alert_lifecycle_drill_successor else ("version: 0.4.0" if alertmanager_successor else ("version: 0.3.0" if controller_metrics_successor else ("version: 0.2.0" if observability_successor else "version: 0.1.0"))),
+    'appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else ('appVersion: "v0.11.5.0"' if alertmanager_successor else ('appVersion: "v0.11.4.1.0"' if controller_metrics_successor else ('appVersion: "v0.11.4.0"' if observability_successor else 'appVersion: "v0.11.3.4"'))),
 )
 for marker in chart_markers:
     require(marker in chart, f"Platform Chart marker missing: {marker}")

@@ -2,6 +2,36 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.5.2.0
+
+### Added
+
+- Added narrowly matched critical and warning drill routes that continue into
+  the existing severity routes and deliver firing and resolved payloads only
+  to a temporary in-cluster webhook sink.
+- Added a guarded local drill covering warning and critical lifecycles,
+  positive critical-over-warning inhibition, unequal-component isolation, and
+  zero-residual cleanup.
+- Added a bounded Python webhook fixture, exact offline contract, negative
+  public-URL tests, live acceptance documentation, and successor-aware
+  historical validators.
+
+### Changed
+
+- Added Alertmanager TCP 8080 egress only to the labeled drill sink Pod in the
+  `observability` Namespace.
+- Advanced the local platform Chart from `0.4.0` to `0.4.1` with application
+  version `v0.11.5.2.0`.
+- Recorded v0.11.5.1.1.1 as accepted through the repaired local live path.
+
+### Boundary
+
+- This increment changes no formal alert, threshold, duration, Dashboard,
+  recording rule, monitor, application image, Rollout gate, AWS resource,
+  release automation, SLO, logging, or tracing behavior. It configures no
+  public webhook, external provider, notification credential, Silence, or
+  real workload failure.
+
 ## v0.11.5.1.1.1
 
 ### Fixed

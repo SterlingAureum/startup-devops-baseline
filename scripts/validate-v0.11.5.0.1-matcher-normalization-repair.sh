@@ -58,14 +58,18 @@ require(acceptance.get("localLiveRerunRequired") is True, "Live rerun is optiona
 require(acceptance.get("redeployBeforeLiveRerun") is False, "Repair wrongly requires redeployment")
 
 checker = read("scripts/check-alertmanager.sh")
+alert_lifecycle_drill_successor = (root / "delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json").is_file()
 for marker in (
     "ALERTMANAGER_CONFIG_FIXTURE",
     "assert_active_alertmanager_config",
     "severity[[:space:]]*=[[:space:]]*",
-    'matcher_count}" -ne 2',
+    "expected_matcher_count=2",
+    'matcher_count}" -ne "${expected_matcher_count}"',
     "Observed severity matcher lines:",
 ):
     require(marker in checker, f"Matcher checker is missing: {marker}")
+if alert_lifecycle_drill_successor:
+    require("v0.11.5.2.0-alert-lifecycle-drill.json" in checker, "Matcher checker is not drill-successor aware")
 require("'severity = \"critical\"'" not in checker, "Legacy exact critical comparison remains")
 require("'severity = \"warning\"'" not in checker, "Legacy exact warning comparison remains")
 
@@ -147,7 +151,7 @@ if ALERTMANAGER_CONFIG_FIXTURE="${fixture_dir}/incomplete.yaml" \
   echo "ERROR: incomplete route-only matcher fixture unexpectedly passed." >&2
   exit 1
 fi
-grep -F -- 'must contain exactly two critical severity matchers; found 1' \
+grep -F -- 'must contain exactly 2 critical severity matchers; found 1' \
   "${fixture_dir}/negative.log" >/dev/null || {
     echo "ERROR: incomplete matcher diagnostic changed." >&2
     cat "${fixture_dir}/negative.log" >&2

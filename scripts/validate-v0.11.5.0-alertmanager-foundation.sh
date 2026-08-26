@@ -158,19 +158,31 @@ aws = require_markers("clusters/aws/base/platform/monitoring.yaml", common_marke
     "reclaimPolicy: Delete",
 ))
 
+alert_lifecycle_drill_successor = (root / "delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json").is_file()
 for text, label in ((local, "local"), (aws, "AWS")):
     require(re.search(r"(?ms)defaultRules:\n\s+create: false", text) is not None, f"{label}: default rules enabled")
     require(re.search(r"(?ms)alertmanager:\n\s+enabled: true", text) is not None, f"{label}: Alertmanager disabled")
     require(re.search(r"(?ms)alertmanager:.*?ingress:\n\s+enabled: false", text) is not None, f"{label}: Alertmanager Ingress enabled")
     require(text.count("name: alertmanager-cluster-only") == 1, f"{label}: Alertmanager NetworkPolicy count changed")
+    if alert_lifecycle_drill_successor:
+        require(text.count("webhook_configs:") == 2, f"{label}: drill webhook count changed")
+        require(text.count("alert-lifecycle-drill-sink.observability.svc.cluster.local:8080") == 2, f"{label}: internal drill webhook URL changed")
+    else:
+        require("webhook_configs:" not in text, f"{label}: webhook added before drill successor")
     for forbidden in (
-        "webhook_configs:", "slack_configs:", "email_configs:", "pagerduty_configs:",
+        "slack_configs:", "email_configs:", "pagerduty_configs:",
         "sns_configs:", "opsgenie_configs:", "victorops_configs:", "telegram_configs:",
         "type: LoadBalancer", "type: NodePort",
     ):
         require(forbidden not in text, f"{label}: forbidden Alertmanager boundary: {forbidden}")
 
-require_markers("clusters/local/platform/Chart.yaml", ("version: 0.4.0", 'appVersion: "v0.11.5.0"'))
+require_markers(
+    "clusters/local/platform/Chart.yaml",
+    (
+        "version: 0.4.1" if alert_lifecycle_drill_successor else "version: 0.4.0",
+        'appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else 'appVersion: "v0.11.5.0"',
+    ),
+)
 semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()
 actionable_alerts_successor = (root / "delivery/contracts/v0.11.5.1-actionable-alerts-runbooks.json").is_file()
 require_markers(

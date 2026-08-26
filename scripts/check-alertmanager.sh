@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OBSERVABILITY_NAMESPACE="${OBSERVABILITY_NAMESPACE:-observability}"
 ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 MONITORING_APP="${MONITORING_APP:-monitoring}"
@@ -16,7 +17,8 @@ ALERTMANAGER_CONFIG_FIXTURE="${ALERTMANAGER_CONFIG_FIXTURE:-}"
 
 assert_active_alertmanager_config() {
   local config_text="$1"
-  local marker severity matcher_pattern matcher_count
+  local expect_drill="$2"
+  local marker severity matcher_pattern matcher_count expected_matcher_count
 
   for marker in \
     'receiver: platform-observation' \
@@ -36,11 +38,46 @@ assert_active_alertmanager_config() {
   # `severity="critical"` in /api/v2/status. Validate the matcher meaning,
   # not the serializer's optional whitespace. Two occurrences are required:
   # one route matcher and one inhibition matcher.
+  expected_matcher_count=2
+  if [ "${expect_drill}" = "true" ]; then
+    expected_matcher_count=3
+    for marker in \
+      'receiver: critical-drill-webhook' \
+      'receiver: warning-drill-webhook' \
+      'name: critical-drill-webhook' \
+      'name: warning-drill-webhook' \
+      'drill="true"' \
+      'alert_family="alert-lifecycle-drill"' \
+      'continue: true' \
+      'group_wait: 1s' \
+      'group_interval: 2s' \
+      'send_resolved: true' \
+      'url: http://alert-lifecycle-drill-sink.observability.svc.cluster.local:8080/critical' \
+      'url: http://alert-lifecycle-drill-sink.observability.svc.cluster.local:8080/warning'; do
+      grep -F -- "${marker}" <<<"${config_text}" >/dev/null || {
+        echo "ERROR: active Alertmanager drill configuration is missing: ${marker}" >&2
+        return 1
+      }
+    done
+
+    [ "$(grep -Fc -- 'webhook_configs:' <<<"${config_text}" || true)" -eq 2 ] || {
+      echo "ERROR: active Alertmanager configuration must contain exactly two drill webhook integrations." >&2
+      return 1
+    }
+    [ "$(grep -Fc -- 'send_resolved: true' <<<"${config_text}" || true)" -eq 2 ] || {
+      echo "ERROR: both drill webhook integrations must enable resolved delivery." >&2
+      return 1
+    }
+  elif grep -F -- 'webhook_configs:' <<<"${config_text}" >/dev/null; then
+    echo "ERROR: webhook integrations are not allowed before the v0.11.5.2.0 drill successor." >&2
+    return 1
+  fi
+
   for severity in critical warning; do
     matcher_pattern="^[[:space:]]*-[[:space:]]+severity[[:space:]]*=[[:space:]]*\"${severity}\"[[:space:]]*$"
     matcher_count="$(grep -Ec -- "${matcher_pattern}" <<<"${config_text}" || true)"
-    if [ "${matcher_count}" -ne 2 ]; then
-      echo "ERROR: active Alertmanager configuration must contain exactly two ${severity} severity matchers; found ${matcher_count}." >&2
+    if [ "${matcher_count}" -ne "${expected_matcher_count}" ]; then
+      echo "ERROR: active Alertmanager configuration must contain exactly ${expected_matcher_count} ${severity} severity matchers; found ${matcher_count}." >&2
       echo "Observed severity matcher lines:" >&2
       grep -En -- 'severity[[:space:]]*=' <<<"${config_text}" >&2 || echo "  (none)" >&2
       return 1
@@ -48,7 +85,7 @@ assert_active_alertmanager_config() {
   done
 
   for external_receiver in \
-    webhook_configs slack_configs email_configs pagerduty_configs sns_configs \
+    slack_configs email_configs pagerduty_configs sns_configs \
     opsgenie_configs victorops_configs wechat_configs telegram_configs \
     msteams_configs discord_configs; do
     if grep -F -- "${external_receiver}:" <<<"${config_text}" >/dev/null; then
@@ -63,7 +100,12 @@ if [ -n "${ALERTMANAGER_CONFIG_FIXTURE}" ]; then
     echo "ERROR: Alertmanager configuration fixture is not readable: ${ALERTMANAGER_CONFIG_FIXTURE}" >&2
     exit 1
   }
-  assert_active_alertmanager_config "$(<"${ALERTMANAGER_CONFIG_FIXTURE}")"
+  fixture_config="$(<"${ALERTMANAGER_CONFIG_FIXTURE}")"
+  fixture_expect_drill=false
+  if grep -F -- 'name: critical-drill-webhook' <<<"${fixture_config}" >/dev/null; then
+    fixture_expect_drill=true
+  fi
+  assert_active_alertmanager_config "${fixture_config}" "${fixture_expect_drill}"
   echo "Alertmanager active-configuration fixture acceptance passed."
   exit 0
 fi
@@ -181,7 +223,11 @@ fi
 
 status_payload="$(curl -fsS "${alertmanager_url}/api/v2/status")"
 config_text="$(jq -er '.config.original' <<<"${status_payload}")"
-assert_active_alertmanager_config "${config_text}"
+expect_drill=false
+if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json" ]; then
+  expect_drill=true
+fi
+assert_active_alertmanager_config "${config_text}" "${expect_drill}"
 
 echo "==> Checking Prometheus discovery of Alertmanager"
 start_port_forward \

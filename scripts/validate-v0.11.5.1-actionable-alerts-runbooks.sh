@@ -54,6 +54,7 @@ require(chart_contract.get("previousVersion") == "0.3.1", "Wrong predecessor Cha
 require(chart_contract.get("version") == "0.4.0", "Wrong Chart version")
 require(chart_contract.get("applicationVersion") == "v0.11.5.1", "Wrong application version")
 semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()
+alert_lifecycle_drill_successor = (root / "delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json").is_file()
 chart = read("platform/observability/helm/Chart.yaml")
 chart_markers = (
     "name: startup-devops-observability-views",
@@ -194,7 +195,12 @@ for relative in ("clusters/local/platform/templates/monitoring.yaml", "clusters/
     require(re.search(r"(?ms)defaultRules:\n\s+create: false", monitoring) is not None, f"Default rules enabled: {relative}")
     for marker in ('severity = "critical"', 'severity = "warning"', "- environment", "- cluster", "- component", "- alert_family"):
         require(marker in monitoring, f"Alertmanager inhibition contract changed in {relative}: {marker}")
-    for external in ("webhook_configs:", "slack_configs:", "email_configs:", "pagerduty_configs:", "sns_configs:"):
+    if alert_lifecycle_drill_successor:
+        require(monitoring.count("webhook_configs:") == 2, f"Drill webhook count changed in {relative}")
+        require(monitoring.count("alert-lifecycle-drill-sink.observability.svc.cluster.local:8080") == 2, f"Internal drill URL changed in {relative}")
+    else:
+        require("webhook_configs:" not in monitoring, f"Webhook receiver added before drill successor in {relative}")
+    for external in ("slack_configs:", "email_configs:", "pagerduty_configs:", "sns_configs:"):
         require(external not in monitoring, f"External receiver added early in {relative}: {external}")
 
 require(all(value is False for value in contract.get("boundaries", {}).values()), "Version boundary expanded")

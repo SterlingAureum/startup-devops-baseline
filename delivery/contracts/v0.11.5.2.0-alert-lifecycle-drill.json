@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "v0.11.5.2.0",
+  "version": "v0.11.5.2.0",
+  "status": "offline-implemented-local-live-required",
+  "predecessor": "v0.11.5.1.1.1",
+  "designDocument": "docs/V0.11.5.2.0_ALERT_LIFECYCLE_DRILL.md",
+  "platformChart": {
+    "path": "clusters/local/platform",
+    "previousVersion": "0.4.0",
+    "version": "0.4.1",
+    "applicationVersion": "v0.11.5.2.0"
+  },
+  "routing": {
+    "normalReceiversUnchanged": [
+      "platform-observation",
+      "critical-observation",
+      "warning-observation"
+    ],
+    "drillReceivers": [
+      "critical-drill-webhook",
+      "warning-drill-webhook"
+    ],
+    "requiredMatchers": [
+      "drill=true",
+      "alert_family=alert-lifecycle-drill",
+      "severity"
+    ],
+    "continue": true,
+    "groupWait": "1s",
+    "groupInterval": "2s",
+    "repeatInterval": "1h",
+    "sendResolved": true,
+    "internalService": "alert-lifecycle-drill-sink.observability.svc.cluster.local:8080",
+    "externalNotificationConfigured": false
+  },
+  "inhibition": {
+    "sourceSeverity": "critical",
+    "targetSeverity": "warning",
+    "equalLabels": [
+      "environment",
+      "cluster",
+      "component",
+      "alert_family"
+    ],
+    "positiveCase": "equal component and alert_family",
+    "negativeCase": "different component",
+    "warningDeliverySuppressedInPositiveCase": true
+  },
+  "temporaryRuntime": {
+    "prometheusRule": "alert-lifecycle-drill",
+    "webhookSink": "alert-lifecycle-drill-sink",
+    "sourceFixture": "scripts/fixtures/alert-webhook-sink.py",
+    "imageSource": "currently deployed demo-api image",
+    "serviceType": "ClusterIP",
+    "serviceAccountTokenAutomount": false,
+    "runAsNonRoot": true,
+    "readOnlyRootFilesystem": true,
+    "networkPolicyIngressSource": "Alertmanager pods in observability",
+    "networkPolicyEgress": "none",
+    "maximumStoredEvents": 500,
+    "mustBeRemoved": true
+  },
+  "phases": [
+    "preflight",
+    "warning-firing-routing-resolved",
+    "critical-firing-routing-resolved",
+    "positive-inhibition",
+    "negative-inhibition-isolation",
+    "zero-residual-cleanup"
+  ],
+  "formalAlertInventory": {
+    "count": 9,
+    "changed": false,
+    "mustBeHealthyAndInactiveBeforeAndAfter": true
+  },
+  "boundaries": {
+    "businessAlertAdded": false,
+    "formalAlertRuleChanged": false,
+    "formalThresholdChanged": false,
+    "realWorkloadFailureCreated": false,
+    "silenceCreated": false,
+    "publicWebhookAdded": false,
+    "externalCredentialAdded": false,
+    "awsLiveMutationPerformed": false,
+    "productionAutomationChanged": false,
+    "sloOrBurnRateAdded": false,
+    "loggingOrTracingAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.5.2.0-alert-lifecycle-drill.sh",
+    "liveValidator": "scripts/check-alert-lifecycle-drill.sh",
+    "confirmationFlag": "CONFIRM_ALERT_DRILL=true",
+    "profile": "local",
+    "completeQualityGateRequired": true,
+    "localLiveAcceptanceRequired": true,
+    "zeroResidualRequired": true,
+    "formalAwsExecutionDeferredTo": "v0.11.8",
+    "externalProviderIntegrationDeferredTo": "v0.11.8-or-v0.12"
+  }
+}

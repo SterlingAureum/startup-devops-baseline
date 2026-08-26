@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.5.1.1 telemetry and alert-routing foundation uses Prometheus Operator through the
+The active v0.11.5.2.0 telemetry and alert-routing foundation uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -22,12 +22,14 @@ observability Namespace
   Capacity and resource-efficiency recording rules
   Alertmanager StatefulSet and private ClusterIP Service
   Environment-local routing and inhibition configuration
+  Internal-only drill webhook routes, inactive until a guarded drill creates the sink
 ```
 
 Nine repository-owned actionable alerts and their version-controlled Runbooks
-are active in v0.11.5.1.1. External notification receivers, firing and inhibition
-drills, Loki, Alloy, tracing, Thanos, remote write, Kubecost, and cloud billing
-integration are not part of this increment.
+remain active and unchanged. v0.11.5.2.0 adds a guarded local firing,
+resolution, routing, and inhibition drill through a temporary restricted sink.
+External notification providers, Loki, Alloy, tracing, Thanos, remote write,
+Kubecost, and cloud billing integration are not part of this increment.
 
 The v0.11.5.0.1 repair changes only active-configuration acceptance: both the
 spaced repository matcher and Alertmanager's compact canonical matcher are
@@ -107,12 +109,15 @@ kubectl get application monitoring -n argocd
 kubectl get pods -n observability
 kubectl get servicemonitors -n startup-apps
 ./scripts/check-monitoring.sh
-REQUIRE_NO_ALERT_RULES=true ./scripts/check-alertmanager.sh
+./scripts/check-alertmanager.sh
 ./scripts/check-observability-views.sh
 PROFILE=local ./scripts/check-controller-metrics.sh
 PROFILE=local ./scripts/check-operator-dashboards.sh
 PROFILE=local ./scripts/check-capacity-signals.sh
 PROFILE=local ./scripts/check-capacity-dashboard.sh
+./scripts/check-actionable-alerts.sh
+./scripts/check-prometheus-target-counts.sh
+CONFIRM_ALERT_DRILL=true ./scripts/check-alert-lifecycle-drill.sh
 ```
 
 Generate demo-api traffic if the application metric is not visible yet, then
@@ -159,3 +164,6 @@ curl -fsS --get http://127.0.0.1:19090/api/v1/query \
 - `docs/V0.11.4.2.1_CAPACITY_EFFICIENCY_DASHBOARD.md` defines the immutable
   Capacity and Resource Efficiency Dashboard, recording-rule-only query
   boundary, interpretation policy, live acceptance, and clean replay handoff.
+- `docs/V0.11.5.2.0_ALERT_LIFECYCLE_DRILL.md` defines the guarded synthetic
+  alert lifecycle, continued severity routing, inhibition cases, restricted
+  webhook sink, resolved delivery, and zero-residual local acceptance.

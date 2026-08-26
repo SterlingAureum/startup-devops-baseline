@@ -3,14 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair`. It repairs the
-final lifecycle-drill race after all four phases completed but Prometheus still
-exposed two healthy inactive temporary rules immediately after Kubernetes
-deletion. The drill now separates strict Kubernetes cleanup from bounded
-Prometheus rule-inventory convergence before asserting the exact nine formal
-alerts. No monitoring redeployment, image rebuild, or desired-state change is
-required. See
-`docs/V0.11.5.2.0.3_PROMETHEUS_RULE_CLEANUP_SYNCHRONIZATION_REPAIR.md`.
+`v0.11.6.0-centralized-logging-minimal-tracing-foundation`. It records the
+completed local v0.11.5 alerting acceptance and defines per-environment
+centralized logging, bounded JSON and Loki label contracts, an upstream OTLP
+Collector boundary, a minimal Tempo path, and metric-log-trace-release
+correlation. It deploys no logging or tracing runtime and changes no
+application code, image, Helm dependency, Kubernetes resource, AWS state, or
+production automation. See
+`docs/V0.11.6.0_CENTRALIZED_LOGGING_MINIMAL_TRACING_FOUNDATION.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -219,12 +219,19 @@ predecessor checkpoint identity is
 v0.11.5.2.0.3 repairs the final cleanup synchronization boundary. After strict
 Kubernetes deletion, the drill waits until both temporary alert definitions
 disappear from the Prometheus rule inventory before requiring the exact nine
-healthy inactive formal alerts.
+healthy inactive formal alerts. The repaired full local rerun passed, closing
+v0.11.5 locally. Its accepted checkpoint identity is
+`v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair`.
+v0.11.6.0 defines environment-isolated logging and minimal tracing contracts.
+Alloy collects Pod logs and Kubernetes Events into environment-local Loki;
+demo-api exports vendor-neutral OTLP through an upstream OpenTelemetry
+Collector to a minimal environment-local Tempo backend. Runtime implementation
+starts in v0.11.6.1 and no deployment is introduced by this foundation.
 
 ## Current Version
 
 ```text
-v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair
+v0.11.6.0-centralized-logging-minimal-tracing-foundation
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

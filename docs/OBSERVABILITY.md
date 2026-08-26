@@ -86,6 +86,16 @@ baseline is checked. EXIT-trap cleanup remains best-effort so an earlier error
 is preserved while cleanup is still attempted. No runtime redeployment or
 image rebuild is required.
 
+The repaired v0.11.5.2.0.3 full local rerun passed and closes v0.11.5 locally.
+v0.11.6.0 begins the next line with a design-only contract for per-environment
+centralized logging and minimal tracing. Alloy will collect Pod logs and
+Kubernetes Events into environment-local Loki. An upstream OpenTelemetry
+Collector will receive OTLP and export the bounded HTTP-to-demo-api-to-
+PostgreSQL trace into environment-local Tempo. Trace IDs, release IDs, source
+commits, image digests, Pod identities, and request identities remain parsed
+fields rather than Loki labels. No Loki, Alloy, Collector, or Tempo runtime is
+deployed in v0.11.6.0.
+
 The local Application is:
 
 ```text

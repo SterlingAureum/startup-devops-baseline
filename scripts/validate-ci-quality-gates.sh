@@ -123,6 +123,9 @@ echo "==> Validating v0.11.5.2.0.2 alert resolution transition repair"
 echo "==> Validating v0.11.5.2.0.3 Prometheus rule cleanup synchronization repair"
 "${ROOT_DIR}/scripts/validate-v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair.sh"
 
+echo "==> Validating v0.11.6.0 centralized logging and minimal tracing foundation"
+"${ROOT_DIR}/scripts/validate-v0.11.6.0-centralized-logging-minimal-tracing-foundation.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

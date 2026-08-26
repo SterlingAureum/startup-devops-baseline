@@ -2,6 +2,28 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.0
+
+### Added
+
+- Added the per-environment centralized logging contract: demo-api JSON Lines,
+  Alloy Pod-log and Kubernetes Event collection, environment-local Loki, and
+  bounded retention and storage profiles.
+- Added the minimal vendor-neutral tracing contract: W3C Trace Context,
+  OpenTelemetry APIs, OTLP through an upstream Collector, collector-owned
+  sampling, and an environment-local Tempo backend.
+- Added exact log fields, forbidden sensitive data, bounded Loki labels,
+  metric-log-trace-release correlation, the v0.11.6.1 through v0.11.6.4
+  implementation sequence, and negative boundary mutations.
+- Recorded the repaired v0.11.5 alert lifecycle as accepted locally.
+
+### Boundary
+
+- This design-only increment adds no application code, image, Helm dependency,
+  Kubernetes resource, logging or tracing runtime, public endpoint, external
+  credential, AWS mutation, production automation, AI infrastructure, AIOps,
+  or OpenClaw integration. Runtime implementation begins in v0.11.6.1.
+
 ## v0.11.5.2.0.3
 
 ### Fixed

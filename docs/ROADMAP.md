@@ -357,7 +357,8 @@ Incremental scope:
       assertions, shared bounded telemetry preflight, and actionable scrape
       diagnostics - implemented and accepted through one clean local feature replay
 - v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity
-  policy, and version-controlled Runbooks with positive/negative drills - in progress
+  policy, and version-controlled Runbooks with positive/negative drills -
+  implemented and accepted locally
   - v0.11.5.0 - environment-local Alertmanager runtime, private exposure,
     bounded persistence, stable severity routing, alert-family inhibition, and
     Prometheus discovery acceptance - implemented offline; local live replay
@@ -378,7 +379,7 @@ Incremental scope:
         and require a unique current-source image after neutral-baseline
         restoration - implemented and accepted locally
   - v0.11.5.2 - firing, routing, inhibition, resolution, and environment-owned
-    notification-path drills - in progress
+    notification-path drills - implemented and accepted locally
     - v0.11.5.2.0 - guarded local synthetic warning and critical lifecycles,
       continued severity-route assignment, positive and negative inhibition,
       internal webhook firing and resolved delivery, and zero-residual cleanup
@@ -398,9 +399,13 @@ Incremental scope:
           - v0.11.5.2.0.3 - make normal Kubernetes cleanup strict and wait
             until both temporary alerts disappear from the Prometheus rule
             inventory before asserting the exact nine formal alerts -
-            implemented offline; repaired final local drill rerun required
+            implemented and accepted through the repaired final local drill
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry
-  tracing foundation for the HTTP to demo-api to PostgreSQL path - planned
+  tracing foundation for the HTTP to demo-api to PostgreSQL path - in progress
+  - v0.11.6.0 - per-environment logging and trace-backend isolation, bounded
+    JSON and Loki label contracts, Alloy log/Event ownership, vendor-neutral
+    OTLP Collector boundary, minimal Tempo path, implementation sequence, and
+    security/cost acceptance boundaries - design-only; implemented offline
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned
 - v0.11.8 - environment-scoped observability qualification, including an

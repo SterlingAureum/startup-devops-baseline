@@ -3,13 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair`. It repairs the live
-checker after Alertmanager represented both configured drill webhook URLs as
-`<secret>` in `/api/v2/status`. Desired-state and literal-fixture checks still
-require the exact internal URLs; runtime checks now require exactly two
-redacted URL lines. No monitoring redeployment or desired-state change is
-required. See
-`docs/V0.11.5.2.0.1_ALERTMANAGER_WEBHOOK_URL_REDACTION_REPAIR.md`.
+`v0.11.5.2.0.2-alert-resolution-transition-repair`. It repairs the live alert
+drill after warning firing delivery succeeded but deleting the temporary rule
+did not provide a reliable resolved transition. The drill now retains the same
+alert identity, changes its expression to the empty-vector
+`vector(0) == 1`, waits for Prometheus clearing and resolved delivery, and only
+then deletes the rule. Global stale-drill-alert checks protect reruns. No
+monitoring redeployment, image rebuild, or desired-state change is required.
+See `docs/V0.11.5.2.0.2_ALERT_RESOLUTION_TRANSITION_REPAIR.md`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -207,12 +208,17 @@ live execution remain deferred. Its predecessor checkpoint identity is
 v0.11.5.2.0.1 repairs only the runtime configuration parser after the first
 local attempt observed two correctly loaded webhook integrations whose URLs
 were rendered as `url: <secret>`. It preserves exact literal desired-state URL
-validation and requires no monitoring redeployment.
+validation and requires no monitoring redeployment. Its predecessor checkpoint
+identity is `v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair`.
+v0.11.5.2.0.2 repairs the subsequent resolved-delivery phase by explicitly
+transitioning each synthetic alert to an empty result before cleanup. Rule
+deletion is no longer treated as the state transition, and reruns reject any
+active drill alert left in Alertmanager by an earlier failed attempt.
 
 ## Current Version
 
 ```text
-v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair
+v0.11.5.2.0.2-alert-resolution-transition-repair
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

@@ -117,6 +117,9 @@ echo "==> Validating v0.11.5.2.0 alert lifecycle drill"
 echo "==> Validating v0.11.5.2.0.1 Alertmanager webhook URL redaction repair"
 "${ROOT_DIR}/scripts/validate-v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair.sh"
 
+echo "==> Validating v0.11.5.2.0.2 alert resolution transition repair"
+"${ROOT_DIR}/scripts/validate-v0.11.5.2.0.2-alert-resolution-transition-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

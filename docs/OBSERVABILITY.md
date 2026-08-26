@@ -65,6 +65,17 @@ not represent configured external receivers; actual external receiver blocks
 remain forbidden. No monitoring redeployment is required for the corrected
 checker rerun.
 
+The corrected parser rerun passed, and the subsequent drill proved warning
+firing delivery. It then exposed a separate transition defect: deleting the
+temporary PrometheusRule did not reliably produce resolved delivery for the
+same alert instance. v0.11.5.2.0.2 keeps the rule loaded, changes its expression
+from `vector(1)` to the empty-vector `vector(0) == 1`, waits for Prometheus to
+clear the alert and Alertmanager to deliver the resolved webhook, and deletes
+the rule only as cleanup. Preflight and final checks reject every active
+`drill="true"` alert, including one retained from an earlier failed run. This
+script-only repair requires neither monitoring redeployment nor an image
+rebuild.
+
 The local Application is:
 
 ```text

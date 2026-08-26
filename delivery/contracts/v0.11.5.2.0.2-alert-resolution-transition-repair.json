@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "v0.11.5.2.0.2",
+  "version": "v0.11.5.2.0.2",
+  "status": "offline-implemented-local-live-rerun-required",
+  "predecessor": "v0.11.5.2.0.1",
+  "designDocument": "docs/V0.11.5.2.0.2_ALERT_RESOLUTION_TRANSITION_REPAIR.md",
+  "incident": {
+    "warningFiringObserved": true,
+    "warningDrillReceiverObserved": true,
+    "warningWebhookFiringObserved": true,
+    "resolvedWebhookObserved": false,
+    "networkPathDefect": false,
+    "alertmanagerRouteDefect": false,
+    "resolutionTransitionDefect": true,
+    "failedSequence": [
+      "apply-firing-rule",
+      "observe-firing",
+      "delete-prometheus-rule",
+      "wait-for-resolved"
+    ]
+  },
+  "repair": {
+    "firingExpression": "vector(1)",
+    "inactiveExpression": "vector(0) == 1",
+    "numericZeroAloneAllowed": false,
+    "samePrometheusRuleRetainedThroughResolution": true,
+    "sameAlertNameAndLabelsRetainedThroughResolution": true,
+    "prometheusClearRequiredBeforeWebhookResolved": true,
+    "webhookResolvedRequiredBeforeRuleDeletion": true,
+    "ruleDeletionIsCleanupOnly": true,
+    "preflightRejectsAnyActiveDrillAlert": true,
+    "finalStateRejectsAnyActiveDrillAlert": true,
+    "allLifecyclePhasesRepaired": true
+  },
+  "phases": {
+    "warning": "explicit-inactive-then-resolved-then-delete",
+    "critical": "explicit-inactive-then-resolved-then-delete",
+    "positiveInhibition": "explicit-inactive-critical-resolved-then-delete",
+    "negativeIsolation": "explicit-inactive-both-resolved-then-delete"
+  },
+  "unchanged": {
+    "localPlatformChartVersion": "0.4.1",
+    "localPlatformApplicationVersion": "v0.11.5.2.0",
+    "observabilityChartVersion": "0.4.1",
+    "observabilityApplicationVersion": "v0.11.5.1.1",
+    "formalAlertCount": 9,
+    "monitoringDesiredStateChanged": false,
+    "alertmanagerConfigChanged": false,
+    "networkPolicyChanged": false,
+    "webhookSinkChanged": false,
+    "externalReceiverAdded": false,
+    "applicationImageChanged": false
+  },
+  "boundaries": {
+    "kubernetesDesiredStateChanged": false,
+    "realWorkloadFailureAdded": false,
+    "silenceAdded": false,
+    "externalCredentialAdded": false,
+    "awsMutationPerformed": false,
+    "productionAutomationChanged": false,
+    "sloOrBurnRateAdded": false,
+    "loggingOrTracingAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.5.2.0.2-alert-resolution-transition-repair.sh",
+    "liveValidator": "scripts/check-alert-lifecycle-drill.sh",
+    "completeQualityGateRequired": true,
+    "localLiveRerunRequired": true,
+    "monitoringRedeployBeforeRerun": false,
+    "imageRebuildBeforeRerun": false,
+    "previousActiveDrillAlertMustClear": true,
+    "zeroResidualRequired": true,
+    "formalAwsExecutionDeferredTo": "v0.11.8"
+  }
+}

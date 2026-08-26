@@ -2,6 +2,31 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.5.2.0.2
+
+### Fixed
+
+- Replaced delete-before-resolved lifecycle handling with an explicit
+  `vector(1)` to empty-vector `vector(0) == 1` transition that retains the same
+  temporary rule, alert name, and labels until resolved delivery is observed.
+- Required Prometheus clearing before resolved-webhook evidence and delayed
+  PrometheusRule deletion until each notifying phase completes.
+
+### Added
+
+- Added preflight and final global checks that reject active `drill="true"`
+  alerts from the current or an earlier failed run.
+- Added exact lifecycle-order validation and negative mutations for premature
+  rule deletion and numeric-zero-only expressions.
+
+### Boundary
+
+- This repair changes only the guarded local drill, contracts, and
+  documentation. It changes no Kubernetes desired state, monitoring Chart,
+  Alertmanager configuration, route, receiver, NetworkPolicy, webhook sink,
+  formal alert, application image, AWS resource, or production automation and
+  requires no monitoring redeployment or image rebuild.
+
 ## v0.11.5.2.0.1
 
 ### Fixed

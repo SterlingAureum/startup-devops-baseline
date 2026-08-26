@@ -386,8 +386,14 @@ Incremental scope:
       exposed URL-redaction parser behavior repaired by v0.11.5.2.0.1
       - v0.11.5.2.0.1 - accept exactly two `<secret>` webhook URL lines in the
         active Alertmanager status while retaining exact internal desired-state
-        URLs and negative public-URL fixtures - implemented offline; corrected
-        checker rerun and full local drill required
+        URLs and negative public-URL fixtures - corrected checker accepted
+        locally; the resumed drill proved warning firing delivery and exposed
+        a delete-before-resolved transition defect repaired by v0.11.5.2.0.2
+        - v0.11.5.2.0.2 - retain the same temporary rule and alert identity,
+          apply the empty-vector `vector(0) == 1`, wait for Prometheus clearing
+          and resolved delivery, then delete only for cleanup; reject active
+          drill alerts from earlier failed runs - implemented offline; repaired
+          full local drill rerun required
 - v0.11.6 - centralized structured logging plus an extensible OpenTelemetry
   tracing foundation for the HTTP to demo-api to PostgreSQL path - planned
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo

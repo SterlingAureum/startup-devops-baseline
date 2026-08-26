@@ -334,6 +334,7 @@ apply_single_rule() {
   local alert_name="$1"
   local severity="$2"
   local component="$3"
+  local expression="$4"
   kubectl apply -f - >/dev/null <<YAML
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -349,7 +350,7 @@ spec:
       interval: 5s
       rules:
         - alert: ${alert_name}
-          expr: vector(1)
+          expr: ${expression}
           for: 0s
           labels:
             severity: ${severity}
@@ -368,6 +369,7 @@ YAML
 apply_pair_rules() {
   local warning_component="$1"
   local critical_component="$2"
+  local expression="$3"
   kubectl apply -f - >/dev/null <<YAML
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
@@ -383,7 +385,7 @@ spec:
       interval: 5s
       rules:
         - alert: AlertLifecycleDrillWarning
-          expr: vector(1)
+          expr: ${expression}
           for: 0s
           labels:
             severity: warning
@@ -397,7 +399,7 @@ spec:
             summary: Temporary warning alert lifecycle drill
             description: Ephemeral v0.11.5.2.0 validation signal; the drill script must remove it.
         - alert: AlertLifecycleDrillCritical
-          expr: vector(1)
+          expr: ${expression}
           for: 0s
           labels:
             severity: critical
@@ -430,6 +432,25 @@ wait_prometheus_firing() {
     fi
     if [ "${SECONDS}" -ge "${deadline}" ]; then
       echo "ERROR: Prometheus did not report ${alert_name} firing." >&2
+      jq . <<<"${payload}" >&2 || true
+      return 1
+    fi
+    sleep "${POLL_SECONDS}"
+  done
+}
+
+wait_prometheus_cleared() {
+  local alert_name="$1"
+  local deadline=$((SECONDS + RESOLUTION_TIMEOUT_SECONDS))
+  local payload
+  while true; do
+    payload="$(curl -fsS --get "${prometheus_url}/api/v1/query" \
+      --data-urlencode "query=ALERTS{alertname=\"${alert_name}\",drill=\"true\",drill_id=\"${drill_id}\"}")"
+    if jq -e '.status == "success" and (.data.result | length) == 0' <<<"${payload}" >/dev/null; then
+      return 0
+    fi
+    if [ "${SECONDS}" -ge "${deadline}" ]; then
+      echo "ERROR: Prometheus did not clear ${alert_name} after the inactive expression was applied." >&2
       jq . <<<"${payload}" >&2 || true
       return 1
     fi
@@ -546,6 +567,17 @@ wait_no_drill_alerts() {
   done
 }
 
+assert_no_active_drill_alerts() {
+  local payload
+  payload="$(curl -fsS "${alertmanager_url}/api/v2/alerts")"
+  if ! jq -e 'all(.[]; .labels.drill != "true")' <<<"${payload}" >/dev/null; then
+    echo "ERROR: Alertmanager still contains an active drill alert from this or a previous run." >&2
+    echo "Wait for the alert to resolve, confirm no temporary resources remain, and retry from preflight." >&2
+    jq '[.[] | select(.labels.drill == "true") | {labels, status, receivers}]' <<<"${payload}" >&2 || true
+    return 1
+  fi
+}
+
 echo "==> Preflight: GitOps health, clean formal alerts, and zero stale drill resources"
 assert_application "${MONITORING_APPLICATION}"
 assert_application "${VIEWS_APPLICATION}"
@@ -557,6 +589,7 @@ wait_http "${prometheus_url}/-/ready" "${prometheus_log}"
 start_port_forward "${ALERTMANAGER_SERVICE}" 9093 "${ALERTMANAGER_LOCAL_PORT}" alertmanager
 alertmanager_url="http://127.0.0.1:${alertmanager_port}"
 wait_http "${alertmanager_url}/-/ready" "${alertmanager_log}"
+assert_no_active_drill_alerts
 assert_clean_formal_alerts
 
 echo "==> Creating the temporary restricted in-cluster webhook sink"
@@ -565,27 +598,31 @@ create_sink "${sink_image}"
 
 echo "==> Phase 1: warning firing, routing, and resolved delivery"
 reset_sink
-apply_single_rule AlertLifecycleDrillWarning warning "${shared_component}"
+apply_single_rule AlertLifecycleDrillWarning warning "${shared_component}" 'vector(1)'
 wait_prometheus_firing AlertLifecycleDrillWarning
 wait_alertmanager_state AlertLifecycleDrillWarning active false warning-drill-webhook warning-observation
 wait_webhook_event /warning AlertLifecycleDrillWarning firing
-remove_rule
+apply_single_rule AlertLifecycleDrillWarning warning "${shared_component}" 'vector(0) == 1'
+wait_prometheus_cleared AlertLifecycleDrillWarning
 wait_webhook_event /warning AlertLifecycleDrillWarning resolved "${RESOLUTION_TIMEOUT_SECONDS}"
 wait_no_drill_alerts
+remove_rule
 
 echo "==> Phase 2: critical firing, routing, and resolved delivery"
 reset_sink
-apply_single_rule AlertLifecycleDrillCritical critical "${shared_component}"
+apply_single_rule AlertLifecycleDrillCritical critical "${shared_component}" 'vector(1)'
 wait_prometheus_firing AlertLifecycleDrillCritical
 wait_alertmanager_state AlertLifecycleDrillCritical active false critical-drill-webhook critical-observation
 wait_webhook_event /critical AlertLifecycleDrillCritical firing
-remove_rule
+apply_single_rule AlertLifecycleDrillCritical critical "${shared_component}" 'vector(0) == 1'
+wait_prometheus_cleared AlertLifecycleDrillCritical
 wait_webhook_event /critical AlertLifecycleDrillCritical resolved "${RESOLUTION_TIMEOUT_SECONDS}"
 wait_no_drill_alerts
+remove_rule
 
 echo "==> Phase 3: positive inhibition; critical inhibits an equal-scope warning"
 reset_sink
-apply_pair_rules "${shared_component}" "${shared_component}"
+apply_pair_rules "${shared_component}" "${shared_component}" 'vector(1)'
 wait_prometheus_firing AlertLifecycleDrillWarning
 wait_prometheus_firing AlertLifecycleDrillCritical
 wait_alertmanager_state AlertLifecycleDrillCritical active false critical-drill-webhook critical-observation
@@ -593,27 +630,38 @@ wait_alertmanager_state AlertLifecycleDrillWarning suppressed true warning-drill
 wait_webhook_event /critical AlertLifecycleDrillCritical firing
 sleep "${INHIBITION_SETTLE_SECONDS}"
 assert_no_webhook_event /warning AlertLifecycleDrillWarning firing
-remove_rule
+apply_pair_rules "${shared_component}" "${shared_component}" 'vector(0) == 1'
+wait_prometheus_cleared AlertLifecycleDrillWarning
+wait_prometheus_cleared AlertLifecycleDrillCritical
 wait_webhook_event /critical AlertLifecycleDrillCritical resolved "${RESOLUTION_TIMEOUT_SECONDS}"
 wait_no_drill_alerts
+remove_rule
 
 echo "==> Phase 4: unequal component labels prevent cross-scope inhibition"
 reset_sink
-apply_pair_rules "${shared_component}-warning" "${shared_component}-critical"
+apply_pair_rules "${shared_component}-warning" "${shared_component}-critical" 'vector(1)'
 wait_prometheus_firing AlertLifecycleDrillWarning
 wait_prometheus_firing AlertLifecycleDrillCritical
 wait_alertmanager_state AlertLifecycleDrillWarning active false warning-drill-webhook warning-observation
 wait_alertmanager_state AlertLifecycleDrillCritical active false critical-drill-webhook critical-observation
 wait_webhook_event /warning AlertLifecycleDrillWarning firing
 wait_webhook_event /critical AlertLifecycleDrillCritical firing
-remove_rule
+apply_pair_rules "${shared_component}-warning" "${shared_component}-critical" 'vector(0) == 1'
+wait_prometheus_cleared AlertLifecycleDrillWarning
+wait_prometheus_cleared AlertLifecycleDrillCritical
 wait_webhook_event /warning AlertLifecycleDrillWarning resolved "${RESOLUTION_TIMEOUT_SECONDS}"
 wait_webhook_event /critical AlertLifecycleDrillCritical resolved "${RESOLUTION_TIMEOUT_SECONDS}"
 wait_no_drill_alerts
+remove_rule
 
 echo "==> Cleanup: removing all temporary resources and rechecking the formal baseline"
 delete_drill_resources
 assert_no_stale_resources
+assert_no_active_drill_alerts
 assert_clean_formal_alerts
 
-echo "v0.11.5.2.0 local firing, routing, inhibition, resolved delivery, isolation, and zero-residual cleanup acceptance passed."
+if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.5.2.0.2-alert-resolution-transition-repair.json" ]; then
+  echo "v0.11.5.2.0.2 local firing, explicit inactive transition, routing, inhibition, resolved delivery, isolation, and zero-residual cleanup acceptance passed."
+else
+  echo "v0.11.5.2.0 local firing, routing, inhibition, resolved delivery, isolation, and zero-residual cleanup acceptance passed."
+fi

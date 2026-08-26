@@ -33,6 +33,13 @@ The v0.11.2 Prometheus contract exposes bounded HTTP and dependency signals:
 Unknown routes collapse to `__unmatched__`; raw URLs, query strings, database
 parameters, and exception details are never exported as labels.
 
+The v0.11.6.1.0 runtime also emits one JSON object per process log line. Every
+record carries service, environment, release, source-commit, and image-digest
+identity. Successful liveness, readiness, and metrics requests are excluded
+from request logs to control probe noise; failures remain visible. Request
+bodies, response bodies, raw query strings, authorization and cookie headers,
+database parameters, and credential values are never added to log records.
+
 ## Local Development
 
 Run locally with Python:
@@ -42,7 +49,7 @@ cd apps/demo-api
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn src.main:app --host 0.0.0.0 --port 8080
+python -m src.server
 ```
 
 Test the service:
@@ -88,6 +95,9 @@ curl http://localhost:8080/health
 | `APP_NAME` | `demo-api` | Service name |
 | `APP_VERSION` | `0.1.0` | Application version |
 | `APP_ENV` | `local` | Runtime environment |
+| `PLATFORM_RELEASE_ID` | derived local identity | Release identity projected from the Pod annotation |
+| `PLATFORM_SOURCE_COMMIT` | `local-unavailable` | Source commit projected from the Pod annotation |
+| `CONTAINER_IMAGE_DIGEST` | `local-unpinned` | Image digest projected from the Pod annotation |
 | `DATABASE_ENABLED` | `false` | Enable PostgreSQL readiness and health checks |
 | `DATABASE_URL` | none | PostgreSQL URI supplied from a Kubernetes Secret |
 | `DATABASE_CONNECT_TIMEOUT_SECONDS` | `3` | Timeout for one connection attempt |

@@ -96,6 +96,14 @@ commits, image digests, Pod identities, and request identities remain parsed
 fields rather than Loki labels. No Loki, Alloy, Collector, or Tempo runtime is
 deployed in v0.11.6.0.
 
+v0.11.6.1.0 implements the demo-api side of that contract. The process emits
+one bounded JSON object per stdout line and derives release identity from the
+existing Pod annotations through the Downward API. Successful `/health`,
+`/ready`, and `/metrics` requests remain quiet, while their failures are
+recorded. Uvicorn uses the same JSON formatter and its duplicate access stream
+is disabled. Loki, Alloy, Kubernetes Event collection, Grafana log data
+sources, and tracing remain undeployed at this checkpoint.
+
 The local Application is:
 
 ```text

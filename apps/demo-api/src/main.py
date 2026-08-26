@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from typing import Dict, Any
@@ -6,6 +7,7 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 from .database import database_enabled, database_health
+from .logging_config import emit_log
 
 APP_NAME = os.getenv("APP_NAME", "demo-api")
 APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
@@ -40,6 +42,7 @@ DEPENDENCY_CHECK_DURATION = Histogram(
 
 ALLOWED_METHODS = frozenset({"GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"})
 ALLOWED_ROUTES = frozenset({"/", "/health", "/ready", "/db/health", "/version", "/metrics"})
+QUIET_SUCCESS_ROUTES = frozenset({"/health", "/ready", "/metrics"})
 
 app = FastAPI(
     title="startup-devops-baseline demo-api",
@@ -76,14 +79,32 @@ async def record_http_metrics(request: Request, call_next: Any) -> Response:
     finally:
         method = _normalized_method(request.method)
         route = _normalized_route(request)
+        duration_seconds = time.perf_counter() - start
         HTTP_REQUESTS.labels(
             method=method,
             route=route,
             status_class=_status_class(status_code),
         ).inc()
         HTTP_REQUEST_DURATION.labels(method=method, route=route).observe(
-            time.perf_counter() - start
+            duration_seconds
         )
+        if status_code >= 400 or route not in QUIET_SUCCESS_ROUTES:
+            severity = logging.INFO
+            if status_code >= 500:
+                severity = logging.ERROR
+            elif status_code >= 400:
+                severity = logging.WARNING
+            emit_log(
+                "http_request_completed",
+                severity=severity,
+                fields={
+                    "http.request.method": method,
+                    "http.route": route,
+                    "http.response.status_code": status_code,
+                    "duration_ms": round(duration_seconds * 1000, 3),
+                    "outcome": "success" if status_code < 400 else "failure",
+                },
+            )
 
 
 def _record_database_disabled() -> None:

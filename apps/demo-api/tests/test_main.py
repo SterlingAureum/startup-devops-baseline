@@ -109,6 +109,73 @@ class ApplicationEndpointTests(unittest.TestCase):
         self.assertNotIn(b"/customer/12345", metrics)
         self.assertNotIn(b"token=sensitive", metrics)
 
+    def test_version_request_emits_bounded_structured_log(self) -> None:
+        scope = {
+            "type": "http",
+            "method": "GET",
+            "path": "/version",
+            "query_string": b"token=sensitive",
+            "headers": [(b"authorization", b"Bearer sensitive")],
+            "route": type("Route", (), {"path": "/version"})(),
+        }
+        request = Request(scope)
+
+        async def call_next(_: Request) -> Response:
+            return Response(status_code=200)
+
+        with patch("src.main.emit_log") as emitted:
+            asyncio.run(main.record_http_metrics(request, call_next))
+
+        emitted.assert_called_once()
+        arguments = emitted.call_args.kwargs
+        self.assertEqual(emitted.call_args.args, ("http_request_completed",))
+        self.assertEqual(arguments["fields"]["http.request.method"], "GET")
+        self.assertEqual(arguments["fields"]["http.route"], "/version")
+        self.assertEqual(arguments["fields"]["http.response.status_code"], 200)
+        self.assertEqual(arguments["fields"]["outcome"], "success")
+        self.assertNotIn("sensitive", str(arguments))
+
+    def test_successful_probe_and_metrics_requests_are_quiet(self) -> None:
+        async def call_next(_: Request) -> Response:
+            return Response(status_code=200)
+
+        for route in ("/health", "/ready", "/metrics"):
+            request = Request(
+                {
+                    "type": "http",
+                    "method": "GET",
+                    "path": route,
+                    "headers": [],
+                    "route": type("Route", (), {"path": route})(),
+                }
+            )
+            with patch("src.main.emit_log") as emitted:
+                asyncio.run(main.record_http_metrics(request, call_next))
+            emitted.assert_not_called()
+
+    def test_failed_probe_is_logged_without_raw_request_data(self) -> None:
+        request = Request(
+            {
+                "type": "http",
+                "method": "GET",
+                "path": "/ready",
+                "query_string": b"password=sensitive",
+                "headers": [],
+                "route": type("Route", (), {"path": "/ready"})(),
+            }
+        )
+
+        async def call_next(_: Request) -> Response:
+            return Response(status_code=503)
+
+        with patch("src.main.emit_log") as emitted:
+            asyncio.run(main.record_http_metrics(request, call_next))
+
+        fields = emitted.call_args.kwargs["fields"]
+        self.assertEqual(fields["http.route"], "/ready")
+        self.assertEqual(fields["outcome"], "failure")
+        self.assertNotIn("sensitive", str(fields))
+
     def test_database_metrics_record_success_and_failure_without_details(self) -> None:
         with patch("src.main.database_enabled", return_value=True):
             with patch("src.main.database_health", return_value={"status": "ok"}):

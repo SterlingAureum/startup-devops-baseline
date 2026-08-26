@@ -406,6 +406,14 @@ Incremental scope:
     JSON and Loki label contracts, Alloy log/Event ownership, vendor-neutral
     OTLP Collector boundary, minimal Tempo path, implementation sequence, and
     security/cost acceptance boundaries - design-only; implemented offline
+  - v0.11.6.1.0 - demo-api one-line JSON runtime, bounded HTTP completion
+    records, successful probe-noise suppression, canonical release-identity
+    projection through the Downward API, and offline/live application log
+    acceptance - implemented; unique local image rerun required
+  - v0.11.6.1.1 - local Loki Monolithic and Alloy Pod-log collection - planned
+  - v0.11.6.1.2 - singleton Kubernetes Event collection and Grafana Loki data
+    source - planned
+  - v0.11.6.1.3 - complete local logging acceptance and replay closure - planned
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned
 - v0.11.8 - environment-scoped observability qualification, including an

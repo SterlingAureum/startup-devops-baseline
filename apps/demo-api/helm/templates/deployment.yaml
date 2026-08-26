@@ -46,6 +46,7 @@ spec:
             {{- end }}
             - name: APP_VERSION
               value: {{ required "release.applicationVersion is required" .Values.release.applicationVersion | quote }}
+            {{- include "demo-api.deliveryEnvironment" . | nindent 12 }}
             - name: DATABASE_ENABLED
               value: {{ .Values.database.enabled | quote }}
             - name: DATABASE_CONNECT_TIMEOUT_SECONDS

@@ -2,6 +2,21 @@
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 
+{{- define "demo-api.deliveryEnvironment" -}}
+- name: PLATFORM_RELEASE_ID
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.annotations['platform.startup.dev/release-id']
+- name: PLATFORM_SOURCE_COMMIT
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.annotations['platform.startup.dev/source-commit']
+- name: CONTAINER_IMAGE_DIGEST
+  valueFrom:
+    fieldRef:
+      fieldPath: metadata.annotations['platform.startup.dev/image-digest']
+{{- end -}}
+
 {{- define "demo-api.fullname" -}}
 {{- if .Values.fullnameOverride -}}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" -}}

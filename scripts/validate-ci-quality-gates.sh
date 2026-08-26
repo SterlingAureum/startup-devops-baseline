@@ -126,6 +126,9 @@ echo "==> Validating v0.11.5.2.0.3 Prometheus rule cleanup synchronization repai
 echo "==> Validating v0.11.6.0 centralized logging and minimal tracing foundation"
 "${ROOT_DIR}/scripts/validate-v0.11.6.0-centralized-logging-minimal-tracing-foundation.sh"
 
+echo "==> Validating v0.11.6.1.0 structured demo-api logging runtime"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.0-structured-demo-api-logging-runtime.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

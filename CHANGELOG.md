@@ -2,6 +2,35 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.1.0
+
+### Added
+
+- Added one-line JSON process logging for demo-api with the required service,
+  environment, release, source-commit, and image-digest identity fields.
+- Added bounded HTTP completion records, normalized route templates, status-
+  based severity, probe-noise suppression, and sensitive request-data tests.
+- Projected the canonical release ID, source commit, and image digest from Pod
+  annotations into both Deployment and Rollout containers through the
+  Kubernetes Downward API.
+- Added offline and local live validators for JSON syntax, release-identity
+  parity, quiet successful probes, failed-request visibility, and raw path and
+  query rejection.
+
+### Changed
+
+- Changed the demo-api entrypoint to install one JSON formatter for application
+  and Uvicorn process logs while disabling the duplicate Uvicorn access stream.
+- Advanced the demo-api Chart to `0.6.0` and application version to `0.4.0`.
+
+### Boundary
+
+- This first v0.11.6.1 subincrement requires a new demo-api image and local
+  application redeployment. It adds no Loki, Alloy, Kubernetes Event
+  collection, Grafana data source, monitoring redeployment, tracing, AWS
+  mutation, public endpoint, external credential, AI infrastructure, AIOps,
+  or OpenClaw integration.
+
 ## v0.11.6.0
 
 ### Added

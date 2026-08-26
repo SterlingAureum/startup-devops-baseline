@@ -3,14 +3,16 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.6.0-centralized-logging-minimal-tracing-foundation`. It records the
-completed local v0.11.5 alerting acceptance and defines per-environment
-centralized logging, bounded JSON and Loki label contracts, an upstream OTLP
-Collector boundary, a minimal Tempo path, and metric-log-trace-release
-correlation. It deploys no logging or tracing runtime and changes no
-application code, image, Helm dependency, Kubernetes resource, AWS state, or
-production automation. See
-`docs/V0.11.6.0_CENTRALIZED_LOGGING_MINIMAL_TRACING_FOUNDATION.md`.
+`v0.11.6.1.0-structured-demo-api-logging-runtime`. demo-api now emits bounded
+JSON Lines with release identity projected from canonical Pod annotations.
+Successful probe and metrics requests are quiet, failures remain visible, and
+raw paths, query strings, headers, bodies, database parameters, credentials,
+and exception details are excluded. This first runtime subincrement requires a
+new application image but deploys no Loki, Alloy, Kubernetes Event collector,
+Grafana log data source, or tracing component. See
+`docs/V0.11.6.1.0_STRUCTURED_DEMO_API_LOGGING_RUNTIME.md`.
+Its design predecessor checkpoint is
+`v0.11.6.0-centralized-logging-minimal-tracing-foundation`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
@@ -223,15 +225,15 @@ healthy inactive formal alerts. The repaired full local rerun passed, closing
 v0.11.5 locally. Its accepted checkpoint identity is
 `v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair`.
 v0.11.6.0 defines environment-isolated logging and minimal tracing contracts.
-Alloy collects Pod logs and Kubernetes Events into environment-local Loki;
-demo-api exports vendor-neutral OTLP through an upstream OpenTelemetry
-Collector to a minimal environment-local Tempo backend. Runtime implementation
-starts in v0.11.6.1 and no deployment is introduced by this foundation.
+v0.11.6.1.0 implements the first application runtime slice: bounded JSON Lines,
+one process formatter, quiet successful probes, and Downward API projection of
+release identity. Loki and Alloy begin in v0.11.6.1.1; tracing remains
+v0.11.6.2 scope.
 
 ## Current Version
 
 ```text
-v0.11.6.0-centralized-logging-minimal-tracing-foundation
+v0.11.6.1.0-structured-demo-api-logging-runtime
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

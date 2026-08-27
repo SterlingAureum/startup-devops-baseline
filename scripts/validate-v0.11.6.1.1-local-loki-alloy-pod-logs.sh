@@ -208,6 +208,7 @@ for marker in (
     "max_query_lookback: 24h",
     "discover_service_name: []",
     "sizeLimit: 2Gi",
+    "sidecar:\n  rules:\n    enabled: false",
     "name: observability-logs-cluster-only",
 ):
     require(marker in loki_values, f"Loki values marker missing: {marker}")
@@ -231,6 +232,10 @@ for marker in (
     'cluster     = "startup-devops-local"',
     "observability-logs-gateway.observability.svc.cluster.local/loki/api/v1/push",
     "readOnlyRootFilesystem: true",
+    "runAsNonRoot: true",
+    "runAsUser: 473",
+    "runAsGroup: 473",
+    "fsGroup: 473",
     "automountServiceAccountToken: true",
     "pods/log",
     "networkPolicy:\n  enabled: true",
@@ -346,34 +351,109 @@ def require(condition: bool, message: str) -> None:
     if not condition:
         raise SystemExit(message)
 
-require(re.search(r"(?ms)^kind: StatefulSet\nmetadata:.*?name: observability-logs\s*$", loki) is not None, "Rendered Loki StatefulSet missing")
-require(re.search(r"(?ms)^kind: Deployment\nmetadata:.*?name: observability-logs-gateway\s*$", loki) is not None, "Rendered Loki gateway Deployment missing")
+
+def normalized_yaml_scalar(raw: str) -> str:
+    value = raw.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        return value[1:-1]
+    return value
+
+
+def resource_document(rendered: str, expected_kind: str, expected_name: str) -> str:
+    for document in re.split(r"(?m)^---\s*$", rendered):
+        kind_match = re.search(
+            r"(?m)^kind:[ \t]*(?P<value>[^#\n]+?)[ \t]*(?:#.*)?$",
+            document,
+        )
+        metadata_match = re.search(
+            r"(?m)^metadata:[ \t]*(?:#.*)?\n(?P<body>(?:^[ \t]+[^\n]*(?:\n|$))*)",
+            document,
+        )
+        if kind_match is None or metadata_match is None:
+            continue
+        name_match = re.search(
+            r"(?m)^  name:[ \t]*(?P<value>[^#\n]+?)[ \t]*(?:#.*)?$",
+            metadata_match.group("body"),
+        )
+        if name_match is None:
+            continue
+        if (
+            normalized_yaml_scalar(kind_match.group("value")) == expected_kind
+            and normalized_yaml_scalar(name_match.group("value")) == expected_name
+        ):
+            return document
+    return ""
+
+
+for name_literal in (
+    "observability-logs",
+    '"observability-logs"',
+    "'observability-logs'",
+):
+    fixture = f"kind: StatefulSet\nmetadata:\n  labels:\n    test: fixture\n  name: {name_literal}\nspec: {{}}\n"
+    require(
+        resource_document(fixture, "StatefulSet", "observability-logs") == fixture,
+        f"Manifest name normalization rejected: {name_literal}",
+    )
+
+
+statefulset = resource_document(loki, "StatefulSet", "observability-logs")
+require(statefulset, "Rendered Loki StatefulSet missing")
+gateway = resource_document(loki, "Deployment", "observability-logs-gateway")
+require(gateway, "Rendered Loki gateway Deployment missing")
 require("name: observability-logs-cluster-only" in loki, "Rendered Loki NetworkPolicy missing")
+require("name: loki-sc-rules" not in statefulset, "Rendered Loki StatefulSet contains the unused rules sidecar")
+require("automountServiceAccountToken: false" in statefulset, "Rendered Loki StatefulSet may mount a ServiceAccount token")
 require("kind: Ingress" not in loki, "Rendered Loki contains an Ingress")
 require("type: LoadBalancer" not in loki and "type: NodePort" not in loki, "Rendered Loki contains a public Service")
 for forbidden in ("chunks-cache", "results-cache", "loki-canary", "minio"):
     require(forbidden not in loki.lower(), f"Rendered Loki contains disabled component: {forbidden}")
 
-require(re.search(r"(?ms)^kind: DaemonSet\nmetadata:.*?name: observability-logs-collector\s*$", alloy) is not None, "Rendered Alloy DaemonSet missing")
+daemonset = resource_document(alloy, "DaemonSet", "observability-logs-collector")
+require(daemonset, "Rendered Alloy DaemonSet missing")
 require("kind: NetworkPolicy" in alloy, "Rendered Alloy NetworkPolicy missing")
 require("kind: Ingress" not in alloy and "kind: Service\n" not in alloy, "Rendered Alloy exposes a service or Ingress")
 require("hostPath:" not in alloy and "privileged: true" not in alloy, "Rendered Alloy requires host privileges")
-require("readOnlyRootFilesystem: true" in alloy and "allowPrivilegeEscalation: false" in alloy, "Rendered Alloy security context missing")
+for marker in (
+    "readOnlyRootFilesystem: true",
+    "allowPrivilegeEscalation: false",
+    "runAsNonRoot: true",
+    "runAsUser: 473",
+    "runAsGroup: 473",
+    "fsGroup: 473",
+):
+    require(marker in daemonset, f"Rendered Alloy security context missing: {marker}")
 
-cluster_role = next(
-    (
-        document
-        for document in re.split(r"(?m)^---\s*$", alloy)
-        if "kind: ClusterRole\n" in document and "name: observability-logs-collector\n" in document
-    ),
-    "",
-)
+cluster_role = resource_document(alloy, "ClusterRole", "observability-logs-collector")
 require(cluster_role, "Rendered Alloy ClusterRole missing")
+
+
+def normalized_yaml_list_item(raw: str) -> str:
+    match = re.fullmatch(
+        r"[ \t]*-[ \t]+(?P<value>[^#\n]+?)[ \t]*(?:#.*)?",
+        raw,
+    )
+    require(match is not None, f"Invalid rendered YAML list item: {raw!r}")
+    return normalized_yaml_scalar(match.group("value"))
+
+
+for fixture, expected in (
+    ("        - namespaces", "namespaces"),
+    ('  - "pods"', "pods"),
+    ("    - 'pods/log'  # read-only subresource", "pods/log"),
+):
+    require(
+        normalized_yaml_list_item(fixture) == expected,
+        f"Rendered YAML list normalization rejected: {fixture!r}",
+    )
+
+
 resource_blocks = re.findall(r"(?ms)^\s+resources:\n((?:\s+- [^\n]+\n)+)", cluster_role)
 rendered_resources = {
-    line.removeprefix("-").strip()
+    normalized_yaml_list_item(line)
     for block in resource_blocks
     for line in block.splitlines()
+    if line.strip()
 }
 require(
     rendered_resources == {"namespaces", "pods", "pods/log"},

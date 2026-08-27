@@ -6,6 +6,7 @@ crds:
 global:
   podSecurityContext:
     runAsNonRoot: true
+    fsGroup: 473
     seccompProfile:
       type: RuntimeDefault
 
@@ -23,6 +24,9 @@ alloy:
   securityContext:
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 473
+    runAsGroup: 473
     capabilities:
       drop:
         - ALL

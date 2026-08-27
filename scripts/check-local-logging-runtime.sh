@@ -9,6 +9,7 @@ ALLOY_APP="${ALLOY_APP:-logging-alloy}"
 LOKI_STATEFULSET="${LOKI_STATEFULSET:-observability-logs}"
 LOKI_GATEWAY_DEPLOYMENT="${LOKI_GATEWAY_DEPLOYMENT:-observability-logs-gateway}"
 LOKI_GATEWAY_SERVICE="${LOKI_GATEWAY_SERVICE:-observability-logs-gateway}"
+LOKI_MEMBERLIST_SERVICE="${LOKI_MEMBERLIST_SERVICE:-observability-logs-memberlist}"
 ALLOY_DAEMONSET="${ALLOY_DAEMONSET:-observability-logs-collector}"
 APP_SELECTOR="${APP_SELECTOR:-app.kubernetes.io/name=demo-api}"
 APP_CONTAINER="${APP_CONTAINER:-demo-api}"
@@ -112,6 +113,51 @@ kubectl -n "${OBSERVABILITY_NAMESPACE}" rollout status \
   "deployment/${LOKI_GATEWAY_DEPLOYMENT}" --timeout="${TIMEOUT_SECONDS}s"
 kubectl -n "${OBSERVABILITY_NAMESPACE}" rollout status \
   "daemonset/${ALLOY_DAEMONSET}" --timeout="${TIMEOUT_SECONDS}s"
+
+echo "==> Checking repaired workload security and container topology"
+kubectl -n "${OBSERVABILITY_NAMESPACE}" get daemonset "${ALLOY_DAEMONSET}" -o json \
+  >"${WORK_DIR}/alloy-daemonset.json"
+jq -e '
+  .spec.template.spec.securityContext.runAsNonRoot == true
+  and .spec.template.spec.securityContext.fsGroup == 473
+  and (
+    [.spec.template.spec.containers[] | select(.name == "alloy")][0].securityContext
+    | .runAsNonRoot == true
+      and .runAsUser == 473
+      and .runAsGroup == 473
+      and .allowPrivilegeEscalation == false
+      and .readOnlyRootFilesystem == true
+  )
+' "${WORK_DIR}/alloy-daemonset.json" >/dev/null \
+  || fail "Alloy is not rendered with the required non-root UID/GID 473 security context."
+
+kubectl -n "${OBSERVABILITY_NAMESPACE}" get statefulset "${LOKI_STATEFULSET}" -o json \
+  >"${WORK_DIR}/loki-statefulset.json"
+jq -e '
+  .spec.template.spec.automountServiceAccountToken == false
+  and [.spec.template.spec.containers[].name] == ["loki"]
+' "${WORK_DIR}/loki-statefulset.json" >/dev/null \
+  || fail "Loki still renders an unnecessary sidecar or may mount a ServiceAccount token."
+
+echo "==> Checking memberlist discovery without changing its topology"
+[ "$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get service "${LOKI_MEMBERLIST_SERVICE}" -o jsonpath='{.spec.clusterIP}')" = "None" ] \
+  || fail "Loki memberlist Service is not headless."
+kubectl -n "${OBSERVABILITY_NAMESPACE}" get endpointslice \
+  -l "kubernetes.io/service-name=${LOKI_MEMBERLIST_SERVICE}" -o json \
+  | jq -e '[.items[].endpoints[]?.addresses[]?] | length > 0' >/dev/null \
+  || fail "Loki memberlist Service has no EndpointSlice address."
+
+loki_pod="$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get pod \
+  -l "app.kubernetes.io/instance=${LOKI_STATEFULSET},app.kubernetes.io/component=single-binary" \
+  -o json | jq -r '.items | sort_by(.metadata.creationTimestamp) | last | .metadata.name // empty')"
+[ -n "${loki_pod}" ] || fail "no Loki Monolithic Pod was found."
+loki_restarts_before="$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get pod "${loki_pod}" \
+  -o json | jq -r '[.status.containerStatuses[] | select(.name == "loki")][0].restartCount // -1')"
+sleep 10
+loki_restarts_after="$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get pod "${loki_pod}" \
+  -o json | jq -r '[.status.containerStatuses[] | select(.name == "loki")][0].restartCount // -1')"
+[ "${loki_restarts_before}" = "${loki_restarts_after}" ] \
+  || fail "Loki main-container restart count changed during the stability observation."
 
 echo "==> Checking private services and NetworkPolicies"
 [ "$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get service "${LOKI_GATEWAY_SERVICE}" -o jsonpath='{.spec.type}')" = "ClusterIP" ] \

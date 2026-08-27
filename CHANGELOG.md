@@ -2,6 +2,35 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.1.1.2
+
+### Fixed
+
+- Pinned the Alloy process to the image-defined non-root UID/GID `473` and
+  assigned Pod `fsGroup` `473`, allowing Kubernetes to enforce
+  `runAsNonRoot` without treating the image as root.
+- Disabled the Loki rules sidecar because this local logging increment does
+  not deploy ruler ConfigMaps or Secrets. The Loki Pod no longer depends on a
+  sidecar that cannot authenticate while ServiceAccount token automounting is
+  intentionally disabled.
+
+### Added
+
+- Added source, rendered-manifest, and live-cluster checks for Alloy UID/GID,
+  Loki single-container topology, token non-automount, memberlist discovery,
+  and bounded Loki restart stability.
+- Added a repair contract, design record, focused validator, and negative
+  mutations for root execution, rules-sidecar re-enablement, token mounting,
+  memberlist topology changes, and premature runtime-success claims.
+
+### Boundary
+
+- This repair keeps local platform `0.5.0` / `v0.11.6.1.1`, Loki
+  `18.11.3` / `3.7.6`, Alloy `1.11.0` / `1.18.0`, the existing memberlist
+  topology, least-privilege Alloy RBAC, and the six-label index contract. It
+  changes no demo-api code or image, Grafana data source, Event collection,
+  tracing, AWS state, public endpoint, credential, or production automation.
+
 ## v0.11.6.1.1.1
 
 ### Fixed

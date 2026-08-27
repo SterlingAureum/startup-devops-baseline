@@ -89,6 +89,9 @@ resultsCache:
   enabled: false
 minio:
   enabled: false
+sidecar:
+  rules:
+    enabled: false
 
 backend:
   replicas: 0

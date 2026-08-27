@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.5.2.0 telemetry and alert-routing foundation uses Prometheus Operator through the
+The active v0.11.6.1.1 local observability foundation uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -23,13 +23,16 @@ observability Namespace
   Alertmanager StatefulSet and private ClusterIP Service
   Environment-local routing and inhibition configuration
   Internal-only drill webhook routes, inactive until a guarded drill creates the sink
+  Loki Monolithic StatefulSet and private gateway
+  Alloy Pod-log collector DaemonSet
 ```
 
 Nine repository-owned actionable alerts and their version-controlled Runbooks
 remain active and unchanged. v0.11.5.2.0 adds a guarded local firing,
 resolution, routing, and inhibition drill through a temporary restricted sink.
-External notification providers, Loki, Alloy, tracing, Thanos, remote write,
-Kubecost, and cloud billing integration are not part of this increment.
+External notification providers, Kubernetes Event collection, a Grafana Loki
+data source, tracing, Thanos, remote write, Kubecost, and cloud billing
+integration are not part of this increment.
 
 The v0.11.5.0.1 repair changes only active-configuration acceptance: both the
 spaced repository matcher and Alertmanager's compact canonical matcher are
@@ -104,6 +107,19 @@ recorded. Uvicorn uses the same JSON formatter and its duplicate access stream
 is disabled. Loki, Alloy, Kubernetes Event collection, Grafana log data
 sources, and tracing remain undeployed at this checkpoint.
 
+v0.11.6.1.1 implements the local Pod-log transport and store. Alloy runs once
+per node and reads Pod logs through the Kubernetes API, so it needs no host
+filesystem mount or privileged container. Loki runs in Monolithic mode with
+one replica, filesystem-backed TSDB v13 storage on a 2 GiB disposable
+`emptyDir`, and 24-hour retention. Its gateway is ClusterIP-only. NetworkPolicy
+limits collector access to DNS, the Kubernetes API, and the Loki gateway.
+
+Only `environment`, `cluster`, `namespace`, `application`, `container`, and
+`severity` are indexed Loki labels. Pod name and UID are structured metadata;
+release ID, source commit, image digest, request ID, trace ID, and span ID stay
+inside the JSON log record. This prevents unbounded stream cardinality while
+retaining release correlation.
+
 The local Application is:
 
 ```text
@@ -166,6 +182,7 @@ PROFILE=local ./scripts/check-capacity-dashboard.sh
 ./scripts/check-actionable-alerts.sh
 ./scripts/check-prometheus-target-counts.sh
 CONFIRM_ALERT_DRILL=true ./scripts/check-alert-lifecycle-drill.sh
+./scripts/check-local-logging-runtime.sh
 ```
 
 Generate demo-api traffic if the application metric is not visible yet, then

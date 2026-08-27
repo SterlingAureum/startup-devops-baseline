@@ -298,7 +298,16 @@ def validate_repository() -> None:
     )
     require("assertNotIn" in tests, "Sensitive metric negative tests missing")
 
-    chart = require_markers("apps/demo-api/helm/Chart.yaml", ("version: 0.5.1", 'appVersion: "0.3.0"'))
+    structured_logging_successor = (
+        root / "delivery/contracts/v0.11.6.1.0-structured-demo-api-logging-runtime.json"
+    ).is_file()
+    chart = require_markers(
+        "apps/demo-api/helm/Chart.yaml",
+        (
+            "version: 0.6.0" if structured_logging_successor else "version: 0.5.1",
+            'appVersion: "0.4.0"' if structured_logging_successor else 'appVersion: "0.3.0"',
+        ),
+    )
     require("version: 0.4.0" not in chart, "Chart version was not advanced")
 
     for relative in (

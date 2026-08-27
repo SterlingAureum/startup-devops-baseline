@@ -89,8 +89,17 @@ chart = read("apps/demo-api/helm/Chart.yaml")
 values = read("apps/demo-api/helm/values.yaml")
 template = read("apps/demo-api/helm/templates/analysis-template.yaml")
 
-require("version: 0.5.1" in chart, "Chart was not advanced to 0.5.1")
-require('appVersion: "0.3.0"' in chart, "Application version changed")
+structured_logging_successor = (
+    root / "delivery/contracts/v0.11.6.1.0-structured-demo-api-logging-runtime.json"
+).is_file()
+require(
+    ("version: 0.6.0" if structured_logging_successor else "version: 0.5.1") in chart,
+    "Unexpected successor-aware Chart version",
+)
+require(
+    ('appVersion: "0.4.0"' if structured_logging_successor else 'appVersion: "0.3.0"') in chart,
+    "Unexpected successor-aware application version",
+)
 require("canaryTargetUp:" in values, "Canary metric values missing")
 require("initialDelay: 60s" in values, "No-data warm-up delay missing from values")
 require(

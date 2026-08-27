@@ -129,6 +129,12 @@ echo "==> Validating v0.11.6.0 centralized logging and minimal tracing foundatio
 echo "==> Validating v0.11.6.1.0 structured demo-api logging runtime"
 "${ROOT_DIR}/scripts/validate-v0.11.6.1.0-structured-demo-api-logging-runtime.sh"
 
+echo "==> Validating v0.11.6.1.1 local Loki and Alloy pod logs"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.1-local-loki-alloy-pod-logs.sh"
+
+echo "==> Validating v0.11.6.1.1.1 Alloy RBAC rendering and historical validator repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.1.1-alloy-rbac-rendering-historical-validator-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

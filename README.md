@@ -3,15 +3,18 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.6.1.0-structured-demo-api-logging-runtime`. demo-api now emits bounded
-JSON Lines with release identity projected from canonical Pod annotations.
-Successful probe and metrics requests are quiet, failures remain visible, and
-raw paths, query strings, headers, bodies, database parameters, credentials,
-and exception details are excluded. This first runtime subincrement requires a
-new application image but deploys no Loki, Alloy, Kubernetes Event collector,
-Grafana log data source, or tracing component. See
-`docs/V0.11.6.1.0_STRUCTURED_DEMO_API_LOGGING_RUNTIME.md`.
-Its design predecessor checkpoint is
+`v0.11.6.1.1-local-loki-alloy-pod-logs`. The local profile now deploys one
+private, bounded Loki Monolithic instance and an Alloy DaemonSet that reads
+node-local Pod logs through the Kubernetes API. The accepted demo-api JSON
+records are queryable with exactly six indexed labels; Pod identity remains
+structured metadata. Storage is disposable and limited to a 2 GiB `emptyDir`
+with Loki's minimum supported 24-hour retention. Kubernetes Events, a Grafana
+Loki data source, tracing, AWS logging, and application image changes remain
+outside this increment. See
+`docs/V0.11.6.1.1_LOCAL_LOKI_ALLOY_POD_LOGS.md`.
+Its runtime predecessor checkpoint is
+`v0.11.6.1.0-structured-demo-api-logging-runtime`.
+The architectural foundation remains
 `v0.11.6.0-centralized-logging-minimal-tracing-foundation`.
 
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
@@ -227,13 +230,15 @@ v0.11.5 locally. Its accepted checkpoint identity is
 v0.11.6.0 defines environment-isolated logging and minimal tracing contracts.
 v0.11.6.1.0 implements the first application runtime slice: bounded JSON Lines,
 one process formatter, quiet successful probes, and Downward API projection of
-release identity. Loki and Alloy begin in v0.11.6.1.1; tracing remains
-v0.11.6.2 scope.
+release identity. v0.11.6.1.1 adds the private local Loki and Alloy Pod-log
+path with bounded storage, resources, RBAC, NetworkPolicy, and label
+cardinality. Kubernetes Events and the Grafana data source remain
+v0.11.6.1.2 scope; tracing remains v0.11.6.2 scope.
 
 ## Current Version
 
 ```text
-v0.11.6.1.0-structured-demo-api-logging-runtime
+v0.11.6.1.1-local-loki-alloy-pod-logs
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

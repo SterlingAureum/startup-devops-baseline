@@ -159,6 +159,7 @@ aws = require_markers("clusters/aws/base/platform/monitoring.yaml", common_marke
 ))
 
 alert_lifecycle_drill_successor = (root / "delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json").is_file()
+logging_runtime_successor = (root / "delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json").is_file()
 for text, label in ((local, "local"), (aws, "AWS")):
     require(re.search(r"(?ms)defaultRules:\n\s+create: false", text) is not None, f"{label}: default rules enabled")
     require(re.search(r"(?ms)alertmanager:\n\s+enabled: true", text) is not None, f"{label}: Alertmanager disabled")
@@ -179,8 +180,8 @@ for text, label in ((local, "local"), (aws, "AWS")):
 require_markers(
     "clusters/local/platform/Chart.yaml",
     (
-        "version: 0.4.1" if alert_lifecycle_drill_successor else "version: 0.4.0",
-        'appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else 'appVersion: "v0.11.5.0"',
+        "version: 0.5.0" if logging_runtime_successor else ("version: 0.4.1" if alert_lifecycle_drill_successor else "version: 0.4.0"),
+        'appVersion: "v0.11.6.1.1"' if logging_runtime_successor else ('appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else 'appVersion: "v0.11.5.0"'),
     ),
 )
 semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()

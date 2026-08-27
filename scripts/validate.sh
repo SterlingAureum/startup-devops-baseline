@@ -12,6 +12,11 @@ INGRESS_HOST="${INGRESS_HOST:-demo-api.local}"
 INGRESS_BASE_URL="${INGRESS_BASE_URL:-http://localhost}"
 MONITORING_APP_NAME="${MONITORING_APP_NAME:-monitoring}"
 MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-observability}"
+LOKI_APP_NAME="${LOKI_APP_NAME:-logging-loki}"
+ALLOY_APP_NAME="${ALLOY_APP_NAME:-logging-alloy}"
+LOKI_STATEFULSET="${LOKI_STATEFULSET:-observability-logs}"
+LOKI_GATEWAY_DEPLOYMENT="${LOKI_GATEWAY_DEPLOYMENT:-observability-logs-gateway}"
+ALLOY_DAEMONSET="${ALLOY_DAEMONSET:-observability-logs-collector}"
 PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
 PROMETHEUS_POD_SELECTOR="${PROMETHEUS_POD_SELECTOR:-app.kubernetes.io/name=prometheus}"
 ALERTMANAGER_SERVICE="${ALERTMANAGER_SERVICE:-observability-metrics-alertmanager}"
@@ -131,6 +136,25 @@ wait_deployment_ready() {
   fi
 }
 
+wait_controller_ready() {
+  local namespace="$1"
+  local kind="$2"
+  local name="$3"
+  local description="$4"
+
+  if ! kubectl -n "$namespace" get "$kind" "$name" >/dev/null 2>&1; then
+    fail "$description not found: ${kind}/${name}"
+    return 1
+  fi
+  if kubectl -n "$namespace" rollout status "${kind}/${name}" --timeout="$TIMEOUT" >/dev/null 2>&1; then
+    pass "$description is rolled out"
+  else
+    fail "$description is not rolled out"
+    kubectl -n "$namespace" get "$kind" "$name" -o wide || true
+    return 1
+  fi
+}
+
 check_application() {
   local namespace="$1"
   local app_name="$2"
@@ -158,6 +182,34 @@ check_application() {
     fail "application health status is not Healthy: $app_name status=$health_status"
     return 1
   fi
+}
+
+wait_application_ready() {
+  local namespace="$1"
+  local app_name="$2"
+  local timeout_seconds="${TIMEOUT%s}"
+  local deadline
+  local sync_status=""
+  local health_status=""
+
+  if ! [[ "$timeout_seconds" =~ ^[0-9]+$ ]]; then
+    timeout_seconds=180
+  fi
+  deadline=$((SECONDS + timeout_seconds))
+
+  while [ "$SECONDS" -lt "$deadline" ]; do
+    sync_status="$(kubectl -n "$namespace" get application "$app_name" -o jsonpath='{.status.sync.status}' 2>/dev/null || true)"
+    health_status="$(kubectl -n "$namespace" get application "$app_name" -o jsonpath='{.status.health.status}' 2>/dev/null || true)"
+    if [ "$sync_status" = "Synced" ] && [ "$health_status" = "Healthy" ]; then
+      pass "application is Synced and Healthy: $app_name"
+      return 0
+    fi
+    sleep 3
+  done
+
+  fail "application did not become Synced and Healthy: $app_name sync=${sync_status:-unknown} health=${health_status:-unknown}"
+  kubectl -n "$namespace" get application "$app_name" -o yaml || true
+  return 1
 }
 
 check_application_if_exists() {
@@ -469,6 +521,8 @@ check_application "$ARGOCD_NAMESPACE" "$ROOT_APP_NAME"
 check_application "$ARGOCD_NAMESPACE" "$DEMO_APP_NAME"
 check_application "$ARGOCD_NAMESPACE" "$INGRESS_APP_NAME"
 check_application "$ARGOCD_NAMESPACE" "$MONITORING_APP_NAME"
+wait_application_ready "$ARGOCD_NAMESPACE" "$LOKI_APP_NAME"
+wait_application_ready "$ARGOCD_NAMESPACE" "$ALLOY_APP_NAME"
 check_application_if_exists "$ARGOCD_NAMESPACE" "$ARGO_ROLLOUTS_APP_NAME" "Argo Rollouts"
 
 print_section "Argo Rollouts controller checks"
@@ -509,6 +563,9 @@ check_http_endpoint "/metrics" "demo_api_http_requests_total" "metrics"
 
 print_section "Monitoring checks"
 check_namespace "$MONITORING_NAMESPACE"
+wait_controller_ready "$MONITORING_NAMESPACE" statefulset "$LOKI_STATEFULSET" "Loki Monolithic"
+wait_controller_ready "$MONITORING_NAMESPACE" deployment "$LOKI_GATEWAY_DEPLOYMENT" "Loki gateway"
+wait_controller_ready "$MONITORING_NAMESPACE" daemonset "$ALLOY_DAEMONSET" "Alloy Pod-log collector"
 wait_pods_ready_by_label \
   "$MONITORING_NAMESPACE" \
   "$PROMETHEUS_POD_SELECTOR" \

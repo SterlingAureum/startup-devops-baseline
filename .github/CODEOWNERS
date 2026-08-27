@@ -110,6 +110,9 @@
 /scripts/validate-v0.11.6.0-centralized-logging-minimal-tracing-foundation.sh @SterlingAureum
 /scripts/validate-v0.11.6.1.0-structured-demo-api-logging-runtime.sh @SterlingAureum
 /scripts/check-demo-api-structured-logs.sh @SterlingAureum
+/scripts/check-local-logging-runtime.sh @SterlingAureum
+/scripts/validate-v0.11.6.1.1-local-loki-alloy-pod-logs.sh @SterlingAureum
+/scripts/validate-v0.11.6.1.1.1-alloy-rbac-rendering-historical-validator-repair.sh @SterlingAureum
 /scripts/derive-demo-api-release-id.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.py @SterlingAureum
 /scripts/validate-trusted-runtime-executor.sh @SterlingAureum
@@ -168,6 +171,10 @@
 /docs/V0.11.6.0_CENTRALIZED_LOGGING_MINIMAL_TRACING_FOUNDATION.md @SterlingAureum
 /docs/V0.11.6.1.0_STRUCTURED_DEMO_API_LOGGING_RUNTIME.md @SterlingAureum
 /delivery/contracts/v0.11.6.1.0-structured-demo-api-logging-runtime.json @SterlingAureum
+/docs/V0.11.6.1.1_LOCAL_LOKI_ALLOY_POD_LOGS.md @SterlingAureum
+/delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json @SterlingAureum
+/delivery/contracts/v0.11.6.1.1.1-alloy-rbac-rendering-historical-validator-repair.json @SterlingAureum
+/docs/V0.11.6.1.1.1_ALLOY_RBAC_RENDERING_HISTORICAL_VALIDATOR_REPAIR.md @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

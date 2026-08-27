@@ -1,0 +1,223 @@
+fullnameOverride: observability-logs-collector
+
+crds:
+  create: false
+
+global:
+  podSecurityContext:
+    runAsNonRoot: true
+    seccompProfile:
+      type: RuntimeDefault
+
+alloy:
+  clustering:
+    enabled: false
+  enableReporting: false
+  storagePath: /tmp/alloy
+  mounts:
+    varlog: false
+    dockercontainers: false
+    extra:
+      - name: alloy-storage
+        mountPath: /tmp/alloy
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+      ephemeral-storage: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+      ephemeral-storage: 256Mi
+  configMap:
+    create: true
+    content: |-
+      logging {
+        level  = "info"
+        format = "logfmt"
+      }
+
+      discovery.kubernetes "pod" {
+        role = "pod"
+
+        selectors {
+          role  = "pod"
+          field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)
+        }
+      }
+
+      discovery.relabel "pod_logs" {
+        targets = discovery.kubernetes.pod.targets
+
+        rule {
+          source_labels = ["__meta_kubernetes_namespace"]
+          action        = "replace"
+          target_label  = "namespace"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+          action        = "replace"
+          target_label  = "application"
+        }
+
+        rule {
+          source_labels = ["application", "__meta_kubernetes_pod_container_name"]
+          separator     = ";"
+          regex         = `^;(.+)$`
+          replacement   = "$1"
+          action        = "replace"
+          target_label  = "application"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_container_name"]
+          action        = "replace"
+          target_label  = "container"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_name"]
+          action        = "replace"
+          target_label  = "pod_name"
+        }
+
+        rule {
+          source_labels = ["__meta_kubernetes_pod_uid"]
+          action        = "replace"
+          target_label  = "pod_uid"
+        }
+      }
+
+      loki.source.kubernetes "pod_logs" {
+        targets    = discovery.relabel.pod_logs.output
+        forward_to = [loki.process.pod_logs.receiver]
+      }
+
+      loki.process "pod_logs" {
+        stage.json {
+          expressions    = { severity = "severity" }
+          drop_malformed = false
+        }
+
+        stage.labels {
+          values = { severity = "severity" }
+        }
+
+        stage.structured_metadata {
+          values = {
+            pod_name = "pod_name",
+            pod_uid  = "pod_uid",
+          }
+        }
+
+        stage.static_labels {
+          values = {
+            environment = "local",
+            cluster     = "startup-devops-local",
+          }
+        }
+
+        stage.label_keep {
+          values = ["environment", "cluster", "namespace", "application", "container", "severity"]
+        }
+
+        forward_to = [loki.write.local.receiver]
+      }
+
+      loki.write "local" {
+        endpoint {
+          url = "http://observability-logs-gateway.observability.svc.cluster.local/loki/api/v1/push"
+        }
+      }
+
+configReloader:
+  enabled: false
+
+controller:
+  type: daemonset
+  hostNetwork: false
+  hostPID: false
+  tolerations:
+    - operator: Exists
+  volumes:
+    extra:
+      - name: alloy-storage
+        emptyDir:
+          sizeLimit: 256Mi
+
+rbac:
+  create: true
+  rules:
+    - apiGroups:
+        - ""
+      resources:
+        - pods
+        - pods/log
+      verbs:
+        - get
+        - list
+        - watch
+  clusterRules:
+    - apiGroups:
+        - ""
+      resources:
+        - namespaces
+      verbs:
+        - get
+        - list
+        - watch
+
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+
+service:
+  enabled: false
+serviceMonitor:
+  enabled: false
+ingress:
+  enabled: false
+
+networkPolicy:
+  enabled: true
+  flavor: kubernetes
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - ipBlock:
+            cidr: 10.96.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: observability-logs
+              app.kubernetes.io/component: gateway
+      ports:
+        - protocol: TCP
+          port: 8080

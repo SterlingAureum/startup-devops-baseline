@@ -9,6 +9,11 @@ cleanup() {
 }
 trap cleanup EXIT
 
+INCLUDE_LOGGING_APPS=false
+if [[ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json" ]]; then
+  INCLUDE_LOGGING_APPS=true
+fi
+
 python3 - "${ROOT_DIR}" <<'PY'
 from copy import deepcopy
 import json
@@ -123,6 +128,28 @@ metadata:
 spec:
   source:
     targetRevision: 88.5.0
+YAML
+    if [ "${INCLUDE_LOGGING_APPS:-false}" = true ]; then
+      cat <<'YAML'
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logging-loki
+spec:
+  source:
+    targetRevision: 18.11.3
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logging-alloy
+spec:
+  source:
+    targetRevision: 1.11.0
+YAML
+    fi
+    cat <<YAML
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -173,7 +200,8 @@ SH
 chmod +x "${WORK_DIR}/bin/helm"
 
 echo "==> Exercising the historical validator's Helm successor branch"
-PATH="${WORK_DIR}/bin:${PATH}" \
+INCLUDE_LOGGING_APPS="${INCLUDE_LOGGING_APPS}" \
+  PATH="${WORK_DIR}/bin:${PATH}" \
   "${ROOT_DIR}/scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh" >/dev/null
 
 echo "v0.11.4.0.1 Helm successor render regression passed."

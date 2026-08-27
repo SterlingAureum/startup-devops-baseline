@@ -130,7 +130,12 @@ for key in ("monitoringRedeployBeforeRerun", "imageRebuildBeforeRerun"):
 require(acceptance.get("formalAwsExecutionDeferredTo") == "v0.11.8", "AWS boundary moved")
 
 local_chart = read("clusters/local/platform/Chart.yaml")
-require("version: 0.4.1" in local_chart and 'appVersion: "v0.11.5.2.0"' in local_chart, "Local platform Chart changed")
+logging_runtime_successor = (root / "delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json").is_file()
+require(
+    ("version: 0.5.0" if logging_runtime_successor else "version: 0.4.1") in local_chart
+    and ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else 'appVersion: "v0.11.5.2.0"') in local_chart,
+    "Local platform Chart changed",
+)
 views_chart = read("platform/observability/helm/Chart.yaml")
 require("version: 0.4.1" in views_chart and 'appVersion: "v0.11.5.1.1"' in views_chart, "Observability Chart changed")
 

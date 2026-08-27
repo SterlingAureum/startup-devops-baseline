@@ -2,6 +2,66 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.1.1.1
+
+### Fixed
+
+- Replaced the explicitly empty Alloy `rbac.clusterRules` value with a second
+  non-empty least-privilege rule list so the pinned Alloy Chart can render a
+  valid ClusterRole.
+- Made the v0.11.2 and v0.11.3.2 historical validators accept the authoritative
+  v0.11.6.1.0 demo-api Chart `0.6.0` / application version `0.4.0` successor
+  while preserving their original pre-successor expectations.
+- Made the v0.11.4.0.1 fake Helm fixture include the two pinned logging
+  Applications only when the v0.11.6.1.1 successor contract exists.
+
+### Added
+
+- Added source and rendered-manifest regression checks that reject empty Alloy
+  RBAC lists and require exactly `namespaces`, `pods`, and `pods/log`.
+- Added a repair contract, design record, focused validator, and negative
+  mutations for RBAC expansion, successor downgrade, and runtime-evidence
+  overstatement.
+
+### Boundary
+
+- This repair keeps local platform `0.5.0` / `v0.11.6.1.1`, Loki
+  `18.11.3` / `3.7.6`, Alloy `1.11.0` / `1.18.0`, and demo-api
+  `0.6.0` / `0.4.0`. It changes no application code or image, Loki value,
+  Alloy collection pipeline, label contract, Grafana data source, Event
+  collection, tracing, AWS state, public endpoint, credential, or production
+  automation.
+
+## v0.11.6.1.1
+
+### Added
+
+- Added pinned local `logging-loki` and `logging-alloy` Argo CD Applications
+  after the existing observability stack.
+- Added one private Loki Monolithic replica with TSDB v13, filesystem storage,
+  a 2 GiB disposable volume, 24-hour retention, bounded resources, and
+  cluster-only NetworkPolicy.
+- Added an Alloy DaemonSet that discovers same-node Pods, reads logs through
+  the Kubernetes API, preserves malformed/non-JSON lines, extracts severity,
+  and sends logs only to the private Loki gateway.
+- Added exact indexed-label and structured-metadata contracts plus offline and
+  local live validators, including a demo-api Pod replacement persistence
+  check.
+
+### Changed
+
+- Advanced the local platform Chart to `0.5.0` and application version to
+  `v0.11.6.1.1`.
+- Made the general local validator wait for both logging Applications and all
+  logging workloads, avoiding transient first-run readiness failures.
+
+### Boundary
+
+- This increment changes no demo-api source or image, monitoring or
+  Alertmanager configuration, Grafana data source, Kubernetes Event stream,
+  tracing component, AWS state, public endpoint, external credential,
+  production automation, AI infrastructure, AIOps, or OpenClaw integration.
+
 ## v0.11.6.1.0
 
 ### Added

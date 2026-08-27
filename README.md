@@ -3,15 +3,17 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.6.1.1-local-loki-alloy-pod-logs`. The local profile now deploys one
-private, bounded Loki Monolithic instance and an Alloy DaemonSet that reads
-node-local Pod logs through the Kubernetes API. The accepted demo-api JSON
-records are queryable with exactly six indexed labels; Pod identity remains
-structured metadata. Storage is disposable and limited to a 2 GiB `emptyDir`
-with Loki's minimum supported 24-hour retention. Kubernetes Events, a Grafana
-Loki data source, tracing, AWS logging, and application image changes remain
-outside this increment. See
-`docs/V0.11.6.1.1_LOCAL_LOKI_ALLOY_POD_LOGS.md`.
+`v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair`. The local
+profile deploys one private, bounded Loki Monolithic instance and an Alloy
+DaemonSet that reads node-local `startup-apps` Pod logs through the Kubernetes
+API. The application scope prevents dense one-node kind clusters from
+exhausting log-tail fsnotify watchers. Accepted demo-api JSON records are
+queryable with exactly six indexed labels; Pod identity remains structured
+metadata. Storage is disposable and limited to a 2 GiB `emptyDir` with Loki's
+minimum supported 24-hour retention. Kubernetes Events, a Grafana Loki data
+source, cluster-wide platform logs, tracing, AWS logging, and application image
+changes remain outside this increment. See
+`docs/V0.11.6.1.1.5_APPLICATION_SCOPED_ALLOY_LOKI_ACCEPTANCE_REPAIR.md`.
 Its runtime predecessor checkpoint is
 `v0.11.6.1.0-structured-demo-api-logging-runtime`.
 The architectural foundation remains

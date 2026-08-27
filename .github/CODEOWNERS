@@ -178,6 +178,9 @@
 /docs/V0.11.6.1.1.1_ALLOY_RBAC_RENDERING_HISTORICAL_VALIDATOR_REPAIR.md @SterlingAureum
 /delivery/contracts/v0.11.6.1.1.2-alloy-nonroot-loki-rules-sidecar-runtime-repair.json @SterlingAureum
 /docs/V0.11.6.1.1.2_ALLOY_NONROOT_LOKI_RULES_SIDECAR_RUNTIME_REPAIR.md @SterlingAureum
+/delivery/contracts/v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair.json @SterlingAureum
+/docs/V0.11.6.1.1.5_APPLICATION_SCOPED_ALLOY_LOKI_ACCEPTANCE_REPAIR.md @SterlingAureum
+/scripts/validate-v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair.sh @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

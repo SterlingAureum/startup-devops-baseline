@@ -138,6 +138,9 @@ echo "==> Validating v0.11.6.1.1.1 Alloy RBAC rendering and historical validator
 echo "==> Validating v0.11.6.1.1.2 Alloy non-root and Loki rules-sidecar runtime repair"
 "${ROOT_DIR}/scripts/validate-v0.11.6.1.1.2-alloy-nonroot-loki-rules-sidecar-runtime-repair.sh"
 
+echo "==> Validating v0.11.6.1.1.5 application-scoped Alloy and Loki acceptance repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

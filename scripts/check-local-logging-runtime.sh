@@ -76,10 +76,19 @@ select_ready_demo_pod() {
 query_loki() {
   local start_ns="$1"
   curl -fsS --get "http://127.0.0.1:${LOKI_LOCAL_PORT}/loki/api/v1/query_range" \
-    --data-urlencode 'query={environment="local",cluster="startup-devops-local",namespace="startup-apps",application="demo-api",container="demo-api",severity="INFO"}' \
+    --data-urlencode 'query={environment="local",cluster="startup-devops-local",namespace="startup-apps",application="demo-api",container="demo-api",severity="INFO"} |= "\"message\":\"http_request_completed\"" |= "\"http.route\":\"/version\""' \
     --data-urlencode "start=${start_ns}" \
     --data-urlencode 'direction=backward' \
     --data-urlencode 'limit=1000'
+}
+
+query_fsnotify_errors() {
+  local start_ns="$1"
+  curl -fsS --get "http://127.0.0.1:${LOKI_LOCAL_PORT}/loki/api/v1/query_range" \
+    --data-urlencode 'query={environment="local",cluster="startup-devops-local",namespace="startup-apps",application="demo-api",container="demo-api"} |= "failed to create fsnotify watcher: too many open files"' \
+    --data-urlencode "start=${start_ns}" \
+    --data-urlencode 'direction=backward' \
+    --data-urlencode 'limit=1'
 }
 
 result_contains_pod_request() {
@@ -88,11 +97,15 @@ result_contains_pod_request() {
   local release_id="$3"
   jq -e --arg pod "${pod_name}" --arg release "${release_id}" '
     [
-      .data.result[].values[]?[1]
+      .data.result[]
+      | select(
+          .stream.pod_name == $pod
+          and (.stream.pod_uid // "") != ""
+        )
+      | .values[]?[1]
       | fromjson?
       | select(
-          .["kubernetes.pod.name"] == $pod
-          and .["platform.release.id"] == $release
+          .["platform.release.id"] == $release
           and .message == "http_request_completed"
           and .["http.route"] == "/version"
           and .["http.response.status_code"] == 200
@@ -177,7 +190,7 @@ old_pod="$(select_ready_demo_pod)"
 kubectl -n "${APP_NAMESPACE}" get pod "${old_pod}" -o json >"${WORK_DIR}/old-pod.json"
 release_id="$(jq -r '.metadata.annotations["platform.startup.dev/release-id"] // empty' "${WORK_DIR}/old-pod.json")"
 [ -n "${release_id}" ] || fail "the selected demo-api Pod lacks the canonical release ID annotation."
-start_ns="$(python3 -c 'import time; print(time.time_ns() - 600_000_000_000)')"
+start_ns="$(python3 -c 'import time; print(time.time_ns() - 5_000_000_000)')"
 kubectl -n "${APP_NAMESPACE}" exec "${old_pod}" -c "${APP_CONTAINER}" -- \
   python -c 'from urllib.request import urlopen; urlopen("http://127.0.0.1:8080/version", timeout=5).read()' \
   >/dev/null
@@ -209,10 +222,16 @@ done
 result_contains_pod_request "${WORK_DIR}/query.json" "${old_pod}" "${release_id}" \
   || fail "Loki did not return the expected structured demo-api request log."
 
+echo "==> Rejecting fsnotify tailer exhaustion in the bounded acceptance window"
+query_fsnotify_errors "${start_ns}" >"${WORK_DIR}/fsnotify-query.json"
+jq -e '[.data.result[].values[]?] | length == 0' "${WORK_DIR}/fsnotify-query.json" >/dev/null \
+  || fail "Alloy/Kubernetes log tailing emitted fsnotify watcher exhaustion after the repaired collector became Ready."
+
 echo "==> Checking the bounded Loki indexed-label inventory"
-curl -fsS --get "http://127.0.0.1:${LOKI_LOCAL_PORT}/loki/api/v1/labels" \
-  --data-urlencode "start=${start_ns}" >"${WORK_DIR}/labels.json"
-python3 - "${WORK_DIR}/labels.json" <<'PY'
+curl -fsS --get "http://127.0.0.1:${LOKI_LOCAL_PORT}/loki/api/v1/series" \
+  --data-urlencode 'match[]={environment="local",cluster="startup-devops-local",namespace="startup-apps",application="demo-api",container="demo-api"}' \
+  --data-urlencode "start=${start_ns}" >"${WORK_DIR}/series.json"
+python3 - "${WORK_DIR}/series.json" <<'PY'
 from __future__ import annotations
 
 import json
@@ -221,8 +240,11 @@ import sys
 
 payload = json.loads(Path(sys.argv[1]).read_text())
 if payload.get("status") != "success":
-    raise SystemExit("Loki label API did not return success")
-observed = set(payload.get("data", []))
+    raise SystemExit("Loki Series API did not return success")
+series = payload.get("data", [])
+if not series:
+    raise SystemExit("Loki Series API returned no demo-api stream")
+observed = {label for stream in series for label in stream}
 allowed = {"environment", "cluster", "namespace", "application", "container", "severity"}
 required = {"environment", "cluster", "namespace", "application", "container", "severity"}
 unexpected = sorted(observed - allowed)
@@ -231,7 +253,7 @@ if unexpected:
     raise SystemExit(f"Unexpected indexed Loki labels: {', '.join(unexpected)}")
 if missing:
     raise SystemExit(f"Required indexed Loki labels were not observed: {', '.join(missing)}")
-print("Indexed Loki labels are exactly bounded by the v0.11.6 contract.")
+print("Indexed Loki stream labels are exactly bounded by the v0.11.6 contract.")
 PY
 
 echo "==> Replacing the source Pod and proving the old log remains queryable"

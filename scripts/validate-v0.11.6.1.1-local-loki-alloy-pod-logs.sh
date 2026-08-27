@@ -173,6 +173,10 @@ contract = load_json(contract_path)
 validate_contract(contract)
 require((root / contract["designDocument"]).is_file(), "Missing design document")
 require((root / "delivery/contracts/v0.11.6.1.0-structured-demo-api-logging-runtime.json").is_file(), "Missing predecessor contract")
+require(
+    (root / "delivery/contracts/v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair.json").is_file(),
+    "Missing application-scoped live-acceptance repair contract",
+)
 
 chart = read("clusters/local/platform/Chart.yaml")
 require("version: 0.5.0" in chart and 'appVersion: "v0.11.6.1.1"' in chart, "Local platform Chart not advanced")
@@ -222,6 +226,7 @@ for forbidden in ("type: LoadBalancer", "type: NodePort", "object_store: s3", "i
 alloy_values = read("clusters/local/platform/files/logging/alloy-values.yaml")
 for marker in (
     "type: daemonset",
+    'names = ["startup-apps"]',
     'field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)',
     'loki.source.kubernetes "pod_logs"',
     "drop_malformed = false",
@@ -264,7 +269,10 @@ for marker in (
     "statefulset/${LOKI_STATEFULSET}",
     "daemonset/${ALLOY_DAEMONSET}",
     "/loki/api/v1/query_range",
-    "/loki/api/v1/labels",
+    "/loki/api/v1/series",
+    "query_fsnotify_errors",
+    '.stream.pod_name == $pod',
+    '(.stream.pod_uid // "") != ""',
     "Unexpected indexed Loki labels",
     "delete pod",
     "pre-replacement demo-api log disappeared",
@@ -275,7 +283,7 @@ for relative, marker in (
     ("scripts/validate-ci-quality-gates.sh", "validate-v0.11.6.1.1-local-loki-alloy-pod-logs.sh"),
     ("scripts/validate.sh", "wait_application_ready"),
     ("scripts/validate.sh", "Alloy Pod-log collector"),
-    ("README.md", "v0.11.6.1.1-local-loki-alloy-pod-logs"),
+    ("README.md", "v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair"),
     ("docs/ROADMAP.md", "v0.11.6.1.1 - local Loki Monolithic and node-local Alloy Pod-log"),
     ("docs/OBSERVABILITY.md", "check-local-logging-runtime.sh"),
     ("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md", "v0.11.6.1.1"),
@@ -411,6 +419,7 @@ for forbidden in ("chunks-cache", "results-cache", "loki-canary", "minio"):
 
 daemonset = resource_document(alloy, "DaemonSet", "observability-logs-collector")
 require(daemonset, "Rendered Alloy DaemonSet missing")
+require('names = ["startup-apps"]' in alloy, "Rendered Alloy discovery is not application-scoped")
 require("kind: NetworkPolicy" in alloy, "Rendered Alloy NetworkPolicy missing")
 require("kind: Ingress" not in alloy and "kind: Service\n" not in alloy, "Rendered Alloy exposes a service or Ingress")
 require("hostPath:" not in alloy and "privileged: true" not in alloy, "Rendered Alloy requires host privileges")

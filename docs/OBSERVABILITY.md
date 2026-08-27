@@ -107,18 +107,25 @@ recorded. Uvicorn uses the same JSON formatter and its duplicate access stream
 is disabled. Loki, Alloy, Kubernetes Event collection, Grafana log data
 sources, and tracing remain undeployed at this checkpoint.
 
-v0.11.6.1.1 implements the local Pod-log transport and store. Alloy runs once
-per node and reads Pod logs through the Kubernetes API, so it needs no host
-filesystem mount or privileged container. Loki runs in Monolithic mode with
-one replica, filesystem-backed TSDB v13 storage on a 2 GiB disposable
-`emptyDir`, and 24-hour retention. Its gateway is ClusterIP-only. NetworkPolicy
-limits collector access to DNS, the Kubernetes API, and the Loki gateway.
+v0.11.6.1.1 implements the local Pod-log transport and store. The
+v0.11.6.1.1.5 repair bounds each node-local Alloy instance to `startup-apps`
+Pod logs after cluster-wide Kubernetes API readers exhausted fsnotify watchers
+on the dense one-node kind profile. The collector still needs no host
+filesystem mount, privileged container, or host sysctl mutation. Loki runs in
+Monolithic mode with one replica, filesystem-backed TSDB v13 storage on a
+2 GiB disposable `emptyDir`, and 24-hour retention. Its gateway is
+ClusterIP-only. NetworkPolicy limits collector access to DNS, the Kubernetes
+API, and the Loki gateway.
 
 Only `environment`, `cluster`, `namespace`, `application`, `container`, and
 `severity` are indexed Loki labels. Pod name and UID are structured metadata;
 release ID, source commit, image digest, request ID, trace ID, and span ID stay
 inside the JSON log record. This prevents unbounded stream cardinality while
 retaining release correlation.
+
+Loki query results merge structured metadata into each returned label map, so
+the Series API, rather than the query-label representation, is the acceptance
+source for actual indexed stream labels.
 
 The local Application is:
 

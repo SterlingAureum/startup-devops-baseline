@@ -413,8 +413,9 @@ Incremental scope:
   - v0.11.6.1.1 - local Loki Monolithic and node-local Alloy Pod-log
     collection through the Kubernetes API, with private access, bounded
     resources, 2 GiB disposable storage, 24-hour retention, exact indexed
-    labels, NetworkPolicy, and live replacement persistence acceptance -
-    implemented; local GitOps live validation required
+    labels, NetworkPolicy, application-scoped watcher-exhaustion repair, and
+    live replacement persistence acceptance - implemented through
+    v0.11.6.1.1.5; local GitOps live validation required
   - v0.11.6.1.2 - singleton Kubernetes Event collection and Grafana Loki data
     source - planned
   - v0.11.6.1.3 - complete local logging acceptance and replay closure - planned

@@ -52,6 +52,10 @@ alloy:
       discovery.kubernetes "pod" {
         role = "pod"
 
+        namespaces {
+          names = ["startup-apps"]
+        }
+
         selectors {
           role  = "pod"
           field = "spec.nodeName=" + coalesce(sys.env("HOSTNAME"), constants.hostname)

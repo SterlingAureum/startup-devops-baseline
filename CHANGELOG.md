@@ -2,6 +2,36 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.1.1.5
+
+### Fixed
+
+- Restricted local Kubernetes API Pod-log readers to `startup-apps`, preventing
+  dense one-node kind clusters from exhausting fsnotify watchers while keeping
+  node-local discovery, non-root execution, and host-mount-free collection.
+- Matched Pod name and UID from Loki-returned structured metadata while keeping
+  release and HTTP identity checks against the original demo-api JSON record.
+- Replaced query-label inventory checks with the Loki Series API so structured
+  metadata and automatic detected level cannot be misclassified as indexed
+  stream labels.
+- Added content-filtered demo-api queries and a bounded guard that rejects new
+  `failed to create fsnotify watcher: too many open files` entries.
+
+### Added
+
+- Added a repair contract, design record, focused validator, and negative
+  mutations for cluster-wide reader restoration, system-namespace expansion,
+  mutable host sysctl dependency, label-API inventory, fsnotify acceptance, and
+  premature live-success claims.
+
+### Boundary
+
+- This repair keeps local platform `0.5.0` / `v0.11.6.1.1`, Loki
+  `18.11.3` / `3.7.6`, Alloy `1.11.0` / `1.18.0`, their security and network
+  boundaries, and the six indexed-label contract. It changes no Loki value,
+  demo-api code or image, Grafana data source, Event collection, tracing, AWS
+  state, host sysctl, public endpoint, credential, or production automation.
+
 ## v0.11.6.1.1.2
 
 ### Fixed

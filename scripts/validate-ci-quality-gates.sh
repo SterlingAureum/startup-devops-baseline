@@ -144,6 +144,9 @@ echo "==> Validating v0.11.6.1.1.5 application-scoped Alloy and Loki acceptance 
 echo "==> Validating v0.11.6.1.2 Kubernetes Events and Grafana Loki integration"
 "${ROOT_DIR}/scripts/validate-v0.11.6.1.2-kubernetes-events-grafana-loki.sh"
 
+echo "==> Validating v0.11.6.1.2.1 Events PVC sync-wave and validation repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.2.1-events-pvc-sync-wave-validation-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

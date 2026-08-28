@@ -26,10 +26,12 @@ it inherits `git.targetRevision` from the Root and deploys recording rules,
 controller ServiceMonitors, and Dashboard ConfigMaps after the monitoring
 control plane. CloudNativePG PodMonitors remain disabled in the local profile.
 
-The logging sequence is Loki at sync wave `7`, the node-local Pod-log Alloy
-DaemonSet at wave `8`, and the singleton Kubernetes Event Alloy Deployment at
-wave `9`. The Event collector uses a Root-owned 256Mi position PVC created at
-wave `8`; demo-api remains at wave `10`.
+The logging sequence is Loki at sync wave `7`; the node-local Pod-log Alloy
+DaemonSet, the Root-owned 256Mi Event-position PVC, and the singleton
+Kubernetes Event Alloy Application share wave `8`; demo-api remains at wave
+`10`. Keeping the `WaitForFirstConsumer` claim and its first consumer in the
+same wave prevents an Argo CD health-gated sync deadlock. See
+`docs/V0.11.6.1.2.1_EVENTS_PVC_SYNC_WAVE_TROUBLESHOOTING.md`.
 
 Stable values use `HEAD` and render `demo-api` Helm parameters as an explicit
 empty list. Feature mode is supplied only through the Root Application and

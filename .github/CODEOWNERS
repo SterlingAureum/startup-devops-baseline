@@ -185,6 +185,9 @@
 /docs/V0.11.6.1.2_KUBERNETES_EVENTS_GRAFANA_LOKI.md @SterlingAureum
 /scripts/validate-v0.11.6.1.2-kubernetes-events-grafana-loki.sh @SterlingAureum
 /scripts/check-local-events-grafana.sh @SterlingAureum
+/delivery/contracts/v0.11.6.1.2.1-events-pvc-sync-wave-validation-repair.json @SterlingAureum
+/docs/V0.11.6.1.2.1_EVENTS_PVC_SYNC_WAVE_TROUBLESHOOTING.md @SterlingAureum
+/scripts/validate-v0.11.6.1.2.1-events-pvc-sync-wave-validation-repair.sh @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

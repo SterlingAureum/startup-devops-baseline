@@ -418,8 +418,10 @@ Incremental scope:
     v0.11.6.1.1.5; local GitOps live validation required
   - v0.11.6.1.2 - singleton Kubernetes Event collection and Grafana Loki data
     source, persistent Event read positions, exact six-label Event streams,
-    and restart replay rejection - implemented; local GitOps live validation
-    required
+    and restart replay rejection - implemented through v0.11.6.1.2.1, which
+    co-schedules the WaitForFirstConsumer PVC and consumer Application,
+    repairs exact historical render counting, and bounds Argo CD sync waits;
+    local GitOps live validation required
   - v0.11.6.1.3 - complete local logging acceptance and replay closure - planned
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned

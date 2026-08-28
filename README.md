@@ -2,7 +2,7 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.6.1.2-kubernetes-events-grafana-loki`.
+Current development checkpoint: `v0.11.6.1.2.1-events-pvc-sync-wave-validation-repair`.
 The local profile deploys one private, bounded Loki Monolithic instance, an
 Alloy DaemonSet for node-local `startup-apps` Pod logs, and a separate
 one-replica Alloy Deployment for cluster Kubernetes Events. Event read
@@ -12,7 +12,11 @@ non-default, non-editable, proxy-mode Loki data source. Pod and Event streams
 both preserve the exact six-label index contract. Loki storage remains
 disposable and limited to a 2 GiB `emptyDir` with 24-hour retention. Dashboards,
 tracing, AWS logging, and application image changes remain outside this
-increment. See `docs/V0.11.6.1.2_KUBERNETES_EVENTS_GRAFANA_LOKI.md`.
+increment. Repair `v0.11.6.1.2.1` co-schedules the Event-position claim and
+its consumer Application for `WaitForFirstConsumer` storage, makes Argo CD
+sync waits bounded, and repairs exact historical Application counting. See
+`docs/V0.11.6.1.2.1_EVENTS_PVC_SYNC_WAVE_TROUBLESHOOTING.md` and
+`docs/V0.11.6.1.2_KUBERNETES_EVENTS_GRAFANA_LOKI.md`.
 Its accepted Pod-log predecessor checkpoint is
 `v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair`.
 Its runtime predecessor checkpoint is

@@ -2,6 +2,36 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.1.2.1
+
+### Fixed
+
+- Moved `logging-alloy-events` from sync wave `9` to wave `8`, matching its
+  Root-owned position claim so the local `WaitForFirstConsumer` StorageClass
+  can bind only after the Event collector Pod is schedulable without blocking
+  that consumer Application from being created.
+- Replaced substring-based historical logging Application cardinality checks
+  with exact rendered Application-name counting. `logging-alloy-events` no
+  longer causes the predecessor `logging-alloy` check to fail.
+- Bounded feature and baseline-restoration Argo CD sync commands with
+  `WAIT_TIMEOUT_SECONDS` and emit Application diagnostics when a sync fails.
+
+### Added
+
+- Added a version-specific troubleshooting record for the PVC/consumer sync
+  deadlock, misleading Argo CD permission response, safe operation termination,
+  non-destructive recovery, verification commands, and prevention invariant.
+- Added a repair contract, focused validator, successor coverage, and negative
+  mutations for cross-wave storage, unbounded sync, substring cardinality, and
+  troubleshooting omission regressions.
+
+### Boundary
+
+- This repair changes no external Chart or application image, Alloy or Loki
+  runtime values, PVC size, StorageClass, RBAC, NetworkPolicy, Event labels,
+  Grafana data source, AWS state, public endpoint, credential, production
+  automation, or tracing runtime.
+
 ## v0.11.6.1.2
 
 ### Added

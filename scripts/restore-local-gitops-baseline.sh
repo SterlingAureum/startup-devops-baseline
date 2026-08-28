@@ -87,9 +87,13 @@ sync_application_if_needed() {
   wait_for_comparison_ready "${application_name}"
   sync_status="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.status.sync.status}')"
   if [ "${sync_status}" != "Synced" ]; then
-    run_argocd_mutation_with_retry \
+    if ! run_argocd_mutation_with_retry \
       "${application_name}" \
-      argocd app sync "${application_name}"
+      argocd app sync "${application_name}" --timeout "${WAIT_TIMEOUT_SECONDS}"; then
+      echo "ERROR: bounded sync failed for Application/${application_name}." >&2
+      argocd_application_diagnostics "${application_name}"
+      return 1
+    fi
   fi
   wait_for_application_idle "${application_name}"
   wait_for_comparison_ready "${application_name}"

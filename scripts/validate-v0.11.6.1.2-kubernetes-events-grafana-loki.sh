@@ -220,10 +220,15 @@ require((root / "delivery/contracts/v0.11.6.1.1.5-application-scoped-alloy-loki-
 chart = read("clusters/local/platform/Chart.yaml")
 require("version: 0.6.0" in chart and 'appVersion: "v0.11.6.1.2"' in chart, "Local platform Chart not advanced")
 
+sync_wave_repair = (
+    root
+    / "delivery/contracts/v0.11.6.1.2.1-events-pvc-sync-wave-validation-repair.json"
+).is_file()
+expected_events_wave = "8" if sync_wave_repair else "9"
 application = read("clusters/local/platform/templates/logging-alloy-events.yaml")
 for marker in (
     "name: logging-alloy-events",
-    'sync-wave: "9"',
+    f'sync-wave: "{expected_events_wave}"',
     "chart: alloy",
     "releaseName: observability-events-collector",
     'files/logging/alloy-events-values.yaml',
@@ -242,6 +247,11 @@ for marker in (
     "storage: 256Mi",
 ):
     require(marker in storage, f"Event position storage marker missing: {marker}")
+if sync_wave_repair:
+    require(
+        'sync-wave: "8"' in application and 'sync-wave: "8"' in storage,
+        "WaitForFirstConsumer PVC and Events Application are separated across sync waves",
+    )
 
 events = read("clusters/local/platform/files/logging/alloy-events-values.yaml")
 for marker in (
@@ -356,6 +366,8 @@ for name, mutate in mutations:
 
 print("v0.11.6.1.2 singleton Events, durable positions, bounded labels, and Grafana Loki contracts passed.")
 print("v0.11.6.1.2 duplicate, volatile, RBAC, high-cardinality, public, default, and tracing mutations were rejected.")
+if sync_wave_repair:
+    print("v0.11.6.1.2.1 same-wave WaitForFirstConsumer successor coverage passed.")
 PY
 
 command -v helm >/dev/null 2>&1 || {

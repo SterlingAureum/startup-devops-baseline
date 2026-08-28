@@ -332,8 +332,9 @@ required = {"logging-loki", "logging-alloy"}
 missing = sorted(required - set(applications))
 if missing:
     raise SystemExit(f"Rendered local platform lacks logging Applications: {', '.join(missing)}")
-if text.count("name: logging-loki") != 1 or text.count("name: logging-alloy") != 1:
-    raise SystemExit("Rendered logging Application cardinality changed")
+for name in required:
+    if applications.count(name) != 1:
+        raise SystemExit(f"Rendered logging Application cardinality changed: {name}")
 PY
 
 echo "==> Rendering pinned Loki and Alloy Charts"

@@ -333,6 +333,18 @@ for marker in (
     "replayed a previously accepted Event",
 ):
     require(marker in live, f"Live checker marker missing: {marker}")
+microtime_repair = (
+    root
+    / "delivery/contracts/v0.11.6.1.2.2-kubernetes-event-microtime-acceptance-repair.json"
+).is_file()
+if microtime_repair:
+    for marker in (
+        "from datetime import datetime, timezone",
+        'isoformat(timespec="microseconds")',
+        '.replace("+00:00", "Z")',
+    ):
+        require(marker in live, f"Event MicroTime repair marker missing: {marker}")
+    require("%N" not in live, "Nanosecond Event timestamp regression found")
 
 for relative, marker in (
     ("scripts/validate-ci-quality-gates.sh", "validate-v0.11.6.1.2-kubernetes-events-grafana-loki.sh"),
@@ -368,6 +380,8 @@ print("v0.11.6.1.2 singleton Events, durable positions, bounded labels, and Graf
 print("v0.11.6.1.2 duplicate, volatile, RBAC, high-cardinality, public, default, and tracing mutations were rejected.")
 if sync_wave_repair:
     print("v0.11.6.1.2.1 same-wave WaitForFirstConsumer successor coverage passed.")
+if microtime_repair:
+    print("v0.11.6.1.2.2 six-digit Event MicroTime successor coverage passed.")
 PY
 
 command -v helm >/dev/null 2>&1 || {

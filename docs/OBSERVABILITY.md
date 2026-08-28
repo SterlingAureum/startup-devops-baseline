@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.6.1.2.1 local observability foundation uses Prometheus Operator through the
+The active v0.11.6.1.2.2 local observability foundation uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -146,6 +146,12 @@ v0.11.6.1.2.1 therefore places the Root-owned claim and the
 `logging-alloy-events` Application in the same sync wave. The version-specific
 deadlock signature and recovery procedure are in
 `V0.11.6.1.2.1_EVENTS_PVC_SYNC_WAVE_TROUBLESHOOTING.md`.
+
+Repair v0.11.6.1.2.2 changes only the temporary acceptance Event timestamp.
+It emits RFC 3339 UTC with exactly six fractional digits, matching Kubernetes
+`MicroTime`; the deployed logging topology and data contracts remain unchanged.
+The active v0.11.6.1.2.1 local observability foundation therefore remains the
+runtime predecessor; v0.11.6.1.2.2 changes only its live checker.
 
 Grafana remains owned by `kube-prometheus-stack`. Its Git-provisioned Loki data
 source uses UID `loki`, proxy access, and the private Loki gateway. It is not

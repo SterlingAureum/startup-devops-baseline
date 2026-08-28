@@ -2,6 +2,32 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.1.2.2
+
+### Fixed
+
+- Replaced the nine-digit GNU `date %N` value used for
+  `events.k8s.io/v1 Event.eventTime` with an explicit UTC Python timestamp
+  containing exactly six fractional digits. The local API server can now
+  decode the value as Kubernetes `MicroTime`.
+- Kept temporary Event cleanup registration after successful API creation, so
+  an API validation failure cannot claim or attempt to clean a resource that
+  was never created.
+
+### Added
+
+- Added a repair contract, incident record, focused validator, predecessor
+  successor coverage, and negative mutations for nanosecond precision, missing
+  UTC normalization, early cleanup registration, and runtime overstatement.
+
+### Boundary
+
+- This repair changes only the local Events live-acceptance timestamp and its
+  offline evidence. It changes no Kubernetes resource, local platform Chart,
+  application image, Events collector, PVC, Alloy/Loki value, Grafana data
+  source, RBAC, NetworkPolicy, indexed label, AWS state, workflow, credential,
+  public endpoint, production automation, or tracing runtime.
+
 ## v0.11.6.1.2.1
 
 ### Fixed

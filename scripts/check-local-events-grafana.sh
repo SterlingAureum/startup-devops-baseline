@@ -88,7 +88,10 @@ create_acceptance_event() {
   local pod_name="$3"
   local pod_uid="$4"
   local timestamp
-  timestamp="$(date -u +%Y-%m-%dT%H:%M:%S.%NZ)"
+  timestamp="$(python3 -c '
+from datetime import datetime, timezone
+print(datetime.now(timezone.utc).isoformat(timespec="microseconds").replace("+00:00", "Z"))
+')"
 
   kubectl create -f - >/dev/null <<YAML
 apiVersion: events.k8s.io/v1

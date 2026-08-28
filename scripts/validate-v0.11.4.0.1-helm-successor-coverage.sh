@@ -13,6 +13,10 @@ INCLUDE_LOGGING_APPS=false
 if [[ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json" ]]; then
   INCLUDE_LOGGING_APPS=true
 fi
+INCLUDE_EVENTS_APP=false
+if [[ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json" ]]; then
+  INCLUDE_EVENTS_APP=true
+fi
 
 python3 - "${ROOT_DIR}" <<'PY'
 from copy import deepcopy
@@ -149,6 +153,18 @@ spec:
     targetRevision: 1.11.0
 YAML
     fi
+    if [ "${INCLUDE_EVENTS_APP:-false}" = true ]; then
+      cat <<'YAML'
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logging-alloy-events
+spec:
+  source:
+    targetRevision: 1.11.0
+YAML
+    fi
     cat <<YAML
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -201,6 +217,7 @@ chmod +x "${WORK_DIR}/bin/helm"
 
 echo "==> Exercising the historical validator's Helm successor branch"
 INCLUDE_LOGGING_APPS="${INCLUDE_LOGGING_APPS}" \
+  INCLUDE_EVENTS_APP="${INCLUDE_EVENTS_APP}" \
   PATH="${WORK_DIR}/bin:${PATH}" \
   "${ROOT_DIR}/scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh" >/dev/null
 

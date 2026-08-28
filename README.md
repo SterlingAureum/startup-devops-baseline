@@ -2,18 +2,19 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint:
-`v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair`. The local
-profile deploys one private, bounded Loki Monolithic instance and an Alloy
-DaemonSet that reads node-local `startup-apps` Pod logs through the Kubernetes
-API. The application scope prevents dense one-node kind clusters from
-exhausting log-tail fsnotify watchers. Accepted demo-api JSON records are
-queryable with exactly six indexed labels; Pod identity remains structured
-metadata. Storage is disposable and limited to a 2 GiB `emptyDir` with Loki's
-minimum supported 24-hour retention. Kubernetes Events, a Grafana Loki data
-source, cluster-wide platform logs, tracing, AWS logging, and application image
-changes remain outside this increment. See
-`docs/V0.11.6.1.1.5_APPLICATION_SCOPED_ALLOY_LOKI_ACCEPTANCE_REPAIR.md`.
+Current development checkpoint: `v0.11.6.1.2-kubernetes-events-grafana-loki`.
+The local profile deploys one private, bounded Loki Monolithic instance, an
+Alloy DaemonSet for node-local `startup-apps` Pod logs, and a separate
+one-replica Alloy Deployment for cluster Kubernetes Events. Event read
+positions use a 256Mi local PVC so collector Pod replacement does not replay
+the Kubernetes Event TTL window. The existing Grafana instance receives one
+non-default, non-editable, proxy-mode Loki data source. Pod and Event streams
+both preserve the exact six-label index contract. Loki storage remains
+disposable and limited to a 2 GiB `emptyDir` with 24-hour retention. Dashboards,
+tracing, AWS logging, and application image changes remain outside this
+increment. See `docs/V0.11.6.1.2_KUBERNETES_EVENTS_GRAFANA_LOKI.md`.
+Its accepted Pod-log predecessor checkpoint is
+`v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair`.
 Its runtime predecessor checkpoint is
 `v0.11.6.1.0-structured-demo-api-logging-runtime`.
 The architectural foundation remains
@@ -234,13 +235,14 @@ v0.11.6.1.0 implements the first application runtime slice: bounded JSON Lines,
 one process formatter, quiet successful probes, and Downward API projection of
 release identity. v0.11.6.1.1 adds the private local Loki and Alloy Pod-log
 path with bounded storage, resources, RBAC, NetworkPolicy, and label
-cardinality. Kubernetes Events and the Grafana data source remain
-v0.11.6.1.2 scope; tracing remains v0.11.6.2 scope.
+cardinality. v0.11.6.1.2 adds singleton Kubernetes Event collection with
+durable read positions and a Git-provisioned Grafana Loki data source; tracing
+remains v0.11.6.2 scope.
 
 ## Current Version
 
 ```text
-v0.11.6.1.1-local-loki-alloy-pod-logs
+v0.11.6.1.2-kubernetes-events-grafana-loki
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

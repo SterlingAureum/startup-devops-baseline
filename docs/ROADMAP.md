@@ -417,7 +417,9 @@ Incremental scope:
     live replacement persistence acceptance - implemented through
     v0.11.6.1.1.5; local GitOps live validation required
   - v0.11.6.1.2 - singleton Kubernetes Event collection and Grafana Loki data
-    source - planned
+    source, persistent Event read positions, exact six-label Event streams,
+    and restart replay rejection - implemented; local GitOps live validation
+    required
   - v0.11.6.1.3 - complete local logging acceptance and replay closure - planned
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned

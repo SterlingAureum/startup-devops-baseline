@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.6.1.1 local observability foundation uses Prometheus Operator through the
+The active v0.11.6.1.2 local observability foundation uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -25,14 +25,15 @@ observability Namespace
   Internal-only drill webhook routes, inactive until a guarded drill creates the sink
   Loki Monolithic StatefulSet and private gateway
   Alloy Pod-log collector DaemonSet
+  Alloy Kubernetes Event collector singleton Deployment
+  Grafana-provisioned private Loki data source
 ```
 
 Nine repository-owned actionable alerts and their version-controlled Runbooks
 remain active and unchanged. v0.11.5.2.0 adds a guarded local firing,
 resolution, routing, and inhibition drill through a temporary restricted sink.
-External notification providers, Kubernetes Event collection, a Grafana Loki
-data source, tracing, Thanos, remote write, Kubecost, and cloud billing
-integration are not part of this increment.
+External notification providers, tracing, Thanos, remote write, Kubecost, and
+cloud billing integration are not part of this increment.
 
 The v0.11.5.0.1 repair changes only active-configuration acceptance: both the
 spaced repository matcher and Alertmanager's compact canonical matcher are
@@ -126,6 +127,29 @@ retaining release correlation.
 Loki query results merge structured metadata into each returned label map, so
 the Series API, rather than the query-label representation, is the acceptance
 source for actual indexed stream labels.
+
+v0.11.6.1.2 adds a separate one-replica Alloy Deployment for Kubernetes
+Events. It watches Events in all namespaces with only `get`, `list`, and
+`watch` permission on the Event resource. Source records are JSON Lines and use
+the same exact six-label index contract, with fixed
+`application=kubernetes-events`, `container=events`, and `severity=INFO`.
+Changing Event reason, message, object name, and UID stay inside the JSON line.
+
+The collector mounts the local
+`observability-events-collector-storage` 256Mi PVC at `/var/lib/alloy`, keeping
+the source positions file across collector Pod replacement. The local live
+acceptance rejects replay of a deterministic Event after a Deployment restart
+and proves that a new Event is still collected afterward.
+
+Grafana remains owned by `kube-prometheus-stack`. Its Git-provisioned Loki data
+source uses UID `loki`, proxy access, and the private Loki gateway. It is not
+default or UI-editable, and Grafana's NetworkPolicy permits only the internal
+gateway port required for server-side queries. Validate this runtime with:
+
+```bash
+./scripts/check-local-logging-runtime.sh
+./scripts/check-local-events-grafana.sh
+```
 
 The local Application is:
 

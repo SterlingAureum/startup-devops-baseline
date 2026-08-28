@@ -2,6 +2,34 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.1.2
+
+### Added
+
+- Added a pinned `logging-alloy-events` Argo CD Application that deploys Alloy
+  `1.18.0` as a one-replica Deployment and watches Kubernetes Events through
+  the API without duplicating collection across node-local Pod-log collectors.
+- Added a 256Mi ReadWriteOnce positions claim so routine Event-collector Pod
+  replacement does not replay the Kubernetes Event TTL window.
+- Added a non-default, non-editable Grafana Loki data source with server-side
+  proxy access to the private Loki gateway.
+- Added exact Event RBAC, six-label cardinality, NetworkPolicy, Grafana health,
+  Event query, collector restart, replay-rejection, and resumed-collection
+  acceptance checks.
+
+### Changed
+
+- Advanced the local platform Chart to `0.6.0` and application version to
+  `v0.11.6.1.2`.
+- Allowed the cluster-only Grafana Deployment to query the Loki gateway on
+  internal port `8080`.
+
+### Boundary
+
+- This increment changes no demo-api code or image, Pod-log Alloy values, Loki
+  values, Prometheus data source, Dashboard, alert rule, AWS state, external
+  credential, public endpoint, production automation, or tracing runtime.
+
 ## v0.11.6.1.1.5
 
 ### Fixed

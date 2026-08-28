@@ -234,9 +234,10 @@ chart = read("apps/demo-api/helm/Chart.yaml")
 require("version: 0.6.0" in chart and 'appVersion: "0.4.0"' in chart, "demo-api Chart identity changed")
 local_chart = read("clusters/local/platform/Chart.yaml")
 logging_runtime_successor = (root / "delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json").is_file()
+events_runtime_successor = (root / "delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json").is_file()
 require(
-    ("version: 0.5.0" if logging_runtime_successor else "version: 0.4.1") in local_chart
-    and ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else 'appVersion: "v0.11.5.2.0"') in local_chart,
+    ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else "version: 0.4.1")) in local_chart
+    and ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else 'appVersion: "v0.11.5.2.0"')) in local_chart,
     "Local platform runtime changed",
 )
 views_chart = read("platform/observability/helm/Chart.yaml")

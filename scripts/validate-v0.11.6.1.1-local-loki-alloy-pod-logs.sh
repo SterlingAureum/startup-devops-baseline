@@ -179,7 +179,10 @@ require(
 )
 
 chart = read("clusters/local/platform/Chart.yaml")
-require("version: 0.5.0" in chart and 'appVersion: "v0.11.6.1.1"' in chart, "Local platform Chart not advanced")
+events_successor = (root / "delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json").is_file()
+expected_chart = "version: 0.6.0" if events_successor else "version: 0.5.0"
+expected_app = 'appVersion: "v0.11.6.1.2"' if events_successor else 'appVersion: "v0.11.6.1.1"'
+require(expected_chart in chart and expected_app in chart, "Local platform Chart successor not accepted")
 values = read("clusters/local/platform/values.yaml")
 for marker in (
     "repoURL: https://grafana-community.github.io/helm-charts",

@@ -55,12 +55,13 @@ require(chart_contract.get("version") == "0.4.1", "Wrong platform Chart version"
 require(chart_contract.get("applicationVersion") == "v0.11.5.2.0", "Wrong application version")
 chart = read("clusters/local/platform/Chart.yaml")
 logging_runtime_successor = (root / "delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json").is_file()
+events_runtime_successor = (root / "delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json").is_file()
 require(
-    ("version: 0.5.0" if logging_runtime_successor else "version: 0.4.1") in chart,
+    ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else "version: 0.4.1")) in chart,
     "Unexpected local platform Chart version",
 )
 require(
-    ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else 'appVersion: "v0.11.5.2.0"') in chart,
+    ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else 'appVersion: "v0.11.5.2.0"')) in chart,
     "Unexpected local platform appVersion",
 )
 

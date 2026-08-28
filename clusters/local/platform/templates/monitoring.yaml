@@ -109,6 +109,17 @@ spec:
         grafana:
           enabled: true
           defaultDashboardsEnabled: false
+          additionalDataSources:
+            - name: Loki
+              uid: loki
+              type: loki
+              access: proxy
+              url: http://observability-logs-gateway.observability.svc.cluster.local
+              isDefault: false
+              editable: false
+              jsonData:
+                timeout: 60
+                maxLines: 1000
           ingress:
             enabled: false
           service:
@@ -347,6 +358,8 @@ spec:
                   ports:
                     - protocol: TCP
                       port: 9090
+                    - protocol: TCP
+                      port: 8080
                 - to:
                     - namespaceSelector:
                         matchLabels:

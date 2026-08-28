@@ -181,6 +181,10 @@
 /delivery/contracts/v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair.json @SterlingAureum
 /docs/V0.11.6.1.1.5_APPLICATION_SCOPED_ALLOY_LOKI_ACCEPTANCE_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json @SterlingAureum
+/docs/V0.11.6.1.2_KUBERNETES_EVENTS_GRAFANA_LOKI.md @SterlingAureum
+/scripts/validate-v0.11.6.1.2-kubernetes-events-grafana-loki.sh @SterlingAureum
+/scripts/check-local-events-grafana.sh @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum
 /clusters/aws/base/platform/observability-views.yaml @SterlingAureum

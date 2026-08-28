@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: observability-events-collector-storage
+  namespace: observability
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+  labels:
+    app.kubernetes.io/name: alloy
+    app.kubernetes.io/instance: observability-events-collector
+    app.kubernetes.io/component: event-positions
+    app.kubernetes.io/part-of: startup-devops-baseline
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 256Mi

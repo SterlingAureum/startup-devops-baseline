@@ -194,6 +194,22 @@ for relative, marker in (
 ):
     require(marker in read(relative), f"Integration marker missing: {relative}: {marker}")
 
+repair_contract = root / "delivery/contracts/v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair.json"
+if repair_contract.is_file():
+    repair_live = read("scripts/check-local-tracing-runtime.sh")
+    repair_generator = read("scripts/generate-synthetic-otlp-trace.py")
+    for marker in (
+        '"traceId": normalized_trace_id',
+        '"spanId": normalized_span_id',
+        "OTLP HTTP request failed: status=",
+        "get pods -l \"${TEMPO_SELECTOR}\"",
+        "get pods -l \"${COLLECTOR_SELECTOR}\"",
+    ):
+        require(marker in repair_live or marker in repair_generator, f"Repair successor marker missing: {marker}")
+    for forbidden in ("import base64", "b64encode", "bytes.fromhex"):
+        require(forbidden not in repair_live and forbidden not in repair_generator, f"Repair successor regressed: {forbidden}")
+    print("Synthetic OTLP/JSON repair successor coverage passed.")
+
 mutations = (
     ("application export", lambda item: item["scope"].update(applicationExportEnabled=True)),
     ("Grafana expansion", lambda item: item["scope"].update(grafanaTraceDatasourceImplemented=True)),

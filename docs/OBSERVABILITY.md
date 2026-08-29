@@ -1,10 +1,15 @@
 # Observability
 
-The active v0.11.6.2.1 private local tracing runtime uses Prometheus Operator through the
+The active v0.11.6.2.1.1 acceptance repair retains the private local tracing runtime and uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
 Application.
+
+The repair changes no deployed component. It replaces Base64 synthetic trace
+and span identifiers with OTLP/JSON hexadecimal values, exposes bounded HTTP
+error bodies, and gathers Tempo and Collector diagnostics with explicit
+selectors. The accepted runtime remains v0.11.6.2.1.
 
 Its accepted runtime predecessor is the active v0.11.6.1.3 local structured-logging closure;
 the tracing increment does not replace or redeploy that logging topology.

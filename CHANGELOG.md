@@ -2,6 +2,25 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.2.1.1
+
+### Fixed
+
+- Corrected the synthetic OTLP/JSON acceptance payload to encode `traceId` and
+  `spanId` as 32- and 16-character hexadecimal strings instead of Base64.
+- Added strict rejection of malformed and all-zero synthetic identifiers and a
+  dedicated payload generator with deterministic protocol-shape tests.
+- Preserved the Collector HTTP 400 status and a bounded response body in live
+  failure output, and made Tempo and Collector diagnostics explicit rather
+  than relying on one shared label selector.
+
+### Boundary
+
+- This repair changes acceptance tooling and documentation only. Collector,
+  Tempo, demo-api, Helm, Kubernetes resources, images, configuration, storage,
+  and network policy remain unchanged; no reconciliation or image rebuild is
+  required.
+
 ## v0.11.6.2.1
 
 ### Added

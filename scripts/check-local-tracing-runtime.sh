@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
 OBSERVABILITY_NAMESPACE="${OBSERVABILITY_NAMESPACE:-observability}"
 APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
@@ -13,6 +14,7 @@ COLLECTOR_SERVICE="${COLLECTOR_SERVICE:-observability-otel-collector}"
 COLLECTOR_SELECTOR="${COLLECTOR_SELECTOR:-app.kubernetes.io/instance=observability-otel-collector}"
 TEMPO_DEPLOYMENT="${TEMPO_DEPLOYMENT:-observability-tempo}"
 TEMPO_SERVICE="${TEMPO_SERVICE:-observability-tempo}"
+TEMPO_SELECTOR="${TEMPO_SELECTOR:-app.kubernetes.io/instance=observability-tempo}"
 TIMEOUT="${TIMEOUT:-180s}"
 QUERY_TIMEOUT_SECONDS="${QUERY_TIMEOUT_SECONDS:-90}"
 WORK_DIR="$(mktemp -d)"
@@ -22,9 +24,13 @@ TEMPO_PF_LOG="${WORK_DIR}/tempo-port-forward.log"
 diagnostics() {
   local status="$?"
   if [ "${status}" -ne 0 ]; then
-    echo "==> v0.11.6.2.1 failure diagnostics" >&2
+    echo "==> v0.11.6.2.1.1 failure diagnostics" >&2
     kubectl -n "${ARGOCD_NAMESPACE}" get application "${TEMPO_APP}" "${COLLECTOR_APP}" -o wide >&2 || true
-    kubectl -n "${OBSERVABILITY_NAMESPACE}" get deployment,pod,service,networkpolicy -l app.kubernetes.io/part-of=startup-devops-baseline -o wide >&2 || true
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" get deployment "${TEMPO_DEPLOYMENT}" "${COLLECTOR_DEPLOYMENT}" -o wide >&2 || true
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" get pods -l "${TEMPO_SELECTOR}" -o wide >&2 || true
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" get pods -l "${COLLECTOR_SELECTOR}" -o wide >&2 || true
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" get service "${TEMPO_SERVICE}" "${COLLECTOR_SERVICE}" -o wide >&2 || true
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" get networkpolicy "${TEMPO_SERVICE}-cluster-only" "${COLLECTOR_SERVICE}-cluster-only" -o wide >&2 || true
     kubectl -n "${OBSERVABILITY_NAMESPACE}" logs deployment/"${COLLECTOR_DEPLOYMENT}" --tail=100 >&2 || true
     kubectl -n "${OBSERVABILITY_NAMESPACE}" logs deployment/"${TEMPO_DEPLOYMENT}" --tail=100 >&2 || true
     if [ -s "${TEMPO_PF_LOG}" ]; then
@@ -108,41 +114,31 @@ tracing_enabled="$(kubectl -n "${APP_NAMESPACE}" get pod "${demo_pod}" -o json |
 
 trace_id="$(python3 -c 'import secrets; print(secrets.token_hex(16))')"
 span_id="$(python3 -c 'import secrets; print(secrets.token_hex(8))')"
-python3 - "${trace_id}" "${span_id}" >"${WORK_DIR}/trace.json" <<'PY'
-import base64
-import json
-import sys
-import time
-
-trace_id, span_id = sys.argv[1:]
-start = time.time_ns()
-payload = {
-    "resourceSpans": [{
-        "resource": {"attributes": [
-            {"key": "service.name", "value": {"stringValue": "v0.11.6.2.1-acceptance"}},
-            {"key": "deployment.environment.name", "value": {"stringValue": "local"}},
-        ]},
-        "scopeSpans": [{
-            "scope": {"name": "startup-devops-baseline.acceptance", "version": "v0.11.6.2.1"},
-            "spans": [{
-                "traceId": base64.b64encode(bytes.fromhex(trace_id)).decode(),
-                "spanId": base64.b64encode(bytes.fromhex(span_id)).decode(),
-                "name": "v0.11.6.2.1.synthetic.collector-tempo",
-                "kind": 1,
-                "startTimeUnixNano": str(start),
-                "endTimeUnixNano": str(start + 1_000_000),
-                "attributes": [{"key": "test.run_id", "value": {"stringValue": trace_id}}],
-                "status": {"code": 1},
-            }],
-        }],
-    }],
-}
-print(json.dumps(payload, separators=(",", ":")))
-PY
+python3 "${ROOT_DIR}/scripts/generate-synthetic-otlp-trace.py" \
+  --trace-id "${trace_id}" \
+  --span-id "${span_id}" \
+  >"${WORK_DIR}/trace.json"
 
 echo "==> Sending one synthetic OTLP trace through the Collector"
 kubectl -n "${APP_NAMESPACE}" exec -i "${demo_pod}" -c "${APP_CONTAINER}" -- \
-  python -c 'import sys, urllib.request; data=sys.stdin.buffer.read(); request=urllib.request.Request("http://observability-otel-collector.observability.svc.cluster.local:4318/v1/traces", data=data, headers={"Content-Type":"application/json"}, method="POST"); response=urllib.request.urlopen(request, timeout=10); print(response.status); response.close()' \
+  python -c 'import sys, urllib.error, urllib.request; data=sys.stdin.buffer.read(); request=urllib.request.Request("http://observability-otel-collector.observability.svc.cluster.local:4318/v1/traces", data=data, headers={"Content-Type":"application/json"}, method="POST");
+try:
+    response=urllib.request.urlopen(request, timeout=10)
+    status=response.status
+    body=response.read(4096).decode("utf-8", errors="replace")
+    response.close()
+except urllib.error.HTTPError as error:
+    body=error.read(4096).decode("utf-8", errors="replace")
+    display_body=body or "<empty>"
+    print(f"OTLP HTTP request failed: status={error.code} body={display_body}", file=sys.stderr)
+    raise SystemExit(1)
+except urllib.error.URLError as error:
+    print(f"OTLP HTTP request failed before a response: {error.reason}", file=sys.stderr)
+    raise SystemExit(1)
+if status != 200:
+    print(f"OTLP HTTP request returned unexpected success status={status} body={body}", file=sys.stderr)
+    raise SystemExit(1)
+print(status)' \
   <"${WORK_DIR}/trace.json" | grep -qx '200'
 
 tempo_local_port="$(python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')"
@@ -173,8 +169,8 @@ import sys
 value = json.loads(Path(sys.argv[1]).read_text())
 encoded = json.dumps(value, sort_keys=True)
 for marker in (
-    "v0.11.6.2.1.synthetic.collector-tempo",
-    "v0.11.6.2.1-acceptance",
+    "v0.11.6.2.1.1.synthetic.collector-tempo",
+    "v0.11.6.2.1.1-acceptance",
     sys.argv[2],
 ):
     if marker not in encoded:
@@ -211,4 +207,4 @@ query_trace "${WORK_DIR}/trace-after-replacement.json" || {
   exit 1
 }
 
-echo "v0.11.6.2.1 private Collector-to-Tempo synthetic trace, disabled application export, and Collector replacement history acceptance passed."
+echo "v0.11.6.2.1.1 hex-encoded OTLP/JSON trace, visible HTTP diagnostics, disabled application export, and Collector replacement history acceptance passed."

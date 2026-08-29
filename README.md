@@ -2,7 +2,7 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.6.2.1-private-local-otel-collector-tempo-runtime`.
+Current development checkpoint: `v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair`.
 The local profile deploys one private, bounded Loki Monolithic instance, an
 Alloy DaemonSet for node-local `startup-apps` Pod logs, and a separate
 one-replica Alloy Deployment for cluster Kubernetes Events. Event read
@@ -18,6 +18,12 @@ adds one private traces-only OTel Collector Deployment and one repository-owned
 Tempo 3.0.3 Monolithic Deployment with bounded disposable local storage. The
 application still does not export, Grafana has no Tempo data source, and this
 runtime increment requires reconciliation but no new demo-api image. Repair
+`v0.11.6.2.1.1` corrects only the synthetic acceptance client: OTLP/JSON trace
+and span identifiers are now hexadecimal, HTTP rejection bodies remain visible,
+and Tempo/Collector diagnostics are selected explicitly. It changes no runtime
+resource and requires neither reconciliation nor an image rebuild. Its runtime
+predecessor is
+`v0.11.6.2.1-private-local-otel-collector-tempo-runtime`. Repair
 `v0.11.6.1.2.1` co-schedules the Event-position claim and
 its consumer Application for `WaitForFirstConsumer` storage, makes Argo CD
 sync waits bounded, and repairs exact historical Application counting. See

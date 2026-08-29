@@ -440,6 +440,10 @@ Incremental scope:
     accepted independently while demo-api export remains disabled. Local
     reconciliation and consecutive two-run live validation are required; no
     application image rebuild or production durability claim is introduced.
+  - v0.11.6.2.1.1 repairs the synthetic OTLP/JSON client to use hexadecimal
+    trace and span identifiers, surfaces bounded HTTP error response bodies,
+    and selects Collector and Tempo diagnostics explicitly. It changes no
+    deployed resource and requires neither reconciliation nor an image rebuild.
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned
 - v0.11.8 - environment-scoped observability qualification, including an

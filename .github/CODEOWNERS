@@ -203,6 +203,10 @@
 /docs/V0.11.6.2.1_PRIVATE_LOCAL_OTEL_COLLECTOR_TEMPO_RUNTIME.md @SterlingAureum
 /scripts/validate-v0.11.6.2.1-private-local-otel-collector-tempo-runtime.sh @SterlingAureum
 /scripts/check-local-tracing-runtime.sh @SterlingAureum
+/delivery/contracts/v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair.json @SterlingAureum
+/docs/V0.11.6.2.1.1_SYNTHETIC_OTLP_JSON_ENCODING_DIAGNOSTICS_REPAIR.md @SterlingAureum
+/scripts/generate-synthetic-otlp-trace.py @SterlingAureum
+/scripts/validate-v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair.sh @SterlingAureum
 /platform/tracing/tempo/ @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum

@@ -2,7 +2,7 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.6.1.3-local-logging-end-to-end-closure`.
+Current development checkpoint: `v0.11.6.2.0-demo-api-opentelemetry-tracing-contract`.
 The local profile deploys one private, bounded Loki Monolithic instance, an
 Alloy DaemonSet for node-local `startup-apps` Pod logs, and a separate
 one-replica Alloy Deployment for cluster Kubernetes Events. Event read
@@ -10,9 +10,12 @@ positions use a 256Mi local PVC so collector Pod replacement does not replay
 the Kubernetes Event TTL window. The existing Grafana instance receives one
 non-default, non-editable, proxy-mode Loki data source. Pod and Event streams
 both preserve the exact six-label index contract. Loki storage remains
-disposable and limited to a 2 GiB `emptyDir` with 24-hour retention. Dashboards,
-tracing, AWS logging, and application image changes remain outside this
-increment. Repair `v0.11.6.1.2.1` co-schedules the Event-position claim and
+disposable and limited to a 2 GiB `emptyDir` with 24-hour retention. Dashboards
+and AWS logging remain outside this increment. v0.11.6.2.0 adds application-
+side W3C propagation, bounded HTTP/PostgreSQL spans, shared release identity,
+and real log correlation while keeping OTLP export disabled. It deploys no
+Collector or Tempo and requires one unique demo-api image rebuild. Repair
+`v0.11.6.1.2.1` co-schedules the Event-position claim and
 its consumer Application for `WaitForFirstConsumer` storage, makes Argo CD
 sync waits bounded, and repairs exact historical Application counting. See
 `docs/V0.11.6.1.2.1_EVENTS_PVC_SYNC_WAVE_TROUBLESHOOTING.md` and
@@ -27,6 +30,10 @@ Event cleanup, preserves accepted Loki history after source deletion, and
 retains the version-specific `WaitForFirstConsumer` incident record. It changes
 no deployed workload. See
 `docs/V0.11.6.1.3_LOCAL_LOGGING_END_TO_END_CLOSURE.md`.
+The active tracing contract is documented in
+`docs/V0.11.6.2.0_DEMO_API_OPENTELEMETRY_TRACING_CONTRACT.md`.
+Its accepted logging predecessor checkpoint is
+`v0.11.6.1.3-local-logging-end-to-end-closure`.
 Its reconciliation predecessor checkpoint is
 `v0.11.6.1.2.1-events-pvc-sync-wave-validation-repair`.
 Its accepted Pod-log predecessor checkpoint is

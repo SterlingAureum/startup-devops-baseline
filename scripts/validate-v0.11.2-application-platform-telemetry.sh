@@ -301,11 +301,14 @@ def validate_repository() -> None:
     structured_logging_successor = (
         root / "delivery/contracts/v0.11.6.1.0-structured-demo-api-logging-runtime.json"
     ).is_file()
+    tracing_successor = (
+        root / "delivery/contracts/v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json"
+    ).is_file()
     chart = require_markers(
         "apps/demo-api/helm/Chart.yaml",
         (
-            "version: 0.6.0" if structured_logging_successor else "version: 0.5.1",
-            'appVersion: "0.4.0"' if structured_logging_successor else 'appVersion: "0.3.0"',
+            "version: 0.7.0" if tracing_successor else ("version: 0.6.0" if structured_logging_successor else "version: 0.5.1"),
+            'appVersion: "0.5.0"' if tracing_successor else ('appVersion: "0.4.0"' if structured_logging_successor else 'appVersion: "0.3.0"'),
         ),
     )
     require("version: 0.4.0" not in chart, "Chart version was not advanced")

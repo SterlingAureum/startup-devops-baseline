@@ -56,11 +56,12 @@ class ApplicationEndpointTests(unittest.TestCase):
             with patch(
                 "src.main.database_health",
                 return_value={"status": "ok"},
-            ):
+            ) as database_health:
                 self.assertEqual(
                     main.ready(),
                     {"status": "ready", "database": "ok"},
                 )
+                database_health.assert_called_once_with(traced=False)
 
     def test_ready_sanitizes_database_failure(self) -> None:
         with patch("src.main.database_enabled", return_value=True):

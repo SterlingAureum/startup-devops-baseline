@@ -1,10 +1,12 @@
 import uvicorn
 
 from .logging_config import configure_logging
+from .tracing import configure_tracing
 
 
 def main() -> None:
     configure_logging()
+    configure_tracing()
     uvicorn.run(
         "src.main:app",
         host="0.0.0.0",

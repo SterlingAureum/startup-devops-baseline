@@ -1,9 +1,12 @@
 import json
 import logging
-import os
 import sys
 from datetime import datetime, timezone
 from typing import Any, Mapping
+
+from opentelemetry import trace
+
+from .runtime_identity import runtime_identity
 
 
 REQUIRED_IDENTITY_FIELDS = (
@@ -17,28 +20,6 @@ REQUIRED_IDENTITY_FIELDS = (
 
 LOGGER = logging.getLogger("demo_api")
 LOGGER.addHandler(logging.NullHandler())
-
-
-def _runtime_identity() -> dict[str, str]:
-    service_name = os.getenv("APP_NAME", "demo-api")
-    service_version = os.getenv("APP_VERSION", "0.1.0")
-    return {
-        "service.name": service_name,
-        "service.version": service_version,
-        "deployment.environment.name": os.getenv("APP_ENV", "local"),
-        "platform.release.id": os.getenv(
-            "PLATFORM_RELEASE_ID",
-            f"{service_name}-local-{service_version}",
-        ),
-        "platform.source.commit": os.getenv(
-            "PLATFORM_SOURCE_COMMIT",
-            "local-unavailable",
-        ),
-        "container.image.digest": os.getenv(
-            "CONTAINER_IMAGE_DIGEST",
-            "local-unpinned",
-        ),
-    }
 
 
 def _timestamp(created: float) -> str:
@@ -55,8 +36,13 @@ class JsonLineFormatter(logging.Formatter):
             "timestamp": _timestamp(record.created),
             "severity": record.levelname.upper(),
             "message": message,
-            **_runtime_identity(),
+            **runtime_identity(),
         }
+
+        span_context = trace.get_current_span().get_span_context()
+        if span_context.is_valid:
+            payload["trace_id"] = format(span_context.trace_id, "032x")
+            payload["span_id"] = format(span_context.span_id, "016x")
 
         fields = getattr(record, "structured_fields", {})
         if isinstance(fields, Mapping):

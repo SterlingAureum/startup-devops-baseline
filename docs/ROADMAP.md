@@ -428,7 +428,12 @@ Incremental scope:
   - v0.11.6.1.3 closes the local structured-logging runtime with one ordered
     platform, Pod-log, Events, Loki, Grafana, strict-cleanup, retained-history,
     final-state, diagnostic, and consecutive two-run acceptance contract -
-    implemented; local live validation required
+    implemented and accepted locally
+  - v0.11.6.2.0 adds the demo-api OpenTelemetry contract: W3C propagation,
+    bounded HTTP SERVER and PostgreSQL CLIENT spans, shared release identity,
+    real JSON log correlation, exact SDK pins, and disabled-by-default OTLP
+    export. It deploys no Collector or Tempo; a unique local image rebuild and
+    disabled-state acceptance are required.
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned
 - v0.11.8 - environment-scoped observability qualification, including an

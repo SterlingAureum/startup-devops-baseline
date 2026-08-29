@@ -111,6 +111,14 @@ spec:
               value: {{ .Values.database.retryAttempts | quote }}
             - name: DATABASE_RETRY_DELAY_SECONDS
               value: {{ .Values.database.retryDelaySeconds | quote }}
+            - name: TRACING_ENABLED
+              value: {{ .Values.telemetry.tracing.enabled | quote }}
+            - name: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+              value: {{ required "telemetry.tracing.endpoint is required" .Values.telemetry.tracing.endpoint | quote }}
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: {{ required "telemetry.tracing.protocol is required" .Values.telemetry.tracing.protocol | quote }}
+            - name: OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
+              value: {{ .Values.telemetry.tracing.timeoutSeconds | quote }}
             {{- if .Values.database.enabled }}
             - name: DATABASE_URL
               valueFrom:

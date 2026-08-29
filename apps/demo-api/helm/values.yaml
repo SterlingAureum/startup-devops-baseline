@@ -144,6 +144,11 @@ telemetry:
       labelLimit: 100
       labelNameLengthLimit: 128
       labelValueLengthLimit: 512
+  tracing:
+    enabled: false
+    endpoint: http://observability-otel-collector.observability.svc.cluster.local:4318/v1/traces
+    protocol: http/protobuf
+    timeoutSeconds: 5
 
 nodeSelector: {}
 tolerations: []

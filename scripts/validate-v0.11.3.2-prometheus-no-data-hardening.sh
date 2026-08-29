@@ -92,12 +92,15 @@ template = read("apps/demo-api/helm/templates/analysis-template.yaml")
 structured_logging_successor = (
     root / "delivery/contracts/v0.11.6.1.0-structured-demo-api-logging-runtime.json"
 ).is_file()
+tracing_successor = (
+    root / "delivery/contracts/v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json"
+).is_file()
 require(
-    ("version: 0.6.0" if structured_logging_successor else "version: 0.5.1") in chart,
+    ("version: 0.7.0" if tracing_successor else ("version: 0.6.0" if structured_logging_successor else "version: 0.5.1")) in chart,
     "Unexpected successor-aware Chart version",
 )
 require(
-    ('appVersion: "0.4.0"' if structured_logging_successor else 'appVersion: "0.3.0"') in chart,
+    ('appVersion: "0.5.0"' if tracing_successor else ('appVersion: "0.4.0"' if structured_logging_successor else 'appVersion: "0.3.0"')) in chart,
     "Unexpected successor-aware application version",
 )
 require("canaryTargetUp:" in values, "Canary metric values missing")

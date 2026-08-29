@@ -231,7 +231,12 @@ for template in (
     )
 
 chart = read("apps/demo-api/helm/Chart.yaml")
-require("version: 0.6.0" in chart and 'appVersion: "0.4.0"' in chart, "demo-api Chart identity changed")
+tracing_successor = (root / "delivery/contracts/v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json").is_file()
+require(
+    ("version: 0.7.0" if tracing_successor else "version: 0.6.0") in chart
+    and ('appVersion: "0.5.0"' if tracing_successor else 'appVersion: "0.4.0"') in chart,
+    "demo-api Chart identity changed",
+)
 local_chart = read("clusters/local/platform/Chart.yaml")
 logging_runtime_successor = (root / "delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json").is_file()
 events_runtime_successor = (root / "delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json").is_file()

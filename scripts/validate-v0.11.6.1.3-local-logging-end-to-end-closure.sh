@@ -217,6 +217,20 @@ for relative, marker in (
 ):
     require(marker in read(relative), f"Integration marker missing: {relative}: {marker}")
 
+tracing_successor_path = (
+    root / "delivery/contracts/v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json"
+)
+if tracing_successor_path.is_file():
+    tracing_successor = load_json(
+        "delivery/contracts/v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json"
+    )
+    require(tracing_successor.get("predecessor") == "v0.11.6.1.3", "Tracing successor skips closure")
+    require(tracing_successor.get("scope", {}).get("collectorImplemented") is False, "Tracing successor deployed Collector early")
+    require(tracing_successor.get("scope", {}).get("tempoImplemented") is False, "Tracing successor deployed Tempo early")
+    successor_chart = read("apps/demo-api/helm/Chart.yaml")
+    require("version: 0.7.0" in successor_chart and 'appVersion: "0.5.0"' in successor_chart, "Tracing successor Chart identity missing")
+    print("v0.11.6.2.0 application tracing successor coverage passed.")
+
 mutations: list[tuple[str, Callable[[dict[str, Any]], None]]] = [
     ("single live run", lambda value: value["acceptance"].__setitem__("consecutiveSuccessfulRunsRequired", 1)),
     ("best-effort normal cleanup", lambda value: value["acceptance"].__setitem__("strictNormalEventCleanup", False)),

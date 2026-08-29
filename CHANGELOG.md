@@ -2,6 +2,37 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.2.0
+
+### Added
+
+- Added explicitly enabled OpenTelemetry SDK initialization, W3C Trace Context
+  extraction, one bounded HTTP SERVER span, controlled PostgreSQL CLIENT spans,
+  and valid-context `trace_id`/`span_id` JSON log correlation.
+- Added exact OpenTelemetry 1.44.0 dependency pins, one shared log/trace release
+  identity source, 29 application unit tests, a machine-readable tracing
+  contract, focused offline validation, and a disabled-state live checker.
+- Added identical disabled-by-default OTLP/HTTP configuration to the Deployment
+  and Rollout paths and advanced the demo-api Chart to `0.7.0` with application
+  version `0.5.0`.
+
+### Security
+
+- Restricted spans to method, route template, status, database system, and one
+  allowlisted operation name. Raw URL/query/body/header/SQL/parameter/database
+  URL and exception text capture remains forbidden.
+- Suppressed liveness, readiness, and metrics spans, suppressed the
+  readiness database child span, rejected baggage and credential-bearing OTLP
+  endpoints, and left sampling outside application configuration.
+
+### Boundary
+
+- OTLP export remains disabled and creates no exporter or background processor.
+  No Collector, Tempo, Grafana trace data source, Operator instrumentation,
+  Kubernetes resource, Loki/Alloy/Grafana value, AWS state, workflow, public
+  endpoint, external credential, or production automation is added. A unique
+  demo-api image rebuild and local reconciliation are required.
+
 ## v0.11.6.1.3
 
 ### Added

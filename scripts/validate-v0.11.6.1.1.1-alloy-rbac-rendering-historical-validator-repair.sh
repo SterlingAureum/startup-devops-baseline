@@ -167,6 +167,10 @@ for relative in (
     for marker in (
         "v0.11.6.1.0-structured-demo-api-logging-runtime.json",
         "structured_logging_successor",
+        "v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json",
+        "tracing_successor",
+        "version: 0.7.0",
+        'appVersion: "0.5.0"',
         "version: 0.6.0",
         'appVersion: "0.4.0"',
         "version: 0.5.1",

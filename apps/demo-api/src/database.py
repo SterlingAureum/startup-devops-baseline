@@ -6,6 +6,8 @@ from typing import Any, Callable, Dict, Optional, TypeVar
 
 import psycopg
 
+from .tracing import database_client_span
+
 
 T = TypeVar("T")
 MARKER_TABLE = "public.platform_failover_validation"
@@ -67,7 +69,7 @@ def _connect() -> psycopg.Connection[Any]:
     )
 
 
-def database_health() -> Dict[str, Any]:
+def database_health(*, traced: bool = True) -> Dict[str, Any]:
     def query() -> Dict[str, Any]:
         with _connect() as connection:
             row = connection.execute(
@@ -93,7 +95,8 @@ def database_health() -> Dict[str, Any]:
             "in_recovery": in_recovery,
         }
 
-    return _run_with_retry(query)
+    with database_client_span("health", enabled=traced):
+        return _run_with_retry(query)
 
 
 def write_marker(marker_id: str, marker_value: str) -> Dict[str, str]:
@@ -121,7 +124,8 @@ def write_marker(marker_id: str, marker_value: str) -> Dict[str, str]:
 
         return {"id": marker_id, "value": marker_value}
 
-    return _run_with_retry(write)
+    with database_client_span("marker.write"):
+        return _run_with_retry(write)
 
 
 def read_marker(marker_id: str) -> Dict[str, Optional[str]]:
@@ -134,7 +138,8 @@ def read_marker(marker_id: str) -> Dict[str, Optional[str]]:
 
         return {"id": marker_id, "value": None if row is None else row[0]}
 
-    return _run_with_retry(read)
+    with database_client_span("marker.read"):
+        return _run_with_retry(read)
 
 
 def _main() -> int:

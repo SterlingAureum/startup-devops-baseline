@@ -1,10 +1,13 @@
 # Observability
 
-The active v0.11.6.1.3 local structured-logging closure uses Prometheus Operator through the
+The active v0.11.6.2.0 demo-api tracing contract uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
 Application.
+
+Its accepted runtime predecessor is the active v0.11.6.1.3 local structured-logging closure;
+the tracing increment does not replace or redeploy that logging topology.
 
 ## Active Components
 
@@ -32,8 +35,9 @@ observability Namespace
 Nine repository-owned actionable alerts and their version-controlled Runbooks
 remain active and unchanged. v0.11.5.2.0 adds a guarded local firing,
 resolution, routing, and inhibition drill through a temporary restricted sink.
-External notification providers, tracing, Thanos, remote write, Kubecost, and
-cloud billing integration are not part of this increment.
+External notification providers, a Collector/Tempo tracing runtime, Thanos,
+remote write, Kubecost, and cloud billing integration are not part of this
+increment.
 
 The v0.11.5.0.1 repair changes only active-configuration acceptance: both the
 spaced repository matcher and Alertmanager's compact canonical matcher are
@@ -163,6 +167,15 @@ objects. Execute it twice consecutively:
 ./scripts/check-local-logging-end-to-end.sh
 ./scripts/check-local-logging-end-to-end.sh
 ```
+
+v0.11.6.2.0 implements only the demo-api side of minimal tracing. It accepts
+W3C Trace Context, creates bounded HTTP SERVER and PostgreSQL CLIENT spans, and
+adds real trace/span identifiers to JSON logs only while a valid span is
+current. The application reuses the existing release identity source and
+records no raw URL, query, body, authorization data, database URL, SQL,
+parameter, baggage, or exception text. OTLP export is disabled by default, so
+this checkpoint creates no exporter, background processor, or network attempt.
+It adds no Collector, Tempo, Grafana trace data source, or auto-instrumentation.
 
 Grafana remains owned by `kube-prometheus-stack`. Its Git-provisioned Loki data
 source uses UID `loki`, proxy access, and the private Loki gateway. It is not

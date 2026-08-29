@@ -40,6 +40,15 @@ from request logs to control probe noise; failures remain visible. Request
 bodies, response bodies, raw query strings, authorization and cookie headers,
 database parameters, and credential values are never added to log records.
 
+The v0.11.6.2.0 tracing contract adds W3C Trace Context, one bounded HTTP
+SERVER span, controlled PostgreSQL CLIENT spans, and valid `trace_id` and
+`span_id` JSON correlation. OTLP export is disabled by default and creates no
+exporter or background processor in that state. `/health`, `/ready`, and
+`/metrics` requests create no trace spans; their failures remain visible in
+the existing bounded logs and metrics. Raw URLs,
+headers, bodies, SQL, database parameters, database URLs, baggage, and exception
+messages are excluded from spans.
+
 ## Local Development
 
 Run locally with Python:
@@ -103,6 +112,10 @@ curl http://localhost:8080/health
 | `DATABASE_CONNECT_TIMEOUT_SECONDS` | `3` | Timeout for one connection attempt |
 | `DATABASE_RETRY_ATTEMPTS` | `3` | Bounded retry count |
 | `DATABASE_RETRY_DELAY_SECONDS` | `1` | Delay between retries |
+| `TRACING_ENABLED` | `false` | Explicitly enable SDK provider and OTLP export |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | private future Collector URL | OTLP/HTTP trace endpoint; ignored while tracing is disabled |
+| `OTEL_EXPORTER_OTLP_PROTOCOL` | `http/protobuf` | Only accepted trace export protocol |
+| `OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` | `5` | Export timeout in seconds; maximum 30 |
 
 The local environment leaves database integration disabled. The AWS Helm values
 enable it and reference `startup-apps/demo-api-postgresql`.

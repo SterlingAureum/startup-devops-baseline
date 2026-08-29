@@ -8,6 +8,7 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 
 from .database import database_enabled, database_health
 from .logging_config import emit_log
+from .tracing import finish_http_server_span, http_server_span
 
 APP_NAME = os.getenv("APP_NAME", "demo-api")
 APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
@@ -72,49 +73,60 @@ def _status_class(status_code: int) -> str:
 async def record_http_metrics(request: Request, call_next: Any) -> Response:
     start = time.perf_counter()
     status_code = 500
-    try:
-        response = await call_next(request)
-        status_code = response.status_code
-        return response
-    finally:
-        method = _normalized_method(request.method)
-        route = _normalized_route(request)
-        duration_seconds = time.perf_counter() - start
-        HTTP_REQUESTS.labels(
-            method=method,
-            route=route,
-            status_class=_status_class(status_code),
-        ).inc()
-        HTTP_REQUEST_DURATION.labels(method=method, route=route).observe(
-            duration_seconds
-        )
-        if status_code >= 400 or route not in QUIET_SUCCESS_ROUTES:
-            severity = logging.INFO
-            if status_code >= 500:
-                severity = logging.ERROR
-            elif status_code >= 400:
-                severity = logging.WARNING
-            emit_log(
-                "http_request_completed",
-                severity=severity,
-                fields={
-                    "http.request.method": method,
-                    "http.route": route,
-                    "http.response.status_code": status_code,
-                    "duration_ms": round(duration_seconds * 1000, 3),
-                    "outcome": "success" if status_code < 400 else "failure",
-                },
+    method = _normalized_method(request.method)
+    with http_server_span(
+        method=method,
+        path=str(request.scope.get("path", "")),
+        headers=list(request.scope.get("headers", [])),
+    ) as span:
+        try:
+            response = await call_next(request)
+            status_code = response.status_code
+            return response
+        finally:
+            route = _normalized_route(request)
+            finish_http_server_span(
+                span,
+                method=method,
+                route=route,
+                status_code=status_code,
             )
+            duration_seconds = time.perf_counter() - start
+            HTTP_REQUESTS.labels(
+                method=method,
+                route=route,
+                status_class=_status_class(status_code),
+            ).inc()
+            HTTP_REQUEST_DURATION.labels(method=method, route=route).observe(
+                duration_seconds
+            )
+            if status_code >= 400 or route not in QUIET_SUCCESS_ROUTES:
+                severity = logging.INFO
+                if status_code >= 500:
+                    severity = logging.ERROR
+                elif status_code >= 400:
+                    severity = logging.WARNING
+                emit_log(
+                    "http_request_completed",
+                    severity=severity,
+                    fields={
+                        "http.request.method": method,
+                        "http.route": route,
+                        "http.response.status_code": status_code,
+                        "duration_ms": round(duration_seconds * 1000, 3),
+                        "outcome": "success" if status_code < 400 else "failure",
+                    },
+                )
 
 
 def _record_database_disabled() -> None:
     DEPENDENCY_CHECKS.labels(dependency="postgresql", outcome="disabled").inc()
 
 
-def _observed_database_health() -> Dict[str, Any]:
+def _observed_database_health(*, traced: bool = True) -> Dict[str, Any]:
     start = time.perf_counter()
     try:
-        result = database_health()
+        result = database_health(traced=traced)
     except RuntimeError:
         DEPENDENCY_CHECKS.labels(dependency="postgresql", outcome="failure").inc()
         raise
@@ -156,7 +168,7 @@ def ready() -> Dict[str, Any]:
         return {"status": "ready", "database": "disabled"}
 
     try:
-        database = _observed_database_health()
+        database = _observed_database_health(traced=False)
     except RuntimeError as error:
         raise HTTPException(
             status_code=503,

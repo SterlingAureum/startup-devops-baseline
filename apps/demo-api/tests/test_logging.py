@@ -55,6 +55,8 @@ class StructuredLoggingTests(unittest.TestCase):
             "sha256:" + ("a" * 64),
         )
         self.assertEqual(payload["http.route"], "/version")
+        self.assertNotIn("trace_id", payload)
+        self.assertNotIn("span_id", payload)
 
     def test_exception_message_is_not_exported(self) -> None:
         try:

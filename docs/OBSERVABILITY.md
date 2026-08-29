@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.6.1.2.2 local observability foundation uses Prometheus Operator through the
+The active v0.11.6.1.3 local structured-logging closure uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -153,6 +153,17 @@ It emits RFC 3339 UTC with exactly six fractional digits, matching Kubernetes
 The active v0.11.6.1.2.1 local observability foundation therefore remains the
 runtime predecessor; v0.11.6.1.2.2 changes only its live checker.
 
+Closure v0.11.6.1.3 changes no deployed logging component. It composes the
+existing platform, Pod-log, Events, Loki, and Grafana checks into one staged
+entrypoint, strictly removes successful-path temporary Events, proves their
+accepted Loki history remains queryable, and rejects residual acceptance
+objects. Execute it twice consecutively:
+
+```bash
+./scripts/check-local-logging-end-to-end.sh
+./scripts/check-local-logging-end-to-end.sh
+```
+
 Grafana remains owned by `kube-prometheus-stack`. Its Git-provisioned Loki data
 source uses UID `loki`, proxy access, and the private Loki gateway. It is not
 default or UI-editable, and Grafana's NetworkPolicy permits only the internal
@@ -161,6 +172,7 @@ gateway port required for server-side queries. Validate this runtime with:
 ```bash
 ./scripts/check-local-logging-runtime.sh
 ./scripts/check-local-events-grafana.sh
+./scripts/check-local-logging-end-to-end.sh
 ```
 
 The local Application is:

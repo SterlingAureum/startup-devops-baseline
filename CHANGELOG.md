@@ -2,6 +2,36 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.1.3
+
+### Added
+
+- Added one local structured-logging closure entrypoint that runs the normal
+  platform validation, Pod-log runtime acceptance, Events/Grafana acceptance,
+  and final Application/PVC/residual-resource assertions in a fixed order.
+- Added stage-scoped failure diagnostics, a machine-readable closure contract,
+  an offline validator, two-run live acceptance instructions, and negative
+  mutations for skipped repetition, Event residue, destructive storage
+  recovery, runtime expansion, image rebuilding, and early tracing.
+- Made the v0.11.6.1.2.2 historical validator successor-aware so the accepted
+  repair remains replayable after the active checkpoint advances to closure.
+
+### Changed
+
+- Made successful Events acceptance delete both temporary Kubernetes Event
+  objects strictly before reporting success, while retaining best-effort trap
+  cleanup on abnormal exit.
+- Added post-cleanup queries proving that deleting temporary Kubernetes source
+  objects does not remove or duplicate the already accepted Loki history.
+
+### Boundary
+
+- This closure changes no Kubernetes resource, application code or image,
+  Chart or application version, Loki/Alloy/Grafana value, PVC, StorageClass,
+  RBAC, NetworkPolicy, indexed label, AWS state, workflow, public endpoint,
+  credential, production automation, or tracing runtime. No reconciliation or
+  image rebuild is required.
+
 ## v0.11.6.1.2.2
 
 ### Fixed

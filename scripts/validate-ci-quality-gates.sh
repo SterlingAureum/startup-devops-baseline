@@ -150,6 +150,9 @@ echo "==> Validating v0.11.6.1.2.1 Events PVC sync-wave and validation repair"
 echo "==> Validating v0.11.6.1.2.2 Kubernetes Event MicroTime acceptance repair"
 "${ROOT_DIR}/scripts/validate-v0.11.6.1.2.2-kubernetes-event-microtime-acceptance-repair.sh"
 
+echo "==> Validating v0.11.6.1.3 local logging end-to-end closure"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.3-local-logging-end-to-end-closure.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

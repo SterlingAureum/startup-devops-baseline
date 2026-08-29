@@ -155,6 +155,22 @@ wait_for_single_event() {
   fail "Loki did not return exactly one copy of Kubernetes Event marker ${marker}."
 }
 
+delete_acceptance_events_strict() {
+  local name
+
+  [ "${#EVENT_NAMES[@]}" -gt 0 ] \
+    || fail "strict Event cleanup was requested without a registered Event."
+  kubectl -n "${APP_NAMESPACE}" delete event "${EVENT_NAMES[@]}" \
+    --ignore-not-found --wait=true >/dev/null \
+    || fail "temporary acceptance Events could not be deleted."
+  for name in "${EVENT_NAMES[@]}"; do
+    if kubectl -n "${APP_NAMESPACE}" get event "${name}" >/dev/null 2>&1; then
+      fail "temporary acceptance Event still exists after deletion: ${name}"
+    fi
+  done
+  EVENT_NAMES=()
+}
+
 echo "==> Waiting for the singleton Events Application and workload"
 wait_application "${EVENTS_APP}"
 kubectl -n "${OBSERVABILITY_NAMESPACE}" rollout status \
@@ -291,5 +307,16 @@ second_event="v011612-${event_suffix}-after"
 second_marker="v011612-event-after-${event_suffix}"
 create_acceptance_event "${second_event}" "${second_marker}" "${demo_pod}" "${demo_uid}"
 wait_for_single_event "${start_ns}" "${second_marker}" "${WORK_DIR}/second-event.json"
+
+echo "==> Strictly deleting temporary Kubernetes Events"
+delete_acceptance_events_strict
+
+echo "==> Proving accepted Event history remains queryable after source cleanup"
+query_event_marker "${start_ns}" "${first_marker}" >"${WORK_DIR}/post-cleanup-first-event.json"
+[ "$(event_marker_count "${WORK_DIR}/post-cleanup-first-event.json" "${first_marker}")" = "1" ] \
+  || fail "The first accepted Event history changed after Kubernetes source cleanup."
+query_event_marker "${start_ns}" "${second_marker}" >"${WORK_DIR}/post-cleanup-second-event.json"
+[ "$(event_marker_count "${WORK_DIR}/post-cleanup-second-event.json" "${second_marker}")" = "1" ] \
+  || fail "The second accepted Event history changed after Kubernetes source cleanup."
 
 echo "v0.11.6.1.2 singleton Kubernetes Events and Grafana Loki data-source acceptance passed."

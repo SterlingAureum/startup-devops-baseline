@@ -208,18 +208,34 @@ for marker in (
 ):
     require(marker in repair_doc, f"Repair documentation marker missing: {marker}")
 
+closure_contract = (
+    root / "delivery/contracts/v0.11.6.1.3-local-logging-end-to-end-closure.json"
+).is_file()
+
 for relative, marker in (
     ("scripts/validate-ci-quality-gates.sh", "validate-v0.11.6.1.2.2-kubernetes-event-microtime-acceptance-repair.sh"),
     ("CHANGELOG.md", "## v0.11.6.1.2.2"),
-    ("README.md", "v0.11.6.1.2.2-kubernetes-event-microtime-acceptance-repair"),
     ("docs/ROADMAP.md", "implemented through v0.11.6.1.2.2"),
-    ("docs/OBSERVABILITY.md", "active v0.11.6.1.2.2 local observability foundation"),
     ("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md", "v0.11.6.1.2.2 then repairs only"),
     ("docs/V0.11.6.1.2_KUBERNETES_EVENTS_GRAFANA_LOKI.md", "Repair `v0.11.6.1.2.2`"),
     (".github/CODEOWNERS", f"/{contract_path} @SterlingAureum"),
     (".github/CODEOWNERS", "/docs/V0.11.6.1.2.2_KUBERNETES_EVENT_MICROTIME_ACCEPTANCE_REPAIR.md @SterlingAureum"),
 ):
     require(marker in read(relative), f"Integration marker missing: {relative}: {marker}")
+
+if closure_contract:
+    for relative, marker in (
+        ("README.md", "v0.11.6.1.3-local-logging-end-to-end-closure"),
+        ("docs/OBSERVABILITY.md", "active v0.11.6.1.3 local structured-logging closure"),
+        ("scripts/validate-ci-quality-gates.sh", "validate-v0.11.6.1.3-local-logging-end-to-end-closure.sh"),
+    ):
+        require(marker in read(relative), f"Closure successor marker missing: {relative}: {marker}")
+else:
+    for relative, marker in (
+        ("README.md", "v0.11.6.1.2.2-kubernetes-event-microtime-acceptance-repair"),
+        ("docs/OBSERVABILITY.md", "active v0.11.6.1.2.2 local observability foundation"),
+    ):
+        require(marker in read(relative), f"Repair integration marker missing: {relative}: {marker}")
 
 mutations: list[tuple[str, Callable[[dict[str, Any]], None]]] = [
     ("nanosecond precision", lambda value: value["repair"].__setitem__("fractionDigits", 9)),
@@ -263,4 +279,6 @@ else:
 
 print("v0.11.6.1.2.2 exact six-digit UTC Event MicroTime and post-create cleanup contracts passed.")
 print("v0.11.6.1.2.2 nanosecond, local-time, suffix, cleanup-order, redeploy, and overstatement mutations were rejected.")
+if closure_contract:
+    print("v0.11.6.1.3 local logging closure successor coverage passed.")
 PY

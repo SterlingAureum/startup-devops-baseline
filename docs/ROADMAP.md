@@ -425,7 +425,10 @@ Incremental scope:
     the acceptance repair series is implemented through v0.11.6.1.2.2, which
     emits API-compatible six-digit Event MicroTime during live acceptance;
     local GitOps live validation required
-  - v0.11.6.1.3 - complete local logging acceptance and replay closure - planned
+  - v0.11.6.1.3 closes the local structured-logging runtime with one ordered
+    platform, Pod-log, Events, Loki, Grafana, strict-cleanup, retained-history,
+    final-state, diagnostic, and consecutive two-run acceptance contract -
+    implemented; local live validation required
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned
 - v0.11.8 - environment-scoped observability qualification, including an

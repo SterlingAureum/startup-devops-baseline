@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "v0.11.6.1.3",
+  "version": "v0.11.6.1.3",
+  "status": "offline-implemented-local-live-required",
+  "predecessor": "v0.11.6.1.2.2",
+  "designDocument": "docs/V0.11.6.1.3_LOCAL_LOGGING_END_TO_END_CLOSURE.md",
+  "scope": {
+    "environment": "local",
+    "structuredLoggingClosure": true,
+    "runtimeConfigurationChanged": false,
+    "kubernetesResourceChanged": false,
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "tracingImplemented": false
+  },
+  "sequence": [
+    "scripts/validate.sh",
+    "scripts/check-local-logging-runtime.sh",
+    "scripts/check-local-events-grafana.sh",
+    "final-state"
+  ],
+  "acceptance": {
+    "entrypoint": "scripts/check-local-logging-end-to-end.sh",
+    "offlineValidator": "scripts/validate-v0.11.6.1.3-local-logging-end-to-end-closure.sh",
+    "completeQualityGateRequired": true,
+    "consecutiveSuccessfulRunsRequired": 2,
+    "applicationHealthRechecked": true,
+    "podLogQueryRequired": true,
+    "releaseIdentityRequired": true,
+    "podReplacementRetentionRequired": true,
+    "eventQueryRequired": true,
+    "eventCollectorRestartRequired": true,
+    "eventReplayRejected": true,
+    "grafanaDatasourceProxyRequired": true,
+    "exactSixLabelInventoryRequired": true,
+    "eventsPvcBoundRequired": true,
+    "strictNormalEventCleanup": true,
+    "bestEffortFailureTrapCleanup": true,
+    "eventHistoryRetainedAfterSourceCleanup": true,
+    "temporaryEventResidualAllowed": false,
+    "stageFailureDiagnosticsRequired": true
+  },
+  "troubleshooting": {
+    "waitForFirstConsumerIncidentRetained": true,
+    "document": "docs/V0.11.6.1.2.1_EVENTS_PVC_SYNC_WAVE_TROUBLESHOOTING.md",
+    "destructiveReproductionRequired": false,
+    "pvcDeletionAllowed": false,
+    "storageClassMutationAllowed": false
+  },
+  "unchanged": {
+    "localPlatformChart": "0.6.0",
+    "localPlatformApplicationVersion": "v0.11.6.1.2",
+    "lokiChart": "18.11.3",
+    "lokiApplicationVersion": "3.7.6",
+    "alloyChart": "1.11.0",
+    "alloyApplicationVersion": "1.18.0",
+    "lokiValuesChanged": false,
+    "alloyValuesChanged": false,
+    "grafanaValuesChanged": false,
+    "positionsClaimChanged": false,
+    "storageClassChanged": false,
+    "rbacChanged": false,
+    "networkPolicyChanged": false,
+    "indexedLabelContractChanged": false,
+    "awsStateChanged": false,
+    "workflowChanged": false,
+    "publicEndpointAdded": false,
+    "externalCredentialAdded": false,
+    "productionAutomationChanged": false,
+    "tracingAdded": false
+  },
+  "operations": {
+    "localGitOpsRedeployRequired": false,
+    "imageRebuildRequired": false,
+    "componentRestartOutsideAcceptanceRequired": false,
+    "pvcRecreationRequired": false
+  },
+  "nextIncrement": {
+    "version": "v0.11.6.2",
+    "outcome": "minimal-extensible-tracing-runtime"
+  }
+}

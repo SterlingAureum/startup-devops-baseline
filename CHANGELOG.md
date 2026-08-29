@@ -2,6 +2,30 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.2.1
+
+### Added
+
+- Added one private single-replica OpenTelemetry Collector Gateway with an
+  OTLP/HTTP traces-only pipeline, bounded queue/retry behavior, memory limiting,
+  batching, strict resources, and no Kubernetes RBAC requirement.
+- Added a repository-owned minimal Tempo Chart pinned to Tempo 3.0.3, one
+  monolithic replica, bounded local filesystem storage, 24-hour retention,
+  private query/ingest Services, and runtime NetworkPolicies.
+- Added synthetic Collector-to-Tempo live acceptance, Tempo query validation,
+  Collector Pod replacement history validation, focused offline validation,
+  and a machine-readable runtime contract.
+
+### Boundary
+
+- demo-api export remains disabled. No application code, application image,
+  logging runtime, Grafana data source, database, AWS state, workflow, public
+  endpoint, external credential, sampling processor, or production durability
+  claim is added. Local platform reconciliation is required; image rebuilding
+  is not.
+- The deprecated external Tempo Chart is explicitly rejected. The local
+  repository-owned Chart contains only the minimal Tempo runtime resources.
+
 ## v0.11.6.2.0
 
 ### Added

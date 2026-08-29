@@ -194,8 +194,10 @@ require(
 )
 
 chart = read("clusters/local/platform/Chart.yaml")
+tracing_successor = (root / "delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json").is_file()
 require(
-    "version: 0.6.0" in chart and 'appVersion: "v0.11.6.1.2"' in chart,
+    ("version: 0.7.0" if tracing_successor else "version: 0.6.0") in chart
+    and ('appVersion: "v0.11.6.2.1"' if tracing_successor else 'appVersion: "v0.11.6.1.2"') in chart,
     "Repair unexpectedly changed local platform version",
 )
 

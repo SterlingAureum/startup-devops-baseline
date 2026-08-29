@@ -17,6 +17,10 @@ INCLUDE_EVENTS_APP=false
 if [[ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json" ]]; then
   INCLUDE_EVENTS_APP=true
 fi
+INCLUDE_TRACING_APPS=false
+if [[ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json" ]]; then
+  INCLUDE_TRACING_APPS=true
+fi
 
 python3 - "${ROOT_DIR}" <<'PY'
 from copy import deepcopy
@@ -165,6 +169,26 @@ spec:
     targetRevision: 1.11.0
 YAML
     fi
+    if [ "${INCLUDE_TRACING_APPS:-false}" = true ]; then
+      cat <<YAML
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tracing-tempo
+spec:
+  source:
+    targetRevision: ${revision}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tracing-otel-collector
+spec:
+  source:
+    targetRevision: 0.172.0
+YAML
+    fi
     cat <<YAML
 ---
 apiVersion: argoproj.io/v1alpha1
@@ -217,7 +241,8 @@ chmod +x "${WORK_DIR}/bin/helm"
 
 echo "==> Exercising the historical validator's Helm successor branch"
 INCLUDE_LOGGING_APPS="${INCLUDE_LOGGING_APPS}" \
-  INCLUDE_EVENTS_APP="${INCLUDE_EVENTS_APP}" \
+INCLUDE_EVENTS_APP="${INCLUDE_EVENTS_APP}" \
+  INCLUDE_TRACING_APPS="${INCLUDE_TRACING_APPS}" \
   PATH="${WORK_DIR}/bin:${PATH}" \
   "${ROOT_DIR}/scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh" >/dev/null
 

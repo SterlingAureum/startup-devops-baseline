@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.6.2.0 demo-api tracing contract uses Prometheus Operator through the
+The active v0.11.6.2.1 private local tracing runtime uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
@@ -30,12 +30,14 @@ observability Namespace
   Alloy Pod-log collector DaemonSet
   Alloy Kubernetes Event collector singleton Deployment
   Grafana-provisioned private Loki data source
+  OpenTelemetry Collector traces-only Gateway Deployment
+  Tempo 3.0.3 Monolithic Deployment and private ClusterIP Service
 ```
 
 Nine repository-owned actionable alerts and their version-controlled Runbooks
 remain active and unchanged. v0.11.5.2.0 adds a guarded local firing,
 resolution, routing, and inhibition drill through a temporary restricted sink.
-External notification providers, a Collector/Tempo tracing runtime, Thanos,
+External notification providers, a production Collector/Tempo runtime, Thanos,
 remote write, Kubecost, and cloud billing integration are not part of this
 increment.
 
@@ -176,6 +178,18 @@ records no raw URL, query, body, authorization data, database URL, SQL,
 parameter, baggage, or exception text. OTLP export is disabled by default, so
 this checkpoint creates no exporter, background processor, or network attempt.
 It adds no Collector, Tempo, Grafana trace data source, or auto-instrumentation.
+
+v0.11.6.2.1 implements the transport and storage side independently. The
+single-replica Collector accepts OTLP/HTTP traces only, applies memory limiting
+and batching, and forwards them to a repository-owned Tempo 3.0.3 Monolithic
+Deployment. Both Services are private and NetworkPolicy-bounded; neither
+workload mounts a service-account token or needs Kubernetes RBAC. Tempo uses a
+bounded `emptyDir` with 24-hour retention, so Collector replacement must retain
+accepted history while Tempo replacement and kind-cluster rebuild remain
+explicit data-loss boundaries. The live checker proves synthetic OTLP ingest,
+Tempo query, Collector replacement history, and continued
+`TRACING_ENABLED=false`. It does not claim a real demo-api or PostgreSQL trace,
+and Grafana has no Tempo data source in this increment.
 
 Grafana remains owned by `kube-prometheus-stack`. Its Git-provisioned Loki data
 source uses UID `loki`, proxy access, and the private Loki gateway. It is not

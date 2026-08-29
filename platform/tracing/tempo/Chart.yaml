@@ -1,0 +1,6 @@
+apiVersion: v2
+name: startup-devops-tempo
+description: Bounded private Tempo Monolithic runtime for the local observability profile
+type: application
+version: 0.1.0
+appVersion: "3.0.3"

@@ -94,6 +94,7 @@ alertmanager_successor = (root / "delivery/contracts/v0.11.5.0-alertmanager-foun
 alert_lifecycle_drill_successor = (root / "delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json").is_file()
 logging_runtime_successor = (root / "delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json").is_file()
 events_runtime_successor = (root / "delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json").is_file()
+tracing_runtime_successor = (root / "delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json").is_file()
 values = read("clusters/local/platform/values.yaml")
 root_app = read("clusters/local/root-app.yaml")
 feature = read("scripts/deploy-local-feature-gitops.sh")
@@ -105,8 +106,8 @@ revision_helper = read("scripts/lib/git-revision.sh")
 
 chart_markers = (
     "name: startup-devops-local-platform",
-    "version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else ("version: 0.4.1" if alert_lifecycle_drill_successor else ("version: 0.4.0" if alertmanager_successor else ("version: 0.3.0" if controller_metrics_successor else ("version: 0.2.0" if observability_successor else "version: 0.1.0"))))),
-    'appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else ('appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else ('appVersion: "v0.11.5.0"' if alertmanager_successor else ('appVersion: "v0.11.4.1.0"' if controller_metrics_successor else ('appVersion: "v0.11.4.0"' if observability_successor else 'appVersion: "v0.11.3.4"'))))),
+    "version: 0.7.0" if tracing_runtime_successor else ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else ("version: 0.4.1" if alert_lifecycle_drill_successor else ("version: 0.4.0" if alertmanager_successor else ("version: 0.3.0" if controller_metrics_successor else ("version: 0.2.0" if observability_successor else "version: 0.1.0")))))),
+    'appVersion: "v0.11.6.2.1"' if tracing_runtime_successor else ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else ('appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else ('appVersion: "v0.11.5.0"' if alertmanager_successor else ('appVersion: "v0.11.4.1.0"' if controller_metrics_successor else ('appVersion: "v0.11.4.0"' if observability_successor else 'appVersion: "v0.11.3.4"')))))),
 )
 for marker in chart_markers:
     require(marker in chart, f"Platform Chart marker missing: {marker}")
@@ -548,7 +549,8 @@ if command -v helm >/dev/null 2>&1; then
     "${ROOT_DIR}/delivery/contracts/v0.11.4.0-grafana-recording-rules.json" \
     "${ROOT_DIR}/delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json" \
     "${ROOT_DIR}/delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json" \
-    "${ROOT_DIR}/delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json" <<'PY'
+    "${ROOT_DIR}/delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json" \
+    "${ROOT_DIR}/delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json" <<'PY'
 from pathlib import Path
 import re
 import sys
@@ -561,6 +563,7 @@ observability_successor = Path(sys.argv[4]).is_file()
 controller_metrics_successor = Path(sys.argv[5]).is_file()
 logging_runtime_successor = Path(sys.argv[6]).is_file()
 events_runtime_successor = Path(sys.argv[7]).is_file()
+tracing_runtime_successor = Path(sys.argv[8]).is_file()
 
 
 def require(condition: bool, message: str) -> None:
@@ -590,6 +593,9 @@ if logging_runtime_successor:
     expected_names.update({"logging-loki", "logging-alloy"})
 if events_runtime_successor:
     expected_names.add("logging-alloy-events")
+if tracing_runtime_successor:
+    expected_names.update({"tracing-tempo", "tracing-otel-collector"})
+    same_repository_names.append("tracing-tempo")
 require(set(stable_apps) == expected_names, "Stable child Application set changed")
 require(set(feature_apps) == expected_names, "Feature child Application set changed")
 
@@ -616,6 +622,9 @@ if logging_runtime_successor:
 if events_runtime_successor:
     require(revision(stable_apps["logging-alloy-events"]) == "1.11.0", "Stable Events Alloy version changed")
     require(revision(feature_apps["logging-alloy-events"]) == "1.11.0", "Feature Events Alloy version changed")
+if tracing_runtime_successor:
+    require(revision(stable_apps["tracing-otel-collector"]) == "0.172.0", "Stable Collector version changed")
+    require(revision(feature_apps["tracing-otel-collector"]) == "0.172.0", "Feature Collector version changed")
 
 require("parameters: []" in stable_apps["demo-api"], "Stable demo-api parameters are not explicit empty")
 parameter_names = re.findall(r"^        - name:\s*(\S+)", feature_apps["demo-api"], re.MULTILINE)

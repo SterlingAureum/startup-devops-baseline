@@ -156,6 +156,9 @@ echo "==> Validating v0.11.6.1.3 local logging end-to-end closure"
 echo "==> Validating v0.11.6.2.0 demo-api OpenTelemetry tracing contract"
 "${ROOT_DIR}/scripts/validate-v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.sh"
 
+echo "==> Validating v0.11.6.2.1 private local OTel Collector and Tempo runtime"
+"${ROOT_DIR}/scripts/validate-v0.11.6.2.1-private-local-otel-collector-tempo-runtime.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

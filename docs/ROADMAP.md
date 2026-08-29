@@ -434,6 +434,12 @@ Incremental scope:
     real JSON log correlation, exact SDK pins, and disabled-by-default OTLP
     export. It deploys no Collector or Tempo; a unique local image rebuild and
     disabled-state acceptance are required.
+  - v0.11.6.2.1 adds one private OTel Collector Gateway and one repository-owned
+    Tempo 3.0.3 Monolithic runtime. Synthetic OTLP ingest, trace query, private
+    service/security controls, and Collector-Pod replacement history are
+    accepted independently while demo-api export remains disabled. Local
+    reconciliation and consecutive two-run live validation are required; no
+    application image rebuild or production durability claim is introduced.
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned
 - v0.11.8 - environment-scoped observability qualification, including an

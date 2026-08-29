@@ -26,3 +26,6 @@ externalCharts:
   alloy:
     repoURL: https://grafana.github.io/helm-charts
     version: 1.11.0
+  otelCollector:
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    version: 0.172.0

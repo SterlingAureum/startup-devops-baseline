@@ -15,10 +15,16 @@ MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-observability}"
 LOKI_APP_NAME="${LOKI_APP_NAME:-logging-loki}"
 ALLOY_APP_NAME="${ALLOY_APP_NAME:-logging-alloy}"
 ALLOY_EVENTS_APP_NAME="${ALLOY_EVENTS_APP_NAME:-logging-alloy-events}"
+TEMPO_APP_NAME="${TEMPO_APP_NAME:-tracing-tempo}"
+OTEL_COLLECTOR_APP_NAME="${OTEL_COLLECTOR_APP_NAME:-tracing-otel-collector}"
 LOKI_STATEFULSET="${LOKI_STATEFULSET:-observability-logs}"
 LOKI_GATEWAY_DEPLOYMENT="${LOKI_GATEWAY_DEPLOYMENT:-observability-logs-gateway}"
 ALLOY_DAEMONSET="${ALLOY_DAEMONSET:-observability-logs-collector}"
 ALLOY_EVENTS_DEPLOYMENT="${ALLOY_EVENTS_DEPLOYMENT:-observability-events-collector}"
+TEMPO_DEPLOYMENT="${TEMPO_DEPLOYMENT:-observability-tempo}"
+TEMPO_SERVICE="${TEMPO_SERVICE:-observability-tempo}"
+OTEL_COLLECTOR_DEPLOYMENT="${OTEL_COLLECTOR_DEPLOYMENT:-observability-otel-collector}"
+OTEL_COLLECTOR_SERVICE="${OTEL_COLLECTOR_SERVICE:-observability-otel-collector}"
 PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
 PROMETHEUS_POD_SELECTOR="${PROMETHEUS_POD_SELECTOR:-app.kubernetes.io/name=prometheus}"
 ALERTMANAGER_SERVICE="${ALERTMANAGER_SERVICE:-observability-metrics-alertmanager}"
@@ -526,6 +532,8 @@ check_application "$ARGOCD_NAMESPACE" "$MONITORING_APP_NAME"
 wait_application_ready "$ARGOCD_NAMESPACE" "$LOKI_APP_NAME"
 wait_application_ready "$ARGOCD_NAMESPACE" "$ALLOY_APP_NAME"
 wait_application_ready "$ARGOCD_NAMESPACE" "$ALLOY_EVENTS_APP_NAME"
+wait_application_ready "$ARGOCD_NAMESPACE" "$TEMPO_APP_NAME"
+wait_application_ready "$ARGOCD_NAMESPACE" "$OTEL_COLLECTOR_APP_NAME"
 check_application_if_exists "$ARGOCD_NAMESPACE" "$ARGO_ROLLOUTS_APP_NAME" "Argo Rollouts"
 
 print_section "Argo Rollouts controller checks"
@@ -570,6 +578,15 @@ wait_controller_ready "$MONITORING_NAMESPACE" statefulset "$LOKI_STATEFULSET" "L
 wait_controller_ready "$MONITORING_NAMESPACE" deployment "$LOKI_GATEWAY_DEPLOYMENT" "Loki gateway"
 wait_controller_ready "$MONITORING_NAMESPACE" daemonset "$ALLOY_DAEMONSET" "Alloy Pod-log collector"
 wait_controller_ready "$MONITORING_NAMESPACE" deployment "$ALLOY_EVENTS_DEPLOYMENT" "Alloy Kubernetes Event collector"
+wait_controller_ready "$MONITORING_NAMESPACE" deployment "$TEMPO_DEPLOYMENT" "Tempo Monolithic"
+wait_controller_ready "$MONITORING_NAMESPACE" deployment "$OTEL_COLLECTOR_DEPLOYMENT" "OpenTelemetry Collector Gateway"
+for private_service in "$TEMPO_SERVICE" "$OTEL_COLLECTOR_SERVICE"; do
+  if [ "$(kubectl -n "$MONITORING_NAMESPACE" get service "$private_service" -o jsonpath='{.spec.type}' 2>/dev/null || true)" = "ClusterIP" ]; then
+    pass "private tracing service exists: ${MONITORING_NAMESPACE}/${private_service}"
+  else
+    fail "private tracing service not found: ${MONITORING_NAMESPACE}/${private_service}"
+  fi
+done
 wait_pods_ready_by_label \
   "$MONITORING_NAMESPACE" \
   "$PROMETHEUS_POD_SELECTOR" \

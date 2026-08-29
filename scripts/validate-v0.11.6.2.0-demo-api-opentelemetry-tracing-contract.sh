@@ -330,13 +330,17 @@ for template in (
     ):
         require(content.count(f"- name: {variable}") == 1, f"{variable} is not exact in {template}")
 
+runtime_successor = (
+    root / "delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json"
+).is_file()
+
 for relative, marker in (
     ("scripts/validate-ci-quality-gates.sh", "validate-v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.sh"),
     ("CHANGELOG.md", "## v0.11.6.2.0"),
     ("README.md", "v0.11.6.2.0-demo-api-opentelemetry-tracing-contract"),
     ("apps/demo-api/README.md", "v0.11.6.2.0 tracing contract"),
     ("docs/ROADMAP.md", "v0.11.6.2.0"),
-    ("docs/OBSERVABILITY.md", "active v0.11.6.2.0"),
+    ("docs/OBSERVABILITY.md", "active v0.11.6.2.1" if runtime_successor else "active v0.11.6.2.0"),
     ("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md", "v0.11.6.2.0 implements"),
     (".github/CODEOWNERS", f"/{contract_path} @SterlingAureum"),
     (".github/CODEOWNERS", "/scripts/check-demo-api-tracing-contract.sh @SterlingAureum"),

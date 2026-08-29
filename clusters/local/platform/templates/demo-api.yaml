@@ -40,13 +40,11 @@ spec:
       - SkipDryRunOnMissingResource=true
       - RespectIgnoreDifferences=true
   ignoreDifferences:
-    - group: ""
-      kind: Service
+    - kind: Service
       name: demo-api-stable
       jsonPointers:
         - /spec/selector
-    - group: ""
-      kind: Service
+    - kind: Service
       name: demo-api-canary
       jsonPointers:
         - /spec/selector

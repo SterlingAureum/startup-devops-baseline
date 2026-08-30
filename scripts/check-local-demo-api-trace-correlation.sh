@@ -12,6 +12,7 @@ LOKI_APP="${LOKI_APP:-logging-loki}"
 COLLECTOR_APP="${COLLECTOR_APP:-tracing-otel-collector}"
 TEMPO_APP="${TEMPO_APP:-tracing-tempo}"
 LOKI_GATEWAY_SERVICE="${LOKI_GATEWAY_SERVICE:-observability-logs-gateway}"
+LOKI_SERVICE="${LOKI_SERVICE:-observability-logs}"
 TEMPO_SERVICE="${TEMPO_SERVICE:-observability-tempo}"
 GRAFANA_SERVICE="${GRAFANA_SERVICE:-observability-metrics-grafana}"
 GRAFANA_SECRET="${GRAFANA_SECRET:-observability-metrics-grafana}"
@@ -21,6 +22,7 @@ WORK_DIR="$(mktemp -d)"
 LOKI_PF_PID=""
 TEMPO_PF_PID=""
 GRAFANA_PF_PID=""
+LOKI_DIRECT_PF_PID=""
 
 fail() {
   echo "ERROR: $*" >&2
@@ -43,11 +45,40 @@ cleanup() {
       --tail=100 >&2 || true
     kubectl -n "${OBSERVABILITY_NAMESPACE}" logs deployment/observability-tempo \
       --tail=100 >&2 || true
+    echo "==> Loki gateway failure boundary" >&2
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" get service \
+      "${LOKI_GATEWAY_SERVICE}" "${LOKI_SERVICE}" -o wide >&2 || true
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" get endpoints \
+      "${LOKI_GATEWAY_SERVICE}" "${LOKI_SERVICE}" -o wide >&2 || true
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" get endpointslice \
+      -l 'kubernetes.io/service-name in (observability-logs-gateway,observability-logs)' \
+      -o wide >&2 || true
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" get networkpolicy \
+      observability-logs-cluster-only -o yaml >&2 || true
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" logs \
+      deployment/observability-logs-gateway --all-containers --tail=100 >&2 || true
+    kubectl -n "${OBSERVABILITY_NAMESPACE}" logs \
+      statefulset/observability-logs --all-containers --tail=100 >&2 || true
+    loki_direct_port="$(free_port 2>/dev/null || true)"
+    if [ -n "${loki_direct_port}" ]; then
+      kubectl -n "${OBSERVABILITY_NAMESPACE}" port-forward service/"${LOKI_SERVICE}" \
+        "${loki_direct_port}:3100" >"${WORK_DIR}/loki-direct-port-forward.log" 2>&1 &
+      LOKI_DIRECT_PF_PID="$!"
+      sleep 2
+      curl -sS --max-time 5 -D "${WORK_DIR}/loki-direct-headers.txt" \
+        -o "${WORK_DIR}/loki-direct-body.txt" \
+        "http://127.0.0.1:${loki_direct_port}/loki/api/v1/labels" || true
+      echo "==> Direct Loki API response" >&2
+      [ -s "${WORK_DIR}/loki-direct-headers.txt" ] \
+        && cat "${WORK_DIR}/loki-direct-headers.txt" >&2 || true
+      [ -s "${WORK_DIR}/loki-direct-body.txt" ] \
+        && sed -n '1,80p' "${WORK_DIR}/loki-direct-body.txt" >&2 || true
+    fi
     for log_file in "${WORK_DIR}"/*-port-forward.log; do
       [ -s "${log_file}" ] && cat "${log_file}" >&2 || true
     done
   fi
-  for pid in "${LOKI_PF_PID}" "${TEMPO_PF_PID}" "${GRAFANA_PF_PID}"; do
+  for pid in "${LOKI_PF_PID}" "${TEMPO_PF_PID}" "${GRAFANA_PF_PID}" "${LOKI_DIRECT_PF_PID}"; do
     if [ -n "${pid}" ] && kill -0 "${pid}" >/dev/null 2>&1; then
       kill "${pid}" >/dev/null 2>&1 || true
       wait "${pid}" >/dev/null 2>&1 || true
@@ -89,12 +120,22 @@ wait_http() {
   local url="$1"
   local log_file="$2"
   local deadline=$((SECONDS + 30))
+  local response_body="${WORK_DIR}/http-response-$(printf '%s' "${url}" | tr -cs '[:alnum:]' '-').txt"
+  local response_headers="${response_body%.txt}-headers.txt"
+  local http_status="000"
   while [ "${SECONDS}" -lt "${deadline}" ]; do
-    curl -fsS "${url}" >/dev/null 2>&1 && return 0
+    http_status="$(curl -sS --max-time 5 -D "${response_headers}" \
+      -o "${response_body}" -w '%{http_code}' "${url}" 2>/dev/null || true)"
+    case "${http_status}" in
+      2??) return 0 ;;
+    esac
     sleep 1
   done
   [ -s "${log_file}" ] && cat "${log_file}" >&2 || true
-  fail "endpoint did not become reachable: ${url}"
+  echo "last HTTP status: ${http_status:-000}" >&2
+  [ -s "${response_headers}" ] && cat "${response_headers}" >&2 || true
+  [ -s "${response_body}" ] && sed -n '1,80p' "${response_body}" >&2 || true
+  fail "endpoint did not return HTTP 2xx: ${url}"
 }
 
 echo "==> Waiting for the real local tracing path"

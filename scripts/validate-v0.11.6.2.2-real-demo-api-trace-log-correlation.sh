@@ -176,6 +176,9 @@ for marker in (
     "api/datasources/uid/tempo", "api/datasources/uid/${uid}/health",
     'has("trace_id")', 'has("span_id")',
     "v0.11.6.2.2 real HTTP trace",
+    "last HTTP status:", "Direct Loki API response",
+    "observability-logs-cluster-only", "get endpointslice",
+    "deployment/observability-logs-gateway", "statefulset/observability-logs",
 ):
     require(marker in live, f"Live acceptance marker missing: {marker}")
 for forbidden in ("/db/health", "service_graph", "spanmetrics", "tail_sampling", "xray"):
@@ -188,6 +191,8 @@ for relative, marker in (
     ("docs/ROADMAP.md", "v0.11.6.2.2"),
     ("docs/OBSERVABILITY.md", "active v0.11.6.2.2"),
     ("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md", "v0.11.6.2.2 joins"),
+    ("docs/V0.11.6.2.2_REAL_DEMO_API_TRACE_LOG_CORRELATION.md", "kubectl argo rollouts status demo-api"),
+    ("docs/V0.11.6.2.2_REAL_DEMO_API_TRACE_LOG_CORRELATION.md", "direct response is diagnostic only"),
     (".github/CODEOWNERS", f"/{contract_path} @SterlingAureum"),
     (".github/CODEOWNERS", "/scripts/check-local-demo-api-trace-correlation.sh @SterlingAureum"),
 ):

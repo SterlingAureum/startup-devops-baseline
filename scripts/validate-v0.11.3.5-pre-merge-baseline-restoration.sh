@@ -145,6 +145,11 @@ print("v0.11.3.5 pre-merge baseline restoration contract and static validation p
 PY
 
 WORK_DIR="$(mktemp -d)"
+TRACE_CORRELATION_SUCCESSOR=false
+if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json" ]; then
+  TRACE_CORRELATION_SUCCESSOR=true
+fi
+export TRACE_CORRELATION_SUCCESSOR
 cleanup() {
   rm -rf -- "${WORK_DIR}"
 }
@@ -245,6 +250,13 @@ case "${resource}:${output}" in
   application:*'.spec.source.helm.parameters'* )
     if [ "${name}" != "demo-api" ]; then
       exit 0
+    fi
+    if [ "${TRACE_CORRELATION_SUCCESSOR}" = "true" ]; then
+      printf '%s\n' \
+        telemetry.tracing.enabled \
+        telemetry.tracing.endpoint \
+        telemetry.tracing.protocol \
+        telemetry.tracing.timeoutSeconds
     fi
     ;;
   application:*'.spec.syncPolicy.automated.selfHeal}'*)

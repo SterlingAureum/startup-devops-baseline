@@ -233,7 +233,7 @@ for template in (
 chart = read("apps/demo-api/helm/Chart.yaml")
 tracing_successor = (root / "delivery/contracts/v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json").is_file()
 require(
-    ("version: 0.8.0" if tracing_successor else "version: 0.6.0") in chart
+    ("version: 0.7.0" if tracing_successor else "version: 0.6.0") in chart
     and ('appVersion: "0.5.0"' if tracing_successor else 'appVersion: "0.4.0"') in chart,
     "demo-api Chart identity changed",
 )

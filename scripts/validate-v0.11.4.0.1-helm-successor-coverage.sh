@@ -21,6 +21,10 @@ INCLUDE_TRACING_APPS=false
 if [[ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json" ]]; then
   INCLUDE_TRACING_APPS=true
 fi
+INCLUDE_TRACE_CORRELATION=false
+if [[ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json" ]]; then
+  INCLUDE_TRACE_CORRELATION=true
+fi
 
 python3 - "${ROOT_DIR}" <<'PY'
 from copy import deepcopy
@@ -217,7 +221,17 @@ spec:
     helm:
 YAML
     if [ "${revision}" = HEAD ]; then
-      printf '%s\n' '      parameters: []'
+      if [ "${INCLUDE_TRACE_CORRELATION:-false}" = true ]; then
+        cat <<'YAML'
+      parameters:
+        - name: telemetry.tracing.enabled
+        - name: telemetry.tracing.endpoint
+        - name: telemetry.tracing.protocol
+        - name: telemetry.tracing.timeoutSeconds
+YAML
+      else
+        printf '%s\n' '      parameters: []'
+      fi
     else
       cat <<'YAML'
       parameters:
@@ -230,6 +244,14 @@ YAML
         - name: release.applicationVersion
           value: v0.11.3-local
 YAML
+      if [ "${INCLUDE_TRACE_CORRELATION:-false}" = true ]; then
+        cat <<'YAML'
+        - name: telemetry.tracing.enabled
+        - name: telemetry.tracing.endpoint
+        - name: telemetry.tracing.protocol
+        - name: telemetry.tracing.timeoutSeconds
+YAML
+      fi
     fi
     ;;
   *)
@@ -243,6 +265,7 @@ echo "==> Exercising the historical validator's Helm successor branch"
 INCLUDE_LOGGING_APPS="${INCLUDE_LOGGING_APPS}" \
 INCLUDE_EVENTS_APP="${INCLUDE_EVENTS_APP}" \
   INCLUDE_TRACING_APPS="${INCLUDE_TRACING_APPS}" \
+  INCLUDE_TRACE_CORRELATION="${INCLUDE_TRACE_CORRELATION}" \
   PATH="${WORK_DIR}/bin:${PATH}" \
   "${ROOT_DIR}/scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh" >/dev/null
 

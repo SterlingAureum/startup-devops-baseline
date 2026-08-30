@@ -250,36 +250,44 @@ jq -e 'all(.data.result[]; (.stream | has("trace_id") | not) and (.stream | has(
   || fail "trace_id or span_id entered the Loki indexed label set"
 
 echo "==> Querying the same real trace from Tempo"
-deadline=$((SECONDS + QUERY_TIMEOUT_SECONDS))
-while [ "${SECONDS}" -lt "${deadline}" ]; do
-  if curl -fsS -H 'Accept: application/json' \
-    "http://127.0.0.1:${tempo_port}/api/v2/traces/${trace_id}" \
-    >"${WORK_DIR}/tempo-trace.json" 2>/dev/null \
-    && python3 - "${WORK_DIR}/tempo-trace.json" "${span_id}" <<'PY'
+tempo_trace_matches() {
+  local mode="$1"
+  python3 - "${WORK_DIR}/tempo-trace.json" "${span_id}" "${mode}" <<'PY'
+import base64
+import binascii
 import json
 from pathlib import Path
+import re
 import sys
 
-value = json.loads(Path(sys.argv[1]).read_text())
-encoded = json.dumps(value, sort_keys=True)
-for marker in (
-    sys.argv[2], "demo-api", "GET /version", "http.request.method",
-    "http.route", "/version", "http.response.status_code",
-):
-    if marker not in encoded:
-        raise SystemExit(1)
-PY
-  then
-    break
-  fi
-  sleep 2
-done
-python3 - "${WORK_DIR}/tempo-trace.json" "${span_id}" <<'PY'
-import json
-from pathlib import Path
-import sys
 
-value = json.loads(Path(sys.argv[1]).read_text())
+def normalize_identifier(value: str, byte_count: int) -> str:
+    if re.fullmatch(rf"[0-9a-fA-F]{{{byte_count * 2}}}", value):
+        return value.lower()
+    try:
+        decoded = base64.b64decode(value, validate=True)
+    except (binascii.Error, ValueError):
+        return value
+    return decoded.hex() if len(decoded) == byte_count else value
+
+
+def normalize(value):
+    if isinstance(value, list):
+        return [normalize(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    result = {}
+    for key, item in value.items():
+        if key == "traceId" and isinstance(item, str):
+            result[key] = normalize_identifier(item, 16)
+        elif key == "spanId" and isinstance(item, str):
+            result[key] = normalize_identifier(item, 8)
+        else:
+            result[key] = normalize(item)
+    return result
+
+
+value = normalize(json.loads(Path(sys.argv[1]).read_text()))
 encoded = json.dumps(value, sort_keys=True)
 required = (
     sys.argv[2], "demo-api", "GET /version", "http.request.method",
@@ -287,7 +295,23 @@ required = (
 )
 missing = [marker for marker in required if marker not in encoded]
 if missing:
-    raise SystemExit(f"Tempo real trace markers missing: {missing}")
+    if sys.argv[3] == "verbose":
+        raise SystemExit(f"Tempo real trace markers missing after identifier normalization: {missing}")
+    raise SystemExit(1)
 PY
+}
+
+deadline=$((SECONDS + QUERY_TIMEOUT_SECONDS))
+while [ "${SECONDS}" -lt "${deadline}" ]; do
+  if curl -fsS -H 'Accept: application/json' \
+    "http://127.0.0.1:${tempo_port}/api/v2/traces/${trace_id}" \
+    >"${WORK_DIR}/tempo-trace.json" 2>/dev/null \
+    && tempo_trace_matches quiet
+  then
+    break
+  fi
+  sleep 2
+done
+tempo_trace_matches verbose
 
 echo "v0.11.6.2.2 real HTTP trace, Loki JSON correlation, bounded labels, Tempo query, and Grafana derived-field acceptance passed."

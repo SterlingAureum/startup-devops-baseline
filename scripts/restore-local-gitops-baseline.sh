@@ -7,6 +7,10 @@ ROOT_APP_NAME="${ROOT_APP_NAME:-startup-devops-root}"
 DEMO_APP_NAME="${DEMO_APP_NAME:-demo-api}"
 GUARDRAILS_APP_NAME="${GUARDRAILS_APP_NAME:-namespace-guardrails}"
 OBSERVABILITY_VIEWS_APP_NAME="${OBSERVABILITY_VIEWS_APP_NAME:-observability-views}"
+LOKI_APP_NAME="${LOKI_APP_NAME:-logging-loki}"
+OBSERVABILITY_NAMESPACE="${OBSERVABILITY_NAMESPACE:-observability}"
+LOKI_SERVICE_NAME="${LOKI_SERVICE_NAME:-observability-logs}"
+LOKI_GATEWAY_DEPLOYMENT="${LOKI_GATEWAY_DEPLOYMENT:-observability-logs-gateway}"
 REPO_URL="${REPO_URL:-https://github.com/SterlingAureum/startup-devops-baseline.git}"
 TARGET_REVISION="${TARGET_REVISION:-}"
 BASELINE_LABEL="${BASELINE_LABEL:-GitOps baseline}"
@@ -116,14 +120,23 @@ TARGET_REVISION="${TARGET_REVISION}" \
 GIT_TARGET_REVISION="${TARGET_REVISION}" \
 ROOT_SYNC_MODE=manual \
 LOCAL_IMAGE_ENABLED=false \
-REPO_URL="${REPO_URL}" \
+  REPO_URL="${REPO_URL}" \
   "${ROOT_DIR}/scripts/deploy-root-app.sh"
+
+# Root is rendered in manual mode above, so child reconciliation has not yet
+# replaced the Loki Service. Capture the old address only after source preflight
+# succeeds, preserving the no-Kubernetes-access-on-invalid-source boundary.
+loki_service_ip_before="$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get service \
+  "${LOKI_SERVICE_NAME}" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"
 
 sync_application_if_needed "${ROOT_APP_NAME}"
 
 wait_for_application "${GUARDRAILS_APP_NAME}"
 wait_for_application "${DEMO_APP_NAME}"
 wait_for_application "${OBSERVABILITY_VIEWS_APP_NAME}"
+if kubectl -n "${ARGOCD_NAMESPACE}" get application "${LOKI_APP_NAME}" >/dev/null 2>&1; then
+  sync_application_if_needed "${LOKI_APP_NAME}"
+fi
 sync_application_if_needed "${GUARDRAILS_APP_NAME}"
 sync_application_if_needed "${DEMO_APP_NAME}"
 sync_application_if_needed "${OBSERVABILITY_VIEWS_APP_NAME}"
@@ -177,6 +190,18 @@ root_sync_status="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP
 if [ "${root_sync_status}" != "Synced" ]; then
   echo "ERROR: Root did not remain Synced after declarative baseline restoration: ${root_sync_status:-<empty>}." >&2
   exit 1
+fi
+
+loki_service_ip_after="$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get service \
+  "${LOKI_SERVICE_NAME}" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"
+if [ -n "${loki_service_ip_before}" ] \
+  && [ -n "${loki_service_ip_after}" ] \
+  && [ "${loki_service_ip_before}" != "${loki_service_ip_after}" ]; then
+  echo "==> Loki Service ClusterIP changed; refreshing the Gateway upstream"
+  kubectl -n "${OBSERVABILITY_NAMESPACE}" rollout restart \
+    "deployment/${LOKI_GATEWAY_DEPLOYMENT}" >/dev/null
+  kubectl -n "${OBSERVABILITY_NAMESPACE}" rollout status \
+    "deployment/${LOKI_GATEWAY_DEPLOYMENT}" --timeout="${WAIT_TIMEOUT_SECONDS}s"
 fi
 
 echo "${BASELINE_LABEL} restored."

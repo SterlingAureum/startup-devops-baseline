@@ -165,6 +165,9 @@ echo "==> Validating v0.11.6.2.1.1 synthetic OTLP/JSON encoding and diagnostics 
 echo "==> Validating v0.11.6.2.2 real demo-api trace and log correlation"
 "${ROOT_DIR}/scripts/validate-v0.11.6.2.2-real-demo-api-trace-log-correlation.sh"
 
+echo "==> Validating v0.11.6.2.2.4 Loki Gateway stale-upstream repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.2.2.4-loki-gateway-stale-upstream-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

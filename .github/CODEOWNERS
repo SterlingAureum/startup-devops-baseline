@@ -211,6 +211,9 @@
 /docs/V0.11.6.2.2_REAL_DEMO_API_TRACE_LOG_CORRELATION.md @SterlingAureum
 /scripts/validate-v0.11.6.2.2-real-demo-api-trace-log-correlation.sh @SterlingAureum
 /scripts/check-local-demo-api-trace-correlation.sh @SterlingAureum
+/delivery/contracts/v0.11.6.2.2.4-loki-gateway-stale-upstream-repair.json @SterlingAureum
+/docs/V0.11.6.2.2.4_LOKI_GATEWAY_STALE_UPSTREAM_TROUBLESHOOTING.md @SterlingAureum
+/scripts/validate-v0.11.6.2.2.4-loki-gateway-stale-upstream-repair.sh @SterlingAureum
 /platform/tracing/tempo/ @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum

@@ -568,7 +568,8 @@ if command -v helm >/dev/null 2>&1; then
     "${ROOT_DIR}/delivery/contracts/v0.11.4.1.0-controller-metrics-discovery.json" \
     "${ROOT_DIR}/delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json" \
     "${ROOT_DIR}/delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json" \
-    "${ROOT_DIR}/delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json" <<'PY'
+    "${ROOT_DIR}/delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json" \
+    "${ROOT_DIR}/delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json" <<'PY'
 from pathlib import Path
 import re
 import sys
@@ -582,6 +583,7 @@ controller_metrics_successor = Path(sys.argv[5]).is_file()
 logging_runtime_successor = Path(sys.argv[6]).is_file()
 events_runtime_successor = Path(sys.argv[7]).is_file()
 tracing_runtime_successor = Path(sys.argv[8]).is_file()
+trace_correlation_successor = Path(sys.argv[9]).is_file()
 
 
 def require(condition: bool, message: str) -> None:

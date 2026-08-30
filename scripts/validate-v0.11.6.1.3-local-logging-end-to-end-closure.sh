@@ -228,7 +228,7 @@ if tracing_successor_path.is_file():
     require(tracing_successor.get("scope", {}).get("collectorImplemented") is False, "Tracing successor deployed Collector early")
     require(tracing_successor.get("scope", {}).get("tempoImplemented") is False, "Tracing successor deployed Tempo early")
     successor_chart = read("apps/demo-api/helm/Chart.yaml")
-    require("version: 0.7.0" in successor_chart and 'appVersion: "0.5.0"' in successor_chart, "Tracing successor Chart identity missing")
+    require("version: 0.7.0" in successor_chart and 'appVersion: "0.5.0"' in successor_chart, "Tracing successor demo-api Chart identity missing")
     print("v0.11.6.2.0 application tracing successor coverage passed.")
 
 mutations: list[tuple[str, Callable[[dict[str, Any]], None]]] = [

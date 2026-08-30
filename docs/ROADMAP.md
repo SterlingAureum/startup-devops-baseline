@@ -444,6 +444,12 @@ Incremental scope:
     trace and span identifiers, surfaces bounded HTTP error response bodies,
     and selects Collector and Tempo diagnostics explicitly. It changes no
     deployed resource and requires neither reconciliation nor an image rebuild.
+  - v0.11.6.2.2 enables the already accepted demo-api exporter only through
+    the local App-of-Apps, proves a real `/version` SERVER span and its
+    correlated Loki JSON record, and provisions one private Grafana Tempo data
+    source plus a Loki `TraceID` derived field. Trace identifiers remain
+    unindexed fields; no image rebuild, PostgreSQL trace claim, AWS runtime,
+    service graph, span metrics, or durable Tempo storage is introduced.
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned
 - v0.11.8 - environment-scoped observability qualification, including an

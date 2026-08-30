@@ -148,9 +148,22 @@ if [ "${root_local_image_enabled}" != "false" ]; then
 fi
 
 helm_parameter_names="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${DEMO_APP_NAME}" -o jsonpath='{range .spec.source.helm.parameters[*]}{.name}{"\n"}{end}')"
-if [ -n "${helm_parameter_names}" ]; then
-  echo "ERROR: demo-api still has live Helm parameters after declarative baseline restoration:" >&2
-  printf '%s\n' "${helm_parameter_names}" >&2
+sorted_helm_parameter_names="$(sort <<<"${helm_parameter_names}")"
+expected_helm_parameter_names=""
+if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json" ]; then
+  expected_helm_parameter_names="$(printf '%s\n' \
+    telemetry.tracing.enabled \
+    telemetry.tracing.endpoint \
+    telemetry.tracing.protocol \
+    telemetry.tracing.timeoutSeconds \
+    | sort)"
+fi
+if [ "${sorted_helm_parameter_names}" != "${expected_helm_parameter_names}" ]; then
+  echo "ERROR: demo-api Helm parameters do not match the declarative baseline:" >&2
+  echo "Expected:" >&2
+  printf '%s\n' "${expected_helm_parameter_names:-<empty>}" >&2
+  echo "Observed:" >&2
+  printf '%s\n' "${sorted_helm_parameter_names:-<empty>}" >&2
   exit 1
 fi
 
@@ -167,4 +180,4 @@ if [ "${root_sync_status}" != "Synced" ]; then
 fi
 
 echo "${BASELINE_LABEL} restored."
-echo "Root and same-repository children use ${TARGET_REVISION}, local image parameters are empty, and Root automation is enabled."
+echo "Root and same-repository children use ${TARGET_REVISION}, local image parameters are empty, declarative local tracing parameters are retained when present, and Root automation is enabled."

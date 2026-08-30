@@ -182,8 +182,8 @@ for text, label in ((local, "local"), (aws, "AWS")):
 require_markers(
     "clusters/local/platform/Chart.yaml",
     (
-        "version: 0.7.0" if tracing_runtime_successor else ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else ("version: 0.4.1" if alert_lifecycle_drill_successor else "version: 0.4.0"))),
-        'appVersion: "v0.11.6.2.1"' if tracing_runtime_successor else ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else ('appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else 'appVersion: "v0.11.5.0"'))),
+        "version: 0.8.0" if tracing_runtime_successor else ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else ("version: 0.4.1" if alert_lifecycle_drill_successor else "version: 0.4.0"))),
+        'appVersion: "v0.11.6.2.2"' if tracing_runtime_successor else ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else ('appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else 'appVersion: "v0.11.5.0"'))),
     ),
 )
 semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()

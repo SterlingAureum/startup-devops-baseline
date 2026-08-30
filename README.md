@@ -2,7 +2,7 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair`.
+Current development checkpoint: `v0.11.6.2.2-real-demo-api-trace-log-correlation`.
 The local profile deploys one private, bounded Loki Monolithic instance, an
 Alloy DaemonSet for node-local `startup-apps` Pod logs, and a separate
 one-replica Alloy Deployment for cluster Kubernetes Events. Event read
@@ -16,8 +16,12 @@ side W3C propagation, bounded HTTP/PostgreSQL spans, shared release identity,
 and real log correlation while keeping OTLP export disabled. v0.11.6.2.1 now
 adds one private traces-only OTel Collector Deployment and one repository-owned
 Tempo 3.0.3 Monolithic Deployment with bounded disposable local storage. The
-application still does not export, Grafana has no Tempo data source, and this
-runtime increment requires reconciliation but no new demo-api image. Repair
+application export and Grafana integration were deliberately separate from
+that runtime increment. v0.11.6.2.2 now enables the already accepted exporter
+only in the local App-of-Apps, validates a real `/version` SERVER span and its
+correlated Loki JSON record, and provisions a private Grafana Tempo data source
+plus a Loki `TraceID` derived field. Trace identifiers remain outside Loki's
+label index, and no application image rebuild is required. Repair
 `v0.11.6.2.1.1` corrects only the synthetic acceptance client: OTLP/JSON trace
 and span identifiers are now hexadecimal, HTTP rejection bodies remain visible,
 and Tempo/Collector diagnostics are selected explicitly. It changes no runtime

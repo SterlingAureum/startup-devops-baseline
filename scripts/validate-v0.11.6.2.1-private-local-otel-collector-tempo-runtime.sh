@@ -132,8 +132,16 @@ validate(contract)
 require((root / contract["designDocument"]).is_file(), "Design document missing")
 require((root / "delivery/contracts/v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json").is_file(), "Predecessor contract missing")
 
+correlation_successor = (
+    root / "delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json"
+).is_file()
 platform_chart = read("clusters/local/platform/Chart.yaml")
-require("version: 0.7.0" in platform_chart and 'appVersion: "v0.11.6.2.1"' in platform_chart, "Local platform identity changed")
+expected_platform = (
+    ("version: 0.8.0", 'appVersion: "v0.11.6.2.2"')
+    if correlation_successor
+    else ("version: 0.7.0", 'appVersion: "v0.11.6.2.1"')
+)
+require(all(marker in platform_chart for marker in expected_platform), "Local platform identity changed")
 platform_values = read("clusters/local/platform/values.yaml")
 for marker in (
     "otelCollector:", "https://open-telemetry.github.io/opentelemetry-helm-charts", "version: 0.172.0",
@@ -186,7 +194,7 @@ for relative, marker in (
     ("CHANGELOG.md", "## v0.11.6.2.1"),
     ("README.md", "v0.11.6.2.1-private-local-otel-collector-tempo-runtime"),
     ("docs/ROADMAP.md", "v0.11.6.2.1"),
-    ("docs/OBSERVABILITY.md", "active v0.11.6.2.1"),
+    ("docs/OBSERVABILITY.md", "active v0.11.6.2.2" if correlation_successor else "active v0.11.6.2.1"),
     ("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md", "v0.11.6.2.1 implements"),
     (".github/CODEOWNERS", f"/{contract_path} @SterlingAureum"),
     (".github/CODEOWNERS", "/platform/tracing/tempo/ @SterlingAureum"),

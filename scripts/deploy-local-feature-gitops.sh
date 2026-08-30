@@ -167,7 +167,16 @@ assert_equals "${root_automation}" "" "feature Root automated sync policy"
 
 helm_parameter_names="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${DEMO_APP_NAME}" -o jsonpath='{range .spec.source.helm.parameters[*]}{.name}{"\n"}{end}')"
 sorted_helm_parameter_names="$(sort <<<"${helm_parameter_names}")"
-expected_helm_parameter_names="$(printf '%s\n' image.pullPolicy image.repository image.tag release.applicationVersion | sort)"
+expected_helm_parameter_names="$(printf '%s\n' \
+  image.pullPolicy \
+  image.repository \
+  image.tag \
+  release.applicationVersion \
+  telemetry.tracing.enabled \
+  telemetry.tracing.endpoint \
+  telemetry.tracing.protocol \
+  telemetry.tracing.timeoutSeconds \
+  | sort)"
 assert_equals "${sorted_helm_parameter_names}" "${expected_helm_parameter_names}" "demo-api Root-rendered Helm parameter allowlist"
 
 chart_label="$(kubectl -n "${APP_NAMESPACE}" get rollout "${DEMO_APP_NAME}" -o jsonpath='{.metadata.labels.helm\.sh/chart}')"

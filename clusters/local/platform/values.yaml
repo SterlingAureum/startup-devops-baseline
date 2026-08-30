@@ -9,6 +9,11 @@ demoApi:
     tag: ""
     pullPolicy: Never
     applicationVersion: ""
+  tracing:
+    enabled: true
+    endpoint: http://observability-otel-collector.observability.svc.cluster.local:4318/v1/traces
+    protocol: http/protobuf
+    timeoutSeconds: 5
 
 externalCharts:
   argoRollouts:

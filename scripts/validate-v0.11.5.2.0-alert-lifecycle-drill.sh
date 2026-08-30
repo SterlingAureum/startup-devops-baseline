@@ -58,11 +58,11 @@ logging_runtime_successor = (root / "delivery/contracts/v0.11.6.1.1-local-loki-a
 events_runtime_successor = (root / "delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json").is_file()
 tracing_runtime_successor = (root / "delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json").is_file()
 require(
-    ("version: 0.7.0" if tracing_runtime_successor else ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else "version: 0.4.1"))) in chart,
+    ("version: 0.8.0" if tracing_runtime_successor else ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else "version: 0.4.1"))) in chart,
     "Unexpected local platform Chart version",
 )
 require(
-    ('appVersion: "v0.11.6.2.1"' if tracing_runtime_successor else ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else 'appVersion: "v0.11.5.2.0"'))) in chart,
+    ('appVersion: "v0.11.6.2.2"' if tracing_runtime_successor else ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else 'appVersion: "v0.11.5.2.0"'))) in chart,
     "Unexpected local platform appVersion",
 )
 

@@ -96,7 +96,7 @@ tracing_successor = (
     root / "delivery/contracts/v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json"
 ).is_file()
 require(
-    ("version: 0.7.0" if tracing_successor else ("version: 0.6.0" if structured_logging_successor else "version: 0.5.1")) in chart,
+    ("version: 0.8.0" if tracing_successor else ("version: 0.6.0" if structured_logging_successor else "version: 0.5.1")) in chart,
     "Unexpected successor-aware Chart version",
 )
 require(

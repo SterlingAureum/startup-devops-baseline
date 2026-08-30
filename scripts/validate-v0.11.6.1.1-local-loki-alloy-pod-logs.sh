@@ -181,8 +181,8 @@ require(
 chart = read("clusters/local/platform/Chart.yaml")
 events_successor = (root / "delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json").is_file()
 tracing_successor = (root / "delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json").is_file()
-expected_chart = "version: 0.7.0" if tracing_successor else ("version: 0.6.0" if events_successor else "version: 0.5.0")
-expected_app = 'appVersion: "v0.11.6.2.1"' if tracing_successor else ('appVersion: "v0.11.6.1.2"' if events_successor else 'appVersion: "v0.11.6.1.1"')
+expected_chart = "version: 0.8.0" if tracing_successor else ("version: 0.6.0" if events_successor else "version: 0.5.0")
+expected_app = 'appVersion: "v0.11.6.2.2"' if tracing_successor else ('appVersion: "v0.11.6.1.2"' if events_successor else 'appVersion: "v0.11.6.1.1"')
 require(expected_chart in chart and expected_app in chart, "Local platform Chart successor not accepted")
 values = read("clusters/local/platform/values.yaml")
 for marker in (

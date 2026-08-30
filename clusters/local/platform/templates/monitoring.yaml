@@ -120,6 +120,20 @@ spec:
               jsonData:
                 timeout: 60
                 maxLines: 1000
+                derivedFields:
+                  - name: TraceID
+                    matcherRegex: '"trace_id":"([0-9a-f]{32})"'
+                    datasourceUid: tempo
+                    url: '$${__value.raw}'
+            - name: Tempo
+              uid: tempo
+              type: tempo
+              access: proxy
+              url: http://observability-tempo.observability.svc.cluster.local:3200
+              isDefault: false
+              editable: false
+              jsonData:
+                httpMethod: GET
           ingress:
             enabled: false
           service:
@@ -360,6 +374,8 @@ spec:
                       port: 9090
                     - protocol: TCP
                       port: 8080
+                    - protocol: TCP
+                      port: 3200
                 - to:
                     - namespaceSelector:
                         matchLabels:

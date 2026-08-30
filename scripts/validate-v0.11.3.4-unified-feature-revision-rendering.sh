@@ -95,6 +95,7 @@ alert_lifecycle_drill_successor = (root / "delivery/contracts/v0.11.5.2.0-alert-
 logging_runtime_successor = (root / "delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json").is_file()
 events_runtime_successor = (root / "delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json").is_file()
 tracing_runtime_successor = (root / "delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json").is_file()
+trace_correlation_successor = (root / "delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json").is_file()
 values = read("clusters/local/platform/values.yaml")
 root_app = read("clusters/local/root-app.yaml")
 feature = read("scripts/deploy-local-feature-gitops.sh")
@@ -106,8 +107,8 @@ revision_helper = read("scripts/lib/git-revision.sh")
 
 chart_markers = (
     "name: startup-devops-local-platform",
-    "version: 0.7.0" if tracing_runtime_successor else ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else ("version: 0.4.1" if alert_lifecycle_drill_successor else ("version: 0.4.0" if alertmanager_successor else ("version: 0.3.0" if controller_metrics_successor else ("version: 0.2.0" if observability_successor else "version: 0.1.0")))))),
-    'appVersion: "v0.11.6.2.1"' if tracing_runtime_successor else ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else ('appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else ('appVersion: "v0.11.5.0"' if alertmanager_successor else ('appVersion: "v0.11.4.1.0"' if controller_metrics_successor else ('appVersion: "v0.11.4.0"' if observability_successor else 'appVersion: "v0.11.3.4"')))))),
+    "version: 0.8.0" if tracing_runtime_successor else ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else ("version: 0.4.1" if alert_lifecycle_drill_successor else ("version: 0.4.0" if alertmanager_successor else ("version: 0.3.0" if controller_metrics_successor else ("version: 0.2.0" if observability_successor else "version: 0.1.0")))))),
+    'appVersion: "v0.11.6.2.2"' if tracing_runtime_successor else ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else ('appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else ('appVersion: "v0.11.5.0"' if alertmanager_successor else ('appVersion: "v0.11.4.1.0"' if controller_metrics_successor else ('appVersion: "v0.11.4.0"' if observability_successor else 'appVersion: "v0.11.3.4"')))))),
 )
 for marker in chart_markers:
     require(marker in chart, f"Platform Chart marker missing: {marker}")
@@ -142,14 +143,23 @@ for relative in (
     require(".Values.git.targetRevision" in text, f"Shared revision value missing: {relative}")
 
 demo_template = read("clusters/local/platform/templates/demo-api.yaml")
-for marker in (
+demo_template_markers = [
     ".Values.demoApi.localImage.enabled",
     "image.repository",
     "image.tag",
     "image.pullPolicy",
     "release.applicationVersion",
-    "parameters: []",
-):
+]
+if trace_correlation_successor:
+    demo_template_markers.extend([
+        "telemetry.tracing.enabled",
+        "telemetry.tracing.endpoint",
+        "telemetry.tracing.protocol",
+        "telemetry.tracing.timeoutSeconds",
+    ])
+else:
+    demo_template_markers.append("parameters: []")
+for marker in demo_template_markers:
     require(marker in demo_template, f"demo-api Root ownership missing: {marker}")
 
 for relative in (
@@ -495,7 +505,15 @@ case "${resource}:${output}" in
     ;;
   application:*'.spec.source.helm.parameters'*)
     if [ "${name}" = "demo-api" ]; then
-      printf '%s\n' image.repository image.tag image.pullPolicy release.applicationVersion
+      printf '%s\n' \
+        image.repository \
+        image.tag \
+        image.pullPolicy \
+        release.applicationVersion \
+        telemetry.tracing.enabled \
+        telemetry.tracing.endpoint \
+        telemetry.tracing.protocol \
+        telemetry.tracing.timeoutSeconds
     fi
     ;;
   rollout:*'helm\.sh/chart'*)
@@ -626,12 +644,26 @@ if tracing_runtime_successor:
     require(revision(stable_apps["tracing-otel-collector"]) == "0.172.0", "Stable Collector version changed")
     require(revision(feature_apps["tracing-otel-collector"]) == "0.172.0", "Feature Collector version changed")
 
-require("parameters: []" in stable_apps["demo-api"], "Stable demo-api parameters are not explicit empty")
+stable_parameter_names = re.findall(r"^        - name:\s*(\S+)", stable_apps["demo-api"], re.MULTILINE)
 parameter_names = re.findall(r"^        - name:\s*(\S+)", feature_apps["demo-api"], re.MULTILINE)
-require(
-    parameter_names == ["image.repository", "image.tag", "image.pullPolicy", "release.applicationVersion"],
-    "Feature demo-api parameter allowlist changed",
-)
+tracing_parameters = [
+    "telemetry.tracing.enabled",
+    "telemetry.tracing.endpoint",
+    "telemetry.tracing.protocol",
+    "telemetry.tracing.timeoutSeconds",
+]
+if trace_correlation_successor:
+    require(stable_parameter_names == tracing_parameters, "Stable demo-api tracing parameter allowlist changed")
+    require(
+        parameter_names == ["image.repository", "image.tag", "image.pullPolicy", "release.applicationVersion", *tracing_parameters],
+        "Feature demo-api parameter allowlist changed",
+    )
+else:
+    require("parameters: []" in stable_apps["demo-api"], "Stable demo-api parameters are not explicit empty")
+    require(
+        parameter_names == ["image.repository", "image.tag", "image.pullPolicy", "release.applicationVersion"],
+        "Feature demo-api parameter allowlist changed",
+    )
 
 print("v0.11.3.4 Helm stable/feature render validation passed.")
 PY

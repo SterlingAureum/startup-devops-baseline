@@ -1,15 +1,15 @@
 # Observability
 
-The active v0.11.6.2.1.1 acceptance repair retains the private local tracing runtime and uses Prometheus Operator through the
+The active v0.11.6.2.2 real trace-correlation increment uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
 Application.
 
-The repair changes no deployed component. It replaces Base64 synthetic trace
-and span identifiers with OTLP/JSON hexadecimal values, exposes bounded HTTP
-error bodies, and gathers Tempo and Collector diagnostics with explicit
-selectors. The accepted runtime remains v0.11.6.2.1.
+The local App-of-Apps now enables the already accepted demo-api OTLP exporter,
+Grafana provisions one private Tempo data source, and Loki exposes one
+query-time `TraceID` derived field. A real `/version` request must produce the
+same trace identifier in Loki and Tempo without adding it to Loki labels.
 
 Its accepted runtime predecessor is the active v0.11.6.1.3 local structured-logging closure;
 the tracing increment does not replace or redeploy that logging topology.
@@ -196,6 +196,14 @@ Tempo query, Collector replacement history, and continued
 `TRACING_ENABLED=false`. It does not claim a real demo-api or PostgreSQL trace,
 and Grafana has no Tempo data source in this increment.
 
+v0.11.6.2.2 joins those independently accepted halves. It changes no demo-api
+code or image, enables export only in the local profile, validates one real
+HTTP SERVER span, and requires the matching structured JSON log from Loki.
+Grafana receives the non-default, non-editable Tempo data source UID `tempo`;
+the existing Loki UID `loki` receives a `TraceID` derived field. Grafana egress
+to Tempo is limited to private TCP/3200, and trace identifiers remain outside
+the exact six-label Loki index.
+
 Grafana remains owned by `kube-prometheus-stack`. Its Git-provisioned Loki data
 source uses UID `loki`, proxy access, and the private Loki gateway. It is not
 default or UI-editable, and Grafana's NetworkPolicy permits only the internal
@@ -205,6 +213,7 @@ gateway port required for server-side queries. Validate this runtime with:
 ./scripts/check-local-logging-runtime.sh
 ./scripts/check-local-events-grafana.sh
 ./scripts/check-local-logging-end-to-end.sh
+./scripts/check-local-demo-api-trace-correlation.sh
 ```
 
 The local Application is:

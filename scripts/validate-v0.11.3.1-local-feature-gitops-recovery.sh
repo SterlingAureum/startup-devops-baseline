@@ -89,11 +89,16 @@ require("kubectl argo rollouts retry ${DEMO_APP_NAME}" not in feature, "Invalid 
 for marker in ("wait_for_application_idle", "argocd app wait", "--operation"):
     require(marker in operation_helper, f"Shared operation guard missing: {marker}")
 
+correlation_successor = (
+    root / "delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json"
+).is_file()
 for marker in (
     "ROOT_SYNC_MODE=manual",
     'GIT_TARGET_REVISION="${TARGET_REVISION}"',
     "LOCAL_IMAGE_ENABLED=false",
-    "still has live Helm parameters after declarative baseline restoration",
+    "demo-api Helm parameters do not match the declarative baseline"
+    if correlation_successor
+    else "still has live Helm parameters after declarative baseline restoration",
     'set_application_automation "${ROOT_APP_NAME}"',
 ):
     require(marker in restore, f"Restore recovery guard missing: {marker}")

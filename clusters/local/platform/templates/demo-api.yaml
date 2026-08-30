@@ -26,8 +26,16 @@ spec:
         - name: release.applicationVersion
           value: {{ .Values.demoApi.localImage.applicationVersion | quote }}
 {{ else }}
-      parameters: []
+      parameters:
 {{ end }}
+        - name: telemetry.tracing.enabled
+          value: {{ .Values.demoApi.tracing.enabled | quote }}
+        - name: telemetry.tracing.endpoint
+          value: {{ .Values.demoApi.tracing.endpoint | quote }}
+        - name: telemetry.tracing.protocol
+          value: {{ .Values.demoApi.tracing.protocol | quote }}
+        - name: telemetry.tracing.timeoutSeconds
+          value: {{ .Values.demoApi.tracing.timeoutSeconds | quote }}
   destination:
     server: https://kubernetes.default.svc
     namespace: startup-apps

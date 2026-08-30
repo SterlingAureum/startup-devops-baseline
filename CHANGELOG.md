@@ -2,6 +2,27 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.2.2
+
+### Added
+
+- Enabled the already accepted demo-api OTLP/HTTP exporter through the local
+  App-of-Apps override while retaining the base Chart's disabled default.
+- Added real `GET /version` trace acceptance through the private Collector and
+  Tempo runtime, including Loki JSON-log correlation by the same W3C trace ID.
+- Provisioned one private, non-default, non-editable Grafana Tempo data source
+  and one Loki `TraceID` derived field, with bounded Grafana egress to Tempo.
+- Added a machine-readable contract, focused offline validation, live Grafana
+  data-source health checks, and consecutive two-run acceptance instructions.
+
+### Boundary
+
+- This increment reuses the v0.11.6.2.0 tracing-capable application image and
+  changes no application code. Trace and span identifiers remain unindexed
+  JSON fields. PostgreSQL live tracing, AWS runtime changes, service graphs,
+  span metrics, sampling, exemplars, object storage, high availability, public
+  OTLP ingress, and tracing dashboards remain deferred.
+
 ## v0.11.6.2.1.1
 
 ### Fixed

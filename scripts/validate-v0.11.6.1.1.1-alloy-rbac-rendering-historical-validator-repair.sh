@@ -169,7 +169,7 @@ for relative in (
         "structured_logging_successor",
         "v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json",
         "tracing_successor",
-        "version: 0.7.0",
+        "version: 0.8.0",
         'appVersion: "0.5.0"',
         "version: 0.6.0",
         'appVersion: "0.4.0"',

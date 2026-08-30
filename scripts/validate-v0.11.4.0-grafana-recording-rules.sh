@@ -215,8 +215,8 @@ require("feature/" not in local_app + aws_app, "Feature revision committed to an
 markers(
     "clusters/local/platform/Chart.yaml",
     (
-        "version: 0.7.0" if tracing_runtime_successor else ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else ("version: 0.4.1" if alert_lifecycle_drill_successor else ("version: 0.4.0" if alertmanager_successor else ("version: 0.3.0" if controller_metrics_successor else "version: 0.2.0"))))),
-        'appVersion: "v0.11.6.2.1"' if tracing_runtime_successor else ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else ('appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else ('appVersion: "v0.11.5.0"' if alertmanager_successor else ('appVersion: "v0.11.4.1.0"' if controller_metrics_successor else 'appVersion: "v0.11.4.0"'))))),
+        "version: 0.8.0" if tracing_runtime_successor else ("version: 0.6.0" if events_runtime_successor else ("version: 0.5.0" if logging_runtime_successor else ("version: 0.4.1" if alert_lifecycle_drill_successor else ("version: 0.4.0" if alertmanager_successor else ("version: 0.3.0" if controller_metrics_successor else "version: 0.2.0"))))),
+        'appVersion: "v0.11.6.2.2"' if tracing_runtime_successor else ('appVersion: "v0.11.6.1.2"' if events_runtime_successor else ('appVersion: "v0.11.6.1.1"' if logging_runtime_successor else ('appVersion: "v0.11.5.2.0"' if alert_lifecycle_drill_successor else ('appVersion: "v0.11.5.0"' if alertmanager_successor else ('appVersion: "v0.11.4.1.0"' if controller_metrics_successor else 'appVersion: "v0.11.4.0"'))))),
     ),
 )
 markers("clusters/aws/base/platform/kustomization.yaml", ("- observability-views.yaml",))

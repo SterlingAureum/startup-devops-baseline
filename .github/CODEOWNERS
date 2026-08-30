@@ -207,6 +207,10 @@
 /docs/V0.11.6.2.1.1_SYNTHETIC_OTLP_JSON_ENCODING_DIAGNOSTICS_REPAIR.md @SterlingAureum
 /scripts/generate-synthetic-otlp-trace.py @SterlingAureum
 /scripts/validate-v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json @SterlingAureum
+/docs/V0.11.6.2.2_REAL_DEMO_API_TRACE_LOG_CORRELATION.md @SterlingAureum
+/scripts/validate-v0.11.6.2.2-real-demo-api-trace-log-correlation.sh @SterlingAureum
+/scripts/check-local-demo-api-trace-correlation.sh @SterlingAureum
 /platform/tracing/tempo/ @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum

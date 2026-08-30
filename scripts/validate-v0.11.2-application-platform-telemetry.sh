@@ -307,7 +307,7 @@ def validate_repository() -> None:
     chart = require_markers(
         "apps/demo-api/helm/Chart.yaml",
         (
-            "version: 0.7.0" if tracing_successor else ("version: 0.6.0" if structured_logging_successor else "version: 0.5.1"),
+            "version: 0.8.0" if tracing_successor else ("version: 0.6.0" if structured_logging_successor else "version: 0.5.1"),
             'appVersion: "0.5.0"' if tracing_successor else ('appVersion: "0.4.0"' if structured_logging_successor else 'appVersion: "0.3.0"'),
         ),
     )

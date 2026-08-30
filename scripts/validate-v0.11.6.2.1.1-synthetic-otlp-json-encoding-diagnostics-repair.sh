@@ -221,8 +221,16 @@ for marker in (
 ):
     require(marker in predecessor_validator, f"Predecessor successor coverage missing: {marker}")
 
+correlation_successor = (
+    root / "delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json"
+).is_file()
 platform_chart = read("clusters/local/platform/Chart.yaml")
-require("version: 0.7.0" in platform_chart and 'appVersion: "v0.11.6.2.1"' in platform_chart, "Platform version changed")
+expected_platform = (
+    ("version: 0.8.0", 'appVersion: "v0.11.6.2.2"')
+    if correlation_successor
+    else ("version: 0.7.0", 'appVersion: "v0.11.6.2.1"')
+)
+require(all(marker in platform_chart for marker in expected_platform), "Platform version changed")
 collector_values = read("clusters/local/platform/files/tracing/otel-collector-values.yaml")
 require('tag: "0.159.0"' in collector_values, "Collector version changed")
 tempo_chart = read("platform/tracing/tempo/Chart.yaml")
@@ -231,9 +239,9 @@ require("version: 0.1.0" in tempo_chart and 'appVersion: "3.0.3"' in tempo_chart
 for relative, marker in (
     ("scripts/validate-ci-quality-gates.sh", "validate-v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair.sh"),
     ("CHANGELOG.md", "## v0.11.6.2.1.1"),
-    ("README.md", "v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair"),
+    ("README.md", "v0.11.6.2.2-real-demo-api-trace-log-correlation" if correlation_successor else "v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair"),
     ("docs/ROADMAP.md", "v0.11.6.2.1.1"),
-    ("docs/OBSERVABILITY.md", "active v0.11.6.2.1.1"),
+    ("docs/OBSERVABILITY.md", "active v0.11.6.2.2" if correlation_successor else "active v0.11.6.2.1.1"),
     ("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md", "v0.11.6.2.1.1 repairs"),
     ("docs/V0.11.6.2.1_PRIVATE_LOCAL_OTEL_COLLECTOR_TEMPO_RUNTIME.md", "Repair v0.11.6.2.1.1"),
     (".github/CODEOWNERS", f"/{contract_path} @SterlingAureum"),

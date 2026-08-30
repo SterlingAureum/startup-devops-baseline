@@ -2,6 +2,22 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.2.3
+
+### Added
+
+- Added one ordered, read-only local minimal tracing closure entrypoint with
+  Application, Rollout, private-Service, NetworkPolicy, and Ingress preflight.
+- Added two independent real trace-log correlation runs, a machine-readable
+  closure contract, negative mutation tests, and a complete operation document.
+
+### Boundaries
+
+- Added no runtime component, application image, AWS tracing state, public OTLP
+  endpoint, dynamic Gateway DNS, high availability, or durable trace storage.
+- Kept the destructive synthetic Collector replacement drill independently
+  accepted and outside the closure entrypoint.
+
 ## v0.11.6.2.2
 
 ### Added

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "v0.11.6.2.3",
+  "version": "v0.11.6.2.3",
+  "status": "offline-implemented-local-live-acceptance-required",
+  "predecessor": "v0.11.6.2.2.4",
+  "designDocument": "docs/V0.11.6.2.3_LOCAL_MINIMAL_TRACING_CLOSURE.md",
+  "scope": {
+    "environment": "local",
+    "runtimeComponentAdded": false,
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "awsRuntimeChanged": false,
+    "productionDnsResilienceAdded": false
+  },
+  "acceptedState": {
+    "applicationAutoInstrumentation": true,
+    "otlpProtocol": "http/protobuf",
+    "collectorPrivate": true,
+    "tempoPrivate": true,
+    "lokiLogCorrelation": true,
+    "grafanaDerivedField": true,
+    "baseChartTracingEnabled": false,
+    "localOverlayTracingEnabled": true,
+    "traceIdIndexedAsLokiLabel": false,
+    "spanIdIndexedAsLokiLabel": false,
+    "postgresqlTraceRequired": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.2.3-local-minimal-tracing-closure.sh",
+    "liveEntrypoint": "scripts/check-local-tracing-end-to-end.sh",
+    "realCorrelationRuns": 2,
+    "syntheticCollectorReplacementInvoked": false,
+    "runtimeMutationAllowed": false,
+    "uniqueTracePerRunRequired": true,
+    "privateServicePreflightRequired": true,
+    "rolloutHealthPreflightRequired": true
+  },
+  "deferred": {
+    "serviceGraph": true,
+    "spanMetrics": true,
+    "tailSampling": true,
+    "exemplars": true,
+    "crossClusterTracing": true,
+    "objectStorage": true,
+    "highAvailability": true,
+    "dynamicGatewayDns": true,
+    "awsXray": true,
+    "publicOtlpEndpoint": true,
+    "dedicatedTracingDashboard": true
+  },
+  "nextStep": {
+    "outcome": "evaluate-v0.11-observability-sre-final-closure"
+  }
+}

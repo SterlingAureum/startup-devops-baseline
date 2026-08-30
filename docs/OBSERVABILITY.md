@@ -1,6 +1,6 @@
 # Observability
 
-The active v0.11.6.2.2 real trace-correlation increment uses Prometheus Operator through the
+The active v0.11.6.2.3 local minimal tracing closure uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD

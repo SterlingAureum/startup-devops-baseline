@@ -336,6 +336,9 @@ runtime_successor = (
 correlation_successor = (
     root / "delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json"
 ).is_file()
+closure_successor = (
+    root / "delivery/contracts/v0.11.6.2.3-local-minimal-tracing-closure.json"
+).is_file()
 
 for relative, marker in (
     ("scripts/validate-ci-quality-gates.sh", "validate-v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.sh"),
@@ -343,7 +346,7 @@ for relative, marker in (
     ("README.md", "v0.11.6.2.0-demo-api-opentelemetry-tracing-contract"),
     ("apps/demo-api/README.md", "v0.11.6.2.0 tracing contract"),
     ("docs/ROADMAP.md", "v0.11.6.2.0"),
-    ("docs/OBSERVABILITY.md", "active v0.11.6.2.2" if correlation_successor else ("active v0.11.6.2.1" if runtime_successor else "active v0.11.6.2.0")),
+    ("docs/OBSERVABILITY.md", "active v0.11.6.2.3" if closure_successor else ("active v0.11.6.2.2" if correlation_successor else ("active v0.11.6.2.1" if runtime_successor else "active v0.11.6.2.0"))),
     ("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md", "v0.11.6.2.0 implements"),
     (".github/CODEOWNERS", f"/{contract_path} @SterlingAureum"),
     (".github/CODEOWNERS", "/scripts/check-demo-api-tracing-contract.sh @SterlingAureum"),

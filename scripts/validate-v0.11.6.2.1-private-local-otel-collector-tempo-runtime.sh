@@ -135,6 +135,9 @@ require((root / "delivery/contracts/v0.11.6.2.0-demo-api-opentelemetry-tracing-c
 correlation_successor = (
     root / "delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json"
 ).is_file()
+closure_successor = (
+    root / "delivery/contracts/v0.11.6.2.3-local-minimal-tracing-closure.json"
+).is_file()
 platform_chart = read("clusters/local/platform/Chart.yaml")
 expected_platform = (
     ("version: 0.8.0", 'appVersion: "v0.11.6.2.2"')
@@ -194,7 +197,7 @@ for relative, marker in (
     ("CHANGELOG.md", "## v0.11.6.2.1"),
     ("README.md", "v0.11.6.2.1-private-local-otel-collector-tempo-runtime"),
     ("docs/ROADMAP.md", "v0.11.6.2.1"),
-    ("docs/OBSERVABILITY.md", "active v0.11.6.2.2" if correlation_successor else "active v0.11.6.2.1"),
+    ("docs/OBSERVABILITY.md", "active v0.11.6.2.3" if closure_successor else ("active v0.11.6.2.2" if correlation_successor else "active v0.11.6.2.1")),
     ("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md", "v0.11.6.2.1 implements"),
     (".github/CODEOWNERS", f"/{contract_path} @SterlingAureum"),
     (".github/CODEOWNERS", "/platform/tracing/tempo/ @SterlingAureum"),

@@ -44,6 +44,7 @@ def read(relative: str) -> str:
 
 contract_path = "delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json"
 contract = json.loads(read(contract_path))
+closure_successor = (root / "delivery/contracts/v0.11.6.2.3-local-minimal-tracing-closure.json").is_file()
 
 
 def validate(value: dict[str, Any]) -> None:
@@ -187,9 +188,9 @@ for forbidden in ("/db/health", "service_graph", "spanmetrics", "tail_sampling",
 for relative, marker in (
     ("scripts/validate-ci-quality-gates.sh", "validate-v0.11.6.2.2-real-demo-api-trace-log-correlation.sh"),
     ("CHANGELOG.md", "## v0.11.6.2.2"),
-    ("README.md", "v0.11.6.2.2-real-demo-api-trace-log-correlation"),
+    ("README.md", "v0.11.6.2.3-local-minimal-tracing-closure" if closure_successor else "v0.11.6.2.2-real-demo-api-trace-log-correlation"),
     ("docs/ROADMAP.md", "v0.11.6.2.2"),
-    ("docs/OBSERVABILITY.md", "active v0.11.6.2.2"),
+    ("docs/OBSERVABILITY.md", "active v0.11.6.2.3" if closure_successor else "active v0.11.6.2.2"),
     ("docs/V0.11_OBSERVABILITY_SRE_DESIGN.md", "v0.11.6.2.2 joins"),
     ("docs/V0.11.6.2.2_REAL_DEMO_API_TRACE_LOG_CORRELATION.md", "kubectl argo rollouts status demo-api"),
     ("docs/V0.11.6.2.2_REAL_DEMO_API_TRACE_LOG_CORRELATION.md", "direct response is diagnostic only"),

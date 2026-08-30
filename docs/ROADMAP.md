@@ -450,6 +450,11 @@ Incremental scope:
     source plus a Loki `TraceID` derived field. Trace identifiers remain
     unindexed fields; no image rebuild, PostgreSQL trace claim, AWS runtime,
     service graph, span metrics, or durable Tempo storage is introduced.
+  - v0.11.6.2.3 closes local minimal tracing with one ordered read-only
+    entrypoint, private-Service and Rollout preflight, two independent real
+    trace-log correlations, and explicit negative production boundaries. The
+    destructive synthetic Collector replacement drill remains independently
+    accepted and is not rerun by closure.
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned
 - v0.11.8 - environment-scoped observability qualification, including an

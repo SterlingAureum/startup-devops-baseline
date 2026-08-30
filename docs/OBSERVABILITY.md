@@ -1,5 +1,12 @@
 # Observability
 
+v0.11.7.0 defines a 30-day 99.9% availability SLO and a 30-day 99% latency
+SLO at 500ms for eligible demo-api `GET /version` traffic. Eight bounded
+recording rules publish the SLI inputs, objective ratios, and remaining error
+budgets. The immutable `startup-devops-demo-api-slo` Dashboard consumes only
+those rules. Local evaluation proves formulas and current samples; it does not
+claim 30 days of production history.
+
 The active v0.11.6.2.3.1 local tracing closure first proves that every ready
 demo-api replica runs the same non-neutral, tracing-capable artifact. It then
 uses Prometheus Operator through the
@@ -333,3 +340,6 @@ curl -fsS --get http://127.0.0.1:19090/api/v1/query \
 - `docs/V0.11.5.2.0_ALERT_LIFECYCLE_DRILL.md` defines the guarded synthetic
   alert lifecycle, continued severity routing, inhibition cases, restricted
   webhook sink, resolved delivery, and zero-residual local acceptance.
+- `docs/V0.11.7.0_DEMO_API_SLI_SLO_ERROR_BUDGET_FOUNDATION.md` defines the
+  eligible traffic, objective formulas, error-budget interpretation,
+  Dashboard, local acceptance, and deferred alert/Rollout boundaries.

@@ -150,7 +150,9 @@ for name, flag in unchanged.items():
         require(flag is False, f"Repair boundary expanded: {name}")
 
 chart = read("platform/observability/helm/Chart.yaml")
-require("version: 0.4.1" in chart and 'appVersion: "v0.11.5.1.1"' in chart, "Observability Chart changed")
+slo_foundation_successor = (root / "delivery/contracts/v0.11.7.0-demo-api-sli-slo-error-budget-foundation.json").is_file()
+expected_views = ("version: 0.5.0", 'appVersion: "v0.11.7.0"') if slo_foundation_successor else ("version: 0.4.1", 'appVersion: "v0.11.5.1.1"')
+require(all(marker in chart for marker in expected_views), "Observability Chart changed")
 require("up == bool 0" in template, "Boolean target-down expression changed")
 alerts = re.findall(r"(?m)^\s*- alert:\s*(\S+)\s*$", read("platform/observability/helm/templates/actionable-alerts.yaml"))
 require(len(alerts) == 9 and len(set(alerts)) == 9, "Nine-alert inventory changed")

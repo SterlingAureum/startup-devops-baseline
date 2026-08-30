@@ -55,11 +55,12 @@ require(chart_contract.get("version") == "0.4.0", "Wrong Chart version")
 require(chart_contract.get("applicationVersion") == "v0.11.5.1", "Wrong application version")
 semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()
 alert_lifecycle_drill_successor = (root / "delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json").is_file()
+slo_foundation_successor = (root / "delivery/contracts/v0.11.7.0-demo-api-sli-slo-error-budget-foundation.json").is_file()
 chart = read("platform/observability/helm/Chart.yaml")
 chart_markers = (
     "name: startup-devops-observability-views",
-    "version: 0.4.1" if semantic_repair_successor else "version: 0.4.0",
-    'appVersion: "v0.11.5.1.1"' if semantic_repair_successor else 'appVersion: "v0.11.5.1"',
+    "version: 0.5.0" if slo_foundation_successor else ("version: 0.4.1" if semantic_repair_successor else "version: 0.4.0"),
+    'appVersion: "v0.11.7.0"' if slo_foundation_successor else ('appVersion: "v0.11.5.1.1"' if semantic_repair_successor else 'appVersion: "v0.11.5.1"'),
 )
 for marker in chart_markers:
     require(marker in chart, f"Chart is missing: {marker}")

@@ -459,7 +459,15 @@ Incremental scope:
     neutral replay image cannot be mistaken for the accepted structured-log
     and tracing binary.
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
-  Rollouts analysis gates - planned
+  Rollouts analysis gates - in progress
+  - v0.11.7.0 establishes 30-day demo-api availability and latency objectives,
+    bounded recording rules, remaining-error-budget formulas, one immutable
+    Grafana Dashboard, and local semantic acceptance. Burn-rate alerts and
+    Rollout decisions remain absent.
+  - v0.11.7.1 adds multi-window burn-rate alerting after the formulas are
+    accepted.
+  - v0.11.7.2 adds human-governed SLO-aware Rollout analysis.
+  - v0.11.7.3 closes the SLO phase with ordered end-to-end acceptance.
 - v0.11.8 - environment-scoped observability qualification, including an
   approval-protected, read-only aws-prod runtime observation boundary - planned
 - v0.11.9 - clean-room dev/test/prod-live end-to-end release, successful and

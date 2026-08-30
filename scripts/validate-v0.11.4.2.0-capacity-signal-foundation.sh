@@ -111,8 +111,12 @@ validate_contract(contract)
 capacity_dashboard_successor = (root / "delivery/contracts/v0.11.4.2.1-capacity-efficiency-dashboard.json").is_file()
 semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()
 actionable_alerts_successor = (root / "delivery/contracts/v0.11.5.1-actionable-alerts-runbooks.json").is_file()
+slo_foundation_successor = (root / "delivery/contracts/v0.11.7.0-demo-api-sli-slo-error-budget-foundation.json").is_file()
 
-if semantic_repair_successor:
+if slo_foundation_successor:
+    expected_views_chart_version = "version: 0.5.0"
+    expected_views_app_version = 'appVersion: "v0.11.7.0"'
+elif semantic_repair_successor:
     expected_views_chart_version = "version: 0.4.1"
     expected_views_app_version = 'appVersion: "v0.11.5.1.1"'
 elif actionable_alerts_successor:
@@ -172,6 +176,8 @@ expected_dashboards = {
 }
 if capacity_dashboard_successor:
     expected_dashboards["capacity-overview.json"] = ("startup-devops-capacity-overview", 12)
+if slo_foundation_successor:
+    expected_dashboards["slo-overview.json"] = ("startup-devops-demo-api-slo", 4)
 dashboard_dir = root / "platform/observability/helm/dashboards"
 require(set(path.name for path in dashboard_dir.glob("*.json")) == set(expected_dashboards), "Dashboard set changed")
 for filename, (uid, panel_count) in expected_dashboards.items():

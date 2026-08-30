@@ -247,7 +247,9 @@ require(
     "Local platform runtime changed",
 )
 views_chart = read("platform/observability/helm/Chart.yaml")
-require("version: 0.4.1" in views_chart and 'appVersion: "v0.11.5.1.1"' in views_chart, "Observability runtime changed")
+slo_foundation_successor = (root / "delivery/contracts/v0.11.7.0-demo-api-sli-slo-error-budget-foundation.json").is_file()
+expected_views = ("version: 0.5.0", 'appVersion: "v0.11.7.0"') if slo_foundation_successor else ("version: 0.4.1", 'appVersion: "v0.11.5.1.1"')
+require(all(marker in views_chart for marker in expected_views), "Observability runtime changed")
 
 for relative, marker in (
     ("scripts/check-demo-api-structured-logs.sh", "v0.11.6.1.0 demo-api structured JSON logging runtime acceptance passed."),

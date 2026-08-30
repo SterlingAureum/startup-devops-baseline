@@ -2,6 +2,23 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.0
+
+### Added
+
+- Added explicit 30-day demo-api availability and latency objectives for
+  eligible `GET /version` traffic, with bounded release-identity dimensions.
+- Added eight recording rules for SLI inputs, SLO ratios, and remaining error
+  budgets plus one immutable, recording-rule-only Grafana Dashboard.
+- Added a local live acceptance path, machine-readable contract, negative
+  mutation tests, and SLO interpretation documentation.
+
+### Boundary
+
+- Added no alert, burn-rate rule, Rollout gate, automatic remediation,
+  application code/image change, AWS runtime evidence, or claim of 30-day
+  production achievement.
+
 ## v0.11.6.2.3.1
 
 ### Fixed

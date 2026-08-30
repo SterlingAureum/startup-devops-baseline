@@ -9,6 +9,15 @@ grafana:
 recordingRules:
   evaluationInterval: 30s
 
+slo:
+  evaluationInterval: 30s
+  rollingWindow: 30d
+  method: GET
+  route: /version
+  availabilityObjective: 0.999
+  latencyObjective: 0.99
+  latencyThresholdSeconds: 0.5
+
 alerting:
   evaluationInterval: 30s
   runbookBaseUrl: https://github.com/SterlingAureum/startup-devops-baseline/blob/main/docs/runbooks/alerts

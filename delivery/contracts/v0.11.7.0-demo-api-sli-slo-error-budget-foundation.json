@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "v0.11.7.0",
+  "version": "v0.11.7.0",
+  "status": "offline-implemented-local-live-acceptance-required",
+  "predecessor": "v0.11.6.2.3.1",
+  "designDocument": "docs/V0.11.7.0_DEMO_API_SLI_SLO_ERROR_BUDGET_FOUNDATION.md",
+  "scope": {
+    "service": "demo-api",
+    "environment": "local-first",
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "rolloutGateChanged": false,
+    "alertRuleAdded": false,
+    "awsRuntimeChanged": false
+  },
+  "slo": {
+    "rollingWindow": "30d",
+    "eligibleMethod": "GET",
+    "eligibleRoute": "/version",
+    "availabilityObjective": 0.999,
+    "availabilityBadStatusClass": "5xx",
+    "latencyObjective": 0.99,
+    "latencyThresholdSeconds": 0.5,
+    "identityDimensions": [
+      "deployment_environment_name",
+      "service_name",
+      "service_version",
+      "platform_release_id"
+    ],
+    "healthAndMetricsRoutesExcluded": true,
+    "missingTrafficTreatedAsHealthy": false
+  },
+  "recordingRules": {
+    "resource": "demo-api-slo-recording-rules",
+    "group": "demo-api.slo.v0.11.7.0",
+    "evaluationInterval": "30s",
+    "count": 8,
+    "burnRateRulesAdded": false
+  },
+  "dashboard": {
+    "uid": "startup-devops-demo-api-slo",
+    "title": "Startup DevOps / Demo API SLO and Error Budget",
+    "editable": false,
+    "recordingRulesOnly": true,
+    "panelCount": 4
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.0-demo-api-sli-slo-error-budget-foundation.sh",
+    "liveEntrypoint": "scripts/check-local-slo-foundation.sh",
+    "boundedVersionTrafficGenerated": true,
+    "productionThirtyDayAchievementClaimed": false,
+    "completeQualityGateRequired": true
+  },
+  "deferred": {
+    "multiWindowBurnRateAlerts": "v0.11.7.1",
+    "sloAwareRolloutAnalysis": "v0.11.7.2",
+    "sloClosure": "v0.11.7.3",
+    "awsEvidence": "v0.11.8"
+  }
+}

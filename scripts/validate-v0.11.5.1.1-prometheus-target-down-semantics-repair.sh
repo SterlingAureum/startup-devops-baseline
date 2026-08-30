@@ -57,7 +57,12 @@ require(chart_contract == {
     "applicationVersion": "v0.11.5.1.1",
 }, "Chart contract changed")
 chart = read("platform/observability/helm/Chart.yaml")
-for marker in ("name: startup-devops-observability-views", "version: 0.4.1", 'appVersion: "v0.11.5.1.1"'):
+slo_foundation_successor = (root / "delivery/contracts/v0.11.7.0-demo-api-sli-slo-error-budget-foundation.json").is_file()
+for marker in (
+    "name: startup-devops-observability-views",
+    "version: 0.5.0" if slo_foundation_successor else "version: 0.4.1",
+    'appVersion: "v0.11.7.0"' if slo_foundation_successor else 'appVersion: "v0.11.5.1.1"',
+):
     require(marker in chart, f"Chart is missing: {marker}")
 
 rule_contract = contract.get("recordingRule", {})

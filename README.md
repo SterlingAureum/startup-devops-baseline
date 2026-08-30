@@ -2,7 +2,9 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.6.2.3-local-minimal-tracing-closure`.
+Current development checkpoint: `v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair`.
+It retains the accepted `v0.11.6.2.3-local-minimal-tracing-closure` and adds a
+runtime-artifact preflight before its two live correlation runs.
 The local profile deploys one private, bounded Loki Monolithic instance, an
 Alloy DaemonSet for node-local `startup-apps` Pod logs, and a separate
 one-replica Alloy Deployment for cluster Kubernetes Events. Event read

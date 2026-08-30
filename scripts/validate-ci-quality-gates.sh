@@ -171,6 +171,9 @@ echo "==> Validating v0.11.6.2.2.4 Loki Gateway stale-upstream repair"
 echo "==> Validating v0.11.6.2.3 local minimal tracing closure"
 "${ROOT_DIR}/scripts/validate-v0.11.6.2.3-local-minimal-tracing-closure.sh"
 
+echo "==> Validating v0.11.6.2.3.1 demo-api runtime artifact preflight repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

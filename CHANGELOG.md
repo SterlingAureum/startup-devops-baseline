@@ -2,6 +2,23 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.6.2.3.1
+
+### Fixed
+
+- Rejected the historical neutral replay image before live trace-log
+  correlation instead of misclassifying its plain access logs as Loki delay.
+- Required all ready demo-api replicas to use one runtime image ID and contain
+  the accepted structured-logging, tracing, server-entrypoint, and private
+  Collector configuration.
+- Corrected the v0.11.6.2.3 replay instructions: a fresh unique image built
+  from the exact committed feature source is required.
+
+### Boundary
+
+- Changed validation and documentation only. No application source, Helm
+  desired state, runtime component, Loki timeout, or AWS runtime was changed.
+
 ## v0.11.6.2.3
 
 ### Added

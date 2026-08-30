@@ -218,6 +218,9 @@
 /docs/V0.11.6.2.3_LOCAL_MINIMAL_TRACING_CLOSURE.md @SterlingAureum
 /scripts/validate-v0.11.6.2.3-local-minimal-tracing-closure.sh @SterlingAureum
 /scripts/check-local-tracing-end-to-end.sh @SterlingAureum
+/delivery/contracts/v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.json @SterlingAureum
+/docs/V0.11.6.2.3.1_DEMO_API_RUNTIME_ARTIFACT_PREFLIGHT_REPAIR.md @SterlingAureum
+/scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh @SterlingAureum
 /platform/tracing/tempo/ @SterlingAureum
 /clusters/local/platform/ @SterlingAureum
 /clusters/aws/base/platform/monitoring.yaml @SterlingAureum

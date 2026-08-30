@@ -455,6 +455,9 @@ Incremental scope:
     trace-log correlations, and explicit negative production boundaries. The
     destructive synthetic Collector replacement drill remains independently
     accepted and is not rerun by closure.
+  - v0.11.6.2.3.1 repairs runtime artifact preflight so a Synced and Healthy
+    neutral replay image cannot be mistaken for the accepted structured-log
+    and tracing binary.
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
   Rollouts analysis gates - planned
 - v0.11.8 - environment-scoped observability qualification, including an

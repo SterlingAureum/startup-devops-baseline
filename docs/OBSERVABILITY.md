@@ -1,10 +1,15 @@
 # Observability
 
-The active v0.11.6.2.3 local minimal tracing closure uses Prometheus Operator through the
+The active v0.11.6.2.3.1 local tracing closure first proves that every ready
+demo-api replica runs the same non-neutral, tracing-capable artifact. It then
+uses Prometheus Operator through the
 GitOps-managed `kube-prometheus-stack` release. The original hand-written
 Prometheus resources remain under `platform/monitoring/prometheus` as
 historical v0.1 material and are no longer referenced by an active Argo CD
 Application.
+
+The active v0.11.6.2.3 local minimal tracing closure remains the predecessor
+contract; v0.11.6.2.3.1 repairs only its runtime artifact preflight.
 
 The local App-of-Apps now enables the already accepted demo-api OTLP exporter,
 Grafana provisions one private Tempo data source, and Loki exposes one

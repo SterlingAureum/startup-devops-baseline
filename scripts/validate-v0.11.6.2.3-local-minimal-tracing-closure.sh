@@ -62,15 +62,23 @@ for predecessor in (
     assert (root / predecessor).is_file(), predecessor
 
 live = read("scripts/check-local-tracing-end-to-end.sh")
+artifact_preflight_successor = (
+    root / "delivery/contracts/v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.json"
+).is_file()
 assert live.count('"${ROOT_DIR}/scripts/check-local-demo-api-trace-correlation.sh"') == 2
 for marker in (
     "kubectl config current-context", ".status.phase == \"Healthy\"",
     '.spec.type == "ClusterIP"', "observability-otel-collector-cluster-only",
     "observability-tempo-cluster-only", "observability-logs-cluster-only",
     "grafana-cluster-only", "get ingress --all-namespaces",
-    "run 1 of 2", "run 2 of 2", "v0.11.6.2.3 local minimal tracing closure passed",
+    "run 1 of 2", "run 2 of 2",
 ):
     assert marker in live, marker
+assert (
+    "v0.11.6.2.3 local minimal tracing closure passed" in live
+    or artifact_preflight_successor
+    and "v0.11.6.2.3.1 local tracing closure passed" in live
+)
 for forbidden in (
     "check-local-tracing-runtime.sh", "check-demo-api-tracing-contract.sh",
     "kubectl delete", "kubectl patch", "rollout restart", "argo rollouts promote",

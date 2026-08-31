@@ -2,6 +2,23 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.2
+
+### Added
+
+- Added release-ID-scoped minimum-sample, availability burn-rate, and latency
+  burn-rate metrics to the local Prometheus AnalysisTemplate.
+- Added stable-service 30-day availability and latency budget protection and a
+  second complete AnalysisRun after the 50% human review pause.
+- Added deterministic gate/AnalysisRun fixtures and bounded local live
+  acceptance that supplies stable and canary traffic without promoting.
+
+### Boundary
+
+- Application code and appVersion remain unchanged. Analysis failure blocks
+  advancement but does not edit Git, create a rollback PR, invoke Rollout undo,
+  or change AWS web-provider runtime behavior.
+
 ## v0.11.7.1.3
 
 ### Fixed

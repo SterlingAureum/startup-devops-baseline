@@ -45,6 +45,9 @@ rollout:
               - templateName: demo-api-canary-health
         - setWeight: 50
         - pause: {}
+        - analysis:
+            templates:
+              - templateName: demo-api-canary-health
         - setWeight: 100
 serviceAccount:
   create: true
@@ -171,3 +174,16 @@ analysis:
       interval: 15s
       count: 2
       failureLimit: 1
+    sloAware:
+      enabled: true
+      initialDelay: 60s
+      interval: 15s
+      count: 2
+      failureLimit: 1
+      window: 5m
+      minimumRequests: 20
+      availabilityObjective: 0.999
+      latencyObjective: 0.99
+      latencyThresholdSeconds: 0.5
+      maximumFastBurnRate: 14.4
+      minimumStableBudgetRemaining: 0

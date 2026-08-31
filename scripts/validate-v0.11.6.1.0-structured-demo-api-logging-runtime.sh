@@ -232,8 +232,9 @@ for template in (
 
 chart = read("apps/demo-api/helm/Chart.yaml")
 tracing_successor = (root / "delivery/contracts/v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.json").is_file()
+slo_rollout_successor = (root / "delivery/contracts/v0.11.7.2-slo-aware-argo-rollouts-analysis.json").is_file()
 require(
-    ("version: 0.7.0" if tracing_successor else "version: 0.6.0") in chart
+    ("version: 0.8.0" if slo_rollout_successor else ("version: 0.7.0" if tracing_successor else "version: 0.6.0")) in chart
     and ('appVersion: "0.5.0"' if tracing_successor else 'appVersion: "0.4.0"') in chart,
     "demo-api Chart identity changed",
 )
@@ -301,6 +302,7 @@ import sys
 
 for manifest_path in sys.argv[1:]:
     manifest = Path(manifest_path).read_text()
+    slo_rollout_successor = "expected-release-id" in manifest
     for variable, annotation in (
         ("PLATFORM_RELEASE_ID", "platform.startup.dev/release-id"),
         ("PLATFORM_SOURCE_COMMIT", "platform.startup.dev/source-commit"),
@@ -308,7 +310,8 @@ for manifest_path in sys.argv[1:]:
     ):
         if manifest.count(f"- name: {variable}") != 1:
             raise SystemExit(f"{variable} is not rendered exactly once in {manifest_path}")
-        if manifest.count(f"fieldPath: metadata.annotations['{annotation}']") != 1:
+        expected_annotation_count = 3 if slo_rollout_successor and annotation == "platform.startup.dev/release-id" and manifest_path.endswith("rollout.yaml") else 1
+        if manifest.count(f"fieldPath: metadata.annotations['{annotation}']") != expected_annotation_count:
             raise SystemExit(f"{annotation} is not rendered exactly once in {manifest_path}")
 PY
 

@@ -1,5 +1,10 @@
 # Observability
 
+v0.11.7.2 connects SLO evidence to local Argo Rollouts through exact candidate
+release identity, minimum samples, 5m availability/latency burn rates, and 30d
+stable budget protection. It blocks unsafe advancement without automating Git
+rollback, Rollout undo, or human promotion.
+
 v0.11.7.1.3 repairs the final burn-rate rule-inventory jq program and reports
 the exact missing recording-rule names instead of conflating syntax and data
 failures.

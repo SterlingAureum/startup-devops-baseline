@@ -3,6 +3,7 @@
 {{- $prometheus := $analysis.prometheus | default dict }}
 {{- $metrics := $analysis.metrics | default dict }}
 {{- $canaryTargetUp := $metrics.canaryTargetUp | default dict }}
+{{- $sloAware := $metrics.sloAware | default dict }}
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
@@ -13,6 +14,7 @@ spec:
   args:
     - name: expected-environment
     - name: expected-version
+    - name: expected-release-id
     - name: image-digest
     - name: source-commit
   metrics:
@@ -28,6 +30,94 @@ spec:
           address: {{ $prometheus.address | default "http://observability-metrics-prometheus.observability.svc.cluster.local:9090" | quote }}
           query: |
             sum(up{job="demo-api-canary"})
+    {{- if ($sloAware.enabled | default false) }}
+    - name: canary-minimum-eligible-requests
+      initialDelay: {{ $sloAware.initialDelay | default "60s" }}
+      interval: {{ $sloAware.interval | default "15s" }}
+      count: {{ $sloAware.count | default 2 }}
+      failureLimit: {{ $sloAware.failureLimit | default 1 }}
+      successCondition: len(result) > 0 && result[0] >= {{ $sloAware.minimumRequests | default 20 }}
+      provider:
+        prometheus:
+          address: {{ $prometheus.address | default "http://observability-metrics-prometheus.observability.svc.cluster.local:9090" | quote }}
+          query: |
+            sum(increase(demo_api_http_requests_total{
+              job="demo-api-canary",
+              method="GET",
+              route="/version",
+              platform_release_id="{{ `{{ args.expected-release-id }}` }}"
+            }[{{ $sloAware.window | default "5m" }}]))
+    - name: canary-availability-error-budget-burn-rate
+      initialDelay: {{ $sloAware.initialDelay | default "60s" }}
+      interval: {{ $sloAware.interval | default "15s" }}
+      count: {{ $sloAware.count | default 2 }}
+      failureLimit: {{ $sloAware.failureLimit | default 1 }}
+      successCondition: len(result) > 0 && result[0] <= {{ $sloAware.maximumFastBurnRate | default 14.4 }}
+      provider:
+        prometheus:
+          address: {{ $prometheus.address | default "http://observability-metrics-prometheus.observability.svc.cluster.local:9090" | quote }}
+          query: |
+            (
+              (
+                sum(rate(demo_api_http_requests_total{job="demo-api-canary",method="GET",route="/version",status_class="5xx",platform_release_id="{{ `{{ args.expected-release-id }}` }}"}[{{ $sloAware.window | default "5m" }}]))
+                or
+                0 * sum(rate(demo_api_http_requests_total{job="demo-api-canary",method="GET",route="/version",platform_release_id="{{ `{{ args.expected-release-id }}` }}"}[{{ $sloAware.window | default "5m" }}]))
+              )
+              /
+              clamp_min(sum(rate(demo_api_http_requests_total{job="demo-api-canary",method="GET",route="/version",platform_release_id="{{ `{{ args.expected-release-id }}` }}"}[{{ $sloAware.window | default "5m" }}])), 0.000000001)
+            ) / {{ subf 1.0 ($sloAware.availabilityObjective | default 0.999) }}
+            and
+            sum(rate(demo_api_http_requests_total{job="demo-api-canary",method="GET",route="/version",platform_release_id="{{ `{{ args.expected-release-id }}` }}"}[{{ $sloAware.window | default "5m" }}])) > 0
+    - name: canary-latency-error-budget-burn-rate
+      initialDelay: {{ $sloAware.initialDelay | default "60s" }}
+      interval: {{ $sloAware.interval | default "15s" }}
+      count: {{ $sloAware.count | default 2 }}
+      failureLimit: {{ $sloAware.failureLimit | default 1 }}
+      successCondition: len(result) > 0 && result[0] <= {{ $sloAware.maximumFastBurnRate | default 14.4 }}
+      provider:
+        prometheus:
+          address: {{ $prometheus.address | default "http://observability-metrics-prometheus.observability.svc.cluster.local:9090" | quote }}
+          query: |
+            (
+              1 - (
+                sum(rate(demo_api_http_request_duration_seconds_bucket{job="demo-api-canary",method="GET",route="/version",le={{ $sloAware.latencyThresholdSeconds | default 0.5 | quote }},platform_release_id="{{ `{{ args.expected-release-id }}` }}"}[{{ $sloAware.window | default "5m" }}]))
+                /
+                clamp_min(sum(rate(demo_api_http_request_duration_seconds_count{job="demo-api-canary",method="GET",route="/version",platform_release_id="{{ `{{ args.expected-release-id }}` }}"}[{{ $sloAware.window | default "5m" }}])), 0.000000001)
+              )
+            ) / {{ subf 1.0 ($sloAware.latencyObjective | default 0.99) }}
+            and
+            sum(rate(demo_api_http_request_duration_seconds_count{job="demo-api-canary",method="GET",route="/version",platform_release_id="{{ `{{ args.expected-release-id }}` }}"}[{{ $sloAware.window | default "5m" }}])) > 0
+    - name: stable-availability-error-budget-remaining
+      initialDelay: {{ $sloAware.initialDelay | default "60s" }}
+      interval: {{ $sloAware.interval | default "15s" }}
+      count: {{ $sloAware.count | default 2 }}
+      failureLimit: {{ $sloAware.failureLimit | default 1 }}
+      successCondition: len(result) > 0 && result[0] > {{ $sloAware.minimumStableBudgetRemaining | default 0 }}
+      provider:
+        prometheus:
+          address: {{ $prometheus.address | default "http://observability-metrics-prometheus.observability.svc.cluster.local:9090" | quote }}
+          query: |
+            clamp_min(clamp_max(1 - ((
+              sum(rate(demo_api_http_requests_total{job="demo-api-stable",method="GET",route="/version",status_class="5xx"}[30d]))
+              or 0 * sum(rate(demo_api_http_requests_total{job="demo-api-stable",method="GET",route="/version"}[30d]))
+            ) / clamp_min(sum(rate(demo_api_http_requests_total{job="demo-api-stable",method="GET",route="/version"}[30d])), 0.000000001)) / {{ subf 1.0 ($sloAware.availabilityObjective | default 0.999) }}), 1), 0)
+            and sum(rate(demo_api_http_requests_total{job="demo-api-stable",method="GET",route="/version"}[30d])) > 0
+    - name: stable-latency-error-budget-remaining
+      initialDelay: {{ $sloAware.initialDelay | default "60s" }}
+      interval: {{ $sloAware.interval | default "15s" }}
+      count: {{ $sloAware.count | default 2 }}
+      failureLimit: {{ $sloAware.failureLimit | default 1 }}
+      successCondition: len(result) > 0 && result[0] > {{ $sloAware.minimumStableBudgetRemaining | default 0 }}
+      provider:
+        prometheus:
+          address: {{ $prometheus.address | default "http://observability-metrics-prometheus.observability.svc.cluster.local:9090" | quote }}
+          query: |
+            clamp_min(clamp_max(1 - ((1 - (
+              sum(rate(demo_api_http_request_duration_seconds_bucket{job="demo-api-stable",method="GET",route="/version",le={{ $sloAware.latencyThresholdSeconds | default 0.5 | quote }}}[30d]))
+              / clamp_min(sum(rate(demo_api_http_request_duration_seconds_count{job="demo-api-stable",method="GET",route="/version"}[30d])), 0.000000001)
+            )) / {{ subf 1.0 ($sloAware.latencyObjective | default 0.99) }}), 1), 0)
+            and sum(rate(demo_api_http_request_duration_seconds_count{job="demo-api-stable",method="GET",route="/version"}[30d])) > 0
+    {{- end }}
     {{- else if eq $analysis.provider "web" }}
     {{- $web := $analysis.web | default dict }}
     - name: canary-ready

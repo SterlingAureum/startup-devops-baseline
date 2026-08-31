@@ -48,6 +48,10 @@ spec:
                 valueFrom:
                   fieldRef:
                     fieldPath: metadata.annotations['platform.startup.dev/application-version']
+              - name: expected-release-id
+                valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.annotations['platform.startup.dev/release-id']
               - name: image-digest
                 {{- if $.Values.image.digest }}
                 valueFrom:

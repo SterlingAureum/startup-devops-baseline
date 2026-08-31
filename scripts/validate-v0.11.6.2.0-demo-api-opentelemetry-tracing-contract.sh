@@ -307,7 +307,8 @@ for marker in (
     require(marker in closure_validator, f"Closure successor coverage missing: {marker}")
 
 chart = read("apps/demo-api/helm/Chart.yaml")
-require("version: 0.7.0" in chart and 'appVersion: "0.5.0"' in chart, "demo-api Chart identity not advanced")
+slo_rollout_successor = (root / "delivery/contracts/v0.11.7.2-slo-aware-argo-rollouts-analysis.json").is_file()
+require(("version: 0.8.0" if slo_rollout_successor else "version: 0.7.0") in chart and 'appVersion: "0.5.0"' in chart, "demo-api Chart identity not advanced")
 values = read("apps/demo-api/helm/values.yaml")
 for marker in (
     "tracing:",

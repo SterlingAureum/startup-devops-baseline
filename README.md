@@ -3,7 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.7.1.3-burn-rate-rule-inventory-jq-repair`.
+`v0.11.7.2-slo-aware-argo-rollouts-analysis`.
+It retains the accepted `v0.11.7.1.3-burn-rate-rule-inventory-jq-repair` and
+adds local candidate-release and stable-budget gates to Argo Rollouts while
+preserving the human promotion pause and explicit rollback ownership.
 It retains the accepted
 `v0.11.7.1.2-grafana-dashboard-successor-live-validation-repair` and repairs
 the final Prometheus rule-inventory jq program and missing-rule diagnostics.

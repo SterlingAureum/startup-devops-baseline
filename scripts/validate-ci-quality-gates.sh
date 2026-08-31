@@ -195,6 +195,9 @@ echo "==> Validating v0.11.7.1.3 burn-rate rule inventory jq repair"
 echo "==> Validating v0.11.7.2 SLO-aware Argo Rollouts Analysis"
 "${ROOT_DIR}/scripts/validate-v0.11.7.2-slo-aware-argo-rollouts-analysis.sh"
 
+echo "==> Validating v0.11.7.2.1 SLO Analysis PromQL and live-race repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.2.1-slo-analysis-promql-live-race-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

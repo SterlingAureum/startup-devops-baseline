@@ -475,6 +475,7 @@ Incremental scope:
   - v0.11.7.1.3 repairs the final jq inventory program and adds exact missing
     recording-rule diagnostics without changing runtime state.
   - v0.11.7.2 adds human-governed, exact-release SLO-aware Rollout analysis
+  - v0.11.7.2.1 repairs stable-budget PromQL parsing and the local live-traffic race
     with candidate short-window signals and stable 30-day budget protection.
   - v0.11.7.3 closes the SLO phase with ordered end-to-end acceptance.
 - v0.11.8 - environment-scoped observability qualification, including an

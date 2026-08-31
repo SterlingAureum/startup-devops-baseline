@@ -1,6 +1,8 @@
 # Observability
 
-v0.11.7.2 connects SLO evidence to local Argo Rollouts through exact candidate
+v0.11.7.2.1 repairs the stable-budget PromQL and coordinates local traffic with
+the exact new application version before v0.11.7.2 connects SLO evidence to
+local Argo Rollouts through exact candidate
 release identity, minimum samples, 5m availability/latency burn rates, and 30d
 stable budget protection. It blocks unsafe advancement without automating Git
 rollback, Rollout undo, or human promotion.

@@ -2,6 +2,22 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.2.1
+
+### Fixed
+
+- Repaired unbalanced stable-availability PromQL grouping that Prometheus
+  rejected at AnalysisRun execution time.
+- Made local SLO acceptance wait for an exact new application version before
+  generating stable/canary traffic, removing the 60-second operator race.
+- Corrected live deployment guidance to pass the feature branch through
+  `TARGET_REVISION` rather than confusing it with `APPLICATION_VERSION`.
+
+### Boundary
+
+- Application code, image, SLO thresholds, human promotion, rollback ownership,
+  AWS web-provider behavior, and automatic promotion remain unchanged.
+
 ## v0.11.7.2
 
 ### Added

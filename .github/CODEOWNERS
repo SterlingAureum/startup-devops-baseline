@@ -250,6 +250,9 @@
 /docs/V0.11.7.2_SLO_AWARE_ARGO_ROLLOUTS_ANALYSIS.md @SterlingAureum
 /scripts/check-local-slo-aware-rollout-analysis.sh @SterlingAureum
 /scripts/validate-v0.11.7.2-slo-aware-argo-rollouts-analysis.sh @SterlingAureum
+/delivery/contracts/v0.11.7.2.1-slo-analysis-promql-live-race-repair.json @SterlingAureum
+/docs/V0.11.7.2.1_SLO_ANALYSIS_PROMQL_LIVE_RACE_TROUBLESHOOTING.md @SterlingAureum
+/scripts/validate-v0.11.7.2.1-slo-analysis-promql-live-race-repair.sh @SterlingAureum
 /delivery/contracts/v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.json @SterlingAureum
 /docs/V0.11.6.2.3.1_DEMO_API_RUNTIME_ARTIFACT_PREFLIGHT_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh @SterlingAureum

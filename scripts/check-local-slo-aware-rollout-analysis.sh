@@ -6,7 +6,9 @@ APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
 ROLLOUT_NAME="${ROLLOUT_NAME:-demo-api}"
 TRAFFIC_REQUESTS="${TRAFFIC_REQUESTS:-40}"
 ANALYSIS_TIMEOUT_SECONDS="${ANALYSIS_TIMEOUT_SECONDS:-300}"
+ROLLOUT_WAIT_SECONDS="${ROLLOUT_WAIT_SECONDS:-300}"
 MINIMUM_MATCHING_ANALYSIS_RUNS="${MINIMUM_MATCHING_ANALYSIS_RUNS:-1}"
+EXPECTED_APPLICATION_VERSION="${EXPECTED_APPLICATION_VERSION:-}"
 ANALYSIS_RUN_FIXTURE="${ANALYSIS_RUN_FIXTURE:-}"
 
 expected_metrics='[
@@ -43,6 +45,20 @@ fi
 for command_name in curl jq kubectl python3 seq; do
   command -v "${command_name}" >/dev/null 2>&1 || { echo "ERROR: required command not found: ${command_name}" >&2; exit 1; }
 done
+
+if [ -n "${EXPECTED_APPLICATION_VERSION}" ]; then
+  echo "==> Waiting for Rollout application version ${EXPECTED_APPLICATION_VERSION}"
+  deadline=$((SECONDS + ROLLOUT_WAIT_SECONDS))
+  while [ "${SECONDS}" -lt "${deadline}" ]; do
+    observed_application_version="$(kubectl -n "${APP_NAMESPACE}" get rollout "${ROLLOUT_NAME}" -o jsonpath='{.metadata.annotations.platform\.startup\.dev/application-version}' 2>/dev/null || true)"
+    [ "${observed_application_version}" != "${EXPECTED_APPLICATION_VERSION}" ] || break
+    sleep 2
+  done
+  [ "${observed_application_version:-}" = "${EXPECTED_APPLICATION_VERSION}" ] || {
+    echo "ERROR: Rollout did not reach application version ${EXPECTED_APPLICATION_VERSION} within ${ROLLOUT_WAIT_SECONDS}s." >&2
+    exit 1
+  }
+fi
 
 expected_release_id="$(kubectl -n "${APP_NAMESPACE}" get rollout "${ROLLOUT_NAME}" -o jsonpath='{.metadata.annotations.platform\.startup\.dev/release-id}')"
 [ -n "${expected_release_id}" ] || { echo "ERROR: Rollout release-id annotation is empty." >&2; exit 1; }

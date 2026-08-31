@@ -3,6 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.7.2.1-slo-analysis-promql-and-live-race-repair`.
+It repairs the stable availability PromQL grouping, makes local traffic
+generation wait for an exact application version, and documents the required
+feature `TARGET_REVISION` before retaining
 `v0.11.7.2-slo-aware-argo-rollouts-analysis`.
 It retains the accepted `v0.11.7.1.3-burn-rate-rule-inventory-jq-repair` and
 adds local candidate-release and stable-budget gates to Argo Rollouts while

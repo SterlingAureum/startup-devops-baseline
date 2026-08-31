@@ -472,6 +472,8 @@ Incremental scope:
     changing the accepted v0.11.7.1 runtime.
   - v0.11.7.1.2 repairs the retained live Grafana Dashboard assertion for the
     six-panel burn-rate successor and adds precise API diagnostics.
+  - v0.11.7.1.3 repairs the final jq inventory program and adds exact missing
+    recording-rule diagnostics without changing runtime state.
   - v0.11.7.2 adds human-governed SLO-aware Rollout analysis.
   - v0.11.7.3 closes the SLO phase with ordered end-to-end acceptance.
 - v0.11.8 - environment-scoped observability qualification, including an

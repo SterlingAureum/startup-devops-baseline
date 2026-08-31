@@ -80,8 +80,11 @@ assert slow(4, 4, 0, 0) and slow(0, 0, 2, 2)
 assert not slow(4, 3, 2, 1)
 
 live = read("scripts/check-local-slo-burn-rate-alerts.sh")
-for marker in ("check-local-slo-foundation.sh", "check-actionable-alerts.sh", "28-rule SLO burn-rate inventory"):
+for marker in ("check-local-slo-foundation.sh", "check-actionable-alerts.sh", "assert_burn_rate_rule_inventory"):
     assert marker in live
+for marker in ("PROMETHEUS_RULES_FIXTURE", "($expected - $records)[]?"):
+    assert marker in live
+assert "all($windows[] as $w;" not in live
 for forbidden in ("kubectl patch", "kubectl delete", "rollout restart", "argo rollouts promote"):
     assert forbidden not in live
 

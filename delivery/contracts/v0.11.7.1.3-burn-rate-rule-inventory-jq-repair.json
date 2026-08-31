@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "v0.11.7.1.3",
+  "version": "v0.11.7.1.3",
+  "predecessor": "v0.11.7.1.2",
+  "title": "Burn-rate rule inventory jq repair",
+  "cause": "The jq all generator bound a variable without the required pipe and failed before inspecting Prometheus data",
+  "scope": {
+    "liveValidatorChanged": true,
+    "runtimeResourceChanged": false,
+    "recordingRuleChanged": false,
+    "alertRuleChanged": false,
+    "dashboardChanged": false,
+    "chartChanged": false,
+    "applicationImageChanged": false,
+    "rolloutChanged": false,
+    "awsRuntimeChanged": false
+  },
+  "inventory": {
+    "windows": ["5m", "30m", "1h", "2h", "6h", "1d", "3d"],
+    "familiesPerWindow": 4,
+    "requiredRuleCount": 28,
+    "missingNamesReported": true,
+    "additionalRecordingRulesAllowed": true
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.1.3-burn-rate-rule-inventory-jq-repair.sh",
+    "completeFixtureRequired": true,
+    "missingRuleFixtureRequired": true,
+    "unsuccessfulApiFixtureRequired": true,
+    "malformedJsonFixtureRequired": true,
+    "reconciliationRequired": false,
+    "liveRerunRequired": true
+  }
+}

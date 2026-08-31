@@ -2,6 +2,21 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.1.3
+
+### Fixed
+
+- Replaced the invalid jq `all(... as ...; ...)` expression with deterministic
+  construction and subtraction of the 28 required recording-rule names.
+- Added exact missing-rule output and separate unsuccessful/malformed
+  Prometheus payload diagnostics with executable fixtures.
+
+### Boundary
+
+- Changed validation and documentation only. PrometheusRule manifests, Chart,
+  alerts, Dashboard, application image, Rollout, and runtime resources remain
+  unchanged; Root advancement and reconciliation are not required.
+
 ## v0.11.7.1.2
 
 ### Fixed

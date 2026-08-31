@@ -1,5 +1,9 @@
 # Observability
 
+v0.11.7.1.3 repairs the final burn-rate rule-inventory jq program and reports
+the exact missing recording-rule names instead of conflating syntax and data
+failures.
+
 v0.11.7.1.2 makes the retained SLO live checker accept the six-panel burn-rate
 Dashboard and reports Grafana HTTP and payload mismatches precisely.
 

@@ -3,7 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.7.1.2-grafana-dashboard-successor-live-validation-repair`.
+`v0.11.7.1.3-burn-rate-rule-inventory-jq-repair`.
+It retains the accepted
+`v0.11.7.1.2-grafana-dashboard-successor-live-validation-repair` and repairs
+the final Prometheus rule-inventory jq program and missing-rule diagnostics.
 It retains the accepted
 `v0.11.7.1.1-alert-inventory-order-independence-repair` and makes the live
 Grafana Dashboard assertion accept the six-panel `.7.1` successor.

@@ -243,6 +243,9 @@
 /delivery/contracts/v0.11.7.1.2-grafana-dashboard-successor-live-validation-repair.json @SterlingAureum
 /docs/V0.11.7.1.2_GRAFANA_DASHBOARD_SUCCESSOR_LIVE_VALIDATION_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.7.1.2-grafana-dashboard-successor-live-validation-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.7.1.3-burn-rate-rule-inventory-jq-repair.json @SterlingAureum
+/docs/V0.11.7.1.3_BURN_RATE_RULE_INVENTORY_JQ_REPAIR.md @SterlingAureum
+/scripts/validate-v0.11.7.1.3-burn-rate-rule-inventory-jq-repair.sh @SterlingAureum
 /delivery/contracts/v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.json @SterlingAureum
 /docs/V0.11.6.2.3.1_DEMO_API_RUNTIME_ARTIFACT_PREFLIGHT_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh @SterlingAureum

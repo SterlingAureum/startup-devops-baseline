@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "v0.11.7.1.1",
+  "version": "v0.11.7.1.1",
+  "predecessor": "v0.11.7.1",
+  "title": "Alert inventory order-independence repair",
+  "cause": "Path.glob template traversal order is not stable across filesystems",
+  "scope": {
+    "historicalValidatorChanged": true,
+    "runtimeResourceChanged": false,
+    "recordingRuleChanged": false,
+    "alertRuleChanged": false,
+    "dashboardChanged": false,
+    "applicationImageChanged": false,
+    "rolloutChanged": false,
+    "awsRuntimeChanged": false
+  },
+  "validation": {
+    "cardinalityRequired": true,
+    "uniqueNamesRequired": true,
+    "setEqualityRequired": true,
+    "crossFileOrderingRequired": false,
+    "reversedOrderFixtureRequired": true,
+    "duplicateFixtureRequired": true,
+    "unexpectedFixtureRequired": true
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.1.1-alert-inventory-order-independence-repair.sh",
+    "completeQualityGateRequired": true,
+    "reconciliationRequired": false,
+    "liveAcceptanceRequired": false
+  }
+}

@@ -193,7 +193,19 @@ for path in (root / "platform/observability/helm/templates").glob("*.yaml"):
 burn_rate_alerts = []
 if burn_rate_successor:
     burn_rate_alerts = json.loads(read("delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json"))["alerts"]["names"]
-require(all_template_alerts == template_names + burn_rate_alerts, "Alert rule exists outside the successor-aware bounded inventory")
+expected_runtime_alerts = template_names + burn_rate_alerts
+require(
+    len(all_template_alerts) == len(expected_runtime_alerts),
+    "Successor-aware alert cardinality changed",
+)
+require(
+    len(all_template_alerts) == len(set(all_template_alerts)),
+    "Duplicate alert name exists",
+)
+require(
+    set(all_template_alerts) == set(expected_runtime_alerts),
+    "Alert rule exists outside the successor-aware bounded inventory",
+)
 
 for relative in ("clusters/local/platform/templates/monitoring.yaml", "clusters/aws/base/platform/monitoring.yaml"):
     monitoring = read(relative)

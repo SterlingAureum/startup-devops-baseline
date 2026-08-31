@@ -2,6 +2,21 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.1.1
+
+### Fixed
+
+- Replaced cross-template alert list ordering with exact cardinality, unique
+  name, and set-equality checks in the historical v0.11.5.1 validator.
+- Added deterministic reversed-order, duplicate-name, unexpected-name, and
+  missing-name fixtures.
+
+### Boundary
+
+- Changed validation and documentation only. Recording rules, alerts,
+  Dashboard, Chart, application image, Rollout, and runtime resources are
+  unchanged; reconciliation and live acceptance are not required.
+
 ## v0.11.7.1
 
 ### Added

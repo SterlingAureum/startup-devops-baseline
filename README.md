@@ -2,7 +2,10 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.7.1-multi-window-burn-rate-alerts`.
+Current development checkpoint:
+`v0.11.7.1.1-alert-inventory-order-independence-repair`.
+It retains the accepted `v0.11.7.1-multi-window-burn-rate-alerts` runtime and
+removes filesystem traversal order from the historical alert-inventory check.
 It retains the accepted `v0.11.7.0-demo-api-sli-slo-error-budget-foundation`
 and `.7.0.1` revision-alignment precondition, then adds paired-window
 availability and latency error-budget alerts, recording rules, Runbooks, and

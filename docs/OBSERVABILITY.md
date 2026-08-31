@@ -1,5 +1,9 @@
 # Observability
 
+v0.11.7.1.1 makes the historical successor alert inventory independent of
+filesystem template traversal order while retaining strict cardinality,
+uniqueness, and set membership.
+
 v0.11.7.1 adds multi-window availability and latency error-budget burn-rate
 recording rules and four actionable alerts. Fast-burn alerts require either
 the 5m/1h pair above 14.4 or the 30m/6h pair above 6; slow-burn alerts require

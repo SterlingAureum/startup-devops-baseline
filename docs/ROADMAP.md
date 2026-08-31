@@ -468,6 +468,8 @@ Incremental scope:
     older immutable commit is rejected before SLO resource discovery.
   - v0.11.7.1 adds multi-window burn-rate alerting after the formulas are
     accepted.
+  - v0.11.7.1.1 repairs cross-filesystem alert-inventory validation without
+    changing the accepted v0.11.7.1 runtime.
   - v0.11.7.2 adds human-governed SLO-aware Rollout analysis.
   - v0.11.7.3 closes the SLO phase with ordered end-to-end acceptance.
 - v0.11.8 - environment-scoped observability qualification, including an

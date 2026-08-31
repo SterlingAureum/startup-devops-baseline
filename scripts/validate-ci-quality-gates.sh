@@ -183,6 +183,9 @@ echo "==> Validating v0.11.7.0.1 immutable feature Root reconciliation repair"
 echo "==> Validating v0.11.7.1 multi-window SLO burn-rate alerts"
 "${ROOT_DIR}/scripts/validate-v0.11.7.1-multi-window-burn-rate-alerts.sh"
 
+echo "==> Validating v0.11.7.1.1 alert inventory order-independence repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.1.1-alert-inventory-order-independence-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

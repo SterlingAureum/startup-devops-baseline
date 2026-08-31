@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "v0.11.7.3",
+  "version": "v0.11.7.3",
+  "predecessor": "v0.11.7.2.2",
+  "title": "Local SLO and Progressive Delivery Closure",
+  "policy": {
+    "localDefault": "human-governed",
+    "humanGoverned": {
+      "manualPauseWeight": 50,
+      "manualPromotionRequired": true,
+      "analysisRunsRequired": 2
+    },
+    "fullyAutomated": {
+      "documented": true,
+      "enabledByThisIncrement": false,
+      "requiresExplicitRiskPolicy": true
+    }
+  },
+  "closurePhases": ["first-analysis", "human-review", "second-analysis", "final"],
+  "finalEvidence": {
+    "rolloutHealthy": true,
+    "rolloutStableHashMatchesCurrentHash": true,
+    "successfulReleaseAnalysisRunsAtLeast": 2,
+    "sloFoundation": true,
+    "burnRateRuleInventory": true,
+    "actionableAlertInventory": true,
+    "grafanaSloDashboard": true
+  },
+  "negativeMatrix": [
+    "candidate-request-volume-below-minimum",
+    "candidate-availability-burn-exceeded",
+    "candidate-latency-burn-exceeded",
+    "stable-availability-budget-exhausted",
+    "stable-latency-budget-exhausted",
+    "prometheus-provider-error",
+    "prometheus-no-data",
+    "release-id-mismatch",
+    "stale-canary-service-selector",
+    "unready-canary-endpoint",
+    "first-analysis-cannot-satisfy-second-analysis"
+  ],
+  "scope": {
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "helmDesiredStateChanged": false,
+    "sloAlgorithmChanged": false,
+    "automaticPromotionAdded": false,
+    "automaticRollbackAdded": false,
+    "awsRuntimeChanged": false,
+    "runtimeHistoryDeleted": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.3-local-slo-progressive-delivery-closure.sh",
+    "liveEntryPoint": "scripts/check-local-slo-progressive-delivery-closure.sh",
+    "runbook": "docs/V0.11.7.3_LOCAL_SLO_PROGRESSIVE_DELIVERY_CLOSURE.md",
+    "completeQualityGateRequired": true
+  },
+  "deferred": {
+    "awsEvidence": "v0.11.8",
+    "automaticRiskPolicy": "post-v0.11.7",
+    "productionTrafficAndResilience": "v1.0"
+  }
+}

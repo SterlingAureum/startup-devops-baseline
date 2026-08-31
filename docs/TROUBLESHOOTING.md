@@ -1,5 +1,10 @@
 # Troubleshooting
 
+For the closed local SLO/progressive-delivery sequence and its incident index,
+see `V0.11.7.3_LOCAL_SLO_PROGRESSIVE_DELIVERY_CLOSURE.md`. The retained cases
+cover Git/application identity confusion, provider-side PromQL parsing, stale
+canary Endpoint identity, and pre-scrape counter traffic.
+
 This document records common issues observed while building and validating the v0.1 local GitOps baseline.
 
 ## kube-proxy CrashLoopBackOff: too many open files

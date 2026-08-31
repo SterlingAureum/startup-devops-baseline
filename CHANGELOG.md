@@ -2,6 +2,23 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.3
+
+### Added
+
+- Added one four-phase local SLO/progressive-delivery closure entry point for
+  first analysis, human review, second analysis, and final evidence.
+- Added explicit human-governed versus fully automated policy boundaries,
+  complete operating guidance, retained incident cases, and negative fixtures.
+- Added final read-only verification of a Healthy stable Rollout, two
+  exact-release AnalysisRuns, SLO foundation, Dashboard, burn-rate rules, and
+  actionable alerts.
+
+### Boundary
+
+- Desired state, application image, SLO algorithms, AWS runtime, promotion,
+  rollback, and runtime-history retention remain unchanged.
+
 ## v0.11.7.2.2
 
 ### Fixed

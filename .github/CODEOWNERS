@@ -256,6 +256,10 @@
 /delivery/contracts/v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair.json @SterlingAureum
 /docs/V0.11.7.2.2_CANARY_ENDPOINT_IDENTITY_SCRAPE_WINDOW_TROUBLESHOOTING.md @SterlingAureum
 /scripts/validate-v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.7.3-local-slo-progressive-delivery-closure.json @SterlingAureum
+/docs/V0.11.7.3_LOCAL_SLO_PROGRESSIVE_DELIVERY_CLOSURE.md @SterlingAureum
+/scripts/check-local-slo-progressive-delivery-closure.sh @SterlingAureum
+/scripts/validate-v0.11.7.3-local-slo-progressive-delivery-closure.sh @SterlingAureum
 /delivery/contracts/v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.json @SterlingAureum
 /docs/V0.11.6.2.3.1_DEMO_API_RUNTIME_ARTIFACT_PREFLIGHT_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh @SterlingAureum

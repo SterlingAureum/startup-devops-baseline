@@ -3,6 +3,9 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.7.3-local-slo-progressive-delivery-closure`.
+It unifies the four human-governed local release phases, final SLO evidence,
+negative contracts, and retention boundaries before retaining
 `v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair`.
 It waits for the canary Service selector to resolve Ready Pods carrying the
 exact new release ID and spreads bounded traffic across Prometheus scrapes

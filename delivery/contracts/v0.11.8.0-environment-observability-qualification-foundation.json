@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "v0.11.8.0",
+  "version": "v0.11.8.0",
+  "status": "design-and-offline-contract-implemented",
+  "predecessor": "v0.11.7.3.1",
+  "designDocument": "docs/V0.11.8.0_ENVIRONMENT_OBSERVABILITY_QUALIFICATION_FOUNDATION.md",
+  "evidenceSchema": "delivery/contracts/v0.11.8.0-environment-observability-qualification-evidence.schema.json",
+  "goal": "Qualify repository-declared observability capabilities per environment without inferring deployment, verification, or production safety from another environment.",
+  "environments": {
+    "local": {
+      "qualificationIncrement": "accepted-predecessor-evidence",
+      "runtimeLifecycle": "operator-owned",
+      "observationBoundary": "read-only",
+      "missingRuntimeResult": "waiting-runtime"
+    },
+    "aws-dev": {
+      "qualificationIncrement": "v0.11.8.1",
+      "runtimeLifecycle": "operator-owned-disposable",
+      "observationBoundary": "read-only",
+      "missingRuntimeResult": "waiting-runtime"
+    },
+    "aws-test": {
+      "qualificationIncrement": "v0.11.8.2",
+      "runtimeLifecycle": "operator-owned-disposable",
+      "observationBoundary": "read-only",
+      "missingRuntimeResult": "waiting-runtime"
+    },
+    "aws-prod": {
+      "qualificationIncrement": "v0.11.8.3",
+      "runtimeLifecycle": "externally-approved",
+      "observationBoundary": "approval-protected-read-only",
+      "missingRuntimeResult": "waiting-runtime"
+    }
+  },
+  "capabilityClasses": {
+    "metrics": "profile-declared",
+    "dashboards": "profile-declared",
+    "alerts": "profile-declared",
+    "logs": "profile-declared-not-inferred-from-local",
+    "traces": "profile-declared-not-inferred-from-local",
+    "slo": "profile-declared",
+    "progressiveDeliveryTelemetry": "profile-declared"
+  },
+  "capabilityStatuses": [
+    "supported-verified",
+    "supported-not-verified",
+    "not-deployed",
+    "not-applicable"
+  ],
+  "qualificationStatuses": [
+    "qualified",
+    "waiting-runtime",
+    "failed"
+  ],
+  "identityLock": {
+    "required": [
+      "environment",
+      "awsAccountIdForAwsProfiles",
+      "awsRegionForAwsProfiles",
+      "clusterName",
+      "kubeContext",
+      "repositoryCommit",
+      "targetRevision",
+      "applicationVersion"
+    ],
+    "movingRevisionAcceptedAsEvidence": false,
+    "crossEnvironmentEvidenceReuse": false
+  },
+  "allowedRuntimeActions": [
+    "validate-identity",
+    "observe",
+    "collect-evidence"
+  ],
+  "forbiddenRuntimeActions": [
+    "apply",
+    "patch",
+    "delete",
+    "sync",
+    "promote",
+    "abort",
+    "retry",
+    "restart",
+    "generate-traffic",
+    "synthetic-alert",
+    "fault-inject",
+    "create-environment",
+    "destroy-environment"
+  ],
+  "productionBoundary": {
+    "approvalRequiredBeforeObservation": true,
+    "kubernetesWrites": false,
+    "gitWrites": false,
+    "workflowDispatch": false,
+    "trafficGeneration": false,
+    "syntheticSignals": false,
+    "faultInjection": false
+  },
+  "evidence": {
+    "appendOnlyReviewedRecord": true,
+    "utcObservationWindowRequired": true,
+    "exactCommandOutcomeRequired": true,
+    "secretMaterialForbidden": true,
+    "waitingRuntimeIsNotQualified": true,
+    "notDeployedIsNotVerified": true
+  },
+  "scope": {
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "helmDesiredStateChanged": false,
+    "awsRuntimeChanged": false,
+    "environmentCreated": false,
+    "productionObserved": false,
+    "liveQualificationClaimed": false
+  },
+  "acceptance": {
+    "policyEntryPoint": "scripts/check-environment-observability-qualification-policy.sh",
+    "offlineValidator": "scripts/validate-v0.11.8.0-environment-observability-qualification-foundation.sh",
+    "completeQualityGateRequired": true
+  },
+  "deferred": {
+    "awsDevLiveQualification": "v0.11.8.1",
+    "awsTestLiveQualification": "v0.11.8.2",
+    "awsProdReadOnlyQualification": "v0.11.8.3",
+    "multiEnvironmentClosure": "v0.11.8.4",
+    "cleanRoomReleaseAndCanaryDrills": "v0.11.9",
+    "platformUpgradeRecoveryAndRtoRpo": "v0.12"
+  }
+}

@@ -263,6 +263,11 @@
 /delivery/contracts/v0.11.7.3.1-final-rollout-convergence-wait-repair.json @SterlingAureum
 /docs/V0.11.7.3.1_FINAL_ROLLOUT_CONVERGENCE_WAIT_TROUBLESHOOTING.md @SterlingAureum
 /scripts/validate-v0.11.7.3.1-final-rollout-convergence-wait-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.8.0-environment-observability-qualification-foundation.json @SterlingAureum
+/delivery/contracts/v0.11.8.0-environment-observability-qualification-evidence.schema.json @SterlingAureum
+/docs/V0.11.8.0_ENVIRONMENT_OBSERVABILITY_QUALIFICATION_FOUNDATION.md @SterlingAureum
+/scripts/check-environment-observability-qualification-policy.sh @SterlingAureum
+/scripts/validate-v0.11.8.0-environment-observability-qualification-foundation.sh @SterlingAureum
 /delivery/contracts/v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.json @SterlingAureum
 /docs/V0.11.6.2.3.1_DEMO_API_RUNTIME_ARTIFACT_PREFLIGHT_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh @SterlingAureum

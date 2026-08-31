@@ -1,5 +1,16 @@
 # Troubleshooting
 
+## Environment Qualification Reports `waiting-runtime`
+
+`waiting-runtime` means that the selected local or AWS runtime was absent or
+unreachable before any capability could be verified. It is a resumable state,
+not a passing qualification and not evidence that a capability is deployed.
+Do not create, synchronize, promote, or mutate an environment from a v0.11.8
+qualification checker. Confirm the intended account, region, cluster, context,
+immutable target revision, and exact application version, then resume through
+the environment-specific Runbook. See
+`V0.11.8.0_ENVIRONMENT_OBSERVABILITY_QUALIFICATION_FOUNDATION.md`.
+
 For the closed local SLO/progressive-delivery sequence and its incident index,
 see `V0.11.7.3_LOCAL_SLO_PROGRESSIVE_DELIVERY_CLOSURE.md`. The retained cases
 cover Git/application identity confusion, provider-side PromQL parsing, stale

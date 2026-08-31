@@ -459,7 +459,7 @@ Incremental scope:
     neutral replay image cannot be mistaken for the accepted structured-log
     and tracing binary.
 - v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
-  Rollouts analysis gates - in progress
+  Rollouts analysis gates - implemented and accepted locally
   - v0.11.7.0 establishes 30-day demo-api availability and latency objectives,
     bounded recording rules, remaining-error-budget formulas, one immutable
     Grafana Dashboard, and local semantic acceptance. Burn-rate alerts and
@@ -482,7 +482,17 @@ Incremental scope:
     with candidate short-window signals and stable 30-day budget protection.
   - v0.11.7.3 closes the SLO phase with ordered end-to-end acceptance.
 - v0.11.8 - environment-scoped observability qualification, including an
-  approval-protected, read-only aws-prod runtime observation boundary - planned
+  approval-protected, read-only aws-prod runtime observation boundary - in progress
+  - v0.11.8.0 defines the four-environment capability matrix, portable evidence
+    schema, exact environment/revision/release identity lock, resumable
+    `waiting-runtime` status, and fail-closed read-only action policy. It makes
+    no live AWS qualification claim.
+  - v0.11.8.1 will qualify the aws-dev runtime without creating it.
+  - v0.11.8.2 will qualify an exact aws-test release without promoting it.
+  - v0.11.8.3 will qualify aws-prod through an approval-protected read-only
+    observation boundary.
+  - v0.11.8.4 will close multi-environment qualification and preserve reviewed
+    evidence without rerunning destructive local drills.
 - v0.11.9 - clean-room dev/test/prod-live end-to-end release, successful and
   intentionally failed Canary checks, telemetry correlation, reviewed closure
   evidence, environment teardown, and residual-cost audit - planned

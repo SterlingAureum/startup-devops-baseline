@@ -3,9 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.7.3.1-final-rollout-convergence-wait-repair`.
-It adds a bounded, version-locked Healthy/stable ReplicaSet wait before final
-observability checks while retaining
+`v0.11.8.0-environment-observability-qualification-foundation`.
+It defines independent local, aws-dev, aws-test, and aws-prod qualification
+profiles, exact environment/revision/release evidence identity, resumable
+`waiting-runtime` semantics, and an approval-protected read-only production
+boundary. It makes no live AWS qualification claim and retains
+`v0.11.7.3.1-final-rollout-convergence-wait-repair`, which adds a bounded,
+version-locked Healthy/stable ReplicaSet wait before final observability checks
+while retaining
 `v0.11.7.3-local-slo-progressive-delivery-closure`.
 It unifies the four human-governed local release phases, final SLO evidence,
 negative contracts, and retention boundaries before retaining

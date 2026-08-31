@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aureumstack.com/contracts/v0.11.8.0-environment-observability-qualification-evidence.schema.json",
+  "title": "v0.11.8 Environment Observability Qualification Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "qualificationVersion",
+    "environment",
+    "status",
+    "observationWindow",
+    "identity",
+    "approval",
+    "capabilities",
+    "checks"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "v0.11.8.0" },
+    "qualificationVersion": { "pattern": "^v0\\.11\\.8\\.[1-4]$" },
+    "environment": { "enum": ["local", "aws-dev", "aws-test", "aws-prod"] },
+    "status": { "enum": ["qualified", "waiting-runtime", "failed"] },
+    "observationWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startedAt", "finishedAt"],
+      "properties": {
+        "startedAt": { "type": "string", "format": "date-time" },
+        "finishedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["clusterName", "kubeContext", "repositoryCommit", "targetRevision", "applicationVersion"],
+      "properties": {
+        "awsAccountId": { "type": ["string", "null"], "pattern": "^[0-9]{12}$" },
+        "awsRegion": { "type": ["string", "null"], "pattern": "^[a-z]{2}-[a-z]+-[0-9]+$" },
+        "clusterName": { "type": "string", "minLength": 1 },
+        "kubeContext": { "type": "string", "minLength": 1 },
+        "repositoryCommit": { "pattern": "^[0-9a-f]{40}$" },
+        "targetRevision": { "pattern": "^[0-9a-f]{40}$" },
+        "applicationVersion": { "type": "string", "minLength": 1 }
+      }
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "approved"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "approved": { "type": "boolean" },
+        "reference": { "type": ["string", "null"] }
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["metrics", "dashboards", "alerts", "logs", "traces", "slo", "progressiveDeliveryTelemetry"],
+      "properties": {
+        "metrics": { "$ref": "#/$defs/capability" },
+        "dashboards": { "$ref": "#/$defs/capability" },
+        "alerts": { "$ref": "#/$defs/capability" },
+        "logs": { "$ref": "#/$defs/capability" },
+        "traces": { "$ref": "#/$defs/capability" },
+        "slo": { "$ref": "#/$defs/capability" },
+        "progressiveDeliveryTelemetry": { "$ref": "#/$defs/capability" }
+      }
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "outcome"],
+        "properties": {
+          "id": { "pattern": "^[a-z0-9][a-z0-9.-]+$" },
+          "outcome": { "enum": ["passed", "failed", "not-run"] },
+          "observedValue": { "type": ["string", "number", "boolean", "null"] },
+          "diagnostic": { "type": ["string", "null"] }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "evidenceCheckIds"],
+      "properties": {
+        "status": { "enum": ["supported-verified", "supported-not-verified", "not-deployed", "not-applicable"] },
+        "evidenceCheckIds": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "environment": { "const": "aws-prod" } }, "required": ["environment"] },
+      "then": {
+        "properties": {
+          "approval": {
+            "properties": {
+              "required": { "const": true },
+              "approved": { "const": true },
+              "reference": { "type": "string", "minLength": 1 }
+            },
+            "required": ["required", "approved", "reference"]
+          }
+        }
+      }
+    }
+  ]
+}

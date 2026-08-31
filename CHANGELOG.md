@@ -2,6 +2,25 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.8.0
+
+### Added
+
+- Added the local/aws-dev/aws-test/aws-prod observability qualification matrix,
+  explicit capability and whole-environment status vocabularies, and an exact
+  environment/revision/release identity lock.
+- Added a portable qualification-evidence schema and a fail-closed action
+  policy with approval-protected, read-only aws-prod observation.
+- Added deterministic positive and negative fixtures for allowed observations,
+  production approval, mutation rejection, moving revisions, and false
+  qualification of absent runtimes.
+
+### Boundary
+
+- Design and offline contracts only. No AWS environment is created, changed,
+  observed, or qualified; no Kubernetes, GitOps, application, image, traffic,
+  alert, Rollout, or production runtime state changes.
+
 ## v0.11.7.3.1
 
 ### Fixed

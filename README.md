@@ -3,6 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair`.
+It waits for the canary Service selector to resolve Ready Pods carrying the
+exact new release ID and spreads bounded traffic across Prometheus scrapes
+before retaining
 `v0.11.7.2.1-slo-analysis-promql-and-live-race-repair`.
 It repairs the stable availability PromQL grouping, makes local traffic
 generation wait for an exact application version, and documents the required

@@ -24,7 +24,8 @@ assert all(contract["repairs"].values())
 assert not any(contract["scope"].values())
 
 chart = read("apps/demo-api/helm/Chart.yaml")
-assert "version: 0.8.1" in chart and 'appVersion: "0.5.0"' in chart
+endpoint_repair_successor = (root / "delivery/contracts/v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair.json").is_file()
+assert ("version: 0.8.2" if endpoint_repair_successor else "version: 0.8.1") in chart and 'appVersion: "0.5.0"' in chart
 analysis = read("apps/demo-api/helm/templates/analysis-template.yaml")
 assert "clamp_min(\n              clamp_max(" in analysis
 assert ")) / {{ subf 1.0 ($sloAware.availabilityObjective" not in analysis

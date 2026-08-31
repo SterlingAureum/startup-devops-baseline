@@ -176,7 +176,7 @@ analysis:
       failureLimit: 1
     sloAware:
       enabled: true
-      initialDelay: 60s
+      initialDelay: 90s
       interval: 15s
       count: 2
       failureLimit: 1

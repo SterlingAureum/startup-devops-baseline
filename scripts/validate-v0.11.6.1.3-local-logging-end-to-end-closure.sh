@@ -230,7 +230,8 @@ if tracing_successor_path.is_file():
     successor_chart = read("apps/demo-api/helm/Chart.yaml")
     slo_rollout_successor = (root / "delivery/contracts/v0.11.7.2-slo-aware-argo-rollouts-analysis.json").is_file()
     slo_analysis_repair_successor = (root / "delivery/contracts/v0.11.7.2.1-slo-analysis-promql-live-race-repair.json").is_file()
-    require(("version: 0.8.1" if slo_analysis_repair_successor else ("version: 0.8.0" if slo_rollout_successor else "version: 0.7.0")) in successor_chart and 'appVersion: "0.5.0"' in successor_chart, "Tracing successor demo-api Chart identity missing")
+    canary_endpoint_repair_successor = (root / "delivery/contracts/v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair.json").is_file()
+    require(("version: 0.8.2" if canary_endpoint_repair_successor else ("version: 0.8.1" if slo_analysis_repair_successor else ("version: 0.8.0" if slo_rollout_successor else "version: 0.7.0"))) in successor_chart and 'appVersion: "0.5.0"' in successor_chart, "Tracing successor demo-api Chart identity missing")
     print("v0.11.6.2.0 application tracing successor coverage passed.")
 
 mutations: list[tuple[str, Callable[[dict[str, Any]], None]]] = [

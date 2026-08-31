@@ -2,6 +2,22 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.2.2
+
+### Fixed
+
+- Required the canary Service selector to resolve Ready Pods with the exact
+  expected release ID before the local checker sends traffic.
+- Replaced the pre-scrape request burst with bounded traffic across multiple
+  Prometheus scrape intervals and moved SLO measurement delay to 90 seconds.
+- Added selector/Pod identity diagnostics and stale Endpoint fixtures based on
+  the preserved v0.11.7.2.1 failure evidence.
+
+### Boundary
+
+- ServiceMonitor relabeling, application code/image, SLO thresholds, manual
+  promotion, rollback ownership, and AWS behavior remain unchanged.
+
 ## v0.11.7.2.1
 
 ### Fixed

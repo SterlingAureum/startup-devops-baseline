@@ -5,11 +5,15 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAMESPACE="${APP_NAMESPACE:-startup-apps}"
 ROLLOUT_NAME="${ROLLOUT_NAME:-demo-api}"
 TRAFFIC_REQUESTS="${TRAFFIC_REQUESTS:-40}"
+TRAFFIC_DURATION_SECONDS="${TRAFFIC_DURATION_SECONDS:-45}"
+TRAFFIC_INTERVAL_SECONDS="${TRAFFIC_INTERVAL_SECONDS:-1}"
 ANALYSIS_TIMEOUT_SECONDS="${ANALYSIS_TIMEOUT_SECONDS:-300}"
 ROLLOUT_WAIT_SECONDS="${ROLLOUT_WAIT_SECONDS:-300}"
+CANARY_IDENTITY_WAIT_SECONDS="${CANARY_IDENTITY_WAIT_SECONDS:-120}"
 MINIMUM_MATCHING_ANALYSIS_RUNS="${MINIMUM_MATCHING_ANALYSIS_RUNS:-1}"
 EXPECTED_APPLICATION_VERSION="${EXPECTED_APPLICATION_VERSION:-}"
 ANALYSIS_RUN_FIXTURE="${ANALYSIS_RUN_FIXTURE:-}"
+CANARY_IDENTITY_FIXTURE="${CANARY_IDENTITY_FIXTURE:-}"
 
 expected_metrics='[
   "canary-prometheus-target-up",
@@ -34,6 +38,31 @@ assert_analysis_run() {
     return 1
   }
 }
+
+assert_canary_identity() {
+  local payload_file="$1"
+  local expected_release_id="$2"
+  jq -e --arg release_id "${expected_release_id}" '
+    .selectorHash as $selector_hash |
+    (.selectorHash | type == "string" and length > 0) and
+    (.selectedPods | length > 0) and
+    all(.selectedPods[];
+      .ready == true and
+      .podTemplateHash == $selector_hash and
+      .releaseId == $release_id)
+  ' "${payload_file}" >/dev/null
+}
+
+if [ -n "${CANARY_IDENTITY_FIXTURE}" ]; then
+  command -v jq >/dev/null 2>&1 || { echo "ERROR: required command not found: jq" >&2; exit 1; }
+  assert_canary_identity "${CANARY_IDENTITY_FIXTURE}" "${EXPECTED_RELEASE_ID:?EXPECTED_RELEASE_ID is required with CANARY_IDENTITY_FIXTURE}" || {
+    echo "ERROR: canary Service still selects missing, unready, stale-hash, or wrong-release Pods." >&2
+    jq . "${CANARY_IDENTITY_FIXTURE}" >&2 || true
+    exit 1
+  }
+  echo "v0.11.7.2.2 canary Service-to-Pod release identity fixture acceptance passed."
+  exit 0
+fi
 
 if [ -n "${ANALYSIS_RUN_FIXTURE}" ]; then
   command -v jq >/dev/null 2>&1 || { echo "ERROR: required command not found: jq" >&2; exit 1; }
@@ -75,6 +104,50 @@ cleanup() {
 }
 trap cleanup EXIT
 
+capture_canary_identity() {
+  local selector_hash
+  selector_hash="$(kubectl -n "${APP_NAMESPACE}" get service/demo-api-canary -o jsonpath='{.spec.selector.rollouts-pod-template-hash}' 2>/dev/null || true)"
+  if [ -z "${selector_hash}" ]; then
+    jq -n '{selectorHash:"",selectedPods:[]}' >"${work_dir}/canary-identity.json"
+    return
+  fi
+  kubectl -n "${APP_NAMESPACE}" get pods \
+    -l "rollouts-pod-template-hash=${selector_hash}" -o json \
+    | jq --arg selector_hash "${selector_hash}" '{
+        selectorHash: $selector_hash,
+        selectedPods: [.items[] | {
+          name: .metadata.name,
+          podTemplateHash: .metadata.labels["rollouts-pod-template-hash"],
+          releaseId: .metadata.annotations["platform.startup.dev/release-id"],
+          applicationVersion: .metadata.annotations["platform.startup.dev/application-version"],
+          ready: any(.status.conditions[]?; .type == "Ready" and .status == "True")
+        }]
+      }' >"${work_dir}/canary-identity.json"
+}
+
+print_canary_identity_diagnostics() {
+  echo "==> Canary identity diagnostics" >&2
+  kubectl -n "${APP_NAMESPACE}" get rollout "${ROLLOUT_NAME}" -o wide >&2 || true
+  kubectl -n "${APP_NAMESPACE}" get service/demo-api-canary -o wide >&2 || true
+  capture_canary_identity || true
+  jq . "${work_dir}/canary-identity.json" >&2 || true
+}
+
+echo "==> Waiting for canary Service endpoints with release ID ${expected_release_id}"
+deadline=$((SECONDS + CANARY_IDENTITY_WAIT_SECONDS))
+while [ "${SECONDS}" -lt "${deadline}" ]; do
+  capture_canary_identity
+  if assert_canary_identity "${work_dir}/canary-identity.json" "${expected_release_id}"; then
+    break
+  fi
+  sleep 2
+done
+if ! assert_canary_identity "${work_dir}/canary-identity.json" "${expected_release_id}"; then
+  echo "ERROR: canary Service did not select Ready Pods for ${expected_release_id} within ${CANARY_IDENTITY_WAIT_SECONDS}s." >&2
+  print_canary_identity_diagnostics
+  exit 1
+fi
+
 free_port() { python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()'; }
 stable_port="$(free_port)"
 canary_port="$(free_port)"
@@ -89,11 +162,16 @@ for endpoint in "http://127.0.0.1:${stable_port}/version" "http://127.0.0.1:${ca
   done
 done
 
-echo "==> Generating bounded stable and candidate release traffic"
-for _ in $(seq 1 "${TRAFFIC_REQUESTS}"); do
+echo "==> Generating bounded traffic across Prometheus scrape intervals"
+traffic_started_at="${SECONDS}"
+traffic_sent=0
+while [ $((SECONDS - traffic_started_at)) -lt "${TRAFFIC_DURATION_SECONDS}" ] || [ "${traffic_sent}" -lt "${TRAFFIC_REQUESTS}" ]; do
   curl -fsS "http://127.0.0.1:${stable_port}/version" >/dev/null
   curl -fsS "http://127.0.0.1:${canary_port}/version" >/dev/null
+  traffic_sent=$((traffic_sent + 1))
+  sleep "${TRAFFIC_INTERVAL_SECONDS}"
 done
+echo "Generated ${traffic_sent} request pairs over $((SECONDS - traffic_started_at))s."
 
 echo "==> Waiting for successful SLO-aware AnalysisRun ${MINIMUM_MATCHING_ANALYSIS_RUNS} for ${expected_release_id}"
 deadline=$((SECONDS + ANALYSIS_TIMEOUT_SECONDS))
@@ -119,6 +197,7 @@ while [ "${SECONDS}" -lt "${deadline}" ]; do
     fi
     case "${phase}" in Failed|Error|Inconclusive)
       assert_analysis_run "${work_dir}/latest.json" "${expected_release_id}" || true
+      print_canary_identity_diagnostics
       exit 1
       ;;
     esac
@@ -129,4 +208,5 @@ done
 
 echo "ERROR: no successful SLO-aware AnalysisRun appeared within ${ANALYSIS_TIMEOUT_SECONDS}s." >&2
 kubectl -n "${APP_NAMESPACE}" get analysisrun --sort-by=.metadata.creationTimestamp >&2 || true
+print_canary_identity_diagnostics
 exit 1

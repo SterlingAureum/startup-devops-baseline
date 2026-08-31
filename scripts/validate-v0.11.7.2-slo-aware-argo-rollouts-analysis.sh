@@ -37,7 +37,8 @@ assert not contract["scope"]["awsRuntimeChanged"]
 
 chart = read("apps/demo-api/helm/Chart.yaml")
 repair_successor = (root / "delivery/contracts/v0.11.7.2.1-slo-analysis-promql-live-race-repair.json").is_file()
-assert ("version: 0.8.1" if repair_successor else "version: 0.8.0") in chart and 'appVersion: "0.5.0"' in chart
+endpoint_repair_successor = (root / "delivery/contracts/v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair.json").is_file()
+assert ("version: 0.8.2" if endpoint_repair_successor else ("version: 0.8.1" if repair_successor else "version: 0.8.0")) in chart and 'appVersion: "0.5.0"' in chart
 values = read("apps/demo-api/helm/values.yaml")
 for marker in (
     "minimumRequests: 20", "maximumFastBurnRate: 14.4",
@@ -129,7 +130,7 @@ grep -F 'SLO-aware AnalysisRun identity, phase, or metric results are invalid.' 
 command -v helm >/dev/null 2>&1 || { echo "Required command not found: helm" >&2; exit 1; }
 helm lint "${ROOT_DIR}/apps/demo-api/helm" >/dev/null
 rendered="$(helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" --namespace startup-apps)"
-grep -q "helm.sh/chart: demo-api-$([ -f "${ROOT_DIR}/delivery/contracts/v0.11.7.2.1-slo-analysis-promql-live-race-repair.json" ] && printf '0.8.1' || printf '0.8.0')" <<<"${rendered}"
+grep -q "helm.sh/chart: demo-api-$([ -f "${ROOT_DIR}/delivery/contracts/v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair.json" ] && printf '0.8.2' || ([ -f "${ROOT_DIR}/delivery/contracts/v0.11.7.2.1-slo-analysis-promql-live-race-repair.json" ] && printf '0.8.1' || printf '0.8.0'))" <<<"${rendered}"
 [ "$(grep -c '^    - name: canary-.*\|^    - name: stable-.*-error-budget-remaining' <<<"${rendered}")" -eq 6 ]
 [ "$(grep -c 'templateName: demo-api-canary-health' <<<"${rendered}")" -eq 2 ]
 grep -q 'name: expected-release-id' <<<"${rendered}"

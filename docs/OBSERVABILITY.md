@@ -1,6 +1,7 @@
 # Observability
 
-v0.11.7.2.1 repairs the stable-budget PromQL and coordinates local traffic with
+v0.11.7.2.2 gates local traffic on exact canary Endpoint identity and spans
+multiple Prometheus scrapes. v0.11.7.2.1 repairs the stable-budget PromQL and coordinates local traffic with
 the exact new application version before v0.11.7.2 connects SLO evidence to
 local Argo Rollouts through exact candidate
 release identity, minimum samples, 5m availability/latency burn rates, and 30d

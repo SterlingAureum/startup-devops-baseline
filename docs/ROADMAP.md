@@ -464,6 +464,8 @@ Incremental scope:
     bounded recording rules, remaining-error-budget formulas, one immutable
     Grafana Dashboard, and local semantic acceptance. Burn-rate alerts and
     Rollout decisions remain absent.
+  - v0.11.7.0.1 repairs feature replay so a healthy Root or child pinned to an
+    older immutable commit is rejected before SLO resource discovery.
   - v0.11.7.1 adds multi-window burn-rate alerting after the formulas are
     accepted.
   - v0.11.7.2 adds human-governed SLO-aware Rollout analysis.

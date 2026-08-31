@@ -2,7 +2,9 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.7.0-demo-api-sli-slo-error-budget-foundation`.
+Current development checkpoint: `v0.11.7.0.1-immutable-feature-root-reconciliation-repair`.
+It retains the accepted `v0.11.7.0-demo-api-sli-slo-error-budget-foundation`
+and makes exact Root/child revision alignment a live precondition.
 It retains the accepted `v0.11.6.2.3-local-minimal-tracing-closure` and adds a
 runtime-artifact preflight before its two live correlation runs.
 The local profile deploys one private, bounded Loki Monolithic instance, an

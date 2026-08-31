@@ -1,5 +1,10 @@
 # Observability
 
+v0.11.7.0.1 requires local HEAD, remote feature HEAD, the immutable Root, its
+`git.targetRevision` parameter, and every same-repository child Application to
+agree before SLO resources are queried. A `Synced/Healthy` child at an older
+commit is rejected with a recovery command that preserves the accepted image.
+
 v0.11.7.0 defines a 30-day 99.9% availability SLO and a 30-day 99% latency
 SLO at 500ms for eligible demo-api `GET /version` traffic. Eight bounded
 recording rules publish the SLI inputs, objective ratios, and remaining error
@@ -343,3 +348,5 @@ curl -fsS --get http://127.0.0.1:19090/api/v1/query \
 - `docs/V0.11.7.0_DEMO_API_SLI_SLO_ERROR_BUDGET_FOUNDATION.md` defines the
   eligible traffic, objective formulas, error-budget interpretation,
   Dashboard, local acceptance, and deferred alert/Rollout boundaries.
+- `docs/V0.11.7.0.1_IMMUTABLE_FEATURE_ROOT_RECONCILIATION_TROUBLESHOOTING.md`
+  records the stale immutable Root case and its repository-owned recovery.

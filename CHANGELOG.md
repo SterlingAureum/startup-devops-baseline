@@ -2,6 +2,23 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.0.1
+
+### Fixed
+
+- Added a pre-resource revision gate that requires local HEAD, remote feature
+  HEAD, Root, Root child parameter, and all same-repository child Applications
+  to use the same immutable commit.
+- Added recovery output that reuses the accepted demo-api image while advancing
+  the feature Root through `deploy-local-feature-gitops.sh`.
+- Documented why `Synced/Healthy`, hard refresh, and direct child sync do not
+  advance an immutable Root after a new increment is pushed.
+
+### Boundary
+
+- Changed validation and documentation only. SLO formulas, Dashboard, alerts,
+  Rollout, image, Kubernetes desired state, and AWS runtime remain unchanged.
+
 ## v0.11.7.0
 
 ### Added

@@ -151,7 +151,8 @@ for name, flag in unchanged.items():
 
 chart = read("platform/observability/helm/Chart.yaml")
 slo_foundation_successor = (root / "delivery/contracts/v0.11.7.0-demo-api-sli-slo-error-budget-foundation.json").is_file()
-expected_views = ("version: 0.5.0", 'appVersion: "v0.11.7.0"') if slo_foundation_successor else ("version: 0.4.1", 'appVersion: "v0.11.5.1.1"')
+burn_rate_successor = (root / "delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json").is_file()
+expected_views = ("version: 0.6.0", 'appVersion: "v0.11.7.1"') if burn_rate_successor else (("version: 0.5.0", 'appVersion: "v0.11.7.0"') if slo_foundation_successor else ("version: 0.4.1", 'appVersion: "v0.11.5.1.1"'))
 require(all(marker in chart for marker in expected_views), "Observability Chart changed")
 require("up == bool 0" in template, "Boolean target-down expression changed")
 alerts = re.findall(r"(?m)^\s*- alert:\s*(\S+)\s*$", read("platform/observability/helm/templates/actionable-alerts.yaml"))

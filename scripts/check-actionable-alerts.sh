@@ -60,6 +60,19 @@ expected_alerts='[
   "PostgreSQLCollectionFailed"
 ]'
 
+expected_warning_count=2
+expected_critical_count=7
+if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json" ]; then
+  expected_alerts="$(jq -c '. + [
+    "DemoApiAvailabilityErrorBudgetFastBurn",
+    "DemoApiAvailabilityErrorBudgetSlowBurn",
+    "DemoApiLatencyErrorBudgetFastBurn",
+    "DemoApiLatencyErrorBudgetSlowBurn"
+  ]' <<<"${expected_alerts}")"
+  expected_warning_count=4
+  expected_critical_count=9
+fi
+
 assert_rules_payload() {
   local rules_payload="$1"
   local warning_count critical_count
@@ -93,8 +106,8 @@ assert_rules_payload() {
 
   warning_count="$(jq '[.data.groups[].rules[] | select(.type == "alerting" and .labels.severity == "warning")] | length' <<<"${rules_payload}")"
   critical_count="$(jq '[.data.groups[].rules[] | select(.type == "alerting" and .labels.severity == "critical")] | length' <<<"${rules_payload}")"
-  if [ "${warning_count}" -ne 2 ] || [ "${critical_count}" -ne 7 ]; then
-    echo "ERROR: expected two warning and seven critical alerts; found warning=${warning_count}, critical=${critical_count}." >&2
+  if [ "${warning_count}" -ne "${expected_warning_count}" ] || [ "${critical_count}" -ne "${expected_critical_count}" ]; then
+    echo "ERROR: expected warning=${expected_warning_count} and critical=${expected_critical_count}; found warning=${warning_count}, critical=${critical_count}." >&2
     return 1
   fi
 }

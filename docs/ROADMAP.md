@@ -558,3 +558,6 @@ Planned scope:
 - human-approved remediation workflows
 - no direct production mutation, automatic merge, or approval bypass
 - AIOps safety, audit, and fallback boundaries
+  - v0.11.7.1 adds paired-window availability and latency error-budget burn-rate
+    recording rules, four actionable alerts, Runbooks, Dashboard panels, and
+    deterministic acceptance without changing progressive delivery decisions.

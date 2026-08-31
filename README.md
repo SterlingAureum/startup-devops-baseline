@@ -2,9 +2,13 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
-Current development checkpoint: `v0.11.7.0.1-immutable-feature-root-reconciliation-repair`.
+Current development checkpoint: `v0.11.7.1-multi-window-burn-rate-alerts`.
 It retains the accepted `v0.11.7.0-demo-api-sli-slo-error-budget-foundation`
-and makes exact Root/child revision alignment a live precondition.
+and `.7.0.1` revision-alignment precondition, then adds paired-window
+availability and latency error-budget alerts, recording rules, Runbooks, and
+Dashboard views without changing the Rollout or application image.
+The retained repair checkpoint is
+`v0.11.7.0.1-immutable-feature-root-reconciliation-repair`.
 It retains the accepted `v0.11.6.2.3-local-minimal-tracing-closure` and adds a
 runtime-artifact preflight before its two live correlation runs.
 The local profile deploys one private, bounded Loki Monolithic instance, an

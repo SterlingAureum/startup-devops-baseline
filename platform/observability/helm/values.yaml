@@ -17,6 +17,20 @@ slo:
   availabilityObjective: 0.999
   latencyObjective: 0.99
   latencyThresholdSeconds: 0.5
+  burnRate:
+    windows:
+      - {name: 5m, duration: 5m}
+      - {name: 30m, duration: 30m}
+      - {name: 1h, duration: 1h}
+      - {name: 2h, duration: 2h}
+      - {name: 6h, duration: 6h}
+      - {name: 1d, duration: 1d}
+      - {name: 3d, duration: 3d}
+    fastPageThreshold: 14.4
+    sustainedPageThreshold: 6
+    slowTicketThreshold: 3
+    longTicketThreshold: 1
+    alertFor: 2m
 
 alerting:
   evaluationInterval: 30s

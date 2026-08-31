@@ -150,24 +150,33 @@ assert_application() {
 }
 
 assert_clean_formal_alerts() {
-  local payload
+  local payload expected
   payload="$(curl -fsS "${prometheus_url}/api/v1/rules?type=alert")"
-  jq -e '
+  expected='[
+    "ArgoCDApplicationUnhealthy",
+    "ArgoRolloutProblem",
+    "DemoApiDependencySuccessRatioLowCritical",
+    "DemoApiDependencySuccessRatioLowWarning",
+    "DemoApiHttpSuccessRatioLowCritical",
+    "DemoApiHttpSuccessRatioLowWarning",
+    "KubernetesDeploymentUnavailable",
+    "PostgreSQLCollectionFailed",
+    "PrometheusTargetDown"
+  ]'
+  if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json" ]; then
+    expected="$(jq -c '. + [
+      "DemoApiAvailabilityErrorBudgetFastBurn",
+      "DemoApiAvailabilityErrorBudgetSlowBurn",
+      "DemoApiLatencyErrorBudgetFastBurn",
+      "DemoApiLatencyErrorBudgetSlowBurn"
+    ]' <<<"${expected}")"
+  fi
+  jq -e --argjson expected "${expected}" '
     ([.data.groups[].rules[] | select(.type == "alerting") | .name] | sort) ==
-    ([
-      "ArgoCDApplicationUnhealthy",
-      "ArgoRolloutProblem",
-      "DemoApiDependencySuccessRatioLowCritical",
-      "DemoApiDependencySuccessRatioLowWarning",
-      "DemoApiHttpSuccessRatioLowCritical",
-      "DemoApiHttpSuccessRatioLowWarning",
-      "KubernetesDeploymentUnavailable",
-      "PostgreSQLCollectionFailed",
-      "PrometheusTargetDown"
-    ] | sort) and
+    ($expected | sort) and
     all(.data.groups[].rules[] | select(.type == "alerting"); .health == "ok" and .state == "inactive")
   ' <<<"${payload}" >/dev/null || {
-    echo "ERROR: the exact nine formal alerts must be healthy and inactive outside the drill." >&2
+    echo "ERROR: the repository-owned formal alerts must be healthy and inactive outside the drill." >&2
     jq '[.data.groups[].rules[] | select(.type == "alerting") | {name, health, state, lastError}]' <<<"${payload}" >&2
     exit 1
   }

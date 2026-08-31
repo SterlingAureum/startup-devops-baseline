@@ -1,5 +1,11 @@
 # Observability
 
+v0.11.7.1 adds multi-window availability and latency error-budget burn-rate
+recording rules and four actionable alerts. Fast-burn alerts require either
+the 5m/1h pair above 14.4 or the 30m/6h pair above 6; slow-burn alerts require
+either the 2h/1d pair above 3 or the 6h/3d pair above 1. Missing traffic remains
+no-data, and no Rollout action is automated in this increment.
+
 v0.11.7.0.1 requires local HEAD, remote feature HEAD, the immutable Root, its
 `git.targetRevision` parameter, and every same-repository child Application to
 agree before SLO resources are queried. A `Synced/Healthy` child at an older

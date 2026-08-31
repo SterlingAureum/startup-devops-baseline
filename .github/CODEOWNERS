@@ -227,6 +227,16 @@
 /delivery/contracts/v0.11.7.0.1-immutable-feature-root-reconciliation-repair.json @SterlingAureum
 /docs/V0.11.7.0.1_IMMUTABLE_FEATURE_ROOT_RECONCILIATION_TROUBLESHOOTING.md @SterlingAureum
 /scripts/validate-v0.11.7.0.1-immutable-feature-root-reconciliation-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json @SterlingAureum
+/docs/V0.11.7.1_MULTI_WINDOW_BURN_RATE_ALERTS.md @SterlingAureum
+/platform/observability/helm/templates/slo-burn-rate-recording-rules.yaml @SterlingAureum
+/platform/observability/helm/templates/slo-burn-rate-alerts.yaml @SterlingAureum
+/docs/runbooks/alerts/demo-api-availability-error-budget-fast-burn.md @SterlingAureum
+/docs/runbooks/alerts/demo-api-availability-error-budget-slow-burn.md @SterlingAureum
+/docs/runbooks/alerts/demo-api-latency-error-budget-fast-burn.md @SterlingAureum
+/docs/runbooks/alerts/demo-api-latency-error-budget-slow-burn.md @SterlingAureum
+/scripts/check-local-slo-burn-rate-alerts.sh @SterlingAureum
+/scripts/validate-v0.11.7.1-multi-window-burn-rate-alerts.sh @SterlingAureum
 /delivery/contracts/v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.json @SterlingAureum
 /docs/V0.11.6.2.3.1_DEMO_API_RUNTIME_ARTIFACT_PREFLIGHT_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh @SterlingAureum

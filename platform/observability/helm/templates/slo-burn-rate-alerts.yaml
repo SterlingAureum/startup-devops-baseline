@@ -1,0 +1,59 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-api-slo-burn-rate-alerts
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: slo-burn-rate-alerts
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ .Values.environment | quote }}
+spec:
+  groups:
+    - name: demo-api.slo.burn-rate-alerts.v0.11.7.1
+      interval: {{ .Values.alerting.evaluationInterval }}
+      rules:
+        - alert: DemoApiAvailabilityErrorBudgetFastBurn
+          expr: |
+            (demo_api:slo_availability_burn_rate:ratio5m > {{ .Values.slo.burnRate.fastPageThreshold }} and demo_api:slo_availability_burn_rate:ratio1h > {{ .Values.slo.burnRate.fastPageThreshold }})
+            or
+            (demo_api:slo_availability_burn_rate:ratio30m > {{ .Values.slo.burnRate.sustainedPageThreshold }} and demo_api:slo_availability_burn_rate:ratio6h > {{ .Values.slo.burnRate.sustainedPageThreshold }})
+          for: {{ .Values.slo.burnRate.alertFor }}
+          labels: {severity: critical, environment: {{ .Values.environment | quote }}, cluster: {{ .Values.cluster | quote }}, component: demo-api, alert_family: slo-availability-burn-rate}
+          annotations:
+            summary: demo-api availability error budget is burning rapidly
+            description: Both short and long availability burn-rate windows exceed a page threshold for GET /version.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "demo-api-availability-error-budget-fast-burn.md" | quote }}
+        - alert: DemoApiAvailabilityErrorBudgetSlowBurn
+          expr: |
+            (demo_api:slo_availability_burn_rate:ratio2h > {{ .Values.slo.burnRate.slowTicketThreshold }} and demo_api:slo_availability_burn_rate:ratio1d > {{ .Values.slo.burnRate.slowTicketThreshold }})
+            or
+            (demo_api:slo_availability_burn_rate:ratio6h > {{ .Values.slo.burnRate.longTicketThreshold }} and demo_api:slo_availability_burn_rate:ratio3d > {{ .Values.slo.burnRate.longTicketThreshold }})
+          for: {{ .Values.slo.burnRate.alertFor }}
+          labels: {severity: warning, environment: {{ .Values.environment | quote }}, cluster: {{ .Values.cluster | quote }}, component: demo-api, alert_family: slo-availability-burn-rate}
+          annotations:
+            summary: demo-api availability error budget is burning persistently
+            description: Both short and long availability burn-rate windows exceed a ticket threshold for GET /version.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "demo-api-availability-error-budget-slow-burn.md" | quote }}
+        - alert: DemoApiLatencyErrorBudgetFastBurn
+          expr: |
+            (demo_api:slo_latency_burn_rate:ratio5m > {{ .Values.slo.burnRate.fastPageThreshold }} and demo_api:slo_latency_burn_rate:ratio1h > {{ .Values.slo.burnRate.fastPageThreshold }})
+            or
+            (demo_api:slo_latency_burn_rate:ratio30m > {{ .Values.slo.burnRate.sustainedPageThreshold }} and demo_api:slo_latency_burn_rate:ratio6h > {{ .Values.slo.burnRate.sustainedPageThreshold }})
+          for: {{ .Values.slo.burnRate.alertFor }}
+          labels: {severity: critical, environment: {{ .Values.environment | quote }}, cluster: {{ .Values.cluster | quote }}, component: demo-api, alert_family: slo-latency-burn-rate}
+          annotations:
+            summary: demo-api latency error budget is burning rapidly
+            description: Both short and long latency burn-rate windows exceed a page threshold for GET /version.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "demo-api-latency-error-budget-fast-burn.md" | quote }}
+        - alert: DemoApiLatencyErrorBudgetSlowBurn
+          expr: |
+            (demo_api:slo_latency_burn_rate:ratio2h > {{ .Values.slo.burnRate.slowTicketThreshold }} and demo_api:slo_latency_burn_rate:ratio1d > {{ .Values.slo.burnRate.slowTicketThreshold }})
+            or
+            (demo_api:slo_latency_burn_rate:ratio6h > {{ .Values.slo.burnRate.longTicketThreshold }} and demo_api:slo_latency_burn_rate:ratio3d > {{ .Values.slo.burnRate.longTicketThreshold }})
+          for: {{ .Values.slo.burnRate.alertFor }}
+          labels: {severity: warning, environment: {{ .Values.environment | quote }}, cluster: {{ .Values.cluster | quote }}, component: demo-api, alert_family: slo-latency-burn-rate}
+          annotations:
+            summary: demo-api latency error budget is burning persistently
+            description: Both short and long latency burn-rate windows exceed a ticket threshold for GET /version.
+            runbook_url: {{ printf "%s/%s" .Values.alerting.runbookBaseUrl "demo-api-latency-error-budget-slow-burn.md" | quote }}

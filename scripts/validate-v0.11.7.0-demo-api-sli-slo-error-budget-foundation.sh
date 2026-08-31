@@ -60,7 +60,9 @@ assert (root / contract["designDocument"]).is_file()
 assert (root / "delivery/contracts/v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.json").is_file()
 
 chart = read("platform/observability/helm/Chart.yaml")
-assert "version: 0.5.0" in chart and 'appVersion: "v0.11.7.0"' in chart
+burn_rate_successor = (root / "delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json").is_file()
+expected_chart = ("version: 0.6.0", 'appVersion: "v0.11.7.1"') if burn_rate_successor else ("version: 0.5.0", 'appVersion: "v0.11.7.0"')
+assert all(marker in chart for marker in expected_chart)
 values = read("platform/observability/helm/values.yaml")
 for marker in (
     "rollingWindow: 30d", "method: GET", "route: /version",
@@ -98,7 +100,7 @@ for forbidden in (
 dashboard = json.loads(read("platform/observability/helm/dashboards/slo-overview.json"))
 assert dashboard["uid"] == contract["dashboard"]["uid"]
 assert dashboard["title"] == contract["dashboard"]["title"]
-assert dashboard["editable"] is False and len(dashboard["panels"]) == 4
+assert dashboard["editable"] is False and len(dashboard["panels"]) == (6 if burn_rate_successor else 4)
 assert [item["name"] for item in dashboard["templating"]["list"]] == ["environment", "release"]
 for panel in dashboard["panels"]:
     assert panel["datasource"]["uid"] == "prometheus"

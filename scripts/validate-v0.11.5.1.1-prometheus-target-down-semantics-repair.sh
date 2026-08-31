@@ -58,10 +58,11 @@ require(chart_contract == {
 }, "Chart contract changed")
 chart = read("platform/observability/helm/Chart.yaml")
 slo_foundation_successor = (root / "delivery/contracts/v0.11.7.0-demo-api-sli-slo-error-budget-foundation.json").is_file()
+burn_rate_successor = (root / "delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json").is_file()
 for marker in (
     "name: startup-devops-observability-views",
-    "version: 0.5.0" if slo_foundation_successor else "version: 0.4.1",
-    'appVersion: "v0.11.7.0"' if slo_foundation_successor else 'appVersion: "v0.11.5.1.1"',
+    "version: 0.6.0" if burn_rate_successor else ("version: 0.5.0" if slo_foundation_successor else "version: 0.4.1"),
+    'appVersion: "v0.11.7.1"' if burn_rate_successor else ('appVersion: "v0.11.7.0"' if slo_foundation_successor else 'appVersion: "v0.11.5.1.1"'),
 ):
     require(marker in chart, f"Chart is missing: {marker}")
 

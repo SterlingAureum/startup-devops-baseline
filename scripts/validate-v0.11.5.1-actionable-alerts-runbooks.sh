@@ -56,11 +56,12 @@ require(chart_contract.get("applicationVersion") == "v0.11.5.1", "Wrong applicat
 semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()
 alert_lifecycle_drill_successor = (root / "delivery/contracts/v0.11.5.2.0-alert-lifecycle-drill.json").is_file()
 slo_foundation_successor = (root / "delivery/contracts/v0.11.7.0-demo-api-sli-slo-error-budget-foundation.json").is_file()
+burn_rate_successor = (root / "delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json").is_file()
 chart = read("platform/observability/helm/Chart.yaml")
 chart_markers = (
     "name: startup-devops-observability-views",
-    "version: 0.5.0" if slo_foundation_successor else ("version: 0.4.1" if semantic_repair_successor else "version: 0.4.0"),
-    'appVersion: "v0.11.7.0"' if slo_foundation_successor else ('appVersion: "v0.11.5.1.1"' if semantic_repair_successor else 'appVersion: "v0.11.5.1"'),
+    "version: 0.6.0" if burn_rate_successor else ("version: 0.5.0" if slo_foundation_successor else ("version: 0.4.1" if semantic_repair_successor else "version: 0.4.0")),
+    'appVersion: "v0.11.7.1"' if burn_rate_successor else ('appVersion: "v0.11.7.0"' if slo_foundation_successor else ('appVersion: "v0.11.5.1.1"' if semantic_repair_successor else 'appVersion: "v0.11.5.1"')),
 )
 for marker in chart_markers:
     require(marker in chart, f"Chart is missing: {marker}")
@@ -189,7 +190,10 @@ if semantic_repair_successor:
 all_template_alerts = []
 for path in (root / "platform/observability/helm/templates").glob("*.yaml"):
     all_template_alerts.extend(re.findall(r"(?m)^\s*- alert:\s*(\S+)\s*$", path.read_text()))
-require(all_template_alerts == template_names, "Alert rule exists outside the bounded inventory")
+burn_rate_alerts = []
+if burn_rate_successor:
+    burn_rate_alerts = json.loads(read("delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json"))["alerts"]["names"]
+require(all_template_alerts == template_names + burn_rate_alerts, "Alert rule exists outside the successor-aware bounded inventory")
 
 for relative in ("clusters/local/platform/templates/monitoring.yaml", "clusters/aws/base/platform/monitoring.yaml"):
     monitoring = read(relative)
@@ -262,7 +266,7 @@ PY
 fixture_dir="$(mktemp -d)"
 trap 'rm -rf -- "${fixture_dir}"' EXIT
 
-python3 - "${fixture_dir}" <<'PY'
+python3 - "${fixture_dir}" "${ROOT_DIR}" <<'PY'
 from __future__ import annotations
 
 from copy import deepcopy
@@ -272,6 +276,7 @@ import sys
 
 
 fixture_dir = Path(sys.argv[1])
+root = Path(sys.argv[2])
 names = [
     "DemoApiHttpSuccessRatioLowWarning",
     "DemoApiHttpSuccessRatioLowCritical",
@@ -287,6 +292,14 @@ warning_names = {
     "DemoApiHttpSuccessRatioLowWarning",
     "DemoApiDependencySuccessRatioLowWarning",
 }
+if (root / "delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json").is_file():
+    names.extend([
+        "DemoApiAvailabilityErrorBudgetFastBurn",
+        "DemoApiAvailabilityErrorBudgetSlowBurn",
+        "DemoApiLatencyErrorBudgetFastBurn",
+        "DemoApiLatencyErrorBudgetSlowBurn",
+    ])
+    warning_names.update({"DemoApiAvailabilityErrorBudgetSlowBurn", "DemoApiLatencyErrorBudgetSlowBurn"})
 rules = []
 for name in names:
     rules.append({

@@ -1,0 +1,59 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-api-slo-burn-rate-recording-rules
+  labels:
+    app.kubernetes.io/name: startup-devops-observability-views
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: slo-burn-rate-recording-rules
+    app.kubernetes.io/part-of: startup-devops-baseline
+    platform.startup.dev/environment: {{ .Values.environment | quote }}
+spec:
+  groups:
+    - name: demo-api.slo.burn-rate.v0.11.7.1
+      interval: {{ .Values.slo.evaluationInterval }}
+      rules:
+{{- range .Values.slo.burnRate.windows }}
+        - record: demo_api:slo_availability_bad:ratio{{ .name }}
+          expr: |
+            (
+              (
+                sum by (deployment_environment_name, service_name, service_version, platform_release_id) (
+                  rate(demo_api_http_requests_total{job=~"demo-api|demo-api-stable|demo-api-canary",method={{ $.Values.slo.method | quote }},route={{ $.Values.slo.route | quote }},status_class="5xx"}[{{ .duration }}])
+                )
+                or
+                0 * sum by (deployment_environment_name, service_name, service_version, platform_release_id) (
+                  rate(demo_api_http_requests_total{job=~"demo-api|demo-api-stable|demo-api-canary",method={{ $.Values.slo.method | quote }},route={{ $.Values.slo.route | quote }}}[{{ .duration }}])
+                )
+              )
+              /
+              clamp_min(sum by (deployment_environment_name, service_name, service_version, platform_release_id) (
+                rate(demo_api_http_requests_total{job=~"demo-api|demo-api-stable|demo-api-canary",method={{ $.Values.slo.method | quote }},route={{ $.Values.slo.route | quote }}}[{{ .duration }}])
+              ), 0.000000001)
+            )
+            and on (deployment_environment_name, service_name, service_version, platform_release_id)
+            sum by (deployment_environment_name, service_name, service_version, platform_release_id) (
+              rate(demo_api_http_requests_total{job=~"demo-api|demo-api-stable|demo-api-canary",method={{ $.Values.slo.method | quote }},route={{ $.Values.slo.route | quote }}}[{{ .duration }}])
+            ) > 0
+        - record: demo_api:slo_availability_burn_rate:ratio{{ .name }}
+          expr: demo_api:slo_availability_bad:ratio{{ .name }} / {{ subf 1.0 $.Values.slo.availabilityObjective }}
+        - record: demo_api:slo_latency_bad:ratio{{ .name }}
+          expr: |
+            (
+              1 - (
+                sum by (deployment_environment_name, service_name, service_version, platform_release_id) (
+                  rate(demo_api_http_request_duration_seconds_bucket{job=~"demo-api|demo-api-stable|demo-api-canary",method={{ $.Values.slo.method | quote }},route={{ $.Values.slo.route | quote }},le={{ $.Values.slo.latencyThresholdSeconds | quote }}}[{{ .duration }}])
+                )
+                /
+                clamp_min(sum by (deployment_environment_name, service_name, service_version, platform_release_id) (
+                  rate(demo_api_http_request_duration_seconds_count{job=~"demo-api|demo-api-stable|demo-api-canary",method={{ $.Values.slo.method | quote }},route={{ $.Values.slo.route | quote }}}[{{ .duration }}])
+                ), 0.000000001)
+              )
+            )
+            and on (deployment_environment_name, service_name, service_version, platform_release_id)
+            sum by (deployment_environment_name, service_name, service_version, platform_release_id) (
+              rate(demo_api_http_request_duration_seconds_count{job=~"demo-api|demo-api-stable|demo-api-canary",method={{ $.Values.slo.method | quote }},route={{ $.Values.slo.route | quote }}}[{{ .duration }}])
+            ) > 0
+        - record: demo_api:slo_latency_burn_rate:ratio{{ .name }}
+          expr: demo_api:slo_latency_bad:ratio{{ .name }} / {{ subf 1.0 $.Values.slo.latencyObjective }}
+{{- end }}

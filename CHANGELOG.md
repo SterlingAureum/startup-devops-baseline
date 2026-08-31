@@ -2,6 +2,22 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.1
+
+### Added
+
+- Added availability and latency bad-ratio and normalized burn-rate recording
+  rules for 5m, 30m, 1h, 2h, 6h, 1d, and 3d windows.
+- Added four paired-window burn-rate alerts: critical fast burn and warning
+  slow burn for each SLO, with repository-owned Runbooks.
+- Extended the SLO Dashboard and added deterministic formula, boundary, Helm,
+  clean-state, and live inventory acceptance.
+
+### Boundary
+
+- Added no application or image change, Rollout gate, automatic rollback,
+  external notification provider, AWS runtime change, or live fault injection.
+
 ## v0.11.7.0.1
 
 ### Fixed

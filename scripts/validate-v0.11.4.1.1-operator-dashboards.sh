@@ -120,8 +120,12 @@ capacity_dashboard_successor = (root / "delivery/contracts/v0.11.4.2.1-capacity-
 semantic_repair_successor = (root / "delivery/contracts/v0.11.5.1.1-prometheus-target-down-semantics-repair.json").is_file()
 actionable_alerts_successor = (root / "delivery/contracts/v0.11.5.1-actionable-alerts-runbooks.json").is_file()
 slo_foundation_successor = (root / "delivery/contracts/v0.11.7.0-demo-api-sli-slo-error-budget-foundation.json").is_file()
+burn_rate_successor = (root / "delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json").is_file()
 
-if slo_foundation_successor:
+if burn_rate_successor:
+    expected_views_chart_version = "version: 0.6.0"
+    expected_views_app_version = 'appVersion: "v0.11.7.1"'
+elif slo_foundation_successor:
     expected_views_chart_version = "version: 0.5.0"
     expected_views_app_version = 'appVersion: "v0.11.7.0"'
 elif semantic_repair_successor:

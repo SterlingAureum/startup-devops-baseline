@@ -4,6 +4,8 @@ For the closed local SLO/progressive-delivery sequence and its incident index,
 see `V0.11.7.3_LOCAL_SLO_PROGRESSIVE_DELIVERY_CLOSURE.md`. The retained cases
 cover Git/application identity confusion, provider-side PromQL parsing, stale
 canary Endpoint identity, and pre-scrape counter traffic.
+Final status convergence after the second AnalysisRun is documented in
+`V0.11.7.3.1_FINAL_ROLLOUT_CONVERGENCE_WAIT_TROUBLESHOOTING.md`.
 
 This document records common issues observed while building and validating the v0.1 local GitOps baseline.
 

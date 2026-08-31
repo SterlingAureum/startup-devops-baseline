@@ -2,6 +2,21 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.3.1
+
+### Fixed
+
+- Replaced the immediate final Rollout assertion with a five-minute,
+  two-second-poll bounded convergence wait locked to the expected application
+  version.
+- Added timeout diagnostics and deterministic Progressing-to-Healthy and
+  version-drift fixtures before final observability checks.
+
+### Boundary
+
+- Validation and documentation only; desired state, image, SLO logic,
+  promotion, rollback, AWS runtime, and accepted live evidence are unchanged.
+
 ## v0.11.7.3
 
 ### Added

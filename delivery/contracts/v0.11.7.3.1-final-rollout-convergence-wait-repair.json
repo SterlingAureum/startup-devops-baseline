@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "v0.11.7.3.1",
+  "version": "v0.11.7.3.1",
+  "predecessor": "v0.11.7.3",
+  "title": "Final Rollout Convergence Wait Repair",
+  "incidentEvidence": ["info55"],
+  "rootCause": {
+    "secondAnalysisCompletedBeforeRolloutStatusConverged": true,
+    "firstFinalCheckWasImmediate": true,
+    "secondUnchangedFinalCheckPassed": true
+  },
+  "repair": {
+    "waitSeconds": 300,
+    "pollSeconds": 2,
+    "expectedApplicationVersionMustRemainExact": true,
+    "healthyStableReplicaSetRequired": true,
+    "observabilityChecksRunAfterConvergence": true,
+    "timeoutDiagnosticsAdded": true,
+    "progressingThenHealthyFixtureAdded": true
+  },
+  "scope": {
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "helmDesiredStateChanged": false,
+    "sloAlgorithmChanged": false,
+    "automaticPromotionAdded": false,
+    "automaticRollbackAdded": false,
+    "awsRuntimeChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.3.1-final-rollout-convergence-wait-repair.sh",
+    "liveEntryPoint": "scripts/check-local-slo-progressive-delivery-closure.sh",
+    "troubleshootingDocument": "docs/V0.11.7.3.1_FINAL_ROLLOUT_CONVERGENCE_WAIT_TROUBLESHOOTING.md",
+    "completeQualityGateRequired": true
+  }
+}

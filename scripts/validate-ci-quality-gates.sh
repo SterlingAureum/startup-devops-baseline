@@ -204,6 +204,9 @@ echo "==> Validating v0.11.7.2.2 canary Endpoint identity and scrape-window repa
 echo "==> Validating v0.11.7.3 local SLO and progressive-delivery closure"
 "${ROOT_DIR}/scripts/validate-v0.11.7.3-local-slo-progressive-delivery-closure.sh"
 
+echo "==> Validating v0.11.7.3.1 final Rollout convergence wait repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.3.1-final-rollout-convergence-wait-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

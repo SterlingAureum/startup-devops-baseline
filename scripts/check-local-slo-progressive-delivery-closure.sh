@@ -8,6 +8,8 @@ ROLLOUT_NAME="${ROLLOUT_NAME:-demo-api}"
 EXPECTED_APPLICATION_VERSION="${EXPECTED_APPLICATION_VERSION:-}"
 CLOSURE_STATE_FIXTURE="${CLOSURE_STATE_FIXTURE:-}"
 RUN_FINAL_OBSERVABILITY_CHECKS="${RUN_FINAL_OBSERVABILITY_CHECKS:-true}"
+FINAL_ROLLOUT_WAIT_SECONDS="${FINAL_ROLLOUT_WAIT_SECONDS:-300}"
+FINAL_ROLLOUT_POLL_SECONDS="${FINAL_ROLLOUT_POLL_SECONDS:-2}"
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
 
@@ -58,6 +60,35 @@ assert_state() {
   esac
 }
 
+rollout_is_final_healthy() {
+  local rollout_file="$1"
+  jq -e '
+    .status.phase == "Healthy" and
+    (.status.currentPodHash | length > 0) and
+    .status.currentPodHash == .status.stableRS and
+    .status.readyReplicas == .spec.replicas and
+    .status.availableReplicas == .spec.replicas
+  ' "${rollout_file}" >/dev/null
+}
+
+print_final_rollout_diagnostics() {
+  local rollout_file="$1"
+  echo "==> Final Rollout convergence diagnostics" >&2
+  jq '{
+    applicationVersion: .metadata.annotations["platform.startup.dev/application-version"],
+    phase: .status.phase,
+    currentStepIndex: .status.currentStepIndex,
+    currentPodHash: .status.currentPodHash,
+    stableRS: .status.stableRS,
+    desiredReplicas: .spec.replicas,
+    replicas: .status.replicas,
+    updatedReplicas: .status.updatedReplicas,
+    readyReplicas: .status.readyReplicas,
+    availableReplicas: .status.availableReplicas,
+    pauseConditions: .status.pauseConditions
+  }' "${rollout_file}" >&2 || true
+}
+
 if [ -n "${CLOSURE_STATE_FIXTURE}" ]; then
   command -v jq >/dev/null 2>&1 || fail "required command not found: jq"
   [ -n "${EXPECTED_APPLICATION_VERSION}" ] || fail "EXPECTED_APPLICATION_VERSION is required with CLOSURE_STATE_FIXTURE"
@@ -88,7 +119,24 @@ case "${CLOSURE_PHASE}" in
     done
     work_dir="$(mktemp -d)"
     trap 'rm -rf -- "${work_dir}"' EXIT
-    kubectl -n "${APP_NAMESPACE}" get rollout "${ROLLOUT_NAME}" -o json >"${work_dir}/rollout.json"
+    if [ "${CLOSURE_PHASE}" = final ]; then
+      echo "==> Waiting for Rollout to converge on its Healthy stable ReplicaSet"
+      deadline=$((SECONDS + FINAL_ROLLOUT_WAIT_SECONDS))
+      while [ "${SECONDS}" -lt "${deadline}" ]; do
+        kubectl -n "${APP_NAMESPACE}" get rollout "${ROLLOUT_NAME}" -o json >"${work_dir}/rollout.json"
+        observed_version="$(jq -r '.metadata.annotations["platform.startup.dev/application-version"] // empty' "${work_dir}/rollout.json")"
+        [ "${observed_version}" = "${EXPECTED_APPLICATION_VERSION}" ] \
+          || fail "Rollout application version drifted while waiting: expected ${EXPECTED_APPLICATION_VERSION}, found ${observed_version:-<empty>}"
+        rollout_is_final_healthy "${work_dir}/rollout.json" && break
+        sleep "${FINAL_ROLLOUT_POLL_SECONDS}"
+      done
+      if ! rollout_is_final_healthy "${work_dir}/rollout.json"; then
+        print_final_rollout_diagnostics "${work_dir}/rollout.json"
+        fail "Rollout did not converge on its Healthy stable ReplicaSet within ${FINAL_ROLLOUT_WAIT_SECONDS}s"
+      fi
+    else
+      kubectl -n "${APP_NAMESPACE}" get rollout "${ROLLOUT_NAME}" -o json >"${work_dir}/rollout.json"
+    fi
     kubectl -n "${APP_NAMESPACE}" get analysisrun -o json >"${work_dir}/analysisruns.json"
     assert_state "${work_dir}/rollout.json" "${work_dir}/analysisruns.json" "${CLOSURE_PHASE}" "${EXPECTED_APPLICATION_VERSION}"
     if [ "${CLOSURE_PHASE}" = final ] && [ "${RUN_FINAL_OBSERVABILITY_CHECKS}" = true ]; then

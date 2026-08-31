@@ -478,6 +478,7 @@ Incremental scope:
   - v0.11.7.2.1 repairs stable-budget PromQL parsing and the local live-traffic race
   - v0.11.7.2.2 repairs stale canary Endpoint identity and pre-scrape traffic timing
   - v0.11.7.3 closes local SLO-aware progressive delivery with explicit policy and evidence
+  - v0.11.7.3.1 repairs final Rollout status convergence timing and diagnostics
     with candidate short-window signals and stable 30-day budget protection.
   - v0.11.7.3 closes the SLO phase with ordered end-to-end acceptance.
 - v0.11.8 - environment-scoped observability qualification, including an

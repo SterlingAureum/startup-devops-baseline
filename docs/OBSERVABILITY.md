@@ -1,6 +1,6 @@
 # Observability
 
-v0.11.7.3 closes the four-phase local SLO/progressive-delivery evidence path
+v0.11.7.3.1 adds bounded final Rollout convergence before v0.11.7.3 closes the four-phase local SLO/progressive-delivery evidence path
 without automating human promotion. v0.11.7.2.2 gates local traffic on exact canary Endpoint identity and spans
 multiple Prometheus scrapes. v0.11.7.2.1 repairs the stable-budget PromQL and coordinates local traffic with
 the exact new application version before v0.11.7.2 connects SLO evidence to

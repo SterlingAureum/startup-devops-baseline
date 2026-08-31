@@ -3,6 +3,9 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.7.3.1-final-rollout-convergence-wait-repair`.
+It adds a bounded, version-locked Healthy/stable ReplicaSet wait before final
+observability checks while retaining
 `v0.11.7.3-local-slo-progressive-delivery-closure`.
 It unifies the four human-governed local release phases, final SLO evidence,
 negative contracts, and retention boundaries before retaining

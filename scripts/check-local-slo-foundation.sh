@@ -12,10 +12,21 @@ GRAFANA_SECRET="${GRAFANA_SECRET:-observability-metrics-grafana}"
 FEATURE_REVISION="${FEATURE_REVISION:-feature/v0.11-observability-sre-baseline}"
 REPOSITORY_URL="${REPOSITORY_URL:-}"
 RULE_WARMUP_SECONDS="${RULE_WARMUP_SECONDS:-45}"
+GRAFANA_DASHBOARD_FIXTURE="${GRAFANA_DASHBOARD_FIXTURE:-}"
+EXPECTED_SLO_DASHBOARD_PANEL_COUNT="${EXPECTED_SLO_DASHBOARD_PANEL_COUNT:-}"
 WORK_DIR="$(mktemp -d)"
 APP_PF_PID=""
 PROMETHEUS_PF_PID=""
 GRAFANA_PF_PID=""
+FIXTURE_MODE=false
+
+if [ -z "${EXPECTED_SLO_DASHBOARD_PANEL_COUNT}" ]; then
+  if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json" ]; then
+    EXPECTED_SLO_DASHBOARD_PANEL_COUNT=6
+  else
+    EXPECTED_SLO_DASHBOARD_PANEL_COUNT=4
+  fi
+fi
 
 fail() {
   echo "ERROR: $*" >&2
@@ -25,7 +36,7 @@ fail() {
 cleanup() {
   local status="$?"
   local pid
-  if [ "${status}" -ne 0 ]; then
+  if [ "${status}" -ne 0 ] && [ "${FIXTURE_MODE}" = false ]; then
     kubectl -n "${OBSERVABILITY_NAMESPACE}" get prometheusrule \
       demo-api-slo-recording-rules -o yaml >&2 || true
     kubectl -n "${APP_NAMESPACE}" get pods -l "${APP_SELECTOR}" -o wide >&2 || true
@@ -43,6 +54,28 @@ cleanup() {
   exit "${status}"
 }
 trap cleanup EXIT
+
+assert_slo_dashboard_payload() {
+  local payload_file="$1"
+  local actual_panel_count
+  jq -e '.dashboard.uid == "startup-devops-demo-api-slo"' "${payload_file}" >/dev/null \
+    || fail "Grafana SLO Dashboard UID is missing or unexpected"
+  jq -e '.dashboard.editable == false' "${payload_file}" >/dev/null \
+    || fail "Grafana SLO Dashboard is editable"
+  actual_panel_count="$(jq -r '.dashboard.panels | if type == "array" then length else -1 end' "${payload_file}")"
+  [ "${actual_panel_count}" = "${EXPECTED_SLO_DASHBOARD_PANEL_COUNT}" ] \
+    || fail "Grafana SLO Dashboard panel count mismatch: expected ${EXPECTED_SLO_DASHBOARD_PANEL_COUNT}, found ${actual_panel_count}"
+}
+
+if [ -n "${GRAFANA_DASHBOARD_FIXTURE}" ]; then
+  FIXTURE_MODE=true
+  command -v jq >/dev/null 2>&1 || fail "required command not found: jq"
+  [ -r "${GRAFANA_DASHBOARD_FIXTURE}" ] \
+    || fail "Grafana Dashboard fixture is not readable: ${GRAFANA_DASHBOARD_FIXTURE}"
+  assert_slo_dashboard_payload "${GRAFANA_DASHBOARD_FIXTURE}"
+  echo "v0.11.7.1.2 Grafana SLO Dashboard API fixture acceptance passed."
+  exit 0
+fi
 
 for command_name in awk base64 curl git jq kubectl python3 seq; do
   command -v "${command_name}" >/dev/null 2>&1 \
@@ -222,12 +255,15 @@ GRAFANA_PF_PID="$!"
 wait_http "http://127.0.0.1:${grafana_port}/api/health"
 admin_user="$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get secret "${GRAFANA_SECRET}" -o jsonpath='{.data.admin-user}' | base64 -d)"
 admin_password="$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get secret "${GRAFANA_SECRET}" -o jsonpath='{.data.admin-password}' | base64 -d)"
-curl -fsS -u "${admin_user}:${admin_password}" \
-  "http://127.0.0.1:${grafana_port}/api/dashboards/uid/startup-devops-demo-api-slo" \
-  | jq -e '
-      .dashboard.uid == "startup-devops-demo-api-slo"
-      and .dashboard.editable == false
-      and (.dashboard.panels | length) == 4
-    ' >/dev/null || fail "Grafana did not provision the immutable SLO Dashboard"
+grafana_dashboard_payload="${WORK_DIR}/grafana-slo-dashboard.json"
+grafana_http_status="$(curl -sS -u "${admin_user}:${admin_password}" \
+  -o "${grafana_dashboard_payload}" -w '%{http_code}' \
+  "http://127.0.0.1:${grafana_port}/api/dashboards/uid/startup-devops-demo-api-slo")"
+if [ "${grafana_http_status}" != "200" ]; then
+  echo "Grafana response body:" >&2
+  sed -n '1,120p' "${grafana_dashboard_payload}" >&2 || true
+  fail "Grafana SLO Dashboard API returned HTTP ${grafana_http_status}"
+fi
+assert_slo_dashboard_payload "${grafana_dashboard_payload}"
 
 echo "v0.11.7.0 local demo-api SLI, 30-day SLO formulas, error-budget rules, and Grafana Dashboard acceptance passed."

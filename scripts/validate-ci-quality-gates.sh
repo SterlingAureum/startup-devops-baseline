@@ -186,6 +186,9 @@ echo "==> Validating v0.11.7.1 multi-window SLO burn-rate alerts"
 echo "==> Validating v0.11.7.1.1 alert inventory order-independence repair"
 "${ROOT_DIR}/scripts/validate-v0.11.7.1.1-alert-inventory-order-independence-repair.sh"
 
+echo "==> Validating v0.11.7.1.2 Grafana Dashboard successor live-validation repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.1.2-grafana-dashboard-successor-live-validation-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

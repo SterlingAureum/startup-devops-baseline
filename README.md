@@ -3,7 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.7.1.1-alert-inventory-order-independence-repair`.
+`v0.11.7.1.2-grafana-dashboard-successor-live-validation-repair`.
+It retains the accepted
+`v0.11.7.1.1-alert-inventory-order-independence-repair` and makes the live
+Grafana Dashboard assertion accept the six-panel `.7.1` successor.
 It retains the accepted `v0.11.7.1-multi-window-burn-rate-alerts` runtime and
 removes filesystem traversal order from the historical alert-inventory check.
 It retains the accepted `v0.11.7.0-demo-api-sli-slo-error-budget-foundation`

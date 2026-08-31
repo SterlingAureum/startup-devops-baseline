@@ -1,5 +1,8 @@
 # Observability
 
+v0.11.7.1.2 makes the retained SLO live checker accept the six-panel burn-rate
+Dashboard and reports Grafana HTTP and payload mismatches precisely.
+
 v0.11.7.1.1 makes the historical successor alert inventory independent of
 filesystem template traversal order while retaining strict cardinality,
 uniqueness, and set membership.

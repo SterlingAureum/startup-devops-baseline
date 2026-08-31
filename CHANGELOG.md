@@ -2,6 +2,21 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.7.1.2
+
+### Fixed
+
+- Made the SLO live checker expect four Dashboard panels for the foundation and
+  six after the burn-rate successor contract exists.
+- Added distinct Grafana HTTP, response-body, UID, editability, and expected/
+  actual panel-count diagnostics plus deterministic API fixtures.
+
+### Boundary
+
+- Changed validation and documentation only. Dashboard JSON, Chart, recording
+  rules, alerts, application image, Rollout, and runtime resources are
+  unchanged; Root advancement and reconciliation are not required.
+
 ## v0.11.7.1.1
 
 ### Fixed

@@ -85,6 +85,14 @@ for marker in ("check-local-slo-foundation.sh", "check-actionable-alerts.sh", "2
 for forbidden in ("kubectl patch", "kubectl delete", "rollout restart", "argo rollouts promote"):
     assert forbidden not in live
 
+foundation_live = read("scripts/check-local-slo-foundation.sh")
+for marker in (
+    "EXPECTED_SLO_DASHBOARD_PANEL_COUNT",
+    "delivery/contracts/v0.11.7.1-multi-window-burn-rate-alerts.json",
+    "EXPECTED_SLO_DASHBOARD_PANEL_COUNT=6",
+): assert marker in foundation_live, marker
+assert '(.dashboard.panels | length) == 4' not in foundation_live
+
 for relative, marker in (
     ("scripts/validate-ci-quality-gates.sh", "validate-v0.11.7.1-multi-window-burn-rate-alerts.sh"),
     ("README.md", "v0.11.7.1-multi-window-burn-rate-alerts"),

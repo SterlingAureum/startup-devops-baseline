@@ -11,6 +11,13 @@ immutable target revision, and exact application version, then resume through
 the environment-specific Runbook. See
 `V0.11.8.0_ENVIRONMENT_OBSERVABILITY_QUALIFICATION_FOUNDATION.md`.
 
+For an aws-dev `failed` result, inspect the evidence diagnostic before changing
+runtime state. A successful result uses reason `aws_dev_observability_qualified`.
+Revision mismatch means the Git-sourced Applications have not reconciled the
+exact protected-main commit; Chart mismatch is checked separately against
+kube-prometheus-stack `88.5.0`. See
+`V0.11.8.1_AWS_DEV_LIVE_OBSERVABILITY_QUALIFICATION.md`.
+
 For the closed local SLO/progressive-delivery sequence and its incident index,
 see `V0.11.7.3_LOCAL_SLO_PROGRESSIVE_DELIVERY_CLOSURE.md`. The retained cases
 cover Git/application identity confusion, provider-side PromQL parsing, stale

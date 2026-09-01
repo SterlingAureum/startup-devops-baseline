@@ -1,0 +1,92 @@
+name: aws-dev observability qualification
+
+on:
+  workflow_dispatch:
+    inputs:
+      control_plane_sha:
+        description: Full protected-main SHA observed by Git-sourced Applications
+        required: true
+        type: string
+      expected_aws_account_id:
+        description: Exact 12-digit aws-dev account ID
+        required: true
+        type: string
+      expected_application_version:
+        description: Exact deployed demo-api application version
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: aws-dev-observability-qualification
+  cancel-in-progress: false
+
+jobs:
+  qualify:
+    name: Read-only aws-dev observability qualification
+    runs-on: [self-hosted, linux, x64, trusted-runtime, aws-dev]
+    timeout-minutes: 20
+    environment:
+      name: aws-dev-runtime
+      deployment: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Validate inputs
+        env:
+          CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
+          EXPECTED_AWS_ACCOUNT_ID: ${{ inputs.expected_aws_account_id }}
+          EXPECTED_APPLICATION_VERSION: ${{ inputs.expected_application_version }}
+        run: |
+          [[ "${CONTROL_PLANE_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${EXPECTED_AWS_ACCOUNT_ID}" =~ ^[0-9]{12}$ ]]
+          [[ -n "${EXPECTED_APPLICATION_VERSION}" ]]
+
+      - name: Checkout the exact control-plane revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.control_plane_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Acquire environment-isolated AWS credentials
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
+        with:
+          role-to-assume: ${{ vars.AWS_RUNTIME_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+          role-session-name: observability-${{ github.run_id }}-${{ github.run_attempt }}
+          role-duration-seconds: 1200
+          unset-current-credentials: true
+
+      - name: Collect qualification evidence
+        id: collect
+        continue-on-error: true
+        env:
+          EXPECTED_CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
+          EXPECTED_AWS_ACCOUNT_ID: ${{ inputs.expected_aws_account_id }}
+          EXPECTED_APPLICATION_VERSION: ${{ inputs.expected_application_version }}
+          AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+          OUTPUT_FILE: ${{ runner.temp }}/aws-dev-observability-qualification.json
+        run: ./scripts/check-aws-dev-observability-qualification.sh
+
+      - name: Upload immutable runtime result
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: aws-dev-observability-${{ inputs.control_plane_sha }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/aws-dev-observability-qualification.json
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Enforce qualified result
+        if: always()
+        env:
+          OUTPUT_FILE: ${{ runner.temp }}/aws-dev-observability-qualification.json
+        run: |
+          status="$(jq -r '.status' "${OUTPUT_FILE}")"
+          echo "### aws-dev observability qualification: ${status}" >> "${GITHUB_STEP_SUMMARY}"
+          jq '{status, observationWindow, identity, capabilities}' "${OUTPUT_FILE}" >> "${GITHUB_STEP_SUMMARY}"
+          [[ "${status}" == "qualified" ]]

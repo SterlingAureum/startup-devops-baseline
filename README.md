@@ -3,8 +3,11 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.8.1-aws-dev-live-observability-qualification`.
+It implements exact-identity, read-only aws-dev Prometheus, Grafana,
+Alertmanager, rule, SLO, and declared-absence qualification while preserving
 `v0.11.8.0-environment-observability-qualification-foundation`.
-It defines independent local, aws-dev, aws-test, and aws-prod qualification
+The foundation defines independent local, aws-dev, aws-test, and aws-prod qualification
 profiles, exact environment/revision/release evidence identity, resumable
 `waiting-runtime` semantics, and an approval-protected read-only production
 boundary. It makes no live AWS qualification claim and retains

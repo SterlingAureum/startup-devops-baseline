@@ -1,6 +1,6 @@
 # Observability
 
-v0.11.8.0 establishes environment-scoped capability, evidence, identity, resumable-wait, and production read-only qualification contracts without claiming live AWS acceptance. v0.11.7.3.1 adds bounded final Rollout convergence before v0.11.7.3 closes the four-phase local SLO/progressive-delivery evidence path
+v0.11.8.1 implements exact-identity read-only aws-dev Prometheus, Grafana, Alertmanager, SLO, and declared-absence qualification without creating the environment or generating traffic. v0.11.8.0 establishes environment-scoped capability, evidence, identity, resumable-wait, and production read-only qualification contracts without claiming live AWS acceptance. v0.11.7.3.1 adds bounded final Rollout convergence before v0.11.7.3 closes the four-phase local SLO/progressive-delivery evidence path
 without automating human promotion. v0.11.7.2.2 gates local traffic on exact canary Endpoint identity and spans
 multiple Prometheus scrapes. v0.11.7.2.1 repairs the stable-budget PromQL and coordinates local traffic with
 the exact new application version before v0.11.7.2 connects SLO evidence to
@@ -379,3 +379,6 @@ curl -fsS --get http://127.0.0.1:19090/api/v1/query \
 - `docs/V0.11.8.0_ENVIRONMENT_OBSERVABILITY_QUALIFICATION_FOUNDATION.md`
   defines the four-environment capability matrix, exact evidence identity,
   resumable runtime absence, and approval-protected aws-prod read-only boundary.
+- `docs/V0.11.8.1_AWS_DEV_LIVE_OBSERVABILITY_QUALIFICATION.md` defines the
+  aws-dev capability profile, bounded runtime RBAC, exact live checks,
+  trusted-runtime workflow, evidence result, and environment-absence handoff.

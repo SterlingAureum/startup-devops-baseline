@@ -268,6 +268,13 @@
 /docs/V0.11.8.0_ENVIRONMENT_OBSERVABILITY_QUALIFICATION_FOUNDATION.md @SterlingAureum
 /scripts/check-environment-observability-qualification-policy.sh @SterlingAureum
 /scripts/validate-v0.11.8.0-environment-observability-qualification-foundation.sh @SterlingAureum
+/delivery/contracts/v0.11.8.1-aws-dev-live-observability-qualification.json @SterlingAureum
+/docs/V0.11.8.1_AWS_DEV_LIVE_OBSERVABILITY_QUALIFICATION.md @SterlingAureum
+/scripts/check-aws-dev-observability-qualification.sh @SterlingAureum
+/scripts/write-environment-observability-qualification.py @SterlingAureum
+/scripts/validate-v0.11.8.1-aws-dev-live-observability-qualification.sh @SterlingAureum
+/.github/workflows/aws-dev-observability-qualification.yaml @SterlingAureum
+/clusters/aws/base/security/runtime-qualification/rbac.yaml @SterlingAureum
 /delivery/contracts/v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.json @SterlingAureum
 /docs/V0.11.6.2.3.1_DEMO_API_RUNTIME_ARTIFACT_PREFLIGHT_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh @SterlingAureum

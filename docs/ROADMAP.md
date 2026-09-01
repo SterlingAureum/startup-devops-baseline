@@ -487,7 +487,11 @@ Incremental scope:
     schema, exact environment/revision/release identity lock, resumable
     `waiting-runtime` status, and fail-closed read-only action policy. It makes
     no live AWS qualification claim.
-  - v0.11.8.1 will qualify the aws-dev runtime without creating it.
+  - v0.11.8.1 implements exact-account/revision/release aws-dev qualification,
+    bounded observability read and port-forward RBAC, private Prometheus and
+    Alertmanager queries, six Dashboard checks, explicit absent Loki/Tempo
+    evidence, idle-SLO semantics, and a trusted-runtime artifact workflow. Live
+    acceptance requires an existing reconciled aws-dev environment.
   - v0.11.8.2 will qualify an exact aws-test release without promoting it.
   - v0.11.8.3 will qualify aws-prod through an approval-protected read-only
     observation boundary.

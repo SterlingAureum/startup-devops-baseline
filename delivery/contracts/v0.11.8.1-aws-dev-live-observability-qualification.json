@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "v0.11.8.1",
+  "version": "v0.11.8.1",
+  "status": "implemented-live-acceptance-required",
+  "predecessor": "v0.11.8.0",
+  "environment": "aws-dev",
+  "clusterName": "startup-devops-baseline-dev",
+  "monitoringChartVersion": "88.5.0",
+  "capabilityProfile": {
+    "metrics": "supported",
+    "dashboards": "supported",
+    "alerts": "supported",
+    "logs": "not-deployed",
+    "traces": "not-deployed",
+    "slo": "supported",
+    "progressiveDeliveryTelemetry": "not-applicable"
+  },
+  "gitApplications": [
+    "demo-api-aws-dev",
+    "observability-views-aws-dev"
+  ],
+  "externalChartApplications": {
+    "monitoring-aws-dev": "88.5.0"
+  },
+  "readTransport": {
+    "namespace": "observability",
+    "podPortForwardCreateAllowed": true,
+    "persistentResourceCreateAllowed": false,
+    "podExecAllowed": false,
+    "secretReadAllowed": false
+  },
+  "mandatoryRuntimeChecks": [
+    "aws.identity",
+    "eks.cluster",
+    "rbac.read-only",
+    "argocd.git-revisions",
+    "argocd.monitoring-chart",
+    "demo-api.deployment",
+    "monitoring.workloads",
+    "prometheus.ready",
+    "prometheus.demo-api-target",
+    "prometheus.rule-inventory",
+    "grafana.dashboard-configmaps",
+    "alertmanager.ready",
+    "logs.absent",
+    "traces.absent"
+  ],
+  "idleTrafficPolicy": {
+    "trafficGeneratedByQualification": false,
+    "missingRecentSliSeriesFailsControlPlaneQualification": false,
+    "sloStatusWithoutRecentSeries": "supported-not-verified"
+  },
+  "absencePolicy": {
+    "environmentAbsentStatus": "waiting-runtime",
+    "environmentAbsentExitCode": 2,
+    "automaticEnvironmentCreation": false
+  },
+  "evidence": {
+    "schema": "delivery/contracts/v0.11.8.0-environment-observability-qualification-evidence.schema.json",
+    "defaultPath": "artifacts/observability-qualification/aws-dev/<commit>-<utc>.json",
+    "automaticCommit": false,
+    "automaticPullRequest": false
+  },
+  "scope": {
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "observabilityRuntimeAdded": false,
+    "logsRuntimeAdded": false,
+    "tracesRuntimeAdded": false,
+    "environmentCreated": false,
+    "trafficGenerated": false,
+    "rolloutMutated": false,
+    "productionAccessAdded": false
+  },
+  "acceptance": {
+    "liveEntryPoint": "scripts/check-aws-dev-observability-qualification.sh",
+    "evidenceWriter": "scripts/write-environment-observability-qualification.py",
+    "manualWorkflow": ".github/workflows/aws-dev-observability-qualification.yaml",
+    "offlineValidator": "scripts/validate-v0.11.8.1-aws-dev-live-observability-qualification.sh",
+    "runbook": "docs/V0.11.8.1_AWS_DEV_LIVE_OBSERVABILITY_QUALIFICATION.md",
+    "completeQualityGateRequired": true
+  },
+  "deferred": {
+    "awsTest": "v0.11.8.2",
+    "awsProd": "v0.11.8.3",
+    "reviewedEvidenceClosure": "v0.11.8.4",
+    "trafficAndCanaryDrills": "v0.11.9"
+  }
+}

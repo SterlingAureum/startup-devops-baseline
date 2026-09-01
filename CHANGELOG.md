@@ -2,6 +2,24 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.8.1
+
+### Added
+
+- Added an exact-account, region, cluster, Git revision, Chart version, and
+  application-version aws-dev observability qualification.
+- Added bounded observability read RBAC, private Prometheus/Alertmanager
+  port-forward transport, capability-aware evidence writing, and a manual
+  trusted-runtime workflow.
+- Added explicit `not-deployed` logging/tracing evidence, idle-SLO semantics,
+  `waiting-runtime` handling, and offline positive/negative fixtures.
+
+### Boundary
+
+- The qualification does not create or restore AWS infrastructure, generate
+  traffic, trigger alerts, mutate a Rollout, synchronize Argo CD, read Secrets,
+  execute in Pods, or deploy Loki, Alloy, OTel Collector, or Tempo.
+
 ## v0.11.8.0
 
 ### Added

@@ -210,6 +210,9 @@ echo "==> Validating v0.11.7.3.1 final Rollout convergence wait repair"
 echo "==> Validating v0.11.8.0 environment observability qualification foundation"
 "${ROOT_DIR}/scripts/validate-v0.11.8.0-environment-observability-qualification-foundation.sh"
 
+echo "==> Validating v0.11.8.1 aws-dev live observability qualification"
+"${ROOT_DIR}/scripts/validate-v0.11.8.1-aws-dev-live-observability-qualification.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

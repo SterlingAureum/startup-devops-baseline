@@ -1,5 +1,15 @@
 # Troubleshooting
 
+## `Workflow gained AWS/EKS runtime access`
+
+If the reported file is `aws-dev-observability-qualification.yaml` on an
+unrepaired v0.11.8.1 checkout, the historical release-orchestration scanner has
+not recognized its successor contract. This is a local static-validator
+compatibility failure, not an AWS connection failure and not a reason to merge
+or switch to main. Apply v0.11.8.1.1 and rerun the same complete quality gate.
+Every other newly introduced AWS/EKS workflow remains rejected. See
+`V0.11.8.1.1_OBSERVABILITY_WORKFLOW_BOUNDARY_SUCCESSOR_REPAIR.md`.
+
 ## Environment Qualification Reports `waiting-runtime`
 
 `waiting-runtime` means that the selected local or AWS runtime was absent or

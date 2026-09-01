@@ -2,6 +2,21 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.8.1.1
+
+### Fixed
+
+- Made the historical release-orchestration workflow scanner recognize the
+  reviewed aws-dev observability qualification workflow only when its v0.11.8.1
+  successor contract exists.
+- Added strict workflow markers and a negative fixture proving that an
+  arbitrary third AWS/EKS workflow remains rejected.
+
+### Boundary
+
+- Validation and documentation only. The workflow, RBAC, checker, AWS runtime,
+  application, image, evidence, and main-merge policy are unchanged.
+
 ## v0.11.8.1
 
 ### Added

@@ -6,3 +6,13 @@ resources:
 labels:
   - pairs:
       platform.startup.dev/environment: aws-dev
+patches:
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: ^(application-admission-policies-aws-dev|data-platform-network-policy-aws-dev|demo-api-aws-dev|external-secrets-startup-apps|namespace-guardrails-aws-dev|observability-views-aws-dev|postgresql-baseline|runtime-qualification-rbac-aws-dev|startup-apps-network-policy-aws-dev)$
+    patch: |-
+      - op: replace
+        path: /spec/source/targetRevision
+        value: feature/v0.11-observability-sre-baseline

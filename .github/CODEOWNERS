@@ -278,6 +278,11 @@
 /delivery/contracts/v0.11.8.1.1-observability-workflow-boundary-successor-repair.json @SterlingAureum
 /docs/V0.11.8.1.1_OBSERVABILITY_WORKFLOW_BOUNDARY_SUCCESSOR_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.8.1.1-observability-workflow-boundary-successor-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.8.1.2-aws-dev-pre-merge-feature-revision-qualification.json @SterlingAureum
+/docs/V0.11.8.1.2_AWS_DEV_PRE_MERGE_FEATURE_REVISION_QUALIFICATION.md @SterlingAureum
+/clusters/aws/overlays/dev/kustomization.yaml @SterlingAureum
+/scripts/check-aws-gitops-revision-boundary.sh @SterlingAureum
+/scripts/validate-v0.11.8.1.2-aws-dev-pre-merge-feature-revision-qualification.sh @SterlingAureum
 /delivery/contracts/v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.json @SterlingAureum
 /docs/V0.11.6.2.3.1_DEMO_API_RUNTIME_ARTIFACT_PREFLIGHT_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh @SterlingAureum

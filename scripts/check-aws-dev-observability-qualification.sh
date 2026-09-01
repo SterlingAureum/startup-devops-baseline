@@ -6,6 +6,7 @@ EXPECTED_AWS_ACCOUNT_ID="${EXPECTED_AWS_ACCOUNT_ID:-}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
 EXPECTED_CONTROL_PLANE_SHA="${EXPECTED_CONTROL_PLANE_SHA:-}"
+EXPECTED_GIT_TARGET_REVISION="${EXPECTED_GIT_TARGET_REVISION:-main}"
 EXPECTED_APPLICATION_VERSION="${EXPECTED_APPLICATION_VERSION:-}"
 MONITORING_CHART_VERSION="${MONITORING_CHART_VERSION:-88.5.0}"
 OUTPUT_FILE="${OUTPUT_FILE:-}"
@@ -29,6 +30,11 @@ done
 
 [[ "${EXPECTED_AWS_ACCOUNT_ID}" =~ ^[0-9]{12}$ ]] || { echo "EXPECTED_AWS_ACCOUNT_ID must contain 12 digits." >&2; exit 1; }
 [[ "${EXPECTED_CONTROL_PLANE_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo "EXPECTED_CONTROL_PLANE_SHA must be a full lowercase commit SHA." >&2; exit 1; }
+[[ "${EXPECTED_GIT_TARGET_REVISION}" =~ ^[A-Za-z0-9][A-Za-z0-9._/-]*$ ]] \
+  || { echo "EXPECTED_GIT_TARGET_REVISION contains unsupported characters." >&2; exit 1; }
+case "${EXPECTED_GIT_TARGET_REVISION}" in
+  HEAD|head|latest|Latest) echo "Moving alias is not an accepted Git target revision." >&2; exit 1 ;;
+esac
 [ -n "${EXPECTED_APPLICATION_VERSION}" ] || { echo "EXPECTED_APPLICATION_VERSION is required." >&2; exit 1; }
 
 if [ -z "${OUTPUT_FILE}" ]; then
@@ -114,11 +120,22 @@ for denied in \
   [ "$(kubectl auth can-i "${args[@]}")" = no ] || fail_with_evidence rbac_boundary_failed
 done
 
-for application in demo-api-aws-dev observability-views-aws-dev; do
+GIT_APPLICATIONS=(
+  application-admission-policies-aws-dev
+  data-platform-network-policy-aws-dev
+  demo-api-aws-dev
+  external-secrets-startup-apps
+  namespace-guardrails-aws-dev
+  observability-views-aws-dev
+  postgresql-baseline
+  runtime-qualification-rbac-aws-dev
+  startup-apps-network-policy-aws-dev
+)
+for application in "${GIT_APPLICATIONS[@]}"; do
   kubectl -n argocd get application "${application}" -o json >"${WORK_DIR}/${application}.json" \
     || fail_with_evidence argocd_application_missing
-  jq -e --arg revision "${EXPECTED_CONTROL_PLANE_SHA}" '
-    .spec.source.targetRevision == "main" and
+  jq -e --arg source_revision "${EXPECTED_GIT_TARGET_REVISION}" --arg revision "${EXPECTED_CONTROL_PLANE_SHA}" '
+    .spec.source.targetRevision == $source_revision and
     .status.sync.status == "Synced" and .status.health.status == "Healthy" and
     .status.sync.revision == $revision
   ' "${WORK_DIR}/${application}.json" >/dev/null || fail_with_evidence argocd_git_revision_mismatch
@@ -227,7 +244,7 @@ if kubectl -n observability get deployment,statefulset,daemonset,service -o name
   fail_with_evidence undeclared_logging_or_tracing_runtime
 fi
 
-jq -n --arg slo_status "${SLO_STATUS}" '
+jq -n --arg slo_status "${SLO_STATUS}" --arg git_target_revision "${EXPECTED_GIT_TARGET_REVISION}" '
 {
   capabilities: {
     metrics: {status: "supported-verified", evidenceCheckIds: ["prometheus.ready", "prometheus.demo-api-target"]},
@@ -242,7 +259,7 @@ jq -n --arg slo_status "${SLO_STATUS}" '
     {id: "aws.identity", outcome: "passed", observedValue: "exact-account-region", diagnostic: null},
     {id: "eks.cluster", outcome: "passed", observedValue: "ACTIVE", diagnostic: null},
     {id: "rbac.read-only", outcome: "passed", observedValue: "bounded-observe-and-portforward", diagnostic: null},
-    {id: "argocd.git-revisions", outcome: "passed", observedValue: "exact-sync-revision", diagnostic: null},
+    {id: "argocd.git-revisions", outcome: "passed", observedValue: $git_target_revision, diagnostic: null},
     {id: "argocd.monitoring-chart", outcome: "passed", observedValue: "88.5.0", diagnostic: null},
     {id: "demo-api.deployment", outcome: "passed", observedValue: "ready-exact-version", diagnostic: null},
     {id: "monitoring.workloads", outcome: "passed", observedValue: "ready", diagnostic: null},

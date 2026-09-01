@@ -2,6 +2,22 @@
 
 All notable changes to this repository are documented in this file.
 
+## v0.11.8.1.2
+
+### Added
+
+- Added an aws-dev-only overlay that aligns all nine same-repository child
+  Applications with the current feature revision for pre-merge qualification.
+- Added rendered dev/test/prod revision-boundary validation and exact logical
+  source plus immutable sync-SHA checks to the aws-dev live qualification.
+- Added an explicit restoration gate that returns aws-dev to `main` before the
+  feature branch is merged.
+
+### Boundary
+
+- aws-test, aws-prod, external Helm Chart revisions, application code, images,
+  infrastructure, and runtime mutation policy are unchanged.
+
 ## v0.11.8.1.1
 
 ### Fixed

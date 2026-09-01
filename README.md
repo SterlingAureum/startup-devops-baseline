@@ -3,8 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.8.1.1-observability-workflow-boundary-successor-repair`.
-It repairs the historical release-orchestration workflow scanner while
+`v0.11.8.1.2-aws-dev-pre-merge-feature-revision-qualification`.
+It aligns every aws-dev same-repository child Application with the selected
+feature revision for truthful pre-merge qualification, keeps other environments
+and external Charts stable, and requires restoration to `main` before merge.
+It retains `v0.11.8.1.1-observability-workflow-boundary-successor-repair`,
+which repairs the historical workflow scanner while
 retaining `v0.11.8.1-aws-dev-live-observability-qualification`, which
 implements exact-identity, read-only aws-dev Prometheus, Grafana,
 Alertmanager, rule, SLO, and declared-absence qualification while preserving

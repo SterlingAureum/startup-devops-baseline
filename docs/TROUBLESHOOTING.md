@@ -1,5 +1,21 @@
 # Troubleshooting
 
+## aws-dev Root and child Applications use a split revision
+
+Symptom: the aws-dev Root Application is deployed from the feature branch, but
+same-repository child Applications still report `spec.source.targetRevision:
+main`. The Root revision selects only the overlay that creates the children; it
+does not automatically rewrite each child's source revision.
+
+Apply v0.11.8.1.2, render the revision boundary, and reconcile aws-dev. The dev
+overlay replaces the source revision for exactly nine same-repository child
+Applications. External Helm Charts, aws-test, and aws-prod remain pinned.
+
+Before merging to main, remove the dev-only feature patch, require all three
+AWS overlays to render same-repository children from `main`, and rerun the
+complete quality gate. This is a pre-merge qualification bridge, not a stable
+branch policy.
+
 ## `Workflow gained AWS/EKS runtime access`
 
 If the reported file is `aws-dev-observability-qualification.yaml` on an

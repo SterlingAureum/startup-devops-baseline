@@ -216,6 +216,9 @@ echo "==> Validating v0.11.8.1 aws-dev live observability qualification"
 echo "==> Validating v0.11.8.1.1 observability workflow boundary successor repair"
 "${ROOT_DIR}/scripts/validate-v0.11.8.1.1-observability-workflow-boundary-successor-repair.sh"
 
+echo "==> Validating v0.11.8.1.2 aws-dev pre-merge feature revision qualification"
+"${ROOT_DIR}/scripts/validate-v0.11.8.1.2-aws-dev-pre-merge-feature-revision-qualification.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

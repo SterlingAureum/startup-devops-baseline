@@ -222,6 +222,9 @@ echo "==> Validating v0.11.8.1.2 aws-dev pre-merge feature revision qualificatio
 echo "==> Validating v0.11.8.1.3 AWS deployment entrypoint repair"
 "${ROOT_DIR}/scripts/validate-v0.11.8.1.3-aws-deployment-entrypoint-repair.sh"
 
+echo "==> Validating v0.11.8.1.4 system capacity and Grafana repair"
+"${ROOT_DIR}/scripts/validate-v0.11.8.1.4-system-capacity-grafana-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

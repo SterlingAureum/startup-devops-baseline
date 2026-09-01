@@ -123,6 +123,11 @@ real `vpc-*` value.
 
 ## 6. Deploy Root Application
 
+For the v0.11 aws-dev overlay, prepare the independent Grafana Secret BEFORE
+deploying or pushing changes to an auto-synced Root. Follow
+`V0.11.8.1.4_SYSTEM_CAPACITY_GRAFANA_REPAIR.md`; it also documents the four-node
+dev system capacity profile and billable expansion. Test/prod are unchanged.
+
 Before deploying the AWS environment, ensure that the current `main` branch
 contains an approved, digest-pinned demo-api desired state produced by a
 Promotion PR or Rollback PR. The normal forward-delivery flow is:

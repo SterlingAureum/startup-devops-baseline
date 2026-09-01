@@ -1,5 +1,13 @@
 # Troubleshooting
 
+## info58-60: monitoring OutOfSync and system Pod-slot exhaustion
+
+Two t3.medium system nodes each had 17/17 Pods. Operator and node-exporter
+could not schedule; resource request percentages did not reveal the Pod limit.
+Grafana random credentials caused a separate Secret/checksum diff. See
+`V0.11.8.1.4_SYSTEM_CAPACITY_GRAFANA_REPAIR.md` for independent credential
+preparation, guarded expansion and per-node relocation/readiness acceptance.
+
 ## info57: first dev deployment fails with ResourceNotFoundException
 
 v0.11.8.1.3 separates initial creation (`apply-aws-dev.sh`) from endpoint

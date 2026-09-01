@@ -3,6 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.8.1.4-system-capacity-grafana-repair` adds an aws-dev four-node system
+capacity budget and independent Grafana credentials. Prepare the Secret before
+pushing the overlay; see `docs/V0.11.8.1.4_SYSTEM_CAPACITY_GRAFANA_REPAIR.md`.
+It retains the earlier qualification checkpoint:
 `v0.11.8.1.2-aws-dev-pre-merge-feature-revision-qualification`.
 It aligns every aws-dev same-repository child Application with the selected
 feature revision for truthful pre-merge qualification, keeps other environments

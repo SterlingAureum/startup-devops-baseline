@@ -11,6 +11,18 @@ patches:
       group: argoproj.io
       version: v1alpha1
       kind: Application
+      name: monitoring-aws-dev
+    patch: |-
+      - op: add
+        path: /spec/source/helm/valuesObject/grafana/admin
+        value:
+          existingSecret: observability-grafana-admin
+          userKey: admin-user
+          passwordKey: admin-password
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
       name: ^(application-admission-policies-aws-dev|data-platform-network-policy-aws-dev|demo-api-aws-dev|external-secrets-startup-apps|namespace-guardrails-aws-dev|observability-views-aws-dev|postgresql-baseline|runtime-qualification-rbac-aws-dev|startup-apps-network-policy-aws-dev)$
     patch: |-
       - op: replace

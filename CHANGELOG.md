@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.8.1.4
+
+- Budget four aws-dev system nodes and guard expansion against unrelated changes.
+- Add per-node Pod-slot preflight and controlled relocation instructions.
+- Stabilize Grafana credentials through a create-once independent Secret.
+- Record info58-60; keep test/prod, CNI, taints and application images unchanged.
+
 ## v0.11.8.1.3
 
 - Separate dev initial creation from existing-cluster endpoint maintenance.

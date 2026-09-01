@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.8.1.5
+
+- Separate healthy-runtime low-reserve warnings from operational failures;
+  retain explicit strict Pod-reserve checks and historical validation.
+- Add a read-only, bounded exact-node-group readiness wait after expansion.
+- Preserve the info58-65 incident chronology and controlled recovery evidence.
+- No changes to capacity targets, credentials, application images, test or prod.
+
 ## v0.11.8.1.4
 
 - Budget four aws-dev system nodes and guard expansion against unrelated changes.

@@ -225,6 +225,9 @@ echo "==> Validating v0.11.8.1.3 AWS deployment entrypoint repair"
 echo "==> Validating v0.11.8.1.4 system capacity and Grafana repair"
 "${ROOT_DIR}/scripts/validate-v0.11.8.1.4-system-capacity-grafana-repair.sh"
 
+echo "==> Validating v0.11.8.1.5 capacity status and node wait closure"
+"${ROOT_DIR}/scripts/validate-v0.11.8.1.5-capacity-status-wait-closure.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

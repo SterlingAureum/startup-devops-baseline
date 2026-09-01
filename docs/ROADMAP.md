@@ -499,6 +499,11 @@ Incremental scope:
       same-repository revision boundary, then restores the dev overlay to main
       before merge.
   - v0.11.8.2 will qualify an exact aws-test release without promoting it.
+    Before aws-test live work, resolve its clean-main bootstrap versus feature
+    qualification boundary and independently review capacity and credentials.
+  - v0.11.8.1.5 closes aws-dev capacity status semantics and bounded node
+    readiness waits following the .8.1.3 creation and .8.1.4 scheduling repairs;
+    it retains the strict reserve policy and the info58-65 incident record.
   - v0.11.8.3 will qualify aws-prod through an approval-protected read-only
     observation boundary.
   - v0.11.8.4 will close multi-environment qualification and preserve reviewed

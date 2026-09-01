@@ -3,6 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.8.1.5-capacity-status-wait-closure` distinguishes operational capacity
+warnings from failures, retains strict reserve mode, and adds a bounded node
+readiness wait. See `docs/V0.11.8.1.5_CAPACITY_STATUS_WAIT_CLOSURE.md`.
+Predecessor:
 `v0.11.8.1.4-system-capacity-grafana-repair` adds an aws-dev four-node system
 capacity budget and independent Grafana credentials. Prepare the Secret before
 pushing the overlay; see `docs/V0.11.8.1.4_SYSTEM_CAPACITY_GRAFANA_REPAIR.md`.

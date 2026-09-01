@@ -1,0 +1,19 @@
+{
+  "version": "v0.11.8.1.5",
+  "predecessor": "v0.11.8.1.4",
+  "scope": "aws-dev-validation-and-documentation",
+  "defaultCapacityMode": "operational",
+  "operationalWarningExitCode": 0,
+  "strictReserveFailureExitCode": 1,
+  "apiOrIdentityFailureExitCode": 1,
+  "operationalModeRequiresMonitoringReady": true,
+  "strictModeRetainsHistoricalPodBudget": true,
+  "nodeReadyWaitSeconds": 900,
+  "nodeReadyPollSeconds": 10,
+  "expectedManagedNodeGroup": "startup-devops-baseline-dev-general",
+  "minimumReadySystemNodes": 4,
+  "automaticEviction": false,
+  "terraformCapacityChanged": false,
+  "credentialsChanged": false,
+  "testProdChanged": false
+}

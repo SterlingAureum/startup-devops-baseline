@@ -8,6 +8,8 @@ AWS_REGION="${AWS_REGION:-us-east-1}"
   echo 'Billable change: set CONFIRM_SYSTEM_SCALE=scale-aws-dev-to-four.' >&2; exit 1;
 }
 [[ "${EXPECTED_AWS_ACCOUNT_ID:-}" =~ ^[0-9]{12}$ ]] || exit 1
+export AWS_REGION
+"${ROOT_DIR}/scripts/wait-aws-dev-system-nodes.py" --check-context
 [[ "$(aws sts get-caller-identity --query Account --output text)" == "${EXPECTED_AWS_ACCOUNT_ID}" ]] || exit 1
 CLUSTER="$(aws eks describe-cluster --region "${AWS_REGION}" --name startup-devops-baseline-dev --output json)"
 CIDRS="$(jq -ce '.cluster.resourcesVpcConfig.publicAccessCidrs' <<<"${CLUSTER}")"
@@ -42,4 +44,5 @@ PY
 read -r -p 'Apply reviewed billable expansion? Type scale-aws-dev-to-four: ' answer
 [[ "${answer}" == scale-aws-dev-to-four ]] || exit 1
 terraform -chdir="${TF_DIR}" apply -input=false "${WORK}/scale.tfplan"
-echo 'Expansion applied. Check Ready nodes and per-node headroom before any relocation.'
+echo 'Terraform apply completed. Waiting for four Ready system nodes; do not repeat expansion if this wait fails.'
+"${ROOT_DIR}/scripts/wait-aws-dev-system-nodes.py"

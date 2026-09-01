@@ -1,5 +1,15 @@
 # Troubleshooting
 
+## Healthy monitoring but the strict Pod-reserve check fails
+
+In info65, monitoring was Synced/Healthy with all eight exporters Ready, but
+one old system node had no spare Pod slots. v0.11.8.1.5 distinguishes that
+reserve warning from actual runtime failure. Operational mode still fails on
+unavailable required workloads, relevant unready Pods and inadequate aggregate
+capacity. Strict mode retains the old reserve requirement. See
+`V0.11.8.1.5_CAPACITY_STATUS_WAIT_CLOSURE.md` and the complete incident record
+`V0.11.8.1.4_AWS_SYSTEM_POD_CAPACITY_INCIDENT.md`.
+
 ## info58-60: monitoring OutOfSync and system Pod-slot exhaustion
 
 Two t3.medium system nodes each had 17/17 Pods. Operator and node-exporter

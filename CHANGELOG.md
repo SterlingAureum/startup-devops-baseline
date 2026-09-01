@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.8.1.3
+
+- Separate dev initial creation from existing-cluster endpoint maintenance.
+- Fail closed on AWS discovery and Terraform state errors; require intended
+  account, empty state, explicit log profile and plan confirmation for creation.
+- Document dev/test entrypoints and retain test clean-main guards. No prod changes.
+- Add eight mocked runtime regression cases for info57.
+
 All notable changes to this repository are documented in this file.
 
 ## v0.11.8.1.2

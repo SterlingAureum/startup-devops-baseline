@@ -1,5 +1,12 @@
 # Troubleshooting
 
+## info57: first dev deployment fails with ResourceNotFoundException
+
+v0.11.8.1.3 separates initial creation (`apply-aws-dev.sh`) from endpoint
+maintenance. Previously the deployment guide called maintenance, whose logging
+preservation requires an existing cluster. Check account/region first; see
+`V0.11.8.1.3_AWS_DEPLOYMENT_ENTRYPOINT_REPAIR.md` for the guarded creation flow.
+
 ## aws-dev Root and child Applications use a split revision
 
 Symptom: the aws-dev Root Application is deployed from the feature branch, but

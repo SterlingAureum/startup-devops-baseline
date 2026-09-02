@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.11.8.2.1.2
+
+- Preserve the optional existing test terraform.tfvars and Owner/runtime settings.
+- Keep explicit test/project/region, four-node capacity and management /32 guards.
+- Validate enabled runtime access entry scope and read-only persistent Role existence.
+- Fingerprint variable-file presence/content; reject changed or legacy plan inputs.
+- Explain incomplete plan bundles and document the original preflight incident.
+- Add offline positive/negative tests; no real AWS acceptance is claimed.
+
 ## v0.11.8.2.1.1
 
 - Register the exact offline test feature preview in the historical active

@@ -1,0 +1,11 @@
+{
+  "version": "v0.11.8.2.1.2",
+  "baseline": "v0.11.8.2.1.1",
+  "optional_local_variables": "infra/terraform/aws/environments/test/terraform.tfvars",
+  "review_fingerprint": "SHA256 plus presence",
+  "allow_legacy_plan": false,
+  "runtime_role_lookup": "iam:GetRole",
+  "automatic_role_creation": false,
+  "automatic_promotion": false,
+  "prod_in_scope": false
+}

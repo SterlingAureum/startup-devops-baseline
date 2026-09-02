@@ -236,6 +236,9 @@ echo "==> Validating v0.11.8.2.1 AWS test feature qualification"
 echo "==> Validating v0.11.8.2.1.1 active GitOps preview registration"
 "${ROOT_DIR}/scripts/validate-v0.11.8.2.1.1-active-gitops-preview-registration.sh"
 
+echo "==> Validating v0.11.8.2.1.2 test variable input repair"
+"${ROOT_DIR}/scripts/validate-v0.11.8.2.1.2-test-variable-input-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

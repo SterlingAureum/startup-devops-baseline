@@ -3,6 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.8.2.1.2-test-variable-input-repair` preserves reviewed local test tfvars,
+checks runtime-role scope, and fingerprints inputs before saved-plan apply.
+See `docs/V0.11.8.2.1.2_TEST_VARIABLE_INPUT_REPAIR.md`.
+Predecessor:
 `v0.11.8.2.1.1-active-gitops-preview-registration` aligns the historical gate
 with the exact test preview and retains stable test/prod revision boundaries.
 Predecessor:

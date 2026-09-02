@@ -305,6 +305,10 @@
 /delivery/contracts/v0.11.8.2.1-aws-test-feature-qualification.json @SterlingAureum
 /docs/V0.11.8.2.1_AWS_TEST_FEATURE_QUALIFICATION.md @SterlingAureum
 /delivery/contracts/v0.11.8.2.1.1-active-gitops-preview-registration.json @SterlingAureum
+/delivery/contracts/v0.11.8.2.1.2-test-variable-input-repair.json @SterlingAureum
+/scripts/test-aws-test-variable-inputs.py @SterlingAureum
+/scripts/validate-v0.11.8.2.1.2-test-variable-input-repair.sh @SterlingAureum
+/docs/V0.11.8.2.1.2_TEST_VARIABLE_INPUT_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11.8.2.1.1-active-gitops-preview-registration.sh @SterlingAureum
 /scripts/test-active-gitops-preview-registration.py @SterlingAureum
 /docs/V0.11.8.1.4_AWS_SYSTEM_POD_CAPACITY_INCIDENT.md @SterlingAureum

@@ -1,0 +1,10 @@
+{
+  "version": "v0.11.8.2.1.1",
+  "predecessor": "v0.11.8.2.1",
+  "registered_preview": "clusters/aws/overlays/test-feature-qualification/root-app.yaml",
+  "revision": "feature/v0.11-observability-sre-baseline",
+  "exception_scope": "exact-file-and-full-manifest-shape",
+  "stable_test_prod_revision": "main",
+  "automatic_preview_sync": false,
+  "runtime_changes": false
+}

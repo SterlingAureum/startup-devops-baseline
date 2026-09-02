@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.8.2.1.1-active-gitops-preview-registration` aligns the historical gate
+with the exact test preview and retains stable test/prod revision boundaries.
+Predecessor:
+`v0.11.8.2.1-aws-test-feature-qualification` adds separately guarded test
+plan/apply/bootstrap and read-only exact-release observation. Read
+`docs/V0.11.8.2.1_AWS_TEST_FEATURE_QUALIFICATION.md` before any live action.
+Predecessor:
 `v0.11.8.2.0.1-barman-chart-identity-render-coverage-repair` corrects the
 Barman Application/Helm Chart identity and strengthens real-source coverage.
 Validated predecessor:

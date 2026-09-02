@@ -297,6 +297,16 @@
 /scripts/validate-v0.11.8.2.0-aws-test-qualification-prerequisites.sh @SterlingAureum
 /delivery/contracts/v0.11.8.2.0.1-barman-chart-identity-render-coverage-repair.json @SterlingAureum
 /scripts/validate-v0.11.8.2.0.1-barman-chart-identity-render-coverage-repair.sh @SterlingAureum
+/scripts/aws_test_feature_common.py @SterlingAureum
+/scripts/prepare-aws-test-feature.py @SterlingAureum
+/scripts/check-aws-test-observability-qualification.py @SterlingAureum
+/scripts/test-aws-test-feature.py @SterlingAureum
+/scripts/validate-v0.11.8.2.1-aws-test-feature-qualification.sh @SterlingAureum
+/delivery/contracts/v0.11.8.2.1-aws-test-feature-qualification.json @SterlingAureum
+/docs/V0.11.8.2.1_AWS_TEST_FEATURE_QUALIFICATION.md @SterlingAureum
+/delivery/contracts/v0.11.8.2.1.1-active-gitops-preview-registration.json @SterlingAureum
+/scripts/validate-v0.11.8.2.1.1-active-gitops-preview-registration.sh @SterlingAureum
+/scripts/test-active-gitops-preview-registration.py @SterlingAureum
 /docs/V0.11.8.1.4_AWS_SYSTEM_POD_CAPACITY_INCIDENT.md @SterlingAureum
 /scripts/prepare-aws-dev-grafana-secret.py @SterlingAureum
 /scripts/scale-aws-dev-system-capacity.sh @SterlingAureum

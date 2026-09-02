@@ -1,5 +1,27 @@
 # Changelog
 
+## v0.11.8.2.1.1
+
+- Register the exact offline test feature preview in the historical active
+  GitOps inventory and revision check; retain all other feature restrictions.
+- Validate its complete source, identity, destination and no-auto-sync shape.
+- Add positive/predecessor and 13 negative regression cases; run the real
+  historical gate from the .8.2.1 focused validator as well as full CI.
+- No runtime manifests, deployment scripts or cloud resources are changed.
+
+## v0.11.8.2.1
+
+- Add fixed-target aws-test feature plan/apply/bootstrap with exact pushed
+  revision/account guards, explicit capacity profile and separate saved-plan
+  review; reject automatic deletion/replacement and foreign-root takeover.
+- Prepare independent test Grafana credentials and reuse existing platform
+  bootstrap logic without weakening stable clean-main entrypoints.
+- Add read-only Rollout/version/digest/GitOps/observability checks and fresh
+  test evidence, distinguishing bounded-runtime and explicit operator modes.
+- Add offline safety regressions and a complete ordered operator runbook.
+- No live AWS qualification, release promotion or prod operation is performed
+  by producing/applying this increment's source patch.
+
 ## v0.11.8.2.0.1
 
 - Correct the Barman Application-versus-Chart identity in the aws-test

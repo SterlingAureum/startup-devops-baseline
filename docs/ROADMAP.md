@@ -503,8 +503,9 @@ Incremental scope:
       stable test/prod remain on main. No live bootstrap is enabled.
       - v0.11.8.2.0.1 repairs the Barman Application/Chart identity and makes
         real AWS source manifests an independent validator input.
-    - v0.11.8.2.1 must first deliver guarded feature-mode test execution and
-      independent prerequisites, then read-only live qualification.
+    - v0.11.8.2.1 supplies guarded feature-mode test execution and independent
+      prerequisites, then read-only qualification; live evidence is collected
+      separately by the operator, not claimed by offline/package validation.
     Before aws-test live work, resolve its clean-main bootstrap versus feature
     qualification boundary and independently review capacity and credentials.
   - v0.11.8.1.5 closes aws-dev capacity status semantics and bounded node

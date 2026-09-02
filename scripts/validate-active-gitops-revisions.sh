@@ -7,6 +7,7 @@ python3 - "${ROOT_DIR}" <<'PY'
 from pathlib import Path
 import re
 import sys
+import json
 
 root = Path(sys.argv[1])
 repository = "https://github.com/SterlingAureum/startup-devops-baseline.git"
@@ -26,6 +27,38 @@ expected = {
     "clusters/aws/base/platform/runtime-qualification-rbac/application.yaml": "main",
     "clusters/aws/base/platform/startup-apps-network-policy.yaml": "main",
 }
+
+# A single offline preview is registered by the .8.2.0 successor contract.
+# This is an exact file/shape exception, not a directory or branch wildcard.
+feature_exceptions = set()
+preview_path = "clusters/aws/overlays/test-feature-qualification/root-app.yaml"
+successor = root / "delivery/contracts/v0.11.8.2.0-aws-test-qualification-prerequisites.json"
+if successor.is_file():
+    import yaml
+    contract = json.loads(successor.read_text())
+    revision = "feature/v0.11-observability-sre-baseline"
+    if (contract.get("qualification_revision") != revision or
+        contract.get("qualification_overlay") != "clusters/aws/overlays/test-feature-qualification" or
+        contract.get("root_application") != "startup-devops-aws-test-root" or
+        contract.get("live_execution_enabled") is not False):
+        raise SystemExit("AWS test preview successor contract changed")
+    expected[preview_path] = revision
+    preview = root / preview_path
+    if not preview.is_file():
+        raise SystemExit("Missing registered AWS test preview root")
+    expected_preview = {
+        "apiVersion": "argoproj.io/v1alpha1", "kind": "Application",
+        "metadata": {"name": "startup-devops-aws-test-root", "namespace": "argocd"},
+        "spec": {
+            "project": "default",
+            "source": {"repoURL": repository, "targetRevision": revision,
+                       "path": "clusters/aws/overlays/test-feature-qualification"},
+            "destination": {"server": "https://kubernetes.default.svc", "namespace": "argocd"},
+        },
+    }
+    if yaml.safe_load(preview.read_text()) != expected_preview:
+        raise SystemExit("AWS test preview identity/source/destination/automation boundary changed")
+    feature_exceptions.add(preview_path)
 
 found = {}
 for path in sorted((root / "clusters").rglob("*.yaml")):
@@ -82,6 +115,8 @@ for base in (root / "clusters", root / "scripts"):
         except UnicodeDecodeError:
             continue
         if re.search(r"targetRevision:\s*(?:feature/|refs/heads/feature/)", text):
+            if path.relative_to(root).as_posix() in feature_exceptions:
+                continue
             raise SystemExit(
                 f"{path.relative_to(root)}: active GitOps contract contains a feature revision"
             )
@@ -89,6 +124,7 @@ for base in (root / "clusters", root / "scripts"):
 print(
     "Active GitOps revision validation passed: "
     f"{sum(path.startswith('clusters/local/') for path in found) + 3} local Applications use HEAD; "
-    f"{sum(path.startswith('clusters/aws/') for path in found)} AWS base/root Applications use main."
+    f"{sum(path.startswith('clusters/aws/') and path not in feature_exceptions for path in found)} AWS base/root Applications use main; "
+    f"{len(feature_exceptions)} exact offline qualification preview uses its contracted feature revision."
 )
 PY

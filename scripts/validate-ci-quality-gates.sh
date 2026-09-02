@@ -227,6 +227,10 @@ echo "==> Validating v0.11.8.1.4 system capacity and Grafana repair"
 
 echo "==> Validating v0.11.8.1.5 capacity status and node wait closure"
 "${ROOT_DIR}/scripts/validate-v0.11.8.1.5-capacity-status-wait-closure.sh"
+echo "==> Validating v0.11.8.2.0 AWS test qualification prerequisites"
+"${ROOT_DIR}/scripts/validate-v0.11.8.2.0-aws-test-qualification-prerequisites.sh"
+echo "==> Validating v0.11.8.2.0.1 Barman Chart identity/render coverage repair"
+"${ROOT_DIR}/scripts/validate-v0.11.8.2.0.1-barman-chart-identity-render-coverage-repair.sh"
 
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"

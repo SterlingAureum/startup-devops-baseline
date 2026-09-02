@@ -94,7 +94,7 @@ git_names = ["application-admission-policies", "data-platform-network-policy", "
 if env == "prod": git_names.remove("runtime-qualification-rbac")
 rev = "feature/v0.11-observability-sre-baseline" if env == "dev" else "main"
 if env == "test" and os.getenv("FAKE_BAD_TEST_FEATURE") == "true": rev = "feature/v0.11-observability-sre-baseline"
-charts = {"argo-rollouts":"2.41.1","aws-load-balancer-controller":"1.14.0","barman-cloud-plugin":"0.7.0","cert-manager":"v1.21.0","cloudnative-pg":"0.29.0","external-secrets":"2.8.0","karpenter":"1.14.0","karpenter-crd":"1.14.0","kube-prometheus-stack":"88.5.0"}
+charts = {"argo-rollouts":"2.41.1","aws-load-balancer-controller":"1.14.0","plugin-barman-cloud":"0.7.0","cert-manager":"v1.21.0","cloudnative-pg":"0.29.0","external-secrets":"2.8.0","karpenter":"1.14.0","karpenter-crd":"1.14.0","kube-prometheus-stack":"88.5.0"}
 if os.getenv("FAKE_BAD_EXTERNAL") == "true": charts["kube-prometheus-stack"] = "88.5.1"
 docs=[]
 for name in git_names:

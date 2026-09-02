@@ -1,0 +1,15 @@
+# Preview only. Deliberately no automated sync; not a bootstrap entrypoint.
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: startup-devops-aws-test-root
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git
+    targetRevision: feature/v0.11-observability-sre-baseline
+    path: clusters/aws/overlays/test-feature-qualification
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd

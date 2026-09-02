@@ -1,0 +1,27 @@
+# Preview only in v0.11.8.2.0. Do not bootstrap this overlay yet.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../test
+patches:
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: ^(application-admission-policies-aws-test|data-platform-network-policy-aws-test|demo-api-aws-test|external-secrets-startup-apps|namespace-guardrails-aws-test|observability-views-aws-test|postgresql-baseline|runtime-qualification-rbac-aws-test|startup-apps-network-policy-aws-test)$
+    patch: |-
+      - op: replace
+        path: /spec/source/targetRevision
+        value: feature/v0.11-observability-sre-baseline
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: monitoring-aws-test
+    patch: |-
+      - op: add
+        path: /spec/source/helm/valuesObject/grafana/admin
+        value:
+          existingSecret: observability-grafana-admin
+          userKey: admin-user
+          passwordKey: admin-password

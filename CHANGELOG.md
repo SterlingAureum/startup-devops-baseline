@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.11.8.2.0.1
+
+- Correct the Barman Application-versus-Chart identity in the aws-test
+  prerequisite contract and historical AWS revision-boundary validator.
+- Derive the external Chart inventory independently from real AWS base
+  Application manifests, and improve rendered mismatch diagnostics.
+- Preserve the `.8.2.0` offline-only boundary; no cloud or cluster operations.
+
+## v0.11.8.2.0
+
+- Add an offline-only AWS test qualification preview with exact rendered
+  resource/revision boundaries and independent Grafana Secret references.
+- Define an explicitly loaded four-node capacity profile, positive/negative
+  contract checks and the ordered creation/bootstrap/evidence prerequisites.
+- Preserve stable test/prod and clean-main entrypoints. No cloud changes,
+  release promotion or live qualification are performed by this increment.
+
 ## v0.11.8.1.5
 
 - Separate healthy-runtime low-reserve warnings from operational failures;

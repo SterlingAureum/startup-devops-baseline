@@ -499,6 +499,12 @@ Incremental scope:
       same-repository revision boundary, then restores the dev overlay to main
       before merge.
   - v0.11.8.2 will qualify an exact aws-test release without promoting it.
+    - v0.11.8.2.0 defines offline prerequisites and a separate feature preview;
+      stable test/prod remain on main. No live bootstrap is enabled.
+      - v0.11.8.2.0.1 repairs the Barman Application/Chart identity and makes
+        real AWS source manifests an independent validator input.
+    - v0.11.8.2.1 must first deliver guarded feature-mode test execution and
+      independent prerequisites, then read-only live qualification.
     Before aws-test live work, resolve its clean-main bootstrap versus feature
     qualification boundary and independently review capacity and credentials.
   - v0.11.8.1.5 closes aws-dev capacity status semantics and bounded node

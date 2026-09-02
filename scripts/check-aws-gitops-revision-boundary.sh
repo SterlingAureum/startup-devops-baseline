@@ -33,7 +33,7 @@ REPOSITORY = "https://github.com/SterlingAureum/startup-devops-baseline.git"
 EXTERNAL_CHARTS = {
     "argo-rollouts": "2.41.1",
     "aws-load-balancer-controller": "1.14.0",
-    "barman-cloud-plugin": "0.7.0",
+    "plugin-barman-cloud": "0.7.0",
     "cert-manager": "v1.21.0",
     "cloudnative-pg": "0.29.0",
     "external-secrets": "2.8.0",
@@ -67,7 +67,11 @@ def validate(path: str, expected_git_revision: str, expected_git_count: int) -> 
     for item in external:
         expected = EXTERNAL_CHARTS.get(item["chart"])
         if expected is None or item["revision"] != expected:
-            raise SystemExit(f"{path}: external Chart revision changed: {item}")
+            raise SystemExit(
+                f"{path}: external Chart identity/revision changed: "
+                f"application={item['name']}, chart={item['chart']}, "
+                f"expected={expected}, actual={item['revision']}"
+            )
 
 arguments = sys.argv[1:]
 for offset in range(0, len(arguments), 3):

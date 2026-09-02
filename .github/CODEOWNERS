@@ -287,6 +287,16 @@
 /scripts/validate-v0.11.8.1.5-capacity-status-wait-closure.sh @SterlingAureum
 /delivery/contracts/v0.11.8.1.5-capacity-status-wait-closure.json @SterlingAureum
 /docs/V0.11.8.1.5_CAPACITY_STATUS_WAIT_CLOSURE.md @SterlingAureum
+/clusters/aws/overlays/test-feature-qualification/ @SterlingAureum
+/delivery/profiles/aws-test-observability-qualification.tfvars @SterlingAureum
+/delivery/contracts/v0.11.8.2.0-aws-test-qualification-prerequisites.json @SterlingAureum
+/docs/V0.11.8.2.0_AWS_TEST_QUALIFICATION_PREREQUISITES.md @SterlingAureum
+/scripts/check-aws-test-qualification-preview.py @SterlingAureum
+/scripts/check-aws-test-qualification-preview.sh @SterlingAureum
+/scripts/test-aws-test-qualification-prerequisites.py @SterlingAureum
+/scripts/validate-v0.11.8.2.0-aws-test-qualification-prerequisites.sh @SterlingAureum
+/delivery/contracts/v0.11.8.2.0.1-barman-chart-identity-render-coverage-repair.json @SterlingAureum
+/scripts/validate-v0.11.8.2.0.1-barman-chart-identity-render-coverage-repair.sh @SterlingAureum
 /docs/V0.11.8.1.4_AWS_SYSTEM_POD_CAPACITY_INCIDENT.md @SterlingAureum
 /scripts/prepare-aws-dev-grafana-secret.py @SterlingAureum
 /scripts/scale-aws-dev-system-capacity.sh @SterlingAureum

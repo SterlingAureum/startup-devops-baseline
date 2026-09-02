@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.8.2.0.1-barman-chart-identity-render-coverage-repair` corrects the
+Barman Application/Helm Chart identity and strengthens real-source coverage.
+Validated predecessor:
+`v0.11.8.2.0-aws-test-qualification-prerequisites` adds an offline-only test
+preview and capacity/credential boundaries. No AWS resources are created.
+See `docs/V0.11.8.2.0_AWS_TEST_QUALIFICATION_PREREQUISITES.md`.
+Validated predecessor:
 `v0.11.8.1.5-capacity-status-wait-closure` distinguishes operational capacity
 warnings from failures, retains strict reserve mode, and adds a bounded node
 readiness wait. See `docs/V0.11.8.1.5_CAPACITY_STATUS_WAIT_CLOSURE.md`.

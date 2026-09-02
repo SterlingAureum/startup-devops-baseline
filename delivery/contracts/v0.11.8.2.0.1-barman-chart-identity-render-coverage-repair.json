@@ -1,0 +1,16 @@
+{
+  "version": "v0.11.8.2.0.1",
+  "predecessor": "v0.11.8.2.0",
+  "problem": "The Application name barman-cloud-plugin was incorrectly used as the Helm Chart identity.",
+  "application_name": "barman-cloud-plugin",
+  "chart_name": "plugin-barman-cloud",
+  "chart_version": "0.7.0",
+  "repairs": [
+    "aws-test qualification prerequisite contract",
+    "historical aws-dev/test/prod revision-boundary validator",
+    "rendered preview diagnostics",
+    "source-manifest-independent Chart inventory coverage"
+  ],
+  "live_operations": false,
+  "prod_in_scope": false
+}

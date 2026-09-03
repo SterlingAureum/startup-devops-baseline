@@ -1,0 +1,11 @@
+{
+  "version": "v0.11.9.0",
+  "predecessor": "v0.11.8.4",
+  "scope": "scenario-design-and-offline-plan-preflight",
+  "runtime_qualified": false,
+  "execution_authorized": false,
+  "prod": "deferred-to-v0.11-tail",
+  "scenarios": ["successful-candidate", "candidate-slo-gate-rejection", "baseline-restoration", "evidence-and-cleanup-review"],
+  "forbidden_actions": ["deploy", "promote", "abort", "fault-injection", "traffic-generation", "aws-mutation", "cluster-teardown"],
+  "next_checkpoint": "local-rehearsal-implementation-with-separate-approval"
+}

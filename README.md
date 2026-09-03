@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.1-local-release-rehearsal` adds explicit local deployment/analysis phases,
+same-binary runtime identity checks and fresh Canary evidence. Live use is opt-in.
+See `docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md`.
+Predecessor:
+`v0.11.9.0-release-rehearsal-design` defines release/failure/restoration scenarios
+and an offline plan preflight; no runtime execution is authorized.
+See `docs/V0.11.9.0_RELEASE_REHEARSAL_DESIGN.md`.
+Predecessor:
 `v0.11.8.4-multi-environment-closure` consolidates historical status and adds
 local reviewed evidence archival, integrity checks and append-only baseline checks.
 Prod live acceptance remains deferred. See `docs/V0.11.8.4_MULTI_ENVIRONMENT_CLOSURE.md`.

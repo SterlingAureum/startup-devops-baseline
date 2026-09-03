@@ -1,0 +1,15 @@
+{
+  "environment": "local",
+  "branch": "feature/v0.11-observability-sre-baseline",
+  "source_commit": "REPLACE_WITH_40_HEX_COMMIT",
+  "context": "REPLACE_WITH_EXACT_CONTEXT",
+  "review_reference": "REPLACE_WITH_REVIEW_REFERENCE",
+  "operator": "REPLACE_WITH_OPERATOR",
+  "recovery_owner": "REPLACE_WITH_RECOVERY_OWNER",
+  "evidence_directory": "/REPLACE_WITH_PRIVATE_EVIDENCE_DIRECTORY",
+  "approval_policy": "human-governed",
+  "baseline": {"application_version": "REPLACE_BASELINE", "image": "REPLACE_WITH_REPOSITORY@sha256:DIGEST"},
+  "candidate": {"application_version": "REPLACE_CANDIDATE", "image": "REPLACE_WITH_REPOSITORY@sha256:DIGEST"},
+  "failure_scenario": "candidate-slo-gate-rejection",
+  "max_duration_seconds": 900
+}

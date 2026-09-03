@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.11.9.1
+
+- Add explicit local prepare/deploy/analysis/review/final rehearsal phases.
+- Pin local API/cluster UID/source and isolate legacy Argo CD calls in core mode.
+- Reuse healthy local image tags with runtime imageID verification, without invented registry digests.
+- Preserve per-attempt evidence and reject stale/duplicate/wrong-owner analyses.
+- Keep promotion human-owned; no fault injection, automatic rollback or prod execution.
+
+## v0.11.9.0
+
+- Define successful release, candidate rejection, restoration and evidence scenarios.
+- Add strict offline plan preflight with explicit non-authorization output and tests.
+- Retain the feature branch, human-governed policy and prod tail deferral.
+- No release, cloud operation, fault injection or live qualification executed.
+
 ## v0.11.8.4
 
 - Consolidate four-environment implementation and historical evidence references.

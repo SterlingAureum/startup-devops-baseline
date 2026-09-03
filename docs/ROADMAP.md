@@ -523,6 +523,11 @@ Incremental scope:
 - v0.11.9 - clean-room dev/test/prod-live end-to-end release, successful and
   intentionally failed Canary checks, telemetry correlation, reviewed closure
   evidence, environment teardown, and residual-cost audit - planned
+  - v0.11.9.0 delivers scenario design and offline plan preflight only;
+    live rehearsal implementation and execution remain subsequent work.
+  - v0.11.9.1 adds the opt-in local successful-release runner with same-binary
+    identity, fresh analyses and explicit human promotion. Producer offline
+    tests do not substitute for operator live acceptance; failure/recovery is next.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

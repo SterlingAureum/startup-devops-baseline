@@ -251,6 +251,12 @@ echo "==> Validating v0.11.8.3 prod read-only qualification"
 echo "==> Validating v0.11.8.4 multi-environment closure"
 "${ROOT_DIR}/scripts/validate-v0.11.8.4-multi-environment-closure.sh"
 
+echo "==> Validating v0.11.9.0 release rehearsal design"
+"${ROOT_DIR}/scripts/validate-v0.11.9.0-release-rehearsal-design.sh"
+
+echo "==> Validating v0.11.9.1 local release rehearsal"
+"${ROOT_DIR}/scripts/validate-v0.11.9.1-local-release-rehearsal.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

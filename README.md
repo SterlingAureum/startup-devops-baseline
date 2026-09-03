@@ -3,6 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.8.2.2-test-closure-and-rebuild` records the bounded historical aws-test
+operator qualification and adds metadata-only Secret rebuild guards.
+See `docs/V0.11.8.2.2_TEST_CLOSURE_AND_REBUILD.md`.
+Predecessor:
 `v0.11.8.2.1.3-test-target-identity` repairs stable/canary target recognition
 with exact environment/release/Pod guards. See `docs/V0.11.8.2.1.3_TEST_TARGET_IDENTITY.md`.
 Predecessor:

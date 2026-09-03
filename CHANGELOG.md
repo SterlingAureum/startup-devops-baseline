@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.8.2.2
+
+- Record the exact historical test operator-observation result and capability limits.
+- Check test Secret metadata before planning and again before infrastructure apply.
+- Stop on pending deletion, lookup failure or active same-name creation collision.
+- Document reviewed recovery, fresh resume plans and the multi-shell incident.
+- Preserve recovery windows; never automatically delete, restore or import secrets.
+
 ## v0.11.8.2.1.3
 
 - Recognize Rollout stable/canary Services in test target qualification.

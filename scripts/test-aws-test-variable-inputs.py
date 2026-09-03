@@ -107,7 +107,7 @@ class VariableGuards(unittest.TestCase):
                 if args[:2] == ('show', '-json'):
                     return json.dumps(enabled_plan())
                 return ''
-            with patch.object(c, 'TF', tfroot), patch.object(p, 'initialize'), \
+            with patch.object(c, 'TF', tfroot), patch.object(p, 'initialize'), patch.object(p, 'check_test_secret'), \
                  patch.object(c, 'discover', return_value=None), patch.object(c, 'aws', return_value=ROLE), \
                  patch.object(p, 'tf', side_effect=fake_tf):
                 p.plan(SimpleNamespace(management_ip='8.8.8.8', mode='create', bundle=str(bundle), account=ACCOUNT, sha=SHA))
@@ -134,7 +134,7 @@ class VariableGuards(unittest.TestCase):
             local.write_text(original)
             (bundle / 'review.json').write_text(json.dumps(record))
             ready = {'resourcesVpcConfig': {'publicAccessCidrs': ['8.8.8.8/32']}}
-            with patch.object(c, 'TF', tfroot), patch.object(p, 'initialize'), \
+            with patch.object(c, 'TF', tfroot), patch.object(p, 'initialize'), patch.object(p, 'check_test_secret'), \
                  patch.object(c, 'discover', side_effect=[None, ready]), patch.object(c, 'aws', return_value=ROLE), \
                  patch.object(p, 'tf', side_effect=fake_tf) as tf:
                 p.apply(args)

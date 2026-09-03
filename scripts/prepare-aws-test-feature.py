@@ -94,12 +94,43 @@ def check_role_exists(role):
         c.require(actual == role, 'Persistent test runtime Role is absent or mismatched; no Role is created automatically.')
 
 
+def check_test_secret(account, document=None):
+    """Read metadata only; never delete, restore, import or read credentials."""
+    name = 'startup-devops-baseline-test/demo-api/postgresql'
+    proc = c.subprocess.run(
+        ['aws', '--region', c.REGION, 'secretsmanager', 'describe-secret',
+         '--secret-id', name, '--output', 'json'],
+        env=c.environment(), text=True, capture_output=True, timeout=90)
+    if proc.returncode:
+        absent = re.search(r'\(ResourceNotFoundException\) when calling the DescribeSecret operation', proc.stderr)
+        c.require(absent, 'Test Secret metadata lookup failed (not confirmed absent). Check AWS credentials, '
+                  'secretsmanager:DescribeSecret permission and connectivity; no recovery action was executed.')
+        return
+    secret = json.loads(proc.stdout)
+    c.require(isinstance(secret, dict), 'Malformed test Secret metadata response; stop.')
+    prefix = f'arn:aws:secretsmanager:{c.REGION}:{account}:secret:{name}-'
+    c.require(secret.get('Name') == name and bool(re.fullmatch(re.escape(prefix) + r'[A-Za-z0-9]{6}', secret.get('ARN', ''))),
+              'Test Secret metadata identity mismatch; stop and review the account/region/name.')
+    c.require(not secret.get('DeletedDate'),
+              'Test Secret is scheduled for deletion; its name is not reusable. '
+              'See docs/V0.11.8.2.2_TEST_CLOSURE_AND_REBUILD.md. '
+              'Preserve Terraform state; explicitly review recovery or permanent deletion, then generate a new plan. '
+              'No Secret was deleted or restored by this preflight.')
+    if document is not None:
+        creating = any(item.get('address') == 'module.external_secrets.aws_secretsmanager_secret.this'
+                       and 'create' in item.get('change', {}).get('actions', [])
+                       for item in document.get('resource_changes', []))
+        c.require(not creating, 'An active same-name test Secret already exists but the plan would create it. '
+                  'Review ownership/state separately; no automatic import or deletion is allowed.')
+
+
 def plan(args):
     address = ipaddress.ip_address(args.management_ip)
     c.require(address.version == 4 and address.is_global, 'Provide your current globally routable management IPv4; never commit it.')
     cidr = f'{address}/32'
     inputs = variable_inputs()
     profile_hash = digest(c.PROFILE)
+    check_test_secret(args.account)
     initialize()
     state = c.TF / 'terraform.tfstate'
     resources = json.loads(state.read_text()).get('resources', []) if state.exists() else []
@@ -117,6 +148,7 @@ def plan(args):
        f'-var=aws_region={c.REGION}', f'-var=eks_public_access_cidrs=["{cidr}"]', timeout=1800)
     document = json.loads(tf('show', '-json', output))
     role = check_plan(document, args.account, cidr)
+    check_test_secret(args.account, document)
     check_role_exists(role)
     c.require(variable_inputs() == inputs and digest(c.PROFILE) == profile_hash,
               'Variable inputs changed while planning; generate a new reviewed plan.')
@@ -144,7 +176,9 @@ def apply(args):
     c.require('variable_inputs' in record, 'Legacy plan has no variable fingerprint; generate a new plan with v0.11.8.2.1.2.')
     c.require(variable_inputs() == record['variable_inputs'], 'terraform.tfvars was added, removed or changed since plan review; generate a new plan.')
     initialize()
-    role = check_plan(json.loads(tf('show', '-json', output)), args.account, record['cidr'])
+    document = json.loads(tf('show', '-json', output))
+    role = check_plan(document, args.account, record['cidr'])
+    check_test_secret(args.account, document)
     check_role_exists(role)
     cluster = c.discover(args.account)
     c.require((cluster is not None) == record['cluster_present'], 'Cluster existence changed since planning.')

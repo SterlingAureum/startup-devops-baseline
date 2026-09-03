@@ -1,0 +1,43 @@
+{
+  "version": "v0.11.8.4",
+  "baseline": "v0.11.8.3",
+  "status": "implementation-and-evidence-management-closure",
+  "all_environments_runtime_qualified": false,
+  "environments": {
+    "local": {
+      "implementation": "predecessor-implemented",
+      "runtime_evidence": "historical-predecessor-reference; not reobserved",
+      "reference": "docs/V0.11.7.3_LOCAL_SLO_PROGRESSIVE_DELIVERY_CLOSURE.md",
+      "new_payload_archived_here": false
+    },
+    "aws-dev": {
+      "implementation": "implemented",
+      "runtime_evidence": "prior operator-reported acceptance; exact payload not registered by this increment",
+      "reference": "docs/V0.11.8.1.5_CAPACITY_STATUS_WAIT_CLOSURE.md",
+      "new_payload_archived_here": false
+    },
+    "aws-test": {
+      "implementation": "implemented",
+      "runtime_evidence": "historical-qualified-operator-observation",
+      "reference": "delivery/contracts/v0.11.8.2.2-test-closure-and-rebuild.json",
+      "repository_commit": "456e1eb85ba63dc94c6e1f04b4498a4c0a87669b",
+      "new_payload_archived_here": false
+    },
+    "aws-prod": {
+      "implementation": "implemented-offline-tests",
+      "runtime_evidence": "deferred-to-v0.11-tail",
+      "reference": "delivery/contracts/v0.11.8.3-prod-read-only-qualification.json",
+      "new_payload_archived_here": false
+    }
+  },
+  "archive": {
+    "local_only": true,
+    "location": "private-directory-outside-repository",
+    "immutable_entry_key": "SHA256-of-original-file-bytes",
+    "kinds": ["raw", "redacted"],
+    "historical_summary_is_runtime_payload": false,
+    "promotion_eligible": false,
+    "deletion_detection_requires_retained_baseline": true
+  },
+  "next": "v0.11.9 end-to-end design and staged acceptance; prod live at tail"
+}

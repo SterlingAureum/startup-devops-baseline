@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.8.4
+
+- Consolidate four-environment implementation and historical evidence references.
+- Add local content-addressed reviewed raw/redacted archive and integrity checks.
+- Detect historical entry removal/modification against separately retained baselines.
+- Preserve original statuses, timestamps and SHAs; never infer current qualification.
+- Document evidence gaps and v0.11.9 handoff; prod runtime stays deferred to the tail.
+
 ## v0.11.8.3
 
 - Implement a fixed-prod, approval-protected, operator-mode read-only observer.

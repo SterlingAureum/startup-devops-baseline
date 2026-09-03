@@ -248,6 +248,9 @@ echo "==> Validating v0.11.8.2.2 test closure and rebuild"
 echo "==> Validating v0.11.8.3 prod read-only qualification"
 "${ROOT_DIR}/scripts/validate-v0.11.8.3-prod-read-only-qualification.sh"
 
+echo "==> Validating v0.11.8.4 multi-environment closure"
+"${ROOT_DIR}/scripts/validate-v0.11.8.4-multi-environment-closure.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

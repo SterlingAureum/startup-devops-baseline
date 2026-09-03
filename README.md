@@ -3,6 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.8.4-multi-environment-closure` consolidates historical status and adds
+local reviewed evidence archival, integrity checks and append-only baseline checks.
+Prod live acceptance remains deferred. See `docs/V0.11.8.4_MULTI_ENVIRONMENT_CLOSURE.md`.
+Predecessor:
 `v0.11.8.3-prod-read-only-qualification` delivers a scoped-approval prod
 observer and offline tests. Real prod deployment/acceptance is deferred to
 the v0.11 tail; no prod live pass is claimed. See

@@ -515,8 +515,9 @@ Incremental scope:
     offline safety tests. Real prod deployment/qualification is deferred to the
     v0.11 tail to avoid running too many clusters simultaneously. Prod stays on
     main; no feature deployment or live qualification is claimed here.
-  - v0.11.8.4 will close multi-environment qualification and preserve reviewed
-    evidence without rerunning destructive local drills.
+  - v0.11.8.4 closes implementation/evidence management with a four-environment
+    status map and local content-addressed reviewed archive. It preserves raw,
+    redacted and summary distinctions without rerunning destructive local drills.
     Closure must explicitly retain prod as runtime-deferred until the tail
     checkpoint supplies fresh approved evidence; offline success is not prod success.
 - v0.11.9 - clean-room dev/test/prod-live end-to-end release, successful and

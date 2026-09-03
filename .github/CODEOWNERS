@@ -309,6 +309,11 @@
 /delivery/contracts/v0.11.8.2.1.3-test-target-identity.json @SterlingAureum
 /delivery/contracts/v0.11.8.2.2-test-closure-and-rebuild.json @SterlingAureum
 /delivery/contracts/v0.11.8.3-prod-read-only-qualification.json @SterlingAureum
+/delivery/contracts/v0.11.8.4-multi-environment-closure.json @SterlingAureum
+/scripts/archive-observability-evidence.py @SterlingAureum
+/scripts/test-observability-evidence-archive.py @SterlingAureum
+/scripts/validate-v0.11.8.4-multi-environment-closure.sh @SterlingAureum
+/docs/V0.11.8.4_MULTI_ENVIRONMENT_CLOSURE.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum
 /scripts/test-aws-prod-observability.py @SterlingAureum
 /scripts/validate-v0.11.8.3-prod-read-only-qualification.sh @SterlingAureum

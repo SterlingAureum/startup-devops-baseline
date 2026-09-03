@@ -3,6 +3,9 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.8.2.1.3-test-target-identity` repairs stable/canary target recognition
+with exact environment/release/Pod guards. See `docs/V0.11.8.2.1.3_TEST_TARGET_IDENTITY.md`.
+Predecessor:
 `v0.11.8.2.1.2-test-variable-input-repair` preserves reviewed local test tfvars,
 checks runtime-role scope, and fingerprints inputs before saved-plan apply.
 See `docs/V0.11.8.2.1.2_TEST_VARIABLE_INPUT_REPAIR.md`.

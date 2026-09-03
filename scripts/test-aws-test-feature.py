@@ -45,6 +45,15 @@ def rollout():
                        'readyReplicas': 2, 'availableReplicas': 2, 'stableRS': 'abc', 'currentPodHash': 'abc'}}
 
 
+def demo_targets(services=('demo-api',)):
+    return [{'scrapePool': 'serviceMonitor/startup-apps/demo-api/0', 'health': 'up', 'lastError': '',
+             'labels': {'namespace': 'startup-apps', 'service_name': 'demo-api',
+                        'deployment_environment_name': 'aws-test', 'service_version': 'v-test',
+                        'container_image_digest': IMAGE.split('@')[1], 'endpoint': 'http',
+                        'job': service, 'service': service, 'pod': f'demo-{i}'}}
+            for service in services for i in range(2)]
+
+
 class Guards(unittest.TestCase):
     def test_environment_drops_target_injection(self):
         with patch.dict(os.environ, {'TF_VAR_environment': 'prod', 'TF_CLI_ARGS': '-destroy',
@@ -244,8 +253,12 @@ class Guards(unittest.TestCase):
         @contextmanager
         def forward(*args):
             yield 'http://127.0.0.1:12345'
-        for healthy in (True, False):
+        for healthy, dual_service in ((True, False), (True, True), (False, True)):
             current = rollout()
+            services = ('demo-api-stable', 'demo-api-canary') if dual_service else ('demo-api',)
+            if dual_service:
+                current['spec']['strategy'] = {'canary': {
+                    'stableService': services[0], 'canaryService': services[1]}}
             if not healthy:
                 current['status']['phase'] = 'Paused'
             def get(env, *args):
@@ -272,7 +285,7 @@ class Guards(unittest.TestCase):
                      patch.object(c, 'kube', return_value='deployment/monitoring'), \
                      patch.object(c, 'load_capacity', return_value=SimpleNamespace(runtime_ready=lambda *x: True)), \
                      patch.object(observe, 'forward', side_effect=forward), \
-                     patch.object(observe, 'api', side_effect=[{'activeTargets': [{'labels': {'job': 'demo-api'}, 'health': 'up'}]},
+                     patch.object(observe, 'api', side_effect=[{'activeTargets': demo_targets(services)},
                          {'groups': [{'rules': [{'name': x} for x in rules]}]}, {'result': []}]):
                     self.assertEqual(observe.main(), 0 if healthy else 1)
                 evidence = json.loads(output.read_text())

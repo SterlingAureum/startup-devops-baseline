@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.8.2.1.3
+
+- Recognize Rollout stable/canary Services in test target qualification.
+- Require exact environment, release, digest, ServiceMonitor and live Pod identity.
+- Check stable Pod coverage and report candidate health/lastError on failure.
+- Add topology/mutation tests and multi-shell diagnostic troubleshooting.
+- No runtime resources or release declarations changed.
+
 ## v0.11.8.2.1.2
 
 - Preserve the optional existing test terraform.tfvars and Owner/runtime settings.

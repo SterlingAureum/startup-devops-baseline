@@ -160,7 +160,7 @@ def observe(args, env, checks, capabilities):
     passed('monitoring.workloads', 'ready')
     with forward(env, 'observability-metrics-prometheus', 9090) as url:
         targets = api(url + '/api/v1/targets')['activeTargets']
-        c.require(any(t.get('labels', {}).get('job') == 'demo-api' and t.get('health') == 'up' for t in targets), 'No up demo-api target.')
+        check_demo_targets(targets, rollout, active, version, image)
         passed('prometheus.target', 'up')
         rules = [r['name'] for group in api(url + '/api/v1/rules')['groups'] for r in group['rules']]
         for name in ('demo_api:slo_availability:ratio30d', 'demo_api:slo_latency:ratio30d',
@@ -194,6 +194,43 @@ def observe(args, env, checks, capabilities):
         'slo': {'status': slo, 'evidenceCheckIds': ['slo.series']},
         'progressiveDeliveryTelemetry': {'status': 'supported-not-verified', 'evidenceCheckIds': ['release.rollout']},
     })
+
+
+def check_demo_targets(targets, rollout, pods, version, image):
+    """Check target identity, not a single hard-coded Service/job spelling."""
+    canary = rollout.get('spec', {}).get('strategy', {}).get('canary', {})
+    stable = canary.get('stableService', 'demo-api')
+    services = {stable, canary.get('canaryService', stable)}
+    names = {pod['metadata']['name'] for pod in pods}
+    candidates = [t for t in targets if
+                  t.get('scrapePool') == 'serviceMonitor/startup-apps/demo-api/0'
+                  or (t.get('labels', {}).get('namespace') == 'startup-apps'
+                      and (t.get('labels', {}).get('service_name') == 'demo-api'
+                           or t.get('labels', {}).get('service') in services))]
+    summary = [{'labels': t.get('labels', {}), 'health': t.get('health'),
+                'lastError': t.get('lastError', '')} for t in candidates]
+    def require(ok, message):
+        c.require(ok, message + '; demo-api targets=' + json.dumps(summary, sort_keys=True))
+    require(bool(candidates), 'No discovered demo-api targets')
+    require(bool(names), 'No active demo-api Pods to verify')
+    stable_pods = set()
+    for target in candidates:
+        labels = target.get('labels', {})
+        require(target.get('scrapePool') == 'serviceMonitor/startup-apps/demo-api/0'
+                and labels.get('namespace') == 'startup-apps'
+                and labels.get('service_name') == 'demo-api'
+                and labels.get('deployment_environment_name') == 'aws-test'
+                and labels.get('service_version') == version
+                and labels.get('container_image_digest') == image.split('@', 1)[1]
+                and labels.get('service') in services
+                and labels.get('job') == labels.get('service')
+                and labels.get('endpoint') == 'http'
+                and labels.get('pod') in names,
+                'Demo-api target environment/release/service/Pod identity mismatch')
+        require(target.get('health') == 'up', 'Demo-api target is not up')
+        if labels['service'] == stable:
+            stable_pods.add(labels['pod'])
+    require(stable_pods == names, 'Stable Service targets do not cover all active demo-api Pods')
 
 
 def main():

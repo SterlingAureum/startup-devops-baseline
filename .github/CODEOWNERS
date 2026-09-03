@@ -308,6 +308,11 @@
 /delivery/contracts/v0.11.8.2.1.2-test-variable-input-repair.json @SterlingAureum
 /delivery/contracts/v0.11.8.2.1.3-test-target-identity.json @SterlingAureum
 /delivery/contracts/v0.11.8.2.2-test-closure-and-rebuild.json @SterlingAureum
+/delivery/contracts/v0.11.8.3-prod-read-only-qualification.json @SterlingAureum
+/scripts/check-aws-prod-observability-qualification.py @SterlingAureum
+/scripts/test-aws-prod-observability.py @SterlingAureum
+/scripts/validate-v0.11.8.3-prod-read-only-qualification.sh @SterlingAureum
+/docs/V0.11.8.3_PROD_READ_ONLY_QUALIFICATION.md @SterlingAureum
 /scripts/test-aws-test-secret-preflight.py @SterlingAureum
 /scripts/validate-v0.11.8.2.2-test-closure-and-rebuild.sh @SterlingAureum
 /docs/V0.11.8.2.2_TEST_CLOSURE_AND_REBUILD.md @SterlingAureum

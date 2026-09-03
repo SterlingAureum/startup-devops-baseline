@@ -196,7 +196,7 @@ def observe(args, env, checks, capabilities):
     })
 
 
-def check_demo_targets(targets, rollout, pods, version, image):
+def check_demo_targets(targets, rollout, pods, version, image, environment='aws-test'):
     """Check target identity, not a single hard-coded Service/job spelling."""
     canary = rollout.get('spec', {}).get('strategy', {}).get('canary', {})
     stable = canary.get('stableService', 'demo-api')
@@ -219,7 +219,7 @@ def check_demo_targets(targets, rollout, pods, version, image):
         require(target.get('scrapePool') == 'serviceMonitor/startup-apps/demo-api/0'
                 and labels.get('namespace') == 'startup-apps'
                 and labels.get('service_name') == 'demo-api'
-                and labels.get('deployment_environment_name') == 'aws-test'
+                and labels.get('deployment_environment_name') == environment
                 and labels.get('service_version') == version
                 and labels.get('container_image_digest') == image.split('@', 1)[1]
                 and labels.get('service') in services

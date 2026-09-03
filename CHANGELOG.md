@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.11.8.3
+
+- Implement a fixed-prod, approval-protected, operator-mode read-only observer.
+- Bind approval to account/actor, main SHA, release, action and a one-hour window.
+- Recheck approval/source identity; distinguish denied, failed and absent runtime.
+- Verify exact rendered prod inventory, targets, monitoring and bounded evidence.
+- Add offline mocked/mutation tests and optional real-source render coverage.
+- Defer real prod deployment and qualification to the v0.11 tail; no live pass claimed.
+
 ## v0.11.8.2.2
 
 - Record the exact historical test operator-observation result and capability limits.

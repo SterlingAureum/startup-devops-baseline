@@ -245,6 +245,9 @@ echo "==> Validating v0.11.8.2.1.3 test target identity"
 echo "==> Validating v0.11.8.2.2 test closure and rebuild"
 "${ROOT_DIR}/scripts/validate-v0.11.8.2.2-test-closure-and-rebuild.sh"
 
+echo "==> Validating v0.11.8.3 prod read-only qualification"
+"${ROOT_DIR}/scripts/validate-v0.11.8.3-prod-read-only-qualification.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

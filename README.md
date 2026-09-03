@@ -3,6 +3,11 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.8.3-prod-read-only-qualification` delivers a scoped-approval prod
+observer and offline tests. Real prod deployment/acceptance is deferred to
+the v0.11 tail; no prod live pass is claimed. See
+`docs/V0.11.8.3_PROD_READ_ONLY_QUALIFICATION.md`.
+Predecessor:
 `v0.11.8.2.2-test-closure-and-rebuild` records the bounded historical aws-test
 operator qualification and adds metadata-only Secret rebuild guards.
 See `docs/V0.11.8.2.2_TEST_CLOSURE_AND_REBUILD.md`.

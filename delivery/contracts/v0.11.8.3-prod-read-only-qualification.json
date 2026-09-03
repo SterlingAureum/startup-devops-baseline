@@ -1,0 +1,44 @@
+{
+  "version": "v0.11.8.3",
+  "baseline": "v0.11.8.2.2",
+  "status": "implementation-and-offline-validation-only",
+  "live_acceptance": "deferred-to-v0.11-tail",
+  "environment": "aws-prod",
+  "cluster": "startup-devops-baseline-prod",
+  "region": "us-east-1",
+  "live_revision": "main",
+  "approval": {
+    "required_before_cloud_access": true,
+    "max_seconds": 3600,
+    "trust": "operator-attested external approval record; not cryptographic authorization",
+    "binds": ["account", "region", "cluster", "sha", "application_version", "image", "actor_arn", "action", "mode"],
+    "expiry_rechecked": true
+  },
+  "same_repository_applications": [
+    "application-admission-policies-aws-prod",
+    "data-platform-network-policy-aws-prod",
+    "demo-api-aws-prod",
+    "external-secrets-startup-apps",
+    "namespace-guardrails-aws-prod",
+    "observability-views-aws-prod",
+    "postgresql-baseline",
+    "startup-apps-network-policy-aws-prod"
+  ],
+  "external_applications": {
+    "argo-rollouts": {"chart": "argo-rollouts", "version": "2.41.1"},
+    "aws-load-balancer-controller": {"chart": "aws-load-balancer-controller", "version": "1.14.0"},
+    "barman-cloud-plugin": {"chart": "plugin-barman-cloud", "version": "0.7.0"},
+    "cert-manager": {"chart": "cert-manager", "version": "v1.21.0"},
+    "cloudnative-pg": {"chart": "cloudnative-pg", "version": "0.29.0"},
+    "external-secrets": {"chart": "external-secrets", "version": "2.8.0"},
+    "karpenter": {"chart": "karpenter", "version": "1.14.0"},
+    "karpenter-crd": {"chart": "karpenter-crd", "version": "1.14.0"},
+    "monitoring-aws-prod": {"chart": "kube-prometheus-stack", "version": "88.5.0"}
+  },
+  "runtime_mutations": false,
+  "automatic_deployment": false,
+  "traffic_generation": false,
+  "least_privilege_claimed": false,
+  "missing_runtime": "waiting-runtime",
+  "prod_qualified": false
+}

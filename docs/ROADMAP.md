@@ -511,13 +511,20 @@ Incremental scope:
   - v0.11.8.1.5 closes aws-dev capacity status semantics and bounded node
     readiness waits following the .8.1.3 creation and .8.1.4 scheduling repairs;
     it retains the strict reserve policy and the info58-65 incident record.
-  - v0.11.8.3 will qualify aws-prod through an approval-protected read-only
-    observation boundary.
+  - v0.11.8.3 implements the approval-protected read-only prod observer and
+    offline safety tests. Real prod deployment/qualification is deferred to the
+    v0.11 tail to avoid running too many clusters simultaneously. Prod stays on
+    main; no feature deployment or live qualification is claimed here.
   - v0.11.8.4 will close multi-environment qualification and preserve reviewed
     evidence without rerunning destructive local drills.
+    Closure must explicitly retain prod as runtime-deferred until the tail
+    checkpoint supplies fresh approved evidence; offline success is not prod success.
 - v0.11.9 - clean-room dev/test/prod-live end-to-end release, successful and
   intentionally failed Canary checks, telemetry correlation, reviewed closure
   evidence, environment teardown, and residual-cost audit - planned
+  - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
+    approve main integration, prod deployment and .8.3 read-only observation.
+    Do not claim full prod acceptance before that checkpoint is complete.
 
 v0.11 does not automatically create an EKS environment, merge a pull request,
 perform a production Kubernetes write, dispatch a rollback, or remove the

@@ -12,6 +12,8 @@ import shutil
 import signal
 import subprocess
 import tempfile
+import threading
+import time
 import uuid
 from urllib.parse import urlparse
 
@@ -22,6 +24,9 @@ METRICS = {'canary-prometheus-target-up', 'canary-minimum-eligible-requests',
            'canary-availability-error-budget-burn-rate', 'canary-latency-error-budget-burn-rate',
            'stable-availability-error-budget-remaining', 'stable-latency-error-budget-remaining'}
 ANN = 'platform.startup.dev/'
+COMMAND_TIMEOUT_SECONDS = 900
+IDENTITY_WAIT_SECONDS = 120
+IDENTITY_POLL_SECONDS = 2
 
 
 def require(ok, message):
@@ -99,10 +104,32 @@ def stable_ready(data):
 
 
 def bounded_command(argv, env, log):
-    process = subprocess.Popen(argv, env=env, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,
+    """Run one phase while retaining and mirroring every output line."""
+    process = subprocess.Popen(argv, env=env, cwd=ROOT, stdout=subprocess.PIPE,
+                               stderr=subprocess.STDOUT, text=True, bufsize=1,
                                start_new_session=True)
+    reader_errors = []
+
+    def mirror():
+        try:
+            for line in process.stdout:
+                log.write(line)
+                log.flush()
+                print(line, end='', flush=True)
+        except BaseException as exc:
+            reader_errors.append(exc)
+
+    reader = threading.Thread(target=mirror, name='rehearsal-output', daemon=True)
+    reader.start()
     try:
-        code = process.wait(timeout=900)
+        try:
+            code = process.wait(timeout=COMMAND_TIMEOUT_SECONDS)
+        except subprocess.TimeoutExpired as exc:
+            raise ValueError(f'Phase command exceeded {COMMAND_TIMEOUT_SECONDS} seconds; inspect command.log') from exc
+        reader.join(timeout=5)
+        require(not reader.is_alive(), 'Phase output reader did not finish; inspect command.log')
+        if reader_errors:
+            raise ValueError(f'Phase output capture failed: {reader_errors[0]}')
         require(code == 0, f'Phase command failed with exit {code}; inspect command.log')
     finally:
         # The process group is owned by this attempt, including port-forwards.
@@ -119,6 +146,43 @@ def bounded_command(argv, env, log):
         except ProcessLookupError:
             pass
         process.wait()
+
+
+def wait_snapshot_identity(env, expected_version, expected_identity, timeout=IDENTITY_WAIT_SECONDS,
+                           poll=IDENTITY_POLL_SECONDS):
+    """Wait through transient rollout scaling until all matching release Pods are Ready."""
+    deadline = time.monotonic() + timeout
+    last_error = None
+    announced = False
+    while True:
+        data = snapshot(env)
+        try:
+            identity = image_identity(data, expected_version)
+            require(identity == expected_identity, 'Candidate binary image differs from prepared baseline')
+            if announced:
+                print('Release Pod/imageID convergence confirmed.', flush=True)
+            return data, identity
+        except ValueError as exc:
+            last_error = exc
+        if time.monotonic() >= deadline:
+            raise ValueError(f'Release Pod/imageID did not converge within {timeout} seconds: {last_error}')
+        if not announced:
+            print(f'Waiting up to {timeout} seconds for all release Pods to become Ready with imageID; '
+                  'this is expected briefly while Canary replicas scale.', flush=True)
+            announced = True
+        time.sleep(poll)
+
+
+def bundle_path(value):
+    raw = str(value).strip()
+    require(raw, 'Bundle path is empty')
+    require(not re.match(r'^(?:export\s+)?REHEARSAL_DIR\s*=', raw),
+            'Pass only the path after the prompt, for example /tmp/local-release-rehearsal.ABC123/run; '
+            'do not enter REHEARSAL_DIR=/tmp/...')
+    path = Path(raw).expanduser().resolve()
+    require(not path.is_relative_to(ROOT),
+            'Private evidence must be outside the repository; example: --bundle /tmp/local-release-rehearsal.ABC123/run')
+    return path
 
 
 def image_identity(data, expected_version):
@@ -200,8 +264,7 @@ def isolated(context, directory):
 
 
 def execute(args):
-    bundle = args.bundle.resolve()
-    require(not bundle.is_relative_to(ROOT), 'Keep private evidence outside repository')
+    bundle = bundle_path(args.bundle)
     require(args.confirm == ('deploy-reviewed-local' if args.phase == 'deploy' else
                              'generate-local-traffic' if args.phase in ('first-analysis', 'second-analysis') else
                              'observe-local'), 'Explicit matching --confirm required')
@@ -268,12 +331,21 @@ def execute(args):
                     env.update(CLOSURE_PHASE=args.phase, EXPECTED_APPLICATION_VERSION=plan['candidate_version'])
                     script = 'check-local-slo-progressive-delivery-closure.sh'
                 with (attempt / 'command.log').open('x') as log:
+                    print(f'{args.phase} started; live output is mirrored below and retained at '
+                          f'{attempt / "command.log"}', flush=True)
+                    if args.phase == 'first-analysis':
+                        print('Terminal 1 action: start deploy now; do not wait for first-analysis to exit.', flush=True)
+                    elif args.phase == 'second-analysis':
+                        print('Terminal 1 action: wait for the traffic/waiting signal below, then run the documented '
+                              'manual promote command once.', flush=True)
                     bounded_command(['bash', str(ROOT / 'scripts' / script)], env, log)
-                data = snapshot(env)
+                if args.phase == 'deploy':
+                    data = snapshot(env)
+                else:
+                    data, _ = wait_snapshot_identity(env, plan['candidate_version'], plan['image'])
                 write(attempt / 'after.json', data)
                 if args.phase != 'deploy':
                     require((bundle / 'deploy.started.json').exists(), 'No deployment attempt belongs to this bundle')
-                    require(image_identity(data, plan['candidate_version']) == plan['image'], 'Candidate binary image differs from prepared baseline')
                     ids = fresh_analyses(data, plan, 2 if args.phase in ('second-analysis', 'final') else 1)
                     if args.phase == 'final':
                         healthy(data['rollout'])
@@ -299,7 +371,8 @@ def execute(args):
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('phase', choices=['prepare', 'deploy', 'first-analysis', 'human-review', 'second-analysis', 'final'])
-    p.add_argument('--bundle', type=Path, required=True)
+    p.add_argument('--bundle', required=True,
+                   help='private evidence path only, e.g. /tmp/local-release-rehearsal.ABC123/run')
     p.add_argument('--confirm', required=True)
     p.add_argument('--context')
     p.add_argument('--version')

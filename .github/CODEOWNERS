@@ -321,9 +321,12 @@
 /scripts/validate-v0.11.9.0-release-rehearsal-design.sh @SterlingAureum
 /docs/V0.11.9.0_RELEASE_REHEARSAL_DESIGN.md @SterlingAureum
 /delivery/contracts/v0.11.9.1-local-release-rehearsal.json @SterlingAureum
+/delivery/contracts/v0.11.9.1.1-local-release-rehearsal-stability.json @SterlingAureum
+/docs/V0.11.9.1.1_LOCAL_RELEASE_REHEARSAL_STABILITY.md @SterlingAureum
 /scripts/local-release-rehearsal.py @SterlingAureum
 /scripts/test-local-release-rehearsal.py @SterlingAureum
 /scripts/validate-v0.11.9.1-local-release-rehearsal.sh @SterlingAureum
+/scripts/validate-v0.11.9.1.1-local-release-rehearsal-stability.sh @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum
 /scripts/test-aws-prod-observability.py @SterlingAureum

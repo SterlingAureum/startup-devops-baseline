@@ -102,10 +102,30 @@ class Tests(unittest.TestCase):
 
     def test_command_failure_and_group_cleanup(self):
         with patch.object(m.subprocess, 'Popen') as popen, patch.object(m.os, 'killpg') as kill:
+            popen.return_value.stdout = io.StringIO('visible output\n')
             popen.return_value.wait.return_value = 1
-            with self.assertRaises(ValueError):
-                m.bounded_command(['false'], {}, io.StringIO())
+            retained = io.StringIO()
+            with patch('builtins.print') as output, self.assertRaises(ValueError):
+                m.bounded_command(['false'], {}, retained)
+            self.assertEqual(retained.getvalue(), 'visible output\n')
+            output.assert_any_call('visible output\n', end='', flush=True)
             self.assertEqual(kill.call_count, 2)
+
+    def test_bundle_input_diagnostic(self):
+        with self.assertRaisesRegex(ValueError, 'do not enter REHEARSAL_DIR'):
+            m.bundle_path('REHEARSAL_DIR=/tmp/local-release-rehearsal.ABC123/run')
+        self.assertEqual(m.bundle_path('/tmp/local-release-rehearsal.ABC123/run'),
+                         Path('/tmp/local-release-rehearsal.ABC123/run'))
+
+    def test_transient_release_pod_readiness_converges(self):
+        waiting = copy.deepcopy(self.data)
+        waiting['pods']['items'][0]['status']['containerStatuses'][0]['ready'] = False
+        expected = m.image_identity(self.data, 'v2')
+        with patch.object(m, 'snapshot', side_effect=[waiting, self.data]), \
+                patch.object(m.time, 'sleep'), patch('builtins.print'):
+            observed, identity = m.wait_snapshot_identity({}, 'v2', expected, timeout=1, poll=0)
+        self.assertIs(observed, self.data)
+        self.assertEqual(identity, expected)
 
     def test_exclusive_evidence(self):
         with tempfile.TemporaryDirectory() as tmp:

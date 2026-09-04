@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.9.1.1
+
+- Mirror phase output live to the terminal while retaining `command.log`.
+- Wait through bounded transient Canary Pod/imageID readiness after phase commands.
+- Diagnose assignment-form bundle input with a concrete raw-path example.
+- Document terminal handoffs, promote signals, log commands and safe retry boundaries.
+- Preserve manual promotion/retry/rollback and defer failure/recovery to v0.11.9.2.
+
 ## v0.11.9.1
 
 - Add explicit local prepare/deploy/analysis/review/final rehearsal phases.

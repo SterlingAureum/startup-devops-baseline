@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.1.1-local-release-rehearsal-stability` mirrors phase output live,
+waits through bounded release Pod/imageID convergence and makes operator
+handoffs, inputs, logs and retry boundaries explicit. It does not rerun or
+expand the successful live rehearsal. See
+`docs/V0.11.9.1.1_LOCAL_RELEASE_REHEARSAL_STABILITY.md` and the active runbook
+`docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md`.
+Predecessor:
 `v0.11.9.1-local-release-rehearsal` adds explicit local deployment/analysis phases,
 same-binary runtime identity checks and fresh Canary evidence. Live use is opt-in.
 See `docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md`.

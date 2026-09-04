@@ -528,6 +528,11 @@ Incremental scope:
   - v0.11.9.1 adds the opt-in local successful-release runner with same-binary
     identity, fresh analyses and explicit human promotion. Producer offline
     tests do not substitute for operator live acceptance; failure/recovery is next.
+    - v0.11.9.1.1 closes rehearsal race and operator-visibility findings with
+      live terminal/log mirroring, bounded Pod/imageID convergence, actionable
+      bundle input diagnostics and an explicit terminal/retry runbook. It does
+      not rerun the already successful live rehearsal or automate mutations.
+      Controlled failure and recovery remain v0.11.9.2.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

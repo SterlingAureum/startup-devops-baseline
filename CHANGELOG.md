@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.9.2.0
+
+- Define a local-only candidate availability rejection and baseline restoration contract.
+- Require a fault-disabled healthy baseline before same-binary candidate fault arming.
+- Bind bounded `/version` 503 traffic to the Canary Service and exact release metric.
+- Reject provider/no-data failures and require stable control traffic plus Git/runtime recovery.
+- Add a strict offline plan preflight; no fault, cluster or AWS operation is authorized.
+
 ## v0.11.9.1.1
 
 - Mirror phase output live to the terminal while retaining `command.log`.

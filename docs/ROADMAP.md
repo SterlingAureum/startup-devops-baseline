@@ -533,6 +533,11 @@ Incremental scope:
       bundle input diagnostics and an explicit terminal/retry runbook. It does
       not rerun the already successful live rehearsal or automate mutations.
       Controlled failure and recovery remain v0.11.9.2.
+  - v0.11.9.2 begins controlled candidate rejection and recovery validation.
+    - v0.11.9.2.0 defines the offline-only local availability-failure contract,
+      same-binary isolation, strict bounded plan preflight, stable control and
+      Git/runtime recovery acceptance. It implements no fault and authorizes no
+      live execution; reviewed runner implementation is v0.11.9.2.1.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

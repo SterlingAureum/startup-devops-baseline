@@ -327,6 +327,12 @@
 /scripts/test-local-release-rehearsal.py @SterlingAureum
 /scripts/validate-v0.11.9.1-local-release-rehearsal.sh @SterlingAureum
 /scripts/validate-v0.11.9.1.1-local-release-rehearsal-stability.sh @SterlingAureum
+/delivery/contracts/v0.11.9.2.0-local-failure-recovery-design.json @SterlingAureum
+/delivery/examples/v0.11.9.2.0-local-failure-recovery-plan.json @SterlingAureum
+/docs/V0.11.9.2.0_LOCAL_FAILURE_RECOVERY_DESIGN.md @SterlingAureum
+/scripts/check-v0.11.9.2.0-failure-recovery-plan.py @SterlingAureum
+/scripts/test-v0.11.9.2.0-failure-recovery-plan.py @SterlingAureum
+/scripts/validate-v0.11.9.2.0-local-failure-recovery-design.sh @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum
 /scripts/test-aws-prod-observability.py @SterlingAureum

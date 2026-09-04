@@ -3,6 +3,11 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.2.0-local-failure-recovery-design` defines the offline-only,
+candidate-scoped availability rejection and known-good GitOps restoration
+contract. It implements and executes no fault. See
+`docs/V0.11.9.2.0_LOCAL_FAILURE_RECOVERY_DESIGN.md`.
+Predecessor:
 `v0.11.9.1.1-local-release-rehearsal-stability` mirrors phase output live,
 waits through bounded release Pod/imageID convergence and makes operator
 handoffs, inputs, logs and retry boundaries explicit. It does not rerun or

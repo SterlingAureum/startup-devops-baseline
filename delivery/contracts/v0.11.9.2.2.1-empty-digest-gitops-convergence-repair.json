@@ -1,0 +1,31 @@
+{
+  "version": "v0.11.9.2.2.1",
+  "predecessor": "v0.11.9.2.2",
+  "scope": "local-empty-fault-digest-gitops-convergence-repair",
+  "incident": {
+    "root_sync_status": "persistent-OutOfSync",
+    "diff_resource": "Application/argocd/demo-api",
+    "desired_field": "spec.source.helm.parameters[rehearsalFault.tokenSha256].value",
+    "desired_value": "empty-string",
+    "live_normalization": "value-field-omitted",
+    "runtime_fault_enabled": false,
+    "first_analysis_successful": true,
+    "rollout_preserved_at_human_pause": true
+  },
+  "repair": {
+    "omit_empty_child_parameter": true,
+    "render_non_empty_armed_parameter": true,
+    "chart_default_remains_empty": true,
+    "bounded_root_sync_identity_wait": true,
+    "kubernetes_omitted_empty_env_value_supported": true,
+    "ignore_differences_added": false
+  },
+  "producer_live_executed": false,
+  "runtime_qualified": false,
+  "automatic_promote": false,
+  "automatic_retry": false,
+  "automatic_abort": false,
+  "automatic_rollback": false,
+  "aws_mutation": false,
+  "resume_checkpoint": "current-fault-disabled-canary-human-review"
+}

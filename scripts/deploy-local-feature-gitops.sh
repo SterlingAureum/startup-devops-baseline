@@ -177,12 +177,15 @@ expected_helm_parameter_names="$(printf '%s\n' \
   image.tag \
   release.applicationVersion \
   rehearsalFault.mode \
-  rehearsalFault.tokenSha256 \
   telemetry.tracing.enabled \
   telemetry.tracing.endpoint \
   telemetry.tracing.protocol \
   telemetry.tracing.timeoutSeconds \
   | sort)"
+if [ -n "${REHEARSAL_FAULT_TOKEN_SHA256}" ]; then
+  expected_helm_parameter_names="$(printf '%s\n%s\n' \
+    "${expected_helm_parameter_names}" rehearsalFault.tokenSha256 | sort)"
+fi
 assert_equals "${sorted_helm_parameter_names}" "${expected_helm_parameter_names}" "demo-api Root-rendered Helm parameter allowlist"
 
 assert_equals \
@@ -202,6 +205,8 @@ prometheus_address="$(kubectl -n "${APP_NAMESPACE}" get analysistemplate "${DEMO
 assert_equals "${prometheus_address}" "${EXPECTED_PROMETHEUS_ADDRESS}" "AnalysisTemplate Prometheus address"
 
 argocd app get "${ROOT_APP_NAME}" --hard-refresh >/dev/null
+echo "==> Waiting for Root declarative feature ownership to converge"
+wait_for_application_sync_identity "${ROOT_APP_NAME}" "${resolved_target_revision}"
 root_sync_status="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.status.sync.status}')"
 assert_equals "${root_sync_status}" "Synced" "Root declarative feature ownership"
 

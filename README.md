@@ -3,6 +3,11 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.2.2.1-empty-digest-gitops-convergence-repair` omits the normalized
+empty child fault-digest parameter, adds bounded exact-revision Root convergence
+and preserves non-empty armed rendering. See
+`docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md`.
+Predecessor:
 `v0.11.9.2.2-local-failure-recovery-live-qualification` adds read-only live
 plan discovery, explicit operator checkpoints, redaction-safe progress output
 and an exact final qualification summary. Applying or validating it performs no

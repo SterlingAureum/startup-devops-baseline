@@ -101,6 +101,15 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'Stable Pod'):
             M.assert_fault_isolation(value, plan('/tmp/evidence'), DIGEST, True)
 
+    def test_kubernetes_omitted_empty_env_value_is_treated_as_empty(self):
+        value = fixture()
+        digest_env = value['pods']['items'][0]['spec']['containers'][0]['env'][1]
+        digest_env.pop('value')
+        template_digest = value['rollout']['spec']['template']['spec']['containers'][0]['env'][1]
+        template_digest.pop('value')
+        M.assert_fault_isolation(value, plan('/tmp/evidence'), '', False)
+        self.assertEqual(M.template_env(value, 'REHEARSAL_FAULT_TOKEN_SHA256'), '')
+
     def test_failed_analysis_requires_exact_measured_metric(self):
         value = fixture(candidate=True)
         state = {'candidate_release_id': 'candidate-release', 'old_analysis_uids': []}

@@ -8,6 +8,7 @@ WAIT_TIMEOUT_SECONDS="${WAIT_TIMEOUT_SECONDS:-180}"
 APPLICATION_IDLE_OBSERVATIONS="${APPLICATION_IDLE_OBSERVATIONS:-3}"
 OPERATION_BUSY_MAX_ATTEMPTS="${OPERATION_BUSY_MAX_ATTEMPTS:-5}"
 OPERATION_RETRY_DELAY_SECONDS="${OPERATION_RETRY_DELAY_SECONDS:-2}"
+APPLICATION_SYNC_POLL_SECONDS="${APPLICATION_SYNC_POLL_SECONDS:-2}"
 OPERATION_BUSY_MESSAGE="another operation is already in progress"
 
 validate_argocd_operation_settings() {
@@ -29,6 +30,10 @@ validate_argocd_operation_settings() {
     echo "ERROR: OPERATION_RETRY_DELAY_SECONDS must be a non-negative integer." >&2
     return 1
   fi
+  if ! [[ "${APPLICATION_SYNC_POLL_SECONDS}" =~ ^[0-9]+$ ]]; then
+    echo "ERROR: APPLICATION_SYNC_POLL_SECONDS must be a non-negative integer." >&2
+    return 1
+  fi
 }
 
 argocd_application_diagnostics() {
@@ -38,6 +43,27 @@ argocd_application_diagnostics() {
   kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" \
     -o custom-columns='NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status,OPERATION:.status.operationState.phase,MESSAGE:.status.operationState.message' \
     >&2 || true
+}
+
+wait_for_application_sync_identity() {
+  local application_name="$1"
+  local expected_revision="$2"
+  local deadline=$((SECONDS + WAIT_TIMEOUT_SECONDS))
+  local sync_status
+  local sync_revision
+
+  while [ "${SECONDS}" -lt "${deadline}" ]; do
+    sync_status="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.status.sync.status}')"
+    sync_revision="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.status.sync.revision}')"
+    if [ "${sync_status}" = "Synced" ] && [ "${sync_revision}" = "${expected_revision}" ]; then
+      return 0
+    fi
+    sleep "${APPLICATION_SYNC_POLL_SECONDS}"
+  done
+
+  echo "ERROR: Application/${application_name} did not converge to Synced revision ${expected_revision}." >&2
+  argocd_application_diagnostics "${application_name}"
+  return 1
 }
 
 wait_for_application_idle() {

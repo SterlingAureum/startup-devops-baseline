@@ -252,8 +252,6 @@ YAML
         cat <<'YAML'
         - name: rehearsalFault.mode
           value: disabled
-        - name: rehearsalFault.tokenSha256
-          value: ""
 YAML
       fi
       if [ "${INCLUDE_TRACE_CORRELATION:-false}" = true ]; then

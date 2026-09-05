@@ -47,7 +47,7 @@ assert 'fault-token.private' not in status
 
 successor_fixture = read('scripts/validate-v0.11.4.0.1-helm-successor-coverage.sh')
 for required in ('INCLUDE_FAILURE_RECOVERY', 'v0.11.9.2.1-local-failure-recovery-runner.json',
-                 'name: rehearsalFault.mode', 'name: rehearsalFault.tokenSha256'):
+                 'name: rehearsalFault.mode'):
     assert required in successor_fixture, required
 
 logging_validator = read('scripts/validate-v0.11.6.1.0-structured-demo-api-logging-runtime.sh')

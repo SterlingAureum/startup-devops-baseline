@@ -547,6 +547,10 @@ Incremental scope:
       and exact Git/runtime/failure evidence closure. Applying and validating
       the increment performs no live rehearsal; qualification requires the
       separately initiated operator run and retained private evidence.
+      - v0.11.9.2.2.1 repairs the observed empty fault-digest Application CRD
+        normalization drift and replaces immediate Root status assertion with
+        bounded exact-revision convergence. The successful first analysis and
+        50% human pause remain preserved for explicit resume after repair.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

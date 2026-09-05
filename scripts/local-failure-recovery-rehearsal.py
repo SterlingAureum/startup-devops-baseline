@@ -43,7 +43,7 @@ PREVIOUS = dict(zip(PHASES[1:], PHASES[:-1]))
 
 
 def env_value(pod, name):
-    values = [item.get('value') for container in pod['spec'].get('containers', [])
+    values = [item.get('value', '') for container in pod['spec'].get('containers', [])
               for item in container.get('env', []) if item.get('name') == name]
     BASE.require(len(values) == 1, f'Pod must contain exactly one {name}')
     return values[0]
@@ -52,7 +52,7 @@ def env_value(pod, name):
 def template_env(data, name):
     containers = data['rollout']['spec']['template']['spec']['containers']
     BASE.require(len(containers) == 1, 'Single demo-api container required')
-    values = [item.get('value') for item in containers[0].get('env', []) if item.get('name') == name]
+    values = [item.get('value', '') for item in containers[0].get('env', []) if item.get('name') == name]
     BASE.require(len(values) == 1, f'Rollout template must contain exactly one {name}')
     return values[0]
 

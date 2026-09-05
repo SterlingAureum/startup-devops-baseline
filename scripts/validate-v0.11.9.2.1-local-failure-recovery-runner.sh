@@ -54,7 +54,7 @@ historical_rendering = read('scripts/validate-v0.11.3.4-unified-feature-revision
 for required in (
         'v0.11.9.2.1-local-failure-recovery-runner.json',
         'failure_recovery_successor = Path(sys.argv[10]).is_file()',
-        'fault_parameters = ["rehearsalFault.mode", "rehearsalFault.tokenSha256"]',
+        'fault_parameters = ["rehearsalFault.mode"]',
         '*fault_parameters,'):
     assert required in historical_rendering, required
 

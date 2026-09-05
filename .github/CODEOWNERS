@@ -348,6 +348,10 @@
 /scripts/validate-v0.11.9.2.2-local-failure-recovery-live-qualification.sh @SterlingAureum
 /delivery/contracts/v0.11.9.2.2-local-failure-recovery-live-qualification.json @SterlingAureum
 /docs/V0.11.9.2.2_LOCAL_FAILURE_RECOVERY_LIVE_QUALIFICATION.md @SterlingAureum
+/scripts/test-root-application-sync-convergence.sh @SterlingAureum
+/scripts/validate-v0.11.9.2.2.1-empty-digest-gitops-convergence-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.9.2.2.1-empty-digest-gitops-convergence-repair.json @SterlingAureum
+/docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum
 /scripts/test-aws-prod-observability.py @SterlingAureum

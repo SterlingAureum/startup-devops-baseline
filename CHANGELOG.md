@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.11.9.2.2.1
+
+- Omit the empty child fault-digest parameter that Application CRD
+  normalization turned into a permanent Root `OutOfSync` diff.
+- Preserve explicit non-empty digest rendering for armed local rehearsals.
+- Wait boundedly for Root `Synced` at the exact source revision after refresh.
+- Accept Kubernetes omission of an empty EnvVar value as semantic empty state.
+- Add transient/permanent convergence and disabled/armed render regressions;
+  no live operation was performed while producing this repair.
+
 ## v0.11.9.2.2
 
 - Add read-only discovery of the exact pushed source and healthy local runtime

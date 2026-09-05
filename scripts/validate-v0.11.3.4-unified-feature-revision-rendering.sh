@@ -522,7 +522,6 @@ case "${resource}:${output}" in
         image.pullPolicy \
         release.applicationVersion \
         rehearsalFault.mode \
-        rehearsalFault.tokenSha256 \
         telemetry.tracing.enabled \
         telemetry.tracing.endpoint \
         telemetry.tracing.protocol \
@@ -671,7 +670,7 @@ tracing_parameters = [
 ]
 fault_parameters = []
 if failure_recovery_successor:
-    fault_parameters = ["rehearsalFault.mode", "rehearsalFault.tokenSha256"]
+    fault_parameters = ["rehearsalFault.mode"]
 if trace_correlation_successor:
     require(stable_parameter_names == tracing_parameters, "Stable demo-api tracing parameter allowlist changed")
     require(

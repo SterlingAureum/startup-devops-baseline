@@ -27,8 +27,10 @@ spec:
           value: {{ .Values.demoApi.localImage.applicationVersion | quote }}
         - name: rehearsalFault.mode
           value: {{ .Values.demoApi.rehearsalFault.mode | quote }}
+{{ if .Values.demoApi.rehearsalFault.tokenSha256 }}
         - name: rehearsalFault.tokenSha256
           value: {{ .Values.demoApi.rehearsalFault.tokenSha256 | quote }}
+{{ end }}
 {{ else }}
       parameters:
 {{ end }}

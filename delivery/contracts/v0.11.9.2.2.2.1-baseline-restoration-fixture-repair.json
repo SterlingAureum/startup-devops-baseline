@@ -1,0 +1,14 @@
+{
+  "version": "v0.11.9.2.2.2.1",
+  "scope": "offline-baseline-restoration-fixture-repair",
+  "cause": "historical fake kubectl omitted Rollout JSON",
+  "fixture": {
+    "phase": "Healthy",
+    "abort": false,
+    "stableEqualsCurrent": true,
+    "applicationVersionNonEmpty": true
+  },
+  "focusedValidatorRunsInheritedRestorationTest": true,
+  "clusterMutation": false,
+  "awsMutation": false
+}

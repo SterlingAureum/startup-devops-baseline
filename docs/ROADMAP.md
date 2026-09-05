@@ -547,6 +547,12 @@ Incremental scope:
       and exact Git/runtime/failure evidence closure. Applying and validating
       the increment performs no live rehearsal; qualification requires the
       separately initiated operator run and retained private evidence.
+      - v0.11.9.2.2.2.1.1 isolates the fake AWS lifecycle from ambient operator
+        environment variables and the current local kind identity.
+      - v0.11.9.2.2.2.1 repairs the inherited offline Rollout fixture for the
+        runtime-qualified baseline restoration contract.
+      - v0.11.9.2.2.2 closes the baseline-restoration zero-traffic race and
+        prevents GitOps-only success from being reported as runtime restoration.
       - v0.11.9.2.2.1 repairs the observed empty fault-digest Application CRD
         normalization drift and replaces immediate Root status assertion with
         bounded exact-revision convergence. The successful first analysis and

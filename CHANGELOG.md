@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.11.9.2.2.2.1.1
+
+- Isolate the offline v0.9 AWS lifecycle fixture from ambient local-kind and
+  cloud identity variables such as `CLUSTER_NAME` and `AWS_ENVIRONMENT`.
+- Exercise that inherited lifecycle test from the focused restoration guard so
+  operator shell state cannot silently change its expected aws-test identity.
+
+## v0.11.9.2.2.2.1
+
+- Supply a Healthy Rollout response in the historical pre-merge restoration
+  fake Kubernetes client after v0.11.9.2.2.2 added runtime qualification.
+- Update the historical success assertion and make the focused traffic-guard
+  validator execute the inherited restoration regression directly.
+
+## v0.11.9.2.2.2
+
+- Prevent baseline restoration from reporting success when Argo CD is Synced
+  but the demo-api Rollout is paused, progressing, degraded or aborted.
+- Add an explicit two-terminal bounded-traffic observer for reviewed restoration
+  retry, second-analysis promotion and final runtime convergence.
+- Document that AnalysisRun queries Prometheus traffic metrics and does not
+  generate its own requests; zero eligible requests are a release rejection.
+
 ## v0.11.9.2.2.1
 
 - Omit the empty child fault-digest parameter that Application CRD

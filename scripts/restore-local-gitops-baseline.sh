@@ -103,7 +103,7 @@ sync_application_if_needed() {
   wait_for_comparison_ready "${application_name}"
 }
 
-for command_name in argocd kubectl; do
+for command_name in argocd jq kubectl; do
   require_cmd "${command_name}"
 done
 
@@ -204,5 +204,23 @@ if [ -n "${loki_service_ip_before}" ] \
     "deployment/${LOKI_GATEWAY_DEPLOYMENT}" --timeout="${WAIT_TIMEOUT_SECONDS}s"
 fi
 
-echo "${BASELINE_LABEL} restored."
-echo "Root and same-repository children use ${TARGET_REVISION}, local image parameters are empty, declarative local tracing parameters are retained when present, and Root automation is enabled."
+rollout_json="$(kubectl -n startup-apps get rollout demo-api -o json)"
+rollout_phase="$(jq -r '.status.phase // "Unknown"' <<<"${rollout_json}")"
+rollout_abort="$(jq -r '.status.abort // false' <<<"${rollout_json}")"
+rollout_version="$(jq -r '.metadata.annotations["platform.startup.dev/application-version"] // ""' <<<"${rollout_json}")"
+rollout_stable="$(jq -r '.status.stableRS // ""' <<<"${rollout_json}")"
+rollout_current="$(jq -r '.status.currentPodHash // ""' <<<"${rollout_json}")"
+
+if [ "${rollout_phase}" != "Healthy" ] || [ "${rollout_abort}" = "true" ] || \
+   [ -z "${rollout_stable}" ] || [ "${rollout_stable}" != "${rollout_current}" ]; then
+  echo "ERROR: GitOps baseline is Synced, but the demo-api runtime baseline is not restored." >&2
+  echo "Rollout phase=${rollout_phase} abort=${rollout_abort} version=${rollout_version:-<empty>} stableRS=${rollout_stable:-<empty>} currentPodHash=${rollout_current:-<empty>}" >&2
+  echo "Do not promote or retry without an armed bounded-traffic observer." >&2
+  echo "Use scripts/run-local-baseline-restoration-analysis.sh and the v0.11.9.2.2.2 runbook." >&2
+  kubectl -n startup-apps get rollout demo-api -o wide >&2 || true
+  kubectl -n startup-apps get analysisrun --sort-by=.metadata.creationTimestamp >&2 || true
+  exit 2
+fi
+
+echo "${BASELINE_LABEL} restored and runtime-qualified."
+echo "Root and same-repository children use ${TARGET_REVISION}; demo-api is Healthy on ${rollout_version}."

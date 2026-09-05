@@ -3,11 +3,19 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.2.2.2.1.1-offline-lifecycle-environment-isolation` prevents ambient
+local-kind or AWS shell variables from changing the fake aws-test lifecycle.
+Predecessor:
+`v0.11.9.2.2.2.1-baseline-restoration-fixture-repair` updates the inherited
+offline restoration fixture for the runtime-qualified success contract.
+`v0.11.9.2.2.2-baseline-restoration-traffic-guard` separates GitOps sync from
+runtime restoration and requires an armed bounded-traffic observer for each
+SLO-aware AnalysisRun. See
+`docs/V0.11.9.2.2.2_BASELINE_RESTORATION_TRAFFIC_GUARD.md`.
 `v0.11.9.2.2.1-empty-digest-gitops-convergence-repair` omits the normalized
 empty child fault-digest parameter, adds bounded exact-revision Root convergence
 and preserves non-empty armed rendering. See
 `docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md`.
-Predecessor:
 `v0.11.9.2.2-local-failure-recovery-live-qualification` adds read-only live
 plan discovery, explicit operator checkpoints, redaction-safe progress output
 and an exact final qualification summary. Applying or validating it performs no

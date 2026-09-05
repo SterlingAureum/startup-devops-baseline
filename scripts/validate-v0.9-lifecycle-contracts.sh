@@ -12,6 +12,15 @@ for command in bash python3; do
   }
 done
 
+# This validator supplies its own fake AWS, Terraform and Kubernetes clients.
+# Do not let an operator's local-kind or cloud shell variables alter the
+# identities asserted by the offline aws-test lifecycle fixtures.
+unset AWS_ENVIRONMENT AWS_REGION AWS_PROFILE AWS_DEFAULT_PROFILE
+unset CLUSTER_NAME ROOT_APPLICATION DEMO_APPLICATION DEMO_HOSTNAME
+unset ENVIRONMENT_SHORT PROJECT_NAME HOSTED_ZONE_NAME SOURCE_FILE TF_DIR
+unset EKS_CONTROL_PLANE_LOGGING_PROFILE EKS_CLUSTER_LOG_TYPES_JSON
+unset EKS_CLUSTER_LOG_RETENTION_DAYS
+
 python3 - "${ROOT_DIR}" <<'PY'
 from pathlib import Path
 import sys

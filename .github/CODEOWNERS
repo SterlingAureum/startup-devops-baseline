@@ -351,6 +351,14 @@
 /scripts/test-root-application-sync-convergence.sh @SterlingAureum
 /scripts/validate-v0.11.9.2.2.1-empty-digest-gitops-convergence-repair.sh @SterlingAureum
 /delivery/contracts/v0.11.9.2.2.1-empty-digest-gitops-convergence-repair.json @SterlingAureum
+/scripts/run-local-baseline-restoration-analysis.sh @SterlingAureum
+/scripts/validate-v0.11.9.2.2.2-baseline-restoration-traffic-guard.sh @SterlingAureum
+/docs/V0.11.9.2.2.2_BASELINE_RESTORATION_TRAFFIC_GUARD.md @SterlingAureum
+/delivery/contracts/v0.11.9.2.2.2-baseline-restoration-traffic-guard.json @SterlingAureum
+/docs/V0.11.9.2.2.2.1_BASELINE_RESTORATION_FIXTURE_REPAIR.md @SterlingAureum
+/delivery/contracts/v0.11.9.2.2.2.1-baseline-restoration-fixture-repair.json @SterlingAureum
+/docs/V0.11.9.2.2.2.1.1_OFFLINE_LIFECYCLE_ENVIRONMENT_ISOLATION.md @SterlingAureum
+/delivery/contracts/v0.11.9.2.2.2.1.1-offline-lifecycle-environment-isolation.json @SterlingAureum
 /docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum

@@ -1,0 +1,22 @@
+{
+  "version": "v0.11.9.2.2.2",
+  "scope": "local-baseline-restoration-traffic-guard",
+  "incidentRevisions": [66, 67],
+  "traffic": {
+    "producer": "scripts/check-local-slo-aware-rollout-analysis.sh",
+    "method": "GET",
+    "route": "/version",
+    "services": ["demo-api-stable", "demo-api-canary"],
+    "minimumEligibleRequests": 20,
+    "window": "5m"
+  },
+  "restoration": {
+    "gitOpsSyncIsNotRuntimeSuccess": true,
+    "healthyRequiredBeforeRestoredMessage": true,
+    "newAnalysisRunRequiredPerCheckpoint": true
+  },
+  "automaticPromote": false,
+  "automaticRetry": false,
+  "automaticAbort": false,
+  "awsMutation": false
+}

@@ -226,6 +226,23 @@ for ((index = 1; index <= $#; index++)); do
 done
 
 case "${resource}:${output}" in
+  rollout:json)
+    cat <<'JSON'
+{
+  "metadata": {
+    "annotations": {
+      "platform.startup.dev/application-version": "fixture-baseline"
+    }
+  },
+  "status": {
+    "phase": "Healthy",
+    "abort": false,
+    "stableRS": "fixture-hash",
+    "currentPodHash": "fixture-hash"
+  }
+}
+JSON
+    ;;
   application:*'.operation}'*)
     exit 0
     ;;
@@ -313,7 +330,7 @@ if ! (
   cat "${WORK_DIR}/feature.err" >&2
   exit 1
 fi
-grep -q 'Pre-merge feature baseline restored.' "${WORK_DIR}/feature.out"
+grep -q 'Pre-merge feature baseline restored and runtime-qualified.' "${WORK_DIR}/feature.out"
 grep -q "Resolved feature commit:   ${FEATURE_SHA}" "${WORK_DIR}/feature.out"
 grep -q "^    targetRevision: ${FEATURE_SHA}$" "${WORK_DIR}/feature-root.yaml"
 grep -A1 'name: demoApi.localImage.enabled' "${WORK_DIR}/feature-root.yaml" | grep -q 'value: "false"'

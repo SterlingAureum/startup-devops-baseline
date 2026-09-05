@@ -542,6 +542,11 @@ Incremental scope:
       same-binary identity checks, bounded Canary/stable traffic and explicit
       recovery phases with offline/mocked coverage. Producer validation performs
       no live fault; separately authorized execution is v0.11.9.2.2.
+    - v0.11.9.2.2 makes that local execution operator-ready with read-only plan
+      discovery, explicit manual abort/retry checkpoints, progress diagnostics
+      and exact Git/runtime/failure evidence closure. Applying and validating
+      the increment performs no live rehearsal; qualification requires the
+      separately initiated operator run and retained private evidence.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

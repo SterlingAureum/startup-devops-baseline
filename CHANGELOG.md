@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.9.2.2
+
+- Add read-only discovery of the exact pushed source and healthy local runtime
+  identity when preparing a private live failure/recovery plan.
+- Add redaction-safe phase, failure, log-path and manual-checkpoint status.
+- Bind final qualification to the reviewed failed AnalysisRun, restored
+  known-good imageID, fault-disabled runtime and synced Root/demo GitOps source.
+- Enforce reviewed whole-rehearsal and recovery time bounds at final closure.
+- Retain explicit manual abort/retry and phase confirmations; producer checks
+  execute no live fault, traffic, cluster mutation or AWS operation.
+
 ## v0.11.9.2.1
 
 - Add a default-disabled, local-only, token-gated `/version` availability fault.

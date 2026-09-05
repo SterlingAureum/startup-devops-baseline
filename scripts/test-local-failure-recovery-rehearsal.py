@@ -60,11 +60,15 @@ def fixture(candidate=False, aborted=False, restored=False):
                 'status': {'phase': 'Failed', 'metricResults': [
                     {'name': 'canary-availability-error-budget-burn-rate', 'phase': 'Failed',
                      'measurements': [{'value': '100'}]}]}}
+    applications = [{'metadata': {'name': name},
+                     'spec': {'source': {'repoURL': M.BASE.REPO, 'targetRevision': SHA}},
+                     'status': {'sync': {'revision': SHA, 'status': 'Synced'}}}
+                    for name in ('startup-devops-root', 'demo-api')]
     return {'rollout': rollout, 'pods': {'items': pods},
             'stable_service': {'spec': {'selector': {'rollouts-pod-template-hash': 'hash1'}}},
             'stable_endpoints': {'subsets': [{'addresses': [{'targetRef': {'uid': 'stable-pod'}}]}]},
             'analyses': {'items': [analysis] if candidate or restored else []},
-            'analysis_template': {'spec': {'metrics': []}}, 'applications': []}
+            'analysis_template': {'spec': {'metrics': []}}, 'applications': applications}
 
 
 def plan(bundle):
@@ -162,6 +166,9 @@ class Tests(unittest.TestCase):
                 M.execute(args)
                 self.assertEqual(command.call_count, 3)
             self.assertTrue(json.loads((bundle / 'final.passed.json').read_text())['runtime_qualified'])
+            qualification = json.loads((bundle / 'qualification.json').read_text())
+            self.assertTrue(qualification['runtime_qualified'])
+            self.assertEqual(qualification['failed_analysis_uid'], 'failed-analysis')
             self.assertEqual((bundle / 'fault-token.private').stat().st_mode & 0o777, 0o600)
             with self.assertRaisesRegex(ValueError, 'already passed'):
                 with patch.object(M.BASE, 'isolated', return_value=({}, 'cluster-uid', 'https://127.0.0.1:6443')), \

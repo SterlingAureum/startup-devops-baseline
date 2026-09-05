@@ -25,6 +25,10 @@ INCLUDE_TRACE_CORRELATION=false
 if [[ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json" ]]; then
   INCLUDE_TRACE_CORRELATION=true
 fi
+INCLUDE_FAILURE_RECOVERY=false
+if [[ -f "${ROOT_DIR}/delivery/contracts/v0.11.9.2.1-local-failure-recovery-runner.json" ]]; then
+  INCLUDE_FAILURE_RECOVERY=true
+fi
 
 python3 - "${ROOT_DIR}" <<'PY'
 from copy import deepcopy
@@ -244,6 +248,14 @@ YAML
         - name: release.applicationVersion
           value: v0.11.3-local
 YAML
+      if [ "${INCLUDE_FAILURE_RECOVERY:-false}" = true ]; then
+        cat <<'YAML'
+        - name: rehearsalFault.mode
+          value: disabled
+        - name: rehearsalFault.tokenSha256
+          value: ""
+YAML
+      fi
       if [ "${INCLUDE_TRACE_CORRELATION:-false}" = true ]; then
         cat <<'YAML'
         - name: telemetry.tracing.enabled
@@ -266,6 +278,7 @@ INCLUDE_LOGGING_APPS="${INCLUDE_LOGGING_APPS}" \
 INCLUDE_EVENTS_APP="${INCLUDE_EVENTS_APP}" \
   INCLUDE_TRACING_APPS="${INCLUDE_TRACING_APPS}" \
   INCLUDE_TRACE_CORRELATION="${INCLUDE_TRACE_CORRELATION}" \
+  INCLUDE_FAILURE_RECOVERY="${INCLUDE_FAILURE_RECOVERY}" \
   PATH="${WORK_DIR}/bin:${PATH}" \
   "${ROOT_DIR}/scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh" >/dev/null
 

@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.2.2-local-failure-recovery-live-qualification` adds read-only live
+plan discovery, explicit operator checkpoints, redaction-safe progress output
+and an exact final qualification summary. Applying or validating it performs no
+live rehearsal. See
+`docs/V0.11.9.2.2_LOCAL_FAILURE_RECOVERY_LIVE_QUALIFICATION.md`.
+Predecessor:
 `v0.11.9.2.1-local-failure-recovery-runner` implements a default-off,
 local-only token-gated candidate availability fault, bounded stable/canary
 traffic and explicit rejection/recovery phases. Producer checks are offline;

@@ -198,6 +198,17 @@ for marker in (
     '"outcome"',
 ):
     require(marker in main_source, f"Request logger lacks marker: {marker}")
+request_logging_source = main_source
+failure_recovery_successor = (
+    root / "delivery/contracts/v0.11.9.2.1-local-failure-recovery-runner.json"
+).is_file()
+if failure_recovery_successor:
+    allowed_fault_header_read = 'request.headers.get("X-Rehearsal-Fault")'
+    require(
+        main_source.count(allowed_fault_header_read) == 1,
+        "Expected exactly one reviewed fault-token Header read",
+    )
+    request_logging_source = main_source.replace(allowed_fault_header_read, "")
 for forbidden in (
     "request.query_params",
     "request.headers",
@@ -206,7 +217,7 @@ for forbidden in (
     "await request.body",
     "str(request.url)",
 ):
-    require(forbidden not in main_source, f"Request logger reads forbidden input: {forbidden}")
+    require(forbidden not in request_logging_source, f"Request logger reads forbidden input: {forbidden}")
 
 server = read("apps/demo-api/src/server.py")
 require("configure_logging()" in server, "Server does not configure JSON logging")

@@ -1,0 +1,41 @@
+{
+  "version": "v0.11.9.2.2",
+  "predecessor": "v0.11.9.2.1",
+  "scope": "operator-controlled-local-candidate-rejection-and-recovery-qualification",
+  "environment": "local-kind-loopback-only",
+  "producer_live_executed": false,
+  "runtime_qualified": false,
+  "plan_source": "read-only-healthy-runtime-discovery",
+  "required_phases": [
+    "prepare",
+    "arm",
+    "traffic",
+    "rejection-review",
+    "abort-check",
+    "recovery-approval",
+    "restore",
+    "final"
+  ],
+  "required_manual_checkpoints": [
+    "reviewed-rejection",
+    "abort-if-not-already-aborted",
+    "reviewed-recovery",
+    "retry-if-still-aborted"
+  ],
+  "final_evidence": {
+    "file": "qualification.json",
+    "exact_failed_analysis_uid": true,
+    "exact_source_commit": true,
+    "root_and_demo_gitops_synced": true,
+    "known_good_runtime_image_id": true,
+    "fault_disabled": true,
+    "bounded_rehearsal_and_recovery": true
+  },
+  "automatic_promote": false,
+  "automatic_retry": false,
+  "automatic_abort": false,
+  "automatic_rollback": false,
+  "automatic_cleanup": false,
+  "aws_mutation": false,
+  "next_checkpoint": "v0.11.9.3-environment-sequencing-review"
+}

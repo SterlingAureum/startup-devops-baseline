@@ -2,6 +2,7 @@
 """Explicit local candidate-rejection phases; never promotes or retries automatically."""
 import argparse
 from contextlib import ExitStack
+import datetime as dt
 import fcntl
 import hashlib
 import importlib.util
@@ -103,6 +104,9 @@ def failed_analysis(data, state):
         matches.append(analysis)
     BASE.require(matches, 'No release-bound candidate AnalysisRun exists')
     latest = sorted(matches, key=lambda item: item['metadata']['creationTimestamp'])[-1]
+    if state.get('failed_analysis_uid'):
+        BASE.require(latest['metadata']['uid'] == state['failed_analysis_uid'],
+                     'Reviewed failed AnalysisRun identity changed')
     BASE.require(latest.get('status', {}).get('phase') == 'Failed',
                  'Candidate AnalysisRun did not fail as required')
     results = latest['status'].get('metricResults', [])
@@ -114,6 +118,26 @@ def failed_analysis(data, state):
     BASE.require(not any(result.get('phase') in ('Error', 'Inconclusive') for result in results),
                  'Provider Error/Inconclusive is not an intentional SLO rejection')
     return latest['metadata']['uid']
+
+
+def elapsed_seconds(start, end=None):
+    start_value = dt.datetime.fromisoformat(start.replace('Z', '+00:00'))
+    end_value = (dt.datetime.now(dt.timezone.utc) if end is None else
+                 dt.datetime.fromisoformat(end.replace('Z', '+00:00')))
+    return (end_value - start_value).total_seconds()
+
+
+def assert_gitops_restored(data, source_commit):
+    applications = {item['metadata']['name']: item for item in data['applications']}
+    BASE.require(set(applications) == {'startup-devops-root', 'demo-api'},
+                 'Expected Root and demo-api GitOps Applications')
+    for name, application in applications.items():
+        source = application['spec']['source']
+        sync = application['status']['sync']
+        BASE.require(source['repoURL'] == BASE.REPO and
+                     source['targetRevision'] == source_commit and
+                     sync['revision'] == source_commit and sync['status'] == 'Synced',
+                     f'{name} GitOps source/sync was not restored')
 
 
 def wait_arm(env, plan, digest, timeout=180, poll=2):
@@ -249,9 +273,14 @@ def execute(args):
                 failed_analysis(data, state)
                 BASE.require(data['rollout'].get('status', {}).get('abort') is True,
                              'Recovery cannot be approved before abort is observed')
+                state['recovery_approved_at'] = BASE.now()
+                (bundle / 'state.json').write_text(json.dumps(state, indent=2))
             elif args.phase == 'restore':
                 BASE.require(data['rollout'].get('status', {}).get('abort') is True,
                              'Restore requires the reviewed aborted candidate state')
+                BASE.require(state.get('recovery_approved_at'), 'Recovery approval timestamp is absent')
+                state['restore_started_at'] = BASE.now()
+                (bundle / 'state.json').write_text(json.dumps(state, indent=2))
                 repository, tag = plan['baseline']['image_reference'].rsplit(':', 1)
                 env.update(TARGET_REVISION=plan['source_commit'], IMAGE_REPOSITORY=repository,
                            IMAGE_TAG=tag, APPLICATION_VERSION=plan['baseline']['application_version'],
@@ -265,6 +294,8 @@ def execute(args):
                 BASE.require(template_env(data, 'REHEARSAL_FAULT_MODE') == 'disabled' and
                              template_env(data, 'REHEARSAL_FAULT_TOKEN_SHA256') == '',
                              'GitOps desired fault-disabled configuration was not restored')
+                state['desired_baseline_restored_at'] = BASE.now()
+                (bundle / 'state.json').write_text(json.dumps(state, indent=2))
             elif args.phase == 'final':
                 BASE.healthy(data['rollout'])
                 BASE.stable_ready(data)
@@ -273,7 +304,28 @@ def execute(args):
                              identity['runtime_image_id'] == plan['baseline']['runtime_image_id'],
                              'Recovered binary differs from known-good baseline')
                 assert_fault_isolation(data, plan, '', False)
-                failed_analysis(data, state)
+                analysis_uid = failed_analysis(data, state)
+                assert_gitops_restored(data, plan['source_commit'])
+                finished_at = BASE.now()
+                whole_seconds = elapsed_seconds(state['prepared_at'], finished_at)
+                recovery_seconds = elapsed_seconds(state['recovery_approved_at'], finished_at)
+                BASE.require(whole_seconds <= plan['whole_rehearsal_max_seconds'],
+                             'Whole rehearsal exceeded its reviewed time bound')
+                BASE.require(recovery_seconds <= plan['recovery']['max_seconds'],
+                             'Recovery exceeded its reviewed time bound')
+                BASE.write(bundle / 'qualification.json', {
+                    'version': 'v0.11.9.2.2',
+                    'runtime_qualified': True,
+                    'environment': 'local',
+                    'source_commit': plan['source_commit'],
+                    'rollout_uid': plan['baseline']['rollout_uid'],
+                    'baseline_release_id': plan['baseline']['release_id'],
+                    'failed_analysis_uid': analysis_uid,
+                    'fault_mode': 'disabled',
+                    'whole_rehearsal_seconds': whole_seconds,
+                    'recovery_seconds': recovery_seconds,
+                    'finished_at': finished_at,
+                })
             if args.phase != 'prepare':
                 BASE.write(attempt / 'after.json', data)
             BASE.write(bundle / (args.phase + '.passed.json'),

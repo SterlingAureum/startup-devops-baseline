@@ -8,12 +8,16 @@ from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_
 
 from .database import database_enabled, database_health
 from .logging_config import emit_log
+from .rehearsal_fault import availability_failure_requested, validate_configuration
 from .tracing import finish_http_server_span, http_server_span
 
 APP_NAME = os.getenv("APP_NAME", "demo-api")
 APP_VERSION = os.getenv("APP_VERSION", "0.1.0")
 APP_ENV = os.getenv("APP_ENV", "local")
+REHEARSAL_FAULT_MODE = os.getenv("REHEARSAL_FAULT_MODE", "disabled")
+REHEARSAL_FAULT_TOKEN_SHA256 = os.getenv("REHEARSAL_FAULT_TOKEN_SHA256", "")
 START_TIME = time.time()
+validate_configuration(REHEARSAL_FAULT_MODE, REHEARSAL_FAULT_TOKEN_SHA256, APP_ENV)
 
 HTTP_REQUESTS = Counter(
     "demo_api_http_requests_total",
@@ -194,7 +198,13 @@ def db_health() -> Dict[str, Any]:
 
 
 @app.get("/version")
-def version() -> Dict[str, Any]:
+def version(request: Request) -> Dict[str, Any]:
+    if availability_failure_requested(
+        REHEARSAL_FAULT_MODE,
+        REHEARSAL_FAULT_TOKEN_SHA256,
+        request.headers.get("X-Rehearsal-Fault"),
+    ):
+        raise HTTPException(status_code=503, detail="Candidate availability rehearsal fault")
     return app_info()
 
 

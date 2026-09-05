@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.11.9.2.1
+
+- Add a default-disabled, local-only, token-gated `/version` availability fault.
+- Project reviewed fault mode/digest through the local Root and demo-api workload.
+- Add bounded candidate 503 traffic with simultaneous stable 200 controls.
+- Add append-only prepare/arm/rejection/review/restore/final runner phases.
+- Require exact measured burn-rate failure and Git/runtime baseline restoration.
+- Retain manual abort/retry/recovery decisions; no live rehearsal was executed.
+
 ## v0.11.9.2.0
 
 - Define a local-only candidate availability rejection and baseline restoration contract.

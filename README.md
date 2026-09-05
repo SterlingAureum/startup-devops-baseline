@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.2.1-local-failure-recovery-runner` implements a default-off,
+local-only token-gated candidate availability fault, bounded stable/canary
+traffic and explicit rejection/recovery phases. Producer checks are offline;
+live execution is deferred. See
+`docs/V0.11.9.2.1_LOCAL_FAILURE_RECOVERY_RUNNER.md`.
+Predecessor:
 `v0.11.9.2.0-local-failure-recovery-design` defines the offline-only,
 candidate-scoped availability rejection and known-good GitOps restoration
 contract. It implements and executes no fault. See

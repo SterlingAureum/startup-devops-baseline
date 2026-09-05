@@ -333,6 +333,14 @@
 /scripts/check-v0.11.9.2.0-failure-recovery-plan.py @SterlingAureum
 /scripts/test-v0.11.9.2.0-failure-recovery-plan.py @SterlingAureum
 /scripts/validate-v0.11.9.2.0-local-failure-recovery-design.sh @SterlingAureum
+/delivery/contracts/v0.11.9.2.1-local-failure-recovery-runner.json @SterlingAureum
+/docs/V0.11.9.2.1_LOCAL_FAILURE_RECOVERY_RUNNER.md @SterlingAureum
+/apps/demo-api/src/rehearsal_fault.py @SterlingAureum
+/apps/demo-api/tests/test_rehearsal_fault.py @SterlingAureum
+/scripts/local-failure-recovery-rehearsal.py @SterlingAureum
+/scripts/run-local-candidate-rejection-traffic.sh @SterlingAureum
+/scripts/test-local-failure-recovery-rehearsal.py @SterlingAureum
+/scripts/validate-v0.11.9.2.1-local-failure-recovery-runner.sh @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum
 /scripts/test-aws-prod-observability.py @SterlingAureum

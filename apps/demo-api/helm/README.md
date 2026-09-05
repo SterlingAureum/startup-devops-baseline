@@ -97,6 +97,11 @@ commit, and image digest from each selected Pod. Pod metadata is intentional:
 during a Canary, the stable and canary Services can select different
 ReplicaSets and must not receive one Service-level release identity.
 
+`rehearsalFault.mode` defaults to `disabled` and its token digest defaults to
+empty. The local Root may set these two values only for the reviewed
+v0.11.9.2 candidate-rejection runner. Application startup rejects enabled mode
+outside `APP_ENV=local`; ordinary deployment and probe behavior remain unchanged.
+
 Configure bounded discovery under:
 
 ```yaml

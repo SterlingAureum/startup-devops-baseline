@@ -116,9 +116,16 @@ curl http://localhost:8080/health
 | `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | private future Collector URL | OTLP/HTTP trace endpoint; ignored while tracing is disabled |
 | `OTEL_EXPORTER_OTLP_PROTOCOL` | `http/protobuf` | Only accepted trace export protocol |
 | `OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` | `5` | Export timeout in seconds; maximum 30 |
+| `REHEARSAL_FAULT_MODE` | `disabled` | Local-only reviewed candidate rejection mode; do not enable in normal service operation |
+| `REHEARSAL_FAULT_TOKEN_SHA256` | empty | SHA-256 of the private per-run header token; must remain empty while fault mode is disabled |
 
 The local environment leaves database integration disabled. The AWS Helm values
 enable it and reference `startup-apps/demo-api-postgresql`.
+
+The rehearsal fault gate is not a general chaos endpoint. Enabled mode is
+accepted only for `APP_ENV=local`; only an exact private `X-Rehearsal-Fault`
+token affects `/version`. See
+`docs/V0.11.9.2.1_LOCAL_FAILURE_RECOVERY_RUNNER.md` before any use.
 
 ## Internal Marker CLI
 

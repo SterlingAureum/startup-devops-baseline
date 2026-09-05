@@ -182,17 +182,22 @@ for marker in (
 require("directory:" not in root_app, "Root still treats the platform Chart as a raw directory")
 require(re.search(r"^    targetRevision: HEAD$", root_app, re.MULTILINE) is not None, "Stable Root HEAD missing")
 root_parameter_names = re.findall(r"^        - name: (\S+)$", root_app, re.MULTILINE)
+expected_root_parameter_names = [
+    "git.repoURL",
+    "git.targetRevision",
+    "demoApi.localImage.enabled",
+    "demoApi.localImage.repository",
+    "demoApi.localImage.tag",
+    "demoApi.localImage.pullPolicy",
+    "demoApi.localImage.applicationVersion",
+]
+if (root / "delivery/contracts/v0.11.9.2.1-local-failure-recovery-runner.json").is_file():
+    expected_root_parameter_names.extend([
+        "demoApi.rehearsalFault.mode",
+        "demoApi.rehearsalFault.tokenSha256",
+    ])
 require(
-    root_parameter_names
-    == [
-        "git.repoURL",
-        "git.targetRevision",
-        "demoApi.localImage.enabled",
-        "demoApi.localImage.repository",
-        "demoApi.localImage.tag",
-        "demoApi.localImage.pullPolicy",
-        "demoApi.localImage.applicationVersion",
-    ],
+    root_parameter_names == expected_root_parameter_names,
     "Root Helm parameter allowlist changed",
 )
 
@@ -500,6 +505,12 @@ case "${resource}:${output}" in
   application:*'demoApi.localImage.enabled'*)
     printf '%s' 'true'
     ;;
+  application:*'demoApi.rehearsalFault.mode'*)
+    printf '%s' 'disabled'
+    ;;
+  application:*'demoApi.rehearsalFault.tokenSha256'*)
+    exit 0
+    ;;
   application:*'.spec.syncPolicy.automated}'*)
     exit 0
     ;;
@@ -510,6 +521,8 @@ case "${resource}:${output}" in
         image.tag \
         image.pullPolicy \
         release.applicationVersion \
+        rehearsalFault.mode \
+        rehearsalFault.tokenSha256 \
         telemetry.tracing.enabled \
         telemetry.tracing.endpoint \
         telemetry.tracing.protocol \
@@ -569,7 +582,8 @@ if command -v helm >/dev/null 2>&1; then
     "${ROOT_DIR}/delivery/contracts/v0.11.6.1.1-local-loki-alloy-pod-logs.json" \
     "${ROOT_DIR}/delivery/contracts/v0.11.6.1.2-kubernetes-events-grafana-loki.json" \
     "${ROOT_DIR}/delivery/contracts/v0.11.6.2.1-private-local-otel-collector-tempo-runtime.json" \
-    "${ROOT_DIR}/delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json" <<'PY'
+    "${ROOT_DIR}/delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json" \
+    "${ROOT_DIR}/delivery/contracts/v0.11.9.2.1-local-failure-recovery-runner.json" <<'PY'
 from pathlib import Path
 import re
 import sys
@@ -584,6 +598,7 @@ logging_runtime_successor = Path(sys.argv[6]).is_file()
 events_runtime_successor = Path(sys.argv[7]).is_file()
 tracing_runtime_successor = Path(sys.argv[8]).is_file()
 trace_correlation_successor = Path(sys.argv[9]).is_file()
+failure_recovery_successor = Path(sys.argv[10]).is_file()
 
 
 def require(condition: bool, message: str) -> None:
@@ -654,16 +669,32 @@ tracing_parameters = [
     "telemetry.tracing.protocol",
     "telemetry.tracing.timeoutSeconds",
 ]
+fault_parameters = []
+if failure_recovery_successor:
+    fault_parameters = ["rehearsalFault.mode", "rehearsalFault.tokenSha256"]
 if trace_correlation_successor:
     require(stable_parameter_names == tracing_parameters, "Stable demo-api tracing parameter allowlist changed")
     require(
-        parameter_names == ["image.repository", "image.tag", "image.pullPolicy", "release.applicationVersion", *tracing_parameters],
+        parameter_names == [
+            "image.repository",
+            "image.tag",
+            "image.pullPolicy",
+            "release.applicationVersion",
+            *fault_parameters,
+            *tracing_parameters,
+        ],
         "Feature demo-api parameter allowlist changed",
     )
 else:
     require("parameters: []" in stable_apps["demo-api"], "Stable demo-api parameters are not explicit empty")
     require(
-        parameter_names == ["image.repository", "image.tag", "image.pullPolicy", "release.applicationVersion"],
+        parameter_names == [
+            "image.repository",
+            "image.tag",
+            "image.pullPolicy",
+            "release.applicationVersion",
+            *fault_parameters,
+        ],
         "Feature demo-api parameter allowlist changed",
     )
 

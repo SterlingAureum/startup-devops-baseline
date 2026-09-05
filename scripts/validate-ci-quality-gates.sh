@@ -263,6 +263,9 @@ echo "==> Validating v0.11.9.1.1 local release rehearsal stability"
 echo "==> Validating v0.11.9.2.0 local failure/recovery design"
 "${ROOT_DIR}/scripts/validate-v0.11.9.2.0-local-failure-recovery-design.sh"
 
+echo "==> Validating v0.11.9.2.1 local failure/recovery runner"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.1-local-failure-recovery-runner.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

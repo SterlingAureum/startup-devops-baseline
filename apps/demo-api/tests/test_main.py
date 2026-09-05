@@ -11,6 +11,12 @@ from src import main
 
 class ApplicationEndpointTests(unittest.TestCase):
     @staticmethod
+    def request(path: str = "/version", fault_token: str | None = None) -> Request:
+        headers = [] if fault_token is None else [(b"x-rehearsal-fault", fault_token.encode())]
+        return Request({"type": "http", "method": "GET", "path": path,
+                        "headers": headers, "route": type("Route", (), {"path": path})()})
+
+    @staticmethod
     def record_http_request(
         method: str,
         status_code: int,
@@ -35,6 +41,20 @@ class ApplicationEndpointTests(unittest.TestCase):
 
     def test_health_reports_ok(self) -> None:
         self.assertEqual(main.health(), {"status": "ok"})
+
+    def test_version_fault_requires_mode_and_exact_token(self) -> None:
+        with patch.object(main, 'REHEARSAL_FAULT_MODE', 'availability-503'), \
+                patch.object(main, 'REHEARSAL_FAULT_TOKEN_SHA256', 'a' * 64), \
+                patch('src.main.availability_failure_requested', return_value=True) as requested:
+            with self.assertRaises(HTTPException) as raised:
+                main.version(self.request(fault_token='private'))
+        self.assertEqual(raised.exception.status_code, 503)
+        requested.assert_called_once_with('availability-503', 'a' * 64, 'private')
+
+    def test_version_without_matching_fault_is_healthy(self) -> None:
+        with patch('src.main.availability_failure_requested', return_value=False):
+            response = main.version(self.request())
+        self.assertEqual(response['version'], main.APP_VERSION)
 
     def test_root_includes_service_identity(self) -> None:
         response = main.root()

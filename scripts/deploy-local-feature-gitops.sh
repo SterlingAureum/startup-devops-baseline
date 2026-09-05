@@ -13,6 +13,8 @@ TARGET_REVISION="${TARGET_REVISION:-}"
 IMAGE_REPOSITORY="${IMAGE_REPOSITORY:-startup-devops-baseline/demo-api}"
 IMAGE_TAG="${IMAGE_TAG:-}"
 APPLICATION_VERSION="${APPLICATION_VERSION:-${IMAGE_TAG}}"
+REHEARSAL_FAULT_MODE="${REHEARSAL_FAULT_MODE:-disabled}"
+REHEARSAL_FAULT_TOKEN_SHA256="${REHEARSAL_FAULT_TOKEN_SHA256:-}"
 EXPECTED_PROMETHEUS_ADDRESS="${EXPECTED_PROMETHEUS_ADDRESS:-http://observability-metrics-prometheus.observability.svc.cluster.local:9090}"
 EXPECTED_CHART_VERSION="${EXPECTED_CHART_VERSION:-}"
 WAIT_TIMEOUT_SECONDS="${WAIT_TIMEOUT_SECONDS:-180}"
@@ -128,6 +130,8 @@ IMAGE_REPOSITORY="${IMAGE_REPOSITORY}" \
 IMAGE_TAG="${IMAGE_TAG}" \
 IMAGE_PULL_POLICY=Never \
 APPLICATION_VERSION="${APPLICATION_VERSION}" \
+REHEARSAL_FAULT_MODE="${REHEARSAL_FAULT_MODE}" \
+REHEARSAL_FAULT_TOKEN_SHA256="${REHEARSAL_FAULT_TOKEN_SHA256}" \
 REPO_URL="${REPO_URL}" \
   "${ROOT_DIR}/scripts/deploy-root-app.sh"
 
@@ -172,12 +176,23 @@ expected_helm_parameter_names="$(printf '%s\n' \
   image.repository \
   image.tag \
   release.applicationVersion \
+  rehearsalFault.mode \
+  rehearsalFault.tokenSha256 \
   telemetry.tracing.enabled \
   telemetry.tracing.endpoint \
   telemetry.tracing.protocol \
   telemetry.tracing.timeoutSeconds \
   | sort)"
 assert_equals "${sorted_helm_parameter_names}" "${expected_helm_parameter_names}" "demo-api Root-rendered Helm parameter allowlist"
+
+assert_equals \
+  "$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.spec.source.helm.parameters[?(@.name=="demoApi.rehearsalFault.mode")].value}')" \
+  "${REHEARSAL_FAULT_MODE}" \
+  "Root-rendered rehearsal fault mode"
+assert_equals \
+  "$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.spec.source.helm.parameters[?(@.name=="demoApi.rehearsalFault.tokenSha256")].value}')" \
+  "${REHEARSAL_FAULT_TOKEN_SHA256}" \
+  "Root-rendered rehearsal fault token digest"
 
 chart_label="$(kubectl -n "${APP_NAMESPACE}" get rollout "${DEMO_APP_NAME}" -o jsonpath='{.metadata.labels.helm\.sh/chart}')"
 assert_equals "${chart_label}" "demo-api-${EXPECTED_CHART_VERSION}" "deployed demo-api Chart"

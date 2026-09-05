@@ -9,6 +9,10 @@ image:
 release:
   applicationVersion: "sha-3e50802"
 
+rehearsalFault:
+  mode: disabled
+  tokenSha256: ""
+
 delivery:
   sourceRepository: ""
   sourceCommit: ""

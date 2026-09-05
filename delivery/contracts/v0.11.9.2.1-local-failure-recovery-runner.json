@@ -1,0 +1,42 @@
+{
+  "version": "v0.11.9.2.1",
+  "predecessor": "v0.11.9.2.0",
+  "scope": "reviewed-local-candidate-rejection-and-recovery-implementation",
+  "environment": "local-kind-loopback-only",
+  "live_executed_by_producer": false,
+  "runtime_qualified": false,
+  "fault": {
+    "default": "disabled",
+    "enabled_mode": "availability-503",
+    "route": "/version",
+    "header": "X-Rehearsal-Fault",
+    "token_storage": "private-bundle-mode-0600",
+    "token_in_process_arguments": false,
+    "non_local_enabled_mode_rejected": true
+  },
+  "traffic": {
+    "candidate_service": "demo-api-canary",
+    "stable_control_service": "demo-api-stable",
+    "maximum_request_pairs": 80,
+    "maximum_analysis_wait_seconds": 180,
+    "expected_candidate_status": 503,
+    "expected_stable_status": 200
+  },
+  "phases": [
+    "prepare",
+    "arm",
+    "traffic",
+    "rejection-review",
+    "abort-check",
+    "recovery-approval",
+    "restore",
+    "final"
+  ],
+  "automatic_promote": false,
+  "automatic_retry": false,
+  "automatic_abort": false,
+  "automatic_rollback": false,
+  "automatic_cleanup": false,
+  "aws_mutation": false,
+  "live_checkpoint": "v0.11.9.2.2-separately-authorized-local-execution"
+}

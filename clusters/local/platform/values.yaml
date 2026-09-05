@@ -9,6 +9,9 @@ demoApi:
     tag: ""
     pullPolicy: Never
     applicationVersion: ""
+  rehearsalFault:
+    mode: disabled
+    tokenSha256: ""
   tracing:
     enabled: true
     endpoint: http://observability-otel-collector.observability.svc.cluster.local:4318/v1/traces

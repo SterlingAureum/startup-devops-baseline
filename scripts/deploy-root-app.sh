@@ -14,6 +14,8 @@ IMAGE_REPOSITORY="${IMAGE_REPOSITORY:-startup-devops-baseline/demo-api}"
 IMAGE_TAG="${IMAGE_TAG:-}"
 IMAGE_PULL_POLICY="${IMAGE_PULL_POLICY:-Never}"
 APPLICATION_VERSION="${APPLICATION_VERSION:-${IMAGE_TAG}}"
+REHEARSAL_FAULT_MODE="${REHEARSAL_FAULT_MODE:-disabled}"
+REHEARSAL_FAULT_TOKEN_SHA256="${REHEARSAL_FAULT_TOKEN_SHA256:-}"
 ROOT_SYNC_MODE="${ROOT_SYNC_MODE:-}"
 REQUIRED_ROOT_SOURCE_PATH="${REQUIRED_ROOT_SOURCE_PATH:-clusters/local/platform/Chart.yaml}"
 
@@ -86,6 +88,29 @@ if [ "${LOCAL_IMAGE_ENABLED}" = "true" ] && { [ -z "${IMAGE_TAG}" ] || [ -z "${A
   exit 1
 fi
 
+case "${REHEARSAL_FAULT_MODE}" in
+  disabled)
+    [ -z "${REHEARSAL_FAULT_TOKEN_SHA256}" ] || {
+      echo "ERROR: disabled rehearsal fault mode must not retain a token digest." >&2
+      exit 1
+    }
+    ;;
+  availability-503)
+    [ "${LOCAL_IMAGE_ENABLED}" = "true" ] || {
+      echo "ERROR: rehearsal fault mode is supported only for an explicit local image." >&2
+      exit 1
+    }
+    [[ "${REHEARSAL_FAULT_TOKEN_SHA256}" =~ ^[0-9a-f]{64}$ ]] || {
+      echo "ERROR: enabled rehearsal fault mode requires a lowercase SHA-256 token digest." >&2
+      exit 1
+    }
+    ;;
+  *)
+    echo "ERROR: REHEARSAL_FAULT_MODE must be disabled or availability-503." >&2
+    exit 1
+    ;;
+esac
+
 case "${ROOT_SYNC_MODE}" in
   automated|manual) ;;
   *)
@@ -142,7 +167,9 @@ awk \
   -v image_repository="${IMAGE_REPOSITORY}" \
   -v image_tag="${IMAGE_TAG}" \
   -v image_pull_policy="${IMAGE_PULL_POLICY}" \
-  -v application_version="${APPLICATION_VERSION}" '
+  -v application_version="${APPLICATION_VERSION}" \
+  -v rehearsal_fault_mode="${REHEARSAL_FAULT_MODE}" \
+  -v rehearsal_fault_token_sha256="${REHEARSAL_FAULT_TOKEN_SHA256}" '
   $0 == "        - name: git.repoURL" {
     print
     getline
@@ -183,6 +210,18 @@ awk \
     print
     getline
     print "          value: \"" application_version "\""
+    next
+  }
+  $0 == "        - name: demoApi.rehearsalFault.mode" {
+    print
+    getline
+    print "          value: \"" rehearsal_fault_mode "\""
+    next
+  }
+  $0 == "        - name: demoApi.rehearsalFault.tokenSha256" {
+    print
+    getline
+    print "          value: \"" rehearsal_fault_token_sha256 "\""
     next
   }
   { print }

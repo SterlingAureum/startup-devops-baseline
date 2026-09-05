@@ -25,6 +25,10 @@ spec:
           value: {{ .Values.demoApi.localImage.pullPolicy | quote }}
         - name: release.applicationVersion
           value: {{ .Values.demoApi.localImage.applicationVersion | quote }}
+        - name: rehearsalFault.mode
+          value: {{ .Values.demoApi.rehearsalFault.mode | quote }}
+        - name: rehearsalFault.tokenSha256
+          value: {{ .Values.demoApi.rehearsalFault.tokenSha256 | quote }}
 {{ else }}
       parameters:
 {{ end }}

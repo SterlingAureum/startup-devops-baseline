@@ -106,6 +106,10 @@ spec:
             {{- end }}
             - name: APP_VERSION
               value: {{ required "release.applicationVersion is required" .Values.release.applicationVersion | quote }}
+            - name: REHEARSAL_FAULT_MODE
+              value: {{ required "rehearsalFault.mode is required" .Values.rehearsalFault.mode | quote }}
+            - name: REHEARSAL_FAULT_TOKEN_SHA256
+              value: {{ .Values.rehearsalFault.tokenSha256 | quote }}
             {{- include "demo-api.deliveryEnvironment" . | nindent 12 }}
             - name: DATABASE_ENABLED
               value: {{ .Values.database.enabled | quote }}

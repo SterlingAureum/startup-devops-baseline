@@ -3,6 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.2.2.3.2-recovery-rollout-closure` records the successful local
+revision 68 recovery, canonical kubectl plugin command ordering and the
+observer-before-promote contract.
+Predecessor:
 `v0.11.9.2.2.3.1-successor-aware-target-query` preserves the historical
 no-data contract while validating the current release-scoped target query.
 Predecessor:

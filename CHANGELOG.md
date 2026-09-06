@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.11.9.2.2.3.2
+
+- Record the accepted local revision 68 recovery identity and its two
+  successful release-scoped AnalysisRuns.
+- Fix the operator command contract so kubectl plugin flags follow
+  `argo rollouts`, and retain the rejected form as explicit troubleshooting.
+- Require the second bounded-traffic observer to be active before the single
+  human promotion; preserve older failed AnalysisRuns as evidence.
+
 ## v0.11.9.2.2.3.1
 
 - Preserve the historical v0.11.3.2 contract while making its current-template

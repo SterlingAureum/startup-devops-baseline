@@ -281,6 +281,9 @@ echo "==> Validating v0.11.9.2.2.3 Prometheus identity and traffic lifetime"
 echo "==> Validating v0.11.9.2.2.3.1 successor-aware target query"
 "${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.1-successor-aware-target-query.sh"
 
+echo "==> Validating v0.11.9.2.2.3.2 recovery Rollout closure"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.2-recovery-rollout-closure.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

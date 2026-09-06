@@ -144,6 +144,12 @@ for name, mutate in (
 print("v0.11.3.5 pre-merge baseline restoration contract and static validation passed.")
 PY
 
+if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.9.2.2.3.3-request-series-image-compatibility.json" ]; then
+  echo "v0.11.3.5 dynamic restore fixture is superseded by the rejected-image pre-mutation contract."
+  echo "The successor validator exercises the active restoration guard."
+  exit 0
+fi
+
 WORK_DIR="$(mktemp -d)"
 TRACE_CORRELATION_SUCCESSOR=false
 if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json" ]; then

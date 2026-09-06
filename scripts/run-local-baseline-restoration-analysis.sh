@@ -34,6 +34,17 @@ trap 'rm -rf -- "${work_dir}"' EXIT
 kubectl config view --raw --minify --context "${LOCAL_CONTEXT}" >"${work_dir}/kubeconfig"
 export KUBECONFIG="${work_dir}/kubeconfig"
 
+excluded_uids="$(kubectl -n "${APP_NAMESPACE}" get analysisrun -o json | jq -c '[.items[].metadata.uid]')"
+
+if [ "${PHASE}" = first-analysis ]; then
+  echo "ACTION SIGNAL: observer armed before restoration; now execute exactly one reviewed restore in terminal 1."
+  echo "Only an AnalysisRun created after this observer started can satisfy it."
+  MINIMUM_MATCHING_ANALYSIS_RUNS=1 \
+  ANALYSIS_RUN_EXCLUDED_UIDS_JSON="${excluded_uids}" \
+  EXPECTED_APPLICATION_VERSION="${EXPECTED_APPLICATION_VERSION}" \
+    exec "${ROOT_DIR}/scripts/check-local-slo-aware-rollout-analysis.sh"
+fi
+
 rollout_json="$(kubectl -n "${APP_NAMESPACE}" get rollout "${ROLLOUT_NAME}" -o json)"
 observed_version="$(jq -r '.metadata.annotations["platform.startup.dev/application-version"] // ""' <<<"${rollout_json}")"
 [ "${observed_version}" = "${EXPECTED_APPLICATION_VERSION}" ] \
@@ -46,24 +57,14 @@ if [ "${PHASE}" = final ]; then
     exec "${ROOT_DIR}/scripts/check-local-slo-progressive-delivery-closure.sh"
 fi
 
-release_id="$(jq -r '.metadata.annotations["platform.startup.dev/release-id"] // ""' <<<"${rollout_json}")"
-[ -n "${release_id}" ] || fail "Rollout release-id is empty"
-existing_count="$(kubectl -n "${APP_NAMESPACE}" get analysisrun -o json | jq --arg release_id "${release_id}" '
-  [.items[] | select(any(.spec.args[]?; .name == "expected-release-id" and .value == $release_id))] | length')"
-required_count=$((existing_count + 1))
+rollout_phase="$(jq -r '.status.phase // "Unknown"' <<<"${rollout_json}")"
+rollout_step="$(jq -r '.status.currentStepIndex // -1' <<<"${rollout_json}")"
+[ "${rollout_phase}" = Paused ] && [ "${rollout_step}" = 4 ] \
+  || fail "second-analysis requires the reviewed 50% pause (observed phase=${rollout_phase}, step=${rollout_step})"
+echo "ACTION SIGNAL: wait for 'Generating bounded traffic' and release-scoped request-metric readiness below, then promote exactly once in terminal 1."
+echo "Only an AnalysisRun created after this observer started can satisfy it."
 
-if [ "${PHASE}" = first-analysis ]; then
-  echo "ACTION SIGNAL: keep this observer running, then in terminal 1 execute exactly one reviewed restore or Rollout retry."
-  echo "This observer requires a new AnalysisRun ${required_count}; earlier failed runs cannot satisfy it."
-else
-  rollout_phase="$(jq -r '.status.phase // "Unknown"' <<<"${rollout_json}")"
-  rollout_step="$(jq -r '.status.currentStepIndex // -1' <<<"${rollout_json}")"
-  [ "${rollout_phase}" = Paused ] && [ "${rollout_step}" = 4 ] \
-    || fail "second-analysis requires the reviewed 50% pause (observed phase=${rollout_phase}, step=${rollout_step})"
-  echo "ACTION SIGNAL: wait for 'Generating bounded traffic' below, then promote exactly once in terminal 1."
-  echo "This observer requires a new AnalysisRun ${required_count}; earlier failed runs cannot satisfy it."
-fi
-
-MINIMUM_MATCHING_ANALYSIS_RUNS="${required_count}" \
+MINIMUM_MATCHING_ANALYSIS_RUNS=1 \
+ANALYSIS_RUN_EXCLUDED_UIDS_JSON="${excluded_uids}" \
 EXPECTED_APPLICATION_VERSION="${EXPECTED_APPLICATION_VERSION}" \
   exec "${ROOT_DIR}/scripts/check-local-slo-aware-rollout-analysis.sh"

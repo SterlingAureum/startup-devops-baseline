@@ -3,6 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.2.2.3.3-request-series-image-compatibility` distinguishes target
+readiness from request-series readiness, selects only post-observer
+AnalysisRuns, and blocks the revision 69 rejected baseline image before restore.
+Predecessor:
 `v0.11.9.2.2.3.2-recovery-rollout-closure` records the successful local
 revision 68 recovery, canonical kubectl plugin command ordering and the
 observer-before-promote contract.

@@ -28,13 +28,18 @@ for marker in (
 assert restore.index('if [ "${rollout_phase}" != "Healthy" ]') < restore.index('restored and runtime-qualified')
 
 observer = Path('scripts/run-local-baseline-restoration-analysis.sh').read_text()
-for marker in (
+markers = [
     'first-analysis|second-analysis|final',
     'observe-reviewed-local-baseline-recovery',
-    'required_count=$((existing_count + 1))',
-    'MINIMUM_MATCHING_ANALYSIS_RUNS="${required_count}"',
     "Generating bounded traffic", 'CLOSURE_PHASE=final',
-):
+]
+if Path('delivery/contracts/v0.11.9.2.2.3.3-request-series-image-compatibility.json').exists():
+    markers.extend(('ANALYSIS_RUN_EXCLUDED_UIDS_JSON',
+                    'Only an AnalysisRun created after this observer started'))
+else:
+    markers.extend(('required_count=$((existing_count + 1))',
+                    'MINIMUM_MATCHING_ANALYSIS_RUNS="${required_count}"'))
+for marker in markers:
     assert marker in observer, marker
 for forbidden in ('rollouts promote', 'rollouts retry', 'rollouts abort'):
     assert forbidden not in observer, forbidden

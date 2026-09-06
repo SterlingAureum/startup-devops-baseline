@@ -547,6 +547,9 @@ Incremental scope:
       and exact Git/runtime/failure evidence closure. Applying and validating
       the increment performs no live rehearsal; qualification requires the
       separately initiated operator run and retained private evidence.
+      - v0.11.9.2.2.3.3 records revision 69 request-series incompatibility,
+        adds post-observer AnalysisRun selection and blocks the rejected image
+        until a compatible immutable baseline is published.
       - v0.11.9.2.2.3.2 records the accepted revision 68 recovery closure,
         canonical kubectl plugin syntax and observer-before-promote contract.
       - v0.11.9.2.2.3.1 makes the historical no-data validator successor-aware

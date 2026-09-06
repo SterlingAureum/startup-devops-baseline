@@ -1,0 +1,16 @@
+{
+  "version": "v0.11.9.2.2.3.3",
+  "incidentRevision": 69,
+  "rejectedBaselineImageTag": "sha-3e50802",
+  "failure": "target-up-with-empty-release-scoped-request-series",
+  "repair": {
+    "requestSeriesReadinessRequired": true,
+    "newAnalysisRunSelectedByObserverStartSnapshot": true,
+    "historicalOrdinalSelectionRemovedFromRestorationRunner": true,
+    "knownIncompatibleBaselineRejectedBeforeKubernetesMutation": true,
+    "compatibleImmutableImageRequiredBeforeRestoration": true
+  },
+  "automaticPromote": false,
+  "automaticRetry": false,
+  "clusterMutationDuringValidation": false
+}

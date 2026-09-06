@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.11.9.2.2.3.3
+
+- Require positive release-scoped Candidate request metrics in addition to an
+  identity-matching Prometheus target before accepting an observer as armed.
+- Select restoration AnalysisRuns from a per-observer UID snapshot instead of
+  historical release-ID ordinals, allowing first-analysis to arm before deploy.
+- Reject the live-proven incompatible `sha-3e50802` baseline before Kubernetes
+  restoration and require a newly published compatible immutable image.
+
 ## v0.11.9.2.2.3.2
 
 - Record the accepted local revision 68 recovery identity and its two

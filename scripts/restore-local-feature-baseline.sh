@@ -44,6 +44,19 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
   exit 1
 fi
 
+baseline_image_tag="$(awk '
+  /^image:/ { in_image=1; next }
+  in_image && /^[^[:space:]]/ { exit }
+  in_image && $1 == "tag:" { gsub(/\"/, "", $2); print $2; exit }
+' "${ROOT_DIR}/apps/demo-api/helm/values.yaml")"
+if [ "${baseline_image_tag}" = "sha-3e50802" ]; then
+  echo "ERROR: baseline image ${baseline_image_tag} was rejected by live revision 69." >&2
+  echo "Its Candidate target was up, but release-scoped request metrics remained empty." >&2
+  echo "Publish and declare a telemetry-compatible immutable image before restoration." >&2
+  echo "No Kubernetes restoration operation was started." >&2
+  exit 1
+fi
+
 echo "Requested feature revision: ${TARGET_REVISION}"
 echo "Resolved feature commit:   ${resolved_target_revision}"
 

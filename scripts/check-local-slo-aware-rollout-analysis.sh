@@ -11,10 +11,12 @@ ANALYSIS_TIMEOUT_SECONDS="${ANALYSIS_TIMEOUT_SECONDS:-300}"
 ROLLOUT_WAIT_SECONDS="${ROLLOUT_WAIT_SECONDS:-300}"
 CANARY_IDENTITY_WAIT_SECONDS="${CANARY_IDENTITY_WAIT_SECONDS:-120}"
 PROMETHEUS_TARGET_WAIT_SECONDS="${PROMETHEUS_TARGET_WAIT_SECONDS:-180}"
+PROMETHEUS_REQUEST_SERIES_WAIT_SECONDS="${PROMETHEUS_REQUEST_SERIES_WAIT_SECONDS:-60}"
 PROMETHEUS_NAMESPACE="${PROMETHEUS_NAMESPACE:-observability}"
 PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
 MINIMUM_MATCHING_ANALYSIS_RUNS="${MINIMUM_MATCHING_ANALYSIS_RUNS:-1}"
 EXPECTED_APPLICATION_VERSION="${EXPECTED_APPLICATION_VERSION:-}"
+ANALYSIS_RUN_EXCLUDED_UIDS_JSON="${ANALYSIS_RUN_EXCLUDED_UIDS_JSON:-[]}"
 ANALYSIS_RUN_FIXTURE="${ANALYSIS_RUN_FIXTURE:-}"
 CANARY_IDENTITY_FIXTURE="${CANARY_IDENTITY_FIXTURE:-}"
 
@@ -77,6 +79,12 @@ fi
 for command_name in curl jq kubectl python3 seq; do
   command -v "${command_name}" >/dev/null 2>&1 || { echo "ERROR: required command not found: ${command_name}" >&2; exit 1; }
 done
+
+jq -e 'type == "array" and all(.[]; type == "string")' \
+  <<<"${ANALYSIS_RUN_EXCLUDED_UIDS_JSON}" >/dev/null || {
+  echo "ERROR: ANALYSIS_RUN_EXCLUDED_UIDS_JSON must be a JSON array of AnalysisRun UID strings." >&2
+  exit 1
+}
 
 if [ -n "${EXPECTED_APPLICATION_VERSION}" ]; then
   echo "==> Waiting for Rollout application version ${EXPECTED_APPLICATION_VERSION}"
@@ -213,6 +221,28 @@ echo "==> Generating bounded traffic across Prometheus scrape intervals"
   done
 ) & traffic_pid="$!"
 
+echo "==> Waiting for release-scoped Candidate request metrics ${expected_release_id}"
+request_query="sum(increase(demo_api_http_requests_total{job=\"demo-api-canary\",method=\"GET\",route=\"/version\",platform_release_id=\"${expected_release_id}\"}[5m]))"
+deadline=$((SECONDS + PROMETHEUS_REQUEST_SERIES_WAIT_SECONDS))
+request_series_ready=false
+while [ "${SECONDS}" -lt "${deadline}" ]; do
+  if curl -fsS --get --data-urlencode "query=${request_query}" \
+      "http://127.0.0.1:${prometheus_port}/api/v1/query" >"${work_dir}/request-series.json" 2>/dev/null \
+    && jq -e '.status == "success" and any(.data.result[]?; ((.value[1] | tonumber) >= 1))' \
+      "${work_dir}/request-series.json" >/dev/null; then
+    echo "Release-scoped Candidate request metrics are ready for ${expected_release_id}."
+    request_series_ready=true
+    break
+  fi
+  sleep 2
+done
+if [ "${request_series_ready}" != true ]; then
+  echo "ERROR: Candidate target is up, but release-scoped /version request metrics did not appear within ${PROMETHEUS_REQUEST_SERIES_WAIT_SECONDS}s." >&2
+  echo "The selected image is not qualified for the current AnalysisTemplate; do not promote or retry this revision." >&2
+  jq . "${work_dir}/request-series.json" >&2 2>/dev/null || true
+  exit 1
+fi
+
 echo "==> Waiting for successful SLO-aware AnalysisRun ${MINIMUM_MATCHING_ANALYSIS_RUNS} for ${expected_release_id}"
 deadline=$((SECONDS + ANALYSIS_TIMEOUT_SECONDS))
 while [ "${SECONDS}" -lt "${deadline}" ]; do
@@ -222,14 +252,16 @@ while [ "${SECONDS}" -lt "${deadline}" ]; do
     echo "ERROR: bounded traffic producer stopped before the target AnalysisRun completed." >&2
     exit 1
   fi
-  matching_count="$(jq --arg release_id "${expected_release_id}" '
+  matching_count="$(jq --arg release_id "${expected_release_id}" --argjson excluded "${ANALYSIS_RUN_EXCLUDED_UIDS_JSON}" '
     [.items[]
-      | select(any(.spec.args[]?; .name == "expected-release-id" and .value == $release_id))]
+      | select(any(.spec.args[]?; .name == "expected-release-id" and .value == $release_id))
+      | select(.metadata.uid as $uid | ($excluded | index($uid) | not))]
     | length
   ' "${work_dir}/analysisruns.json")"
-  jq -c --arg release_id "${expected_release_id}" --argjson minimum "${MINIMUM_MATCHING_ANALYSIS_RUNS}" '
+  jq -c --arg release_id "${expected_release_id}" --argjson minimum "${MINIMUM_MATCHING_ANALYSIS_RUNS}" --argjson excluded "${ANALYSIS_RUN_EXCLUDED_UIDS_JSON}" '
     [.items[]
-      | select(any(.spec.args[]?; .name == "expected-release-id" and .value == $release_id))]
+      | select(any(.spec.args[]?; .name == "expected-release-id" and .value == $release_id))
+      | select(.metadata.uid as $uid | ($excluded | index($uid) | not))]
     | sort_by(.metadata.creationTimestamp)
     | if length >= $minimum then .[$minimum - 1] else empty end
   ' "${work_dir}/analysisruns.json" >"${work_dir}/latest.json"

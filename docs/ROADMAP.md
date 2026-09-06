@@ -547,6 +547,10 @@ Incremental scope:
       and exact Git/runtime/failure evidence closure. Applying and validating
       the increment performs no live rehearsal; qualification requires the
       separately initiated operator run and retained private evidence.
+      - v0.11.9.2.2.3.1 makes the historical no-data validator successor-aware
+        while preserving its original contract evidence.
+      - v0.11.9.2.2.3 closes the Prometheus Candidate-discovery and bounded
+        traffic-lifetime race observed during revision 67 recovery.
       - v0.11.9.2.2.2.1.1 isolates the fake AWS lifecycle from ambient operator
         environment variables and the current local kind identity.
       - v0.11.9.2.2.2.1 repairs the inherited offline Rollout fixture for the

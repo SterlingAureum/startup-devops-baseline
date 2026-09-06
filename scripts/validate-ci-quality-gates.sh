@@ -275,6 +275,12 @@ echo "==> Validating v0.11.9.2.2.1 empty-digest GitOps convergence repair"
 echo "==> Validating v0.11.9.2.2.2 baseline-restoration traffic guard"
 "${ROOT_DIR}/scripts/validate-v0.11.9.2.2.2-baseline-restoration-traffic-guard.sh"
 
+echo "==> Validating v0.11.9.2.2.3 Prometheus identity and traffic lifetime"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3-prometheus-identity-traffic-lifetime.sh"
+
+echo "==> Validating v0.11.9.2.2.3.1 successor-aware target query"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.1-successor-aware-target-query.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

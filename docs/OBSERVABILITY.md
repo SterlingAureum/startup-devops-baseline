@@ -290,12 +290,15 @@ clusters/aws/base/platform/observability-views.yaml
 
 demo-api exposes `/metrics` and owns its ServiceMonitor in the application
 Chart. It discovers the `demo-api`, `demo-api-stable`, and `demo-api-canary`
-Services and uses their Service names as the Prometheus `job` label. This keeps
-the original Canary query valid:
+Services and uses their Service names as the Prometheus `job` label. The current
+gate combines that Service identity with the exact Candidate release identity:
 
 ```promql
-sum(up{job="demo-api-canary"})
+sum(up{job="demo-api-canary",platform_release_id="<expected-release-id>"})
 ```
+
+The `platform_release_id` target label comes from the selected Pod's
+`platform.startup.dev/release-id` annotation through ServiceMonitor relabeling.
 
 Example application metrics include:
 

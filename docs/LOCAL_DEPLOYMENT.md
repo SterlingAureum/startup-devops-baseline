@@ -157,10 +157,12 @@ kubectl argo rollouts abort demo-api -n startup-apps
 kubectl argo rollouts retry rollout demo-api -n startup-apps
 ```
 
-The current canary analysis checks whether Prometheus can scrape the canary service:
+The current canary analysis checks whether Prometheus can scrape the exact
+Candidate selected through the canary Service:
 
 ```promql
-sum(up{job="demo-api-canary"})
+sum(up{job="demo-api-canary",platform_release_id="<expected-release-id>"})
 ```
 
-This is a lightweight canary health gate. Real error-rate or latency-based analysis should be added after the demo-api exposes richer HTTP metrics.
+The target-up query is complemented by eligible-request, availability burn-rate,
+latency burn-rate and stable-budget queries. Empty data fails closed.

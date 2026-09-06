@@ -1,0 +1,17 @@
+{
+  "version": "v0.11.9.2.2.3",
+  "scope": "local-prometheus-identity-and-traffic-lifetime",
+  "incidentAnalysisRun": "demo-api-79696cc48f-67-2.1",
+  "repair": {
+    "waitForExactPrometheusTargetIdentity": true,
+    "targetUpScopedToExpectedReleaseId": true,
+    "trafficRunsUntilAnalysisTerminal": true,
+    "historicalAnalysisCannotSatisfyCheckpoint": true,
+    "postAbortServiceIdentityIsNotPreAbortEvidence": true
+  },
+  "automaticPromote": false,
+  "automaticRetry": false,
+  "automaticAbort": false,
+  "realClusterMutationDuringValidation": false,
+  "awsMutation": false
+}

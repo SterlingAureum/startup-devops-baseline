@@ -359,6 +359,12 @@
 /delivery/contracts/v0.11.9.2.2.2.1-baseline-restoration-fixture-repair.json @SterlingAureum
 /docs/V0.11.9.2.2.2.1.1_OFFLINE_LIFECYCLE_ENVIRONMENT_ISOLATION.md @SterlingAureum
 /delivery/contracts/v0.11.9.2.2.2.1.1-offline-lifecycle-environment-isolation.json @SterlingAureum
+/scripts/validate-v0.11.9.2.2.3-prometheus-identity-traffic-lifetime.sh @SterlingAureum
+/docs/V0.11.9.2.2.3_PROMETHEUS_IDENTITY_TRAFFIC_LIFETIME.md @SterlingAureum
+/delivery/contracts/v0.11.9.2.2.3-prometheus-identity-traffic-lifetime.json @SterlingAureum
+/scripts/validate-v0.11.9.2.2.3.1-successor-aware-target-query.sh @SterlingAureum
+/docs/V0.11.9.2.2.3.1_SUCCESSOR_AWARE_TARGET_QUERY.md @SterlingAureum
+/delivery/contracts/v0.11.9.2.2.3.1-successor-aware-target-query.json @SterlingAureum
 /docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum

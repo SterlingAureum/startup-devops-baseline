@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.11.9.2.2.3.1
+
+- Preserve the historical v0.11.3.2 contract while making its current-template
+  query assertion aware of the release-scoped v0.11.9.2.2.3 successor.
+- Update active analysis, observability and local deployment documentation with
+  the exact Candidate target query.
+
+## v0.11.9.2.2.3
+
+- Wait for a Prometheus Canary target carrying the exact expected release ID
+  before generating recovery traffic.
+- Keep stable/Canary request traffic active until the selected new AnalysisRun
+  reaches a terminal phase instead of stopping after a fixed initial window.
+- Scope the target-up AnalysisRun query to the Candidate release identity.
+
 ## v0.11.9.2.2.2.1.1
 
 - Isolate the offline v0.9 AWS lifecycle fixture from ambient local-kind and

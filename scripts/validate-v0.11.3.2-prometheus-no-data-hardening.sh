@@ -104,6 +104,9 @@ slo_analysis_repair_successor = (
 canary_endpoint_repair_successor = (
     root / "delivery/contracts/v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair.json"
 ).is_file()
+prometheus_identity_successor = (
+    root / "delivery/contracts/v0.11.9.2.2.3-prometheus-identity-traffic-lifetime.json"
+).is_file()
 require(
     ("version: 0.8.2" if canary_endpoint_repair_successor else ("version: 0.8.1" if slo_analysis_repair_successor else ("version: 0.8.0" if slo_rollout_successor else ("version: 0.7.0" if tracing_successor else ("version: 0.6.0" if structured_logging_successor else "version: 0.5.1"))))) in chart,
     "Unexpected successor-aware Chart version",
@@ -122,7 +125,12 @@ require(
     "successCondition: len(result) > 0 && result[0] >= 1" in template,
     "Safe Prometheus vector condition missing",
 )
-require('sum(up{job="demo-api-canary"})' in template, "Canary target query changed")
+current_target_query = (
+    'sum(up{job="demo-api-canary",platform_release_id="{{ `{{ args.expected-release-id }}` }}"})'
+    if prometheus_identity_successor
+    else 'sum(up{job="demo-api-canary"})'
+)
+require(current_target_query in template, "Canary target query changed")
 
 for forbidden in (
     "successCondition: result[0] >= 1",

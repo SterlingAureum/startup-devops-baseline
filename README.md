@@ -3,9 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.2.2.3.1-successor-aware-target-query` preserves the historical
+no-data contract while validating the current release-scoped target query.
+Predecessor:
+`v0.11.9.2.2.3-prometheus-identity-traffic-lifetime` waits for exact Prometheus
+Candidate discovery and keeps bounded request traffic active through AnalysisRun
+completion. See `docs/V0.11.9.2.2.3_PROMETHEUS_IDENTITY_TRAFFIC_LIFETIME.md`.
 `v0.11.9.2.2.2.1.1-offline-lifecycle-environment-isolation` prevents ambient
 local-kind or AWS shell variables from changing the fake aws-test lifecycle.
-Predecessor:
 `v0.11.9.2.2.2.1-baseline-restoration-fixture-repair` updates the inherited
 offline restoration fixture for the runtime-qualified success contract.
 `v0.11.9.2.2.2-baseline-restoration-traffic-guard` separates GitOps sync from

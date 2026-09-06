@@ -10,6 +10,9 @@ TRAFFIC_INTERVAL_SECONDS="${TRAFFIC_INTERVAL_SECONDS:-1}"
 ANALYSIS_TIMEOUT_SECONDS="${ANALYSIS_TIMEOUT_SECONDS:-300}"
 ROLLOUT_WAIT_SECONDS="${ROLLOUT_WAIT_SECONDS:-300}"
 CANARY_IDENTITY_WAIT_SECONDS="${CANARY_IDENTITY_WAIT_SECONDS:-120}"
+PROMETHEUS_TARGET_WAIT_SECONDS="${PROMETHEUS_TARGET_WAIT_SECONDS:-180}"
+PROMETHEUS_NAMESPACE="${PROMETHEUS_NAMESPACE:-observability}"
+PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
 MINIMUM_MATCHING_ANALYSIS_RUNS="${MINIMUM_MATCHING_ANALYSIS_RUNS:-1}"
 EXPECTED_APPLICATION_VERSION="${EXPECTED_APPLICATION_VERSION:-}"
 ANALYSIS_RUN_FIXTURE="${ANALYSIS_RUN_FIXTURE:-}"
@@ -95,8 +98,11 @@ expected_release_id="$(kubectl -n "${APP_NAMESPACE}" get rollout "${ROLLOUT_NAME
 work_dir="$(mktemp -d)"
 stable_pid=""
 canary_pid=""
+prometheus_pid=""
+traffic_pid=""
 cleanup() {
-  for pid in "${canary_pid}" "${stable_pid}"; do
+  touch "${work_dir}/stop-traffic" 2>/dev/null || true
+  for pid in "${traffic_pid}" "${prometheus_pid}" "${canary_pid}" "${stable_pid}"; do
     [ -z "${pid}" ] || kill "${pid}" >/dev/null 2>&1 || true
     [ -z "${pid}" ] || wait "${pid}" >/dev/null 2>&1 || true
   done
@@ -151,8 +157,10 @@ fi
 free_port() { python3 -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1",0)); print(s.getsockname()[1]); s.close()'; }
 stable_port="$(free_port)"
 canary_port="$(free_port)"
+prometheus_port="$(free_port)"
 kubectl -n "${APP_NAMESPACE}" port-forward service/demo-api-stable "${stable_port}:80" >"${work_dir}/stable.log" 2>&1 & stable_pid="$!"
 kubectl -n "${APP_NAMESPACE}" port-forward service/demo-api-canary "${canary_port}:80" >"${work_dir}/canary.log" 2>&1 & canary_pid="$!"
+kubectl -n "${PROMETHEUS_NAMESPACE}" port-forward "service/${PROMETHEUS_SERVICE}" "${prometheus_port}:9090" >"${work_dir}/prometheus.log" 2>&1 & prometheus_pid="$!"
 
 for endpoint in "http://127.0.0.1:${stable_port}/version" "http://127.0.0.1:${canary_port}/version"; do
   deadline=$((SECONDS + 45))
@@ -162,21 +170,58 @@ for endpoint in "http://127.0.0.1:${stable_port}/version" "http://127.0.0.1:${ca
   done
 done
 
-echo "==> Generating bounded traffic across Prometheus scrape intervals"
-traffic_started_at="${SECONDS}"
-traffic_sent=0
-while [ $((SECONDS - traffic_started_at)) -lt "${TRAFFIC_DURATION_SECONDS}" ] || [ "${traffic_sent}" -lt "${TRAFFIC_REQUESTS}" ]; do
-  curl -fsS "http://127.0.0.1:${stable_port}/version" >/dev/null
-  curl -fsS "http://127.0.0.1:${canary_port}/version" >/dev/null
-  traffic_sent=$((traffic_sent + 1))
-  sleep "${TRAFFIC_INTERVAL_SECONDS}"
+prometheus_ready="http://127.0.0.1:${prometheus_port}/-/ready"
+deadline=$((SECONDS + 45))
+until curl -fsS "${prometheus_ready}" >/dev/null 2>&1; do
+  [ "${SECONDS}" -lt "${deadline}" ] || { echo "ERROR: timed out waiting for local Prometheus port-forward" >&2; exit 1; }
+  sleep 1
 done
-echo "Generated ${traffic_sent} request pairs over $((SECONDS - traffic_started_at))s."
+
+echo "==> Waiting for Prometheus target identity ${expected_release_id}"
+target_query="sum(up{job=\"demo-api-canary\",platform_release_id=\"${expected_release_id}\"})"
+deadline=$((SECONDS + PROMETHEUS_TARGET_WAIT_SECONDS))
+target_ready=false
+while [ "${SECONDS}" -lt "${deadline}" ]; do
+  if curl -fsS --get --data-urlencode "query=${target_query}" \
+      "http://127.0.0.1:${prometheus_port}/api/v1/query" >"${work_dir}/target.json" 2>/dev/null \
+    && jq -e '.status == "success" and any(.data.result[]?; ((.value[1] | tonumber) >= 1))' \
+      "${work_dir}/target.json" >/dev/null; then
+    echo "Prometheus target identity is ready for ${expected_release_id}."
+    target_ready=true
+    break
+  fi
+  sleep 2
+done
+if [ "${target_ready}" != true ]; then
+  echo "ERROR: Prometheus did not discover the exact Canary release identity within ${PROMETHEUS_TARGET_WAIT_SECONDS}s." >&2
+  cat "${work_dir}/target.json" >&2 2>/dev/null || true
+  exit 1
+fi
+
+echo "==> Generating bounded traffic across Prometheus scrape intervals"
+(
+  traffic_started_at="${SECONDS}"
+  traffic_sent=0
+  while [ ! -f "${work_dir}/stop-traffic" ] \
+    || [ $((SECONDS - traffic_started_at)) -lt "${TRAFFIC_DURATION_SECONDS}" ] \
+    || [ "${traffic_sent}" -lt "${TRAFFIC_REQUESTS}" ]; do
+    curl -fsS "http://127.0.0.1:${stable_port}/version" >/dev/null
+    curl -fsS "http://127.0.0.1:${canary_port}/version" >/dev/null
+    traffic_sent=$((traffic_sent + 1))
+    printf '%s\n' "${traffic_sent}" >"${work_dir}/traffic-count"
+    sleep "${TRAFFIC_INTERVAL_SECONDS}"
+  done
+) & traffic_pid="$!"
 
 echo "==> Waiting for successful SLO-aware AnalysisRun ${MINIMUM_MATCHING_ANALYSIS_RUNS} for ${expected_release_id}"
 deadline=$((SECONDS + ANALYSIS_TIMEOUT_SECONDS))
 while [ "${SECONDS}" -lt "${deadline}" ]; do
   kubectl -n "${APP_NAMESPACE}" get analysisrun -o json >"${work_dir}/analysisruns.json"
+  if ! kill -0 "${traffic_pid}" >/dev/null 2>&1; then
+    wait "${traffic_pid}" || true
+    echo "ERROR: bounded traffic producer stopped before the target AnalysisRun completed." >&2
+    exit 1
+  fi
   matching_count="$(jq --arg release_id "${expected_release_id}" '
     [.items[]
       | select(any(.spec.args[]?; .name == "expected-release-id" and .value == $release_id))]
@@ -192,10 +237,17 @@ while [ "${SECONDS}" -lt "${deadline}" ]; do
     phase="$(jq -r '.status.phase // "Pending"' "${work_dir}/latest.json")"
     if [ "${phase}" = "Successful" ]; then
       assert_analysis_run "${work_dir}/latest.json" "${expected_release_id}"
+      touch "${work_dir}/stop-traffic"
+      wait "${traffic_pid}"
+      traffic_pid=""
+      echo "Generated $(cat "${work_dir}/traffic-count") request pairs through AnalysisRun completion."
       echo "v0.11.7.2 local candidate release identity, SLO-aware metrics, and successful AnalysisRun acceptance passed."
       exit 0
     fi
     case "${phase}" in Failed|Error|Inconclusive)
+      touch "${work_dir}/stop-traffic"
+      wait "${traffic_pid}" || true
+      traffic_pid=""
       assert_analysis_run "${work_dir}/latest.json" "${expected_release_id}" || true
       print_canary_identity_diagnostics
       exit 1

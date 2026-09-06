@@ -29,7 +29,7 @@ spec:
         prometheus:
           address: {{ $prometheus.address | default "http://observability-metrics-prometheus.observability.svc.cluster.local:9090" | quote }}
           query: |
-            sum(up{job="demo-api-canary"})
+            sum(up{job="demo-api-canary",platform_release_id="{{ `{{ args.expected-release-id }}` }}"})
     {{- if ($sloAware.enabled | default false) }}
     - name: canary-minimum-eligible-requests
       initialDelay: {{ $sloAware.initialDelay | default "60s" }}

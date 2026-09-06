@@ -1,0 +1,9 @@
+{
+  "version": "v0.11.9.2.2.3.1",
+  "scope": "successor-aware-canary-target-query",
+  "historicalContractPreserved": true,
+  "currentTemplateQuery": "job-and-platform-release-id",
+  "activeDocumentationUpdated": true,
+  "clusterMutation": false,
+  "awsMutation": false
+}

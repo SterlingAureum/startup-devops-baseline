@@ -49,10 +49,17 @@ A new AnalysisRun is created when the Rollout reaches an analysis step.
 
 ## Current query
 
-The v0.3.3 baseline uses:
+The historical v0.3.3 baseline used:
 
 ```promql
 sum(up{job="demo-api-canary"})
+```
+
+The current local recovery gate additionally binds the scrape target to the
+exact Candidate identity:
+
+```promql
+sum(up{job="demo-api-canary",platform_release_id="<expected-release-id>"})
 ```
 
 The current metric waits an additional 60 seconds for target discovery and
@@ -63,8 +70,8 @@ initialDelay: 60s
 len(result) > 0 && result[0] >= 1
 ```
 
-This checks whether Prometheus can scrape the canary service without treating
-no-data as success or indexing a missing vector element.
+This checks whether Prometheus can scrape the intended Candidate behind the
+canary Service without treating no-data or a stable target as success.
 
 ## Rollout progression
 

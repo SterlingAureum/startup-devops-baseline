@@ -1,0 +1,20 @@
+{
+  "version": "v0.11.8.2.1",
+  "predecessor": "v0.11.8.2.0.1",
+  "environment": "aws-test",
+  "cluster": "startup-devops-baseline-test",
+  "region": "us-east-1",
+  "feature_revision": "feature/v0.11-observability-sre-baseline",
+  "deployment_entrypoint": "scripts/prepare-aws-test-feature.py",
+  "observation_entrypoint": "scripts/check-aws-test-observability-qualification.py",
+  "deployment_actions": ["plan", "apply", "bootstrap"],
+  "plan_valid_seconds": 3600,
+  "plan_requires_separate_apply_confirmation": true,
+  "automatic_deletion_or_replacement": false,
+  "automatic_promotion": false,
+  "default_observation_requires_bounded_rbac": true,
+  "explicit_operator_mode_records_unverified_least_privilege": true,
+  "evidence_schema_version": "v0.11.8.0",
+  "evidence_qualification_version": "v0.11.8.2",
+  "prod_in_scope": false
+}

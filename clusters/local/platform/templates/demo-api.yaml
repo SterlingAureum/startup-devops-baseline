@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: demo-api
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.git.repoURL | quote }}
+    targetRevision: {{ .Values.git.targetRevision | quote }}
+    path: apps/demo-api/helm
+    helm:
+      releaseName: demo-api
+{{ if .Values.demoApi.localImage.enabled }}
+      parameters:
+        - name: image.repository
+          value: {{ .Values.demoApi.localImage.repository | quote }}
+        - name: image.tag
+          value: {{ .Values.demoApi.localImage.tag | quote }}
+        - name: image.pullPolicy
+          value: {{ .Values.demoApi.localImage.pullPolicy | quote }}
+        - name: release.applicationVersion
+          value: {{ .Values.demoApi.localImage.applicationVersion | quote }}
+        - name: rehearsalFault.mode
+          value: {{ .Values.demoApi.rehearsalFault.mode | quote }}
+{{ if .Values.demoApi.rehearsalFault.tokenSha256 }}
+        - name: rehearsalFault.tokenSha256
+          value: {{ .Values.demoApi.rehearsalFault.tokenSha256 | quote }}
+{{ end }}
+{{ else }}
+      parameters:
+{{ end }}
+        - name: telemetry.tracing.enabled
+          value: {{ .Values.demoApi.tracing.enabled | quote }}
+        - name: telemetry.tracing.endpoint
+          value: {{ .Values.demoApi.tracing.endpoint | quote }}
+        - name: telemetry.tracing.protocol
+          value: {{ .Values.demoApi.tracing.protocol | quote }}
+        - name: telemetry.tracing.timeoutSeconds
+          value: {{ .Values.demoApi.tracing.timeoutSeconds | quote }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: startup-apps
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - SkipDryRunOnMissingResource=true
+      - RespectIgnoreDifferences=true
+  ignoreDifferences:
+    - kind: Service
+      name: demo-api-stable
+      jsonPointers:
+        - /spec/selector
+    - kind: Service
+      name: demo-api-canary
+      jsonPointers:
+        - /spec/selector

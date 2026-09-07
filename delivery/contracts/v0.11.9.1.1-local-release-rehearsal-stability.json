@@ -1,0 +1,15 @@
+{
+  "version": "v0.11.9.1.1",
+  "predecessor": "v0.11.9.1",
+  "environment": "local-kind-loopback-only",
+  "live_output": "terminal-mirror-and-command-log",
+  "post_phase_identity_wait_seconds": 120,
+  "phase_timeout_seconds": 900,
+  "bundle_input": "raw-private-path-outside-repository",
+  "automatic_promote": false,
+  "automatic_retry": false,
+  "automatic_rollback": false,
+  "fault_injection": false,
+  "live_qualified_by_producer": false,
+  "next_checkpoint": "v0.11.9.2-controlled-failure-and-recovery"
+}

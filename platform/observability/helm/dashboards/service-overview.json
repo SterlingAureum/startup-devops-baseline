@@ -1,0 +1,82 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "decimals": 2, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 0.99}]}, "unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "avg(demo_api:http_success_ratio:rate5m{deployment_environment_name=~\"$environment\",platform_release_id=~\"$release\"})", "legendFormat": "success", "refId": "A"}],
+      "title": "HTTP Success Ratio",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "reqps"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "value", "graphMode": "area", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "sum(demo_api:http_requests:rate5m{deployment_environment_name=~\"$environment\",platform_release_id=~\"$release\"})", "legendFormat": "requests", "refId": "A"}],
+      "title": "Request Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "s"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 0},
+      "id": 3,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"expr": "demo_api:http_request_duration_seconds:p50_5m{deployment_environment_name=~\"$environment\",platform_release_id=~\"$release\"}", "legendFormat": "p50 {{platform_release_id}}", "refId": "A"},
+        {"expr": "demo_api:http_request_duration_seconds:p95_5m{deployment_environment_name=~\"$environment\",platform_release_id=~\"$release\"}", "legendFormat": "p95 {{platform_release_id}}", "refId": "B"},
+        {"expr": "demo_api:http_request_duration_seconds:p99_5m{deployment_environment_name=~\"$environment\",platform_release_id=~\"$release\"}", "legendFormat": "p99 {{platform_release_id}}", "refId": "C"}
+      ],
+      "title": "HTTP Request Latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 6},
+      "id": 4,
+      "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [{"expr": "demo_api:dependency_success_ratio:rate5m{deployment_environment_name=~\"$environment\",platform_release_id=~\"$release\"}", "legendFormat": "{{dependency}} {{platform_release_id}}", "refId": "A"}],
+      "title": "Dependency Success Ratio",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {}, "overrides": []},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 6},
+      "id": 5,
+      "options": {"cellHeight": "sm", "showHeader": true},
+      "targets": [{"expr": "max by (deployment_environment_name, service_name, service_version, platform_release_id) (demo_api:http_requests:rate5m{deployment_environment_name=~\"$environment\",platform_release_id=~\"$release\"})", "format": "table", "instant": true, "refId": "A"}],
+      "title": "Active Release Identity",
+      "transformations": [{"id": "organize", "options": {"excludeByName": {"Time": true, "Value": true}, "indexByName": {}, "renameByName": {"deployment_environment_name": "Environment", "platform_release_id": "Release", "service_name": "Service", "service_version": "Version"}}}],
+      "type": "table"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["startup-devops-baseline", "v0.11.4", "service"],
+  "templating": {
+    "list": [
+      {"current": {}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(demo_api:http_requests:rate5m, deployment_environment_name)", "hide": 0, "includeAll": true, "label": "Environment", "multi": true, "name": "environment", "options": [], "query": {"query": "label_values(demo_api:http_requests:rate5m, deployment_environment_name)", "refId": "PrometheusVariableQueryEditor-Environment"}, "refresh": 1, "regex": "", "skipUrlSync": false, "sort": 1, "type": "query"},
+      {"current": {}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(demo_api:http_requests:rate5m{deployment_environment_name=~\"$environment\"}, platform_release_id)", "hide": 0, "includeAll": true, "label": "Release", "multi": true, "name": "release", "options": [], "query": {"query": "label_values(demo_api:http_requests:rate5m{deployment_environment_name=~\"$environment\"}, platform_release_id)", "refId": "PrometheusVariableQueryEditor-Release"}, "refresh": 1, "regex": "", "skipUrlSync": false, "sort": 1, "type": "query"}
+    ]
+  },
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Startup DevOps / Service Overview",
+  "uid": "startup-devops-service-overview",
+  "version": 1,
+  "weekStart": ""
+}

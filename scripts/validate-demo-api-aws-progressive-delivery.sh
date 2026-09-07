@@ -107,7 +107,7 @@ require(
     root / "clusters/aws/base/platform/argo-rollouts.yaml",
     (
         "name: argo-rollouts", "repoURL: https://argoproj.github.io/argo-helm",
-        "chart: argo-rollouts", "targetRevision: 2.41.0",
+        "chart: argo-rollouts", "targetRevision: 2.41.1",
         'argocd.argoproj.io/sync-wave: "-15"', "ServerSideApply=true",
     ),
     "pinned AWS Argo Rollouts Application",

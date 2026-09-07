@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "v0.11.6.1.1.1",
+  "version": "v0.11.6.1.1.1",
+  "status": "offline-implemented-local-live-rerun-required",
+  "predecessor": "v0.11.6.1.1",
+  "designDocument": "docs/V0.11.6.1.1.1_ALLOY_RBAC_RENDERING_HISTORICAL_VALIDATOR_REPAIR.md",
+  "incident": {
+    "focusedStaticContractPassed": true,
+    "alloyChartRenderingFailed": true,
+    "alloyRbacTemplateWasFailureLocation": true,
+    "emptyClusterRulesWasRootCause": true,
+    "v0112HistoricalValidatorRejectedSuccessor": true,
+    "v01132HistoricalValidatorRejectedSuccessor": true,
+    "v011401FixtureRejectedLoggingSuccessor": true,
+    "clusterRuntimeAcceptanceReached": false
+  },
+  "repair": {
+    "alloyRulesNonEmpty": true,
+    "alloyClusterRulesNonEmpty": true,
+    "alloyRbacResources": [
+      "namespaces",
+      "pods",
+      "pods/log"
+    ],
+    "alloyRbacVerbs": [
+      "get",
+      "list",
+      "watch"
+    ],
+    "renderedClusterRoleInventoryRequired": true,
+    "emptyRbacListRegressionRejected": true,
+    "v0112SuccessorAware": true,
+    "v01132SuccessorAware": true,
+    "v011401FixtureSuccessorAware": true,
+    "successorContract": "delivery/contracts/v0.11.6.1.0-structured-demo-api-logging-runtime.json",
+    "legacyDemoApiChart": "0.5.1",
+    "legacyDemoApiApplicationVersion": "0.3.0",
+    "successorDemoApiChart": "0.6.0",
+    "successorDemoApiApplicationVersion": "0.4.0"
+  },
+  "unchanged": {
+    "localPlatformChart": "0.5.0",
+    "localPlatformApplicationVersion": "v0.11.6.1.1",
+    "lokiChart": "18.11.3",
+    "lokiApplicationVersion": "3.7.6",
+    "alloyChart": "1.11.0",
+    "alloyApplicationVersion": "1.18.0",
+    "demoApiChart": "0.6.0",
+    "demoApiApplicationVersion": "0.4.0",
+    "demoApiCodeChanged": false,
+    "demoApiImageChanged": false,
+    "lokiConfigurationChanged": false,
+    "alloyCollectionPipelineChanged": false,
+    "indexedLabelContractChanged": false,
+    "grafanaDatasourceChanged": false,
+    "kubernetesEventsCollected": false,
+    "tracingAdded": false,
+    "awsStateChanged": false,
+    "publicEndpointAdded": false,
+    "externalCredentialAdded": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.1.1.1-alloy-rbac-rendering-historical-validator-repair.sh",
+    "focusedPredecessorValidatorRequired": true,
+    "completeQualityGateRequired": true,
+    "pinnedExternalChartRenderRequired": true,
+    "localLiveRerunRequired": true,
+    "loggingGitOpsReconciliationRequired": true,
+    "demoApiImageRebuildRequired": false,
+    "demoApiRedeployRequired": false,
+    "formalAwsExecutionDeferredTo": "v0.11.8",
+    "cleanRoomClosureDeferredTo": "v0.11.9"
+  }
+}

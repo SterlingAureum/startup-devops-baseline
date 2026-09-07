@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "v0.11.7.2.2",
+  "version": "v0.11.7.2.2",
+  "predecessor": "v0.11.7.2.1",
+  "title": "Canary Endpoint Identity and Scrape-window Repair",
+  "incidentEvidence": ["info52", "info53"],
+  "rootCause": {
+    "rolloutMetadataAdvancedBeforeCanaryServiceSelector": true,
+    "trafficReachedPreviousReleasePods": true,
+    "serviceMonitorRelabelingWasCorrect": true,
+    "candidateNoDataFailClosedWasCorrect": true
+  },
+  "repairs": {
+    "waitForCanaryServiceSelector": true,
+    "requireReadySelectedPods": true,
+    "requireExactSelectedPodReleaseId": true,
+    "trafficCrossesMultipleScrapeIntervals": true,
+    "minimumTrafficRequestsPreserved": true,
+    "identityDiagnosticsAdded": true,
+    "staleEndpointFixtureRejected": true
+  },
+  "timing": {
+    "sloInitialDelay": "90s",
+    "trafficDurationSeconds": 45,
+    "trafficIntervalSeconds": 1,
+    "prometheusScrapeInterval": "15s"
+  },
+  "scope": {
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "sloThresholdsChanged": false,
+    "automaticPromotionAdded": false,
+    "automaticRollbackAdded": false,
+    "awsRuntimeChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair.sh",
+    "liveValidator": "scripts/check-local-slo-aware-rollout-analysis.sh",
+    "completeQualityGateRequired": true
+  },
+  "troubleshootingDocument": "docs/V0.11.7.2.2_CANARY_ENDPOINT_IDENTITY_SCRAPE_WINDOW_TROUBLESHOOTING.md"
+}

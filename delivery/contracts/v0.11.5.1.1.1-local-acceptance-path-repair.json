@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "v0.11.5.1.1.1",
+  "version": "v0.11.5.1.1.1",
+  "status": "offline-implemented-local-live-required",
+  "predecessor": "v0.11.5.1.1",
+  "designDocument": "docs/V0.11.5.1.1.1_LOCAL_ACCEPTANCE_PATH_REPAIR.md",
+  "observedEvidence": {
+    "historicalImageTag": "sha-3e50802",
+    "historicalMetric": "demo_api_requests_total",
+    "requiredMetricsObservedAfterFreshBuild": [
+      "demo_api_http_requests_total",
+      "demo_api_dependency_checks_total"
+    ],
+    "prometheusRuleObserved": "operator-diagnostic-recording-rules"
+  },
+  "repairs": {
+    "prometheusRuleOwnershipCheck": {
+      "script": "scripts/check-prometheus-target-counts.sh",
+      "previousName": "operator-recording-rules",
+      "actualName": "operator-diagnostic-recording-rules",
+      "sourceTemplate": "platform/observability/helm/templates/operator-recording-rules.yaml",
+      "overrideVariable": "OPERATOR_RECORDING_RULE_NAME"
+    },
+    "freshImageTransition": {
+      "neutralBaselineIsReplayStartOnly": true,
+      "freshUniqueLocalImageRequired": true,
+      "buildScript": "scripts/build-load-demo-api-image.sh",
+      "deployScript": "scripts/deploy-local-feature-gitops.sh",
+      "applicationVersionEqualsImageTag": true,
+      "requiredDirectMetrics": [
+        "demo_api_http_requests_total",
+        "demo_api_dependency_checks_total"
+      ]
+    }
+  },
+  "unchanged": {
+    "observabilityChartVersion": "0.4.1",
+    "observabilityApplicationVersion": "v0.11.5.1.1",
+    "recordingRuleExpression": "sum by (namespace, job) (up == bool 0)",
+    "alertCount": 9,
+    "warningCount": 2,
+    "criticalCount": 7,
+    "kubernetesDesiredStateChanged": false,
+    "dashboardChanged": false,
+    "monitorChanged": false,
+    "alertmanagerChanged": false,
+    "applicationSourceChanged": false,
+    "applicationImageContentChanged": false,
+    "awsMutationPerformed": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.5.1.1.1-local-acceptance-path-repair.sh",
+    "targetCountValidator": "scripts/check-prometheus-target-counts.sh",
+    "actionableAlertValidator": "scripts/check-actionable-alerts.sh",
+    "profiles": [
+      "local",
+      "aws"
+    ],
+    "localFreshImageReplayRequired": true,
+    "completeQualityGateRequired": true,
+    "formalFiringRoutingInhibitionResolutionDrillDeferredTo": "v0.11.5.2",
+    "formalAwsEvidenceDeferredTo": "v0.11.8"
+  }
+}

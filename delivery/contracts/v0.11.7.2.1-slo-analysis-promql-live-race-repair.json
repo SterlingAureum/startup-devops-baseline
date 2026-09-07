@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "v0.11.7.2.1",
+  "version": "v0.11.7.2.1",
+  "predecessor": "v0.11.7.2",
+  "title": "SLO Analysis PromQL and Local Live Race Repair",
+  "incidentEvidence": ["info50", "info51"],
+  "repairs": {
+    "requiredTargetRevisionDocumented": true,
+    "targetRevisionIsGitRevision": true,
+    "applicationVersionIsReleaseIdentity": true,
+    "stableAvailabilityPromqlBalanced": true,
+    "stableLatencyPromqlBalanced": true,
+    "checkerWaitsForExpectedApplicationVersion": true,
+    "checkerStartsBeforeReconciliation": true
+  },
+  "scope": {
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "sloThresholdsChanged": false,
+    "automaticPromotionAdded": false,
+    "automaticRollbackAdded": false,
+    "awsRuntimeChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.2.1-slo-analysis-promql-live-race-repair.sh",
+    "liveValidator": "scripts/check-local-slo-aware-rollout-analysis.sh",
+    "exactApplicationVersionRequired": true,
+    "completeQualityGateRequired": true
+  },
+  "troubleshootingDocument": "docs/V0.11.7.2.1_SLO_ANALYSIS_PROMQL_LIVE_RACE_TROUBLESHOOTING.md"
+}

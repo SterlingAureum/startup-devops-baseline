@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "v0.11.4.2.0",
+  "version": "v0.11.4.2.0",
+  "predecessor": "v0.11.4.1.1",
+  "status": "offline-implemented-local-live-required",
+  "designDocument": "docs/V0.11.4.2.0_CAPACITY_SIGNAL_FOUNDATION.md",
+  "chart": {
+    "path": "platform/observability/helm",
+    "previousVersion": "0.2.2",
+    "version": "0.3.0",
+    "applicationVersion": "v0.11.4.2.0"
+  },
+  "sourceMetrics": {
+    "ownership": "existing-kube-prometheus-stack-core-targets",
+    "names": [
+      "kube_node_status_allocatable",
+      "kube_pod_status_phase",
+      "kube_pod_container_info",
+      "kube_pod_container_resource_requests",
+      "kube_pod_container_resource_limits",
+      "container_cpu_usage_seconds_total",
+      "container_memory_working_set_bytes"
+    ],
+    "newMonitorAdded": false,
+    "newExporterAdded": false,
+    "kubePrometheusStackChanged": false
+  },
+  "recordingRules": {
+    "path": "platform/observability/helm/templates/capacity-recording-rules.yaml",
+    "resource": "PrometheusRule/capacity-efficiency-recording-rules",
+    "evaluationInterval": "30s",
+    "groups": [
+      "capacity.foundation.v0.11.4.2.0",
+      "efficiency.foundation.v0.11.4.2.0"
+    ],
+    "names": [
+      "capacity:node_cpu_allocatable_cores:sum",
+      "capacity:node_memory_allocatable_bytes:sum",
+      "capacity:node_pods_allocatable:sum",
+      "capacity:running_pods:count",
+      "capacity:running_pods_to_allocatable:ratio",
+      "capacity:cpu_requests_cores:sum",
+      "capacity:memory_requests_bytes:sum",
+      "capacity:cpu_limits_cores:sum",
+      "capacity:memory_limits_bytes:sum",
+      "capacity:cpu_requests_to_allocatable:ratio",
+      "capacity:memory_requests_to_allocatable:ratio",
+      "efficiency:namespace_cpu_requests_cores:sum",
+      "efficiency:namespace_memory_requests_bytes:sum",
+      "efficiency:namespace_cpu_usage_cores:rate5m",
+      "efficiency:namespace_memory_working_set_bytes:sum",
+      "efficiency:namespace_cpu_usage_to_requests:ratio",
+      "efficiency:namespace_memory_usage_to_requests:ratio",
+      "efficiency:namespace_active_containers:count",
+      "efficiency:namespace_containers_without_cpu_requests:count",
+      "efficiency:namespace_containers_without_memory_requests:count"
+    ]
+  },
+  "semantics": {
+    "activePodPhases": ["Pending", "Running"],
+    "requestsAndLimitsAreContainerReservationProxies": true,
+    "cpuUsageWindow": "5m",
+    "memoryUsageType": "working-set",
+    "namespaceUsageRatioRequiresPositiveRequest": true,
+    "missingRequestZeroAnchoredToActiveContainers": true,
+    "globalVectorZeroForbidden": true,
+    "noSourceProducesNoData": true,
+    "schedulerExactFitClaimed": false,
+    "currencyCostClaimed": false
+  },
+  "liveDiscovery": {
+    "script": "scripts/check-capacity-signals.sh",
+    "profiles": ["local", "aws"],
+    "sourceMetricNamesChecked": true,
+    "sourceSeriesChecked": true,
+    "recordingRulesLoadedChecked": true,
+    "recordingRuleSeriesChecked": true,
+    "finiteRatiosChecked": true,
+    "startupAppsRequestCoverageChecked": true,
+    "awsFormalEvidenceDeferredTo": "v0.11.8"
+  },
+  "boundaries": {
+    "dashboardAdded": false,
+    "existingDashboardChanged": false,
+    "existingRecordingRuleChanged": false,
+    "monitorAdded": false,
+    "monitoringStackChanged": false,
+    "kubecostAdded": false,
+    "awsBillingIntegrationAdded": false,
+    "realCurrencyCostClaimed": false,
+    "alertAdded": false,
+    "automaticScalingAdded": false,
+    "karpenterPolicyChanged": false,
+    "canaryChanged": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.4.2.0-capacity-signal-foundation.sh",
+    "completeQualityGateRequired": true,
+    "localLiveDiscoveryRequired": true,
+    "operatorDashboardRegressionRequired": true,
+    "capacityDashboardDeferredTo": "v0.11.4.2.1",
+    "cleanLocalReplayDeferredTo": "v0.11.4.2-final"
+  }
+}

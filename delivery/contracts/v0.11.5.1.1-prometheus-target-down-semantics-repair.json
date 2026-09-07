@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "v0.11.5.1.1",
+  "version": "v0.11.5.1.1",
+  "status": "offline-implemented-local-live-required",
+  "predecessor": "v0.11.5.1",
+  "designDocument": "docs/V0.11.5.1.1_PROMETHEUS_TARGET_DOWN_SEMANTICS_REPAIR.md",
+  "chart": {
+    "path": "platform/observability/helm",
+    "previousVersion": "0.4.0",
+    "version": "0.4.1",
+    "applicationVersion": "v0.11.5.1.1"
+  },
+  "recordingRule": {
+    "path": "platform/observability/helm/templates/operator-recording-rules.yaml",
+    "name": "platform:prometheus_targets_down:count",
+    "previousExpression": "sum by (namespace, job) (up == 0)",
+    "repairedExpression": "sum by (namespace, job) (up == bool 0)",
+    "groupingLabels": [
+      "namespace",
+      "job"
+    ],
+    "semantics": {
+      "allUp": 0,
+      "oneDown": 1,
+      "twoDown": 2,
+      "absent": "no-data"
+    }
+  },
+  "alert": {
+    "name": "PrometheusTargetDown",
+    "severity": "critical",
+    "component": "prometheus",
+    "alertFamily": "monitoring-target-health",
+    "sourceRule": "platform:prometheus_targets_down:count",
+    "threshold": ">0",
+    "for": "10m",
+    "runbook": "docs/runbooks/alerts/prometheus-target-down.md"
+  },
+  "successorPolicy": {
+    "alertCount": 9,
+    "warningCount": 2,
+    "criticalCount": 7,
+    "predecessorAlertsUnchanged": true,
+    "cleanBaselineMustBeInactive": true,
+    "absentRemainsNoData": true
+  },
+  "boundaries": {
+    "recordingRuleExpressionRepaired": true,
+    "dashboardChanged": false,
+    "monitorChanged": false,
+    "monitoringStackChanged": false,
+    "alertmanagerRouteChanged": false,
+    "externalReceiverAdded": false,
+    "notificationCredentialAdded": false,
+    "demoApiImageChanged": false,
+    "rolloutAnalysisChanged": false,
+    "sloOrBurnRateAdded": false,
+    "realTargetFailureInjected": false,
+    "awsMutationPerformed": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.5.1.1-prometheus-target-down-semantics-repair.sh",
+    "liveValidator": "scripts/check-prometheus-target-counts.sh",
+    "actionableAlertValidator": "scripts/check-actionable-alerts.sh",
+    "profiles": [
+      "local",
+      "aws"
+    ],
+    "offlineSemanticFixtures": [
+      "all-up",
+      "one-down",
+      "two-down",
+      "absent"
+    ],
+    "recordedAndDirectQueryMustMatch": true,
+    "cleanBaselineAllTargetsUpRequired": true,
+    "formalFiringRoutingInhibitionResolutionDrillDeferredTo": "v0.11.5.2",
+    "formalAwsEvidenceDeferredTo": "v0.11.8"
+  }
+}

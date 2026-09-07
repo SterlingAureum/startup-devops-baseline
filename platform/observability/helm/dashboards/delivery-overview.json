@@ -1,0 +1,111 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "decimals": 0, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 8, "x": 0, "y": 0},
+      "id": 1,
+      "options": {"cellHeight": "sm", "showHeader": true},
+      "targets": [{"expr": "delivery:argocd_applications:count{namespace=~\"$application_namespace\"}", "format": "table", "instant": true, "refId": "A"}],
+      "title": "Argo CD Applications by Sync and Health",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "decimals": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 4, "x": 8, "y": 0},
+      "id": 2,
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "sum(delivery:argocd_applications_out_of_sync:count{namespace=~\"$application_namespace\"})", "legendFormat": "out-of-sync", "refId": "A"}],
+      "title": "Out-of-Sync Applications",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "decimals": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 4, "x": 12, "y": 0},
+      "id": 3,
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "sum(delivery:argocd_applications_unhealthy:count{namespace=~\"$application_namespace\"})", "legendFormat": "unhealthy", "refId": "A"}],
+      "title": "Unhealthy Applications",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "decimals": 0, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 6, "w": 8, "x": 16, "y": 0},
+      "id": 4,
+      "options": {"cellHeight": "sm", "showHeader": true},
+      "targets": [{"expr": "delivery:rollouts:count{namespace=~\"$rollout_namespace\"}", "format": "table", "instant": true, "refId": "A"}],
+      "title": "Rollouts by Phase and Strategy",
+      "type": "table"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "thresholds"}, "decimals": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 4, "x": 0, "y": 6},
+      "id": 5,
+      "options": {"colorMode": "background", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false}, "textMode": "auto"},
+      "targets": [{"expr": "sum(delivery:rollouts_problem:count{namespace=~\"$rollout_namespace\"})", "legendFormat": "problem", "refId": "A"}],
+      "title": "Problem Rollouts",
+      "type": "stat"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "max": 1, "min": 0, "unit": "percentunit"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 10, "x": 4, "y": 6},
+      "id": 6,
+      "options": {"legend": {"calcs": ["lastNotNull", "min"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "asc"}},
+      "targets": [{"expr": "delivery:rollout_ready_replicas:ratio{namespace=~\"$rollout_namespace\"}", "legendFormat": "{{namespace}}/{{name}}", "refId": "A"}],
+      "title": "Rollout Ready Replica Ratio",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "decimals": 0, "unit": "short"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 10, "x": 14, "y": 6},
+      "id": 7,
+      "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [
+        {"expr": "delivery:rollout_desired_replicas:count{namespace=~\"$rollout_namespace\"}", "legendFormat": "desired {{namespace}}/{{name}}", "refId": "A"},
+        {"expr": "delivery:rollout_available_replicas:count{namespace=~\"$rollout_namespace\"}", "legendFormat": "available {{namespace}}/{{name}}", "refId": "B"},
+        {"expr": "delivery:rollout_unavailable_replicas:count{namespace=~\"$rollout_namespace\"}", "legendFormat": "unavailable {{namespace}}/{{name}}", "refId": "C"}
+      ],
+      "title": "Rollout Replica State",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {"defaults": {"color": {"mode": "palette-classic"}, "unit": "ops"}, "overrides": []},
+      "gridPos": {"h": 7, "w": 24, "x": 0, "y": 13},
+      "id": 8,
+      "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true}, "tooltip": {"mode": "multi", "sort": "desc"}},
+      "targets": [{"expr": "delivery:rollout_reconcile:rate5m{namespace=~\"$rollout_namespace\"}", "legendFormat": "{{namespace}}", "refId": "A"}],
+      "title": "Rollout Reconcile Rate",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["startup-devops-baseline", "v0.11.4.1.1", "delivery"],
+  "templating": {
+    "list": [
+      {"current": {}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(delivery:argocd_applications:count, namespace)", "hide": 0, "includeAll": true, "label": "Application Namespace", "multi": true, "name": "application_namespace", "options": [], "query": {"query": "label_values(delivery:argocd_applications:count, namespace)", "refId": "PrometheusVariableQueryEditor-ApplicationNamespace"}, "refresh": 1, "regex": "", "skipUrlSync": false, "sort": 1, "type": "query"},
+      {"current": {}, "datasource": {"type": "prometheus", "uid": "prometheus"}, "definition": "label_values(delivery:rollouts:count, namespace)", "hide": 0, "includeAll": true, "label": "Rollout Namespace", "multi": true, "name": "rollout_namespace", "options": [], "query": {"query": "label_values(delivery:rollouts:count, namespace)", "refId": "PrometheusVariableQueryEditor-RolloutNamespace"}, "refresh": 1, "regex": "", "skipUrlSync": false, "sort": 1, "type": "query"}
+    ]
+  },
+  "time": {"from": "now-1h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "Startup DevOps / Delivery Overview",
+  "uid": "startup-devops-delivery-overview",
+  "version": 1,
+  "weekStart": ""
+}

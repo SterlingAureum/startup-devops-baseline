@@ -1,0 +1,445 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-aws-dev
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "20"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 88.5.0
+    helm:
+      releaseName: observability-metrics
+      valuesObject:
+        fullnameOverride: observability-metrics
+        commonLabels:
+          app.kubernetes.io/part-of: startup-devops-baseline
+          platform.startup.dev/managed-by: gitops
+        defaultRules:
+          create: false
+        alertmanager:
+          enabled: true
+          ingress:
+            enabled: false
+          service:
+            type: ClusterIP
+          networkPolicy:
+            enabled: false
+          config:
+            global:
+              resolve_timeout: 5m
+            inhibit_rules:
+              - source_matchers:
+                  - 'severity = "critical"'
+                target_matchers:
+                  - 'severity = "warning"'
+                equal:
+                  - environment
+                  - cluster
+                  - component
+                  - alert_family
+            route:
+              receiver: platform-observation
+              group_by:
+                - environment
+                - cluster
+                - component
+                - alert_family
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 4h
+              routes:
+                - receiver: critical-drill-webhook
+                  matchers:
+                    - 'drill = "true"'
+                    - 'alert_family = "alert-lifecycle-drill"'
+                    - 'severity = "critical"'
+                  continue: true
+                  group_wait: 1s
+                  group_interval: 2s
+                  repeat_interval: 1h
+                - receiver: warning-drill-webhook
+                  matchers:
+                    - 'drill = "true"'
+                    - 'alert_family = "alert-lifecycle-drill"'
+                    - 'severity = "warning"'
+                  continue: true
+                  group_wait: 1s
+                  group_interval: 2s
+                  repeat_interval: 1h
+                - receiver: critical-observation
+                  matchers:
+                    - 'severity = "critical"'
+                - receiver: warning-observation
+                  matchers:
+                    - 'severity = "warning"'
+            receivers:
+              - name: platform-observation
+              - name: critical-observation
+              - name: warning-observation
+              - name: critical-drill-webhook
+                webhook_configs:
+                  - url: http://alert-lifecycle-drill-sink.observability.svc.cluster.local:8080/critical
+                    send_resolved: true
+              - name: warning-drill-webhook
+                webhook_configs:
+                  - url: http://alert-lifecycle-drill-sink.observability.svc.cluster.local:8080/warning
+                    send_resolved: true
+            templates:
+              - /etc/alertmanager/config/*.tmpl
+          alertmanagerSpec:
+            replicas: 1
+            retention: 24h
+            automountServiceAccountToken: false
+            nodeSelector:
+              workload: system
+            resources:
+              requests:
+                cpu: 50m
+                memory: 64Mi
+              limits:
+                cpu: 200m
+                memory: 256Mi
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: gp3-observability-alertmanager
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 2Gi
+        grafana:
+          enabled: true
+          defaultDashboardsEnabled: false
+          ingress:
+            enabled: false
+          service:
+            type: ClusterIP
+          persistence:
+            enabled: false
+          nodeSelector:
+            workload: system
+          sidecar:
+            dashboards:
+              enabled: true
+              label: grafana_dashboard
+              labelValue: "1"
+              searchNamespace: observability
+            datasources:
+              enabled: true
+              defaultDatasourceEnabled: true
+              uid: prometheus
+          grafana.ini:
+            analytics:
+              check_for_updates: false
+              reporting_enabled: false
+            auth.anonymous:
+              enabled: false
+            users:
+              allow_sign_up: false
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+        windowsMonitoring:
+          enabled: false
+        kubeEtcd:
+          enabled: false
+        kubeControllerManager:
+          enabled: false
+        kubeScheduler:
+          enabled: false
+        kubeProxy:
+          enabled: false
+        prometheusOperator:
+          nodeSelector:
+            workload: system
+          admissionWebhooks:
+            patch:
+              nodeSelector:
+                workload: system
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+        kube-state-metrics:
+          nodeSelector:
+            workload: system
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 250m
+              memory: 256Mi
+        prometheus-node-exporter:
+          tolerations:
+            - operator: Exists
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+        prometheus:
+          ingress:
+            enabled: false
+          service:
+            type: ClusterIP
+          prometheusSpec:
+            replicas: 1
+            retention: 24h
+            retentionSize: 8GiB
+            enableAdminAPI: false
+            nodeSelector:
+              workload: system
+            externalLabels:
+              environment: aws-dev
+              cluster: startup-devops-baseline-dev
+            serviceMonitorSelectorNilUsesHelmValues: false
+            serviceMonitorSelector: {}
+            serviceMonitorNamespaceSelector: {}
+            podMonitorSelectorNilUsesHelmValues: false
+            podMonitorSelector: {}
+            podMonitorNamespaceSelector: {}
+            ruleSelectorNilUsesHelmValues: false
+            ruleSelector: {}
+            ruleNamespaceSelector: {}
+            resources:
+              requests:
+                cpu: 250m
+                memory: 512Mi
+              limits:
+                cpu: "1"
+                memory: 1Gi
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: gp3-observability
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 10Gi
+        extraManifests:
+          - apiVersion: storage.k8s.io/v1
+            kind: StorageClass
+            metadata:
+              name: gp3-observability
+              annotations:
+                argocd.argoproj.io/sync-wave: "-1"
+                argocd.argoproj.io/sync-options: Prune=false
+              labels:
+                app.kubernetes.io/part-of: startup-devops-baseline
+                app.kubernetes.io/managed-by: argocd
+            provisioner: ebs.csi.aws.com
+            parameters:
+              type: gp3
+              encrypted: "true"
+              iops: "3000"
+              throughput: "125"
+              csi.storage.k8s.io/fstype: ext4
+              tagSpecification_1: Project=startup-devops-baseline
+              tagSpecification_2: Environment=dev
+              tagSpecification_3: Component=observability-prometheus
+            reclaimPolicy: Delete
+            allowVolumeExpansion: true
+            volumeBindingMode: WaitForFirstConsumer
+          - apiVersion: storage.k8s.io/v1
+            kind: StorageClass
+            metadata:
+              name: gp3-observability-alertmanager
+              annotations:
+                argocd.argoproj.io/sync-wave: "-1"
+                argocd.argoproj.io/sync-options: Prune=false
+              labels:
+                app.kubernetes.io/part-of: startup-devops-baseline
+                app.kubernetes.io/managed-by: argocd
+            provisioner: ebs.csi.aws.com
+            parameters:
+              type: gp3
+              encrypted: "true"
+              iops: "3000"
+              throughput: "125"
+              csi.storage.k8s.io/fstype: ext4
+              tagSpecification_1: Project=startup-devops-baseline
+              tagSpecification_2: Environment=dev
+              tagSpecification_3: Component=observability-alertmanager
+            reclaimPolicy: Delete
+            allowVolumeExpansion: true
+            volumeBindingMode: WaitForFirstConsumer
+          - apiVersion: networking.k8s.io/v1
+            kind: NetworkPolicy
+            metadata:
+              name: alertmanager-cluster-only
+              namespace: observability
+              labels:
+                app.kubernetes.io/part-of: startup-devops-baseline
+            spec:
+              podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: alertmanager
+              policyTypes:
+                - Ingress
+                - Egress
+              ingress:
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: prometheus
+                  ports:
+                    - protocol: TCP
+                      port: 9093
+                - from:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: alertmanager
+                  ports:
+                    - protocol: TCP
+                      port: 9094
+                    - protocol: UDP
+                      port: 9094
+              egress:
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: alert-lifecycle-drill-sink
+                  ports:
+                    - protocol: TCP
+                      port: 8080
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                      podSelector:
+                        matchLabels:
+                          app.kubernetes.io/name: alertmanager
+                  ports:
+                    - protocol: TCP
+                      port: 9094
+                    - protocol: UDP
+                      port: 9094
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: kube-system
+                  ports:
+                    - protocol: UDP
+                      port: 53
+                    - protocol: TCP
+                      port: 53
+          - apiVersion: networking.k8s.io/v1
+            kind: NetworkPolicy
+            metadata:
+              name: prometheus-cluster-only
+              namespace: observability
+              labels:
+                app.kubernetes.io/part-of: startup-devops-baseline
+            spec:
+              podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: prometheus
+              policyTypes:
+                - Ingress
+                - Egress
+              ingress:
+                - from:
+                    - namespaceSelector: {}
+                  ports:
+                    - protocol: TCP
+                      port: 9090
+              egress:
+                - to:
+                    - namespaceSelector: {}
+                - to:
+                    - ipBlock:
+                        cidr: 0.0.0.0/0
+                  ports:
+                    - protocol: TCP
+                      port: 443
+                    - protocol: TCP
+                      port: 10249
+                    - protocol: TCP
+                      port: 10250
+                    - protocol: TCP
+                      port: 9100
+          - apiVersion: networking.k8s.io/v1
+            kind: NetworkPolicy
+            metadata:
+              name: grafana-cluster-only
+              namespace: observability
+              labels:
+                app.kubernetes.io/part-of: startup-devops-baseline
+            spec:
+              podSelector:
+                matchLabels:
+                  app.kubernetes.io/name: grafana
+              policyTypes:
+                - Ingress
+                - Egress
+              ingress:
+                - from:
+                    - namespaceSelector: {}
+                  ports:
+                    - protocol: TCP
+                      port: 3000
+              egress:
+                - to:
+                    - ipBlock:
+                        cidr: 0.0.0.0/0
+                  ports:
+                    - protocol: TCP
+                      port: 443
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: observability
+                  ports:
+                    - protocol: TCP
+                      port: 9090
+                - to:
+                    - namespaceSelector:
+                        matchLabels:
+                          kubernetes.io/metadata.name: kube-system
+                  ports:
+                    - protocol: UDP
+                      port: 53
+                    - protocol: TCP
+                      port: 53
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    managedNamespaceMetadata:
+      labels:
+        app.kubernetes.io/part-of: startup-devops-baseline
+        platform.startup.dev/tier: observability
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+      - SkipDryRunOnMissingResource=true

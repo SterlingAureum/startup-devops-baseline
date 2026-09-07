@@ -152,6 +152,23 @@ Promotion commits are excluded from image-publish path filters. Merging a
 values-only promotion therefore cannot start another image build and cannot
 form a publish/promotion loop.
 
+## Historical existing-image handoff
+
+When a successful image workflow intentionally completed without its same-run
+promotion PR, `.github/workflows/demo-api-promote-existing-image.yaml` can
+recover the handoff without rebuilding. It is manual-only and rejects every ref
+except protected `main`. The operator supplies the original workflow run ID and
+full expected source commit; repository, tag, digest and artifact name are not
+free-form inputs.
+
+The workflow downloads the original run's metadata, verifies source ancestry,
+the digest-addressed GHCR manifest, SLSA provenance and SPDX SBOM attestation,
+then reuses `scripts/promote-demo-api-image.sh`. Only
+`apps/demo-api/helm/values/releases/aws-dev.yaml` may change. A same-name remote
+branch must have the exact derived tree or the run fails without overwriting it.
+The workflow creates or reuses a PR and never merges it. It has no AWS, EKS,
+Kubernetes or Argo CD access.
+
 ## Ordered Environment Promotion
 
 `.github/workflows/demo-api-promote-environment.yaml` is manual-only and must

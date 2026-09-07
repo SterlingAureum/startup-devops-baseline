@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "v0.11.7.1",
+  "version": "v0.11.7.1",
+  "predecessor": "v0.11.7.0.1",
+  "title": "Demo API multi-window SLO burn-rate alerts",
+  "scope": {
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "rolloutGateChanged": false,
+    "automaticRollbackAdded": false,
+    "externalNotificationAdded": false,
+    "awsRuntimeChanged": false
+  },
+  "slo": {
+    "availabilityObjective": 0.999,
+    "latencyObjective": 0.99,
+    "eligibleMethod": "GET",
+    "eligibleRoute": "/version",
+    "missingTrafficTreatedAsHealthy": false,
+    "windows": ["5m", "30m", "1h", "2h", "6h", "1d", "3d"],
+    "thresholds": {"fastPage": 14.4, "sustainedPage": 6, "slowTicket": 3, "longTicket": 1},
+    "requiresLongAndShortWindow": true
+  },
+  "recordingRules": {"badRatioCount": 14, "burnRateCount": 14, "identityDimensionsPreserved": true},
+  "alerts": {
+    "count": 4,
+    "names": [
+      "DemoApiAvailabilityErrorBudgetFastBurn",
+      "DemoApiAvailabilityErrorBudgetSlowBurn",
+      "DemoApiLatencyErrorBudgetFastBurn",
+      "DemoApiLatencyErrorBudgetSlowBurn"
+    ],
+    "cleanStateRequired": true
+  },
+  "dashboard": {"uid": "startup-devops-demo-api-slo", "recordingRulesOnly": true, "panelCount": 6},
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.1-multi-window-burn-rate-alerts.sh",
+    "liveValidator": "scripts/check-local-slo-burn-rate-alerts.sh",
+    "deterministicFixtures": true,
+    "liveFaultInjectionRequired": false
+  },
+  "deferred": {"sloAwareRolloutAnalysis": "v0.11.7.2", "sloClosure": "v0.11.7.3", "awsEvidence": "v0.11.8"}
+}

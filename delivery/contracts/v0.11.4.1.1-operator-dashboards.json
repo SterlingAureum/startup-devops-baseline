@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "v0.11.4.1.1",
+  "version": "v0.11.4.1.1",
+  "predecessor": "v0.11.4.1.0.2",
+  "status": "offline-implemented-local-live-required",
+  "designDocument": "docs/V0.11.4.1.1_OPERATOR_DASHBOARDS.md",
+  "chart": {
+    "path": "platform/observability/helm",
+    "previousVersion": "0.2.1",
+    "version": "0.2.2",
+    "applicationVersion": "v0.11.4.1.1",
+    "dashboardConfigMapsExpected": 4
+  },
+  "dashboards": {
+    "service": {
+      "file": "platform/observability/helm/dashboards/service-overview.json",
+      "uid": "startup-devops-service-overview",
+      "preserved": true
+    },
+    "delivery": {
+      "file": "platform/observability/helm/dashboards/delivery-overview.json",
+      "uid": "startup-devops-delivery-overview",
+      "title": "Startup DevOps / Delivery Overview",
+      "panelCount": 8,
+      "variables": ["application_namespace", "rollout_namespace"],
+      "rules": [
+        "delivery:argocd_applications:count",
+        "delivery:argocd_applications_out_of_sync:count",
+        "delivery:argocd_applications_unhealthy:count",
+        "delivery:rollouts:count",
+        "delivery:rollouts_problem:count",
+        "delivery:rollout_desired_replicas:count",
+        "delivery:rollout_available_replicas:count",
+        "delivery:rollout_unavailable_replicas:count",
+        "delivery:rollout_ready_replicas:ratio",
+        "delivery:rollout_reconcile:rate5m"
+      ]
+    },
+    "data": {
+      "file": "platform/observability/helm/dashboards/data-overview.json",
+      "uid": "startup-devops-data-overview",
+      "title": "Startup DevOps / Data Overview",
+      "panelCount": 6,
+      "variables": ["environment", "release"],
+      "rules": [
+        "data:demo_api_dependency_checks:rate5m",
+        "data:postgresql_instances_up:min",
+        "data:postgresql_collection_errors:max",
+        "data:postgresql_nodes_used:max",
+        "data:postgresql_manual_switchover_required:max"
+      ],
+      "localRequiredRules": ["data:demo_api_dependency_checks:rate5m"],
+      "localCloudNativePGDataRequired": false,
+      "cloudNativePGLiveEvidenceDeferredTo": "v0.11.8"
+    },
+    "platform": {
+      "file": "platform/observability/helm/dashboards/platform-overview.json",
+      "uid": "startup-devops-platform-overview",
+      "title": "Startup DevOps / Platform Overview",
+      "panelCount": 6,
+      "variables": ["namespace", "deployment"],
+      "rules": [
+        "platform:deployment_desired_replicas:count",
+        "platform:deployment_ready_replicas:ratio",
+        "platform:deployment_unavailable_replicas:count",
+        "platform:pod_container_restarts:increase15m",
+        "platform:prometheus_targets:count",
+        "platform:prometheus_targets_down:count"
+      ]
+    }
+  },
+  "dashboardPolicy": {
+    "editable": false,
+    "datasourceUid": "prometheus",
+    "refresh": "30s",
+    "defaultTimeRange": "now-1h",
+    "recordingRulesOnly": true,
+    "rawMetricsForbidden": true,
+    "globalVectorZeroForbidden": true,
+    "localCloudNativePGNoDataAllowed": true
+  },
+  "liveAcceptance": {
+    "script": "scripts/check-operator-dashboards.sh",
+    "profiles": ["local", "aws"],
+    "dashboardConfigMapsChecked": true,
+    "grafanaApiChecked": true,
+    "immutableDashboardsChecked": true,
+    "localDeliveryDataRequired": true,
+    "localDependencyDataRequired": true,
+    "localPlatformDataRequired": true,
+    "awsCloudNativePGDataRequired": true
+  },
+  "boundaries": {
+    "recordingRuleChanged": false,
+    "monitorChanged": false,
+    "dashboardOnlyIncrement": true,
+    "alertingAdded": false,
+    "loggingAdded": false,
+    "tracingAdded": false,
+    "sloAdded": false,
+    "capacityOrCostViewAdded": false,
+    "grafanaExposureChanged": false,
+    "grafanaPersistenceChanged": false,
+    "grafanaDeploymentChanged": false,
+    "canaryChanged": false,
+    "awsDesiredStateChanged": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.4.1.1-operator-dashboards.sh",
+    "completeQualityGateRequired": true,
+    "localLiveDashboardAcceptanceRequired": true,
+    "controllerMetricRegressionRequired": true,
+    "capacityViewsDeferredTo": "v0.11.4.2"
+  }
+}

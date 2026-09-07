@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "v0.11.8.1.2",
+  "version": "v0.11.8.1.2",
+  "status": "implemented-live-acceptance-required",
+  "predecessor": "v0.11.8.1.1",
+  "goal": "Qualify the current v0.11 feature revision in aws-dev without merging main or mixing child Application sources.",
+  "featureRevision": "feature/v0.11-observability-sre-baseline",
+  "sourcePolicy": {
+    "rootRevisionSelectedByDeployScript": true,
+    "awsDevSameRepositoryChildren": "feature/v0.11-observability-sre-baseline",
+    "awsTestSameRepositoryChildren": "main",
+    "awsProdSameRepositoryChildren": "main",
+    "externalChartVersionsPreserved": true
+  },
+  "awsDevSameRepositoryApplications": [
+    "application-admission-policies-aws-dev",
+    "data-platform-network-policy-aws-dev",
+    "demo-api-aws-dev",
+    "external-secrets-startup-apps",
+    "namespace-guardrails-aws-dev",
+    "observability-views-aws-dev",
+    "postgresql-baseline",
+    "runtime-qualification-rbac-aws-dev",
+    "startup-apps-network-policy-aws-dev"
+  ],
+  "liveIdentity": {
+    "logicalSourceInput": "EXPECTED_GIT_TARGET_REVISION",
+    "immutableSyncInput": "EXPECTED_CONTROL_PLANE_SHA",
+    "allAwsDevGitApplicationsRequireLogicalSource": true,
+    "allAwsDevGitApplicationsRequireExactSyncSha": true,
+    "evidenceTargetRevisionRemainsImmutableSha": true
+  },
+  "preMergeRestoration": {
+    "required": true,
+    "devExpectedAfterRestoration": "main",
+    "testExpected": "main",
+    "prodExpected": "main",
+    "externalChartsUnaffected": true,
+    "mergeBlockedByFeatureResidue": true
+  },
+  "scope": {
+    "awsDevGitSourceOverlayChanged": true,
+    "awsTestGitSourceChanged": false,
+    "awsProdGitSourceChanged": false,
+    "externalChartChanged": false,
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "awsInfrastructureCreated": false,
+    "runtimeMutationAddedToChecker": false,
+    "mainMergeRequiredForFeatureQualification": false
+  },
+  "acceptance": {
+    "revisionBoundaryChecker": "scripts/check-aws-gitops-revision-boundary.sh",
+    "liveChecker": "scripts/check-aws-dev-observability-qualification.sh",
+    "offlineValidator": "scripts/validate-v0.11.8.1.2-aws-dev-pre-merge-feature-revision-qualification.sh",
+    "runbook": "docs/V0.11.8.1.2_AWS_DEV_PRE_MERGE_FEATURE_REVISION_QUALIFICATION.md",
+    "completeQualityGateRequired": true
+  },
+  "deferred": {
+    "liveAwsDevEvidence": "after feature reconciliation",
+    "restorationCommit": "before main merge",
+    "awsTestQualification": "v0.11.8.2"
+  }
+}

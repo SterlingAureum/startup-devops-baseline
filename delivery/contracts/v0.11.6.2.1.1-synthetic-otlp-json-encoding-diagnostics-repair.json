@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "v0.11.6.2.1.1",
+  "version": "v0.11.6.2.1.1",
+  "status": "offline-implemented-local-live-rerun-required",
+  "predecessor": "v0.11.6.2.1",
+  "designDocument": "docs/V0.11.6.2.1.1_SYNTHETIC_OTLP_JSON_ENCODING_DIAGNOSTICS_REPAIR.md",
+  "incident": {
+    "failedStage": "synthetic-otlp-http-ingest",
+    "observedHttpStatus": 400,
+    "tempoApplicationHealthy": true,
+    "collectorApplicationHealthy": true,
+    "collectorReceiverListening": true,
+    "networkPathReachedCollector": true,
+    "runtimeResourceDefect": false,
+    "rootCause": "trace-and-span-identifiers-used-base64-instead-of-otlp-json-hex"
+  },
+  "protocol": {
+    "contentType": "application/json",
+    "traceIdEncoding": "hexadecimal",
+    "traceIdCharacters": 32,
+    "spanIdEncoding": "hexadecimal",
+    "spanIdCharacters": 16,
+    "zeroIdentifiersAllowed": false,
+    "identifierFieldCase": "lowerCamelCase",
+    "enumEncoding": "integer",
+    "timestampEncoding": "decimal-string"
+  },
+  "repair": {
+    "dedicatedPayloadGenerator": "scripts/generate-synthetic-otlp-trace.py",
+    "base64IdentifiersRemoved": true,
+    "httpErrorStatusPrinted": true,
+    "httpErrorBodyPrinted": true,
+    "httpErrorBodyLimitBytes": 4096,
+    "transportFailurePrinted": true,
+    "tempoAndCollectorDiagnosticsExplicit": true,
+    "collectorReplacementProofPreserved": true
+  },
+  "unchanged": {
+    "localPlatformChart": "0.7.0",
+    "localPlatformApplicationVersion": "v0.11.6.2.1",
+    "collectorChart": "0.172.0",
+    "collectorApplicationVersion": "0.159.0",
+    "tempoChart": "0.1.0",
+    "tempoApplicationVersion": "3.0.3",
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "applicationExportEnabled": false,
+    "collectorConfigurationChanged": false,
+    "tempoConfigurationChanged": false,
+    "networkPolicyChanged": false,
+    "grafanaTraceDatasourceAdded": false,
+    "awsStateChanged": false,
+    "workflowChanged": false,
+    "publicEndpointAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair.sh",
+    "liveEntrypoint": "scripts/check-local-tracing-runtime.sh",
+    "validHexPayloadTestRequired": true,
+    "invalidIdentifierTestsRequired": true,
+    "base64RegressionTestRequired": true,
+    "httpErrorVisibilityTestRequired": true,
+    "explicitRuntimeDiagnosticsTestRequired": true,
+    "consecutiveLiveRunsRequired": 2,
+    "runtimeRedeployRequired": false,
+    "imageRebuildRequired": false
+  },
+  "nextIncrement": {
+    "version": "v0.11.6.2.2",
+    "outcome": "enable-local-demo-api-export-and-accept-real-http-trace-correlation"
+  }
+}

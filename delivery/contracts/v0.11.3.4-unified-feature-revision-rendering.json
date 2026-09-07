@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "v0.11.3.4",
+  "version": "v0.11.3.4",
+  "status": "offline-implemented-live-replay-required",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.3.4_UNIFIED_FEATURE_REVISION_RENDERING.md",
+  "sourceModel": {
+    "rootApplication": "clusters/local/root-app.yaml",
+    "platformChart": "clusters/local/platform",
+    "platformChartVersion": "0.1.0",
+    "sameRepositoryApplications": [
+      "startup-devops-root",
+      "namespace-guardrails",
+      "demo-api"
+    ],
+    "sameRepositoryRevisionValue": "git.targetRevision",
+    "stableRevision": "HEAD",
+    "externalChartVersionsRemainIndependent": true
+  },
+  "featureInput": {
+    "operatorInput": "TARGET_REVISION",
+    "remoteBranchResolvedOnce": true,
+    "resolvedForm": "full-40-character-commit-sha",
+    "localCommitMustMatchRemote": true,
+    "trackedWorkingTreeMustBeClean": true,
+    "rootAndChildrenUseResolvedCommit": true
+  },
+  "rootRendering": {
+    "rootSyncMode": "manual",
+    "parameters": [
+      "git.repoURL",
+      "git.targetRevision",
+      "demoApi.localImage.enabled",
+      "demoApi.localImage.repository",
+      "demoApi.localImage.tag",
+      "demoApi.localImage.pullPolicy",
+      "demoApi.localImage.applicationVersion"
+    ],
+    "demoApiParametersOwnedByRoot": true,
+    "directChildSetOrUnsetRequired": false,
+    "expectedRootSyncStatus": "Synced",
+    "rootResyncSafeDuringFeatureValidation": true
+  },
+  "externalCharts": {
+    "argo-rollouts": "2.41.0",
+    "ingress-nginx": "4.11.3",
+    "monitoring": "88.5.0"
+  },
+  "restoration": {
+    "rootRevision": "HEAD",
+    "childRevisionValue": "HEAD",
+    "localImageEnabled": false,
+    "demoApiParametersRenderedExplicitlyEmpty": true,
+    "directChildCleanupRequired": false,
+    "rootAutomationRestored": true,
+    "expectedRootSyncStatus": "Synced"
+  },
+  "dynamicValidation": {
+    "manualFeatureRootRender": true,
+    "automatedStableRootRender": true,
+    "remoteBranchResolution": true,
+    "missingRemoteBranchRejected": true,
+    "invalidRootParameterRejected": true,
+    "helmStableAndFeatureRenderRequiredWhenHelmAvailable": true
+  },
+  "boundaries": {
+    "applicationTelemetryChanged": false,
+    "monitoringStackChanged": false,
+    "externalChartVersionChanged": false,
+    "canaryStrategyChanged": false,
+    "imageBuildOrPublishChanged": false,
+    "awsMutation": false,
+    "productionAutomationChanged": false,
+    "activeFeatureRevisionCommitted": false
+  },
+  "acceptance": {
+    "offlineValidatorRequired": true,
+    "helmRenderRequiredInQualityGate": true,
+    "cleanRemoteFeatureReplayRequired": true,
+    "rootAndSameRepositoryCommitEqualityRequired": true,
+    "rootSyncedRequired": true,
+    "headRestorationRequired": true,
+    "demoApiParametersEmptyAfterRestoration": true
+  }
+}

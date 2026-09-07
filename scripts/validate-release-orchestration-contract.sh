@@ -331,15 +331,43 @@ def validate_state(contract: dict[str, Any], state: dict[str, Any]) -> None:
         seen.add(key)
 
 
+def validate_workflow_document(name: str, text: str, allowed_runtime_workflows: set[str]) -> None:
+    forbidden = re.compile(r"(?im)\b(kubectl|aws\s+eks|update-kubeconfig|configure-aws-credentials)\b")
+    if forbidden.search(text) is None:
+        return
+    require(name in allowed_runtime_workflows, f"Workflow gained AWS/EKS runtime access: {name}")
+    if name == "aws-dev-observability-qualification.yaml":
+        for marker in (
+            "runs-on: [self-hosted, linux, x64, trusted-runtime, aws-dev]",
+            "name: aws-dev-runtime",
+            "check-aws-dev-observability-qualification.sh",
+        ):
+            require(marker in text, f"Observability runtime workflow lost boundary: {marker}")
+        for denied in ("aws-prod", "pull_request:", "kubectl apply", "terraform apply", "git push"):
+            require(denied not in text, f"Observability runtime workflow gained forbidden behavior: {denied}")
+
+
 def validate_workflow_boundary() -> None:
     workflow_dir = root / ".github/workflows"
-    forbidden = re.compile(
-        r"(?im)\b(kubectl|aws\s+eks|update-kubeconfig|configure-aws-credentials)\b"
-    )
+    allowed_runtime_workflows = {"demo-api-runtime-qualification.yaml"}
+    observability_successor = (
+        root / "delivery/contracts/v0.11.8.1-aws-dev-live-observability-qualification.json"
+    ).is_file()
+    if observability_successor:
+        allowed_runtime_workflows.add("aws-dev-observability-qualification.yaml")
     for path in sorted(workflow_dir.glob("*.y*ml")):
-        if path.name == "demo-api-runtime-qualification.yaml":
-            continue
-        require(forbidden.search(path.read_text()) is None, f"Workflow gained AWS/EKS runtime access: {path.name}")
+        validate_workflow_document(path.name, path.read_text(), allowed_runtime_workflows)
+
+    try:
+        validate_workflow_document(
+            "unreviewed-cluster-access.yaml",
+            "jobs:\n  unsafe:\n    steps:\n      - run: kubectl get pods\n",
+            allowed_runtime_workflows,
+        )
+    except ContractError:
+        pass
+    else:
+        raise ContractError("Unreviewed third-party AWS/EKS workflow fixture was accepted")
 
 
 def expect_rejected(name: str, value: dict[str, Any], validator) -> None:

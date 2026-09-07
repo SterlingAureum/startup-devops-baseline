@@ -19,7 +19,7 @@ done
 echo "==> Checking shell script syntax"
 while IFS= read -r script; do
   bash -n "${script}"
-done < <(find "${ROOT_DIR}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
+done < <(find "${ROOT_DIR}/scripts" -type f -name '*.sh' | sort)
 
 echo "==> Validating release orchestration contracts"
 "${ROOT_DIR}/scripts/validate-release-orchestration-contract.sh"
@@ -38,6 +38,275 @@ echo "==> Validating trusted runtime qualification executor"
 
 echo "==> Validating v0.10 final clean-room acceptance contracts"
 "${ROOT_DIR}/scripts/validate-v0.10-final-acceptance.sh"
+
+echo "==> Validating v0.11 Observability and SRE design foundation"
+"${ROOT_DIR}/scripts/validate-v0.11-observability-sre-foundation.sh"
+
+echo "==> Validating v0.11.1 metrics foundation"
+"${ROOT_DIR}/scripts/validate-v0.11.1-metrics-foundation.sh"
+
+echo "==> Validating v0.11.2 application and platform telemetry"
+"${ROOT_DIR}/scripts/validate-v0.11.2-application-platform-telemetry.sh"
+
+echo "==> Validating v0.11.3 local feature GitOps workflow"
+"${ROOT_DIR}/scripts/validate-v0.11.3-local-feature-gitops.sh"
+
+echo "==> Validating v0.11.3.1 local feature GitOps recovery guards"
+"${ROOT_DIR}/scripts/validate-v0.11.3.1-local-feature-gitops-recovery.sh"
+
+echo "==> Validating v0.11.3.2 Prometheus no-data hardening"
+"${ROOT_DIR}/scripts/validate-v0.11.3.2-prometheus-no-data-hardening.sh"
+
+echo "==> Validating v0.11.3.3 Argo CD operation race hardening"
+"${ROOT_DIR}/scripts/validate-v0.11.3.3-argocd-operation-race-hardening.sh"
+
+echo "==> Validating v0.11.3.4 unified feature revision rendering"
+"${ROOT_DIR}/scripts/validate-v0.11.3.4-unified-feature-revision-rendering.sh"
+
+echo "==> Validating v0.11.3.5 pre-merge baseline restoration"
+"${ROOT_DIR}/scripts/validate-v0.11.3.5-pre-merge-baseline-restoration.sh"
+
+echo "==> Validating v0.11.3.6 Helm migration validator coverage"
+"${ROOT_DIR}/scripts/validate-v0.11.3.6-helm-migration-validator-coverage.sh"
+
+echo "==> Validating v0.11.4.0 Grafana and recording rules"
+"${ROOT_DIR}/scripts/validate-v0.11.4.0-grafana-recording-rules.sh"
+
+echo "==> Validating v0.11.4.0.1 Helm successor coverage"
+"${ROOT_DIR}/scripts/validate-v0.11.4.0.1-helm-successor-coverage.sh"
+
+echo "==> Validating v0.11.4.1.0 controller metrics discovery"
+"${ROOT_DIR}/scripts/validate-v0.11.4.1.0-controller-metrics-discovery.sh"
+
+echo "==> Validating v0.11.4.1.0.1 acceptance stability repair"
+"${ROOT_DIR}/scripts/validate-v0.11.4.1.0.1-acceptance-stability-repair.sh"
+
+echo "==> Validating v0.11.4.1.0.2 ratio no-series repair"
+"${ROOT_DIR}/scripts/validate-v0.11.4.1.0.2-ratio-no-series-repair.sh"
+
+echo "==> Validating v0.11.4.1.1 operator Dashboards"
+"${ROOT_DIR}/scripts/validate-v0.11.4.1.1-operator-dashboards.sh"
+
+echo "==> Validating v0.11.4.2.0 capacity signal foundation"
+"${ROOT_DIR}/scripts/validate-v0.11.4.2.0-capacity-signal-foundation.sh"
+
+echo "==> Validating v0.11.4.2.1 Capacity and Resource Efficiency Dashboard"
+"${ROOT_DIR}/scripts/validate-v0.11.4.2.1-capacity-efficiency-dashboard.sh"
+
+echo "==> Validating v0.11.4.2.2 replay diagnostics repair"
+"${ROOT_DIR}/scripts/validate-v0.11.4.2.2-replay-diagnostics-repair.sh"
+
+echo "==> Validating v0.11.5.0 Alertmanager foundation"
+"${ROOT_DIR}/scripts/validate-v0.11.5.0-alertmanager-foundation.sh"
+
+echo "==> Validating v0.11.5.0.1 Alertmanager matcher normalization repair"
+"${ROOT_DIR}/scripts/validate-v0.11.5.0.1-matcher-normalization-repair.sh"
+
+echo "==> Validating v0.11.5.1 actionable alerts and Runbooks"
+"${ROOT_DIR}/scripts/validate-v0.11.5.1-actionable-alerts-runbooks.sh"
+
+echo "==> Validating v0.11.5.1.1 Prometheus target-down semantics repair"
+"${ROOT_DIR}/scripts/validate-v0.11.5.1.1-prometheus-target-down-semantics-repair.sh"
+
+echo "==> Validating v0.11.5.1.1.1 local acceptance path repair"
+"${ROOT_DIR}/scripts/validate-v0.11.5.1.1.1-local-acceptance-path-repair.sh"
+
+echo "==> Validating v0.11.5.2.0 alert lifecycle drill"
+"${ROOT_DIR}/scripts/validate-v0.11.5.2.0-alert-lifecycle-drill.sh"
+
+echo "==> Validating v0.11.5.2.0.1 Alertmanager webhook URL redaction repair"
+"${ROOT_DIR}/scripts/validate-v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair.sh"
+
+echo "==> Validating v0.11.5.2.0.2 alert resolution transition repair"
+"${ROOT_DIR}/scripts/validate-v0.11.5.2.0.2-alert-resolution-transition-repair.sh"
+
+echo "==> Validating v0.11.5.2.0.3 Prometheus rule cleanup synchronization repair"
+"${ROOT_DIR}/scripts/validate-v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair.sh"
+
+echo "==> Validating v0.11.6.0 centralized logging and minimal tracing foundation"
+"${ROOT_DIR}/scripts/validate-v0.11.6.0-centralized-logging-minimal-tracing-foundation.sh"
+
+echo "==> Validating v0.11.6.1.0 structured demo-api logging runtime"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.0-structured-demo-api-logging-runtime.sh"
+
+echo "==> Validating v0.11.6.1.1 local Loki and Alloy pod logs"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.1-local-loki-alloy-pod-logs.sh"
+
+echo "==> Validating v0.11.6.1.1.1 Alloy RBAC rendering and historical validator repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.1.1-alloy-rbac-rendering-historical-validator-repair.sh"
+
+echo "==> Validating v0.11.6.1.1.2 Alloy non-root and Loki rules-sidecar runtime repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.1.2-alloy-nonroot-loki-rules-sidecar-runtime-repair.sh"
+
+echo "==> Validating v0.11.6.1.1.5 application-scoped Alloy and Loki acceptance repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair.sh"
+
+echo "==> Validating v0.11.6.1.2 Kubernetes Events and Grafana Loki integration"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.2-kubernetes-events-grafana-loki.sh"
+
+echo "==> Validating v0.11.6.1.2.1 Events PVC sync-wave and validation repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.2.1-events-pvc-sync-wave-validation-repair.sh"
+
+echo "==> Validating v0.11.6.1.2.2 Kubernetes Event MicroTime acceptance repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.2.2-kubernetes-event-microtime-acceptance-repair.sh"
+
+echo "==> Validating v0.11.6.1.3 local logging end-to-end closure"
+"${ROOT_DIR}/scripts/validate-v0.11.6.1.3-local-logging-end-to-end-closure.sh"
+
+echo "==> Validating v0.11.6.2.0 demo-api OpenTelemetry tracing contract"
+"${ROOT_DIR}/scripts/validate-v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.sh"
+
+echo "==> Validating v0.11.6.2.1 private local OTel Collector and Tempo runtime"
+"${ROOT_DIR}/scripts/validate-v0.11.6.2.1-private-local-otel-collector-tempo-runtime.sh"
+
+echo "==> Validating v0.11.6.2.1.1 synthetic OTLP/JSON encoding and diagnostics repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.2.1.1-synthetic-otlp-json-encoding-diagnostics-repair.sh"
+
+echo "==> Validating v0.11.6.2.2 real demo-api trace and log correlation"
+"${ROOT_DIR}/scripts/validate-v0.11.6.2.2-real-demo-api-trace-log-correlation.sh"
+
+echo "==> Validating v0.11.6.2.2.4 Loki Gateway stale-upstream repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.2.2.4-loki-gateway-stale-upstream-repair.sh"
+
+echo "==> Validating v0.11.6.2.3 local minimal tracing closure"
+"${ROOT_DIR}/scripts/validate-v0.11.6.2.3-local-minimal-tracing-closure.sh"
+
+echo "==> Validating v0.11.6.2.3.1 demo-api runtime artifact preflight repair"
+"${ROOT_DIR}/scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh"
+
+echo "==> Validating v0.11.7.0 demo-api SLI/SLO and error-budget foundation"
+"${ROOT_DIR}/scripts/validate-v0.11.7.0-demo-api-sli-slo-error-budget-foundation.sh"
+
+echo "==> Validating v0.11.7.0.1 immutable feature Root reconciliation repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.0.1-immutable-feature-root-reconciliation-repair.sh"
+
+echo "==> Validating v0.11.7.1 multi-window SLO burn-rate alerts"
+"${ROOT_DIR}/scripts/validate-v0.11.7.1-multi-window-burn-rate-alerts.sh"
+
+echo "==> Validating v0.11.7.1.1 alert inventory order-independence repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.1.1-alert-inventory-order-independence-repair.sh"
+
+echo "==> Validating v0.11.7.1.2 Grafana Dashboard successor live-validation repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.1.2-grafana-dashboard-successor-live-validation-repair.sh"
+
+echo "==> Validating v0.11.7.1.3 burn-rate rule inventory jq repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.1.3-burn-rate-rule-inventory-jq-repair.sh"
+
+echo "==> Validating v0.11.7.2 SLO-aware Argo Rollouts Analysis"
+"${ROOT_DIR}/scripts/validate-v0.11.7.2-slo-aware-argo-rollouts-analysis.sh"
+
+echo "==> Validating v0.11.7.2.1 SLO Analysis PromQL and live-race repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.2.1-slo-analysis-promql-live-race-repair.sh"
+
+echo "==> Validating v0.11.7.2.2 canary Endpoint identity and scrape-window repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair.sh"
+
+echo "==> Validating v0.11.7.3 local SLO and progressive-delivery closure"
+"${ROOT_DIR}/scripts/validate-v0.11.7.3-local-slo-progressive-delivery-closure.sh"
+
+echo "==> Validating v0.11.7.3.1 final Rollout convergence wait repair"
+"${ROOT_DIR}/scripts/validate-v0.11.7.3.1-final-rollout-convergence-wait-repair.sh"
+
+echo "==> Validating v0.11.8.0 environment observability qualification foundation"
+"${ROOT_DIR}/scripts/validate-v0.11.8.0-environment-observability-qualification-foundation.sh"
+
+echo "==> Validating v0.11.8.1 aws-dev live observability qualification"
+"${ROOT_DIR}/scripts/validate-v0.11.8.1-aws-dev-live-observability-qualification.sh"
+
+echo "==> Validating v0.11.8.1.1 observability workflow boundary successor repair"
+"${ROOT_DIR}/scripts/validate-v0.11.8.1.1-observability-workflow-boundary-successor-repair.sh"
+
+echo "==> Validating v0.11.8.1.2 aws-dev pre-merge feature revision qualification"
+"${ROOT_DIR}/scripts/validate-v0.11.8.1.2-aws-dev-pre-merge-feature-revision-qualification.sh"
+
+echo "==> Validating v0.11.8.1.3 AWS deployment entrypoint repair"
+"${ROOT_DIR}/scripts/validate-v0.11.8.1.3-aws-deployment-entrypoint-repair.sh"
+
+echo "==> Validating v0.11.8.1.4 system capacity and Grafana repair"
+"${ROOT_DIR}/scripts/validate-v0.11.8.1.4-system-capacity-grafana-repair.sh"
+
+echo "==> Validating v0.11.8.1.5 capacity status and node wait closure"
+"${ROOT_DIR}/scripts/validate-v0.11.8.1.5-capacity-status-wait-closure.sh"
+echo "==> Validating v0.11.8.2.0 AWS test qualification prerequisites"
+"${ROOT_DIR}/scripts/validate-v0.11.8.2.0-aws-test-qualification-prerequisites.sh"
+echo "==> Validating v0.11.8.2.0.1 Barman Chart identity/render coverage repair"
+"${ROOT_DIR}/scripts/validate-v0.11.8.2.0.1-barman-chart-identity-render-coverage-repair.sh"
+echo "==> Validating v0.11.8.2.1 AWS test feature qualification"
+"${ROOT_DIR}/scripts/validate-v0.11.8.2.1-aws-test-feature-qualification.sh"
+echo "==> Validating v0.11.8.2.1.1 active GitOps preview registration"
+"${ROOT_DIR}/scripts/validate-v0.11.8.2.1.1-active-gitops-preview-registration.sh"
+
+echo "==> Validating v0.11.8.2.1.2 test variable input repair"
+"${ROOT_DIR}/scripts/validate-v0.11.8.2.1.2-test-variable-input-repair.sh"
+
+echo "==> Validating v0.11.8.2.1.3 test target identity"
+"${ROOT_DIR}/scripts/validate-v0.11.8.2.1.3-test-target-identity.sh"
+
+echo "==> Validating v0.11.8.2.2 test closure and rebuild"
+"${ROOT_DIR}/scripts/validate-v0.11.8.2.2-test-closure-and-rebuild.sh"
+
+echo "==> Validating v0.11.8.3 prod read-only qualification"
+"${ROOT_DIR}/scripts/validate-v0.11.8.3-prod-read-only-qualification.sh"
+
+echo "==> Validating v0.11.8.4 multi-environment closure"
+"${ROOT_DIR}/scripts/validate-v0.11.8.4-multi-environment-closure.sh"
+
+echo "==> Validating v0.11.9.0 release rehearsal design"
+"${ROOT_DIR}/scripts/validate-v0.11.9.0-release-rehearsal-design.sh"
+
+echo "==> Validating v0.11.9.1 local release rehearsal"
+"${ROOT_DIR}/scripts/validate-v0.11.9.1-local-release-rehearsal.sh"
+
+echo "==> Validating v0.11.9.1.1 local release rehearsal stability"
+"${ROOT_DIR}/scripts/validate-v0.11.9.1.1-local-release-rehearsal-stability.sh"
+
+echo "==> Validating v0.11.9.2.0 local failure/recovery design"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.0-local-failure-recovery-design.sh"
+
+echo "==> Validating v0.11.9.2.1 local failure/recovery runner"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.1-local-failure-recovery-runner.sh"
+
+echo "==> Validating v0.11.9.2.2 local failure/recovery live qualification"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2-local-failure-recovery-live-qualification.sh"
+
+echo "==> Validating v0.11.9.2.2.1 empty-digest GitOps convergence repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.1-empty-digest-gitops-convergence-repair.sh"
+
+echo "==> Validating v0.11.9.2.2.2 baseline-restoration traffic guard"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.2-baseline-restoration-traffic-guard.sh"
+
+echo "==> Validating v0.11.9.2.2.3 Prometheus identity and traffic lifetime"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3-prometheus-identity-traffic-lifetime.sh"
+
+echo "==> Validating v0.11.9.2.2.3.1 successor-aware target query"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.1-successor-aware-target-query.sh"
+
+echo "==> Validating v0.11.9.2.2.3.2 recovery Rollout closure"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.2-recovery-rollout-closure.sh"
+
+echo "==> Validating v0.11.9.2.2.3.3 request-series image compatibility"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3-request-series-image-compatibility.sh"
+
+echo "==> Validating v0.11.9.2.2.3.3.1 ShellCheck CI parity repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3.1-shellcheck-ci-parity.sh"
+
+echo "==> Validating v0.11.9.2.2.3.3.2 immutable local baseline image identity"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3.2-immutable-local-baseline-image.sh"
+
+echo "==> Validating v0.11.9.2.2.3.3.3 baseline restoration closure"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3.3-baseline-restoration-closure.sh"
+
+echo "==> Validating v0.11.9.2.2.3.3.3.1 rendered identity projection repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3.3.1-rendered-identity-projection-repair.sh"
+
+echo "==> Validating v0.11.9.3.0 remote release rehearsal design"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.0-remote-release-rehearsal-design.sh"
+
+echo "==> Validating v0.11.9.3.1 existing-image aws-dev promotion"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.1-existing-image-aws-dev-promotion.sh"
+
+echo "==> Validating v0.11.9.3.2 protected-main integration readiness"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.2-protected-main-integration-readiness.sh"
 
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"

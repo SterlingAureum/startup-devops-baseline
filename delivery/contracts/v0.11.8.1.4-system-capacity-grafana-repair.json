@@ -1,0 +1,15 @@
+{
+  "version": "v0.11.8.1.4",
+  "predecessor": "v0.11.8.1.3",
+  "scope": "aws-dev-only",
+  "systemNodeCount": 4,
+  "minimumFreeSlotsPerNode": 1,
+  "reserveSlotsBeyondPending": 8,
+  "capacityCheckIsPodSlotsOnly": true,
+  "scaleDownAllowed": false,
+  "automaticEviction": false,
+  "grafanaSecret": "observability-grafana-admin",
+  "secretPolicy": "create-once-preserve-existing-no-tracking-metadata",
+  "prepareSecretBeforeGitPush": true,
+  "liveAcceptance": "operator-required"
+}

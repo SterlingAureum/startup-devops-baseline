@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "v0.11.4.2.1",
+  "version": "v0.11.4.2.1",
+  "predecessor": "v0.11.4.2.0",
+  "status": "offline-implemented-local-live-required",
+  "designDocument": "docs/V0.11.4.2.1_CAPACITY_EFFICIENCY_DASHBOARD.md",
+  "chart": {
+    "path": "platform/observability/helm",
+    "previousVersion": "0.3.0",
+    "version": "0.3.1",
+    "applicationVersion": "v0.11.4.2.1",
+    "dashboardConfigMapsExpected": 5
+  },
+  "dashboard": {
+    "file": "platform/observability/helm/dashboards/capacity-overview.json",
+    "uid": "startup-devops-capacity-overview",
+    "title": "Startup DevOps / Capacity & Efficiency Overview",
+    "panelCount": 12,
+    "variables": ["namespace"],
+    "preservedDashboardUids": [
+      "startup-devops-service-overview",
+      "startup-devops-delivery-overview",
+      "startup-devops-data-overview",
+      "startup-devops-platform-overview"
+    ],
+    "acceptedRules": [
+      "capacity:node_cpu_allocatable_cores:sum",
+      "capacity:node_memory_allocatable_bytes:sum",
+      "capacity:node_pods_allocatable:sum",
+      "capacity:running_pods:count",
+      "capacity:running_pods_to_allocatable:ratio",
+      "capacity:cpu_requests_cores:sum",
+      "capacity:memory_requests_bytes:sum",
+      "capacity:cpu_limits_cores:sum",
+      "capacity:memory_limits_bytes:sum",
+      "capacity:cpu_requests_to_allocatable:ratio",
+      "capacity:memory_requests_to_allocatable:ratio",
+      "efficiency:namespace_cpu_requests_cores:sum",
+      "efficiency:namespace_memory_requests_bytes:sum",
+      "efficiency:namespace_cpu_usage_cores:rate5m",
+      "efficiency:namespace_memory_working_set_bytes:sum",
+      "efficiency:namespace_cpu_usage_to_requests:ratio",
+      "efficiency:namespace_memory_usage_to_requests:ratio",
+      "efficiency:namespace_active_containers:count",
+      "efficiency:namespace_containers_without_cpu_requests:count",
+      "efficiency:namespace_containers_without_memory_requests:count"
+    ],
+    "allAcceptedRulesConsumed": true
+  },
+  "dashboardPolicy": {
+    "editable": false,
+    "datasourceUid": "prometheus",
+    "refresh": "30s",
+    "defaultTimeRange": "now-1h",
+    "recordingRulesOnly": true,
+    "rawMetricsForbidden": true,
+    "globalVectorZeroForbidden": true,
+    "schedulerExactFitClaimForbidden": true,
+    "currencyCostClaimForbidden": true,
+    "missingSourceRemainsNoData": true
+  },
+  "liveAcceptance": {
+    "script": "scripts/check-capacity-dashboard.sh",
+    "profiles": ["local", "aws"],
+    "fiveDashboardConfigMapsChecked": true,
+    "grafanaApiChecked": true,
+    "immutableDashboardsChecked": true,
+    "capacityPanelCountChecked": true,
+    "namespaceVariableChecked": true,
+    "finiteCapacityDataChecked": true,
+    "startupAppsEfficiencyChecked": true,
+    "awsFormalEvidenceDeferredTo": "v0.11.8"
+  },
+  "boundaries": {
+    "dashboardOnlyIncrement": true,
+    "recordingRuleChanged": false,
+    "monitorChanged": false,
+    "monitoringStackChanged": false,
+    "alertAdded": false,
+    "autoscalingAdded": false,
+    "karpenterPolicyChanged": false,
+    "kubecostAdded": false,
+    "awsBillingIntegrationAdded": false,
+    "realCurrencyCostAdded": false,
+    "canaryChanged": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.4.2.1-capacity-efficiency-dashboard.sh",
+    "completeQualityGateRequired": true,
+    "localLiveDashboardAcceptanceRequired": true,
+    "capacitySignalRegressionRequired": true,
+    "operatorDashboardRegressionRequired": true,
+    "cleanLocalReplayRequiredAfterAcceptance": true
+  }
+}

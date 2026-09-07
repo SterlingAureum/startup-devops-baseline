@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "v0.11.5.0",
+  "version": "v0.11.5.0",
+  "status": "offline-implemented-local-live-required",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.5.0_ALERTMANAGER_FOUNDATION.md",
+  "ownership": {
+    "runtimeApplication": "monitoring",
+    "runtimeChart": "kube-prometheus-stack",
+    "runtimeChartVersion": "88.5.0",
+    "configurationOwner": "monitoring Application Helm values",
+    "alertRuleOwner": "platform/observability/helm",
+    "alertmanagerConfigCrdAdded": false
+  },
+  "profiles": {
+    "local": {
+      "replicas": 1,
+      "retention": "6h",
+      "storageType": "emptyDir",
+      "storageSize": "512Mi"
+    },
+    "aws-dev": {
+      "replicas": 1,
+      "retention": "24h",
+      "storageType": "gp3-pvc",
+      "storageSize": "2Gi"
+    },
+    "aws-test": {
+      "replicas": 1,
+      "retention": "48h",
+      "storageType": "gp3-pvc",
+      "storageSize": "2Gi"
+    },
+    "aws-prod": {
+      "replicas": 1,
+      "retention": "168h",
+      "storageType": "gp3-pvc",
+      "storageSize": "5Gi"
+    }
+  },
+  "routing": {
+    "defaultReceiver": "platform-observation",
+    "severityReceivers": [
+      "critical-observation",
+      "warning-observation"
+    ],
+    "groupBy": [
+      "environment",
+      "cluster",
+      "component",
+      "alert_family"
+    ],
+    "groupWait": "30s",
+    "groupInterval": "5m",
+    "repeatInterval": "4h",
+    "externalNotificationConfigured": false
+  },
+  "inhibition": {
+    "sourceSeverity": "critical",
+    "targetSeverity": "warning",
+    "equalLabels": [
+      "environment",
+      "cluster",
+      "component",
+      "alert_family"
+    ]
+  },
+  "securityAndCost": {
+    "serviceType": "ClusterIP",
+    "publicIngress": false,
+    "serviceAccountTokenAutomount": false,
+    "resourceRequestsAndLimits": true,
+    "networkPolicy": "alertmanager-cluster-only",
+    "awsNodeSelector": "workload=system",
+    "awsStorageClass": "gp3-observability-alertmanager",
+    "awsStorageEncrypted": true,
+    "awsStorageReclaimPolicy": "Delete",
+    "plaintextNotificationCredentialCommitted": false,
+    "highAvailabilityClaimed": false
+  },
+  "boundaries": {
+    "defaultRulesEnabled": false,
+    "alertRulesAdded": false,
+    "runbooksAdded": false,
+    "externalReceiverAdded": false,
+    "alertmanagerHaAdded": false,
+    "centralAlertmanagerAdded": false,
+    "remoteWriteAdded": false,
+    "dashboardChanged": false,
+    "demoApiTelemetryChanged": false,
+    "rolloutGateChanged": false,
+    "releaseOrchestratorChanged": false,
+    "awsMutationPerformed": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.5.0-alertmanager-foundation.sh",
+    "liveValidator": "scripts/check-alertmanager.sh",
+    "requireNoAlertRulesFlag": "REQUIRE_NO_ALERT_RULES=true",
+    "completeQualityGateRequired": true,
+    "localLiveReplayRequiredBeforeTag": true,
+    "awsLiveEvidenceDeferredTo": "v0.11.8"
+  }
+}

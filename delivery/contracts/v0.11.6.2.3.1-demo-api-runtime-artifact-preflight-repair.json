@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "v0.11.6.2.3.1",
+  "version": "v0.11.6.2.3.1",
+  "status": "offline-implemented-local-live-acceptance-required",
+  "predecessor": "v0.11.6.2.3",
+  "designDocument": "docs/V0.11.6.2.3.1_DEMO_API_RUNTIME_ARTIFACT_PREFLIGHT_REPAIR.md",
+  "scope": {
+    "environment": "local",
+    "applicationCodeChanged": false,
+    "helmDesiredStateChanged": false,
+    "runtimeComponentAdded": false,
+    "awsRuntimeChanged": false
+  },
+  "repair": {
+    "neutralReplayImageRejected": true,
+    "singleRuntimeImageIdRequired": true,
+    "allReadyPodsInspected": true,
+    "structuredLoggingModuleRequired": true,
+    "tracingModuleRequired": true,
+    "tracingEnvironmentRequired": true,
+    "lokiTimeoutExtended": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.2.3.1-demo-api-runtime-artifact-preflight-repair.sh",
+    "liveEntrypoint": "scripts/check-local-tracing-end-to-end.sh",
+    "freshUniqueImageRequired": true,
+    "realCorrelationRuns": 2
+  },
+  "incident": {
+    "classification": "runtime-artifact-provenance-drift",
+    "securityVulnerability": false,
+    "gitOpsHealthySufficient": false,
+    "knownNeutralImageTag": "sha-3e50802"
+  }
+}

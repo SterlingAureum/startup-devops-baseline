@@ -23,6 +23,7 @@ startup-devops-root Application
    +-- ingress-nginx Application
    +-- argo-rollouts Application
    +-- monitoring Application
+   +-- observability-views Application
    +-- demo-api Application
           |
           +-- Rollout/demo-api
@@ -72,7 +73,8 @@ It watches:
 clusters/local/platform/
 ```
 
-That directory contains child Application definitions for ingress-nginx, Argo Rollouts, monitoring, and demo-api.
+That directory contains child Application definitions for ingress-nginx, Argo
+Rollouts, monitoring, namespace guardrails, observability views, and demo-api.
 
 ## 3. Application Delivery
 
@@ -126,15 +128,30 @@ Stable and canary Services allow Argo Rollouts to direct traffic to separate Rep
 
 ## 6. Monitoring and Analysis
 
-A lightweight Prometheus deployment is stored under:
+The active v0.11.2 telemetry foundation uses the Operator-managed
+`kube-prometheus-stack` release in the `observability` Namespace. It provides
+Prometheus, kube-state-metrics, and node-exporter with bounded local and AWS
+profiles. The original `platform/monitoring/prometheus/` resources are retained
+only as historical v0.1 material.
 
-```text
-platform/monitoring/prometheus/
-```
+v0.11.4.0 enables the private Grafana component in the same pinned stack. A
+separate repository-owned `observability-views` Chart provisions bounded
+recording rules and immutable Dashboard ConfigMaps. It is a same-repository
+Application and therefore inherits the exact Root revision during feature
+validation.
 
-Prometheus scrapes stable and canary demo-api targets. The current AnalysisTemplate verifies that the canary target is available to Prometheus.
+v0.11.5.0 enables one private environment-local Alertmanager in the monitoring
+Application. Prometheus sends alerts only to the Alertmanager in its own
+cluster. Git shares the routing and inhibition policy across environments,
+while alerts, silences, notification state, and storage remain isolated.
+External notification delivery and actionable alert rules remain later
+v0.11.5 increments.
 
-This is intentionally a baseline health gate. Error-rate, latency, saturation, and business-level signals are deferred until richer application metrics are available.
+The demo-api Chart owns its ServiceMonitor, preserves Service names as
+Prometheus `job` labels, and derives release correlation from the selected Pod.
+This keeps stable and canary ReplicaSet identities correct during a Rollout.
+The current AnalysisTemplate can continue to verify the canary target with its
+existing query. SLO-based release gates remain v0.11.7 work.
 
 ## 7. CI and Image Publishing
 

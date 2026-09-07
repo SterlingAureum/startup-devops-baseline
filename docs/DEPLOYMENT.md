@@ -97,6 +97,25 @@ REPO_URL=https://github.com/<your-user>/startup-devops-baseline.git \
   ./scripts/deploy-root-app.sh
 ```
 
+The command above is the stable post-merge `HEAD` path. It fails before
+Kubernetes access if remote HEAD does not contain the platform `Chart.yaml`.
+For a pushed feature revision and
+an image already loaded into kind, use the branch-aware local workflow:
+
+```bash
+TARGET_REVISION=feature/v0.11-observability-sre-baseline \
+IMAGE_TAG=v0.11.3-local \
+  ./scripts/deploy-local-feature-gitops.sh
+```
+
+The workflow resolves the branch to one full commit SHA and renders it through
+the Root Helm App-of-Apps into every same-repository child. Root remains manual
+but `Synced`; a Root resync is safe. Before merge, restore a clean baseline
+with `TARGET_REVISION=feature/v0.11-observability-sre-baseline
+./scripts/restore-local-feature-baseline.sh`. Use
+`./scripts/restore-local-gitops-head.sh` only after this source migration has
+reached remote HEAD.
+
 The root app syncs the platform applications under:
 
 ```text
@@ -139,8 +158,10 @@ kubectl get svc -n ingress-nginx
 Check monitoring:
 
 ```bash
-kubectl get pods -n monitoring
-kubectl get svc -n monitoring
+kubectl get pods -n observability
+kubectl get svc -n observability
+./scripts/check-monitoring.sh
+REQUIRE_NO_ALERT_RULES=true ./scripts/check-alertmanager.sh
 ```
 
 ## 7. Test demo-api Through Ingress

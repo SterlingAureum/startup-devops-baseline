@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "v0.11.8.1.1",
+  "version": "v0.11.8.1.1",
+  "status": "implemented",
+  "predecessor": "v0.11.8.1",
+  "incidentEvidence": "info56.txt",
+  "failure": {
+    "entryPoint": "scripts/validate-ci-quality-gates.sh",
+    "validator": "scripts/validate-release-orchestration-contract.sh",
+    "message": "Workflow gained AWS/EKS runtime access: aws-dev-observability-qualification.yaml",
+    "cause": "The historical boundary recognized only demo-api-runtime-qualification.yaml as a reviewed runtime workflow."
+  },
+  "repair": {
+    "successorContractRequired": "delivery/contracts/v0.11.8.1-aws-dev-live-observability-qualification.json",
+    "additionalReviewedWorkflow": "aws-dev-observability-qualification.yaml",
+    "existingReviewedWorkflow": "demo-api-runtime-qualification.yaml",
+    "arbitraryThirdWorkflowRejected": true,
+    "awsProdRejected": true,
+    "pullRequestTriggerRejected": true,
+    "kubectlApplyRejected": true,
+    "terraformApplyRejected": true,
+    "gitPushRejected": true
+  },
+  "scope": {
+    "workflowChanged": false,
+    "runtimeCheckerChanged": false,
+    "rbacChanged": false,
+    "awsRuntimeChanged": false,
+    "applicationChanged": false,
+    "imageChanged": false,
+    "mainMergeRequired": false
+  },
+  "acceptance": {
+    "historicalValidator": "scripts/validate-release-orchestration-contract.sh",
+    "offlineValidator": "scripts/validate-v0.11.8.1.1-observability-workflow-boundary-successor-repair.sh",
+    "completeQualityGateRequired": true
+  }
+}

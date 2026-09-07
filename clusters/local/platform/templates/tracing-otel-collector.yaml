@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tracing-otel-collector
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "8"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.externalCharts.otelCollector.repoURL | quote }}
+    chart: opentelemetry-collector
+    targetRevision: {{ .Values.externalCharts.otelCollector.version | quote }}
+    helm:
+      releaseName: observability-otel-collector
+      values: |
+{{ .Files.Get "files/tracing/otel-collector-values.yaml" | nindent 8 }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

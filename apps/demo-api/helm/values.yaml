@@ -2,17 +2,21 @@ replicaCount: 3
 
 image:
   repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
-  tag: "sha-3e50802"
-  digest: ""
+  tag: "sha-cf0a6bc"
+  digest: "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623"
   pullPolicy: IfNotPresent
 
 release:
-  applicationVersion: "sha-3e50802"
+  applicationVersion: "sha-cf0a6bc"
+
+rehearsalFault:
+  mode: disabled
+  tokenSha256: ""
 
 delivery:
-  sourceRepository: ""
-  sourceCommit: ""
-  workflowRunId: ""
+  sourceRepository: "SterlingAureum/startup-devops-baseline"
+  sourceCommit: "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8"
+  workflowRunId: "34070524953"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -45,6 +49,9 @@ rollout:
               - templateName: demo-api-canary-health
         - setWeight: 50
         - pause: {}
+        - analysis:
+            templates:
+              - templateName: demo-api-canary-health
         - setWeight: 100
 serviceAccount:
   create: true
@@ -132,6 +139,24 @@ database:
   retryAttempts: 3
   retryDelaySeconds: 1
 
+telemetry:
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      interval: 15s
+      scrapeTimeout: 10s
+      sampleLimit: 50000
+      targetLimit: 10
+      labelLimit: 100
+      labelNameLengthLimit: 128
+      labelValueLengthLimit: 512
+  tracing:
+    enabled: false
+    endpoint: http://observability-otel-collector.observability.svc.cluster.local:4318/v1/traces
+    protocol: http/protobuf
+    timeoutSeconds: 5
+
 nodeSelector: {}
 tolerations: []
 affinity: {}
@@ -140,7 +165,7 @@ analysis:
   enabled: true
   provider: prometheus
   prometheus:
-    address: http://prometheus.monitoring.svc.cluster.local:9090
+    address: http://observability-metrics-prometheus.observability.svc.cluster.local:9090
   web:
     readyUrl: http://demo-api-canary.startup-apps.svc.cluster.local/ready
     versionUrl: http://demo-api-canary.startup-apps.svc.cluster.local/version
@@ -149,6 +174,20 @@ analysis:
     failureLimit: 1
   metrics:
     canaryTargetUp:
+      initialDelay: 60s
       interval: 15s
       count: 2
       failureLimit: 1
+    sloAware:
+      enabled: true
+      initialDelay: 90s
+      interval: 15s
+      count: 2
+      failureLimit: 1
+      window: 5m
+      minimumRequests: 20
+      availabilityObjective: 0.999
+      latencyObjective: 0.99
+      latencyThresholdSeconds: 0.5
+      maximumFastBurnRate: 14.4
+      minimumStableBudgetRemaining: 0

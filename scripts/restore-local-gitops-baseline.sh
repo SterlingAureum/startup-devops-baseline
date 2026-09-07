@@ -1,0 +1,227 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ARGOCD_NAMESPACE="${ARGOCD_NAMESPACE:-argocd}"
+ROOT_APP_NAME="${ROOT_APP_NAME:-startup-devops-root}"
+DEMO_APP_NAME="${DEMO_APP_NAME:-demo-api}"
+GUARDRAILS_APP_NAME="${GUARDRAILS_APP_NAME:-namespace-guardrails}"
+OBSERVABILITY_VIEWS_APP_NAME="${OBSERVABILITY_VIEWS_APP_NAME:-observability-views}"
+LOKI_APP_NAME="${LOKI_APP_NAME:-logging-loki}"
+OBSERVABILITY_NAMESPACE="${OBSERVABILITY_NAMESPACE:-observability}"
+LOKI_SERVICE_NAME="${LOKI_SERVICE_NAME:-observability-logs}"
+LOKI_GATEWAY_DEPLOYMENT="${LOKI_GATEWAY_DEPLOYMENT:-observability-logs-gateway}"
+REPO_URL="${REPO_URL:-https://github.com/SterlingAureum/startup-devops-baseline.git}"
+TARGET_REVISION="${TARGET_REVISION:-}"
+BASELINE_LABEL="${BASELINE_LABEL:-GitOps baseline}"
+WAIT_TIMEOUT_SECONDS="${WAIT_TIMEOUT_SECONDS:-180}"
+
+# shellcheck source=scripts/lib/argocd-operation.sh
+source "${ROOT_DIR}/scripts/lib/argocd-operation.sh"
+
+require_cmd() {
+  local command_name="$1"
+  command -v "${command_name}" >/dev/null 2>&1 || {
+    echo "ERROR: required command not found: ${command_name}" >&2
+    exit 1
+  }
+}
+
+wait_for_application() {
+  local application_name="$1"
+  local deadline=$((SECONDS + WAIT_TIMEOUT_SECONDS))
+
+  until kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" >/dev/null 2>&1; do
+    if [ "${SECONDS}" -ge "${deadline}" ]; then
+      echo "ERROR: timed out waiting for Application/${application_name}." >&2
+      exit 1
+    fi
+    sleep 2
+  done
+}
+
+wait_for_comparison_ready() {
+  local application_name="$1"
+  local deadline=$((SECONDS + WAIT_TIMEOUT_SECONDS))
+  local comparison_error
+
+  while true; do
+    if ! argocd app get "${application_name}" --hard-refresh >/dev/null; then
+      echo "ERROR: unable to hard-refresh Application/${application_name}." >&2
+      echo "Comparison readiness cannot be established; no sync or prune operation was started." >&2
+      exit 1
+    fi
+    comparison_error="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" \
+      -o jsonpath='{range .status.conditions[?(@.type=="ComparisonError")]}{.message}{end}' 2>/dev/null || true)"
+    if [ -z "${comparison_error}" ]; then
+      return 0
+    fi
+    if [ "${SECONDS}" -ge "${deadline}" ]; then
+      echo "ERROR: Application/${application_name} still has ComparisonError." >&2
+      echo "${comparison_error}" >&2
+      echo "No sync or prune operation was started for this Application." >&2
+      exit 1
+    fi
+    sleep 2
+  done
+}
+
+assert_revision() {
+  local application_name="$1"
+  local revision
+  revision="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.spec.source.targetRevision}')"
+  if [ "${revision}" != "${TARGET_REVISION}" ]; then
+    echo "ERROR: Application/${application_name} revision mismatch: expected ${TARGET_REVISION}, found ${revision:-<empty>}." >&2
+    exit 1
+  fi
+}
+
+set_application_automation() {
+  local application_name="$1"
+  kubectl -n "${ARGOCD_NAMESPACE}" patch application "${application_name}" \
+    --type merge \
+    -p '{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":true}}}}' >/dev/null
+}
+
+sync_application_if_needed() {
+  local application_name="$1"
+  local sync_status
+
+  wait_for_application_idle "${application_name}"
+  wait_for_comparison_ready "${application_name}"
+  sync_status="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${application_name}" -o jsonpath='{.status.sync.status}')"
+  if [ "${sync_status}" != "Synced" ]; then
+    if ! run_argocd_mutation_with_retry \
+      "${application_name}" \
+      argocd app sync "${application_name}" --timeout "${WAIT_TIMEOUT_SECONDS}"; then
+      echo "ERROR: bounded sync failed for Application/${application_name}." >&2
+      argocd_application_diagnostics "${application_name}"
+      return 1
+    fi
+  fi
+  wait_for_application_idle "${application_name}"
+  wait_for_comparison_ready "${application_name}"
+}
+
+for command_name in argocd jq kubectl; do
+  require_cmd "${command_name}"
+done
+
+if [ -z "${TARGET_REVISION}" ]; then
+  echo "ERROR: TARGET_REVISION is required by restore-local-gitops-baseline.sh." >&2
+  exit 1
+fi
+
+validate_argocd_operation_settings
+cd "${ROOT_DIR}"
+
+echo "==> Restoring ${BASELINE_LABEL} through the Root App-of-Apps"
+resolved_target_revision="${TARGET_REVISION}"
+TARGET_REVISION="${resolved_target_revision}" \
+GIT_TARGET_REVISION="${resolved_target_revision}" \
+ROOT_SYNC_MODE=manual \
+LOCAL_IMAGE_ENABLED=false \
+  REPO_URL="${REPO_URL}" \
+  "${ROOT_DIR}/scripts/deploy-root-app.sh"
+
+# Root is rendered in manual mode above, so child reconciliation has not yet
+# replaced the Loki Service. Capture the old address only after source preflight
+# succeeds, preserving the no-Kubernetes-access-on-invalid-source boundary.
+loki_service_ip_before="$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get service \
+  "${LOKI_SERVICE_NAME}" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"
+
+sync_application_if_needed "${ROOT_APP_NAME}"
+
+wait_for_application "${GUARDRAILS_APP_NAME}"
+wait_for_application "${DEMO_APP_NAME}"
+wait_for_application "${OBSERVABILITY_VIEWS_APP_NAME}"
+if kubectl -n "${ARGOCD_NAMESPACE}" get application "${LOKI_APP_NAME}" >/dev/null 2>&1; then
+  sync_application_if_needed "${LOKI_APP_NAME}"
+fi
+sync_application_if_needed "${GUARDRAILS_APP_NAME}"
+sync_application_if_needed "${DEMO_APP_NAME}"
+sync_application_if_needed "${OBSERVABILITY_VIEWS_APP_NAME}"
+
+set_application_automation "${ROOT_APP_NAME}"
+
+assert_revision "${ROOT_APP_NAME}"
+assert_revision "${GUARDRAILS_APP_NAME}"
+assert_revision "${DEMO_APP_NAME}"
+assert_revision "${OBSERVABILITY_VIEWS_APP_NAME}"
+
+root_child_revision="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.spec.source.helm.parameters[?(@.name=="git.targetRevision")].value}')"
+if [ "${root_child_revision}" != "${TARGET_REVISION}" ]; then
+  echo "ERROR: Root-rendered child revision mismatch: expected ${TARGET_REVISION}, found ${root_child_revision:-<empty>}." >&2
+  exit 1
+fi
+
+root_local_image_enabled="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.spec.source.helm.parameters[?(@.name=="demoApi.localImage.enabled")].value}')"
+if [ "${root_local_image_enabled}" != "false" ]; then
+  echo "ERROR: Root local-image mode was not disabled." >&2
+  exit 1
+fi
+
+helm_parameter_names="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${DEMO_APP_NAME}" -o jsonpath='{range .spec.source.helm.parameters[*]}{.name}{"\n"}{end}')"
+sorted_helm_parameter_names="$(sort <<<"${helm_parameter_names}")"
+expected_helm_parameter_names=""
+if [ -f "${ROOT_DIR}/delivery/contracts/v0.11.6.2.2-real-demo-api-trace-log-correlation.json" ]; then
+  expected_helm_parameter_names="$(printf '%s\n' \
+    telemetry.tracing.enabled \
+    telemetry.tracing.endpoint \
+    telemetry.tracing.protocol \
+    telemetry.tracing.timeoutSeconds \
+    | sort)"
+fi
+if [ "${sorted_helm_parameter_names}" != "${expected_helm_parameter_names}" ]; then
+  echo "ERROR: demo-api Helm parameters do not match the declarative baseline:" >&2
+  echo "Expected:" >&2
+  printf '%s\n' "${expected_helm_parameter_names:-<empty>}" >&2
+  echo "Observed:" >&2
+  printf '%s\n' "${sorted_helm_parameter_names:-<empty>}" >&2
+  exit 1
+fi
+
+self_heal="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.spec.syncPolicy.automated.selfHeal}')"
+if [ "${self_heal}" != "true" ]; then
+  echo "ERROR: Root automated self-heal was not restored." >&2
+  exit 1
+fi
+
+root_sync_status="$(kubectl -n "${ARGOCD_NAMESPACE}" get application "${ROOT_APP_NAME}" -o jsonpath='{.status.sync.status}')"
+if [ "${root_sync_status}" != "Synced" ]; then
+  echo "ERROR: Root did not remain Synced after declarative baseline restoration: ${root_sync_status:-<empty>}." >&2
+  exit 1
+fi
+
+loki_service_ip_after="$(kubectl -n "${OBSERVABILITY_NAMESPACE}" get service \
+  "${LOKI_SERVICE_NAME}" -o jsonpath='{.spec.clusterIP}' 2>/dev/null || true)"
+if [ -n "${loki_service_ip_before}" ] \
+  && [ -n "${loki_service_ip_after}" ] \
+  && [ "${loki_service_ip_before}" != "${loki_service_ip_after}" ]; then
+  echo "==> Loki Service ClusterIP changed; refreshing the Gateway upstream"
+  kubectl -n "${OBSERVABILITY_NAMESPACE}" rollout restart \
+    "deployment/${LOKI_GATEWAY_DEPLOYMENT}" >/dev/null
+  kubectl -n "${OBSERVABILITY_NAMESPACE}" rollout status \
+    "deployment/${LOKI_GATEWAY_DEPLOYMENT}" --timeout="${WAIT_TIMEOUT_SECONDS}s"
+fi
+
+rollout_json="$(kubectl -n startup-apps get rollout demo-api -o json)"
+rollout_phase="$(jq -r '.status.phase // "Unknown"' <<<"${rollout_json}")"
+rollout_abort="$(jq -r '.status.abort // false' <<<"${rollout_json}")"
+rollout_version="$(jq -r '.metadata.annotations["platform.startup.dev/application-version"] // ""' <<<"${rollout_json}")"
+rollout_stable="$(jq -r '.status.stableRS // ""' <<<"${rollout_json}")"
+rollout_current="$(jq -r '.status.currentPodHash // ""' <<<"${rollout_json}")"
+
+if [ "${rollout_phase}" != "Healthy" ] || [ "${rollout_abort}" = "true" ] || \
+   [ -z "${rollout_stable}" ] || [ "${rollout_stable}" != "${rollout_current}" ]; then
+  echo "ERROR: GitOps baseline is Synced, but the demo-api runtime baseline is not restored." >&2
+  echo "Rollout phase=${rollout_phase} abort=${rollout_abort} version=${rollout_version:-<empty>} stableRS=${rollout_stable:-<empty>} currentPodHash=${rollout_current:-<empty>}" >&2
+  echo "Do not promote or retry without an armed bounded-traffic observer." >&2
+  echo "Use scripts/run-local-baseline-restoration-analysis.sh and the v0.11.9.2.2.2 runbook." >&2
+  kubectl -n startup-apps get rollout demo-api -o wide >&2 || true
+  kubectl -n startup-apps get analysisrun --sort-by=.metadata.creationTimestamp >&2 || true
+  exit 2
+fi
+
+echo "${BASELINE_LABEL} restored and runtime-qualified."
+echo "Root and same-repository children use ${TARGET_REVISION}; demo-api is Healthy on ${rollout_version}."

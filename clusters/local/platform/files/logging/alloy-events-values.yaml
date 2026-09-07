@@ -1,0 +1,158 @@
+fullnameOverride: observability-events-collector
+
+crds:
+  create: false
+
+global:
+  podSecurityContext:
+    runAsNonRoot: true
+    fsGroup: 473
+    seccompProfile:
+      type: RuntimeDefault
+
+alloy:
+  clustering:
+    enabled: false
+  enableReporting: false
+  storagePath: /var/lib/alloy
+  mounts:
+    varlog: false
+    dockercontainers: false
+    extra:
+      - name: alloy-storage
+        mountPath: /var/lib/alloy
+  securityContext:
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+    runAsUser: 473
+    runAsGroup: 473
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+      ephemeral-storage: 32Mi
+    limits:
+      cpu: 150m
+      memory: 192Mi
+      ephemeral-storage: 128Mi
+  configMap:
+    create: true
+    content: |-
+      logging {
+        level  = "info"
+        format = "logfmt"
+      }
+
+      loki.source.kubernetes_events "cluster_events" {
+        job_name   = "integrations/kubernetes/eventhandler"
+        log_format = "json"
+        forward_to = [loki.process.cluster_events.receiver]
+      }
+
+      loki.process "cluster_events" {
+        stage.static_labels {
+          values = {
+            environment = "local",
+            cluster     = "startup-devops-local",
+            application = "kubernetes-events",
+            container   = "events",
+            severity    = "INFO",
+          }
+        }
+
+        stage.label_keep {
+          values = ["environment", "cluster", "namespace", "application", "container", "severity"]
+        }
+
+        forward_to = [loki.write.local.receiver]
+      }
+
+      loki.write "local" {
+        endpoint {
+          url = "http://observability-logs-gateway.observability.svc.cluster.local/loki/api/v1/push"
+        }
+      }
+
+configReloader:
+  enabled: false
+
+controller:
+  type: deployment
+  replicas: 1
+  hostNetwork: false
+  hostPID: false
+  volumes:
+    extra:
+      - name: alloy-storage
+        persistentVolumeClaim:
+          claimName: observability-events-collector-storage
+
+rbac:
+  create: true
+  rules:
+    - apiGroups:
+        - ""
+      resources:
+        - events
+      verbs:
+        - get
+  clusterRules:
+    - apiGroups:
+        - ""
+      resources:
+        - events
+      verbs:
+        - list
+        - watch
+
+serviceAccount:
+  create: true
+  automountServiceAccountToken: true
+
+service:
+  enabled: false
+serviceMonitor:
+  enabled: false
+ingress:
+  enabled: false
+
+networkPolicy:
+  enabled: true
+  flavor: kubernetes
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress: []
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - to:
+        - ipBlock:
+            cidr: 10.96.0.1/32
+      ports:
+        - protocol: TCP
+          port: 443
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/instance: observability-logs
+              app.kubernetes.io/component: gateway
+      ports:
+        - protocol: TCP
+          port: 8080

@@ -1,0 +1,13 @@
+{
+  "version": "v0.11.9.1",
+  "predecessor": "v0.11.9.0",
+  "environment": "local-kind-loopback-only",
+  "phases": ["prepare", "deploy", "first-analysis", "human-review", "second-analysis", "final"],
+  "image_identity": "reuse-baseline-tag-and-verify-runtime-image-id",
+  "automatic_promote": false,
+  "automatic_rollback": false,
+  "fault_injection": false,
+  "phase_timeout_seconds": 900,
+  "prod": "deferred-to-v0.11-tail",
+  "live_qualified_by_producer": false
+}

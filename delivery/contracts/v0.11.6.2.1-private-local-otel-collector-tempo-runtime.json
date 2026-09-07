@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "v0.11.6.2.1",
+  "version": "v0.11.6.2.1",
+  "status": "offline-implemented-local-live-acceptance-required",
+  "predecessor": "v0.11.6.2.0",
+  "designDocument": "docs/V0.11.6.2.1_PRIVATE_LOCAL_OTEL_COLLECTOR_TEMPO_RUNTIME.md",
+  "scope": {
+    "environment": "local",
+    "collectorImplemented": true,
+    "tempoImplemented": true,
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "applicationExportEnabled": false,
+    "grafanaTraceDatasourceImplemented": false,
+    "postgresqlLiveTraceClaimed": false,
+    "awsRuntimeChanged": false
+  },
+  "versions": {
+    "localPlatformChart": "0.7.0",
+    "localPlatformApplicationVersion": "v0.11.6.2.1",
+    "collectorChart": "0.172.0",
+    "collectorApplicationVersion": "0.159.0",
+    "tempoChart": "0.1.0",
+    "tempoApplicationVersion": "3.0.3",
+    "deprecatedExternalTempoChartUsed": false
+  },
+  "topology": {
+    "namespace": "observability",
+    "applications": [
+      {"name": "tracing-tempo", "syncWave": 7},
+      {"name": "tracing-otel-collector", "syncWave": 8}
+    ],
+    "collectorDeployment": "observability-otel-collector",
+    "collectorService": "observability-otel-collector",
+    "collectorOtlpHttpPort": 4318,
+    "tempoDeployment": "observability-tempo",
+    "tempoService": "observability-tempo",
+    "tempoHttpPort": 3200,
+    "tempoOtlpHttpPort": 4318,
+    "publicEndpointAdded": false
+  },
+  "collector": {
+    "mode": "deployment",
+    "replicas": 1,
+    "receiverProtocols": ["otlp-http"],
+    "processors": ["memory_limiter", "batch"],
+    "exporters": ["otlp_http/tempo"],
+    "pipelines": ["traces"],
+    "samplingConfigured": false,
+    "logsPipelineConfigured": false,
+    "metricsPipelineConfigured": false,
+    "jaegerReceiverConfigured": false,
+    "zipkinReceiverConfigured": false,
+    "kubernetesRbacRequired": false
+  },
+  "tempo": {
+    "deploymentMode": "monolithic",
+    "replicas": 1,
+    "target": "all",
+    "backend": "local-filesystem",
+    "storage": "bounded-emptyDir",
+    "retention": "24h",
+    "multitenancyEnabled": false,
+    "kafkaRequired": false,
+    "metricsGeneratorEnabled": false,
+    "repoOwnedMinimalChart": true
+  },
+  "security": {
+    "clusterIpOnly": true,
+    "ingressCreated": false,
+    "loadBalancerCreated": false,
+    "hostNetworkUsed": false,
+    "hostPathUsed": false,
+    "privilegedUsed": false,
+    "serviceAccountTokensMounted": false,
+    "readOnlyRootFilesystems": true,
+    "allCapabilitiesDropped": true,
+    "networkPoliciesRequired": true,
+    "externalCredentialsAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.2.1-private-local-otel-collector-tempo-runtime.sh",
+    "liveEntrypoint": "scripts/check-local-tracing-runtime.sh",
+    "helmRenderRequired": true,
+    "syntheticOtlpTraceRequired": true,
+    "tempoTraceQueryRequired": true,
+    "collectorPodReplacementHistoryRequired": true,
+    "applicationExportDisabledRequired": true,
+    "consecutiveRunsRequired": 2
+  },
+  "operations": {
+    "imageRebuildRequired": false,
+    "applicationCodeChangeRequired": false,
+    "localPlatformReconciliationRequired": true,
+    "loggingRuntimeRedeployRequired": false,
+    "databaseEnablementRequired": false
+  },
+  "nextIncrement": {
+    "version": "v0.11.6.2.2",
+    "outcome": "enable-local-demo-api-export-and-accept-real-http-trace-correlation"
+  }
+}

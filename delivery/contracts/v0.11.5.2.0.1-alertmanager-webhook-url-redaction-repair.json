@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "v0.11.5.2.0.1",
+  "version": "v0.11.5.2.0.1",
+  "status": "offline-implemented-local-live-rerun-required",
+  "predecessor": "v0.11.5.2.0",
+  "designDocument": "docs/V0.11.5.2.0.1_ALERTMANAGER_WEBHOOK_URL_REDACTION_REPAIR.md",
+  "incident": {
+    "runtimeConfigurationDefect": false,
+    "acceptanceParserDefect": true,
+    "redeployRequired": false,
+    "observedRuntimeUrlRepresentation": "url: <secret>",
+    "observedRedactedUrlCount": 2,
+    "drillReceiversObserved": 2,
+    "webhookConfigsObserved": 2,
+    "sendResolvedObserved": 2,
+    "remainingLiveChecksPassed": true
+  },
+  "repair": {
+    "desiredStateUrlMode": "exact-internal-literal",
+    "fixtureDefaultUrlMode": "literal",
+    "runtimeUrlMode": "redacted",
+    "runtimeUrlLineCount": 2,
+    "runtimeRedactedUrlCount": 2,
+    "publicUrlFixtureRejected": true,
+    "missingRedactedUrlFixtureRejected": true,
+    "mixedLiteralAndRedactedRuntimeFixtureRejected": true,
+    "normalRouteAndMatcherCardinalityPreserved": true
+  },
+  "unchanged": {
+    "localPlatformChartVersion": "0.4.1",
+    "localPlatformApplicationVersion": "v0.11.5.2.0",
+    "observabilityChartVersion": "0.4.1",
+    "observabilityApplicationVersion": "v0.11.5.1.1",
+    "formalAlertCount": 9,
+    "warningCount": 2,
+    "criticalCount": 7,
+    "monitoringDesiredStateChanged": false,
+    "alertmanagerRouteChanged": false,
+    "alertmanagerReceiverChanged": false,
+    "networkPolicyChanged": false,
+    "formalAlertChanged": false,
+    "webhookSinkChanged": false,
+    "liveDrillChanged": false
+  },
+  "boundaries": {
+    "externalReceiverAdded": false,
+    "publicWebhookAdded": false,
+    "notificationCredentialAdded": false,
+    "kubernetesResourceChanged": false,
+    "demoApiImageChanged": false,
+    "awsMutationPerformed": false,
+    "productionAutomationChanged": false,
+    "sloOrBurnRateAdded": false,
+    "loggingOrTracingAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair.sh",
+    "liveValidator": "scripts/check-alertmanager.sh",
+    "liveDrill": "scripts/check-alert-lifecycle-drill.sh",
+    "completeQualityGateRequired": true,
+    "localLiveRerunRequired": true,
+    "monitoringRedeployBeforeRerun": false,
+    "liveDrillRequiredAfterCheckerPasses": true,
+    "formalAwsExecutionDeferredTo": "v0.11.8"
+  }
+}

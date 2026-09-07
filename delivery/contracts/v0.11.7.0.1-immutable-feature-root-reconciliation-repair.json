@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "v0.11.7.0.1",
+  "version": "v0.11.7.0.1",
+  "status": "offline-implemented-local-live-acceptance-required",
+  "predecessor": "v0.11.7.0",
+  "designDocument": "docs/V0.11.7.0.1_IMMUTABLE_FEATURE_ROOT_RECONCILIATION_TROUBLESHOOTING.md",
+  "scope": {
+    "environment": "local",
+    "sloFormulaChanged": false,
+    "dashboardChanged": false,
+    "alertRuleChanged": false,
+    "rolloutChanged": false,
+    "runtimeResourceChanged": false,
+    "applicationImageChanged": false,
+    "awsRuntimeChanged": false
+  },
+  "repair": {
+    "localHeadCompared": true,
+    "remoteFeatureHeadCompared": true,
+    "rootTargetRevisionCompared": true,
+    "rootChildRevisionParameterCompared": true,
+    "namespaceGuardrailsRevisionCompared": true,
+    "demoApiRevisionCompared": true,
+    "observabilityViewsRevisionCompared": true,
+    "targetAndStatusRevisionRequired": true,
+    "existingImageReuseCommandPrinted": true,
+    "childDirectPatchRecommended": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.0.1-immutable-feature-root-reconciliation-repair.sh",
+    "liveEntrypoint": "scripts/check-local-slo-foundation.sh",
+    "rootRedeployRequiredAfterEachCommittedIncrement": true,
+    "syncedHealthyAloneSufficient": false,
+    "hardRefreshAloneSufficient": false
+  },
+  "incident": {
+    "observedRemoteHead": "f95581d0795fe057d4a955ce915d0857231d5cd9",
+    "observedStaleRevision": "2375fd62244a8e0f26bf0cb9b88a67c8ffe3a435",
+    "classification": "immutable-feature-root-not-advanced",
+    "runtimeDefect": false
+  }
+}

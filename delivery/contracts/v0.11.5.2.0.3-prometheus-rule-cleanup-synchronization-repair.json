@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "v0.11.5.2.0.3",
+  "version": "v0.11.5.2.0.3",
+  "status": "offline-implemented-local-live-rerun-required",
+  "predecessor": "v0.11.5.2.0.2",
+  "designDocument": "docs/V0.11.5.2.0.3_PROMETHEUS_RULE_CLEANUP_SYNCHRONIZATION_REPAIR.md",
+  "incident": {
+    "allFourLifecyclePhasesCompleted": true,
+    "temporaryRulesHealthy": true,
+    "temporaryRulesInactive": true,
+    "formalRulesHealthy": true,
+    "formalRulesInactive": true,
+    "observedFormalAlertCount": 9,
+    "observedTemporaryAlertCount": 2,
+    "observedPrometheusInventoryCount": 11,
+    "kubernetesDeletionConfirmedByIncidentOutput": false,
+    "prometheusInventoryConvergenceConfirmed": false,
+    "lifecycleTransitionDefect": false,
+    "cleanupSynchronizationDefect": true
+  },
+  "repair": {
+    "kubernetesDeletionAndPrometheusReloadSeparated": true,
+    "strictFinalKubernetesDeletion": true,
+    "exitTrapCleanupRemainsBestEffort": true,
+    "prometheusInventoryAbsenceRequiredAfterEachPhase": true,
+    "prometheusInventoryAbsenceRequiredBeforeFormalBaseline": true,
+    "temporaryAlertNamesChecked": [
+      "AlertLifecycleDrillWarning",
+      "AlertLifecycleDrillCritical"
+    ],
+    "ruleRemovalTimeoutSeconds": 120,
+    "boundedPolling": true,
+    "timeoutDiagnosticsRequired": true,
+    "formalBaselineCheckedOnlyAfterConvergence": true
+  },
+  "unchanged": {
+    "localPlatformChartVersion": "0.4.1",
+    "localPlatformApplicationVersion": "v0.11.5.2.0",
+    "observabilityChartVersion": "0.4.1",
+    "observabilityApplicationVersion": "v0.11.5.1.1",
+    "formalAlertCount": 9,
+    "monitoringDesiredStateChanged": false,
+    "alertmanagerConfigChanged": false,
+    "networkPolicyChanged": false,
+    "webhookSinkChanged": false,
+    "alertExpressionChanged": false,
+    "externalReceiverAdded": false,
+    "applicationImageChanged": false
+  },
+  "boundaries": {
+    "kubernetesDesiredStateChanged": false,
+    "realWorkloadFailureAdded": false,
+    "silenceAdded": false,
+    "externalCredentialAdded": false,
+    "awsMutationPerformed": false,
+    "productionAutomationChanged": false,
+    "sloOrBurnRateAdded": false,
+    "loggingOrTracingAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair.sh",
+    "liveValidator": "scripts/check-alert-lifecycle-drill.sh",
+    "completeQualityGateRequired": true,
+    "localLiveRerunRequired": true,
+    "monitoringRedeployBeforeRerun": false,
+    "imageRebuildBeforeRerun": false,
+    "zeroKubernetesResidualRequired": true,
+    "zeroPrometheusRuleInventoryResidualRequired": true,
+    "exactFormalAlertInventoryRequired": true,
+    "formalAwsExecutionDeferredTo": "v0.11.8"
+  }
+}

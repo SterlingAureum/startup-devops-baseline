@@ -1,0 +1,66 @@
+{
+  "version": "v0.11.8.2.0",
+  "predecessor": "v0.11.8.1.5",
+  "phase": "offline-prerequisites",
+  "live_execution_enabled": false,
+  "repository": "https://github.com/SterlingAureum/startup-devops-baseline.git",
+  "stable_revision": "main",
+  "qualification_revision": "feature/v0.11-observability-sre-baseline",
+  "qualification_overlay": "clusters/aws/overlays/test-feature-qualification",
+  "root_application": "startup-devops-aws-test-root",
+  "same_repository_applications": [
+    "application-admission-policies-aws-test",
+    "data-platform-network-policy-aws-test",
+    "demo-api-aws-test",
+    "external-secrets-startup-apps",
+    "namespace-guardrails-aws-test",
+    "observability-views-aws-test",
+    "postgresql-baseline",
+    "runtime-qualification-rbac-aws-test",
+    "startup-apps-network-policy-aws-test"
+  ],
+  "external_charts": {
+    "argo-rollouts": "2.41.1",
+    "aws-load-balancer-controller": "1.14.0",
+    "plugin-barman-cloud": "0.7.0",
+    "cert-manager": "v1.21.0",
+    "cloudnative-pg": "0.29.0",
+    "external-secrets": "2.8.0",
+    "karpenter": "1.14.0",
+    "karpenter-crd": "1.14.0",
+    "kube-prometheus-stack": "88.5.0"
+  },
+  "capacity": {
+    "terraform_root": "infra/terraform/aws/environments/test",
+    "profile": "delivery/profiles/aws-test-observability-qualification.tfvars",
+    "min": 4,
+    "desired": 4,
+    "max": 4,
+    "automatic_loading": false,
+    "requires_reviewed_plan": true
+  },
+  "grafana": {
+    "namespace": "observability",
+    "secret": "observability-grafana-admin",
+    "user_key": "admin-user",
+    "password_key": "admin-password",
+    "independent_credentials": true
+  },
+  "release": {
+    "promote": false,
+    "require_test_release_identity": true,
+    "copy_dev_evidence": false
+  },
+  "sequence": [
+    "review-source-and-cost",
+    "create-or-resume-test-with-reviewed-plan",
+    "verify-node-readiness-and-pod-headroom",
+    "prepare-independent-test-grafana-secret",
+    "bootstrap-test-root",
+    "verify-exact-release-and-canary-completion",
+    "collect-read-only-test-evidence",
+    "destroy-after-evidence"
+  ],
+  "prod_in_scope": false,
+  "next": "v0.11.8.2.1"
+}

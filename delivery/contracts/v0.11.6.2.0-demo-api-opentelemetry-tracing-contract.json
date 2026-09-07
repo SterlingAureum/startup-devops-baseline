@@ -1,0 +1,137 @@
+{
+  "schemaVersion": "v0.11.6.2.0",
+  "version": "v0.11.6.2.0",
+  "status": "offline-implemented-local-image-rebuild-required",
+  "predecessor": "v0.11.6.1.3",
+  "designDocument": "docs/V0.11.6.2.0_DEMO_API_OPENTELEMETRY_TRACING_CONTRACT.md",
+  "scope": {
+    "environment": "local",
+    "applicationCodeChanged": true,
+    "applicationImageSourceChanged": true,
+    "helmRuntimeConfigurationChanged": true,
+    "w3cTraceContextImplemented": true,
+    "httpServerSpanImplemented": true,
+    "postgresqlClientSpanImplemented": true,
+    "logTraceCorrelationImplemented": true,
+    "collectorImplemented": false,
+    "tempoImplemented": false,
+    "grafanaTraceDatasourceImplemented": false,
+    "operatorAutoInstrumentationImplemented": false
+  },
+  "dependencies": {
+    "opentelemetry-api": "1.44.0",
+    "opentelemetry-sdk": "1.44.0",
+    "opentelemetry-exporter-otlp-proto-http": "1.44.0"
+  },
+  "runtime": {
+    "enabledByDefault": false,
+    "enableVariable": "TRACING_ENABLED",
+    "protocol": "http/protobuf",
+    "endpointVariable": "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+    "timeoutVariable": "OTEL_EXPORTER_OTLP_TRACES_TIMEOUT",
+    "defaultTimeoutSeconds": 5,
+    "maximumTimeoutSeconds": 30,
+    "exporterCreatedWhenDisabled": false,
+    "backgroundProcessorCreatedWhenDisabled": false,
+    "networkAttemptWhenDisabled": false,
+    "samplingConfiguredInApplication": false,
+    "collectorOwnsSamplingNextIncrement": true,
+    "baggagePropagationAccepted": false
+  },
+  "tracePath": {
+    "shape": "http-request-to-demo-api-server-span-to-postgresql-client-span",
+    "httpSpanKind": "SERVER",
+    "databaseSpanKind": "CLIENT",
+    "suppressedPaths": [
+      "/health",
+      "/ready",
+      "/metrics"
+    ],
+    "readinessDatabaseSpanEnabled": false,
+    "localLivePostgresqlRequired": false,
+    "awsPostgresqlQualificationDeferredTo": "v0.11.8"
+  },
+  "identity": {
+    "sharedSource": "apps/demo-api/src/runtime_identity.py",
+    "resourceAttributes": [
+      "service.name",
+      "service.version",
+      "deployment.environment.name",
+      "platform.release.id",
+      "platform.source.commit",
+      "container.image.digest"
+    ],
+    "logCorrelationFields": [
+      "trace_id",
+      "span_id"
+    ],
+    "invalidContextFieldsOmitted": true
+  },
+  "security": {
+    "httpAttributeAllowlist": [
+      "http.request.method",
+      "http.route",
+      "http.response.status_code"
+    ],
+    "databaseAttributeAllowlist": [
+      "db.system.name",
+      "db.operation.name"
+    ],
+    "rawUrlCaptured": false,
+    "queryStringCaptured": false,
+    "requestBodyCaptured": false,
+    "responseBodyCaptured": false,
+    "authorizationHeaderCaptured": false,
+    "cookieHeaderCaptured": false,
+    "databaseUrlCaptured": false,
+    "rawSqlCaptured": false,
+    "databaseParametersCaptured": false,
+    "exceptionMessageCaptured": false,
+    "backendSpecificApiUsed": false,
+    "endpointCredentialsAllowed": false,
+    "ambientOtelResourceAttributesAccepted": false,
+    "ambientExporterCredentialsAccepted": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.2.0-demo-api-opentelemetry-tracing-contract.sh",
+    "liveEntrypoint": "scripts/check-demo-api-tracing-contract.sh",
+    "unitTestsRequired": true,
+    "deploymentAndRolloutRenderRequired": true,
+    "uniqueImageRebuildRequired": true,
+    "tracingDisabledLiveRequired": true,
+    "structuredLoggingRegressionRequired": true,
+    "localCollectorRequired": false,
+    "localTraceQueryRequired": false
+  },
+  "unchanged": {
+    "localPlatformChart": "0.6.0",
+    "localPlatformApplicationVersion": "v0.11.6.1.2",
+    "lokiChart": "18.11.3",
+    "lokiApplicationVersion": "3.7.6",
+    "alloyChart": "1.11.0",
+    "alloyApplicationVersion": "1.18.0",
+    "lokiValuesChanged": false,
+    "alloyValuesChanged": false,
+    "grafanaValuesChanged": false,
+    "kubernetesResourceAdded": false,
+    "networkPolicyChanged": false,
+    "awsStateChanged": false,
+    "workflowChanged": false,
+    "publicEndpointAdded": false,
+    "externalCredentialAdded": false,
+    "productionAutomationChanged": false
+  },
+  "operations": {
+    "imageRebuildRequired": true,
+    "uniqueImageTagRequired": true,
+    "localDemoApiRedeployRequired": true,
+    "loggingRuntimeRedeployRequired": false,
+    "collectorDeploymentRequired": false,
+    "tempoDeploymentRequired": false,
+    "databaseEnablementRequired": false
+  },
+  "nextIncrement": {
+    "version": "v0.11.6.2.1",
+    "outcome": "private-local-otel-collector-and-tempo-monolithic-runtime"
+  }
+}

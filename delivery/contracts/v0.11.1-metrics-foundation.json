@@ -1,0 +1,157 @@
+{
+  "schemaVersion": "v0.11.1",
+  "version": "v0.11.1",
+  "status": "offline-implemented",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "foundationContract": "delivery/contracts/v0.11-observability-sre-foundation.json",
+  "designDocument": "docs/V0.11.1_METRICS_FOUNDATION.md",
+  "liveAcceptanceClaimed": false,
+  "chart": {
+    "repository": "https://prometheus-community.github.io/helm-charts",
+    "name": "kube-prometheus-stack",
+    "version": "88.5.0",
+    "releaseName": "observability-metrics",
+    "namespace": "observability",
+    "floatingVersionAllowed": false
+  },
+  "enabledComponents": [
+    "prometheus-operator",
+    "prometheus",
+    "kube-state-metrics",
+    "node-exporter",
+    "prometheus-operator-crds"
+  ],
+  "disabledComponents": [
+    "grafana",
+    "alertmanager",
+    "default-alert-rules",
+    "loki",
+    "grafana-alloy",
+    "tempo",
+    "opentelemetry-collector",
+    "thanos",
+    "remote-write"
+  ],
+  "profiles": {
+    "local": {
+      "retention": "6h",
+      "retentionSize": "2GiB",
+      "storage": "emptyDir",
+      "replicas": 1,
+      "productionClaim": false
+    },
+    "aws-dev": {
+      "retention": "24h",
+      "retentionSize": "8GiB",
+      "storageClass": "gp3-observability",
+      "storage": "10Gi",
+      "replicas": 1,
+      "productionClaim": false
+    },
+    "aws-test": {
+      "retention": "48h",
+      "retentionSize": "8GiB",
+      "storageClass": "gp3-observability",
+      "storage": "10Gi",
+      "replicas": 1,
+      "productionClaim": false
+    },
+    "aws-prod": {
+      "retention": "7d",
+      "retentionSize": "16GiB",
+      "storageClass": "gp3-observability",
+      "storage": "20Gi",
+      "replicas": 1,
+      "productionClaim": "requires-live-v0.11-acceptance"
+    }
+  },
+  "placement": {
+    "awsControlPlaneComponentsNodeSelector": {
+      "workload": "system"
+    },
+    "nodeExporterToleratesAllWorkerTaints": true,
+    "dedicatedObservabilityNodePoolRequired": false
+  },
+  "applicationCompatibility": {
+    "serviceMonitor": "demo-api-compatibility",
+    "namespace": "startup-apps",
+    "metricsPath": "/metrics",
+    "servicePort": "http",
+    "jobLabelSource": "__meta_kubernetes_service_name",
+    "requiredJobs": [
+      "demo-api",
+      "demo-api-stable",
+      "demo-api-canary"
+    ],
+    "legacyCanaryQuery": "sum(up{job=\"demo-api-canary\"})",
+    "prometheusAddress": "http://observability-metrics-prometheus.observability.svc.cluster.local:9090"
+  },
+  "security": {
+    "prometheusServiceType": "ClusterIP",
+    "publicIngress": false,
+    "loadBalancer": false,
+    "nodePort": false,
+    "adminApiEnabled": false,
+    "networkPolicy": true,
+    "startupAppsScrapeIngressExplicit": true,
+    "scrapeLimitsRequired": true
+  },
+  "awsStorage": {
+    "provisioner": "ebs.csi.aws.com",
+    "type": "gp3",
+    "encrypted": true,
+    "reclaimPolicy": "Delete",
+    "volumeBindingMode": "WaitForFirstConsumer",
+    "requiredTags": [
+      "Project=startup-devops-baseline",
+      "Environment=<environment>",
+      "Component=observability-prometheus"
+    ],
+    "coveredByResidualCostAudit": true
+  },
+  "migration": {
+    "legacyPath": "platform/monitoring/prometheus",
+    "legacyPathRetainedAsHistoricalMaterial": true,
+    "legacyPathReferencedByActiveArgoApplication": false,
+    "oldNamespace": "monitoring",
+    "newNamespace": "observability",
+    "localCutoverMayHaveBriefMetricsGap": true,
+    "acceptedBecauseLocalHasNoProductionClaim": true
+  },
+  "automationBoundary": {
+    "releaseOrchestratorChanged": false,
+    "automaticEnvironmentCreation": false,
+    "automaticPullRequestMerge": false,
+    "automaticProductionRolloutProgression": false,
+    "automaticRollback": false,
+    "productionApprovalPreserved": true
+  },
+  "acceptance": {
+    "offlineValidationRequired": true,
+    "localLiveValidationRequiredBeforeTag": true,
+    "awsDevLiveValidationRequiredBeforeFinalV011Acceptance": true,
+    "requiredLocalQueries": [
+      "demo_api_requests_total",
+      "sum(up{job=\"demo-api-stable\"})",
+      "sum(up{job=\"demo-api-canary\"})"
+    ],
+    "requiredAwsFacts": [
+      "prometheus-on-system-node",
+      "encrypted-gp3-pvc-bound",
+      "cluster-and-application-targets-up",
+      "no-public-observability-endpoint",
+      "no-ebs-volume-after-disposable-environment-destroy"
+    ]
+  },
+  "deferred": [
+    "application-release-correlation-metrics",
+    "grafana-dashboards",
+    "recording-rules",
+    "alertmanager-routing",
+    "centralized-logs",
+    "distributed-tracing",
+    "service-slos",
+    "sli-based-rollout-gates",
+    "cross-cluster-metrics-storage"
+  ]
+}

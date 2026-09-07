@@ -2,6 +2,246 @@
 
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
+Current development checkpoint:
+`v0.11.9.3.2-protected-main-integration-readiness` removes the temporary
+aws-dev feature-revision override, restores every active AWS same-repository
+Application to `main`, fingerprints unchanged release files and keeps remote
+execution blocked until reviewed protected-main integration.
+Predecessor:
+`v0.11.9.3.1-existing-image-aws-dev-promotion` adds a protected-main-only,
+manual handoff that verifies the original image run, metadata, GHCR digest,
+SLSA provenance and SPDX SBOM before preparing a release-only aws-dev PR. It
+cannot rebuild, deploy, access AWS/EKS or merge its PR; live dispatch remains
+blocked until reviewed main integration.
+Predecessor:
+`v0.11.9.3.0-remote-release-rehearsal-design` pins the accepted `sha-cf0a6bc`
+image for a protected-main, one-environment-at-a-time aws-dev/test/prod
+rehearsal. It validates only an offline plan and blocks live execution until an
+existing-image aws-dev release-PR handoff is implemented in v0.11.9.3.1.
+Predecessor:
+`v0.11.9.2.2.3.3.3.1-rendered-identity-projection-repair` separates the
+container Downward API projection from successor AnalysisRun argument bindings,
+removing a false global-count rejection without changing the Helm workload or
+Healthy revision 70.
+Predecessor:
+`v0.11.9.2.2.3.3.3-baseline-restoration-closure` records the successful,
+digest-pinned revision 70 baseline restoration, its two release-scoped
+AnalysisRuns, final Argo CD convergence and an idempotent restore that created
+no successor revision. It also removes a non-portable mawk quote escape.
+Predecessor:
+`v0.11.9.2.2.3.3.2-immutable-local-baseline-image` declares the image published
+by workflow run `34070524953` as the digest-pinned local baseline and validates
+its complete release identity before restoration.
+Predecessor:
+`v0.11.9.2.2.3.3.1-shellcheck-ci-parity` resolves the deterministic ShellCheck
+failure that stopped workflow run `34035241036` before image build or push,
+without changing restoration behavior or touching the cluster.
+Predecessor:
+`v0.11.9.2.2.3.3-request-series-image-compatibility` distinguishes target
+readiness from request-series readiness, selects only post-observer
+AnalysisRuns, and blocks the revision 69 rejected baseline image before restore.
+Predecessor:
+`v0.11.9.2.2.3.2-recovery-rollout-closure` records the successful local
+revision 68 recovery, canonical kubectl plugin command ordering and the
+observer-before-promote contract.
+Predecessor:
+`v0.11.9.2.2.3.1-successor-aware-target-query` preserves the historical
+no-data contract while validating the current release-scoped target query.
+Predecessor:
+`v0.11.9.2.2.3-prometheus-identity-traffic-lifetime` waits for exact Prometheus
+Candidate discovery and keeps bounded request traffic active through AnalysisRun
+completion. See `docs/V0.11.9.2.2.3_PROMETHEUS_IDENTITY_TRAFFIC_LIFETIME.md`.
+`v0.11.9.2.2.2.1.1-offline-lifecycle-environment-isolation` prevents ambient
+local-kind or AWS shell variables from changing the fake aws-test lifecycle.
+`v0.11.9.2.2.2.1-baseline-restoration-fixture-repair` updates the inherited
+offline restoration fixture for the runtime-qualified success contract.
+`v0.11.9.2.2.2-baseline-restoration-traffic-guard` separates GitOps sync from
+runtime restoration and requires an armed bounded-traffic observer for each
+SLO-aware AnalysisRun. See
+`docs/V0.11.9.2.2.2_BASELINE_RESTORATION_TRAFFIC_GUARD.md`.
+`v0.11.9.2.2.1-empty-digest-gitops-convergence-repair` omits the normalized
+empty child fault-digest parameter, adds bounded exact-revision Root convergence
+and preserves non-empty armed rendering. See
+`docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md`.
+`v0.11.9.2.2-local-failure-recovery-live-qualification` adds read-only live
+plan discovery, explicit operator checkpoints, redaction-safe progress output
+and an exact final qualification summary. Applying or validating it performs no
+live rehearsal. See
+`docs/V0.11.9.2.2_LOCAL_FAILURE_RECOVERY_LIVE_QUALIFICATION.md`.
+Predecessor:
+`v0.11.9.2.1-local-failure-recovery-runner` implements a default-off,
+local-only token-gated candidate availability fault, bounded stable/canary
+traffic and explicit rejection/recovery phases. Producer checks are offline;
+live execution is deferred. See
+`docs/V0.11.9.2.1_LOCAL_FAILURE_RECOVERY_RUNNER.md`.
+Predecessor:
+`v0.11.9.2.0-local-failure-recovery-design` defines the offline-only,
+candidate-scoped availability rejection and known-good GitOps restoration
+contract. It implements and executes no fault. See
+`docs/V0.11.9.2.0_LOCAL_FAILURE_RECOVERY_DESIGN.md`.
+Predecessor:
+`v0.11.9.1.1-local-release-rehearsal-stability` mirrors phase output live,
+waits through bounded release Pod/imageID convergence and makes operator
+handoffs, inputs, logs and retry boundaries explicit. It does not rerun or
+expand the successful live rehearsal. See
+`docs/V0.11.9.1.1_LOCAL_RELEASE_REHEARSAL_STABILITY.md` and the active runbook
+`docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md`.
+Predecessor:
+`v0.11.9.1-local-release-rehearsal` adds explicit local deployment/analysis phases,
+same-binary runtime identity checks and fresh Canary evidence. Live use is opt-in.
+See `docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md`.
+Predecessor:
+`v0.11.9.0-release-rehearsal-design` defines release/failure/restoration scenarios
+and an offline plan preflight; no runtime execution is authorized.
+See `docs/V0.11.9.0_RELEASE_REHEARSAL_DESIGN.md`.
+Predecessor:
+`v0.11.8.4-multi-environment-closure` consolidates historical status and adds
+local reviewed evidence archival, integrity checks and append-only baseline checks.
+Prod live acceptance remains deferred. See `docs/V0.11.8.4_MULTI_ENVIRONMENT_CLOSURE.md`.
+Predecessor:
+`v0.11.8.3-prod-read-only-qualification` delivers a scoped-approval prod
+observer and offline tests. Real prod deployment/acceptance is deferred to
+the v0.11 tail; no prod live pass is claimed. See
+`docs/V0.11.8.3_PROD_READ_ONLY_QUALIFICATION.md`.
+Predecessor:
+`v0.11.8.2.2-test-closure-and-rebuild` records the bounded historical aws-test
+operator qualification and adds metadata-only Secret rebuild guards.
+See `docs/V0.11.8.2.2_TEST_CLOSURE_AND_REBUILD.md`.
+Predecessor:
+`v0.11.8.2.1.3-test-target-identity` repairs stable/canary target recognition
+with exact environment/release/Pod guards. See `docs/V0.11.8.2.1.3_TEST_TARGET_IDENTITY.md`.
+Predecessor:
+`v0.11.8.2.1.2-test-variable-input-repair` preserves reviewed local test tfvars,
+checks runtime-role scope, and fingerprints inputs before saved-plan apply.
+See `docs/V0.11.8.2.1.2_TEST_VARIABLE_INPUT_REPAIR.md`.
+Predecessor:
+`v0.11.8.2.1.1-active-gitops-preview-registration` aligns the historical gate
+with the exact test preview and retains stable test/prod revision boundaries.
+Predecessor:
+`v0.11.8.2.1-aws-test-feature-qualification` adds separately guarded test
+plan/apply/bootstrap and read-only exact-release observation. Read
+`docs/V0.11.8.2.1_AWS_TEST_FEATURE_QUALIFICATION.md` before any live action.
+Predecessor:
+`v0.11.8.2.0.1-barman-chart-identity-render-coverage-repair` corrects the
+Barman Application/Helm Chart identity and strengthens real-source coverage.
+Validated predecessor:
+`v0.11.8.2.0-aws-test-qualification-prerequisites` adds an offline-only test
+preview and capacity/credential boundaries. No AWS resources are created.
+See `docs/V0.11.8.2.0_AWS_TEST_QUALIFICATION_PREREQUISITES.md`.
+Validated predecessor:
+`v0.11.8.1.5-capacity-status-wait-closure` distinguishes operational capacity
+warnings from failures, retains strict reserve mode, and adds a bounded node
+readiness wait. See `docs/V0.11.8.1.5_CAPACITY_STATUS_WAIT_CLOSURE.md`.
+Predecessor:
+`v0.11.8.1.4-system-capacity-grafana-repair` adds an aws-dev four-node system
+capacity budget and independent Grafana credentials. Prepare the Secret before
+pushing the overlay; see `docs/V0.11.8.1.4_SYSTEM_CAPACITY_GRAFANA_REPAIR.md`.
+It retains the earlier qualification checkpoint:
+`v0.11.8.1.2-aws-dev-pre-merge-feature-revision-qualification`.
+It aligns every aws-dev same-repository child Application with the selected
+feature revision for truthful pre-merge qualification, keeps other environments
+and external Charts stable, and requires restoration to `main` before merge.
+It retains `v0.11.8.1.1-observability-workflow-boundary-successor-repair`,
+which repairs the historical workflow scanner while
+retaining `v0.11.8.1-aws-dev-live-observability-qualification`, which
+implements exact-identity, read-only aws-dev Prometheus, Grafana,
+Alertmanager, rule, SLO, and declared-absence qualification while preserving
+`v0.11.8.0-environment-observability-qualification-foundation`.
+The foundation defines independent local, aws-dev, aws-test, and aws-prod qualification
+profiles, exact environment/revision/release evidence identity, resumable
+`waiting-runtime` semantics, and an approval-protected read-only production
+boundary. It makes no live AWS qualification claim and retains
+`v0.11.7.3.1-final-rollout-convergence-wait-repair`, which adds a bounded,
+version-locked Healthy/stable ReplicaSet wait before final observability checks
+while retaining
+`v0.11.7.3-local-slo-progressive-delivery-closure`.
+It unifies the four human-governed local release phases, final SLO evidence,
+negative contracts, and retention boundaries before retaining
+`v0.11.7.2.2-canary-endpoint-identity-scrape-window-repair`.
+It waits for the canary Service selector to resolve Ready Pods carrying the
+exact new release ID and spreads bounded traffic across Prometheus scrapes
+before retaining
+`v0.11.7.2.1-slo-analysis-promql-and-live-race-repair`.
+It repairs the stable availability PromQL grouping, makes local traffic
+generation wait for an exact application version, and documents the required
+feature `TARGET_REVISION` before retaining
+`v0.11.7.2-slo-aware-argo-rollouts-analysis`.
+It retains the accepted `v0.11.7.1.3-burn-rate-rule-inventory-jq-repair` and
+adds local candidate-release and stable-budget gates to Argo Rollouts while
+preserving the human promotion pause and explicit rollback ownership.
+It retains the accepted
+`v0.11.7.1.2-grafana-dashboard-successor-live-validation-repair` and repairs
+the final Prometheus rule-inventory jq program and missing-rule diagnostics.
+It retains the accepted
+`v0.11.7.1.1-alert-inventory-order-independence-repair` and makes the live
+Grafana Dashboard assertion accept the six-panel `.7.1` successor.
+It retains the accepted `v0.11.7.1-multi-window-burn-rate-alerts` runtime and
+removes filesystem traversal order from the historical alert-inventory check.
+It retains the accepted `v0.11.7.0-demo-api-sli-slo-error-budget-foundation`
+and `.7.0.1` revision-alignment precondition, then adds paired-window
+availability and latency error-budget alerts, recording rules, Runbooks, and
+Dashboard views without changing the Rollout or application image.
+The retained repair checkpoint is
+`v0.11.7.0.1-immutable-feature-root-reconciliation-repair`.
+It retains the accepted `v0.11.6.2.3-local-minimal-tracing-closure` and adds a
+runtime-artifact preflight before its two live correlation runs.
+The local profile deploys one private, bounded Loki Monolithic instance, an
+Alloy DaemonSet for node-local `startup-apps` Pod logs, and a separate
+one-replica Alloy Deployment for cluster Kubernetes Events. Event read
+positions use a 256Mi local PVC so collector Pod replacement does not replay
+the Kubernetes Event TTL window. The existing Grafana instance receives one
+non-default, non-editable, proxy-mode Loki data source. Pod and Event streams
+both preserve the exact six-label index contract. Loki storage remains
+disposable and limited to a 2 GiB `emptyDir` with 24-hour retention. Dashboards
+and AWS logging remain outside this increment. v0.11.6.2.0 adds application-
+side W3C propagation, bounded HTTP/PostgreSQL spans, shared release identity,
+and real log correlation while keeping OTLP export disabled. v0.11.6.2.1 now
+adds one private traces-only OTel Collector Deployment and one repository-owned
+Tempo 3.0.3 Monolithic Deployment with bounded disposable local storage. The
+application export and Grafana integration were deliberately separate from
+that runtime increment. v0.11.6.2.2 now enables the already accepted exporter
+only in the local App-of-Apps, validates a real `/version` SERVER span and its
+correlated Loki JSON record, and provisions a private Grafana Tempo data source
+plus a Loki `TraceID` derived field. Trace identifiers remain outside Loki's
+label index, and no application image rebuild is required. Repair
+`v0.11.6.2.1.1` corrects only the synthetic acceptance client: OTLP/JSON trace
+and span identifiers are now hexadecimal, HTTP rejection bodies remain visible,
+and Tempo/Collector diagnostics are selected explicitly. It changes no runtime
+resource and requires neither reconciliation nor an image rebuild. Its runtime
+predecessor is
+`v0.11.6.2.1-private-local-otel-collector-tempo-runtime`. Repair
+`v0.11.6.1.2.1` co-schedules the Event-position claim and
+its consumer Application for `WaitForFirstConsumer` storage, makes Argo CD
+sync waits bounded, and repairs exact historical Application counting. See
+`docs/V0.11.6.1.2.1_EVENTS_PVC_SYNC_WAVE_TROUBLESHOOTING.md` and
+`docs/V0.11.6.1.2_KUBERNETES_EVENTS_GRAFANA_LOKI.md`.
+Repair `v0.11.6.1.2.2` normalizes the temporary acceptance Event timestamp to
+the six-digit UTC precision required by Kubernetes `MicroTime`; it changes no
+deployed workload. See
+`docs/V0.11.6.1.2.2_KUBERNETES_EVENT_MICROTIME_ACCEPTANCE_REPAIR.md`.
+Closure `v0.11.6.1.3` composes the platform, Pod-log, Events, Loki, and
+Grafana checks into one repeatable entrypoint, adds strict successful-path
+Event cleanup, preserves accepted Loki history after source deletion, and
+retains the version-specific `WaitForFirstConsumer` incident record. It changes
+no deployed workload. See
+`docs/V0.11.6.1.3_LOCAL_LOGGING_END_TO_END_CLOSURE.md`.
+The active tracing runtime is documented in
+`docs/V0.11.6.2.1_PRIVATE_LOCAL_OTEL_COLLECTOR_TEMPO_RUNTIME.md`; its accepted
+application contract is
+`docs/V0.11.6.2.0_DEMO_API_OPENTELEMETRY_TRACING_CONTRACT.md`.
+The corresponding accepted checkpoint identifier is
+`v0.11.6.2.0-demo-api-opentelemetry-tracing-contract`.
+Its accepted logging predecessor checkpoint is
+`v0.11.6.1.3-local-logging-end-to-end-closure`.
+Its reconciliation predecessor checkpoint is
+`v0.11.6.1.2.1-events-pvc-sync-wave-validation-repair`.
+Its accepted Pod-log predecessor checkpoint is
+`v0.11.6.1.1.5-application-scoped-alloy-loki-acceptance-repair`.
+Its runtime predecessor checkpoint is
+`v0.11.6.1.0-structured-demo-api-logging-runtime`.
+The architectural foundation remains
+`v0.11.6.0-centralized-logging-minimal-tracing-foundation`.
+
 This repository demonstrates a practical Kubernetes platform baseline built around kind, Argo CD, Helm, ingress-nginx, Argo Rollouts, GHCR image publishing, Prometheus, and a small demo API service.
 
 The repository now contains the completed local progressive-delivery and AWS
@@ -127,11 +367,104 @@ v0.10.8.7 is the post-tag image-security hotfix: closure tags no longer rebuild
 demo-api, Debian fixable security updates are installed before publication,
 Trivy v0.74.0 behavior is reproducible locally and in CI, and sealed v0.10
 evidence is replayed against its recorded historical control plane.
+v0.11.0 begins the Observability and SRE line with an environment-aware design
+contract, stable telemetry and release-correlation conventions, an extensible
+OpenTelemetry foundation, explicit cost and security profiles, and preserved
+human production controls. It deploys no monitoring component and changes no
+v0.10 acceptance evidence or release-orchestration behavior.
+v0.11.1 replaces the active hand-written local Prometheus deployment with a
+pinned Prometheus Operator metrics foundation and adds cost-aware AWS
+dev/test/prod declarations. The stack includes Prometheus,
+kube-state-metrics, node-exporter, bounded retention, encrypted gp3 storage,
+explicit scrape NetworkPolicy, and compatibility with the existing local
+Canary query. Grafana, Alertmanager, logs, tracing, SLOs, and telemetry-based
+release gates remain later v0.11 increments.
+v0.11.2 moves demo-api discovery into its own Helm Chart and adds bounded HTTP
+and PostgreSQL dependency metrics. Prometheus target labels now correlate each
+selected Pod with its environment, application version, deterministic release
+ID, source commit, and image digest without changing the accepted v0.10 build,
+Promotion, rollback, or production-approval workflows. Dashboard, alerting,
+logging, tracing, and SLO work remains deferred.
+v0.11.3 adds a parameterized and reversible local feature-revision GitOps
+workflow. It prevents Root self-heal from silently returning same-repository
+children to `HEAD`, verifies the deployed revision, Chart, ServiceMonitor and
+Prometheus address, preserves manual Canary progression, and restores the
+stable automated `HEAD` declaration after testing.
+v0.11.4.1.1 provisions immutable Delivery, Data, and Platform Grafana
+Dashboards from the accepted controller and dependency recording rules. Local
+acceptance requires delivery, demo-api dependency, and platform rule data while
+explicitly allowing CloudNativePG panels to remain no-data outside the AWS
+profile.
+v0.11.4.2.0 adds the capacity and resource-efficiency signal layer without a
+new exporter, cost system, Dashboard, or automation action.
+v0.11.4.2.1 adds the immutable Capacity and Resource Efficiency Dashboard and
+consumes all twenty accepted rules without raw metric, scheduler-exact,
+currency-cost, or automation claims. v0.11.4.2.2 repairs the clean replay with
+a mandatory fresh local image transition, numeric target-health assertions,
+shared bounded telemetry preflight, and Prometheus scrape diagnostics. The
+accepted replay closes v0.11.4.
+v0.11.5.0 enables one private environment-local Alertmanager per monitoring
+profile with bounded storage and resources, stable critical and warning
+routing, alert-family inhibition, and Prometheus discovery validation. It adds
+no alert rule, external notification integration, central Alertmanager, or HA
+claim; actionable alerts and Runbooks remain v0.11.5.1 work. The clean-room
+v0.11 acceptance remains the final v0.11.9 increment.
+v0.11.5.0.1 repairs the live acceptance check after Alertmanager serialized
+`severity = "critical"` as the equivalent canonical `severity="critical"`.
+It preserves exact route and inhibition cardinality and requires no runtime
+redeployment. Its accepted checkpoint identity is
+`v0.11.5.0.1-matcher-normalization-repair`.
+v0.11.5.1 adds an exact eight-alert inventory for application, dependency,
+delivery, Kubernetes workload, and AWS-profile PostgreSQL collection health.
+Every alert has stable routing labels and one version-controlled Runbook; the
+clean local baseline must load all rules while keeping them inactive. Its
+accepted checkpoint identity is `v0.11.5.1-actionable-alerts-runbooks`.
+v0.11.5.1.1 repairs `platform:prometheus_targets_down:count` with
+`up == bool 0`, adds `PrometheusTargetDown` as the ninth alert, and introduces
+a live recorded-versus-direct query cross-check without deliberately failing
+a real target. Its checkpoint identity is
+`v0.11.5.1.1-prometheus-target-down-semantics-repair`.
+v0.11.5.1.1.1 corrects the live check to use
+`operator-diagnostic-recording-rules` and restores the already-required fresh
+image transition after the neutral pre-merge baseline. Its accepted checkpoint
+identity is `v0.11.5.1.1.1-local-acceptance-path-repair`.
+v0.11.5.2.0 proves the complete local alert lifecycle with temporary synthetic
+signals and an internal-only webhook sink. Dedicated drill routes continue
+into the existing critical and warning routes, resolved payloads are required,
+critical-over-warning inhibition is checked in both equal and unequal scopes,
+and every temporary object must be removed. External provider delivery and AWS
+live execution remain deferred. Its predecessor checkpoint identity is
+`v0.11.5.2.0-alert-lifecycle-drill`.
+v0.11.5.2.0.1 repairs only the runtime configuration parser after the first
+local attempt observed two correctly loaded webhook integrations whose URLs
+were rendered as `url: <secret>`. It preserves exact literal desired-state URL
+validation and requires no monitoring redeployment. Its predecessor checkpoint
+identity is `v0.11.5.2.0.1-alertmanager-webhook-url-redaction-repair`.
+v0.11.5.2.0.2 repairs the subsequent resolved-delivery phase by explicitly
+transitioning each synthetic alert to an empty result before cleanup. Rule
+deletion is no longer treated as the state transition, and reruns reject any
+active drill alert left in Alertmanager by an earlier failed attempt. Its
+predecessor checkpoint identity is
+`v0.11.5.2.0.2-alert-resolution-transition-repair`.
+v0.11.5.2.0.3 repairs the final cleanup synchronization boundary. After strict
+Kubernetes deletion, the drill waits until both temporary alert definitions
+disappear from the Prometheus rule inventory before requiring the exact nine
+healthy inactive formal alerts. The repaired full local rerun passed, closing
+v0.11.5 locally. Its accepted checkpoint identity is
+`v0.11.5.2.0.3-prometheus-rule-cleanup-synchronization-repair`.
+v0.11.6.0 defines environment-isolated logging and minimal tracing contracts.
+v0.11.6.1.0 implements the first application runtime slice: bounded JSON Lines,
+one process formatter, quiet successful probes, and Downward API projection of
+release identity. v0.11.6.1.1 adds the private local Loki and Alloy Pod-log
+path with bounded storage, resources, RBAC, NetworkPolicy, and label
+cardinality. v0.11.6.1.2 adds singleton Kubernetes Event collection with
+durable read positions and a Git-provisioned Grafana Loki data source; tracing
+remains v0.11.6.2 scope.
 
 ## Current Version
 
 ```text
-v0.10.8.7-post-tag-image-security-hotfix
+v0.11.6.1.2-kubernetes-events-grafana-loki
 ```
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
@@ -343,6 +676,7 @@ startup-devops-baseline/
 - `docs/AWS_EKS_ARCHITECTURE.md`
 - `docs/ENVIRONMENT_MODEL.md`
 - `docs/MULTI_ENVIRONMENT_GITOPS_MODEL.md`
+- `docs/V0.11_OBSERVABILITY_SRE_DESIGN.md`
 
 ### Deployment and Operations
 

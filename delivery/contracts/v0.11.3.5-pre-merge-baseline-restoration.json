@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "v0.11.3.5",
+  "version": "v0.11.3.5",
+  "status": "offline-implemented-live-recovery-required",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.3.5_PRE_MERGE_BASELINE_RESTORATION.md",
+  "incident": {
+    "application": "startup-devops-root",
+    "errorClass": "ComparisonError",
+    "missingPath": "clusters/local/platform/Chart.yaml",
+    "rootSourceType": "helm",
+    "requestedRevision": "HEAD",
+    "cause": "remote-head-preceded-platform-chart-migration",
+    "childPruneIndicatorsWereSecondary": true,
+    "clusterRebuildRequired": false
+  },
+  "sourcePreflight": {
+    "requiredPath": "clusters/local/platform/Chart.yaml",
+    "remoteRevisionResolvedBeforeKubernetes": true,
+    "remoteRevisionFetchedBeforeKubernetes": true,
+    "requiredPathCheckedBeforeKubernetes": true,
+    "missingPathFailsWithoutKubernetesMutation": true
+  },
+  "restorationModes": {
+    "preMerge": {
+      "script": "scripts/restore-local-feature-baseline.sh",
+      "operatorInput": "TARGET_REVISION",
+      "declaredRevision": "resolved-full-commit-sha",
+      "localCommitMustMatchRemote": true,
+      "trackedWorkingTreeMustBeClean": true,
+      "localImageEnabled": false,
+      "rootAutomationRestored": true
+    },
+    "postMerge": {
+      "script": "scripts/restore-local-gitops-head.sh",
+      "declaredRevision": "HEAD",
+      "remoteHeadMustContainRequiredPath": true,
+      "localImageEnabled": false,
+      "rootAutomationRestored": true
+    },
+    "sharedImplementation": "scripts/restore-local-gitops-baseline.sh"
+  },
+  "comparisonSafety": {
+    "comparisonErrorBlocksSync": true,
+    "comparisonErrorBlocksPrune": true,
+    "comparisonReadinessIsBounded": true,
+    "directChildSetOrUnsetRequired": false
+  },
+  "boundaries": {
+    "platformChartChanged": false,
+    "demoApiChartChanged": false,
+    "applicationTelemetryChanged": false,
+    "monitoringStackChanged": false,
+    "externalChartVersionChanged": false,
+    "canaryStrategyChanged": false,
+    "imageBuildOrPublishChanged": false,
+    "awsMutation": false,
+    "productionAutomationChanged": false,
+    "activeFeatureRevisionCommitted": false
+  },
+  "acceptance": {
+    "missingHeadChartRejectedWithoutKubernetesCall": true,
+    "featureBaselineUsesResolvedCommit": true,
+    "featureBaselineClearsLocalImageParameters": true,
+    "postMergeHeadRestorationRemainsSupported": true,
+    "offlineRegressionRequired": true,
+    "liveRecoveryReplayRequired": true
+  }
+}

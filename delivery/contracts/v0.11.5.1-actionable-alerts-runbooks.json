@@ -1,0 +1,174 @@
+{
+  "schemaVersion": "v0.11.5.1",
+  "version": "v0.11.5.1",
+  "status": "offline-implemented-local-live-required",
+  "predecessor": "v0.11.5.0.1",
+  "designDocument": "docs/V0.11.5.1_ACTIONABLE_ALERTS_RUNBOOKS.md",
+  "chart": {
+    "path": "platform/observability/helm",
+    "previousVersion": "0.3.1",
+    "version": "0.4.0",
+    "applicationVersion": "v0.11.5.1",
+    "prometheusRule": "actionable-alerts",
+    "ruleTemplate": "platform/observability/helm/templates/actionable-alerts.yaml"
+  },
+  "policy": {
+    "alertCount": 8,
+    "warningCount": 2,
+    "criticalCount": 6,
+    "recordingRulesOnly": true,
+    "cleanBaselineMustBeInactive": true,
+    "requiredLabels": [
+      "severity",
+      "environment",
+      "cluster",
+      "component",
+      "alert_family"
+    ],
+    "requiredAnnotations": [
+      "summary",
+      "description",
+      "runbook_url"
+    ],
+    "inhibitionEqualLabels": [
+      "environment",
+      "cluster",
+      "component",
+      "alert_family"
+    ],
+    "externalNotificationConfigured": false,
+    "defaultRulesEnabled": false
+  },
+  "alerts": [
+    {
+      "name": "DemoApiHttpSuccessRatioLowWarning",
+      "severity": "warning",
+      "component": "demo-api",
+      "alertFamily": "demo-api-http-reliability",
+      "sourceRules": [
+        "demo_api:http_success_ratio:rate5m",
+        "demo_api:http_requests:rate5m"
+      ],
+      "threshold": "<0.99",
+      "for": "10m",
+      "runbook": "docs/runbooks/alerts/demo-api-http-success-ratio-low-warning.md"
+    },
+    {
+      "name": "DemoApiHttpSuccessRatioLowCritical",
+      "severity": "critical",
+      "component": "demo-api",
+      "alertFamily": "demo-api-http-reliability",
+      "sourceRules": [
+        "demo_api:http_success_ratio:rate5m",
+        "demo_api:http_requests:rate5m"
+      ],
+      "threshold": "<0.95",
+      "for": "5m",
+      "runbook": "docs/runbooks/alerts/demo-api-http-success-ratio-low-critical.md"
+    },
+    {
+      "name": "DemoApiDependencySuccessRatioLowWarning",
+      "severity": "warning",
+      "component": "demo-api-dependency",
+      "alertFamily": "demo-api-dependency-reliability",
+      "sourceRules": [
+        "demo_api:dependency_success_ratio:rate5m",
+        "demo_api:dependency_checks:rate5m"
+      ],
+      "threshold": "<0.99",
+      "for": "10m",
+      "runbook": "docs/runbooks/alerts/demo-api-dependency-success-ratio-low-warning.md"
+    },
+    {
+      "name": "DemoApiDependencySuccessRatioLowCritical",
+      "severity": "critical",
+      "component": "demo-api-dependency",
+      "alertFamily": "demo-api-dependency-reliability",
+      "sourceRules": [
+        "demo_api:dependency_success_ratio:rate5m",
+        "demo_api:dependency_checks:rate5m"
+      ],
+      "threshold": "<0.90",
+      "for": "5m",
+      "runbook": "docs/runbooks/alerts/demo-api-dependency-success-ratio-low-critical.md"
+    },
+    {
+      "name": "ArgoRolloutProblem",
+      "severity": "critical",
+      "component": "argo-rollouts",
+      "alertFamily": "rollout-health",
+      "sourceRules": [
+        "delivery:rollouts_problem:count"
+      ],
+      "threshold": ">0",
+      "for": "5m",
+      "runbook": "docs/runbooks/alerts/argo-rollout-problem.md"
+    },
+    {
+      "name": "ArgoCDApplicationUnhealthy",
+      "severity": "critical",
+      "component": "argocd",
+      "alertFamily": "gitops-application-health",
+      "sourceRules": [
+        "delivery:argocd_applications_unhealthy:count"
+      ],
+      "threshold": ">0",
+      "for": "10m",
+      "runbook": "docs/runbooks/alerts/argocd-application-unhealthy.md"
+    },
+    {
+      "name": "KubernetesDeploymentUnavailable",
+      "severity": "critical",
+      "component": "kubernetes-workload",
+      "alertFamily": "deployment-availability",
+      "sourceRules": [
+        "platform:deployment_unavailable_replicas:count"
+      ],
+      "threshold": ">0",
+      "for": "10m",
+      "runbook": "docs/runbooks/alerts/kubernetes-deployment-unavailable.md"
+    },
+    {
+      "name": "PostgreSQLCollectionFailed",
+      "severity": "critical",
+      "component": "cloudnative-pg",
+      "alertFamily": "postgresql-collection-health",
+      "sourceRules": [
+        "data:postgresql_collection_errors:max"
+      ],
+      "threshold": ">0",
+      "for": "5m",
+      "profile": "aws-only-no-data-local",
+      "runbook": "docs/runbooks/alerts/postgresql-collection-failed.md"
+    }
+  ],
+  "boundaries": {
+    "recordingRuleChanged": false,
+    "dashboardChanged": false,
+    "monitorChanged": false,
+    "monitoringStackChanged": false,
+    "alertmanagerRouteChanged": false,
+    "externalReceiverAdded": false,
+    "notificationCredentialAdded": false,
+    "demoApiImageChanged": false,
+    "rolloutAnalysisChanged": false,
+    "sloOrBurnRateAdded": false,
+    "awsMutationPerformed": false,
+    "productionAutomationChanged": false,
+    "firingOrInhibitionDrillAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.5.1-actionable-alerts-runbooks.sh",
+    "liveValidator": "scripts/check-actionable-alerts.sh",
+    "profiles": [
+      "local",
+      "aws"
+    ],
+    "completeQualityGateRequired": true,
+    "localLiveAcceptanceRequired": true,
+    "cleanBaselineAllInactiveRequired": true,
+    "alertmanagerRegressionRequired": true,
+    "formalFiringRoutingInhibitionResolutionDrillDeferredTo": "v0.11.5.2",
+    "formalAwsEvidenceDeferredTo": "v0.11.8"
+  }
+}

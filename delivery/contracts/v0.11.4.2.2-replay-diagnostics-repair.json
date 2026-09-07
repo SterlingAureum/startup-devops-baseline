@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "v0.11.4.2.2",
+  "version": "v0.11.4.2.2",
+  "predecessor": "v0.11.4.2.1",
+  "status": "offline-implemented-local-live-required",
+  "designDocument": "docs/V0.11.4.2.2_REPLAY_DIAGNOSTICS_REPAIR.md",
+  "incident": {
+    "phase": "clean-local-feature-replay",
+    "neutralFeatureBaselineObserved": true,
+    "demoApiSourceMetricsAbsent": true,
+    "capacitySignalsHealthy": true,
+    "fiveDashboardsHealthy": true,
+    "freshLocalImageRedeployRecoveredTelemetry": true
+  },
+  "rootCause": {
+    "neutralBaselineClearsLocalImageParameters": true,
+    "neutralBaselineIsReplayStartOnly": true,
+    "exactFeatureImageRedeployRequiredBeforeAcceptance": true,
+    "resourceWarmupWasNotRootCause": true,
+    "dashboardOrRecordingRuleWasNotRootCause": true
+  },
+  "repair": {
+    "sharedLibrary": "scripts/lib/observability-live.sh",
+    "liveScripts": [
+      "scripts/check-monitoring.sh",
+      "scripts/check-observability-views.sh",
+      "scripts/check-controller-metrics.sh",
+      "scripts/check-operator-dashboards.sh"
+    ],
+    "positiveUpValueRequired": true,
+    "zeroUpRejected": true,
+    "targetLastErrorPrinted": true,
+    "boundedTrafficShared": true,
+    "directMetricsPreflightRequired": true,
+    "runtimeOwnershipDiagnosticsPrinted": true,
+    "freshReplayImageTagRequired": true
+  },
+  "unchanged": {
+    "observabilityChartVersion": "0.3.1",
+    "observabilityApplicationVersion": "v0.11.4.2.1",
+    "dashboardCount": 5,
+    "recordingRulesChanged": false,
+    "dashboardChanged": false,
+    "serviceMonitorChanged": false,
+    "monitoringStackChanged": false,
+    "demoApiImageChanged": false,
+    "canaryChanged": false,
+    "awsDesiredStateChanged": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.4.2.2-replay-diagnostics-repair.sh",
+    "completeQualityGateRequired": true,
+    "freshUniqueLocalImageRequired": true,
+    "cleanFeatureReplayRequired": true,
+    "fullLocalLiveSuiteRequired": true,
+    "restoreNeutralFeatureBaselineAfterEvidence": true
+  }
+}

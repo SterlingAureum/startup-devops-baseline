@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "v0.11.3.2",
+  "version": "v0.11.3.2",
+  "status": "offline-implemented-live-failure-observed",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.3.2_PROMETHEUS_NO_DATA_HARDENING.md",
+  "incident": {
+    "rolloutRevision": 22,
+    "analysisRun": "demo-api-5b98fb8f59-22-2",
+    "analysisPhase": "Error",
+    "consecutiveErrors": 5,
+    "message": "reflect: slice index out of range",
+    "resolvedPrometheusQuery": "sum(up{job=\"demo-api-canary\"})",
+    "rootCause": "empty-prometheus-vector-indexed-without-length-guard"
+  },
+  "chart": {
+    "previousVersion": "0.5.0",
+    "version": "0.5.1",
+    "appVersionChanged": false
+  },
+  "analysis": {
+    "metric": "canary-prometheus-target-up",
+    "query": "sum(up{job=\"demo-api-canary\"})",
+    "initialDelay": "60s",
+    "interval": "15s",
+    "count": 2,
+    "failureLimit": 1,
+    "successCondition": "len(result) > 0 && result[0] >= 1",
+    "emptyResultPolicy": "failed-closed",
+    "emptyResultAccepted": false,
+    "unsafeIndexingRejected": true,
+    "existingPreAnalysisPause": "60s"
+  },
+  "boundaries": {
+    "prometheusQueryChanged": false,
+    "metricSchemaChanged": false,
+    "serviceMonitorChanged": false,
+    "rolloutStepSequenceChanged": false,
+    "manualPromotionRemoved": false,
+    "awsMutation": false,
+    "productionAutomationChanged": false
+  },
+  "acceptance": {
+    "offlineValidatorRequired": true,
+    "cleanHeadToFeatureReplayRequired": true,
+    "latestAnalysisRunMustBeSuccessful": true,
+    "successfulMeasurementsRequired": 2,
+    "retryMayNotReplaceCleanReplay": true,
+    "headRestorationRequired": true
+  }
+}

@@ -2,10 +2,10 @@
 
 ## Deployment Flow
 
-This runbook remains the live aws-dev workflow. v0.9.2 also declares aws-test
-and aws-prod, but does not apply them as part of this checkpoint. The existing
-operational scripts continue to default to the dev Terraform root and dev
-overlay until the clean-room multi-environment validation increment.
+This runbook covers aws-dev. For dev/test entrypoints, branch restrictions and
+the initial-create versus maintenance distinction, see
+`V0.11.8.1.3_AWS_DEPLOYMENT_ENTRYPOINT_REPAIR.md`. The stable test lifecycle is
+documented in `AWS_MULTI_ENVIRONMENT_LIFECYCLE.md`; prod is not exercised here.
 
 ```text
 Developer
@@ -74,9 +74,16 @@ Use the guarded entrypoint so the current public `/32` is passed directly to
 Terraform without being written to Git or a local repository file:
 
 ```bash
-CONFIRM_EKS_API_CIDR_UPDATE=restrict-current-ip \
-  ./scripts/apply-eks-api-access-cidr.sh
+EXPECTED_AWS_ACCOUNT_ID='<intended-12-digit-account>' \
+CONFIRM_AWS_DEV_APPLY=create-ephemeral-aws-dev \
+  ./scripts/apply-aws-dev.sh
 ```
+
+This is initial creation only; review the plan and type the requested explicit
+confirmation. For an existing cluster use `apply-eks-api-access-cidr.sh` with
+`CONFIRM_EKS_API_CIDR_UPDATE=restrict-current-ip`. Do not delete nonempty state
+to make creation pass. For v0.11 feature qualification, use the feature Root
+revision described in the repair runbook instead of the stable main example below.
 
 The initial disposable aws-dev profile leaves EKS control-plane log ingestion
 off while Terraform still owns the log group with 14-day retention. The
@@ -115,6 +122,11 @@ The repository keeps only the `__VPC_ID__` template marker. Do not commit a
 real `vpc-*` value.
 
 ## 6. Deploy Root Application
+
+For the v0.11 aws-dev overlay, prepare the independent Grafana Secret BEFORE
+deploying or pushing changes to an auto-synced Root. Follow
+`V0.11.8.1.4_SYSTEM_CAPACITY_GRAFANA_REPAIR.md`; it also documents the four-node
+dev system capacity profile and billable expansion. Test/prod are unchanged.
 
 Before deploying the AWS environment, ensure that the current `main` branch
 contains an approved, digest-pinned demo-api desired state produced by a

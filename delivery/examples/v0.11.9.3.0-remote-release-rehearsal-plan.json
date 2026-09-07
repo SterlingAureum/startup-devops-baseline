@@ -1,0 +1,98 @@
+{
+  "schema_version": "v0.11.9.3.0",
+  "mode": "offline-plan-only",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "feature_branch": "feature/v0.11-observability-sre-baseline",
+  "design_baseline_commit": "d2ab89b22e5e048ed4d9121170e04d7fe7156f2c",
+  "planned_main_commit": "REPLACE_WITH_POST_INTEGRATION_MAIN_COMMIT",
+  "review_reference": "REPLACE_WITH_REVIEW_REFERENCE",
+  "operator": "REPLACE_WITH_OPERATOR",
+  "recovery_owner": "REPLACE_WITH_RECOVERY_OWNER",
+  "evidence_directory": "/REPLACE_WITH_PRIVATE_EVIDENCE_DIRECTORY",
+  "aws_account_id": "REPLACE_WITH_12_DIGIT_AWS_ACCOUNT_ID",
+  "aws_region": "us-east-1",
+  "candidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "source_commit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflow_run_id": "34070524953",
+    "metadata_artifact": "demo-api-image-metadata-cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "application_version": "sha-cf0a6bc",
+    "release_id": "demo-api-cf0a6bcbc466-cdffd3d71763"
+  },
+  "main_integration": {
+    "required_before_remote_credentials": true,
+    "trusted_runtime_ref": "refs/heads/main",
+    "pull_request_code_allowed": false,
+    "feature_direct_runtime_allowed": false,
+    "active_aws_overlays_restored_to_main": true
+  },
+  "artifact_entry": {
+    "method": "existing-image-metadata-release-pr",
+    "implementation_status": "required-before-live",
+    "implementation_checkpoint": "v0.11.9.3.1",
+    "rebuild_required": false,
+    "release_file_only": true,
+    "automatic_merge": false
+  },
+  "local_failure_evidence": {
+    "accepted_for_v011_failure_scenario": true,
+    "failed_revision": 69,
+    "recovered_revision": 70,
+    "remote_replay_allowed": false,
+    "closure_contract": "delivery/contracts/v0.11.9.2.2.3.3.3-baseline-restoration-closure.json",
+    "private_archive_sha256": "REPLACE_WITH_REVIEWED_PRIVATE_ARCHIVE_SHA256"
+  },
+  "environments": [
+    {
+      "name": "aws-dev",
+      "cluster_name": "startup-devops-baseline-dev",
+      "kube_context": "REPLACE_WITH_EXACT_AWS_DEV_CONTEXT",
+      "release_file": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+      "manual_canary_checkpoints": 0,
+      "qualification": "runtime-and-observability"
+    },
+    {
+      "name": "aws-test",
+      "cluster_name": "startup-devops-baseline-test",
+      "kube_context": "REPLACE_WITH_EXACT_AWS_TEST_CONTEXT",
+      "release_file": "apps/demo-api/helm/values/releases/aws-test.yaml",
+      "manual_canary_checkpoints": 1,
+      "qualification": "runtime-and-observability-after-reviewed-canary"
+    },
+    {
+      "name": "aws-prod",
+      "cluster_name": "startup-devops-baseline-prod",
+      "kube_context": "REPLACE_WITH_EXACT_AWS_PROD_CONTEXT",
+      "release_file": "apps/demo-api/helm/values/releases/aws-prod.yaml",
+      "manual_canary_checkpoints": 1,
+      "qualification": "approval-protected-read-only-observation"
+    }
+  ],
+  "sequence": [
+    "offline-plan-validation",
+    "existing-image-promotion-implementation",
+    "feature-to-main-review-and-merge",
+    "existing-image-to-aws-dev-release-pr",
+    "aws-dev-create-deploy-and-qualify",
+    "aws-dev-to-aws-test-release-pr",
+    "preserve-dev-evidence-and-teardown",
+    "aws-test-create-deploy-canary-and-qualify",
+    "aws-test-to-aws-prod-release-pr-and-approval",
+    "preserve-test-evidence-and-teardown",
+    "aws-prod-create-deploy-and-reviewed-canary",
+    "aws-prod-approved-read-only-qualification",
+    "reviewed-final-evidence",
+    "approved-prod-teardown",
+    "residual-cost-audit"
+  ],
+  "cost_control": {
+    "maximum_active_eks_environments": 1,
+    "source_evidence_preserved_before_teardown": true,
+    "source_qualification_fresh_for_promotion": true,
+    "automatic_teardown": false,
+    "teardown_requires_separate_approval": true,
+    "residual_cost_audit_required": true
+  }
+}

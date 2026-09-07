@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="${VALIDATION_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
 command -v python3 >/dev/null 2>&1 || {
   echo "Required command not found: python3" >&2
@@ -167,7 +167,7 @@ if 'assert_rejected "A Pod without requests"' in runtime_validation.read_text():
 local_platform = root / "clusters" / "local" / "platform"
 if any(
     path.name == "application-admission-policies.yaml"
-    for path in local_platform.glob("*.yaml")
+    for path in local_platform.rglob("*.yaml")
 ):
     raise SystemExit(
         "Strict digest admission must remain disabled for tag-loaded local images."

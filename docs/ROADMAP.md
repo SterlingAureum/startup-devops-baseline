@@ -261,60 +261,426 @@ The application release path does not automatically create EKS environments.
 An absent disposable environment is a resumable wait, and production approval
 and PR merge remain human controls throughout v0.10.
 
-## v0.11 - Observability and Production Readiness Baseline
+## v0.11 - Observability and SRE Baseline
+
+Status: In Progress
+
+Goal:
+
+Make the multi-environment platform observable, establish measurable
+reliability objectives, and use trusted telemetry to support alerting,
+diagnosis, progressive delivery, and operational response.
+
+Incremental scope:
+
+- v0.11.0 - version-boundary correction, environment-aware observability
+  architecture, telemetry and correlation conventions, extensible tracing
+  foundation, explicit security and automation boundaries, and offline
+  positive/negative contract validation - delivered
+- v0.11.1 - Prometheus Operator and production-oriented metrics foundation,
+  with a pinned kube-prometheus-stack release, ServiceMonitor compatibility,
+  system-node placement, NetworkPolicy, and bounded local/AWS storage profiles
+  - delivered offline; live local and aws-dev evidence pending
+- v0.11.2 - demo-api and platform telemetry, stable resource attributes,
+  application-owned ServiceMonitor, Pod-derived release correlation, and
+  bounded-cardinality SLI inputs - delivered offline; the local path is
+  operator-validated and formal aws-dev evidence remains pending
+- v0.11.3 - parameterized local root deployment, safe feature-revision child
+  overrides, local-image injection, revision/Chart/ServiceMonitor verification,
+  explicit Root OutOfSync semantics, and declarative HEAD restoration - delivered
+  offline and live-replayed; repaired by v0.11.3.1 after recovery findings
+- v0.11.3.1 - serialize local Argo CD operations, render manual Root mode before
+  apply, explicitly remove stale live Helm parameters, enforce the feature
+  allowlist, harden HEAD restoration, and document the observed revision 15
+  recovery plus demo-api dependency graph - implemented; clean replay exposed
+  a Prometheus empty-vector defect repaired by v0.11.3.2
+- v0.11.3.2 - add bounded Prometheus metric warm-up, reject empty vectors
+  without expression errors, retain fail-closed Canary semantics, and require a
+  new clean HEAD-to-feature replay after the revision 22 failure - implemented;
+  that replay exposed an Argo CD server-side operation-lock hand-off repaired
+  by v0.11.3.3
+- v0.11.3.3 - centralize Application operation serialization, retry only the
+  exact operation-busy failure with a five-attempt bound, fail all other errors
+  immediately, emit exhaustion diagnostics, and execute transient/permanent
+  busy regression tests - implemented; the next replay identified the need to
+  remove split Root/child source ownership in v0.11.3.4
+- v0.11.3.4 - render local child Applications from a Helm App-of-Apps Chart,
+  resolve one remote feature input to an immutable commit shared by Root and
+  same-repository children, keep external Chart versions independent, and make
+  feature image parameters plus HEAD cleanup declaratively Root-owned -
+  implemented; pre-merge HEAD restoration exposed a source-schema mismatch
+  repaired by v0.11.3.5
+- v0.11.3.5 - verify the selected remote revision contains the platform Chart
+  before Kubernetes access, separate immutable pre-merge feature restoration
+  from post-merge HEAD restoration, and block sync on ComparisonError -
+  implemented; complete quality-gate replay exposed historical validator paths
+  repaired by v0.11.3.6
+- v0.11.3.6 - align namespace guardrail validation with the Helm template and
+  stable values model, recursively enforce the local admission-policy boundary,
+  and reject both legacy and nested negative fixtures - implemented; complete
+  quality-gate and local live recovery accepted
+- v0.11.4 - Grafana dashboards, recording rules, and operator-oriented views
+  for application, delivery, data, platform, capacity, and cost health - in
+  progress
+  - v0.11.4.0 - private GitOps-managed Grafana, repository-owned views Chart,
+    bounded demo-api recording rules, immutable service overview Dashboard,
+    unified feature revision, and local live acceptance - implemented and
+    accepted locally; Helm replay exposed historical five-child validation
+    repaired by v0.11.4.0.1
+  - v0.11.4.0.1 - make the v0.11.3.4 Helm-render regression successor-aware,
+    require the sixth observability child and its stable/feature revisions, and
+    force the skipped branch through a fake-Helm regression - implemented and
+    accepted
+  - v0.11.4.1 - delivery, data, and platform views plus version-verified
+    controller metrics discovery - in progress
+    - v0.11.4.1.0 - observed semantic Argo CD identity, patched and pinned Argo
+      Rollouts, repository-owned controller and CloudNativePG monitors,
+      Delivery/Data/Platform diagnostic recording rules, and profile-aware
+      live discovery - implemented and accepted locally
+      - v0.11.4.1.0.1 - stabilize transient Pod discovery and exact Dashboard
+        ConfigMap acceptance - implemented and accepted locally
+      - v0.11.4.1.0.2 - preserve no-data for absent sources while anchoring
+        valid zero numerators to observed request and dependency series -
+        implemented and accepted locally
+    - v0.11.4.1.1 - immutable Delivery, Data, and Platform Dashboards backed
+      only by the accepted v0.11.4.1.0 rules - implemented and accepted locally
+  - v0.11.4.2 - capacity and resource-efficiency views, conditional no-data
+    hardening, and clean local replay - implemented and accepted locally
+    - v0.11.4.2.0 - existing-source capacity and efficiency recording rules,
+      bounded request coverage, and profile-aware live discovery - implemented
+      and accepted locally
+    - v0.11.4.2.1 - immutable Capacity and Resource Efficiency Dashboard backed
+      only by the accepted v0.11.4.2.0 rules - implemented and accepted locally;
+      clean replay exposed a neutral-baseline image transition and target
+      diagnostic defect repaired by v0.11.4.2.2
+    - v0.11.4.2.2 - fresh replay image transition, positive target-health
+      assertions, shared bounded telemetry preflight, and actionable scrape
+      diagnostics - implemented and accepted through one clean local feature replay
+- v0.11.5 - Alertmanager routing, actionable alerts, inhibition, severity
+  policy, and version-controlled Runbooks with positive/negative drills -
+  implemented and accepted locally
+  - v0.11.5.0 - environment-local Alertmanager runtime, private exposure,
+    bounded persistence, stable severity routing, alert-family inhibition, and
+    Prometheus discovery acceptance - implemented offline; local live replay
+    proved the runtime configuration and exposed a whitespace-sensitive
+    acceptance defect repaired by v0.11.5.0.1
+    - v0.11.5.0.1 - accept Alertmanager canonical matcher formatting while
+      retaining exact route-and-inhibition matcher cardinality and actionable
+      diagnostics - implemented and accepted through the direct local live rerun
+  - v0.11.5.1 - eight recording-rule-backed actionable alerts, stable routing
+    labels, one reviewed English Runbook per alert, and clean inactive-baseline
+    acceptance - implemented and accepted locally
+    - v0.11.5.1.1 - repair Prometheus target-down counting with Boolean
+      semantics, add the ninth actionable alert and Runbook, and cross-check
+      the recorded vector against the direct query - implemented offline;
+      local live attempt confirmed fresh-image telemetry and exposed two
+      acceptance-path defects repaired by v0.11.5.1.1.1
+      - v0.11.5.1.1.1 - correct the diagnostic PrometheusRule ownership name
+        and require a unique current-source image after neutral-baseline
+        restoration - implemented and accepted locally
+  - v0.11.5.2 - firing, routing, inhibition, resolution, and environment-owned
+    notification-path drills - implemented and accepted locally
+    - v0.11.5.2.0 - guarded local synthetic warning and critical lifecycles,
+      continued severity-route assignment, positive and negative inhibition,
+      internal webhook firing and resolved delivery, and zero-residual cleanup
+      - implemented offline; first local live attempt proved the runtime and
+      exposed URL-redaction parser behavior repaired by v0.11.5.2.0.1
+      - v0.11.5.2.0.1 - accept exactly two `<secret>` webhook URL lines in the
+        active Alertmanager status while retaining exact internal desired-state
+        URLs and negative public-URL fixtures - corrected checker accepted
+        locally; the resumed drill proved warning firing delivery and exposed
+        a delete-before-resolved transition defect repaired by v0.11.5.2.0.2
+        - v0.11.5.2.0.2 - retain the same temporary rule and alert identity,
+          apply the empty-vector `vector(0) == 1`, wait for Prometheus clearing
+          and resolved delivery, then delete only for cleanup; reject active
+          drill alerts from earlier failed runs - all four repaired phases
+          completed locally; final baseline exposed an asynchronous rule-
+          inventory cleanup race repaired by v0.11.5.2.0.3
+          - v0.11.5.2.0.3 - make normal Kubernetes cleanup strict and wait
+            until both temporary alerts disappear from the Prometheus rule
+            inventory before asserting the exact nine formal alerts -
+            implemented and accepted through the repaired final local drill
+- v0.11.6 - centralized structured logging plus an extensible OpenTelemetry
+  tracing foundation for the HTTP to demo-api to PostgreSQL path - in progress
+  - v0.11.6.0 - per-environment logging and trace-backend isolation, bounded
+    JSON and Loki label contracts, Alloy log/Event ownership, vendor-neutral
+    OTLP Collector boundary, minimal Tempo path, implementation sequence, and
+    security/cost acceptance boundaries - design-only; implemented offline
+  - v0.11.6.1.0 - demo-api one-line JSON runtime, bounded HTTP completion
+    records, successful probe-noise suppression, canonical release-identity
+    projection through the Downward API, and offline/live application log
+    acceptance - implemented; unique local image rerun required
+  - v0.11.6.1.1 - local Loki Monolithic and node-local Alloy Pod-log
+    collection through the Kubernetes API, with private access, bounded
+    resources, 2 GiB disposable storage, 24-hour retention, exact indexed
+    labels, NetworkPolicy, application-scoped watcher-exhaustion repair, and
+    live replacement persistence acceptance - implemented through
+    v0.11.6.1.1.5; local GitOps live validation required
+  - v0.11.6.1.2 - singleton Kubernetes Event collection and Grafana Loki data
+    source, persistent Event read positions, exact six-label Event streams,
+    and restart replay rejection - implemented through v0.11.6.1.2.1, whose
+    repair
+    co-schedules the WaitForFirstConsumer PVC and consumer Application,
+    repairs exact historical render counting, and bounds Argo CD sync waits;
+    the acceptance repair series is implemented through v0.11.6.1.2.2, which
+    emits API-compatible six-digit Event MicroTime during live acceptance;
+    local GitOps live validation required
+  - v0.11.6.1.3 closes the local structured-logging runtime with one ordered
+    platform, Pod-log, Events, Loki, Grafana, strict-cleanup, retained-history,
+    final-state, diagnostic, and consecutive two-run acceptance contract -
+    implemented and accepted locally
+  - v0.11.6.2.0 adds the demo-api OpenTelemetry contract: W3C propagation,
+    bounded HTTP SERVER and PostgreSQL CLIENT spans, shared release identity,
+    real JSON log correlation, exact SDK pins, and disabled-by-default OTLP
+    export. It deploys no Collector or Tempo; a unique local image rebuild and
+    disabled-state acceptance are required.
+  - v0.11.6.2.1 adds one private OTel Collector Gateway and one repository-owned
+    Tempo 3.0.3 Monolithic runtime. Synthetic OTLP ingest, trace query, private
+    service/security controls, and Collector-Pod replacement history are
+    accepted independently while demo-api export remains disabled. Local
+    reconciliation and consecutive two-run live validation are required; no
+    application image rebuild or production durability claim is introduced.
+  - v0.11.6.2.1.1 repairs the synthetic OTLP/JSON client to use hexadecimal
+    trace and span identifiers, surfaces bounded HTTP error response bodies,
+    and selects Collector and Tempo diagnostics explicitly. It changes no
+    deployed resource and requires neither reconciliation nor an image rebuild.
+  - v0.11.6.2.2 enables the already accepted demo-api exporter only through
+    the local App-of-Apps, proves a real `/version` SERVER span and its
+    correlated Loki JSON record, and provisions one private Grafana Tempo data
+    source plus a Loki `TraceID` derived field. Trace identifiers remain
+    unindexed fields; no image rebuild, PostgreSQL trace claim, AWS runtime,
+    service graph, span metrics, or durable Tempo storage is introduced.
+  - v0.11.6.2.3 closes local minimal tracing with one ordered read-only
+    entrypoint, private-Service and Rollout preflight, two independent real
+    trace-log correlations, and explicit negative production boundaries. The
+    destructive synthetic Collector replacement drill remains independently
+    accepted and is not rerun by closure.
+  - v0.11.6.2.3.1 repairs runtime artifact preflight so a Synced and Healthy
+    neutral replay image cannot be mistaken for the accepted structured-log
+    and tracing binary.
+- v0.11.7 - service SLOs, error budgets, burn-rate alerts, and SLI-based Argo
+  Rollouts analysis gates - implemented and accepted locally
+  - v0.11.7.0 establishes 30-day demo-api availability and latency objectives,
+    bounded recording rules, remaining-error-budget formulas, one immutable
+    Grafana Dashboard, and local semantic acceptance. Burn-rate alerts and
+    Rollout decisions remain absent.
+  - v0.11.7.0.1 repairs feature replay so a healthy Root or child pinned to an
+    older immutable commit is rejected before SLO resource discovery.
+  - v0.11.7.1 adds multi-window burn-rate alerting after the formulas are
+    accepted.
+  - v0.11.7.1.1 repairs cross-filesystem alert-inventory validation without
+    changing the accepted v0.11.7.1 runtime.
+  - v0.11.7.1.2 repairs the retained live Grafana Dashboard assertion for the
+    six-panel burn-rate successor and adds precise API diagnostics.
+  - v0.11.7.1.3 repairs the final jq inventory program and adds exact missing
+    recording-rule diagnostics without changing runtime state.
+  - v0.11.7.2 adds human-governed, exact-release SLO-aware Rollout analysis
+  - v0.11.7.2.1 repairs stable-budget PromQL parsing and the local live-traffic race
+  - v0.11.7.2.2 repairs stale canary Endpoint identity and pre-scrape traffic timing
+  - v0.11.7.3 closes local SLO-aware progressive delivery with explicit policy and evidence
+  - v0.11.7.3.1 repairs final Rollout status convergence timing and diagnostics
+    with candidate short-window signals and stable 30-day budget protection.
+  - v0.11.7.3 closes the SLO phase with ordered end-to-end acceptance.
+- v0.11.8 - environment-scoped observability qualification, including an
+  approval-protected, read-only aws-prod runtime observation boundary - in progress
+  - v0.11.8.0 defines the four-environment capability matrix, portable evidence
+    schema, exact environment/revision/release identity lock, resumable
+    `waiting-runtime` status, and fail-closed read-only action policy. It makes
+    no live AWS qualification claim.
+  - v0.11.8.1 implements exact-account/revision/release aws-dev qualification,
+    bounded observability read and port-forward RBAC, private Prometheus and
+    Alertmanager queries, six Dashboard checks, explicit absent Loki/Tempo
+    evidence, idle-SLO semantics, and a trusted-runtime artifact workflow. Live
+    acceptance requires an existing reconciled aws-dev environment.
+    - v0.11.8.1.1 repairs the historical release-orchestration workflow
+      boundary so the contracted aws-dev observability workflow is recognized
+      while every arbitrary third AWS/EKS workflow remains rejected.
+    - v0.11.8.1.2 qualifies aws-dev from the feature branch with one consistent
+      same-repository revision boundary, then restores the dev overlay to main
+      before merge.
+  - v0.11.8.2 will qualify an exact aws-test release without promoting it.
+    - v0.11.8.2.0 defines offline prerequisites and a separate feature preview;
+      stable test/prod remain on main. No live bootstrap is enabled.
+      - v0.11.8.2.0.1 repairs the Barman Application/Chart identity and makes
+        real AWS source manifests an independent validator input.
+    - v0.11.8.2.1 supplies guarded feature-mode test execution and independent
+      prerequisites, then read-only qualification; live evidence is collected
+      separately by the operator, not claimed by offline/package validation.
+    Before aws-test live work, resolve its clean-main bootstrap versus feature
+    qualification boundary and independently review capacity and credentials.
+  - v0.11.8.1.5 closes aws-dev capacity status semantics and bounded node
+    readiness waits following the .8.1.3 creation and .8.1.4 scheduling repairs;
+    it retains the strict reserve policy and the info58-65 incident record.
+  - v0.11.8.3 implements the approval-protected read-only prod observer and
+    offline safety tests. Real prod deployment/qualification is deferred to the
+    v0.11 tail to avoid running too many clusters simultaneously. Prod stays on
+    main; no feature deployment or live qualification is claimed here.
+  - v0.11.8.4 closes implementation/evidence management with a four-environment
+    status map and local content-addressed reviewed archive. It preserves raw,
+    redacted and summary distinctions without rerunning destructive local drills.
+    Closure must explicitly retain prod as runtime-deferred until the tail
+    checkpoint supplies fresh approved evidence; offline success is not prod success.
+- v0.11.9 - clean-room dev/test/prod-live end-to-end release, successful and
+  intentionally failed Canary checks, telemetry correlation, reviewed closure
+  evidence, environment teardown, and residual-cost audit - planned
+  - v0.11.9.0 delivers scenario design and offline plan preflight only;
+    live rehearsal implementation and execution remain subsequent work.
+  - v0.11.9.1 adds the opt-in local successful-release runner with same-binary
+    identity, fresh analyses and explicit human promotion. Producer offline
+    tests do not substitute for operator live acceptance; failure/recovery is next.
+    - v0.11.9.1.1 closes rehearsal race and operator-visibility findings with
+      live terminal/log mirroring, bounded Pod/imageID convergence, actionable
+      bundle input diagnostics and an explicit terminal/retry runbook. It does
+      not rerun the already successful live rehearsal or automate mutations.
+      Controlled failure and recovery remain v0.11.9.2.
+  - v0.11.9.2 begins controlled candidate rejection and recovery validation.
+    - v0.11.9.2.0 defines the offline-only local availability-failure contract,
+      same-binary isolation, strict bounded plan preflight, stable control and
+      Git/runtime recovery acceptance. It implements no fault and authorizes no
+      live execution; reviewed runner implementation is v0.11.9.2.1.
+    - v0.11.9.2.1 implements the reviewed default-off local fault gate,
+      same-binary identity checks, bounded Canary/stable traffic and explicit
+      recovery phases with offline/mocked coverage. Producer validation performs
+      no live fault; separately authorized execution is v0.11.9.2.2.
+    - v0.11.9.2.2 makes that local execution operator-ready with read-only plan
+      discovery, explicit manual abort/retry checkpoints, progress diagnostics
+      and exact Git/runtime/failure evidence closure. Applying and validating
+      the increment performs no live rehearsal; qualification requires the
+      separately initiated operator run and retained private evidence.
+      - v0.11.9.2.2.3.3.3.1 repairs the inherited rendered-identity validator
+        by checking container Downward API and AnalysisRun argument bindings
+        independently instead of globally counting annotation references.
+      - v0.11.9.2.2.3.3.3 closes the successful digest-pinned revision 70
+        restoration, its two AnalysisRuns, Argo CD convergence and idempotent
+        reapplication without revision 71; it also removes the mawk warning.
+      - v0.11.9.2.2.3.3.2 promotes the successfully published `sha-cf0a6bc`
+        artifact into the digest-pinned local baseline declaration and adds an
+        immutable identity preflight before any restoration mutation.
+      - v0.11.9.2.2.3.3.1 restores local/CI ShellCheck parity after workflow
+        run 34035241036 rejected ambiguous environment assignment and boolean
+        guard syntax before image build-and-push.
+      - v0.11.9.2.2.3.3 records revision 69 request-series incompatibility,
+        adds post-observer AnalysisRun selection and blocks the rejected image
+        until a compatible immutable baseline is published.
+      - v0.11.9.2.2.3.2 records the accepted revision 68 recovery closure,
+        canonical kubectl plugin syntax and observer-before-promote contract.
+      - v0.11.9.2.2.3.1 makes the historical no-data validator successor-aware
+        while preserving its original contract evidence.
+      - v0.11.9.2.2.3 closes the Prometheus Candidate-discovery and bounded
+        traffic-lifetime race observed during revision 67 recovery.
+      - v0.11.9.2.2.2.1.1 isolates the fake AWS lifecycle from ambient operator
+        environment variables and the current local kind identity.
+      - v0.11.9.2.2.2.1 repairs the inherited offline Rollout fixture for the
+        runtime-qualified baseline restoration contract.
+      - v0.11.9.2.2.2 closes the baseline-restoration zero-traffic race and
+        prevents GitOps-only success from being reported as runtime restoration.
+      - v0.11.9.2.2.1 repairs the observed empty fault-digest Application CRD
+        normalization drift and replaces immediate Root status assertion with
+        bounded exact-revision convergence. The successful first analysis and
+        50% human pause remain preserved for explicit resume after repair.
+  - v0.11.9.3 sequences the final remote build-once release and closure.
+    - v0.11.9.3.0 pins the accepted `sha-cf0a6bc` artifact, requires protected
+      main before remote credentials, accepts the local-only failure/recovery
+      evidence without enabling fault mode in AWS, sequences dev/test/prod with
+      at most one active EKS environment, and requires reviewed teardown plus a
+      residual-cost audit. It is offline-only and blocks live execution until
+      v0.11.9.3.1 implements an existing-image aws-dev release-PR handoff.
+    - v0.11.9.3.1 implements that protected-main-only handoff. It downloads the
+      original successful run artifact, verifies source ancestry, digest,
+      provenance and SPDX SBOM, then permits only an aws-dev release-file PR.
+      It neither rebuilds nor deploys, never overwrites a divergent branch and
+      remains live-blocked until reviewed main integration.
+    - v0.11.9.3.2 removes the temporary aws-dev feature source override, makes
+      main the default rendered revision for all active AWS environments,
+      fingerprints unchanged release files and preserves the test feature
+      overlay only as non-active historical preview evidence. Review and main
+      integration remain separate actions.
+  - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
+    approve main integration, prod deployment and .8.3 read-only observation.
+    Do not claim full prod acceptance before that checkpoint is complete.
+
+v0.11 does not automatically create an EKS environment, merge a pull request,
+perform a production Kubernetes write, dispatch a rollback, or remove the
+existing production approval boundary. Full remote Terraform state, platform
+upgrade lifecycle, recovery objectives, and repository-wide production
+readiness remain v0.12 work.
+
+## v0.12 - Production Readiness Capstone
 
 Status: Planned
 
 Goal:
 
-Make the multi-environment baseline observable and operationally sustainable.
+Prove that the complete platform can be rebuilt, upgraded, recovered,
+operated, and reviewed as a production-oriented commercial baseline.
 
 Planned scope:
 
-- Prometheus production deployment
-- Grafana dashboards
-- Alertmanager and actionable alert routing
-- centralized logging
-- application SLI/SLO metrics
-- platform health monitoring
-- remote Terraform state bootstrap and locking
-- platform upgrade and dependency lifecycle
+- encrypted remote Terraform state bootstrap and S3-native locking
+- state backup, recovery, and operator-access boundaries
+- EKS and platform dependency upgrade lifecycle
 - clean-room infrastructure and GitOps rebuild
-- recovery objectives and operational readiness review
-- end-to-end security, observability, delivery, and cost validation
+- measured recovery objectives and disaster-recovery review
+- production access, break-glass, capacity, availability, and cost review
+- repository-wide security, delivery, observability, recovery, and
+  documentation acceptance
 
-## v1.0 - AI Infrastructure Extension
-
-Status: Planned
-
-Goal:
-
-Extend the platform toward AI workloads.
-
-Planned scope:
-
-- GPU node pool
-- NVIDIA device plugin
-- GPU scheduling and isolation
-- GPU monitoring
-- vLLM inference service
-- OpenAI-compatible API serving
-- model storage workflow
-
-## v1.1 - AIOps Operations Extension
+## v1.0 - Production-ready Commercial Baseline
 
 Status: Planned
 
 Goal:
 
-Introduce AI-assisted platform operations.
+Stabilize and publish the completed general-purpose DevOps, GitOps, security,
+delivery, observability, and SRE baseline without introducing a new workload
+domain during release closure.
 
 Planned scope:
 
-- alert summarization
-- incident triage
-- GitOps diagnosis
-- rollout failure analysis
-- runbook automation
+- v0.1 through v0.12 architecture and documentation consistency review
+- stable supported-version and upgrade matrix
+- final commercial deployment, operation, and teardown guidance
+- final clean repository, acceptance evidence, and release packaging
+- explicit supported, optional, and out-of-scope capability boundaries
+
+## v1.1 - AI Infrastructure Integration
+
+Status: Planned
+
+Goal:
+
+Define how the general platform contracts integrate with the separate
+`ai-infra-blueprints` repository without duplicating GPU, model-serving, or
+training infrastructure in this repository.
+
+Planned scope:
+
+- cross-repository release, telemetry, SLO, cost, and evidence conventions
+- model-serving workload integration contract
+- GPU and model identity extension points
+- OpenAI-compatible endpoint qualification example
+- documented ownership boundary for GPU nodes, NVIDIA components, vLLM,
+  model storage, inference benchmarking, and Slurm
+
+## v1.2 - Lightweight AIOps Extension
+
+Status: Planned
+
+Goal:
+
+Introduce AI-assisted, evidence-grounded operations after deterministic
+observability, Runbooks, and production-readiness controls are established.
+
+Planned scope:
+
+- alert summarization and evidence correlation
+- incident triage and likely-cause ranking
+- GitOps and rollout failure diagnosis
+- version-controlled Runbook recommendation
+- reviewable issue, pull-request, or rollback-handoff preparation
 - human-approved remediation workflows
-- AIOps safety boundaries
+- no direct production mutation, automatic merge, or approval bypass
+- AIOps safety, audit, and fallback boundaries
+  - v0.11.7.1 adds paired-window availability and latency error-budget burn-rate
+    recording rules, four actionable alerts, Runbooks, Dashboard panels, and
+    deterministic acceptance without changing progressive delivery decisions.

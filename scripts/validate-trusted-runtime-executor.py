@@ -162,7 +162,17 @@ def main() -> None:
 
     rbac = read(root, "clusters/aws/base/security/runtime-qualification/rbac.yaml")
     require('verbs: ["get", "list", "watch"]' in rbac, "Read-only RBAC verbs are missing")
-    require(not re.search(r'verbs:\s*\[[^\]]*(create|update|patch|delete|\*)', rbac), "RBAC contains a write or wildcard verb")
+    portforward_rule = '''  - apiGroups: [""]
+    resources: ["pods/portforward"]
+    verbs: ["create"]
+'''
+    observability_successor = "observability-runtime-qualification" in rbac
+    if observability_successor:
+        require(rbac.count(portforward_rule) == 1, "Bounded observability port-forward rule changed")
+        persistent_rbac = rbac.replace(portforward_rule, "")
+    else:
+        persistent_rbac = rbac
+    require(not re.search(r'verbs:\s*\[[^\]]*(create|update|patch|delete|\*)', persistent_rbac), "RBAC contains a persistent write or wildcard verb")
     require(not re.search(r'resources:\s*\[[^\]]*(secrets|pods/exec|\*)', rbac), "RBAC exposes a sensitive or wildcard resource")
     application_resource = "../../base/platform/runtime-qualification-rbac"
     for environment in ("dev", "test"):

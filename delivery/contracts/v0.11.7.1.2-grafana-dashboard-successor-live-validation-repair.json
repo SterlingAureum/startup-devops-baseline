@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "v0.11.7.1.2",
+  "version": "v0.11.7.1.2",
+  "predecessor": "v0.11.7.1.1",
+  "title": "Grafana SLO Dashboard successor live-validation repair",
+  "cause": "The v0.11.7.0 live checker retained a hard-coded four-panel assertion after v0.11.7.1 added two burn-rate panels",
+  "scope": {
+    "liveValidatorChanged": true,
+    "runtimeResourceChanged": false,
+    "dashboardChanged": false,
+    "chartChanged": false,
+    "recordingRuleChanged": false,
+    "alertRuleChanged": false,
+    "applicationImageChanged": false,
+    "rolloutChanged": false,
+    "awsRuntimeChanged": false
+  },
+  "dashboard": {
+    "uid": "startup-devops-demo-api-slo",
+    "predecessorPanelCount": 4,
+    "burnRateSuccessorPanelCount": 6,
+    "editable": false
+  },
+  "diagnostics": {
+    "httpStatusReported": true,
+    "responseBodyReportedOnHttpFailure": true,
+    "uidMismatchDistinct": true,
+    "editableMismatchDistinct": true,
+    "panelCountExpectedAndActualReported": true
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.1.2-grafana-dashboard-successor-live-validation-repair.sh",
+    "predecessorFixtureRequired": true,
+    "successorFixtureRequired": true,
+    "wrongCountFixtureRequired": true,
+    "reconciliationRequired": false,
+    "liveRerunRequired": true
+  }
+}

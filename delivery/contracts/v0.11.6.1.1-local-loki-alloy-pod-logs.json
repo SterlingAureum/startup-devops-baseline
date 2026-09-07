@@ -1,0 +1,149 @@
+{
+  "schemaVersion": "v0.11.6.1.1",
+  "version": "v0.11.6.1.1",
+  "status": "offline-implemented-local-live-required",
+  "predecessor": "v0.11.6.1.0",
+  "designDocument": "docs/V0.11.6.1.1_LOCAL_LOKI_ALLOY_POD_LOGS.md",
+  "scope": {
+    "environment": "local",
+    "lokiImplemented": true,
+    "alloyPodLogsImplemented": true,
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "kubernetesEventsImplemented": false,
+    "grafanaLokiDatasourceImplemented": false,
+    "tracingImplemented": false
+  },
+  "applications": [
+    {
+      "name": "logging-loki",
+      "syncWave": 7,
+      "chart": "loki",
+      "repository": "https://grafana-community.github.io/helm-charts",
+      "chartVersion": "18.11.3",
+      "applicationVersion": "3.7.6",
+      "releaseName": "observability-logs"
+    },
+    {
+      "name": "logging-alloy",
+      "syncWave": 8,
+      "chart": "alloy",
+      "repository": "https://grafana.github.io/helm-charts",
+      "chartVersion": "1.11.0",
+      "applicationVersion": "1.18.0",
+      "releaseName": "observability-logs-collector"
+    }
+  ],
+  "loki": {
+    "deploymentMode": "Monolithic",
+    "replicas": 1,
+    "replicationFactor": 1,
+    "schema": "v13",
+    "indexStore": "tsdb",
+    "objectStore": "filesystem",
+    "authenticationEnabled": false,
+    "gatewayEnabled": true,
+    "gatewayServiceType": "ClusterIP",
+    "publicIngress": false,
+    "persistence": "emptyDir",
+    "storageCapacity": "2Gi",
+    "retention": "24h",
+    "minioEnabled": false,
+    "canaryEnabled": false,
+    "chunksCacheEnabled": false,
+    "resultsCacheEnabled": false,
+    "automaticServiceNameDiscoveryEnabled": false,
+    "networkPolicy": "observability-logs-cluster-only"
+  },
+  "alloy": {
+    "controller": "DaemonSet",
+    "collectionMethod": "kubernetes-api",
+    "nodeLocalDiscovery": true,
+    "hostPathRequired": false,
+    "privilegedRequired": false,
+    "hostNetwork": false,
+    "hostPID": false,
+    "serviceEnabled": false,
+    "publicIngress": false,
+    "configurationReloadSidecarEnabled": false,
+    "serviceAccountTokenRequired": true,
+    "rbacResources": [
+      "namespaces",
+      "pods",
+      "pods/log"
+    ],
+    "nonJsonLinesPreserved": true,
+    "podIdentityAsStructuredMetadata": true,
+    "networkPolicyEnabled": true,
+    "kubernetesApiServiceCidr": "10.96.0.1/32"
+  },
+  "labels": {
+    "allowedIndexed": [
+      "environment",
+      "cluster",
+      "namespace",
+      "application",
+      "container",
+      "severity"
+    ],
+    "static": {
+      "environment": "local",
+      "cluster": "startup-devops-local"
+    },
+    "forbiddenIndexed": [
+      "service_name",
+      "pod",
+      "pod_name",
+      "pod_uid",
+      "image",
+      "image_digest",
+      "release_id",
+      "source_commit",
+      "request_id",
+      "trace_id",
+      "span_id"
+    ]
+  },
+  "versions": {
+    "localPlatformChartPrevious": "0.4.1",
+    "localPlatformChart": "0.5.0",
+    "localPlatformApp": "v0.11.6.1.1",
+    "demoApiChart": "0.6.0",
+    "demoApiApp": "0.4.0",
+    "observabilityViewsChart": "0.4.1",
+    "observabilityViewsApp": "v0.11.5.1.1"
+  },
+  "unchanged": {
+    "demoApiCodeChanged": false,
+    "demoApiImageChanged": false,
+    "monitoringConfigurationChanged": false,
+    "alertmanagerConfigurationChanged": false,
+    "grafanaDatasourceChanged": false,
+    "kubernetesEventsCollected": false,
+    "awsStateChanged": false,
+    "productionAutomationChanged": false,
+    "publicEndpointAdded": false,
+    "externalCredentialAdded": false,
+    "tracingAdded": false,
+    "aiInfrastructureAdded": false,
+    "aiopsAdded": false,
+    "openClawAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.1.1-local-loki-alloy-pod-logs.sh",
+    "liveValidator": "scripts/check-local-logging-runtime.sh",
+    "completeQualityGateRequired": true,
+    "localGitOpsRedeployRequired": true,
+    "imageRebuildRequired": false,
+    "demoApiRedeployRequired": false,
+    "lokiQueryRequired": true,
+    "indexedLabelInventoryRequired": true,
+    "oldPodLogSurvivesDemoApiReplacementRequired": true,
+    "formalAwsExecutionDeferredTo": "v0.11.8",
+    "cleanRoomClosureDeferredTo": "v0.11.9"
+  },
+  "nextIncrement": {
+    "version": "v0.11.6.1.2",
+    "outcome": "singleton-kubernetes-events-and-grafana-loki-datasource"
+  }
+}

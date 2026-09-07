@@ -21,6 +21,34 @@ the repository can focus on platform workflows.
 `/health` is process-only. `/ready` includes PostgreSQL when
 `DATABASE_ENABLED=true`. `/db/health` never returns a password, URI, or DSN.
 
+The v0.11.2 Prometheus contract exposes bounded HTTP and dependency signals:
+
+| Metric | Labels |
+| --- | --- |
+| `demo_api_http_requests_total` | `method`, `route`, `status_class` |
+| `demo_api_http_request_duration_seconds` | `method`, `route` |
+| `demo_api_dependency_checks_total` | `dependency`, `outcome` |
+| `demo_api_dependency_check_duration_seconds` | `dependency` |
+
+Unknown routes collapse to `__unmatched__`; raw URLs, query strings, database
+parameters, and exception details are never exported as labels.
+
+The v0.11.6.1.0 runtime also emits one JSON object per process log line. Every
+record carries service, environment, release, source-commit, and image-digest
+identity. Successful liveness, readiness, and metrics requests are excluded
+from request logs to control probe noise; failures remain visible. Request
+bodies, response bodies, raw query strings, authorization and cookie headers,
+database parameters, and credential values are never added to log records.
+
+The v0.11.6.2.0 tracing contract adds W3C Trace Context, one bounded HTTP
+SERVER span, controlled PostgreSQL CLIENT spans, and valid `trace_id` and
+`span_id` JSON correlation. OTLP export is disabled by default and creates no
+exporter or background processor in that state. `/health`, `/ready`, and
+`/metrics` requests create no trace spans; their failures remain visible in
+the existing bounded logs and metrics. Raw URLs,
+headers, bodies, SQL, database parameters, database URLs, baggage, and exception
+messages are excluded from spans.
+
 ## Local Development
 
 Run locally with Python:
@@ -30,7 +58,7 @@ cd apps/demo-api
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn src.main:app --host 0.0.0.0 --port 8080
+python -m src.server
 ```
 
 Test the service:
@@ -76,14 +104,28 @@ curl http://localhost:8080/health
 | `APP_NAME` | `demo-api` | Service name |
 | `APP_VERSION` | `0.1.0` | Application version |
 | `APP_ENV` | `local` | Runtime environment |
+| `PLATFORM_RELEASE_ID` | derived local identity | Release identity projected from the Pod annotation |
+| `PLATFORM_SOURCE_COMMIT` | `local-unavailable` | Source commit projected from the Pod annotation |
+| `CONTAINER_IMAGE_DIGEST` | `local-unpinned` | Image digest projected from the Pod annotation |
 | `DATABASE_ENABLED` | `false` | Enable PostgreSQL readiness and health checks |
 | `DATABASE_URL` | none | PostgreSQL URI supplied from a Kubernetes Secret |
 | `DATABASE_CONNECT_TIMEOUT_SECONDS` | `3` | Timeout for one connection attempt |
 | `DATABASE_RETRY_ATTEMPTS` | `3` | Bounded retry count |
 | `DATABASE_RETRY_DELAY_SECONDS` | `1` | Delay between retries |
+| `TRACING_ENABLED` | `false` | Explicitly enable SDK provider and OTLP export |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | private future Collector URL | OTLP/HTTP trace endpoint; ignored while tracing is disabled |
+| `OTEL_EXPORTER_OTLP_PROTOCOL` | `http/protobuf` | Only accepted trace export protocol |
+| `OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` | `5` | Export timeout in seconds; maximum 30 |
+| `REHEARSAL_FAULT_MODE` | `disabled` | Local-only reviewed candidate rejection mode; do not enable in normal service operation |
+| `REHEARSAL_FAULT_TOKEN_SHA256` | empty | SHA-256 of the private per-run header token; must remain empty while fault mode is disabled |
 
 The local environment leaves database integration disabled. The AWS Helm values
 enable it and reference `startup-apps/demo-api-postgresql`.
+
+The rehearsal fault gate is not a general chaos endpoint. Enabled mode is
+accepted only for `APP_ENV=local`; only an exact private `X-Rehearsal-Fault`
+token affects `/version`. See
+`docs/V0.11.9.2.1_LOCAL_FAILURE_RECOVERY_RUNNER.md` before any use.
 
 ## Internal Marker CLI
 

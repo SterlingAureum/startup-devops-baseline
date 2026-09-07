@@ -1,0 +1,13 @@
+{
+  "version": "v0.11.8.1.3",
+  "predecessor": "v0.11.8.1.2",
+  "devCreateEntrypoint": "scripts/apply-aws-dev.sh",
+  "maintenanceEntrypoint": "scripts/apply-eks-api-access-cidr.sh",
+  "requiresAccountMatch": true,
+  "requiresEmptyStateForCreation": true,
+  "requiresReviewedPlanConfirmation": true,
+  "permissionFailureIsNotAbsence": true,
+  "testStillRequiresCleanMain": true,
+  "prodChanges": false,
+  "liveAcceptance": "operator-required"
+}

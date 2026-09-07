@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: argo-rollouts
+  namespace: argocd
+  labels:
+    app.kubernetes.io/part-of: startup-devops-baseline
+  annotations:
+    argocd.argoproj.io/sync-wave: "-10"
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.externalCharts.argoRollouts.repoURL | quote }}
+    chart: argo-rollouts
+    targetRevision: {{ .Values.externalCharts.argoRollouts.version | quote }}
+    helm:
+      releaseName: argo-rollouts
+      values: |
+        controller:
+          metrics:
+            enabled: true
+        dashboard:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argo-rollouts
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

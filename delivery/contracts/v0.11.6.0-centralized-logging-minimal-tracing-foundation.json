@@ -1,0 +1,277 @@
+{
+  "schemaVersion": "v0.11.6.0",
+  "version": "v0.11.6.0",
+  "status": "design-foundation-runtime-deferred",
+  "predecessor": "v0.11.5.2.0.3",
+  "designDocument": "docs/V0.11.6.0_CENTRALIZED_LOGGING_MINIMAL_TRACING_FOUNDATION.md",
+  "v0115Acceptance": {
+    "scope": "local",
+    "alertmanagerRuntimeAccepted": true,
+    "formalAlertCount": 9,
+    "formalAlertsHealthyAndInactive": true,
+    "warningAndCriticalLifecycleAccepted": true,
+    "routingAccepted": true,
+    "positiveAndNegativeInhibitionAccepted": true,
+    "resolvedDeliveryAccepted": true,
+    "zeroKubernetesResidualAccepted": true,
+    "zeroPrometheusRuleInventoryResidualAccepted": true,
+    "externalProviderDeliveryDeferred": true,
+    "formalAwsExecutionDeferredTo": "v0.11.8"
+  },
+  "scope": {
+    "centralizedLoggingBoundary": "per-environment",
+    "minimalTracingBoundary": "http-demo-api-postgresql",
+    "runtimeImplemented": false,
+    "applicationCodeChanged": false,
+    "kubernetesResourcesAdded": false,
+    "helmDependenciesAdded": false,
+    "containerImagesAdded": false,
+    "liveClaimAdded": false
+  },
+  "components": {
+    "applicationLogging": {
+      "owner": "demo-api",
+      "source": "stdout-stderr",
+      "format": "json-lines",
+      "fileLogging": false,
+      "loggingSidecarRequired": false,
+      "implementationIncrement": "v0.11.6.1"
+    },
+    "logCollector": {
+      "component": "grafana-alloy",
+      "role": "kubernetes-node-log-and-event-collector",
+      "includeKubernetesEvents": true,
+      "implementationIncrement": "v0.11.6.1"
+    },
+    "logBackend": {
+      "component": "loki",
+      "role": "environment-local-log-store",
+      "crossEnvironmentBackend": false,
+      "implementationIncrement": "v0.11.6.1"
+    },
+    "traceCollector": {
+      "component": "upstream-opentelemetry-collector",
+      "role": "environment-local-otlp-gateway",
+      "protocol": "otlp",
+      "samplingOwnedOutsideApplication": true,
+      "implementationIncrement": "v0.11.6.2"
+    },
+    "traceBackend": {
+      "component": "tempo",
+      "role": "minimal-environment-local-trace-store",
+      "applicationBackendCoupling": false,
+      "implementationIncrement": "v0.11.6.2"
+    },
+    "visualization": {
+      "component": "grafana",
+      "role": "metrics-logs-traces-correlation",
+      "implementationIncrement": "v0.11.6.3"
+    }
+  },
+  "environmentIsolation": {
+    "environments": [
+      "local",
+      "aws-dev",
+      "aws-test",
+      "aws-prod"
+    ],
+    "separateRuntimePerEnvironment": true,
+    "separateStoragePerEnvironment": true,
+    "separateRetentionPerEnvironment": true,
+    "separateCredentialsPerEnvironment": true,
+    "crossEnvironmentQueryRequired": false,
+    "globalSharedLokiRequired": false,
+    "globalSharedTempoRequired": false,
+    "futureAggregationWithoutApplicationContractChange": true
+  },
+  "environmentProfiles": [
+    {
+      "environment": "local",
+      "profile": "lightweight",
+      "persistence": "disposable",
+      "retention": "short",
+      "productionClaim": false
+    },
+    {
+      "environment": "aws-dev",
+      "profile": "cost-optimized",
+      "persistence": "bounded",
+      "retention": "short",
+      "productionClaim": false
+    },
+    {
+      "environment": "aws-test",
+      "profile": "cost-optimized-production-parity",
+      "persistence": "bounded",
+      "retention": "short",
+      "productionClaim": false
+    },
+    {
+      "environment": "aws-prod",
+      "profile": "production-parity",
+      "persistence": "explicit",
+      "retention": "policy-controlled",
+      "productionClaim": "requires-live-v0.11-acceptance"
+    }
+  ],
+  "logSchema": {
+    "requiredFields": [
+      "timestamp",
+      "severity",
+      "message",
+      "service.name",
+      "service.version",
+      "deployment.environment.name",
+      "platform.release.id",
+      "platform.source.commit",
+      "container.image.digest"
+    ],
+    "conditionalCorrelationFields": [
+      "trace_id",
+      "span_id"
+    ],
+    "optionalBoundedFields": [
+      "http.request.method",
+      "http.route",
+      "http.response.status_code",
+      "duration_ms",
+      "db.system",
+      "outcome"
+    ],
+    "forbiddenFields": [
+      "http.request.body",
+      "http.request.header.authorization",
+      "http.request.header.cookie",
+      "db.query.parameter",
+      "db.statement.raw",
+      "enduser.id",
+      "raw.url.query",
+      "credential",
+      "secret"
+    ]
+  },
+  "lokiLabelPolicy": {
+    "allowedBoundedLabels": [
+      "environment",
+      "cluster",
+      "namespace",
+      "application",
+      "container",
+      "severity"
+    ],
+    "structuredFieldsNotIndexedLabels": [
+      "trace_id",
+      "span_id",
+      "platform.release.id",
+      "platform.source.commit",
+      "container.image.digest",
+      "pod.uid",
+      "pod.ip",
+      "request.id",
+      "enduser.id",
+      "raw.url"
+    ],
+    "boundedCardinalityRequired": true
+  },
+  "tracing": {
+    "scope": "minimal-extensible-foundation",
+    "initialPath": "http-request-to-demo-api-server-span-to-postgresql-client-span",
+    "propagation": "w3c-trace-context",
+    "exportProtocol": "otlp",
+    "applicationUsesOpenTelemetryApi": true,
+    "applicationCallsBackendSpecificApi": false,
+    "samplingConfiguredInCollector": true,
+    "serverSpanRequired": true,
+    "postgresqlClientSpanRequired": true,
+    "traceAndSpanIdsInLogs": true,
+    "secretsInSpanAttributes": false,
+    "rawSqlParametersInSpanAttributes": false,
+    "fullDistributedTracingPlatformRequired": false
+  },
+  "correlation": {
+    "requiredDimensions": [
+      "service.name",
+      "service.version",
+      "deployment.environment.name",
+      "platform.release.id",
+      "platform.source.commit",
+      "container.image.digest"
+    ],
+    "metricToLog": "release-and-service-identity",
+    "logToTrace": "trace_id",
+    "traceToLog": "trace_id-and-span_id",
+    "crossEnvironmentIdentity": "same-release-fields-not-shared-backend",
+    "acceptanceIncrement": "v0.11.6.3"
+  },
+  "implementationPlan": [
+    {
+      "increment": "v0.11.6.1",
+      "outcome": "structured-demo-api-logs-alloy-loki-and-kubernetes-events"
+    },
+    {
+      "increment": "v0.11.6.2",
+      "outcome": "opentelemetry-sdk-collector-and-minimal-tempo-path"
+    },
+    {
+      "increment": "v0.11.6.3",
+      "outcome": "grafana-metric-log-trace-release-correlation-and-local-acceptance"
+    },
+    {
+      "increment": "v0.11.6.4",
+      "outcome": "clean-replay-diagnostics-and-v0.11.6-closure"
+    }
+  ],
+  "runtimeRequirementsForLaterIncrements": {
+    "pinnedVersionsRequired": true,
+    "resourceRequestsAndLimitsRequired": true,
+    "storageCapacityRequired": true,
+    "retentionAndDeletionPolicyRequired": true,
+    "networkPolicyRequired": true,
+    "privateEndpointsRequired": true,
+    "credentialOwnershipRequired": true,
+    "schedulingProfileRequired": true,
+    "idleAndValidationCostDocumented": true,
+    "teardownAndResidualCostChecksRequired": true
+  },
+  "deferred": [
+    "cross-cluster-log-aggregation",
+    "cross-cluster-trace-aggregation",
+    "multi-tenant-observability-backend",
+    "distributed-ha-loki",
+    "distributed-ha-tempo",
+    "long-term-object-storage",
+    "tail-sampling",
+    "service-graph",
+    "messaging-tracing",
+    "model-inference-tracing",
+    "gpu-telemetry",
+    "aiops-automation"
+  ],
+  "boundaries": {
+    "kubernetesDesiredStateChanged": false,
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "monitoringRuntimeChanged": false,
+    "loggingRuntimeDeployed": false,
+    "tracingRuntimeDeployed": false,
+    "awsMutationPerformed": false,
+    "productionAutomationChanged": false,
+    "externalCredentialAdded": false,
+    "publicEndpointAdded": false,
+    "aiInfrastructureScopeAdded": false,
+    "aiopsImplementationAdded": false,
+    "openClawIntegrationAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.0-centralized-logging-minimal-tracing-foundation.sh",
+    "completeQualityGateRequired": true,
+    "localClusterExecutionRequired": false,
+    "monitoringRedeployRequired": false,
+    "imageRebuildRequired": false,
+    "loggingRuntimeDeferredTo": "v0.11.6.1",
+    "tracingRuntimeDeferredTo": "v0.11.6.2",
+    "localCorrelationAcceptanceDeferredTo": "v0.11.6.3",
+    "formalAwsExecutionDeferredTo": "v0.11.8",
+    "cleanRoomClosureDeferredTo": "v0.11.9"
+  }
+}

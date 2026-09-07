@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "v0.11.6.2.2",
+  "version": "v0.11.6.2.2",
+  "status": "offline-implemented-local-live-acceptance-required",
+  "predecessor": "v0.11.6.2.1.1",
+  "designDocument": "docs/V0.11.6.2.2_REAL_DEMO_API_TRACE_LOG_CORRELATION.md",
+  "scope": {
+    "environment": "local",
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "applicationExportEnabled": true,
+    "grafanaTempoDatasourceImplemented": true,
+    "lokiTraceDerivedFieldImplemented": true,
+    "realHttpTraceClaimed": true,
+    "postgresqlLiveTraceClaimed": false,
+    "awsRuntimeChanged": false
+  },
+  "versions": {
+    "localPlatformChart": "0.8.0",
+    "localPlatformApplicationVersion": "v0.11.6.2.2",
+    "demoApiChart": "0.7.0",
+    "demoApiApplicationVersion": "0.5.0",
+    "opentelemetrySdk": "1.44.0",
+    "collectorApplicationVersion": "0.159.0",
+    "tempoApplicationVersion": "3.0.3"
+  },
+  "applicationExport": {
+    "enableVariable": "TRACING_ENABLED",
+    "enabledValue": "true",
+    "protocol": "http/protobuf",
+    "endpoint": "http://observability-otel-collector.observability.svc.cluster.local:4318/v1/traces",
+    "timeoutSeconds": 5,
+    "localOverrideOnly": true,
+    "baseChartDefaultEnabled": false,
+    "externalCredentialsAdded": false
+  },
+  "correlation": {
+    "requestRoute": "/version",
+    "traceIdEncoding": "lowercase-hexadecimal",
+    "traceIdCharacters": 32,
+    "spanIdEncoding": "lowercase-hexadecimal",
+    "spanIdCharacters": 16,
+    "traceIdIndexedAsLokiLabel": false,
+    "spanIdIndexedAsLokiLabel": false,
+    "lokiDatasourceUid": "loki",
+    "tempoDatasourceUid": "tempo",
+    "derivedFieldName": "TraceID"
+  },
+  "grafana": {
+    "tempoUrl": "http://observability-tempo.observability.svc.cluster.local:3200",
+    "access": "proxy",
+    "defaultDatasource": false,
+    "editable": false,
+    "networkPolicyTempoPort": 3200,
+    "dedicatedTracingDashboardAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.2.2-real-demo-api-trace-log-correlation.sh",
+    "liveEntrypoint": "scripts/check-local-demo-api-trace-correlation.sh",
+    "realHttpRequestRequired": true,
+    "lokiCorrelationQueryRequired": true,
+    "tempoTraceQueryRequired": true,
+    "grafanaDatasourceHealthRequired": true,
+    "highCardinalityLabelRejectionRequired": true,
+    "consecutiveRunsRequired": 2
+  },
+  "deferred": {
+    "serviceGraph": true,
+    "spanMetrics": true,
+    "tailSampling": true,
+    "exemplars": true,
+    "crossClusterTracing": true,
+    "objectStorage": true,
+    "highAvailability": true,
+    "awsXray": true,
+    "publicOtlpEndpoint": true
+  },
+  "operations": {
+    "imageRebuildRequired": false,
+    "applicationCodeChangeRequired": false,
+    "localPlatformReconciliationRequired": true,
+    "loggingRuntimeRedeployRequired": false,
+    "databaseEnablementRequired": false
+  },
+  "nextIncrement": {
+    "version": "v0.11.6.2.3",
+    "outcome": "close-local-minimal-tracing-with-ordered-repeatable-acceptance"
+  }
+}

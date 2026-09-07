@@ -11,9 +11,25 @@ INGRESS_CONTROLLER_DEPLOYMENT="${INGRESS_CONTROLLER_DEPLOYMENT:-ingress-nginx-co
 INGRESS_HOST="${INGRESS_HOST:-demo-api.local}"
 INGRESS_BASE_URL="${INGRESS_BASE_URL:-http://localhost}"
 MONITORING_APP_NAME="${MONITORING_APP_NAME:-monitoring}"
-MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-monitoring}"
-PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-prometheus}"
-PROMETHEUS_QUERY="${PROMETHEUS_QUERY:-demo_api_requests_total}"
+MONITORING_NAMESPACE="${MONITORING_NAMESPACE:-observability}"
+LOKI_APP_NAME="${LOKI_APP_NAME:-logging-loki}"
+ALLOY_APP_NAME="${ALLOY_APP_NAME:-logging-alloy}"
+ALLOY_EVENTS_APP_NAME="${ALLOY_EVENTS_APP_NAME:-logging-alloy-events}"
+TEMPO_APP_NAME="${TEMPO_APP_NAME:-tracing-tempo}"
+OTEL_COLLECTOR_APP_NAME="${OTEL_COLLECTOR_APP_NAME:-tracing-otel-collector}"
+LOKI_STATEFULSET="${LOKI_STATEFULSET:-observability-logs}"
+LOKI_GATEWAY_DEPLOYMENT="${LOKI_GATEWAY_DEPLOYMENT:-observability-logs-gateway}"
+ALLOY_DAEMONSET="${ALLOY_DAEMONSET:-observability-logs-collector}"
+ALLOY_EVENTS_DEPLOYMENT="${ALLOY_EVENTS_DEPLOYMENT:-observability-events-collector}"
+TEMPO_DEPLOYMENT="${TEMPO_DEPLOYMENT:-observability-tempo}"
+TEMPO_SERVICE="${TEMPO_SERVICE:-observability-tempo}"
+OTEL_COLLECTOR_DEPLOYMENT="${OTEL_COLLECTOR_DEPLOYMENT:-observability-otel-collector}"
+OTEL_COLLECTOR_SERVICE="${OTEL_COLLECTOR_SERVICE:-observability-otel-collector}"
+PROMETHEUS_SERVICE="${PROMETHEUS_SERVICE:-observability-metrics-prometheus}"
+PROMETHEUS_POD_SELECTOR="${PROMETHEUS_POD_SELECTOR:-app.kubernetes.io/name=prometheus}"
+ALERTMANAGER_SERVICE="${ALERTMANAGER_SERVICE:-observability-metrics-alertmanager}"
+ALERTMANAGER_POD_SELECTOR="${ALERTMANAGER_POD_SELECTOR:-app.kubernetes.io/name=alertmanager}"
+PROMETHEUS_QUERY="${PROMETHEUS_QUERY:-demo_api_http_requests_total}"
 PROMETHEUS_HTTP_MODE="${PROMETHEUS_HTTP_MODE:-port-forward}"
 PROMETHEUS_LOCAL_PORT="${PROMETHEUS_LOCAL_PORT:-19090}"
 PROMETHEUS_BASE_URL="${PROMETHEUS_BASE_URL:-http://127.0.0.1:${PROMETHEUS_LOCAL_PORT}}"
@@ -24,6 +40,8 @@ ROLLOUT_NAME="${ROLLOUT_NAME:-$DEMO_APP_NAME}"
 STABLE_SERVICE_NAME="${STABLE_SERVICE_NAME:-demo-api-stable}"
 CANARY_SERVICE_NAME="${CANARY_SERVICE_NAME:-demo-api-canary}"
 TIMEOUT="${TIMEOUT:-180s}"
+POD_DISCOVERY_TIMEOUT_SECONDS="${POD_DISCOVERY_TIMEOUT_SECONDS:-30}"
+POD_DISCOVERY_RETRY_SECONDS="${POD_DISCOVERY_RETRY_SECONDS:-2}"
 SKIP_PROMETHEUS_HTTP="${SKIP_PROMETHEUS_HTTP:-false}"
 
 PASS_COUNT=0
@@ -73,17 +91,36 @@ wait_pods_ready_by_label() {
   local namespace="$1"
   local selector="$2"
   local description="$3"
+  local deadline=$((SECONDS + POD_DISCOVERY_TIMEOUT_SECONDS))
+  local list_output=""
+  local last_list_error=""
 
-  if kubectl -n "$namespace" get pods -l "$selector" --no-headers 2>/dev/null | grep -q .; then
-    if kubectl -n "$namespace" wait --for=condition=Ready pod -l "$selector" --timeout="$TIMEOUT" >/dev/null 2>&1; then
-      pass "$description pods are Ready"
+  while true; do
+    if list_output="$(kubectl -n "$namespace" get pods -l "$selector" --no-headers 2>&1)"; then
+      last_list_error=""
+      if printf '%s\n' "$list_output" | grep -q .; then
+        break
+      fi
     else
-      fail "$description pods are not Ready"
-      kubectl -n "$namespace" get pods -l "$selector" || true
+      last_list_error="$list_output"
+    fi
+
+    if [ "$SECONDS" -ge "$deadline" ]; then
+      if [ -n "$last_list_error" ]; then
+        fail "$description pod discovery failed for selector $selector: $last_list_error"
+      else
+        fail "$description pods not found with selector: $selector after ${POD_DISCOVERY_TIMEOUT_SECONDS}s"
+      fi
       return 1
     fi
+    sleep "$POD_DISCOVERY_RETRY_SECONDS"
+  done
+
+  if kubectl -n "$namespace" wait --for=condition=Ready pod -l "$selector" --timeout="$TIMEOUT" >/dev/null 2>&1; then
+    pass "$description pods are Ready"
   else
-    fail "$description pods not found with selector: $selector"
+    fail "$description pods are not Ready"
+    kubectl -n "$namespace" get pods -l "$selector" || true
     return 1
   fi
 }
@@ -103,6 +140,25 @@ wait_deployment_ready() {
     fi
   else
     fail "$description deployment not found: $deployment"
+    return 1
+  fi
+}
+
+wait_controller_ready() {
+  local namespace="$1"
+  local kind="$2"
+  local name="$3"
+  local description="$4"
+
+  if ! kubectl -n "$namespace" get "$kind" "$name" >/dev/null 2>&1; then
+    fail "$description not found: ${kind}/${name}"
+    return 1
+  fi
+  if kubectl -n "$namespace" rollout status "${kind}/${name}" --timeout="$TIMEOUT" >/dev/null 2>&1; then
+    pass "$description is rolled out"
+  else
+    fail "$description is not rolled out"
+    kubectl -n "$namespace" get "$kind" "$name" -o wide || true
     return 1
   fi
 }
@@ -134,6 +190,34 @@ check_application() {
     fail "application health status is not Healthy: $app_name status=$health_status"
     return 1
   fi
+}
+
+wait_application_ready() {
+  local namespace="$1"
+  local app_name="$2"
+  local timeout_seconds="${TIMEOUT%s}"
+  local deadline
+  local sync_status=""
+  local health_status=""
+
+  if ! [[ "$timeout_seconds" =~ ^[0-9]+$ ]]; then
+    timeout_seconds=180
+  fi
+  deadline=$((SECONDS + timeout_seconds))
+
+  while [ "$SECONDS" -lt "$deadline" ]; do
+    sync_status="$(kubectl -n "$namespace" get application "$app_name" -o jsonpath='{.status.sync.status}' 2>/dev/null || true)"
+    health_status="$(kubectl -n "$namespace" get application "$app_name" -o jsonpath='{.status.health.status}' 2>/dev/null || true)"
+    if [ "$sync_status" = "Synced" ] && [ "$health_status" = "Healthy" ]; then
+      pass "application is Synced and Healthy: $app_name"
+      return 0
+    fi
+    sleep 3
+  done
+
+  fail "application did not become Synced and Healthy: $app_name sync=${sync_status:-unknown} health=${health_status:-unknown}"
+  kubectl -n "$namespace" get application "$app_name" -o yaml || true
+  return 1
 }
 
 check_application_if_exists() {
@@ -383,7 +467,7 @@ check_prometheus_http() {
 
   local response
   if response="$(curl -fsS --get "${PROMETHEUS_BASE_URL}/api/v1/query" --data-urlencode "query=${PROMETHEUS_QUERY}" 2>/dev/null)"; then
-    if printf '%s' "$response" | grep -q '"status":"success"' && printf '%s' "$response" | grep -q 'demo_api_requests_total'; then
+    if printf '%s' "$response" | grep -q '"status":"success"' && printf '%s' "$response" | grep -q 'demo_api_http_requests_total'; then
       pass "Prometheus can query demo-api metrics: ${PROMETHEUS_QUERY}"
     else
       warn "Prometheus query succeeded but demo-api metric was not found yet: ${PROMETHEUS_QUERY}"
@@ -408,6 +492,7 @@ info "Prometheus HTTP mode: $PROMETHEUS_HTTP_MODE"
 info "Prometheus local port start: $PROMETHEUS_LOCAL_PORT"
 info "Argo Rollouts namespace: $ARGO_ROLLOUTS_NAMESPACE"
 info "Timeout: $TIMEOUT"
+info "Pod discovery timeout: ${POD_DISCOVERY_TIMEOUT_SECONDS}s"
 
 print_section "Command checks"
 require_cmd kubectl
@@ -444,6 +529,11 @@ check_application "$ARGOCD_NAMESPACE" "$ROOT_APP_NAME"
 check_application "$ARGOCD_NAMESPACE" "$DEMO_APP_NAME"
 check_application "$ARGOCD_NAMESPACE" "$INGRESS_APP_NAME"
 check_application "$ARGOCD_NAMESPACE" "$MONITORING_APP_NAME"
+wait_application_ready "$ARGOCD_NAMESPACE" "$LOKI_APP_NAME"
+wait_application_ready "$ARGOCD_NAMESPACE" "$ALLOY_APP_NAME"
+wait_application_ready "$ARGOCD_NAMESPACE" "$ALLOY_EVENTS_APP_NAME"
+wait_application_ready "$ARGOCD_NAMESPACE" "$TEMPO_APP_NAME"
+wait_application_ready "$ARGOCD_NAMESPACE" "$OTEL_COLLECTOR_APP_NAME"
 check_application_if_exists "$ARGOCD_NAMESPACE" "$ARGO_ROLLOUTS_APP_NAME" "Argo Rollouts"
 
 print_section "Argo Rollouts controller checks"
@@ -480,17 +570,44 @@ print_section "HTTP checks through ingress"
 check_http_endpoint "/health" '"status":"ok"' "health"
 check_http_endpoint "/ready" '"status":"ready"' "readiness"
 check_http_endpoint "/version" '"name":"demo-api"' "version"
-check_http_endpoint "/metrics" "demo_api_requests_total" "metrics"
+check_http_endpoint "/metrics" "demo_api_http_requests_total" "metrics"
 
 print_section "Monitoring checks"
 check_namespace "$MONITORING_NAMESPACE"
-wait_deployment_ready "$MONITORING_NAMESPACE" prometheus "Prometheus"
+wait_controller_ready "$MONITORING_NAMESPACE" statefulset "$LOKI_STATEFULSET" "Loki Monolithic"
+wait_controller_ready "$MONITORING_NAMESPACE" deployment "$LOKI_GATEWAY_DEPLOYMENT" "Loki gateway"
+wait_controller_ready "$MONITORING_NAMESPACE" daemonset "$ALLOY_DAEMONSET" "Alloy Pod-log collector"
+wait_controller_ready "$MONITORING_NAMESPACE" deployment "$ALLOY_EVENTS_DEPLOYMENT" "Alloy Kubernetes Event collector"
+wait_controller_ready "$MONITORING_NAMESPACE" deployment "$TEMPO_DEPLOYMENT" "Tempo Monolithic"
+wait_controller_ready "$MONITORING_NAMESPACE" deployment "$OTEL_COLLECTOR_DEPLOYMENT" "OpenTelemetry Collector Gateway"
+for private_service in "$TEMPO_SERVICE" "$OTEL_COLLECTOR_SERVICE"; do
+  if [ "$(kubectl -n "$MONITORING_NAMESPACE" get service "$private_service" -o jsonpath='{.spec.type}' 2>/dev/null || true)" = "ClusterIP" ]; then
+    pass "private tracing service exists: ${MONITORING_NAMESPACE}/${private_service}"
+  else
+    fail "private tracing service not found: ${MONITORING_NAMESPACE}/${private_service}"
+  fi
+done
+wait_pods_ready_by_label \
+  "$MONITORING_NAMESPACE" \
+  "$PROMETHEUS_POD_SELECTOR" \
+  "Prometheus"
 
 if kubectl -n "$MONITORING_NAMESPACE" get service "$PROMETHEUS_SERVICE" >/dev/null 2>&1; then
   pass "service exists: ${MONITORING_NAMESPACE}/${PROMETHEUS_SERVICE}"
 else
   fail "service not found: ${MONITORING_NAMESPACE}/${PROMETHEUS_SERVICE}"
   exit 1
+fi
+
+wait_pods_ready_by_label \
+  "$MONITORING_NAMESPACE" \
+  "$ALERTMANAGER_POD_SELECTOR" \
+  "Alertmanager"
+
+if [ "$(kubectl -n "$MONITORING_NAMESPACE" get service "$ALERTMANAGER_SERVICE" -o jsonpath='{.spec.type}' 2>/dev/null || true)" = "ClusterIP" ]; then
+  pass "private Alertmanager service exists: ${MONITORING_NAMESPACE}/${ALERTMANAGER_SERVICE}"
+else
+  fail "private Alertmanager service not found: ${MONITORING_NAMESPACE}/${ALERTMANAGER_SERVICE}"
 fi
 
 check_prometheus_http

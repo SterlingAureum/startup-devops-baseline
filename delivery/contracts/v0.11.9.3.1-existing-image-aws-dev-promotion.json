@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "v0.11.9.3.1",
+  "version": "v0.11.9.3.1",
+  "predecessor": "v0.11.9.3.0",
+  "status": "implemented-offline-live-dispatch-blocked-until-protected-main",
+  "implementationBaselineCommit": "e8a980ffed354b143e9b25df959d22920abf7ce0",
+  "goal": "Prepare a reviewed aws-dev release-only pull request from the accepted historical demo-api image without rebuilding it or exposing remote runtime credentials to feature code.",
+  "candidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceRepository": "SterlingAureum/startup-devops-baseline",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953",
+    "metadataArtifact": "demo-api-image-metadata-cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "applicationVersion": "sha-cf0a6bc",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763"
+  },
+  "workflow": {
+    "path": ".github/workflows/demo-api-promote-existing-image.yaml",
+    "trigger": "workflow_dispatch",
+    "allowedRef": "refs/heads/main",
+    "inputs": [
+      "source_run_id",
+      "expected_source_commit"
+    ],
+    "baseBranch": "main",
+    "targetEnvironment": "aws-dev",
+    "targetReleaseFile": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+    "promotionBranchTemplate": "release/demo-api-{imageTag}",
+    "automaticMerge": false,
+    "automaticDeployment": false
+  },
+  "sourceGates": {
+    "runMustBeCompletedAndSuccessful": true,
+    "runWorkflowPathMustMatchPublisher": true,
+    "runRepositoryMustMatch": true,
+    "runHeadShaMustMatchInput": true,
+    "originalArtifactOnly": true,
+    "manualDigestInputAllowed": false,
+    "metadataSchema": "v0.7.1",
+    "metadataRunIdMustMatch": true,
+    "metadataSourceMustMatch": true,
+    "metadataRepositoryMustMatch": true,
+    "tagMustDeriveFromSourceCommit": true,
+    "sourceCommitMustBeAncestorOfCapturedMain": true
+  },
+  "supplyChainGates": {
+    "digestAddressedManifestRequired": true,
+    "slsaProvenanceRequired": true,
+    "spdxSbomAttestationRequired": true,
+    "attestationSignerWorkflowRequired": ".github/workflows/demo-api-image-publish.yaml",
+    "attestationSourceDigestRequired": true,
+    "attestationSubjectDigestRequired": true,
+    "missingArtifactBehavior": "fail-closed-no-rebuild",
+    "missingAttestationBehavior": "fail-closed-no-rebuild"
+  },
+  "mutationBoundary": {
+    "releaseFileOnly": true,
+    "environmentValuesChanged": false,
+    "existingBranchMayBeOverwritten": false,
+    "mainMustRemainCapturedBeforeBranchPush": true,
+    "mainMustRemainCapturedBeforePrCreation": true,
+    "pullRequestRequiredWhenChangeExists": true,
+    "pullRequestReuseAllowed": true,
+    "automaticPrMerge": false
+  },
+  "permissions": {
+    "actions": "read",
+    "contents": "write",
+    "packages": "read",
+    "pullRequests": "write",
+    "idToken": "none",
+    "attestations": "none",
+    "awsCredentials": "none",
+    "clusterCredentials": "none"
+  },
+  "producerExecution": {
+    "workflowDispatched": false,
+    "artifactDownloadedFromGitHub": false,
+    "ghcrAccessed": false,
+    "attestationsVerifiedLive": false,
+    "promotionBranchPushed": false,
+    "pullRequestCreated": false,
+    "releaseValuesChangedInProducer": false,
+    "imageRebuilt": false,
+    "awsAccessed": false,
+    "clusterAccessed": false,
+    "mainMerged": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.2-protected-main-integration-readiness"
+}

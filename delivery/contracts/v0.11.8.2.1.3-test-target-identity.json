@@ -1,0 +1,9 @@
+{
+  "version": "v0.11.8.2.1.3",
+  "baseline": "v0.11.8.2.1.2",
+  "environment": "aws-test",
+  "service_names_from": "healthy Rollout canary strategy; single-Service fallback",
+  "require_all_stable_pods": true,
+  "require_discovered_canary_targets_up": true,
+  "runtime_changes": false
+}

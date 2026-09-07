@@ -8,6 +8,19 @@ REQUESTED_LOG_TYPES_JSON="${EKS_CLUSTER_LOG_TYPES_JSON-}"
 # shellcheck source=scripts/aws-environment-context.sh
 source "${ROOT_DIR}/scripts/aws-environment-context.sh"
 configure_aws_environment_context
+EKS_ACCESS_MODE="${EKS_ACCESS_MODE:-maintain}"
+[[ "${EKS_ACCESS_MODE}" == maintain || "${EKS_ACCESS_MODE}" == create-dev ]] || exit 1
+if [[ "${EKS_ACCESS_MODE}" == create-dev ]]; then
+  [[ "${AWS_ENVIRONMENT}" == aws-dev &&
+     "${CONFIRM_AWS_DEV_APPLY:-}" == create-ephemeral-aws-dev &&
+     "${EXPECTED_AWS_ACCOUNT_ID:-}" =~ ^[0-9]{12}$ ]] || {
+    echo 'Creation requires aws-dev confirmation and EXPECTED_AWS_ACCOUNT_ID.' >&2; exit 1;
+  }
+  [[ "${TF_DIR}" == "${ROOT_DIR}/infra/terraform/aws/environments/dev" &&
+     "${CLUSTER_NAME}" == startup-devops-baseline-dev ]] || {
+    echo 'Creation refuses custom Terraform roots or cluster names.' >&2; exit 1;
+  }
+fi
 
 IP_DISCOVERY_URL="${IP_DISCOVERY_URL:-https://checkip.amazonaws.com}"
 
@@ -55,15 +68,34 @@ trap 'rm -f -- "${PLAN_FILE}"' EXIT
 echo "==> AWS identity"
 aws sts get-caller-identity >/dev/null
 
+if [[ "${EKS_ACCESS_MODE}" == create-dev ]]; then
+  ACTUAL_ACCOUNT="$(aws sts get-caller-identity --query Account --output text)"
+  [[ "${ACTUAL_ACCOUNT}" == "${EXPECTED_AWS_ACCOUNT_ID}" ]] || {
+    echo 'AWS account mismatch; no Terraform operation performed.' >&2; exit 1;
+  }
+fi
+DISCOVERY_ERROR="$(mktemp)"
+trap 'rm -f -- "${PLAN_FILE}" "${DISCOVERY_ERROR}"' EXIT
+if CLUSTER_JSON="$(aws eks describe-cluster --region "${AWS_REGION}" --name "${CLUSTER_NAME}" --output json 2>"${DISCOVERY_ERROR}")"; then
+  [[ "${EKS_ACCESS_MODE}" == maintain ]] || {
+    echo 'Cluster already exists; use the maintenance entrypoint after reviewing Terraform state.' >&2; exit 1;
+  }
+else
+  if ! grep -q '(ResourceNotFoundException)' "${DISCOVERY_ERROR}"; then
+    cat "${DISCOVERY_ERROR}" >&2
+    echo 'EKS discovery failed; this is not proof of an absent cluster.' >&2; exit 1
+  fi
+  [[ "${EKS_ACCESS_MODE}" == create-dev ]] || {
+    echo 'Cluster not found. Verify AWS account/region; for initial dev creation use scripts/apply-aws-dev.sh.' >&2; exit 1;
+  }
+fi
+
 # Endpoint allowlist maintenance must not silently change the logging cost
 # profile. Preserve the live EKS setting unless the operator explicitly passes
 # EKS_CLUSTER_LOG_TYPES_JSON.
 if [[ -z "${REQUESTED_LOG_TYPES_JSON}" ]]; then
   EKS_CLUSTER_LOG_TYPES_JSON="$(
-    aws eks describe-cluster \
-      --region "${AWS_REGION}" \
-      --name "${CLUSTER_NAME}" \
-      --output json |
+    printf '%s' "${CLUSTER_JSON}" |
       jq -c '[.cluster.logging.clusterLogging[]? | select(.enabled == true) | .types[]] | unique'
   )"
 else
@@ -86,12 +118,24 @@ echo "The address is runtime-only and will not be written to Git."
 echo "Preserving EKS control-plane log types: ${EKS_CLUSTER_LOG_TYPES_JSON}"
 
 terraform -chdir="${TF_DIR}" init -input=false
+if [[ "${EKS_ACCESS_MODE}" == create-dev ]]; then
+  STATE_JSON="$(terraform -chdir="${TF_DIR}" show -json)" || {
+    echo 'Cannot inspect Terraform state; stopping.' >&2; exit 1;
+  }
+  jq -e '[.. | objects | .resources? // empty | .[]] | length == 0' <<<"${STATE_JSON}" >/dev/null || {
+    echo 'Nonempty dev state: review partial/existing infrastructure; do not delete state.' >&2; exit 1;
+  }
+fi
 terraform -chdir="${TF_DIR}" plan \
   -input=false \
   -out="${PLAN_FILE}" \
   -var="eks_public_access_cidrs=[\"${MANAGEMENT_CIDR}\"]" \
   -var="eks_enabled_cluster_log_types=${EKS_CLUSTER_LOG_TYPES_JSON}" \
   -var="eks_cluster_log_retention_days=${EKS_CLUSTER_LOG_RETENTION_DAYS}"
+if [[ "${EKS_ACCESS_MODE}" == create-dev ]]; then
+  read -r -p 'Review the plan above. Type apply-aws-dev to apply: ' PLAN_CONFIRMATION
+  [[ "${PLAN_CONFIRMATION}" == apply-aws-dev ]] || exit 1
+fi
 terraform -chdir="${TF_DIR}" apply -input=false "${PLAN_FILE}"
 
 echo "==> Waiting for ${CLUSTER_NAME} to report Active"

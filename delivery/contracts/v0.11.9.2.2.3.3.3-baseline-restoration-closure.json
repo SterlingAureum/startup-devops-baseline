@@ -1,0 +1,74 @@
+{
+  "version": "v0.11.9.2.2.3.3.3",
+  "predecessor": "v0.11.9.2.2.3.3.2",
+  "reviewedRevision": "ab03a439f44c9766b951668dd344b6717e327a03",
+  "release": {
+    "applicationVersion": "sha-cf0a6bc",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "imageDigest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623"
+  },
+  "rollout": {
+    "name": "demo-api",
+    "namespace": "startup-apps",
+    "revision": 70,
+    "phase": "Healthy",
+    "abort": false,
+    "step": "7/7",
+    "stableReplicaSet": "7557fdfb9b",
+    "currentPodHash": "7557fdfb9b",
+    "desiredReplicas": 3,
+    "readyReplicas": 3
+  },
+  "analysisRuns": [
+    {
+      "name": "demo-api-7557fdfb9b-70-2",
+      "step": 2,
+      "phase": "Successful"
+    },
+    {
+      "name": "demo-api-7557fdfb9b-70-5",
+      "step": 5,
+      "phase": "Successful"
+    }
+  ],
+  "argoCD": {
+    "root": {
+      "name": "startup-devops-root",
+      "targetRevision": "ab03a439f44c9766b951668dd344b6717e327a03",
+      "syncStatus": "Synced",
+      "healthStatus": "Healthy",
+      "diffEmpty": true
+    },
+    "application": {
+      "name": "demo-api",
+      "targetRevision": "ab03a439f44c9766b951668dd344b6717e327a03",
+      "syncStatus": "Synced",
+      "healthStatus": "Healthy",
+      "diffEmpty": true
+    }
+  },
+  "idempotentRestoration": {
+    "result": "passed",
+    "targetRevision": "ab03a439f44c9766b951668dd344b6717e327a03",
+    "rolloutRevisionBefore": 70,
+    "rolloutRevisionAfter": 70,
+    "newRevisionCreated": false
+  },
+  "retainedEvidence": {
+    "revision69AnalysisRun": "demo-api-79696cc48f-69-2",
+    "revision69Phase": "Failed",
+    "retryPerformed": false,
+    "promotionPerformed": false
+  },
+  "repair": {
+    "file": "scripts/restore-local-feature-baseline.sh",
+    "portableAwkQuoteRemoval": true,
+    "stderrExpected": ""
+  },
+  "automaticRestore": false,
+  "automaticPromote": false,
+  "automaticRetry": false,
+  "clusterMutationDuringValidation": false,
+  "awsMutationDuringValidation": false
+}

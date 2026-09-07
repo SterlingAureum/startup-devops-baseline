@@ -1,0 +1,33 @@
+{
+  "version": "v0.11.8.2.2",
+  "baseline": "v0.11.8.2.1.3",
+  "environment": "aws-test",
+  "historical_observation": {
+    "source": "operator-supplied redacted aws-test-observability-20260903T031534Z.json",
+    "started_at": "2026-09-03T03:15:40Z",
+    "finished_at": "2026-09-03T03:16:57Z",
+    "repository_commit": "456e1eb85ba63dc94c6e1f04b4498a4c0a87669b",
+    "application_version": "sha-e43b535",
+    "status": "qualified",
+    "mode": "operator-observation",
+    "least_privilege_verified": false,
+    "fresh_evidence_for_this_increment": false,
+    "capabilities": {
+      "metrics": "supported-verified",
+      "dashboards": "supported-verified",
+      "alerts": "supported-verified",
+      "slo": "supported-not-verified",
+      "progressiveDeliveryTelemetry": "supported-not-verified",
+      "logs": "not-deployed",
+      "traces": "not-deployed"
+    }
+  },
+  "preflight": {
+    "secret_name": "startup-devops-baseline-test/demo-api/postgresql",
+    "permission": "secretsmanager:DescribeSecret",
+    "pending_deletion": "stop",
+    "lookup_failure": "stop",
+    "automatic_delete_restore_import": false
+  },
+  "prod_in_scope": false
+}

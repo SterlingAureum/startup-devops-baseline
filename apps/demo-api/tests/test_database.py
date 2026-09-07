@@ -47,6 +47,15 @@ class DatabaseConfigurationTests(unittest.TestCase):
 
         self.assertEqual(attempts, 2)
 
+    def test_readiness_can_disable_database_tracing(self) -> None:
+        with patch("src.database._run_with_retry", return_value={"status": "ok"}):
+            with patch("src.database.database_client_span") as span:
+                span.return_value.__enter__.return_value = None
+                result = database.database_health(traced=False)
+
+        self.assertEqual(result, {"status": "ok"})
+        span.assert_called_once_with("health", enabled=False)
+
 
 if __name__ == "__main__":
     unittest.main()

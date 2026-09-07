@@ -1,0 +1,24 @@
+{
+  "version": "v0.11.9.2.2.3.2",
+  "scope": "local-kind-recovery-rollout-closure",
+  "clusterMutation": false,
+  "canonicalKubectlPluginOrder": "kubectl argo rollouts <command> <rollout> -n <namespace>",
+  "analysisRunTrafficSource": "operator-armed-bounded-traffic-observer",
+  "requiredAnalysisRuns": 2,
+  "promotionOwner": "human-operator",
+  "promotionPrecondition": "second-observer-generating-bounded-traffic",
+  "historicalFailedAnalysisRuns": "retain-as-evidence-do-not-retry",
+  "acceptedObservation": {
+    "sourceRevision": "fc87e64688aba209e712ade0baf0573e5fae68ca",
+    "rolloutRevision": 68,
+    "applicationVersion": "v0.11.9.2.2.3-recovery-fc87e64",
+    "releaseId": "demo-api-local-v0.11.9.2.2.3-recovery-fc87e64",
+    "replicaSetHash": "54fb66bc49",
+    "firstAnalysisRun": "demo-api-54fb66bc49-68-2",
+    "secondAnalysisRun": "demo-api-54fb66bc49-68-5",
+    "finalRolloutPhase": "Healthy",
+    "abort": false,
+    "rootApplication": "Synced/Healthy",
+    "demoApplication": "Synced/Healthy"
+  }
+}

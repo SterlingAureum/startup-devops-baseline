@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "v0.11.7.2",
+  "version": "v0.11.7.2",
+  "predecessor": "v0.11.7.1.3",
+  "title": "SLO-aware Argo Rollouts Analysis",
+  "scope": {
+    "environment": "local-first",
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "analysisTemplateChanged": true,
+    "rolloutStrategyChanged": true,
+    "automaticGitRollbackAdded": false,
+    "automaticRolloutUndoAdded": false,
+    "alertmanagerControlsRollout": false,
+    "awsRuntimeChanged": false
+  },
+  "candidate": {
+    "method": "GET",
+    "route": "/version",
+    "window": "5m",
+    "minimumRequests": 20,
+    "maximumAvailabilityBurnRate": 14.4,
+    "maximumLatencyBurnRate": 14.4,
+    "releaseIdArgument": "expected-release-id",
+    "releaseIdExactMatchRequired": true
+  },
+  "stableServiceBudget": {
+    "availabilityRemainingMustBeGreaterThan": 0,
+    "latencyRemainingMustBeGreaterThan": 0,
+    "window": "30d",
+    "job": "demo-api-stable"
+  },
+  "analysis": {
+    "template": "demo-api-canary-health",
+    "prometheusMetricCount": 6,
+    "executionWeights": [20, 50],
+    "failureLimit": 1,
+    "noDataPasses": false,
+    "queryErrorPasses": false,
+    "stableContinuesServingOnFailure": true
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.7.2-slo-aware-argo-rollouts-analysis.sh",
+    "liveValidator": "scripts/check-local-slo-aware-rollout-analysis.sh",
+    "completeQualityGateRequired": true,
+    "controlledFreshReleaseRequired": true,
+    "automaticPromotionRequired": false
+  },
+  "deferred": {"sloClosure": "v0.11.7.3", "awsEvidence": "v0.11.8"}
+}

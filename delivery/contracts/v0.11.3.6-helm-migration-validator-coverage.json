@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "v0.11.3.6",
+  "version": "v0.11.3.6",
+  "status": "offline-implemented-full-quality-gate-required",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "designDocument": "docs/V0.11.3.6_HELM_MIGRATION_VALIDATOR_COVERAGE.md",
+  "incident": {
+    "failedValidator": "scripts/validate-namespace-guardrails.sh",
+    "staleExpectedPath": "clusters/local/platform/namespace-guardrails.yaml",
+    "currentTemplatePath": "clusters/local/platform/templates/namespace-guardrails.yaml",
+    "migrationIntroducedBy": "v0.11.3.4",
+    "runtimeResourceMissing": false,
+    "legacyFileMustBeRestored": false
+  },
+  "namespaceGuardrailValidation": {
+    "templatePathChecked": true,
+    "templatedRepositoryValueChecked": true,
+    "templatedRevisionValueChecked": true,
+    "stableValuesPath": "clusters/local/platform/values.yaml",
+    "stableHeadValueChecked": true,
+    "legacyRawApplicationRejected": true,
+    "awsMainContractRetained": true
+  },
+  "admissionPolicyValidation": {
+    "localPlatformScan": "recursive",
+    "nestedTemplatesCovered": true,
+    "strictLocalDigestApplicationRejected": true,
+    "tagLoadedLocalImageBoundaryRetained": true
+  },
+  "dynamicValidation": {
+    "currentNamespaceGuardrailContractPasses": true,
+    "currentAdmissionPolicyContractPasses": true,
+    "legacyRawGuardrailFixtureRejected": true,
+    "nestedAdmissionApplicationFixtureRejected": true
+  },
+  "boundaries": {
+    "namespaceGuardrailResourceChanged": false,
+    "admissionPolicyResourceChanged": false,
+    "platformChartChanged": false,
+    "demoApiChanged": false,
+    "telemetryChanged": false,
+    "canaryChanged": false,
+    "awsMutation": false,
+    "productionAutomationChanged": false,
+    "activeFeatureRevisionCommitted": false
+  },
+  "acceptance": {
+    "offlineRegressionRequired": true,
+    "completeQualityGateRequired": true,
+    "featureBranchValidationRequired": true,
+    "v0.11.3.5RecoverySequenceStillRequired": true
+  }
+}

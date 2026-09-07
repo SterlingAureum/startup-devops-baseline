@@ -1,0 +1,145 @@
+{
+  "schemaVersion": "v0.11.6.1.2",
+  "version": "v0.11.6.1.2",
+  "status": "offline-implemented-local-live-required",
+  "predecessor": "v0.11.6.1.1.5",
+  "designDocument": "docs/V0.11.6.1.2_KUBERNETES_EVENTS_GRAFANA_LOKI.md",
+  "scope": {
+    "environment": "local",
+    "kubernetesEventsImplemented": true,
+    "grafanaLokiDatasourceImplemented": true,
+    "podLogPipelineChanged": false,
+    "applicationCodeChanged": false,
+    "applicationImageChanged": false,
+    "tracingImplemented": false
+  },
+  "application": {
+    "name": "logging-alloy-events",
+    "syncWave": 9,
+    "chart": "alloy",
+    "repository": "https://grafana.github.io/helm-charts",
+    "chartVersion": "1.11.0",
+    "applicationVersion": "1.18.0",
+    "releaseName": "observability-events-collector"
+  },
+  "eventsCollector": {
+    "controller": "Deployment",
+    "replicas": 1,
+    "collectionScope": "all-namespaces",
+    "collectionMethod": "kubernetes-api",
+    "component": "loki.source.kubernetes_events",
+    "logFormat": "json",
+    "clustered": false,
+    "positionsPersistent": true,
+    "positionsClaim": "observability-events-collector-storage",
+    "positionsCapacity": "256Mi",
+    "positionsPath": "/var/lib/alloy",
+    "serviceAccountTokenRequired": true,
+    "rbacResources": [
+      "events"
+    ],
+    "rbacVerbs": [
+      "get",
+      "list",
+      "watch"
+    ],
+    "hostPathRequired": false,
+    "privilegedRequired": false,
+    "hostNetwork": false,
+    "hostPID": false,
+    "publicService": false,
+    "networkPolicyEnabled": true,
+    "kubernetesApiServiceCidr": "10.96.0.1/32"
+  },
+  "labels": {
+    "allowedIndexed": [
+      "environment",
+      "cluster",
+      "namespace",
+      "application",
+      "container",
+      "severity"
+    ],
+    "static": {
+      "environment": "local",
+      "cluster": "startup-devops-local",
+      "application": "kubernetes-events",
+      "container": "events",
+      "severity": "INFO"
+    },
+    "forbiddenIndexed": [
+      "job",
+      "instance",
+      "event_name",
+      "event_uid",
+      "reason",
+      "involved_object_name",
+      "involved_object_uid",
+      "pod",
+      "pod_uid",
+      "trace_id",
+      "span_id"
+    ]
+  },
+  "grafana": {
+    "managedBy": "kube-prometheus-stack",
+    "datasourceName": "Loki",
+    "datasourceUid": "loki",
+    "datasourceType": "loki",
+    "access": "proxy",
+    "url": "http://observability-logs-gateway.observability.svc.cluster.local",
+    "defaultDatasource": false,
+    "editable": false,
+    "maxLines": 1000,
+    "timeoutSeconds": 60,
+    "serviceType": "ClusterIP",
+    "publicIngress": false,
+    "networkPolicyPort": 8080
+  },
+  "versions": {
+    "localPlatformChartPrevious": "0.5.0",
+    "localPlatformChart": "0.6.0",
+    "localPlatformApp": "v0.11.6.1.2",
+    "lokiChart": "18.11.3",
+    "lokiApplicationVersion": "3.7.6",
+    "alloyChart": "1.11.0",
+    "alloyApplicationVersion": "1.18.0",
+    "demoApiChart": "0.6.0",
+    "demoApiApplicationVersion": "0.4.0"
+  },
+  "unchanged": {
+    "demoApiCodeChanged": false,
+    "demoApiImageChanged": false,
+    "podLogAlloyValuesChanged": false,
+    "lokiValuesChanged": false,
+    "prometheusDatasourceChanged": false,
+    "dashboardAdded": false,
+    "alertRuleAdded": false,
+    "awsStateChanged": false,
+    "productionAutomationChanged": false,
+    "publicEndpointAdded": false,
+    "externalCredentialAdded": false,
+    "tracingAdded": false,
+    "aiInfrastructureAdded": false,
+    "aiopsAdded": false
+  },
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.1.2-kubernetes-events-grafana-loki.sh",
+    "liveValidator": "scripts/check-local-events-grafana.sh",
+    "completeQualityGateRequired": true,
+    "localGitOpsRedeployRequired": true,
+    "imageRebuildRequired": false,
+    "singletonCollectorRequired": true,
+    "persistentPositionRestartCheckRequired": true,
+    "eventQueryRequired": true,
+    "eventIndexedLabelInventoryRequired": true,
+    "grafanaDatasourceHealthRequired": true,
+    "podLogRegressionRequired": true,
+    "formalAwsExecutionDeferredTo": "v0.11.8",
+    "cleanRoomClosureDeferredTo": "v0.11.9"
+  },
+  "nextIncrement": {
+    "version": "v0.11.6.1.3",
+    "outcome": "structured-logging-end-to-end-replay-and-cleanup-closure"
+  }
+}

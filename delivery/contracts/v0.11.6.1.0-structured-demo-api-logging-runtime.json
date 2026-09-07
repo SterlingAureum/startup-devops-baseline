@@ -1,0 +1,142 @@
+{
+  "schemaVersion": "v0.11.6.1.0",
+  "version": "v0.11.6.1.0",
+  "status": "offline-implemented-local-image-rerun-required",
+  "predecessor": "v0.11.6.0",
+  "designDocument": "docs/V0.11.6.1.0_STRUCTURED_DEMO_API_LOGGING_RUNTIME.md",
+  "scope": {
+    "application": "demo-api",
+    "output": "stdout",
+    "format": "json-lines",
+    "structuredLoggingImplemented": true,
+    "releaseIdentityProjectionImplemented": true,
+    "localImageRebuildRequired": true,
+    "loggingBackendImplemented": false,
+    "logCollectorImplemented": false,
+    "kubernetesEventCollectionImplemented": false,
+    "tracingImplemented": false
+  },
+  "requiredFields": [
+    "timestamp",
+    "severity",
+    "message",
+    "service.name",
+    "service.version",
+    "deployment.environment.name",
+    "platform.release.id",
+    "platform.source.commit",
+    "container.image.digest"
+  ],
+  "httpFields": [
+    "http.request.method",
+    "http.route",
+    "http.response.status_code",
+    "duration_ms",
+    "outcome"
+  ],
+  "identityProjection": {
+    "source": "pod-annotations",
+    "mechanism": "kubernetes-downward-api",
+    "environmentVariables": {
+      "PLATFORM_RELEASE_ID": "platform.startup.dev/release-id",
+      "PLATFORM_SOURCE_COMMIT": "platform.startup.dev/source-commit",
+      "CONTAINER_IMAGE_DIGEST": "platform.startup.dev/image-digest"
+    },
+    "deploymentAndRolloutParityRequired": true,
+    "applicationRecomputationForbidden": true
+  },
+  "requestLogging": {
+    "completionMessage": "http_request_completed",
+    "routeTemplateOnly": true,
+    "unmatchedRoute": "__unmatched__",
+    "successfulQuietRoutes": [
+      "/health",
+      "/ready",
+      "/metrics"
+    ],
+    "failedQuietRoutesStillLogged": true,
+    "statusSeverity": {
+      "2xxAnd3xx": "INFO",
+      "4xx": "WARNING",
+      "5xx": "ERROR"
+    }
+  },
+  "security": {
+    "forbiddenFields": [
+      "http.request.body",
+      "http.request.header.authorization",
+      "http.request.header.cookie",
+      "db.query.parameter",
+      "db.statement.raw",
+      "enduser.id",
+      "raw.url.query",
+      "credential",
+      "secret"
+    ],
+    "rawPathLogged": false,
+    "queryStringLogged": false,
+    "requestHeadersLogged": false,
+    "exceptionMessageExported": false,
+    "requiredIdentityOverrideAllowed": false
+  },
+  "runtime": {
+    "entrypoint": "python -m src.server",
+    "uvicornAccessLogEnabled": false,
+    "uvicornUsesJsonFormatter": true,
+    "multilineRecordAllowed": false,
+    "fileLoggingEnabled": false,
+    "loggingSidecarRequired": false
+  },
+  "versions": {
+    "demoApiChart": "0.6.0",
+    "demoApiApp": "0.4.0",
+    "localPlatformChart": "0.4.1",
+    "localPlatformApp": "v0.11.5.2.0",
+    "observabilityViewsChart": "0.4.1",
+    "observabilityViewsApp": "v0.11.5.1.1"
+  },
+  "unchanged": {
+    "lokiDeployed": false,
+    "alloyDeployed": false,
+    "kubernetesEventsCollected": false,
+    "grafanaDatasourceChanged": false,
+    "prometheusConfigurationChanged": false,
+    "alertmanagerConfigurationChanged": false,
+    "canaryStepsChanged": false,
+    "networkPolicyChanged": false,
+    "awsStateChanged": false,
+    "productionAutomationChanged": false,
+    "publicEndpointAdded": false,
+    "externalCredentialAdded": false,
+    "tracingAdded": false,
+    "aiInfrastructureAdded": false,
+    "aiopsAdded": false,
+    "openClawAdded": false
+  },
+  "nextIncrements": [
+    {
+      "increment": "v0.11.6.1.1",
+      "outcome": "local-loki-and-alloy-pod-log-runtime"
+    },
+    {
+      "increment": "v0.11.6.1.2",
+      "outcome": "singleton-kubernetes-events-and-grafana-loki-datasource"
+    },
+    {
+      "increment": "v0.11.6.1.3",
+      "outcome": "logging-runtime-live-acceptance-and-replay-closure"
+    }
+  ],
+  "acceptance": {
+    "offlineValidator": "scripts/validate-v0.11.6.1.0-structured-demo-api-logging-runtime.sh",
+    "liveValidator": "scripts/check-demo-api-structured-logs.sh",
+    "completeQualityGateRequired": true,
+    "localClusterRerunRequired": true,
+    "imageRebuildRequired": true,
+    "demoApiRedeployRequired": true,
+    "monitoringRedeployRequired": false,
+    "lokiQueryRequired": false,
+    "formalAwsExecutionDeferredTo": "v0.11.8",
+    "cleanRoomClosureDeferredTo": "v0.11.9"
+  }
+}

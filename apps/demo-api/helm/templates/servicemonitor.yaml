@@ -1,0 +1,57 @@
+{{- if and .Values.telemetry.metrics.enabled .Values.telemetry.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "demo-api.fullname" . }}
+  labels:
+    {{- include "demo-api.labels" . | nindent 4 }}
+    app.kubernetes.io/component: telemetry
+spec:
+  sampleLimit: {{ .Values.telemetry.metrics.serviceMonitor.sampleLimit }}
+  targetLimit: {{ .Values.telemetry.metrics.serviceMonitor.targetLimit }}
+  labelLimit: {{ .Values.telemetry.metrics.serviceMonitor.labelLimit }}
+  labelNameLengthLimit: {{ .Values.telemetry.metrics.serviceMonitor.labelNameLengthLimit }}
+  labelValueLengthLimit: {{ .Values.telemetry.metrics.serviceMonitor.labelValueLengthLimit }}
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "demo-api.selectorLabels" . | nindent 6 }}
+  endpoints:
+    - port: http
+      path: /metrics
+      scheme: http
+      honorLabels: false
+      interval: {{ .Values.telemetry.metrics.serviceMonitor.interval }}
+      scrapeTimeout: {{ .Values.telemetry.metrics.serviceMonitor.scrapeTimeout }}
+      relabelings:
+        - sourceLabels:
+            - __meta_kubernetes_service_name
+          targetLabel: job
+          action: replace
+        - sourceLabels:
+            - __meta_kubernetes_pod_label_app_kubernetes_io_name
+          targetLabel: service_name
+          action: replace
+        - sourceLabels:
+            - __meta_kubernetes_pod_annotation_platform_startup_dev_application_version
+          targetLabel: service_version
+          action: replace
+        - sourceLabels:
+            - __meta_kubernetes_pod_annotation_platform_startup_dev_environment
+          targetLabel: deployment_environment_name
+          action: replace
+        - sourceLabels:
+            - __meta_kubernetes_pod_annotation_platform_startup_dev_release_id
+          targetLabel: platform_release_id
+          action: replace
+        - sourceLabels:
+            - __meta_kubernetes_pod_annotation_platform_startup_dev_source_commit
+          targetLabel: platform_source_commit
+          action: replace
+        - sourceLabels:
+            - __meta_kubernetes_pod_annotation_platform_startup_dev_image_digest
+          targetLabel: container_image_digest
+          action: replace
+{{- end }}

@@ -91,6 +91,34 @@ The chart projects delivery identity into workload and Pod annotations under
 ./scripts/validate-demo-api-delivery-trace.sh
 ```
 
+v0.11.2 also renders an application-owned ServiceMonitor. Its target relabeling
+copies the application version, environment, deterministic release ID, source
+commit, and image digest from each selected Pod. Pod metadata is intentional:
+during a Canary, the stable and canary Services can select different
+ReplicaSets and must not receive one Service-level release identity.
+
+`rehearsalFault.mode` defaults to `disabled` and its token digest defaults to
+empty. The local Root may set these two values only for the reviewed
+v0.11.9.2 candidate-rejection runner. Application startup rejects enabled mode
+outside `APP_ENV=local`; ordinary deployment and probe behavior remain unchanged.
+
+Configure bounded discovery under:
+
+```yaml
+telemetry:
+  metrics:
+    serviceMonitor:
+```
+
+The Prometheus control plane discovers this resource; the monitoring
+Application no longer embeds demo-api-specific scrape configuration.
+
+v0.11.6.2.0 adds identical tracing environment to Deployment and Rollout
+renders under `telemetry.tracing`. The default remains `enabled: false`; the
+private Collector endpoint is inert until a later increment deploys and
+accepts that runtime. Changing this switch before Collector and Tempo
+acceptance is outside the v0.11.6.2.0 contract.
+
 aws-test and aws-prod enable Argo Rollouts ALB traffic routing. Their Ingress
 uses the `use-annotation` action backend, while Rollouts owns the stable/canary
 weights and Service selectors. The inline Web AnalysisRun checks canary

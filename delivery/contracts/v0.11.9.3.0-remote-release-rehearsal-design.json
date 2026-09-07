@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "v0.11.9.3.0",
+  "version": "v0.11.9.3.0",
+  "predecessor": "v0.11.9.2.2.3.3.3.1",
+  "status": "offline-design-implemented-live-execution-blocked",
+  "designBaselineCommit": "d2ab89b22e5e048ed4d9121170e04d7fe7156f2c",
+  "goal": "Sequence one existing immutable demo-api image through live aws-dev, aws-test, and aws-prod with exact identity, human controls, reviewed evidence, bounded concurrency, teardown, and residual-cost audit.",
+  "candidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953",
+    "metadataArtifact": "demo-api-image-metadata-cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "applicationVersion": "sha-cf0a6bc",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "rebuildRequired": false,
+    "sameDigestRequiredAcrossEnvironments": true
+  },
+  "revisionModel": {
+    "featureBranch": "feature/v0.11-observability-sre-baseline",
+    "integrationTarget": "main",
+    "trustedRuntimeRef": "refs/heads/main",
+    "mainIntegrationRequiredBeforeRemoteCredentials": true,
+    "pullRequestCodeAllowedRemoteCredentials": false,
+    "featureWorkflowRuntimeAllowed": false,
+    "activeAwsOverlaysRestoredToMainBeforeMerge": true,
+    "imageSourceCommitMayPrecedeControlPlaneCommit": true,
+    "exactMergedMainCommitRequiredAsControlPlaneIdentity": true
+  },
+  "artifactEntry": {
+    "method": "existing-image-metadata-release-pr",
+    "targetEnvironment": "aws-dev",
+    "targetReleaseFile": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+    "releaseFileOnly": true,
+    "sourceCommitMustBeAncestorOfMain": true,
+    "metadataAndAttestationsMustRemainAvailable": true,
+    "automaticMerge": false,
+    "implementationStatus": "required-before-live",
+    "implementationCheckpoint": "v0.11.9.3.1"
+  },
+  "environments": [
+    {
+      "name": "aws-dev",
+      "order": 10,
+      "clusterName": "startup-devops-baseline-dev",
+      "argoApplication": "demo-api-aws-dev",
+      "releaseFile": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+      "workloadKind": "Deployment",
+      "manualCanaryCheckpoints": 0,
+      "qualification": "runtime-and-observability",
+      "lifecycle": "operator-owned-disposable"
+    },
+    {
+      "name": "aws-test",
+      "order": 20,
+      "clusterName": "startup-devops-baseline-test",
+      "argoApplication": "demo-api-aws-test",
+      "releaseFile": "apps/demo-api/helm/values/releases/aws-test.yaml",
+      "workloadKind": "Rollout",
+      "manualCanaryCheckpoints": 1,
+      "qualification": "runtime-and-observability-after-reviewed-canary",
+      "lifecycle": "operator-owned-disposable"
+    },
+    {
+      "name": "aws-prod",
+      "order": 30,
+      "clusterName": "startup-devops-baseline-prod",
+      "argoApplication": "demo-api-aws-prod",
+      "releaseFile": "apps/demo-api/helm/values/releases/aws-prod.yaml",
+      "workloadKind": "Rollout",
+      "manualCanaryCheckpoints": 1,
+      "qualification": "approval-protected-read-only-observation",
+      "lifecycle": "externally-approved"
+    }
+  ],
+  "sequence": [
+    "offline-plan-validation",
+    "existing-image-promotion-implementation",
+    "feature-to-main-review-and-merge",
+    "existing-image-to-aws-dev-release-pr",
+    "aws-dev-create-deploy-and-qualify",
+    "aws-dev-to-aws-test-release-pr",
+    "preserve-dev-evidence-and-teardown",
+    "aws-test-create-deploy-canary-and-qualify",
+    "aws-test-to-aws-prod-release-pr-and-approval",
+    "preserve-test-evidence-and-teardown",
+    "aws-prod-create-deploy-and-reviewed-canary",
+    "aws-prod-approved-read-only-qualification",
+    "reviewed-final-evidence",
+    "approved-prod-teardown",
+    "residual-cost-audit"
+  ],
+  "localFailureEvidence": {
+    "acceptedForV011FailureScenario": true,
+    "failedRevision": 69,
+    "recoveredRevision": 70,
+    "closureContract": "delivery/contracts/v0.11.9.2.2.3.3.3-baseline-restoration-closure.json",
+    "remoteReplayRequired": false,
+    "remoteReplayAllowed": false,
+    "reason": "The implemented fault capability rejects non-local enabled mode; expanding it to AWS requires a separate security and recovery design."
+  },
+  "costControl": {
+    "maximumActiveEksEnvironments": 1,
+    "sourceEvidencePreservedBeforeTeardown": true,
+    "sourceQualificationMustRemainFreshForPromotion": true,
+    "automaticTeardown": false,
+    "teardownRequiresSeparateApproval": true,
+    "residualCostAuditRequired": true
+  },
+  "evidence": {
+    "privatePlanOutsideRepository": true,
+    "appendOnlyAttempts": true,
+    "exactControlPlaneCommitRequired": true,
+    "exactImageIdentityRequired": true,
+    "crossEnvironmentEvidenceReuse": false,
+    "localFailureEvidenceNotRemoteQualification": true,
+    "waitingRuntimeNotQualified": true,
+    "rawCredentialsForbidden": true
+  },
+  "automaticActions": {
+    "mainMerge": false,
+    "releasePrMerge": false,
+    "environmentCreation": false,
+    "canaryPromote": false,
+    "rollback": false,
+    "teardown": false
+  },
+  "producerExecution": {
+    "awsAccessed": false,
+    "clusterAccessed": false,
+    "workflowDispatched": false,
+    "releaseValuesChanged": false,
+    "mainMerged": false,
+    "liveQualificationClaimed": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.1-existing-image-aws-dev-promotion"
+}

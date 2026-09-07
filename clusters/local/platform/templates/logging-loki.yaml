@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: logging-loki
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "7"
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: default
+  source:
+    repoURL: {{ .Values.externalCharts.loki.repoURL | quote }}
+    chart: loki
+    targetRevision: {{ .Values.externalCharts.loki.version | quote }}
+    helm:
+      releaseName: observability-logs
+      values: |
+{{ .Files.Get "files/logging/loki-values.yaml" | nindent 8 }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: observability
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

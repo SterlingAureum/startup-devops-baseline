@@ -1,0 +1,18 @@
+{
+  "version": "v0.11.9.2.2.2.1.1",
+  "scope": "offline-lifecycle-environment-isolation",
+  "fixture": "scripts/validate-v0.9-lifecycle-contracts.sh",
+  "ambientVariablesRejected": [
+    "AWS_ENVIRONMENT",
+    "AWS_REGION",
+    "CLUSTER_NAME",
+    "ROOT_APPLICATION",
+    "TF_DIR",
+    "SOURCE_FILE"
+  ],
+  "usesFakeAws": true,
+  "usesFakeTerraform": true,
+  "usesFakeKubectl": true,
+  "realAwsMutation": false,
+  "realKubernetesMutation": false
+}

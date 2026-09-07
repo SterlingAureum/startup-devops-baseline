@@ -6,3 +6,16 @@ resources:
 labels:
   - pairs:
       platform.startup.dev/environment: aws-dev
+patches:
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Application
+      name: monitoring-aws-dev
+    patch: |-
+      - op: add
+        path: /spec/source/helm/valuesObject/grafana/admin
+        value:
+          existingSecret: observability-grafana-admin
+          userKey: admin-user
+          passwordKey: admin-password

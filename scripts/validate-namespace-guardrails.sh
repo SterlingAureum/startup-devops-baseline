@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ROOT_DIR="${VALIDATION_ROOT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 
 command -v python3 >/dev/null 2>&1 || {
   echo "Required command not found: python3" >&2
@@ -24,7 +24,10 @@ data_dir = root / "clusters" / "aws" / "base" / "data-platform" / "postgresql"
 data_namespace = data_dir / "namespace.yaml"
 data_quota = data_dir / "resource-quota.yaml"
 data_limits = data_dir / "limit-range.yaml"
-local_app = root / "clusters" / "local" / "platform" / "namespace-guardrails.yaml"
+local_platform = root / "clusters" / "local" / "platform"
+local_app = local_platform / "templates" / "namespace-guardrails.yaml"
+local_values = local_platform / "values.yaml"
+legacy_local_app = local_platform / "namespace-guardrails.yaml"
 aws_app = root / "clusters" / "aws" / "base" / "platform" / "namespace-guardrails.yaml"
 aws_demo_app = root / "clusters" / "aws" / "base" / "platform" / "demo-api.yaml"
 aws_postgres_app = (
@@ -39,6 +42,7 @@ required_files = [
     data_quota,
     data_limits,
     local_app,
+    local_values,
     aws_app,
 ]
 missing = [str(path.relative_to(root)) for path in required_files if not path.is_file()]
@@ -128,13 +132,27 @@ require(
     [
         "name: namespace-guardrails",
         'argocd.argoproj.io/sync-wave: "-5"',
-        "targetRevision: HEAD",
+        "repoURL: {{ .Values.git.repoURL | quote }}",
+        "targetRevision: {{ .Values.git.targetRevision | quote }}",
         "path: platform/security/namespace-guardrails/startup-apps",
         "namespace: startup-apps",
         "ServerSideApply=true",
     ],
     "local namespace guardrail Application",
 )
+require(
+    local_values,
+    [
+        "repoURL: https://github.com/SterlingAureum/startup-devops-baseline.git",
+        "targetRevision: HEAD",
+    ],
+    "local namespace guardrail stable Git values",
+)
+if legacy_local_app.exists():
+    raise SystemExit(
+        "Legacy raw local namespace guardrail Application must not coexist "
+        "with the Helm template: " + str(legacy_local_app.relative_to(root))
+    )
 require(
     aws_app,
     [

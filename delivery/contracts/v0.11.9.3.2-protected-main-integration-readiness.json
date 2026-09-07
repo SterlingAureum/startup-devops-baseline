@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "v0.11.9.3.2",
+  "version": "v0.11.9.3.2",
+  "predecessor": "v0.11.9.3.1",
+  "status": "offline-readiness-implemented-main-integration-not-executed",
+  "implementationBaselineCommit": "cf2c7cd37c114e875b731fb151a05aad9b9cddd6",
+  "goal": "Remove the temporary aws-dev feature revision override and prove that every active AWS same-repository Application is ready to follow protected main before final feature integration.",
+  "activeRevisionPolicy": {
+    "localRoot": "HEAD",
+    "localSameRepositoryChildren": "HEAD",
+    "awsDevRoot": "main",
+    "awsDevSameRepositoryChildren": "main",
+    "awsTestRoot": "main",
+    "awsTestSameRepositoryChildren": "main",
+    "awsProdRoot": "main",
+    "awsProdSameRepositoryChildren": "main",
+    "featureRevisionAllowedInActiveAwsOverlay": false,
+    "externalChartVersionsPreserved": true
+  },
+  "restoration": {
+    "removedOverlay": "clusters/aws/overlays/dev/kustomization.yaml#same-repository-targetRevision-patch",
+    "restoredApplicationCount": 9,
+    "checker": "scripts/check-aws-gitops-revision-boundary.sh",
+    "defaultExpectedDevRevision": "main",
+    "defaultExpectedTestRevision": "main",
+    "defaultExpectedProdRevision": "main",
+    "liveReconciliationPerformed": false
+  },
+  "historicalPreview": {
+    "path": "clusters/aws/overlays/test-feature-qualification",
+    "revision": "feature/v0.11-observability-sre-baseline",
+    "purpose": "v0.11.8.2 offline qualification preview evidence",
+    "active": false,
+    "bootstrapAllowed": false,
+    "automaticSyncAllowed": false,
+    "exactExceptionRetained": true
+  },
+  "releaseFiles": {
+    "apps/demo-api/helm/values/releases/aws-dev.yaml": "e13937cd11df5c4625fe0de50808b9d74e14503e3b6021900a8f8ae8f0e87d80",
+    "apps/demo-api/helm/values/releases/aws-test.yaml": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22",
+    "apps/demo-api/helm/values/releases/aws-prod.yaml": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22"
+  },
+  "candidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "writtenToAwsReleaseFile": false
+  },
+  "integrationGates": {
+    "completeQualityGatesRequired": true,
+    "featurePullRequestReviewRequired": true,
+    "codeOwnerReviewRequired": true,
+    "protectedMainMergeRequired": true,
+    "exactMergedMainCommitCapturedAfterMerge": true,
+    "existingImageWorkflowDispatchBeforeMergeAllowed": false,
+    "remoteRuntimeBeforeMergeAllowed": false,
+    "awsEnvironmentCreationBeforeMergeAllowed": false
+  },
+  "trustedBoundaries": {
+    "existingImagePromotionAllowedRef": "refs/heads/main",
+    "runtimeQualificationAllowedRef": "refs/heads/main",
+    "pullRequestCodeAllowedRemoteCredentials": false,
+    "productionRuntimeWorkflowEnabled": false,
+    "automaticPromotionPrMerge": false,
+    "automaticEnvironmentCreation": false
+  },
+  "producerExecution": {
+    "mainMerged": false,
+    "pullRequestCreated": false,
+    "workflowDispatched": false,
+    "releaseValuesChanged": false,
+    "awsAccessed": false,
+    "clusterAccessed": false,
+    "localRuntimeChanged": false,
+    "imageRebuilt": false,
+    "liveQualificationClaimed": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.3-reviewed-main-integration"
+}

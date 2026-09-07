@@ -1,0 +1,24 @@
+{
+  "version": "v0.11.9.2.2.3.3.1",
+  "failedWorkflowRunId": "34035241036",
+  "failureStage": "quality-gates-before-build-and-push",
+  "shellcheckFindings": [
+    "SC1091",
+    "SC2097",
+    "SC2098",
+    "SC2015"
+  ],
+  "repair": {
+    "followReviewedSourceDuringLint": true,
+    "capturedRevisionFeedsBothChildVariables": true,
+    "explicitSecondAnalysisPauseConditional": true,
+    "localAndCiShellcheckCommandAligned": true,
+    "inheritedCompatibilityValidationRetained": true
+  },
+  "imagePublishedByFailedRun": false,
+  "promotionCreatedByFailedRun": false,
+  "automaticWorkflowRetry": false,
+  "automaticPromote": false,
+  "automaticRetry": false,
+  "clusterMutationDuringValidation": false
+}

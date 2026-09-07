@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.9.3.1
+
+- Add a manual protected-main workflow that prepares an aws-dev release-only PR
+  from an existing successful image-publish run without rebuilding the image.
+- Bind the original run, metadata artifact, source ancestry, GHCR manifest,
+  SLSA provenance and SPDX SBOM attestation before any Git mutation.
+- Refuse a moving main or a divergent existing promotion branch, never
+  auto-merge, and grant no AWS, Kubernetes, Argo CD or attestation-write access.
+- Keep live workflow dispatch blocked until the implementation is reviewed,
+  active AWS overlays are restored to main, and the feature is merged.
+
 ## v0.11.9.3.0
 
 - Define the offline-only remote aws-dev, aws-test, and aws-prod release

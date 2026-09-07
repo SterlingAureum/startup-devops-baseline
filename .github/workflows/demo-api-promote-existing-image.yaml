@@ -1,0 +1,362 @@
+name: demo-api existing image aws-dev promotion
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful demo-api image publish workflow run ID
+        required: true
+        type: string
+      expected_source_commit:
+        description: Full source commit recorded by the image metadata artifact
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: demo-api-existing-image-aws-dev-promotion
+  cancel-in-progress: false
+
+env:
+  BASE_BRANCH: main
+  EXPECTED_WORKFLOW_PATH: .github/workflows/demo-api-image-publish.yaml
+  EXPECTED_IMAGE_REPOSITORY: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
+  METADATA_DIRECTORY: .promotion/demo-api-existing-image
+  METADATA_FILE: .promotion/demo-api-existing-image/demo-api-image-metadata.json
+  RUN_FILE: .promotion/demo-api-existing-image/workflow-run.json
+  ENVIRONMENT_VALUES_FILE: apps/demo-api/helm/values/environments/aws-dev.yaml
+  VALUES_FILE: apps/demo-api/helm/values/releases/aws-dev.yaml
+
+jobs:
+  prepare-aws-dev-release-pr:
+    name: Prepare existing image aws-dev release PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+      packages: read
+      pull-requests: write
+    steps:
+      - name: Enforce protected main invocation
+        env:
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          EXPECTED_SOURCE_COMMIT: ${{ inputs.expected_source_commit }}
+        run: |
+          if [[ "${GITHUB_REF}" != "refs/heads/main" ]]; then
+            echo "::error::Existing-image promotion may only be dispatched from refs/heads/main."
+            exit 1
+          fi
+          if [[ ! "${SOURCE_RUN_ID}" =~ ^[1-9][0-9]*$ ]]; then
+            echo "::error::source_run_id must be a positive decimal integer."
+            exit 1
+          fi
+          if [[ ! "${EXPECTED_SOURCE_COMMIT}" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::expected_source_commit must be a full lowercase Git SHA."
+            exit 1
+          fi
+
+      - name: Checkout protected main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Capture main and source run identity
+        id: source
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          EXPECTED_SOURCE_COMMIT: ${{ inputs.expected_source_commit }}
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          base_sha="$(git rev-parse "origin/${BASE_BRANCH}")"
+          checked_out_sha="$(git rev-parse HEAD)"
+          if [[ "${checked_out_sha}" != "${GITHUB_SHA}" || \
+                "${checked_out_sha}" != "${base_sha}" ]]; then
+            echo "::error::The workflow is not executing the captured current main revision."
+            exit 1
+          fi
+
+          mkdir -p "${METADATA_DIRECTORY}"
+          gh api \
+            --method GET \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}" \
+            > "${RUN_FILE}"
+
+          jq --exit-status \
+            --arg run_id "${SOURCE_RUN_ID}" \
+            --arg source_repository "${GITHUB_REPOSITORY}" \
+            --arg source_commit "${EXPECTED_SOURCE_COMMIT}" \
+            --arg workflow_path "${EXPECTED_WORKFLOW_PATH}" '
+              (.id | tostring) == $run_id and
+              .status == "completed" and
+              .conclusion == "success" and
+              .head_sha == $source_commit and
+              (.path == $workflow_path or
+                (.path | startswith($workflow_path + "@"))) and
+              .repository.full_name == $source_repository
+            ' "${RUN_FILE}" >/dev/null || {
+            echo "::error::The requested run is not the successful demo-api image publisher for the expected source commit."
+            exit 1
+          }
+
+          {
+            echo "base-sha=${base_sha}"
+            echo "artifact-name=demo-api-image-metadata-${EXPECTED_SOURCE_COMMIT}"
+          } >> "${GITHUB_OUTPUT}"
+
+      - name: Download original image metadata artifact
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ steps.source.outputs.artifact-name }}
+          path: ${{ env.METADATA_DIRECTORY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+
+      - name: Verify existing image metadata and ancestry
+        id: identity
+        env:
+          EXPECTED_WORKFLOW_RUN_ID: ${{ inputs.source_run_id }}
+          EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
+          EXPECTED_SOURCE_COMMIT: ${{ inputs.expected_source_commit }}
+          BASE_REVISION: ${{ steps.source.outputs.base-sha }}
+        run: |
+          ./scripts/verify-existing-demo-api-image-metadata.sh
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to GHCR for immutable verification
+        uses: docker/login-action@371161bbe7024a29a25c5e19bfcbc0804fe9ad2c # v4.5.2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify digest and both attestations
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_REFERENCE: ${{ steps.identity.outputs.image-reference }}
+          IMAGE_DIGEST: ${{ steps.identity.outputs.image-digest }}
+          SOURCE_COMMIT: ${{ steps.identity.outputs.source-commit }}
+        run: |
+          resolved_digest="$(
+            docker buildx imagetools inspect \
+              "${IMAGE_REFERENCE}" \
+              --format '{{json .Manifest.Digest}}' |
+              tr -d '"'
+          )"
+          if [[ "${resolved_digest}" != "${IMAGE_DIGEST}" ]]; then
+            echo "::error::The digest-addressed GHCR manifest did not resolve to the metadata digest."
+            exit 1
+          fi
+
+          signer_workflow="github.com/${GITHUB_REPOSITORY}/${EXPECTED_WORKFLOW_PATH}"
+          gh attestation verify \
+            "oci://${IMAGE_REFERENCE}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --bundle-from-oci \
+            --signer-workflow "${signer_workflow}" \
+            --source-digest "${SOURCE_COMMIT}" \
+            --format json > "${RUNNER_TEMP}/provenance-verification.json"
+
+          gh attestation verify \
+            "oci://${IMAGE_REFERENCE}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --bundle-from-oci \
+            --signer-workflow "${signer_workflow}" \
+            --source-digest "${SOURCE_COMMIT}" \
+            --predicate-type https://spdx.dev/Document/v2.3 \
+            --format json > "${RUNNER_TEMP}/sbom-verification.json"
+
+          for verification_file in \
+            "${RUNNER_TEMP}/provenance-verification.json" \
+            "${RUNNER_TEMP}/sbom-verification.json"; do
+            jq --exit-status \
+              --arg digest "${IMAGE_DIGEST#sha256:}" '
+                length > 0 and
+                all(.[];
+                  any(.verificationResult.statement.subject[]?;
+                    .digest.sha256 == $digest))
+              ' "${verification_file}" >/dev/null || {
+              echo "::error::Verified attestation output is empty or bound to another digest."
+              exit 1
+            }
+          done
+
+      - name: Setup Helm
+        uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+
+      - name: Prepare or reuse exact promotion branch
+        id: promotion
+        env:
+          BASE_SHA: ${{ steps.source.outputs.base-sha }}
+          EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
+          EXPECTED_SOURCE_COMMIT: ${{ steps.identity.outputs.source-commit }}
+          IMAGE_TAG: ${{ steps.identity.outputs.image-tag }}
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          if [[ "$(git rev-parse "origin/${BASE_BRANCH}")" != "${BASE_SHA}" ]]; then
+            echo "::error::main changed before promotion preparation; rerun from the new main revision."
+            exit 1
+          fi
+
+          promotion_branch="release/demo-api-${IMAGE_TAG}"
+          git switch --create "candidate-${GITHUB_RUN_ID}" "${BASE_SHA}"
+
+          EXPECTED_IMAGE_REPOSITORY="${EXPECTED_IMAGE_REPOSITORY}" \
+          EXPECTED_SOURCE_REPOSITORY="${EXPECTED_SOURCE_REPOSITORY}" \
+          EXPECTED_SOURCE_COMMIT="${EXPECTED_SOURCE_COMMIT}" \
+          METADATA_FILE="${METADATA_FILE}" \
+          VALUES_FILE="${VALUES_FILE}" \
+            ./scripts/promote-demo-api-image.sh
+
+          helm lint apps/demo-api/helm \
+            --values "${ENVIRONMENT_VALUES_FILE}" \
+            --values "${VALUES_FILE}"
+          helm template demo-api apps/demo-api/helm \
+            --values "${ENVIRONMENT_VALUES_FILE}" \
+            --values "${VALUES_FILE}" >/dev/null
+          git diff --check
+
+          mapfile -t changed_files < <(git diff --name-only "${BASE_SHA}")
+          if [[ "${#changed_files[@]}" == "0" ]]; then
+            echo "status=already-promoted" >> "${GITHUB_OUTPUT}"
+            echo "promotion-branch=${promotion_branch}" >> "${GITHUB_OUTPUT}"
+            echo "branch-ready=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          if [[ "${#changed_files[@]}" != "1" || \
+                "${changed_files[0]}" != "${VALUES_FILE}" ]]; then
+            echo "::error::Existing-image promotion may change only ${VALUES_FILE}."
+            printf 'Unexpected promotion diff: %s\n' "${changed_files[@]}"
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "${VALUES_FILE}"
+          git commit -m "release: promote existing aws-dev demo-api ${IMAGE_TAG}"
+
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
+          if [[ "$(git rev-parse "origin/${BASE_BRANCH}")" != "${BASE_SHA}" ]]; then
+            echo "::error::main changed before promotion branch publication."
+            exit 1
+          fi
+
+          status=created
+          if git ls-remote --exit-code --heads origin \
+            "refs/heads/${promotion_branch}" >/dev/null 2>&1; then
+            git fetch --no-tags origin \
+              "+refs/heads/${promotion_branch}:refs/remotes/origin/${promotion_branch}"
+            if ! git diff --quiet "origin/${promotion_branch}" HEAD; then
+              echo "::error::The existing promotion branch has different content and will not be overwritten."
+              exit 1
+            fi
+            status=reused
+          else
+            git push origin "HEAD:refs/heads/${promotion_branch}"
+          fi
+
+          echo "status=${status}" >> "${GITHUB_OUTPUT}"
+          echo "promotion-branch=${promotion_branch}" >> "${GITHUB_OUTPUT}"
+          echo "branch-ready=true" >> "${GITHUB_OUTPUT}"
+
+      - name: Create or reuse promotion pull request
+        id: pull-request
+        if: steps.promotion.outputs.branch-ready == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_SHA: ${{ steps.source.outputs.base-sha }}
+          PROMOTION_BRANCH: ${{ steps.promotion.outputs.promotion-branch }}
+          IMAGE_TAG: ${{ steps.identity.outputs.image-tag }}
+          IMAGE_DIGEST: ${{ steps.identity.outputs.image-digest }}
+          SOURCE_COMMIT: ${{ steps.identity.outputs.source-commit }}
+          SOURCE_RUN_ID: ${{ steps.identity.outputs.workflow-run-id }}
+          RELEASE_ID: ${{ steps.identity.outputs.release-id }}
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}" \
+            "+refs/heads/${PROMOTION_BRANCH}:refs/remotes/origin/${PROMOTION_BRANCH}"
+          if [[ "$(git rev-parse "origin/${BASE_BRANCH}")" != "${BASE_SHA}" ]]; then
+            echo "::error::main changed before PR creation."
+            exit 1
+          fi
+
+          mapfile -t changed_files < <(
+            git diff --name-only \
+              "origin/${BASE_BRANCH}" "origin/${PROMOTION_BRANCH}"
+          )
+          if [[ "${#changed_files[@]}" != "1" || \
+                "${changed_files[0]}" != "${VALUES_FILE}" ]]; then
+            echo "::error::Promotion branch must differ from main only in ${VALUES_FILE}."
+            printf 'Unexpected promotion diff: %s\n' "${changed_files[@]}"
+            exit 1
+          fi
+
+          pr_url="$(
+            gh pr list \
+              --state open \
+              --base "${BASE_BRANCH}" \
+              --head "${PROMOTION_BRANCH}" \
+              --json url \
+              --jq '.[0].url // empty'
+          )"
+          status=reused
+          if [[ -z "${pr_url}" ]]; then
+            body_file="$(mktemp)"
+            {
+              echo "## Existing demo-api image promotion to aws-dev"
+              echo
+              echo "- Image tag: \`${IMAGE_TAG}\`"
+              echo "- Image digest: \`${IMAGE_DIGEST}\`"
+              echo "- Source commit: \`${SOURCE_COMMIT}\`"
+              echo "- Release ID: \`${RELEASE_ID}\`"
+              echo "- Original build run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}"
+              echo "- Metadata artifact, SLSA provenance and SPDX SBOM attestation: verified"
+              echo
+              echo "This PR changes only the aws-dev release identity. It does not rebuild the image, access a cluster, create an AWS environment, or merge itself."
+            } > "${body_file}"
+            pr_url="$(
+              gh pr create \
+                --base "${BASE_BRANCH}" \
+                --head "${PROMOTION_BRANCH}" \
+                --title "release: promote existing aws-dev demo-api ${IMAGE_TAG}" \
+                --body-file "${body_file}"
+            )"
+            status=created
+          fi
+
+          echo "status=${status}" >> "${GITHUB_OUTPUT}"
+          echo "url=${pr_url}" >> "${GITHUB_OUTPUT}"
+
+      - name: Publish handoff summary
+        env:
+          BRANCH_STATUS: ${{ steps.promotion.outputs.status }}
+          PR_STATUS: ${{ steps.pull-request.outputs.status }}
+          PR_URL: ${{ steps.pull-request.outputs.url }}
+          IMAGE_REFERENCE: ${{ steps.identity.outputs.image-reference }}
+          SOURCE_COMMIT: ${{ steps.identity.outputs.source-commit }}
+          SOURCE_RUN_ID: ${{ steps.identity.outputs.workflow-run-id }}
+          RELEASE_ID: ${{ steps.identity.outputs.release-id }}
+        run: |
+          {
+            echo "### Existing image to aws-dev handoff"
+            echo
+            echo "- Branch status: \`${BRANCH_STATUS}\`"
+            echo "- PR status: \`${PR_STATUS:-not-required}\`"
+            echo "- Image: \`${IMAGE_REFERENCE}\`"
+            echo "- Source commit: \`${SOURCE_COMMIT}\`"
+            echo "- Original build run: \`${SOURCE_RUN_ID}\`"
+            echo "- Release ID: \`${RELEASE_ID}\`"
+            if [[ -n "${PR_URL:-}" ]]; then
+              echo "- Pull request: ${PR_URL}"
+            fi
+          } >> "${GITHUB_STEP_SUMMARY}"

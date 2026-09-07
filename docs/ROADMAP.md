@@ -585,6 +585,11 @@ Incremental scope:
       at most one active EKS environment, and requires reviewed teardown plus a
       residual-cost audit. It is offline-only and blocks live execution until
       v0.11.9.3.1 implements an existing-image aws-dev release-PR handoff.
+    - v0.11.9.3.1 implements that protected-main-only handoff. It downloads the
+      original successful run artifact, verifies source ancestry, digest,
+      provenance and SPDX SBOM, then permits only an aws-dev release-file PR.
+      It neither rebuilds nor deploys, never overwrites a divergent branch and
+      remains live-blocked until reviewed main integration.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

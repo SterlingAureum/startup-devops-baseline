@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.1-existing-image-aws-dev-promotion` adds a protected-main-only,
+manual handoff that verifies the original image run, metadata, GHCR digest,
+SLSA provenance and SPDX SBOM before preparing a release-only aws-dev PR. It
+cannot rebuild, deploy, access AWS/EKS or merge its PR; live dispatch remains
+blocked until reviewed main integration.
+Predecessor:
 `v0.11.9.3.0-remote-release-rehearsal-design` pins the accepted `sha-cf0a6bc`
 image for a protected-main, one-environment-at-a-time aws-dev/test/prod
 rehearsal. It validates only an offline plan and blocks live execution until an

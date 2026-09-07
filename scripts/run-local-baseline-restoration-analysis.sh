@@ -59,8 +59,9 @@ fi
 
 rollout_phase="$(jq -r '.status.phase // "Unknown"' <<<"${rollout_json}")"
 rollout_step="$(jq -r '.status.currentStepIndex // -1' <<<"${rollout_json}")"
-[ "${rollout_phase}" = Paused ] && [ "${rollout_step}" = 4 ] \
-  || fail "second-analysis requires the reviewed 50% pause (observed phase=${rollout_phase}, step=${rollout_step})"
+if [ "${rollout_phase}" != Paused ] || [ "${rollout_step}" != 4 ]; then
+  fail "second-analysis requires the reviewed 50% pause (observed phase=${rollout_phase}, step=${rollout_step})"
+fi
 echo "ACTION SIGNAL: wait for 'Generating bounded traffic' and release-scoped request-metric readiness below, then promote exactly once in terminal 1."
 echo "Only an AnalysisRun created after this observer started can satisfy it."
 

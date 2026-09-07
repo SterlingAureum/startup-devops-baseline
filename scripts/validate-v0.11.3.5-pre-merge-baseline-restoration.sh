@@ -107,7 +107,9 @@ for marker in (
     "wait_for_comparison_ready",
     "ComparisonError",
     "No sync or prune operation was started",
-    'GIT_TARGET_REVISION="${TARGET_REVISION}"',
+    'resolved_target_revision="${TARGET_REVISION}"',
+    'TARGET_REVISION="${resolved_target_revision}"',
+    'GIT_TARGET_REVISION="${resolved_target_revision}"',
     "LOCAL_IMAGE_ENABLED=false",
     'set_application_automation "${ROOT_APP_NAME}"',
 ):

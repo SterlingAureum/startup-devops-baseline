@@ -116,8 +116,9 @@ validate_argocd_operation_settings
 cd "${ROOT_DIR}"
 
 echo "==> Restoring ${BASELINE_LABEL} through the Root App-of-Apps"
-TARGET_REVISION="${TARGET_REVISION}" \
-GIT_TARGET_REVISION="${TARGET_REVISION}" \
+resolved_target_revision="${TARGET_REVISION}"
+TARGET_REVISION="${resolved_target_revision}" \
+GIT_TARGET_REVISION="${resolved_target_revision}" \
 ROOT_SYNC_MODE=manual \
 LOCAL_IMAGE_ENABLED=false \
   REPO_URL="${REPO_URL}" \

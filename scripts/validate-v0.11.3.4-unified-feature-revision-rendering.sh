@@ -224,7 +224,9 @@ for forbidden in ("argocd app set", "argocd app unset", "remove_unexpected_demo_
     require(forbidden not in feature, f"Imperative feature child mutation returned: {forbidden}")
 
 for marker in (
-    'GIT_TARGET_REVISION="${TARGET_REVISION}"',
+    'resolved_target_revision="${TARGET_REVISION}"',
+    'TARGET_REVISION="${resolved_target_revision}"',
+    'GIT_TARGET_REVISION="${resolved_target_revision}"',
     "LOCAL_IMAGE_ENABLED=false",
     'sync_application_if_needed "${ROOT_APP_NAME}"',
     'sync_application_if_needed "${DEMO_APP_NAME}"',

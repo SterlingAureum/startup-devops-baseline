@@ -212,7 +212,9 @@ def validate_repository() -> None:
     restore = require_markers(
         "scripts/restore-local-gitops-baseline.sh",
         (
-            'GIT_TARGET_REVISION="${TARGET_REVISION}"',
+            'resolved_target_revision="${TARGET_REVISION}"',
+            'TARGET_REVISION="${resolved_target_revision}"',
+            'GIT_TARGET_REVISION="${resolved_target_revision}"',
             "LOCAL_IMAGE_ENABLED=false",
             "ROOT_SYNC_MODE=manual",
             'sync_application_if_needed "${ROOT_APP_NAME}"',

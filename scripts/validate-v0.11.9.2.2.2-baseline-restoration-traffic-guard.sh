@@ -53,7 +53,7 @@ bash -n scripts/restore-local-gitops-baseline.sh
 bash -n scripts/run-local-baseline-restoration-analysis.sh
 
 if command -v shellcheck >/dev/null 2>&1; then
-  shellcheck scripts/restore-local-gitops-baseline.sh \
+  shellcheck -x scripts/restore-local-gitops-baseline.sh \
     scripts/run-local-baseline-restoration-analysis.sh
 else
   echo "SKIP: shellcheck unavailable; CI must run it."

@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.11.9.2.2.3.3.1
+
+- Resolve the ShellCheck findings that stopped image-publish workflow run
+  `34035241036` before build-and-push.
+- Follow the reviewed Argo CD helper during lint, pass both revision variables
+  from an unambiguous captured value, and express the 50% pause guard as an
+  explicit conditional.
+- Preserve the no-cluster-mutation boundary and require CI/local ShellCheck
+  parity before retrying image publication.
+
 ## v0.11.9.2.2.3.3
 
 - Require positive release-scoped Candidate request metrics in addition to an

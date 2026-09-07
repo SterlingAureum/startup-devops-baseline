@@ -287,6 +287,9 @@ echo "==> Validating v0.11.9.2.2.3.2 recovery Rollout closure"
 echo "==> Validating v0.11.9.2.2.3.3 request-series image compatibility"
 "${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3-request-series-image-compatibility.sh"
 
+echo "==> Validating v0.11.9.2.2.3.3.1 ShellCheck CI parity repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3.1-shellcheck-ci-parity.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

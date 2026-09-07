@@ -94,7 +94,9 @@ correlation_successor = (
 ).is_file()
 for marker in (
     "ROOT_SYNC_MODE=manual",
-    'GIT_TARGET_REVISION="${TARGET_REVISION}"',
+    'resolved_target_revision="${TARGET_REVISION}"',
+    'TARGET_REVISION="${resolved_target_revision}"',
+    'GIT_TARGET_REVISION="${resolved_target_revision}"',
     "LOCAL_IMAGE_ENABLED=false",
     "demo-api Helm parameters do not match the declarative baseline"
     if correlation_successor

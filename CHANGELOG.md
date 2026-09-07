@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.9.3.2
+
+- Remove the temporary aws-dev child-Application feature revision override so
+  every active AWS same-repository Application follows protected `main`.
+- Change the AWS revision-boundary checker's default dev expectation to `main`
+  while preserving exact external Chart versions.
+- Make historical pre-merge validators successor-aware and retain the isolated
+  test feature overlay only as non-active offline-preview evidence.
+- Fingerprint all three unchanged AWS release files and keep workflow dispatch,
+  main merge, AWS access and runtime qualification explicitly unexecuted.
+
 ## v0.11.9.3.1
 
 - Add a manual protected-main workflow that prepares an aws-dev release-only PR

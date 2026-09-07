@@ -590,6 +590,11 @@ Incremental scope:
       provenance and SPDX SBOM, then permits only an aws-dev release-file PR.
       It neither rebuilds nor deploys, never overwrites a divergent branch and
       remains live-blocked until reviewed main integration.
+    - v0.11.9.3.2 removes the temporary aws-dev feature source override, makes
+      main the default rendered revision for all active AWS environments,
+      fingerprints unchanged release files and preserves the test feature
+      overlay only as non-active historical preview evidence. Review and main
+      integration remain separate actions.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

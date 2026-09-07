@@ -305,6 +305,9 @@ echo "==> Validating v0.11.9.3.0 remote release rehearsal design"
 echo "==> Validating v0.11.9.3.1 existing-image aws-dev promotion"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.1-existing-image-aws-dev-promotion.sh"
 
+echo "==> Validating v0.11.9.3.2 protected-main integration readiness"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.2-protected-main-integration-readiness.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

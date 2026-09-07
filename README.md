@@ -3,6 +3,11 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.2-protected-main-integration-readiness` removes the temporary
+aws-dev feature-revision override, restores every active AWS same-repository
+Application to `main`, fingerprints unchanged release files and keeps remote
+execution blocked until reviewed protected-main integration.
+Predecessor:
 `v0.11.9.3.1-existing-image-aws-dev-promotion` adds a protected-main-only,
 manual handoff that verifies the original image run, metadata, GHCR digest,
 SLSA provenance and SPDX SBOM before preparing a release-only aws-dev PR. It

@@ -4,13 +4,15 @@ set -Eeuo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.8.1.2-aws-dev-pre-merge-feature-revision-qualification.json"
 FEATURE_REVISION="feature/v0.11-observability-sre-baseline"
+SUCCESSOR_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.2-protected-main-integration-readiness.json"
 
-python3 - "${ROOT_DIR}" "${CONTRACT}" "${FEATURE_REVISION}" <<'PY'
+python3 - "${ROOT_DIR}" "${CONTRACT}" "${FEATURE_REVISION}" "${SUCCESSOR_CONTRACT}" <<'PY'
 import json, re, sys
 from pathlib import Path
 
-root, contract_path, feature = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
+root, contract_path, feature, successor_path = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3], Path(sys.argv[4])
 contract = json.loads(contract_path.read_text())
+successor = json.loads(successor_path.read_text())
 expected_apps = [
     "application-admission-policies-aws-dev", "data-platform-network-policy-aws-dev",
     "demo-api-aws-dev", "external-secrets-startup-apps", "namespace-guardrails-aws-dev",
@@ -32,12 +34,16 @@ assert contract["preMergeRestoration"]["required"] is True
 assert contract["preMergeRestoration"]["mergeBlockedByFeatureResidue"] is True
 assert contract["scope"]["mainMergeRequiredForFeatureQualification"] is False
 assert contract["scope"]["runtimeMutationAddedToChecker"] is False
+assert successor["version"] == "v0.11.9.3.2"
+assert successor["predecessor"] == "v0.11.9.3.1"
+assert successor["implementationBaselineCommit"] == "cf2c7cd37c114e875b731fb151a05aad9b9cddd6"
+assert successor["activeRevisionPolicy"]["awsDevSameRepositoryChildren"] == "main"
+assert successor["historicalPreview"]["active"] is False
 
 overlay = (root / "clusters/aws/overlays/dev/kustomization.yaml").read_text()
-assert overlay.count(feature) == 1
-assert "path: /spec/source/targetRevision" in overlay and "op: replace" in overlay
-name_match = re.search(r"name: \^\(([^\n]+)\)\$", overlay)
-assert name_match and name_match.group(1).split("|") == expected_apps
+assert feature not in overlay
+assert "path: /spec/source/targetRevision" not in overlay
+assert "name: monitoring-aws-dev" in overlay
 for env in ("test", "prod"):
     assert feature not in (root / f"clusters/aws/overlays/{env}/kustomization.yaml").read_text()
 
@@ -56,9 +62,10 @@ for forbidden in ("kubectl apply", "kubectl patch", "argocd app sync", "kubectl 
     assert forbidden not in live
 
 boundary = (root / "scripts/check-aws-gitops-revision-boundary.sh").read_text()
-for marker in (feature, "EXPECTED_TEST_GIT_TARGET_REVISION:-main", "EXPECTED_PROD_GIT_TARGET_REVISION:-main",
+for marker in ("EXPECTED_DEV_GIT_TARGET_REVISION:-main", "EXPECTED_TEST_GIT_TARGET_REVISION:-main", "EXPECTED_PROD_GIT_TARGET_REVISION:-main",
                '"kube-prometheus-stack": "88.5.0"', '"karpenter": "1.14.0"'):
     assert marker in boundary, marker
+assert "EXPECTED_DEV_GIT_TARGET_REVISION:-feature/" not in boundary
 
 for relative, marker in (
     ("README.md", "v0.11.8.1.2"), ("CHANGELOG.md", "## v0.11.8.1.2"),
@@ -77,7 +84,7 @@ for mutation in (
 ):
     changed = json.loads(contract_path.read_text()); mutation(changed)
     assert changed != contract
-print("v0.11.8.1.2 static contract validation passed.")
+print("v0.11.8.1.2 historical feature contract and v0.11.9.3.2 main-restoration successor passed.")
 PY
 
 bash -n "${ROOT_DIR}/scripts/check-aws-gitops-revision-boundary.sh"
@@ -92,7 +99,8 @@ import os, sys
 env = sys.argv[-1].rstrip('/').split('/')[-1]
 git_names = ["application-admission-policies", "data-platform-network-policy", "demo-api", "external-secrets-startup-apps", "namespace-guardrails", "observability-views", "postgresql-baseline", "runtime-qualification-rbac", "startup-apps-network-policy"]
 if env == "prod": git_names.remove("runtime-qualification-rbac")
-rev = "feature/v0.11-observability-sre-baseline" if env == "dev" else "main"
+rev = "main"
+if env == "dev" and os.getenv("FAKE_BAD_DEV_FEATURE") == "true": rev = "feature/v0.11-observability-sre-baseline"
 if env == "test" and os.getenv("FAKE_BAD_TEST_FEATURE") == "true": rev = "feature/v0.11-observability-sre-baseline"
 charts = {"argo-rollouts":"2.41.1","aws-load-balancer-controller":"1.14.0","plugin-barman-cloud":"0.7.0","cert-manager":"v1.21.0","cloudnative-pg":"0.29.0","external-secrets":"2.8.0","karpenter":"1.14.0","karpenter-crd":"1.14.0","kube-prometheus-stack":"88.5.0"}
 if os.getenv("FAKE_BAD_EXTERNAL") == "true": charts["kube-prometheus-stack"] = "88.5.1"
@@ -105,10 +113,13 @@ print("---\n".join(docs))
 PY
 chmod +x "${FIXTURE_DIR}/bin/kustomize"
 PATH="${FIXTURE_DIR}/bin:${PATH}" "${ROOT_DIR}/scripts/check-aws-gitops-revision-boundary.sh" >/dev/null
+if FAKE_BAD_DEV_FEATURE=true PATH="${FIXTURE_DIR}/bin:${PATH}" "${ROOT_DIR}/scripts/check-aws-gitops-revision-boundary.sh" >/dev/null 2>&1; then
+  echo "Revision-boundary checker accepted feature residue in aws-dev." >&2; exit 1
+fi
 if FAKE_BAD_TEST_FEATURE=true PATH="${FIXTURE_DIR}/bin:${PATH}" "${ROOT_DIR}/scripts/check-aws-gitops-revision-boundary.sh" >/dev/null 2>&1; then
   echo "Revision-boundary checker accepted feature residue in aws-test." >&2; exit 1
 fi
 if FAKE_BAD_EXTERNAL=true PATH="${FIXTURE_DIR}/bin:${PATH}" "${ROOT_DIR}/scripts/check-aws-gitops-revision-boundary.sh" >/dev/null 2>&1; then
   echo "Revision-boundary checker accepted external Chart drift." >&2; exit 1
 fi
-echo "v0.11.8.1.2 positive and negative revision-boundary fixtures passed."
+echo "v0.11.8.1.2 historical contract plus restored-main positive and negative revision-boundary fixtures passed."

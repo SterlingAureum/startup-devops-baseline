@@ -102,7 +102,13 @@ for environment in ("aws-dev", "aws-test", "aws-prod"):
     assert candidate["digest"] not in release
 
 dev_overlay = (root / "clusters/aws/overlays/dev/kustomization.yaml").read_text()
-assert revision["featureBranch"] in dev_overlay
+successor = json.loads((root / "delivery/contracts/v0.11.9.3.2-protected-main-integration-readiness.json").read_text())
+assert successor["predecessor"] == "v0.11.9.3.1"
+assert successor["activeRevisionPolicy"]["awsDevSameRepositoryChildren"] == "main"
+assert successor["activeRevisionPolicy"]["awsTestSameRepositoryChildren"] == "main"
+assert successor["activeRevisionPolicy"]["awsProdSameRepositoryChildren"] == "main"
+assert revision["featureBranch"] not in dev_overlay
+assert "path: /spec/source/targetRevision" not in dev_overlay
 
 for relative, marker in (
     ("README.md", "v0.11.9.3.0-remote-release-rehearsal-design"),

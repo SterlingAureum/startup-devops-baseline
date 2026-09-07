@@ -3,6 +3,10 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.2.2.3.3.2-immutable-local-baseline-image` declares the image published
+by workflow run `34070524953` as the digest-pinned local baseline and validates
+its complete release identity before restoration.
+Predecessor:
 `v0.11.9.2.2.3.3.1-shellcheck-ci-parity` resolves the deterministic ShellCheck
 failure that stopped workflow run `34035241036` before image build or push,
 without changing restoration behavior or touching the cluster.

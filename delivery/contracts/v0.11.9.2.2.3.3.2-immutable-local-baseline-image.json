@@ -1,0 +1,33 @@
+{
+  "version": "v0.11.9.2.2.3.3.2",
+  "predecessor": "v0.11.9.2.2.3.3.1",
+  "image": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "reference": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api@sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623"
+  },
+  "source": {
+    "repository": "SterlingAureum/startup-devops-baseline",
+    "commit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8"
+  },
+  "build": {
+    "workflowRunId": "34070524953",
+    "conclusion": "success"
+  },
+  "release": {
+    "applicationVersion": "sha-cf0a6bc",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763"
+  },
+  "scope": {
+    "localDefaultValuesOnly": true,
+    "awsReleaseValuesChanged": false,
+    "revision69RetainedAsEvidence": true,
+    "freshRolloutRevisionRequired": true
+  },
+  "automaticRestore": false,
+  "automaticPromote": false,
+  "automaticRetry": false,
+  "clusterMutationDuringValidation": false,
+  "awsMutationDuringValidation": false
+}

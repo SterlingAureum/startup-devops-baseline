@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.11.9.2.2.3.3.2
+
+- Declare the successfully published `sha-cf0a6bc` demo-api image as the local
+  baseline by immutable digest and complete source/build identity.
+- Validate the baseline tag, source commit, digest and application version
+  before any Kubernetes restoration operation.
+- Preserve revision 69 as rejected evidence and require a fresh Rollout
+  revision with release ID `demo-api-cf0a6bcbc466-cdffd3d71763`.
+
 ## v0.11.9.2.2.3.3.1
 
 - Resolve the ShellCheck findings that stopped image-publish workflow run

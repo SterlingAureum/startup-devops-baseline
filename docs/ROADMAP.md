@@ -547,6 +547,9 @@ Incremental scope:
       and exact Git/runtime/failure evidence closure. Applying and validating
       the increment performs no live rehearsal; qualification requires the
       separately initiated operator run and retained private evidence.
+      - v0.11.9.2.2.3.3.2 promotes the successfully published `sha-cf0a6bc`
+        artifact into the digest-pinned local baseline declaration and adds an
+        immutable identity preflight before any restoration mutation.
       - v0.11.9.2.2.3.3.1 restores local/CI ShellCheck parity after workflow
         run 34035241036 rejected ambiguous environment assignment and boolean
         guard syntax before image build-and-push.

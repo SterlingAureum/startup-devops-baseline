@@ -8,7 +8,7 @@ TARGET_REVISION="${TARGET_REVISION:-}"
 # shellcheck source=scripts/lib/git-revision.sh
 source "${ROOT_DIR}/scripts/lib/git-revision.sh"
 
-for command_name in awk git wc; do
+for command_name in awk git jq python3 wc; do
   command -v "${command_name}" >/dev/null 2>&1 || {
     echo "ERROR: required command not found: ${command_name}" >&2
     exit 1
@@ -57,8 +57,21 @@ if [ "${baseline_image_tag}" = "sha-3e50802" ]; then
   exit 1
 fi
 
+if ! baseline_identity_json="$(
+  python3 "${ROOT_DIR}/scripts/derive-demo-api-release-id.py" \
+    --release-file "${ROOT_DIR}/apps/demo-api/helm/values.yaml" \
+    --format json 2>&1
+)"; then
+  echo "ERROR: declarative local baseline image identity is invalid." >&2
+  echo "${baseline_identity_json}" >&2
+  echo "No Kubernetes restoration operation was started." >&2
+  exit 1
+fi
+baseline_release_id="$(jq -r '.releaseId' <<<"${baseline_identity_json}")"
+
 echo "Requested feature revision: ${TARGET_REVISION}"
 echo "Resolved feature commit:   ${resolved_target_revision}"
+echo "Validated baseline release: ${baseline_release_id}"
 
 TARGET_REVISION="${resolved_target_revision}" \
 BASELINE_LABEL="Pre-merge feature baseline" \

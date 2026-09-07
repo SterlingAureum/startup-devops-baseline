@@ -47,7 +47,7 @@ fi
 baseline_image_tag="$(awk '
   /^image:/ { in_image=1; next }
   in_image && /^[^[:space:]]/ { exit }
-  in_image && $1 == "tag:" { gsub(/\"/, "", $2); print $2; exit }
+  in_image && $1 == "tag:" { gsub(/"/, "", $2); print $2; exit }
 ' "${ROOT_DIR}/apps/demo-api/helm/values.yaml")"
 if [ "${baseline_image_tag}" = "sha-3e50802" ]; then
   echo "ERROR: baseline image ${baseline_image_tag} was rejected by live revision 69." >&2

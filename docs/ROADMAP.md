@@ -547,6 +547,12 @@ Incremental scope:
       and exact Git/runtime/failure evidence closure. Applying and validating
       the increment performs no live rehearsal; qualification requires the
       separately initiated operator run and retained private evidence.
+      - v0.11.9.2.2.3.3.3.1 repairs the inherited rendered-identity validator
+        by checking container Downward API and AnalysisRun argument bindings
+        independently instead of globally counting annotation references.
+      - v0.11.9.2.2.3.3.3 closes the successful digest-pinned revision 70
+        restoration, its two AnalysisRuns, Argo CD convergence and idempotent
+        reapplication without revision 71; it also removes the mawk warning.
       - v0.11.9.2.2.3.3.2 promotes the successfully published `sha-cf0a6bc`
         artifact into the digest-pinned local baseline declaration and adds an
         immutable identity preflight before any restoration mutation.

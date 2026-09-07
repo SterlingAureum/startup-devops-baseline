@@ -293,6 +293,12 @@ echo "==> Validating v0.11.9.2.2.3.3.1 ShellCheck CI parity repair"
 echo "==> Validating v0.11.9.2.2.3.3.2 immutable local baseline image identity"
 "${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3.2-immutable-local-baseline-image.sh"
 
+echo "==> Validating v0.11.9.2.2.3.3.3 baseline restoration closure"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3.3-baseline-restoration-closure.sh"
+
+echo "==> Validating v0.11.9.2.2.3.3.3.1 rendered identity projection repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3.3.1-rendered-identity-projection-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

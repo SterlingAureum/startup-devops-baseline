@@ -308,25 +308,9 @@ helm template demo-api "${ROOT_DIR}/apps/demo-api/helm" \
   --set rollout.enabled=false \
   >"${WORK_DIR}/deployment.yaml"
 
-python3 - "${WORK_DIR}/rollout.yaml" "${WORK_DIR}/deployment.yaml" <<'PY'
-from pathlib import Path
-import sys
-
-
-for manifest_path in sys.argv[1:]:
-    manifest = Path(manifest_path).read_text()
-    slo_rollout_successor = "expected-release-id" in manifest
-    for variable, annotation in (
-        ("PLATFORM_RELEASE_ID", "platform.startup.dev/release-id"),
-        ("PLATFORM_SOURCE_COMMIT", "platform.startup.dev/source-commit"),
-        ("CONTAINER_IMAGE_DIGEST", "platform.startup.dev/image-digest"),
-    ):
-        if manifest.count(f"- name: {variable}") != 1:
-            raise SystemExit(f"{variable} is not rendered exactly once in {manifest_path}")
-        expected_annotation_count = 3 if slo_rollout_successor and annotation == "platform.startup.dev/release-id" and manifest_path.endswith("rollout.yaml") else 1
-        if manifest.count(f"fieldPath: metadata.annotations['{annotation}']") != expected_annotation_count:
-            raise SystemExit(f"{annotation} is not rendered exactly once in {manifest_path}")
-PY
+python3 "${ROOT_DIR}/scripts/check-demo-api-rendered-identity-projection.py" \
+  --rollout "${WORK_DIR}/rollout.yaml" \
+  --deployment "${WORK_DIR}/deployment.yaml"
 
 bash -n "${ROOT_DIR}/scripts/check-demo-api-structured-logs.sh"
 

@@ -1,0 +1,32 @@
+{
+  "version": "v0.11.9.2.2.3.3.3.1",
+  "predecessor": "v0.11.9.2.2.3.3.3",
+  "failure": {
+    "validator": "scripts/validate-v0.11.6.1.0-structured-demo-api-logging-runtime.sh",
+    "message": "platform.startup.dev/source-commit is not rendered exactly once",
+    "cause": "successor-analysis-bindings-were-counted-as-container-projection-duplicates",
+    "runtimeManifestInvalid": false
+  },
+  "repair": {
+    "containerProjectionValidatedStructurally": true,
+    "analysisProjectionValidatedSeparately": true,
+    "analysisStepCountDerivedFromRenderedBindings": true,
+    "deploymentAnalysisProjectionForbidden": true,
+    "globalAnnotationStringCountRemoved": true
+  },
+  "requiredContainerBindings": {
+    "PLATFORM_RELEASE_ID": "platform.startup.dev/release-id",
+    "PLATFORM_SOURCE_COMMIT": "platform.startup.dev/source-commit",
+    "CONTAINER_IMAGE_DIGEST": "platform.startup.dev/image-digest"
+  },
+  "requiredAnalysisBindings": {
+    "expected-release-id": "platform.startup.dev/release-id",
+    "source-commit": "platform.startup.dev/source-commit",
+    "image-digest": "platform.startup.dev/image-digest"
+  },
+  "rolloutTemplateChanged": false,
+  "imageIdentityChanged": false,
+  "rolloutRevisionChangeExpected": false,
+  "clusterMutationDuringValidation": false,
+  "awsMutationDuringValidation": false
+}

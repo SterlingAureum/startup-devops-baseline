@@ -377,6 +377,13 @@
 /scripts/validate-v0.11.9.2.2.3.3.2-immutable-local-baseline-image.sh @SterlingAureum
 /docs/V0.11.9.2.2.3.3.2_IMMUTABLE_LOCAL_BASELINE_IMAGE.md @SterlingAureum
 /delivery/contracts/v0.11.9.2.2.3.3.2-immutable-local-baseline-image.json @SterlingAureum
+/scripts/validate-v0.11.9.2.2.3.3.3-baseline-restoration-closure.sh @SterlingAureum
+/docs/V0.11.9.2.2.3.3.3_BASELINE_RESTORATION_CLOSURE.md @SterlingAureum
+/delivery/contracts/v0.11.9.2.2.3.3.3-baseline-restoration-closure.json @SterlingAureum
+/scripts/check-demo-api-rendered-identity-projection.py @SterlingAureum
+/scripts/validate-v0.11.9.2.2.3.3.3.1-rendered-identity-projection-repair.sh @SterlingAureum
+/docs/V0.11.9.2.2.3.3.3.1_RENDERED_IDENTITY_PROJECTION_REPAIR.md @SterlingAureum
+/delivery/contracts/v0.11.9.2.2.3.3.3.1-rendered-identity-projection-repair.json @SterlingAureum
 /docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum

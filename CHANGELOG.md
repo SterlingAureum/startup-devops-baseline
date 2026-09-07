@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.11.9.2.2.3.3.3.1
+
+- Repair the inherited structured-logging validator after it counted valid
+  Rollout AnalysisRun source-commit and image-digest bindings as duplicate
+  container identity projections.
+- Validate container Downward API bindings and AnalysisRun argument bindings
+  independently, deriving successor counts from the rendered analysis steps.
+- Preserve the Helm workload, immutable image identity and Healthy revision 70;
+  applying and validating this increment performs no live operation.
+
+## v0.11.9.2.2.3.3.3
+
+- Record successful local baseline Rollout revision 70 and both new
+  release-scoped AnalysisRuns for the immutable `sha-cf0a6bc` image.
+- Close Argo CD and runtime acceptance with a Healthy three-replica stable
+  ReplicaSet and an idempotent restore that created no revision 71.
+- Remove the non-portable escaped quote from the baseline tag awk parser and
+  exercise the parser without stderr in the offline closure validator.
+
 ## v0.11.9.2.2.3.3.2
 
 - Declare the successfully published `sha-cf0a6bc` demo-api image as the local

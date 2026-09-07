@@ -3,6 +3,16 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.2.2.3.3.3.1-rendered-identity-projection-repair` separates the
+container Downward API projection from successor AnalysisRun argument bindings,
+removing a false global-count rejection without changing the Helm workload or
+Healthy revision 70.
+Predecessor:
+`v0.11.9.2.2.3.3.3-baseline-restoration-closure` records the successful,
+digest-pinned revision 70 baseline restoration, its two release-scoped
+AnalysisRuns, final Argo CD convergence and an idempotent restore that created
+no successor revision. It also removes a non-portable mawk quote escape.
+Predecessor:
 `v0.11.9.2.2.3.3.2-immutable-local-baseline-image` declares the image published
 by workflow run `34070524953` as the digest-pinned local baseline and validates
 its complete release identity before restoration.

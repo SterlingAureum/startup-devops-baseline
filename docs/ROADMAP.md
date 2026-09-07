@@ -578,6 +578,13 @@ Incremental scope:
         normalization drift and replaces immediate Root status assertion with
         bounded exact-revision convergence. The successful first analysis and
         50% human pause remain preserved for explicit resume after repair.
+  - v0.11.9.3 sequences the final remote build-once release and closure.
+    - v0.11.9.3.0 pins the accepted `sha-cf0a6bc` artifact, requires protected
+      main before remote credentials, accepts the local-only failure/recovery
+      evidence without enabling fault mode in AWS, sequences dev/test/prod with
+      at most one active EKS environment, and requires reviewed teardown plus a
+      residual-cost audit. It is offline-only and blocks live execution until
+      v0.11.9.3.1 implements an existing-image aws-dev release-PR handoff.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

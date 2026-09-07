@@ -3,6 +3,11 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.0-remote-release-rehearsal-design` pins the accepted `sha-cf0a6bc`
+image for a protected-main, one-environment-at-a-time aws-dev/test/prod
+rehearsal. It validates only an offline plan and blocks live execution until an
+existing-image aws-dev release-PR handoff is implemented in v0.11.9.3.1.
+Predecessor:
 `v0.11.9.2.2.3.3.3.1-rendered-identity-projection-repair` separates the
 container Downward API projection from successor AnalysisRun argument bindings,
 removing a false global-count rejection without changing the Helm workload or

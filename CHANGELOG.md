@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.11.9.3.0
+
+- Define the offline-only remote aws-dev, aws-test, and aws-prod release
+  rehearsal sequence for the accepted `sha-cf0a6bc` immutable image.
+- Require protected-main control-plane identity before remote credentials,
+  distinguish the image source SHA from the later merged main SHA, and retain
+  release-only, human-reviewed promotion boundaries.
+- Accept the reviewed local revision 69 rejection/revision 70 recovery as the
+  v0.11 failure scenario while forbidding the local-only fault mode in AWS.
+- Limit live EKS concurrency to one environment, preserve fresh evidence before
+  teardown, require separate teardown approvals and finish with a residual-cost
+  audit.
+- Block live execution until v0.11.9.3.1 implements the existing-image metadata
+  handoff to an aws-dev release-only PR without rebuilding or auto-merging.
+
 ## v0.11.9.2.2.3.3.3.1
 
 - Repair the inherited structured-logging validator after it counted valid

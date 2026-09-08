@@ -326,6 +326,9 @@ echo "==> Validating v0.11.9.3.5 aws-dev live-rehearsal preflight"
 echo "==> Validating v0.11.9.3.5.1 aws-dev live-rehearsal preflight execution"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.5.1-aws-dev-live-rehearsal-preflight-execution.sh"
 
+echo "==> Validating v0.11.9.3.6 aws-dev live-rehearsal create plan"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6-aws-dev-live-rehearsal-create-plan.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

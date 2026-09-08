@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.11.9.3.6
+
+- Add a private, offline-only aws-dev creation-plan template and strict
+  checker bound to the later protected-main commit and fresh preflight hashes.
+- Require current pricing review, a USD 50 maximum reviewed session budget,
+  an eight-hour window and at most one active rehearsal EKS environment.
+- Preserve both create confirmations and reject nonempty state, Terraform
+  destroy/replacement actions, moving main, unknown discovery and remote fault
+  replay.
+- Order EKS creation, API readiness, Argo CD bootstrap, Root deployment,
+  qualification, evidence preservation, separate teardown and residual audit.
+- Keep every live command and environment action blocked until a separately
+  reviewed `.3.6.1` executor is implemented.
+
 ## v0.11.9.3.5.1
 
 - Record the successful read-only aws-dev preflight on exact protected-main

@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.11.9.3.5.1
+
+- Record the successful read-only aws-dev preflight on exact protected-main
+  commit `cd5aac1f2ab4` with an empty rehearsal-cluster inventory.
+- Record zero local dev Terraform resource blocks and instances, with no
+  unmanaged or partial environment state.
+- Pin only SHA-256 fingerprints and `0700`/`0600` modes for private evidence;
+  keep the raw plan, result and AWS account identity outside the repository.
+- Record the two completed AWS reads and explicitly retain zero Terraform,
+  Kubernetes, Argo CD, creation, traffic, fault, teardown or promotion action.
+- Require a separate reviewed, billable aws-dev creation plan; applying and
+  validating this checkpoint performs no live operation.
+
 ## v0.11.9.3.5
 
 - Add a private aws-dev rehearsal plan bound to the post-implementation main

@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.5.1-aws-dev-live-rehearsal-preflight-execution` records the
+successful read-only preflight on protected main `cd5aac1f2ab4`: no rehearsal
+cluster was active, local dev state was empty, and the private plan/result are
+represented only by SHA-256 fingerprints and restrictive modes. It records
+the two permitted AWS reads, no mutation, and keeps creation unauthorized
+until a separate reviewed plan.
+Predecessor:
 `v0.11.9.3.5-aws-dev-live-rehearsal-preflight` adds a private-plan and
 read-only discovery gate before any billable aws-dev creation. It binds the
 post-merge main SHA, candidate identity, AWS account and region, inventories

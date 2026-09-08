@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "v0.11.9.3.5.1",
+  "version": "v0.11.9.3.5.1",
+  "predecessor": "v0.11.9.3.5",
+  "status": "aws-dev-live-rehearsal-read-only-preflight-executed-ready",
+  "goal": "Record the reviewed, read-only aws-dev preflight result without committing private AWS identity or raw evidence and retain a separate approval boundary before billable creation.",
+  "controlPlane": {
+    "branch": "main",
+    "commit": "cd5aac1f2ab4363fe05ac3507d2abe0a15f54422",
+    "pullRequestNumber": 75,
+    "pullRequestHeadCommit": "b0711ea76dbecbc1b9883a3b7fee8dc89dab696c",
+    "pullRequestBaseCommit": "1ede302a833074c567da89b15875c0ad3a8f2c69",
+    "mergedMainCommit": "cd5aac1f2ab4363fe05ac3507d2abe0a15f54422",
+    "mergedAt": "2026-09-08T10:45:31Z",
+    "successfulMainValidateRunId": "34217223349",
+    "successfulMainValidateConclusion": "success",
+    "supersededMainValidateRunId": "34217132194",
+    "supersededMainValidateConclusion": "cancelled",
+    "supersededBySameCommitConcurrency": true
+  },
+  "selectedCandidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "awsDevReleaseFileSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46"
+  },
+  "privateEvidence": {
+    "rawPlanCommitted": false,
+    "rawPreflightResultCommitted": false,
+    "awsAccountIdCommitted": false,
+    "planSha256": "56eef1a83217d9d5b2287ac295dcc0fa915313b3d23f3f494d20ab56b151a66b",
+    "preflightResultSha256": "ad91ef09cd481b9d32efbfb2fbe91ca8e552827bda369f063bf9e02fc499e068",
+    "planParentMode": "0700",
+    "evidenceDirectoryMode": "0700",
+    "planFileMode": "0600",
+    "preflightResultFileMode": "0600"
+  },
+  "preflightResult": {
+    "status": "ready-for-separate-aws-dev-create-approval",
+    "controlPlaneCommit": "cd5aac1f2ab4363fe05ac3507d2abe0a15f54422",
+    "region": "us-east-1",
+    "activeRehearsalClusters": [],
+    "blockedReason": null,
+    "checksPerformed": [
+      "private-plan-permissions",
+      "clean-exact-main",
+      "candidate-source-ancestry",
+      "aws-dev-release-identity",
+      "aws-caller-identity",
+      "eks-rehearsal-cluster-inventory",
+      "local-terraform-state-summary"
+    ],
+    "terraformStateSummary": {
+      "exists": true,
+      "resourceBlocks": 0,
+      "resourceInstances": 0,
+      "containsDevEksCluster": false
+    },
+    "mutationsPerformed": [],
+    "executionAuthorized": false,
+    "nextAction": "review-separate-create-approval"
+  },
+  "operationBoundary": {
+    "completedAwsReads": [
+      "sts get-caller-identity",
+      "eks list-clusters"
+    ],
+    "terraformCommandExecuted": false,
+    "terraformApplyExecuted": false,
+    "kubernetesCommandExecuted": false,
+    "argocdCommandExecuted": false,
+    "environmentCreated": false,
+    "trafficGenerated": false,
+    "remoteFaultReplayed": false,
+    "teardownExecuted": false,
+    "awsTestPromotionExecuted": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6-aws-dev-live-rehearsal-create-plan"
+}

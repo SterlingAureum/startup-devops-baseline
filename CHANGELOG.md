@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.11.9.3.5
+
+- Add a private aws-dev rehearsal plan bound to the post-implementation main
+  commit, exact accepted image identity, intended AWS account and region.
+- Add a read-only preflight that accepts only STS caller identity and EKS
+  cluster inventory calls; it invokes no Terraform, Kubernetes or Argo CD CLI.
+- Summarize the local dev Terraform state without emitting attributes, outputs
+  or credentials and refuse unmanaged, partial or existing environment state.
+- Enforce at most one rehearsal EKS environment and block while aws-test or
+  aws-prod is active.
+- Keep environment creation, runtime qualification, remote fault replay,
+  teardown and aws-test promotion separately controlled and unexecuted.
+
 ## v0.11.9.3.4
 
 - Record successful existing-image workflow run `34180004676`, reviewed PR 71

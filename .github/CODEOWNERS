@@ -411,6 +411,13 @@
 /scripts/validate-v0.11.9.3.4-existing-image-aws-dev-promotion-execution.sh @SterlingAureum
 /docs/V0.11.9.3.4_EXISTING_IMAGE_AWS_DEV_PROMOTION_EXECUTION.md @SterlingAureum
 /delivery/contracts/v0.11.9.3.4-existing-image-aws-dev-promotion-execution.json @SterlingAureum
+/scripts/check-v0.11.9.3.5-aws-dev-live-rehearsal-plan.py @SterlingAureum
+/scripts/preflight-v0.11.9.3.5-aws-dev-live-rehearsal.py @SterlingAureum
+/scripts/test-v0.11.9.3.5-aws-dev-live-rehearsal-preflight.py @SterlingAureum
+/scripts/validate-v0.11.9.3.5-aws-dev-live-rehearsal-preflight.sh @SterlingAureum
+/docs/V0.11.9.3.5_AWS_DEV_LIVE_REHEARSAL_PREFLIGHT.md @SterlingAureum
+/delivery/contracts/v0.11.9.3.5-aws-dev-live-rehearsal-preflight.json @SterlingAureum
+/delivery/examples/v0.11.9.3.5-aws-dev-live-rehearsal-plan.json @SterlingAureum
 /docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum

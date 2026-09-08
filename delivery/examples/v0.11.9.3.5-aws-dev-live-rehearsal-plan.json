@@ -1,0 +1,44 @@
+{
+  "schema_version": "v0.11.9.3.5",
+  "mode": "read-only-preflight",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "target_environment": "aws-dev",
+  "control_plane_commit": "REPLACE_WITH_POST_V0.11.9.3.5_MAIN_COMMIT",
+  "trusted_git_ref": "refs/heads/main",
+  "review_reference": "REPLACE_WITH_REVIEW_REFERENCE",
+  "operator": "REPLACE_WITH_OPERATOR",
+  "recovery_owner": "REPLACE_WITH_RECOVERY_OWNER",
+  "evidence_directory": "/REPLACE_WITH_PRIVATE_EVIDENCE_DIRECTORY",
+  "aws_account_id": "REPLACE_WITH_12_DIGIT_AWS_ACCOUNT_ID",
+  "aws_region": "us-east-1",
+  "cluster_names": {
+    "aws_dev": "startup-devops-baseline-dev",
+    "aws_test": "startup-devops-baseline-test",
+    "aws_prod": "startup-devops-baseline-prod"
+  },
+  "terraform_state_path": "infra/terraform/aws/environments/dev/terraform.tfstate",
+  "candidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "source_commit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflow_run_id": "34070524953",
+    "release_id": "demo-api-cf0a6bcbc466-cdffd3d71763"
+  },
+  "cost_control": {
+    "maximum_active_rehearsal_eks_environments": 1,
+    "other_environment_cluster_allowed": false,
+    "require_empty_dev_state_for_create": true,
+    "automatic_teardown": false,
+    "teardown_requires_separate_approval": true
+  },
+  "operation_boundary": {
+    "requested_action": "preflight-only",
+    "aws_reads_only": true,
+    "terraform_command_allowed": false,
+    "kubernetes_command_allowed": false,
+    "argocd_command_allowed": false,
+    "environment_creation_allowed": false,
+    "remote_fault_replay_allowed": false
+  }
+}

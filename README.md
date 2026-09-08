@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.5-aws-dev-live-rehearsal-preflight` adds a private-plan and
+read-only discovery gate before any billable aws-dev creation. It binds the
+post-merge main SHA, candidate identity, AWS account and region, inventories
+only the three rehearsal EKS names, summarizes local Terraform state without
+emitting attributes, and always leaves execution unauthorized.
+Predecessor:
 `v0.11.9.3.4-existing-image-aws-dev-promotion-execution` records successful
 existing-image workflow run `34180004676`, reviewed values-only PR 71 and its
 protected-main merge `071e32914a30`. aws-dev now declares the exact locally

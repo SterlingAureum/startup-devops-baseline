@@ -600,6 +600,10 @@ Incremental scope:
       allowed aws-dev successor, and rejects the incidental `sha-6013688`
       promotion. It repairs the historical release fingerprint for that one
       selected successor without dispatching a workflow or accessing AWS.
+      - v0.11.9.3.3.1 repairs the earlier local-only image validator after PR
+        71 exposed its permanent all-AWS absence assertion. aws-dev now reuses
+        the single selected-successor allowlist while aws-test and aws-prod
+        remain unchanged; the promotion PR stays held until repair review.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

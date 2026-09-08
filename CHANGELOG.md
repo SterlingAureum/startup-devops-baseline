@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.11.9.3.4
+
+- Record successful existing-image workflow run `34180004676`, reviewed PR 71
+  and protected-main merge commit `071e32914a30`.
+- Pin the final aws-dev release-file SHA-256 and complete `sha-cf0a6bc`
+  repository, digest, source, workflow and release identity.
+- Confirm PR 71 changed only the aws-dev release file while aws-test and
+  aws-prod retain their prior immutable fingerprints.
+- Record successful post-merge validate and release-orchestrator runs and the
+  absence of a recursive image build for the release-only merge.
+- Keep AWS creation, Argo CD reconciliation, runtime qualification, source
+  evidence and aws-test promotion explicitly unexecuted.
+
 ## v0.11.9.3.3.2
 
 - Repair the v0.11.9.3.0 all-AWS candidate-absence assertion exposed by the

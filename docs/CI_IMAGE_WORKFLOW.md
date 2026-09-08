@@ -169,6 +169,16 @@ branch must have the exact derived tree or the run fails without overwriting it.
 The workflow creates or reuses a PR and never merges it. It has no AWS, EKS,
 Kubernetes or Argo CD access.
 
+### v0.11.9.3.4 execution record
+
+Existing-image workflow run `34180004676` reused original image run
+`34070524953` and created release-only PR 71. After review and successor-chain
+validation, PR 71 merged as protected-main commit `071e32914a30`. The resulting
+aws-dev declaration contains the exact `sha-cf0a6bc` digest and source identity.
+Post-merge validation and release orchestration succeeded; the release-only
+change did not trigger image publication. This is desired-state evidence only,
+not AWS deployment or runtime qualification evidence.
+
 ## Ordered Environment Promotion
 
 `.github/workflows/demo-api-promote-environment.yaml` is manual-only and must

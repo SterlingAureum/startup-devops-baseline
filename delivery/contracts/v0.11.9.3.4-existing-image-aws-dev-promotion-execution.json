@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "v0.11.9.3.4",
+  "version": "v0.11.9.3.4",
+  "predecessor": "v0.11.9.3.3.2",
+  "status": "existing-image-aws-dev-promotion-merged-runtime-not-qualified",
+  "implementationBaselineCommit": "071e32914a304f6e3ca006f0f60f54b21b5d810d",
+  "goal": "Close the reviewed build-once handoff by recording the exact existing-image workflow, values-only aws-dev pull request, protected-main merge, immutable release identity, and successful post-merge checks without claiming AWS runtime qualification.",
+  "existingImageHandoff": {
+    "workflow": ".github/workflows/demo-api-promote-existing-image.yaml",
+    "workflowRunId": "34180004676",
+    "workflowHeadCommit": "03e39f3416a8f5e368d0cda497487376ec575d52",
+    "workflowConclusion": "success",
+    "imageRebuilt": false,
+    "promotionPullRequestNumber": 71,
+    "promotionPullRequestUrl": "https://github.com/SterlingAureum/startup-devops-baseline/pull/71",
+    "promotionBranch": "release/demo-api-sha-cf0a6bc",
+    "initialPromotionHeadCommit": "e97072019374d0137388a8cfb35332a3fd8d81c2",
+    "finalPromotionHeadCommit": "2353977e3efa1f202a0bfe3cd1c2b9f6a4b505d2",
+    "finalPromotionBaseCommit": "7a71662f8032219372f1e078298cd08338e8f995",
+    "changedPaths": [
+      "apps/demo-api/helm/values/releases/aws-dev.yaml"
+    ],
+    "pullRequestChecksSuccessful": true,
+    "merged": true,
+    "mergedAt": "2026-09-08T07:13:30Z",
+    "mergeCommit": "071e32914a304f6e3ca006f0f60f54b21b5d810d",
+    "promotionHeadContainedInMain": true
+  },
+  "selectedCandidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceRepository": "SterlingAureum/startup-devops-baseline",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "sourceWorkflowRunId": "34070524953",
+    "applicationVersion": "sha-cf0a6bc",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "awsDevReleaseFileSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46"
+  },
+  "environmentBoundary": {
+    "awsDevDesiredStateUpdated": true,
+    "awsTestReleaseFileSha256": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22",
+    "awsProdReleaseFileSha256": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22",
+    "candidatePresentInAwsTest": false,
+    "candidatePresentInAwsProd": false,
+    "maximumActiveEksEnvironments": 1,
+    "awsEnvironmentCreated": false,
+    "argoCdReconciliationObserved": false,
+    "runtimeQualificationExecuted": false,
+    "sourceRuntimeEvidenceRecorded": false,
+    "awsTestPromotionAllowed": false
+  },
+  "postMergeMain": {
+    "commit": "071e32914a304f6e3ca006f0f60f54b21b5d810d",
+    "validateRunId": "34198278046",
+    "validateConclusion": "success",
+    "releaseOrchestratorRunId": "34198278111",
+    "releaseOrchestratorConclusion": "success",
+    "imagePublishRunObserved": false,
+    "releaseOnlyMergeExcludedFromImagePublishPaths": true
+  },
+  "producerExecution": {
+    "existingImageWorkflowDispatched": true,
+    "promotionPullRequestCreated": true,
+    "promotionPullRequestMerged": true,
+    "selectedCandidateWrittenToAwsDev": true,
+    "imageRebuilt": false,
+    "awsAccessed": false,
+    "clusterAccessed": false,
+    "runtimeQualificationExecuted": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.5-aws-dev-live-rehearsal-preflight"
+}

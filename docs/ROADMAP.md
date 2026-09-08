@@ -617,6 +617,11 @@ Incremental scope:
       billable creation. It binds the later reviewed main SHA, account, region,
       release identity, rehearsal-cluster inventory and redacted local-state
       summary while keeping every write and runtime claim unauthorized.
+      - v0.11.9.3.5.1 records the successful preflight on protected main
+        `cd5aac1f2ab4`: all rehearsal clusters are absent and local dev state is
+        empty. Only private evidence fingerprints and restrictive file modes
+        are committed; billable creation remains blocked behind a separate
+        reviewed create plan.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

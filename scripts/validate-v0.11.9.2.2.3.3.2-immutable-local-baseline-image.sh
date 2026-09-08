@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
+AWS_DEV_RELEASE_FILE="${AWS_DEV_RELEASE_FILE:-apps/demo-api/helm/values/releases/aws-dev.yaml}"
 
 python3 - <<'PY'
 import json
@@ -74,7 +75,6 @@ assert restore.index('derive-demo-api-release-id.py') < restore.index(
     'exec "${ROOT_DIR}/scripts/restore-local-gitops-baseline.sh"')
 
 for release_file in (
-    'apps/demo-api/helm/values/releases/aws-dev.yaml',
     'apps/demo-api/helm/values/releases/aws-test.yaml',
     'apps/demo-api/helm/values/releases/aws-prod.yaml',
 ):
@@ -82,6 +82,18 @@ for release_file in (
     assert contract['image']['digest'] not in text, release_file
     assert contract['source']['commit'] not in text, release_file
 PY
+
+aws_dev_release_state="$(
+  scripts/check-v0.11.9.3.2-release-successor.py \
+    --release-file "${AWS_DEV_RELEASE_FILE}" \
+    --readiness-contract delivery/contracts/v0.11.9.3.2-protected-main-integration-readiness.json \
+    --successor-contract delivery/contracts/v0.11.9.3.3-reviewed-main-integration.json
+)"
+if [[ "${aws_dev_release_state}" != "historical-baseline" && \
+      "${aws_dev_release_state}" != "reviewed-selected-candidate" ]]; then
+  echo "Unexpected aws-dev release successor state: ${aws_dev_release_state}" >&2
+  exit 1
+fi
 
 release_id="$(
   python3 scripts/derive-demo-api-release-id.py \

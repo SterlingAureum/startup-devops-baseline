@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "v0.11.9.3.3.1",
+  "version": "v0.11.9.3.3.1",
+  "predecessor": "v0.11.9.3.3",
+  "status": "historical-local-identity-validator-repaired-promotion-pr-held",
+  "implementationBaselineCommit": "03e39f3416a8f5e368d0cda497487376ec575d52",
+  "goal": "Make the historical local-baseline identity validator accept only the reviewed aws-dev successor while preserving the exact local image and immutable aws-test/aws-prod boundaries.",
+  "observedFailure": {
+    "existingImageWorkflowRunId": "34180004676",
+    "existingImageWorkflowConclusion": "success",
+    "existingImageWorkflowHeadCommit": "03e39f3416a8f5e368d0cda497487376ec575d52",
+    "promotionPullRequestNumber": 71,
+    "promotionPullRequestUrl": "https://github.com/SterlingAureum/startup-devops-baseline/pull/71",
+    "promotionBranch": "release/demo-api-sha-cf0a6bc",
+    "promotionHeadCommit": "e97072019374d0137388a8cfb35332a3fd8d81c2",
+    "promotionBaseCommit": "03e39f3416a8f5e368d0cda497487376ec575d52",
+    "validationWorkflowRunId": "34180043793",
+    "releaseCurrentnessConclusion": "success",
+    "qualityGatesConclusion": "failure",
+    "failingValidator": "scripts/validate-v0.11.9.2.2.3.3.2-immutable-local-baseline-image.sh",
+    "failure": "The historical local-only checkpoint rejected its accepted image digest and source commit in every AWS release file, including the later reviewed aws-dev successor.",
+    "promotionPullRequestMerged": false
+  },
+  "repair": {
+    "localDefaultValuesRemainExact": true,
+    "awsDevValidator": "scripts/check-v0.11.9.3.2-release-successor.py",
+    "awsDevAllowedStates": [
+      "historical-baseline",
+      "reviewed-selected-candidate"
+    ],
+    "selectedCandidateTag": "sha-cf0a6bc",
+    "selectedCandidateDigest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "selectedCandidateSourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "selectedCandidateWorkflowRunId": "34070524953",
+    "incidentalMainTagRejected": "sha-6013688",
+    "incidentalMainDigestRejected": "sha256:445f8e432cd0848a615f99a123a8305262255bd4a6082675a58744742660b02d",
+    "awsTestCandidateForbidden": true,
+    "awsProdCandidateForbidden": true,
+    "partialOrUnknownIdentityForbidden": true
+  },
+  "scope": {
+    "releaseValuesChanged": false,
+    "workflowChanged": false,
+    "promotionPullRequestChanged": false,
+    "workflowDispatched": false,
+    "imageRebuilt": false,
+    "awsAccessed": false,
+    "clusterAccessed": false,
+    "localRuntimeChanged": false
+  },
+  "promotionHold": {
+    "pullRequestNumber": 71,
+    "keepOpen": true,
+    "mergeBeforeRepairMainAllowed": false,
+    "rerunBeforeRepairMainAllowed": false,
+    "updateBranchBeforeRepairMainAllowed": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.4-existing-image-aws-dev-promotion-execution"
+}

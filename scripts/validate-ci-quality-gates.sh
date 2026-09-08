@@ -311,6 +311,9 @@ echo "==> Validating v0.11.9.3.2 protected-main integration readiness"
 echo "==> Validating v0.11.9.3.3 reviewed main integration"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.3-reviewed-main-integration.sh"
 
+echo "==> Validating v0.11.9.3.3.1 immutable local AWS successor repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.3.1-immutable-local-aws-successor-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.3.1-immutable-local-aws-successor-repair` makes the historical
+local-only image validator accept the single reviewed aws-dev successor while
+continuing to reject that identity from aws-test/aws-prod and rejecting the
+incidental `sha-6013688`. It changes no release file or workflow and keeps PR
+71 held until the repair reaches protected main.
+Predecessor:
 `v0.11.9.3.3-reviewed-main-integration` records protected-main merge commit
 `6013688a384c`, keeps the locally qualified `sha-cf0a6bc` image as the only
 allowed aws-dev successor, and rejects the incidental unqualified

@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.9.3.3.1
+
+- Repair the historical local-baseline validator after it rejected the exact
+  reviewed `sha-cf0a6bc` successor in aws-dev PR 71.
+- Delegate aws-dev acceptance to the existing v0.11.9.3.3 allowlist while
+  retaining strict local, aws-test and aws-prod identity boundaries.
+- Exercise the original release file, the accepted successor and the rejected
+  incidental `sha-6013688` image through the historical validation entrypoint.
+- Change no release values or workflow and perform no PR mutation, workflow
+  dispatch, AWS access or cluster operation.
+
 ## v0.11.9.3.3
 
 - Record reviewed PR 68 and protected-main merge commit `6013688a384c`, with

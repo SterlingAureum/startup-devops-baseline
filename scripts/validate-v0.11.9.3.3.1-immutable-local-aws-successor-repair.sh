@@ -7,7 +7,7 @@ HISTORICAL_VALIDATOR="${ROOT_DIR}/scripts/validate-v0.11.9.2.2.3.3.2-immutable-l
 READINESS_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.2-protected-main-integration-readiness.json"
 SUCCESSOR_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.3-reviewed-main-integration.json"
 SUCCESSOR_CHECK="${ROOT_DIR}/scripts/check-v0.11.9.3.2-release-successor.py"
-AWS_DEV_RELEASE_FILE="${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml"
+AWS_DEV_RELEASE_FILE="${AWS_DEV_RELEASE_FILE:-${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml}"
 
 for command_name in bash python3; do
   command -v "${command_name}" >/dev/null 2>&1 || {
@@ -19,7 +19,6 @@ done
 python3 - "${ROOT_DIR}" "${CONTRACT}" <<'PY'
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 import sys
@@ -81,8 +80,9 @@ for environment in ("aws-test", "aws-prod"):
     assert repair["selectedCandidateSourceCommit"] not in release
 
 readiness = json.loads((root / "delivery/contracts/v0.11.9.3.2-protected-main-integration-readiness.json").read_text())
-current_aws_dev = (root / "apps/demo-api/helm/values/releases/aws-dev.yaml").read_bytes()
-assert hashlib.sha256(current_aws_dev).hexdigest() == readiness["releaseFiles"]["apps/demo-api/helm/values/releases/aws-dev.yaml"]
+assert readiness["releaseFiles"]["apps/demo-api/helm/values/releases/aws-dev.yaml"] == (
+    "e13937cd11df5c4625fe0de50808b9d74e14503e3b6021900a8f8ae8f0e87d80"
+)
 
 historical = (root / failure["failingValidator"]).read_text()
 for marker in (
@@ -113,6 +113,18 @@ for relative, marker in (
 
 print("v0.11.9.3.3.1 historical validator boundary and no-runtime scope passed.")
 PY
+
+current_aws_dev_state="$(
+  "${SUCCESSOR_CHECK}" \
+    --release-file "${AWS_DEV_RELEASE_FILE}" \
+    --readiness-contract "${READINESS_CONTRACT}" \
+    --successor-contract "${SUCCESSOR_CONTRACT}"
+)"
+if [[ "${current_aws_dev_state}" != "historical-baseline" && \
+      "${current_aws_dev_state}" != "reviewed-selected-candidate" ]]; then
+  echo "Unexpected current aws-dev release state: ${current_aws_dev_state}" >&2
+  exit 1
+fi
 
 FIXTURE_DIR="$(mktemp -d)"
 trap 'rm -rf "${FIXTURE_DIR}"' EXIT

@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.3.2-remote-successor-chain-repair` removes the remaining permanent
+pre-promotion assumptions from the `.3.0` and `.3.3.1` validators. Both now
+reuse the one exact aws-dev successor allowlist, while aws-test/aws-prod and
+the rejection of `sha-6013688` remain strict. It changes no workflow or release
+file and keeps PR 71 held for repaired-main validation.
+Predecessor:
 `v0.11.9.3.3.1-immutable-local-aws-successor-repair` makes the historical
 local-only image validator accept the single reviewed aws-dev successor while
 continuing to reject that identity from aws-test/aws-prod and rejecting the

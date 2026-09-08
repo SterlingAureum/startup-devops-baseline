@@ -604,6 +604,10 @@ Incremental scope:
         71 exposed its permanent all-AWS absence assertion. aws-dev now reuses
         the single selected-successor allowlist while aws-test and aws-prod
         remain unchanged; the promotion PR stays held until repair review.
+      - v0.11.9.3.3.2 completes the inherited successor-chain repair after the
+        `.3.0` design gate exposed the same stale all-AWS assumption and the
+        `.3.3.1` regression still pinned the pre-promotion file. Both now reuse
+        the exact allowlist, with a repository-wide stale-pattern scan.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

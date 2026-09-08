@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.11.9.3.3.2
+
+- Repair the v0.11.9.3.0 all-AWS candidate-absence assertion exposed by the
+  updated existing-image promotion PR.
+- Remove the remaining pre-promotion aws-dev fingerprint assertion from the
+  v0.11.9.3.3.1 regression validator.
+- Route both historical entrypoints through the single exact aws-dev successor
+  allowlist and scan all v0.11 validators for the known stale patterns.
+- Retain immutable aws-test/aws-prod declarations and reject `sha-6013688` and
+  every partial or unknown identity.
+- Change no workflow or release file and perform no PR, AWS or cluster action.
+
 ## v0.11.9.3.3.1
 
 - Repair the historical local-baseline validator after it rejected the exact

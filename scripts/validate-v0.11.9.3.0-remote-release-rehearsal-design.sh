@@ -4,6 +4,10 @@ set -Eeuo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.0-remote-release-rehearsal-design.json"
 TEMPLATE="${ROOT_DIR}/delivery/examples/v0.11.9.3.0-remote-release-rehearsal-plan.json"
+AWS_DEV_RELEASE_FILE="${AWS_DEV_RELEASE_FILE:-${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml}"
+READINESS_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.2-protected-main-integration-readiness.json"
+SUCCESSOR_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.3-reviewed-main-integration.json"
+SUCCESSOR_CHECK="${ROOT_DIR}/scripts/check-v0.11.9.3.2-release-successor.py"
 
 for command_name in bash python3; do
   command -v "${command_name}" >/dev/null 2>&1 || {
@@ -97,7 +101,7 @@ assert prod["runtime_mutations"] is False
 assert prod["automatic_deployment"] is False
 assert prod["prod_qualified"] is False
 
-for environment in ("aws-dev", "aws-test", "aws-prod"):
+for environment in ("aws-test", "aws-prod"):
     release = (root / f"apps/demo-api/helm/values/releases/{environment}.yaml").read_text()
     assert candidate["digest"] not in release
 
@@ -122,6 +126,18 @@ for relative, marker in (
 
 print("v0.11.9.3.0 candidate, main boundary, environment order, local-failure disposition, and cost contracts passed.")
 PY
+
+aws_dev_release_state="$(
+  "${SUCCESSOR_CHECK}" \
+    --release-file "${AWS_DEV_RELEASE_FILE}" \
+    --readiness-contract "${READINESS_CONTRACT}" \
+    --successor-contract "${SUCCESSOR_CONTRACT}"
+)"
+if [[ "${aws_dev_release_state}" != "historical-baseline" && \
+      "${aws_dev_release_state}" != "reviewed-selected-candidate" ]]; then
+  echo "Unexpected aws-dev release successor state: ${aws_dev_release_state}" >&2
+  exit 1
+fi
 
 PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/test-v0.11.9.3.0-remote-release-rehearsal-plan.py"

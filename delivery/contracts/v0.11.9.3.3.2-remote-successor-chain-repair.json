@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "v0.11.9.3.3.2",
+  "version": "v0.11.9.3.3.2",
+  "predecessor": "v0.11.9.3.3.1",
+  "status": "remaining-remote-successor-chain-guards-repaired-promotion-pr-held",
+  "implementationBaselineCommit": "6f259e229a8f653e1a567fe809ed58926d31bbb4",
+  "goal": "Remove the remaining permanent pre-promotion assumptions from the v0.11 validation chain while retaining one exact allowlisted aws-dev successor and immutable aws-test/aws-prod identities.",
+  "observedFailure": {
+    "promotionPullRequestNumber": 71,
+    "promotionBranch": "release/demo-api-sha-cf0a6bc",
+    "observedAfterMainCommit": "6f259e229a8f653e1a567fe809ed58926d31bbb4",
+    "failingValidator": "scripts/validate-v0.11.9.3.0-remote-release-rehearsal-design.sh",
+    "embeddedPythonLine": 87,
+    "failedAssertion": "candidate digest absent from every AWS release file",
+    "promotionPullRequestMerged": false
+  },
+  "chainAudit": {
+    "repairedValidators": [
+      "scripts/validate-v0.11.9.3.0-remote-release-rehearsal-design.sh",
+      "scripts/validate-v0.11.9.3.3.1-immutable-local-aws-successor-repair.sh"
+    ],
+    "sharedAwsDevAllowlist": "scripts/check-v0.11.9.3.2-release-successor.py",
+    "forbiddenPermanentAssertions": [
+      "candidate digest absent from aws-dev after reviewed promotion",
+      "current aws-dev file equals the pre-promotion fingerprint"
+    ],
+    "awsDevAllowedStates": [
+      "historical-baseline",
+      "reviewed-selected-candidate"
+    ],
+    "awsTestAndAwsProdRemainPrePromotion": true,
+    "incidentalMainImageRemainsRejected": true,
+    "staticRegressionScanAdded": true
+  },
+  "selectedCandidate": {
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953"
+  },
+  "rejectedCandidate": {
+    "tag": "sha-6013688",
+    "digest": "sha256:445f8e432cd0848a615f99a123a8305262255bd4a6082675a58744742660b02d",
+    "sourceCommit": "6013688a384c4e39a5b2b79d1b95bb29d00725de",
+    "workflowRunId": "34124828745"
+  },
+  "scope": {
+    "releaseValuesChanged": false,
+    "workflowChanged": false,
+    "promotionPullRequestChanged": false,
+    "workflowDispatched": false,
+    "imageRebuilt": false,
+    "awsAccessed": false,
+    "clusterAccessed": false,
+    "localRuntimeChanged": false
+  },
+  "promotionHold": {
+    "pullRequestNumber": 71,
+    "keepOpen": true,
+    "mergeBeforeRepairMainAllowed": false,
+    "rerunHistoricalFailureAllowed": false,
+    "nextUpdateOnlyAfterRepairMain": true
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.4-existing-image-aws-dev-promotion-execution"
+}

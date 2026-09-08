@@ -405,6 +405,9 @@
 /scripts/validate-v0.11.9.3.3.1-immutable-local-aws-successor-repair.sh @SterlingAureum
 /docs/V0.11.9.3.3.1_IMMUTABLE_LOCAL_AWS_SUCCESSOR_REPAIR.md @SterlingAureum
 /delivery/contracts/v0.11.9.3.3.1-immutable-local-aws-successor-repair.json @SterlingAureum
+/scripts/validate-v0.11.9.3.3.2-remote-successor-chain-repair.sh @SterlingAureum
+/docs/V0.11.9.3.3.2_REMOTE_SUCCESSOR_CHAIN_REPAIR.md @SterlingAureum
+/delivery/contracts/v0.11.9.3.3.2-remote-successor-chain-repair.json @SterlingAureum
 /docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum

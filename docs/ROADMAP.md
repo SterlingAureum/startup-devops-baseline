@@ -613,6 +613,10 @@ Incremental scope:
       aws-dev now declares the exact locally qualified `sha-cf0a6bc` identity;
       aws-test/aws-prod remain unchanged, no image was rebuilt, and live
       aws-dev qualification remains a separate checkpoint.
+    - v0.11.9.3.5 inserts a private-plan, read-only aws-dev preflight before
+      billable creation. It binds the later reviewed main SHA, account, region,
+      release identity, rehearsal-cluster inventory and redacted local-state
+      summary while keeping every write and runtime claim unauthorized.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

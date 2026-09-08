@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "v0.11.9.3.5",
+  "version": "v0.11.9.3.5",
+  "predecessor": "v0.11.9.3.4",
+  "status": "aws-dev-live-rehearsal-read-only-preflight-implemented-not-executed",
+  "implementationBaselineCommit": "1ede302a833074c567da89b15875c0ad3a8f2c69",
+  "goal": "Insert a fail-closed, read-only operator preflight between the reviewed aws-dev desired-state handoff and every billable AWS creation or runtime action.",
+  "implementationBaselineEvidence": {
+    "pullRequestNumber": 74,
+    "pullRequestUrl": "https://github.com/SterlingAureum/startup-devops-baseline/pull/74",
+    "pullRequestHeadCommit": "6dca1cd04ea19aa0cb9cb12e5d023f83ff50fc01",
+    "pullRequestBaseCommit": "071e32914a304f6e3ca006f0f60f54b21b5d810d",
+    "mergedMainCommit": "1ede302a833074c567da89b15875c0ad3a8f2c69",
+    "mergedAt": "2026-09-08T09:11:53Z",
+    "mainValidateRunId": "34208660392",
+    "mainValidateConclusion": "success",
+    "awsDevReleaseFileSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46"
+  },
+  "privatePlan": {
+    "template": "delivery/examples/v0.11.9.3.5-aws-dev-live-rehearsal-plan.json",
+    "checker": "scripts/check-v0.11.9.3.5-aws-dev-live-rehearsal-plan.py",
+    "mode": "read-only-preflight",
+    "fileMode": "0600",
+    "evidenceDirectoryOutsideRepository": true,
+    "evidenceDirectoryPrivate": true,
+    "postImplementationMainCommitRequired": true,
+    "rawCredentialsAllowed": false
+  },
+  "preflight": {
+    "entrypoint": "scripts/preflight-v0.11.9.3.5-aws-dev-live-rehearsal.py",
+    "confirmationEnvironmentVariable": "CONFIRM_AWS_DEV_PREFLIGHT",
+    "confirmationValue": "observe-reviewed-aws-dev-rehearsal",
+    "requiredGitBranch": "main",
+    "cleanWorktreeRequired": true,
+    "headMustEqualOriginMainAndPlan": true,
+    "implementationBaselineMustBeAncestor": true,
+    "imageSourceCommitMustBeAncestor": true,
+    "awsDevReleaseIdentityMustMatch": true,
+    "readOnlyAwsCommands": [
+      "sts get-caller-identity",
+      "eks list-clusters"
+    ],
+    "terraformStateInspection": "direct-redacted-summary-no-terraform-command",
+    "terraformStatePath": "infra/terraform/aws/environments/dev/terraform.tfstate",
+    "terraformStateAttributesEmitted": false,
+    "mutationsPerformed": []
+  },
+  "inventoryPolicy": {
+    "clusterNames": {
+      "awsDev": "startup-devops-baseline-dev",
+      "awsTest": "startup-devops-baseline-test",
+      "awsProd": "startup-devops-baseline-prod"
+    },
+    "maximumActiveRehearsalEksEnvironments": 1,
+    "readyState": "no-rehearsal-cluster-and-empty-or-absent-dev-state",
+    "existingDevState": "blocked-requires-separate-resume-review",
+    "partialState": "blocked-preserve-state-and-investigate",
+    "testOrProdActive": "blocked-preserve-and-complete-current-environment",
+    "unmanagedDev": "blocked-no-create",
+    "deleteTerraformStateAllowed": false
+  },
+  "selectedCandidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763"
+  },
+  "operationBoundary": {
+    "awsReadsOnly": true,
+    "terraformCommandAllowed": false,
+    "terraformApplyAllowed": false,
+    "kubernetesCommandAllowed": false,
+    "argocdCommandAllowed": false,
+    "environmentCreationAllowed": false,
+    "trafficGenerationAllowed": false,
+    "remoteFaultReplayAllowed": false,
+    "automaticTeardownAllowed": false,
+    "awsTestPromotionAllowed": false
+  },
+  "producerExecution": {
+    "livePreflightExecuted": false,
+    "awsAccessed": false,
+    "clusterAccessed": false,
+    "terraformStateRead": false,
+    "environmentCreated": false,
+    "runtimeQualificationExecuted": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.5.1-aws-dev-live-rehearsal-preflight-execution"
+}

@@ -320,6 +320,9 @@ echo "==> Validating v0.11.9.3.3.2 remote successor chain repair"
 echo "==> Validating v0.11.9.3.4 existing-image aws-dev promotion execution"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.4-existing-image-aws-dev-promotion-execution.sh"
 
+echo "==> Validating v0.11.9.3.5 aws-dev live-rehearsal preflight"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.5-aws-dev-live-rehearsal-preflight.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

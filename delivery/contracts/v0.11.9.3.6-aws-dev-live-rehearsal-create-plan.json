@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "v0.11.9.3.6",
+  "version": "v0.11.9.3.6",
+  "predecessor": "v0.11.9.3.5.1",
+  "status": "aws-dev-live-rehearsal-create-plan-implemented-live-create-blocked",
+  "implementationBaselineCommit": "05270a186fcf8aa5b82ff4d1e44ea467f4a1498d",
+  "goal": "Define a private, fail-closed aws-dev creation plan with explicit cost, duration, GitOps bootstrap, evidence, failure-stop and separately approved teardown boundaries.",
+  "preflightEvidence": {
+    "contract": "delivery/contracts/v0.11.9.3.5.1-aws-dev-live-rehearsal-preflight-execution.json",
+    "controlPlaneCommit": "cd5aac1f2ab4363fe05ac3507d2abe0a15f54422",
+    "planSha256": "56eef1a83217d9d5b2287ac295dcc0fa915313b3d23f3f494d20ab56b151a66b",
+    "resultSha256": "ad91ef09cd481b9d32efbfb2fbe91ca8e552827bda369f063bf9e02fc499e068",
+    "status": "ready-for-separate-aws-dev-create-approval",
+    "activeRehearsalClusters": [],
+    "terraformResourceBlocks": 0,
+    "terraformResourceInstances": 0,
+    "freshPreflightRequiredAfterImplementationMerge": true
+  },
+  "privatePlan": {
+    "template": "delivery/examples/v0.11.9.3.6-aws-dev-live-rehearsal-create-plan.json",
+    "checker": "scripts/check-v0.11.9.3.6-aws-dev-live-rehearsal-create-plan.py",
+    "mode": "offline-create-plan-only",
+    "fileMode": "0600",
+    "outsideRepository": true,
+    "postImplementationMainCommitRequired": true,
+    "rawCredentialsAllowed": false
+  },
+  "selectedCandidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "awsDevReleaseFileSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46"
+  },
+  "target": {
+    "environment": "aws-dev",
+    "region": "us-east-1",
+    "clusterName": "startup-devops-baseline-dev",
+    "terraformDirectory": "infra/terraform/aws/environments/dev",
+    "terraformStatePath": "infra/terraform/aws/environments/dev/terraform.tfstate",
+    "createEntrypoint": "scripts/apply-aws-dev.sh",
+    "gitopsBootstrapEntrypoint": "scripts/bootstrap-eks-argocd.sh",
+    "rootDeployEntrypoint": "scripts/deploy-aws-dev-root-app.sh",
+    "destroyEntrypoint": "scripts/destroy-aws-dev.sh",
+    "residualCostAuditEntrypoint": "scripts/validate-aws-cost-cleanup.sh"
+  },
+  "creationControls": {
+    "environmentConfirmationVariable": "CONFIRM_AWS_DEV_APPLY",
+    "environmentConfirmationValue": "create-ephemeral-aws-dev",
+    "expectedAccountVariable": "EXPECTED_AWS_ACCOUNT_ID",
+    "interactiveTerraformPlanConfirmation": "apply-aws-dev",
+    "terraformPlanReplacementAllowed": false,
+    "terraformPlanDestroyAllowed": false,
+    "nonemptyStateAllowed": false,
+    "movingMainAllowed": false
+  },
+  "costControl": {
+    "currency": "USD",
+    "maximumActiveRehearsalEksEnvironments": 1,
+    "maximumSessionHours": 8,
+    "maximumReviewedSessionBudgetUsd": 50,
+    "reviewedEstimateRequired": true,
+    "reviewedSessionBudgetRequired": true,
+    "automaticBudgetEnforcement": false,
+    "automaticTeardown": false,
+    "teardownRequiresSeparateApproval": true,
+    "deadlineStopsQualificationAndRequiresReview": true,
+    "residualCostAuditRequired": true
+  },
+  "sequence": [
+    "fresh-read-only-preflight",
+    "separate-live-create-approval",
+    "guarded-terraform-plan",
+    "interactive-plan-confirmation",
+    "terraform-apply",
+    "eks-api-readiness",
+    "argocd-bootstrap",
+    "root-application-deploy",
+    "aws-dev-runtime-observability-qualification",
+    "preserve-private-evidence",
+    "separate-teardown-review",
+    "destroy-and-residual-cost-audit"
+  ],
+  "operationBoundary": {
+    "planValidationOnly": true,
+    "awsCommandAllowed": false,
+    "terraformCommandAllowed": false,
+    "kubernetesCommandAllowed": false,
+    "argocdCommandAllowed": false,
+    "environmentCreationAllowed": false,
+    "trafficGenerationAllowed": false,
+    "remoteFaultReplayAllowed": false,
+    "automaticTeardownAllowed": false,
+    "awsTestPromotionAllowed": false
+  },
+  "producerExecution": {
+    "privatePlanPopulated": false,
+    "freshPreflightExecuted": false,
+    "awsAccessed": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "clusterAccessed": false,
+    "environmentCreated": false,
+    "gitopsBootstrapped": false,
+    "runtimeQualificationExecuted": false,
+    "teardownExecuted": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.1-aws-dev-live-rehearsal-create-executor"
+}

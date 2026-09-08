@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6-aws-dev-live-rehearsal-create-plan` adds an offline-only private
+aws-dev creation-plan contract. It requires a fresh post-merge preflight,
+exact candidate and main identities, two Terraform confirmations, a reviewed
+current-price estimate, an eight-hour/one-environment ceiling, ordered GitOps
+bootstrap, failure-stop rules and separately approved teardown. Validation
+never executes the plan and always leaves creation unauthorized.
+Predecessor:
 `v0.11.9.3.5.1-aws-dev-live-rehearsal-preflight-execution` records the
 successful read-only preflight on protected main `cd5aac1f2ab4`: no rehearsal
 cluster was active, local dev state was empty, and the private plan/result are

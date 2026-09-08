@@ -622,6 +622,11 @@ Incremental scope:
         empty. Only private evidence fingerprints and restrictive file modes
         are committed; billable creation remains blocked behind a separate
         reviewed create plan.
+    - v0.11.9.3.6 implements that offline private create plan with a fresh
+      post-merge preflight, exact image/main identity, reviewed current-price
+      estimate, eight-hour/USD 50 ceiling, two create confirmations, ordered
+      GitOps bootstrap and separate teardown approval. Live creation remains
+      blocked until the `.3.6.1` executor review.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

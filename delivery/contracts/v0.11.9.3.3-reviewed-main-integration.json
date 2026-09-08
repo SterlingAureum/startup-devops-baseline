@@ -1,0 +1,96 @@
+{
+  "schemaVersion": "v0.11.9.3.3",
+  "version": "v0.11.9.3.3",
+  "predecessor": "v0.11.9.3.2",
+  "status": "reviewed-main-integrated-selected-existing-image-promotion-not-dispatched",
+  "implementationBaselineCommit": "6013688a384c4e39a5b2b79d1b95bb29d00725de",
+  "goal": "Record the reviewed v0.11 protected-main integration, preserve the runtime-qualified existing image as the only aws-dev successor, and reject the incidental unqualified main rebuild without touching AWS or release desired state.",
+  "mainIntegration": {
+    "pullRequestNumber": 68,
+    "pullRequestUrl": "https://github.com/SterlingAureum/startup-devops-baseline/pull/68",
+    "featureHeadCommit": "7192f28f947e9f1942cfc67d093dc00afa7a0755",
+    "preMergeMainCommit": "4cb8592fb02224551fc78f1cf6a5cf82ea869089",
+    "mergedMainCommit": "6013688a384c4e39a5b2b79d1b95bb29d00725de",
+    "mergedAt": "2026-09-07T12:58:53Z",
+    "featureContainedInMain": true,
+    "pullRequestMergeableBeforeMerge": "MERGEABLE",
+    "pullRequestMergeStateBeforeMerge": "CLEAN",
+    "pullRequestChecks": {
+      "terraform validate/validate": "SUCCESS",
+      "validate/demo-api release currentness": "SUCCESS",
+      "validate/quality-gates / quality-gates": "SUCCESS"
+    },
+    "mainPushRuns": {
+      "demo-api release orchestrator": "34124828650",
+      "terraform validate": "34124828437",
+      "validate": "34124828759",
+      "demo-api image publish": "34124828745"
+    },
+    "allObservedMainPushRunsSuccessful": true
+  },
+  "selectedCandidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceRepository": "SterlingAureum/startup-devops-baseline",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "localQualifiedRevision": 70,
+    "localAnalysisRuns": [
+      "demo-api-7557fdfb9b-70-2",
+      "demo-api-7557fdfb9b-70-5"
+    ],
+    "selectedForAwsDev": true,
+    "writtenToAwsDevReleaseFile": false
+  },
+  "incidentalMainBuild": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-6013688",
+    "digest": "sha256:445f8e432cd0848a615f99a123a8305262255bd4a6082675a58744742660b02d",
+    "sourceRepository": "SterlingAureum/startup-devops-baseline",
+    "sourceCommit": "6013688a384c4e39a5b2b79d1b95bb29d00725de",
+    "workflowRunId": "34124828745",
+    "releaseId": "demo-api-6013688a384c-445f8e432cd0",
+    "promotionPullRequestNumber": 69,
+    "promotionPullRequestUrl": "https://github.com/SterlingAureum/startup-devops-baseline/pull/69",
+    "promotionBranch": "release/demo-api-sha-6013688",
+    "promotionHeadCommit": "0fb0ccf94715b498f0ec2615386dbcf60a6e4094",
+    "observedPromotionState": "open-quality-gates-rejected",
+    "selectedForAwsDev": false,
+    "runtimeQualified": false,
+    "requiredDisposition": "close-without-merge"
+  },
+  "releaseFilePolicy": {
+    "awsDevPrePromotionSha256": "e13937cd11df5c4625fe0de50808b9d74e14503e3b6021900a8f8ae8f0e87d80",
+    "awsTestSha256": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22",
+    "awsProdSha256": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22",
+    "allowedAwsDevSuccessor": "selectedCandidate",
+    "incidentalMainBuildAllowed": false,
+    "otherAwsDevIdentityAllowed": false,
+    "awsTestOrProdChangeAllowed": false
+  },
+  "promotionBoundary": {
+    "closeIncidentalPromotionPullRequestFirst": true,
+    "existingImageWorkflow": ".github/workflows/demo-api-promote-existing-image.yaml",
+    "allowedDispatchRef": "refs/heads/main",
+    "sourceRunId": "34070524953",
+    "expectedSourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "automaticMergeAllowed": false,
+    "concurrentPromotionPullRequestsAllowed": false,
+    "workflowDispatched": false
+  },
+  "producerExecution": {
+    "mainMerged": true,
+    "mainPushImageBuilt": true,
+    "incidentalPromotionPullRequestCreated": true,
+    "incidentalPromotionPullRequestMerged": false,
+    "selectedExistingImageWorkflowDispatched": false,
+    "selectedCandidateWrittenToAwsDev": false,
+    "awsAccessed": false,
+    "clusterAccessed": false,
+    "runtimeQualificationExecuted": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.4-existing-image-aws-dev-promotion-execution"
+}

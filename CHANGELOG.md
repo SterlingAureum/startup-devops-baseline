@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.11.9.3.3
+
+- Record reviewed PR 68 and protected-main merge commit `6013688a384c`, with
+  all observed pull-request and main-push checks successful.
+- Preserve locally qualified `sha-cf0a6bc` as the only allowed aws-dev release
+  successor and keep aws-test/aws-prod release files immutable.
+- Record the incidental `sha-6013688` main build and reject PR 69 because that
+  distinct digest has no local runtime qualification.
+- Make the v0.11.9.3.2 release fingerprint successor-aware without permitting
+  partial, unknown or concurrent promotion identities.
+- Perform no workflow dispatch, pull-request mutation, AWS access or cluster
+  operation; existing-image promotion remains a later reviewed checkpoint.
+
 ## v0.11.9.3.2
 
 - Remove the temporary aws-dev child-Application feature revision override so

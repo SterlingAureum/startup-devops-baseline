@@ -127,6 +127,8 @@ assert "Preview only" in preview_overlay
 assert preview["revision"] in preview_overlay
 
 for relative, expected_sha256 in contract["releaseFiles"].items():
+    if relative == "apps/demo-api/helm/values/releases/aws-dev.yaml":
+        continue
     data = (root / relative).read_bytes()
     actual = hashlib.sha256(data).hexdigest()
     assert actual == expected_sha256, f"{relative}: release identity changed"
@@ -188,6 +190,12 @@ for relative, marker in (
 
 print("v0.11.9.3.2 active main revisions, release immutability, historical preview and trusted boundaries passed.")
 PY
+
+"${ROOT_DIR}/scripts/check-v0.11.9.3.2-release-successor.py" \
+  --release-file "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml" \
+  --readiness-contract "${CONTRACT}" \
+  --successor-contract "${ROOT_DIR}/delivery/contracts/v0.11.9.3.3-reviewed-main-integration.json" \
+  >/dev/null
 
 "${ROOT_DIR}/scripts/validate-active-gitops-revisions.sh"
 "${ROOT_DIR}/scripts/validate-v0.11.8.1.2-aws-dev-pre-merge-feature-revision-qualification.sh"

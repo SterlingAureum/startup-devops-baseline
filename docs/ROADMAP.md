@@ -595,6 +595,11 @@ Incremental scope:
       fingerprints unchanged release files and preserves the test feature
       overlay only as non-active historical preview evidence. Review and main
       integration remain separate actions.
+    - v0.11.9.3.3 records reviewed PR 68 and exact main merge commit
+      `6013688a384c`, retains locally qualified `sha-cf0a6bc` as the only
+      allowed aws-dev successor, and rejects the incidental `sha-6013688`
+      promotion. It repairs the historical release fingerprint for that one
+      selected successor without dispatching a workflow or accessing AWS.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

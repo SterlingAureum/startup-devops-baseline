@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.3-reviewed-main-integration` records protected-main merge commit
+`6013688a384c`, keeps the locally qualified `sha-cf0a6bc` image as the only
+allowed aws-dev successor, and rejects the incidental unqualified
+`sha-6013688` promotion without changing release desired state or accessing
+AWS. It repairs the historical release fingerprint so the selected successor
+can pass later review while every other identity remains fail-closed.
+Predecessor:
 `v0.11.9.3.2-protected-main-integration-readiness` removes the temporary
 aws-dev feature-revision override, restores every active AWS same-repository
 Application to `main`, fingerprints unchanged release files and keeps remote

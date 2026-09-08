@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.4-existing-image-aws-dev-promotion-execution` records successful
+existing-image workflow run `34180004676`, reviewed values-only PR 71 and its
+protected-main merge `071e32914a30`. aws-dev now declares the exact locally
+qualified `sha-cf0a6bc` identity; aws-test/aws-prod remain unchanged. Main
+validation and release orchestration succeeded, no image was rebuilt, and no
+AWS runtime qualification is claimed.
+Predecessor:
 `v0.11.9.3.3.2-remote-successor-chain-repair` removes the remaining permanent
 pre-promotion assumptions from the `.3.0` and `.3.3.1` validators. Both now
 reuse the one exact aws-dev successor allowlist, while aws-test/aws-prod and

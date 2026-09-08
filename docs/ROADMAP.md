@@ -608,6 +608,11 @@ Incremental scope:
         `.3.0` design gate exposed the same stale all-AWS assumption and the
         `.3.3.1` regression still pinned the pre-promotion file. Both now reuse
         the exact allowlist, with a repository-wide stale-pattern scan.
+    - v0.11.9.3.4 records successful existing-image workflow run `34180004676`,
+      reviewed values-only PR 71 and protected-main merge `071e32914a30`.
+      aws-dev now declares the exact locally qualified `sha-cf0a6bc` identity;
+      aws-test/aws-prod remain unchanged, no image was rebuilt, and live
+      aws-dev qualification remains a separate checkpoint.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

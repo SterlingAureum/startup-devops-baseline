@@ -641,6 +641,12 @@ Incremental scope:
             - v0.11.9.3.6.2.1 isolates the historical mocked ready-preflight
               test from the now-nonempty live Terraform state. Production
               classification and every live resource remain unchanged.
+              - v0.11.9.3.6.3 implements a separately confirmed two-phase
+                aws-dev GitOps bootstrap. It revalidates exact main, account,
+                ACTIVE EKS, the recorded state, API readiness and Argo CD
+                absence; pins Argo CD v3.5.2; and stops before Root deployment,
+                qualification, traffic or teardown. Live execution remains a
+                separate operator checkpoint.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

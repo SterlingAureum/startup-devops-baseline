@@ -5,8 +5,13 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 CLUSTER_NAME="${CLUSTER_NAME:-startup-devops-baseline-dev}"
 TF_DIR="${TF_DIR:-${ROOT_DIR}/infra/terraform/aws/environments/dev}"
-ARGOCD_VERSION="${ARGOCD_VERSION:-stable}"
+ARGOCD_VERSION="${ARGOCD_VERSION:-v3.5.2}"
 ALB_APPLICATION_TEMPLATE="${ALB_APPLICATION_TEMPLATE:-${ROOT_DIR}/clusters/aws/base/platform/aws-load-balancer-controller.yaml}"
+
+if [[ ! "${ARGOCD_VERSION}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  echo "ARGOCD_VERSION must be an exact vMAJOR.MINOR.PATCH release." >&2
+  exit 1
+fi
 
 for command in aws kubectl terraform; do
   command -v "${command}" >/dev/null 2>&1 || {

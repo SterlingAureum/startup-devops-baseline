@@ -443,6 +443,11 @@
 /scripts/validate-v0.11.9.3.6.2.1-live-state-test-isolation-repair.sh @SterlingAureum
 /docs/V0.11.9.3.6.2.1_LIVE_STATE_TEST_ISOLATION_REPAIR.md @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.2.1-live-state-test-isolation-repair.json @SterlingAureum
+/scripts/execute-v0.11.9.3.6.3-aws-dev-gitops-bootstrap.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.3-aws-dev-gitops-bootstrap-executor.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.3-aws-dev-guarded-gitops-bootstrap.sh @SterlingAureum
+/docs/V0.11.9.3.6.3_AWS_DEV_GUARDED_GITOPS_BOOTSTRAP.md @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.3-aws-dev-guarded-gitops-bootstrap.json @SterlingAureum
 /docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum

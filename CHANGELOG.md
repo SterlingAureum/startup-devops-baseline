@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.11.9.3.6.3
+
+- Implement a two-phase aws-dev GitOps bootstrap executor with separate
+  read-only observation and cluster-write confirmations.
+- Require clean exact protected main, the private reviewed AWS account,
+  ACTIVE EKS, 103 Terraform state addresses, `/readyz=ok`, absent Argo CD and
+  account-bound IRSA outputs before any bootstrap write.
+- Replace the mutable Argo CD `stable` default with exact `v3.5.2` and reject
+  non-semantic aliases while preserving explicit exact-version overrides.
+- Stop successful execution after Argo CD and the AWS Load Balancer Controller
+  Application; do not deploy Root, qualify runtime, generate traffic or tear
+  down the live environment.
+- Add mock-only failure and boundary coverage. Package production and quality
+  gates access no AWS, Terraform, Kubernetes or Argo CD runtime.
+
 ## v0.11.9.3.6.2.1
 
 - Isolate the historical mocked ready-preflight test from the repository's

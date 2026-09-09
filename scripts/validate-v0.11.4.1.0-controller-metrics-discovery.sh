@@ -215,7 +215,10 @@ markers(
 )
 markers(
     "scripts/bootstrap-eks-argocd.sh",
-    ('ARGOCD_VERSION="${ARGOCD_VERSION:-stable}"',),
+    (
+        'ARGOCD_VERSION="${ARGOCD_VERSION:-v3.5.2}"',
+        'ARGOCD_VERSION must be an exact vMAJOR.MINOR.PATCH release.',
+    ),
 )
 
 live = markers(

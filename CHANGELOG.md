@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.11.9.3.6.4.1
+
+- Record that aws-dev correctly runs `Deployment/demo-api`, with two Ready
+  replicas and the reviewed immutable image identity; no Rollout or AnalysisRun
+  is expected in this environment.
+- Repair the post-Root handoff after live evidence found `monitoring-aws-dev`
+  `Synced / Degraded` and Grafana in `CreateContainerConfigError` because the
+  independent `observability-grafana-admin` Secret was absent.
+- Add a separately confirmed, resumable executor that accepts only the exact
+  reviewed missing-Secret state or the idempotent fully converged state.
+- Create the Grafana Secret through the existing create-only privacy boundary,
+  then require Grafana Ready and monitoring Healthy without exposing credential
+  values, redeploying Root, generating traffic, promoting or tearing down.
+- Correct `.3.6.4` success handoff so monitoring convergence must precede
+  `.3.6.5` runtime qualification, and document fresh approval/plan requirements
+  when the reviewed eight-hour operational window expires.
+
 ## v0.11.9.3.6.4
 
 - Implement a two-phase aws-dev Root deployment executor with separate

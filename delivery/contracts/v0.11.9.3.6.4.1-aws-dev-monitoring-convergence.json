@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "v0.11.9.3.6.4.1",
+  "version": "v0.11.9.3.6.4.1",
+  "predecessor": "v0.11.9.3.6.4",
+  "status": "guarded-aws-dev-monitoring-convergence-repair-implemented-not-executed",
+  "implementationBaselineCommit": "39b650d57b5609d18502721344cd46ea9b8dcce4",
+  "goal": "Close the reviewed post-Root Grafana Secret gap and require monitoring convergence before aws-dev runtime qualification.",
+  "observedIncident": {
+    "rootApplicationStatus": "Synced/Healthy",
+    "demoWorkloadKind": "Deployment",
+    "demoDeploymentReady": true,
+    "monitoringApplicationStatus": "Synced/Degraded",
+    "grafanaDeploymentStatus": "CreateContainerConfigError",
+    "cause": "observability-grafana-admin Secret absent",
+    "rolloutExpectedInAwsDev": false,
+    "analysisRunExpectedInAwsDev": false
+  },
+  "executor": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.4.1-aws-dev-monitoring-convergence.py",
+    "phases": [
+      "verify",
+      "execute"
+    ],
+    "secretEntrypoint": "scripts/prepare-aws-dev-grafana-secret.py",
+    "requiredBranch": "main",
+    "cleanWorktreeRequired": true,
+    "headOriginAndRemoteMainMustMatchReviewedCommit": true,
+    "rootRedeployAllowed": false,
+    "secretValuesMayBePrintedOrPersisted": false,
+    "alreadyConvergedExecutionIsIdempotent": true,
+    "awsAccountInput": "EXPECTED_AWS_ACCOUNT_ID",
+    "awsAccountCommitted": false
+  },
+  "immutableInputs": {
+    "awsDevRelease": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+    "awsDevReleaseSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46",
+    "candidateReleaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "applicationVersion": "sha-cf0a6bc",
+    "imageDigest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "monitoringChartVersion": "88.5.0"
+  },
+  "acceptedInitialStates": [
+    "monitoring Synced/Degraded, Grafana Secret absent and Grafana Deployment unavailable",
+    "monitoring Synced/Healthy, Grafana Secret present and Grafana Deployment fully Ready"
+  ],
+  "livePrerequisites": {
+    "region": "us-east-1",
+    "clusterName": "startup-devops-baseline-dev",
+    "clusterStatus": "ACTIVE",
+    "kubectlContextMustEqualExactEksArn": true,
+    "kubernetesReadyz": "ok",
+    "rootApplicationStatus": "Synced/Healthy on reviewed main",
+    "demoApplicationStatus": "Synced/Healthy on reviewed main",
+    "demoWorkloadKind": "Deployment",
+    "demoImmutableIdentityRequired": true,
+    "databaseFullyReady": true,
+    "monitoringMustBeSynced": true,
+    "unrelatedMonitoringDegradationRejected": true,
+    "secretDiscoveryReadsNameOnly": true
+  },
+  "confirmations": {
+    "readOnlyVerification": {
+      "variable": "CONFIRM_AWS_DEV_MONITORING_PREFLIGHT",
+      "value": "observe-reviewed-aws-dev-monitoring-convergence"
+    },
+    "monitoringConvergence": {
+      "variable": "CONFIRM_AWS_DEV_MONITORING_CONVERGENCE",
+      "value": "converge-reviewed-aws-dev-monitoring"
+    },
+    "internalGrafanaSecret": {
+      "variable": "CONFIRM_GRAFANA_SECRET",
+      "value": "prepare-aws-dev",
+      "operatorFacing": false
+    }
+  },
+  "approvedWriteScope": [
+    "create observability/observability-grafana-admin only when absent"
+  ],
+  "observationScope": [
+    "wait for observability-metrics-grafana Deployment Available",
+    "wait for monitoring-aws-dev Application Healthy"
+  ],
+  "successBoundary": {
+    "status": "aws-dev-monitoring-convergence-complete",
+    "grafanaSecretCreatedOrPreserved": true,
+    "grafanaSecretValuesExposed": false,
+    "grafanaDeploymentReady": true,
+    "monitoringApplicationSynced": true,
+    "monitoringApplicationHealthy": true,
+    "rootApplicationRedeployed": false,
+    "runtimeQualified": false,
+    "trafficGenerated": false,
+    "progressiveDeliveryPromoted": false,
+    "automaticTeardownExecuted": false,
+    "nextAction": "review-separate-aws-dev-runtime-qualification"
+  },
+  "failureBoundary": {
+    "automaticRetry": false,
+    "automaticRootRedeploy": false,
+    "automaticQualification": false,
+    "automaticPromotion": false,
+    "automaticRollback": false,
+    "automaticDestroy": false,
+    "preserveLiveAndTerraformState": true
+  },
+  "timeWindowPolicy": {
+    "eightHoursIsAReviewedOperationalTimeboxNotAnAwsTtl": true,
+    "doNotModifyAnExecutedPlanInPlace": true,
+    "stopNewWritesWhenTheReviewedWindowExpires": true,
+    "newWindowRequiresFreshExactMainAndLiveStateVerification": true,
+    "newWindowRequiresSeparateApproval": true,
+    "overnightPauseRequiresExplicitCostOrTeardownDecision": true
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "kubernetesAccessed": false,
+    "argocdAccessed": false,
+    "secretsAccessed": false,
+    "secretCreated": false,
+    "rootRedeployed": false,
+    "trafficGenerated": false,
+    "environmentChanged": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.5-aws-dev-runtime-qualification"
+}

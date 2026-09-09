@@ -36,7 +36,7 @@ assert contract["predecessor"] == "v0.11.9.3.6.3.1"
 assert contract["status"] == "guarded-aws-dev-root-application-deploy-implemented-not-executed"
 assert contract["implementationBaselineCommit"] == "20224914590bc2ab8d1154d28e18f0d4e23cd383"
 assert contract["executionAuthorized"] is False
-assert contract["nextCheckpoint"] == "v0.11.9.3.6.5-aws-dev-runtime-qualification"
+assert contract["nextCheckpoint"] == "v0.11.9.3.6.4.1-aws-dev-monitoring-convergence"
 
 executor = contract["executor"]
 assert executor == {
@@ -100,11 +100,13 @@ assert contract["successBoundary"] == {
     "databaseAndSecretBootstrapComplete": True,
     "demoApplicationAcceptedHealth": True,
     "stableDnsReconciled": True,
+    "grafanaRuntimeSecretPrepared": False,
+    "monitoringConverged": False,
     "runtimeQualified": False,
     "progressiveDeliveryPromoted": False,
     "trafficGenerated": False,
     "automaticTeardownExecuted": False,
-    "nextAction": "review-aws-dev-runtime-qualification",
+    "nextAction": "review-aws-dev-monitoring-convergence",
 }
 assert all(value is False for value in contract["packageProducer"].values())
 
@@ -120,6 +122,7 @@ for marker in (
     '["ls-remote", "origin", "refs/heads/main"]',
     'TARGET_REVISION="main"',
     '"root_resolved_revision": expected_commit',
+    '"monitoring_converged": False',
     '"runtime_qualified": False',
     '"progressive_delivery_promoted": False',
 ):

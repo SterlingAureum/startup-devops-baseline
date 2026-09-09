@@ -3,6 +3,15 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.4.1-aws-dev-monitoring-convergence` repairs the post-Root
+Grafana runtime-Secret gap. It accepts only the observed missing-Secret state
+or the already-converged state, creates or preserves the independent Secret
+without exposing values, and requires Grafana Ready plus monitoring
+`Synced / Healthy`. Root redeploy, traffic, qualification, promotion and
+teardown remain outside this checkpoint. Applying and validating it performs
+no live operation. An expired eight-hour review window requires a fresh plan,
+live preflight and approval rather than editing the executed plan in place.
+Predecessor:
 `v0.11.9.3.6.4-aws-dev-guarded-root-application-deploy` implements a
 separately confirmed verify/execute gate for the first aws-dev Root tree. It
 binds local, tracking and remote main; the reviewed account/EKS/Terraform
@@ -10,7 +19,8 @@ state; exact Root/release files; Argo CD `v3.5.2`; the healthy ALB Application;
 Secrets Manager and Route53 containers; and Root absence. The approved write
 scope includes Root, CNPG/External Secrets bootstrap and stable DNS, but never
 progressive promotion, SLO qualification or teardown. Applying and validating
-this checkpoint performs no live operation.
+this checkpoint performs no live operation and hands off to `.3.6.4.1` before
+runtime qualification.
 Predecessor:
 `v0.11.9.3.6.3.1-aws-dev-gitops-bootstrap-execution` records the separately
 approved bootstrap on exact protected main `64fe6bb58bb5`. Argo CD `v3.5.2`

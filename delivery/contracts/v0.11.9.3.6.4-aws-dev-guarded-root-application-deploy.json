@@ -78,11 +78,13 @@
     "databaseAndSecretBootstrapComplete": true,
     "demoApplicationAcceptedHealth": true,
     "stableDnsReconciled": true,
+    "grafanaRuntimeSecretPrepared": false,
+    "monitoringConverged": false,
     "runtimeQualified": false,
     "progressiveDeliveryPromoted": false,
     "trafficGenerated": false,
     "automaticTeardownExecuted": false,
-    "nextAction": "review-aws-dev-runtime-qualification"
+    "nextAction": "review-aws-dev-monitoring-convergence"
   },
   "failureBoundary": {
     "partialRootStateRequiresReview": true,
@@ -103,5 +105,5 @@
     "environmentChanged": false
   },
   "executionAuthorized": false,
-  "nextCheckpoint": "v0.11.9.3.6.5-aws-dev-runtime-qualification"
+  "nextCheckpoint": "v0.11.9.3.6.4.1-aws-dev-monitoring-convergence"
 }

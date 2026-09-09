@@ -350,11 +350,13 @@ def execute(
         "database_and_secret_bootstrap_complete": True,
         "demo_application_accepted_health": True,
         "stable_dns_reconciled": True,
+        "grafana_runtime_secret_prepared": False,
+        "monitoring_converged": False,
         "runtime_qualified": False,
         "progressive_delivery_promoted": False,
         "traffic_generated": False,
         "automatic_teardown_executed": False,
-        "next_action": "review-separate-aws-dev-runtime-qualification",
+        "next_action": "review-separate-aws-dev-monitoring-convergence",
     }
 
 

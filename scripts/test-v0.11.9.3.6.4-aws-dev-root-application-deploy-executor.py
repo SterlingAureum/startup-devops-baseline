@@ -270,8 +270,11 @@ class AwsDevRootDeployTests(unittest.TestCase):
         self.assertEqual(result["status"], "aws-dev-root-application-deploy-complete")
         self.assertEqual(result["root_target_revision"], "main")
         self.assertEqual(result["root_resolved_revision"], CONTROL_PLANE)
+        self.assertFalse(result["grafana_runtime_secret_prepared"])
+        self.assertFalse(result["monitoring_converged"])
         self.assertFalse(result["runtime_qualified"])
         self.assertFalse(result["progressive_delivery_promoted"])
+        self.assertEqual(result["next_action"], "review-separate-aws-dev-monitoring-convergence")
 
     def test_deploy_failure_is_not_retried_or_hidden(self) -> None:
         calls: list[str] = []

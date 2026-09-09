@@ -656,8 +656,13 @@ Incremental scope:
                     boundary. It validates exact remote main, private account,
                     EKS/Terraform/Argo state, release identity, secret container
                     and DNS zone before one approved Root/CNPG/External Secrets/
-                    DNS execution. Runtime qualification, promotion and
-                    teardown remain later checkpoints.
+                    DNS execution. It now hands off explicitly to `.3.6.4.1`.
+                    - v0.11.9.3.6.4.1 repairs the observed missing independent
+                      Grafana Secret, proves Grafana and monitoring convergence,
+                      and preserves runtime qualification, traffic, promotion
+                      and teardown as later, separately reviewed checkpoints.
+                      Expired eight-hour windows require fresh state review and
+                      approval rather than an in-place plan extension.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

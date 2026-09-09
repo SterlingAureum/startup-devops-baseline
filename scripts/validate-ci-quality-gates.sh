@@ -350,6 +350,9 @@ echo "==> Validating v0.11.9.3.6.3.1 aws-dev GitOps bootstrap execution evidence
 echo "==> Validating v0.11.9.3.6.4 aws-dev guarded Root Application deploy"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.4-aws-dev-guarded-root-application-deploy.sh"
 
+echo "==> Validating v0.11.9.3.6.4.1 aws-dev monitoring convergence repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.4.1-aws-dev-monitoring-convergence.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

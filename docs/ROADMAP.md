@@ -647,6 +647,11 @@ Incremental scope:
                 absence; pins Argo CD v3.5.2; and stops before Root deployment,
                 qualification, traffic or teardown. Live execution remains a
                 separate operator checkpoint.
+                - v0.11.9.3.6.3.1 records the successful bootstrap on exact
+                  protected main: all observed Argo CD workloads are Ready,
+                  the ALB controller Application is Synced/Healthy and both
+                  IRSA identities match. Root remains absent, so `.3.6.4`
+                  retains a separate implementation and approval boundary.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

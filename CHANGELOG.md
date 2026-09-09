@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.11.9.3.6.3.1
+
+- Record the separately approved aws-dev GitOps bootstrap on exact protected
+  main `64fe6bb58bb5` after its read-only inventory passed.
+- Record Argo CD `v3.5.2`, seven Ready Argo CD workloads and a Synced/Healthy
+  AWS Load Balancer Controller chart `1.14.0` deployment.
+- Record both expected IRSA ServiceAccounts matching the reviewed account
+  without committing account IDs, role ARNs, VPC IDs or cluster endpoints.
+- Confirm the aws-dev Root Application remained absent and no application
+  runtime, traffic, promotion, fault or teardown operation occurred.
+- Preserve Root Application deployment as a separately implemented and
+  approved `.3.6.4` checkpoint.
+
 ## v0.11.9.3.6.3
 
 - Implement a two-phase aws-dev GitOps bootstrap executor with separate

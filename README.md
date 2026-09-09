@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.3.1-aws-dev-gitops-bootstrap-execution` records the separately
+approved bootstrap on exact protected main `64fe6bb58bb5`. Argo CD `v3.5.2`
+and the AWS Load Balancer Controller Application converged, all seven observed
+Argo CD workloads were Ready, both IRSA accounts matched, and the Root
+Application remained absent. Raw account, role, VPC and endpoint values remain
+private. Applying or validating this evidence performs no live operation.
+Predecessor:
 `v0.11.9.3.6.3-aws-dev-guarded-gitops-bootstrap` implements a separately
 confirmed verify/execute gate for the existing aws-dev EKS environment. It
 requires clean exact protected main, the reviewed AWS account, ACTIVE EKS,

@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "v0.11.9.3.6.3.1",
+  "version": "v0.11.9.3.6.3.1",
+  "predecessor": "v0.11.9.3.6.3",
+  "status": "aws-dev-gitops-bootstrap-executed-and-observed",
+  "goal": "Record the separately approved aws-dev GitOps bootstrap and its redacted post-bootstrap convergence while retaining Root deployment as a separate checkpoint.",
+  "controlPlane": {
+    "branch": "main",
+    "commit": "64fe6bb58bb5dd6c33a03f25f0df19bef177c825",
+    "headEqualsOriginMain": true,
+    "cleanWorktree": true
+  },
+  "preExecutionVerification": {
+    "status": "aws-dev-gitops-bootstrap-inputs-verified",
+    "executionAuthorized": false,
+    "awsCallerAccountMatched": true,
+    "eksStatus": "ACTIVE",
+    "eksVersion": "1.36",
+    "kubernetesServerMatchedEksEndpoint": true,
+    "kubernetesReadyz": "ok",
+    "terraformStateAddressCount": 103,
+    "argocdNamespacePresent": false,
+    "terraformBootstrapOutputsValidated": true
+  },
+  "approval": {
+    "separateGitopsBootstrapApproved": true,
+    "readOnlyConfirmationSatisfied": true,
+    "writeConfirmationSatisfied": true,
+    "approvedScope": "Argo CD and AWS Load Balancer Controller bootstrap only",
+    "rootDeployApproved": false,
+    "teardownApproved": false
+  },
+  "executionResult": {
+    "status": "aws-dev-gitops-bootstrap-complete",
+    "argocdVersion": "v3.5.2",
+    "gitopsBootstrapped": true,
+    "rootApplicationDeployed": false,
+    "runtimeQualified": false,
+    "trafficGenerated": false,
+    "automaticTeardownExecuted": false,
+    "nextAction": "review-separate-root-application-deploy"
+  },
+  "postBootstrapObservation": {
+    "observedAt": "2026-09-09T11:16:55Z",
+    "argocd": {
+      "observedWorkloadCount": 7,
+      "readyWorkloadCount": 7,
+      "coreVersion": "v3.5.2",
+      "coreVersionWorkloads": [
+        "argocd-applicationset-controller",
+        "argocd-notifications-controller",
+        "argocd-repo-server",
+        "argocd-server",
+        "argocd-application-controller"
+      ],
+      "auxiliaryImages": {
+        "argocd-dex-server": "ghcr.io/dexidp/dex:v2.45.1",
+        "argocd-redis": "public.ecr.aws/docker/library/redis:8.2.3-alpine"
+      }
+    },
+    "awsLoadBalancerController": {
+      "applicationName": "aws-load-balancer-controller",
+      "syncStatus": "Synced",
+      "healthStatus": "Healthy",
+      "chart": "aws-load-balancer-controller",
+      "chartVersion": "1.14.0",
+      "destinationNamespace": "kube-system",
+      "deploymentRolloutComplete": true
+    },
+    "irsa": {
+      "awsLoadBalancerControllerServiceAccountPresent": true,
+      "karpenterServiceAccountPresent": true,
+      "roleAccountMatches": true,
+      "rawRoleArnsCommitted": false
+    },
+    "rootApplication": {
+      "name": "startup-devops-aws-dev-root",
+      "present": false
+    }
+  },
+  "privateEvidence": {
+    "awsAccountIdCommitted": false,
+    "roleArnsCommitted": false,
+    "vpcIdCommitted": false,
+    "eksEndpointCommitted": false,
+    "terraformAddressesCommitted": false,
+    "rawExecutorLogCommitted": false,
+    "rawKubectlInventoryCommitted": false
+  },
+  "operationBoundary": {
+    "gitopsBootstrapExecuted": true,
+    "argocdInstalled": true,
+    "awsLoadBalancerControllerApplicationApplied": true,
+    "rootApplicationDeployExecuted": false,
+    "applicationRuntimeQualificationExecuted": false,
+    "trafficGenerated": false,
+    "remoteFaultReplayed": false,
+    "awsTestPromotionExecuted": false,
+    "teardownExecuted": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformExecuted": false,
+    "kubernetesAccessed": false,
+    "argocdAccessed": false,
+    "environmentChanged": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.4-aws-dev-root-application-deploy"
+}

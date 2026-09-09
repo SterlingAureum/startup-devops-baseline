@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.11.9.3.6.4
+
+- Implement a two-phase aws-dev Root deployment executor with separate
+  read-only and full Root-tree write confirmations.
+- Require clean local/tracking/remote main identity, reviewed AWS account,
+  ACTIVE EKS, 103-address Terraform state, matching kubectl endpoint, exact
+  Root/release fingerprints and healthy Argo CD/ALB bootstrap state.
+- Validate the Terraform-managed Secrets Manager container and public Route53
+  zone without reading credentials or changing DNS during `verify`.
+- Block direct aws-dev calls to `deploy-aws-dev-root-app.sh`; only the validated
+  executor supplies its internal entrypoint token. aws-test behavior is kept.
+- Treat Root, External Secrets, CNPG backup destination, initial secret
+  migration and stable DNS reconciliation as one explicit write scope.
+- Recheck remote main and require Root to be Synced/Healthy on the reviewed SHA;
+  leave progressive promotion, SLO qualification and teardown unexecuted.
+
 ## v0.11.9.3.6.3.1
 
 - Record the separately approved aws-dev GitOps bootstrap on exact protected

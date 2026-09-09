@@ -3,6 +3,15 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.4-aws-dev-guarded-root-application-deploy` implements a
+separately confirmed verify/execute gate for the first aws-dev Root tree. It
+binds local, tracking and remote main; the reviewed account/EKS/Terraform
+state; exact Root/release files; Argo CD `v3.5.2`; the healthy ALB Application;
+Secrets Manager and Route53 containers; and Root absence. The approved write
+scope includes Root, CNPG/External Secrets bootstrap and stable DNS, but never
+progressive promotion, SLO qualification or teardown. Applying and validating
+this checkpoint performs no live operation.
+Predecessor:
 `v0.11.9.3.6.3.1-aws-dev-gitops-bootstrap-execution` records the separately
 approved bootstrap on exact protected main `64fe6bb58bb5`. Argo CD `v3.5.2`
 and the AWS Load Balancer Controller Application converged, all seven observed

@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "v0.11.9.3.6.4",
+  "version": "v0.11.9.3.6.4",
+  "predecessor": "v0.11.9.3.6.3.1",
+  "status": "guarded-aws-dev-root-application-deploy-implemented-not-executed",
+  "implementationBaselineCommit": "20224914590bc2ab8d1154d28e18f0d4e23cd383",
+  "goal": "Implement a separately confirmed aws-dev Root tree deployment with complete pre-write identity and prerequisite validation, followed by a reviewed-revision postcondition.",
+  "executor": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.4-aws-dev-root-application-deploy.py",
+    "phases": [
+      "verify",
+      "execute"
+    ],
+    "rootDeployEntrypoint": "scripts/deploy-aws-dev-root-app.sh",
+    "directAwsDevEntrypointBlocked": true,
+    "requiredBranch": "main",
+    "cleanWorktreeRequired": true,
+    "headOriginAndRemoteMainMustMatchReviewedCommit": true,
+    "rootTargetRevision": "main",
+    "postDeployResolvedRevisionMustMatchReviewedCommit": true,
+    "awsAccountInput": "EXPECTED_AWS_ACCOUNT_ID",
+    "awsAccountCommitted": false
+  },
+  "immutableInputs": {
+    "rootSource": "clusters/aws/overlays/dev/root-app.yaml",
+    "rootSourceSha256": "6f0fc680b04b7df3194549e626764a758856ebfb7cf38e806f573c4b0297e11f",
+    "awsDevRelease": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+    "awsDevReleaseSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46",
+    "candidateReleaseId": "demo-api-cf0a6bcbc466-cdffd3d71763"
+  },
+  "livePrerequisites": {
+    "region": "us-east-1",
+    "clusterName": "startup-devops-baseline-dev",
+    "clusterStatus": "ACTIVE",
+    "kubernetesServerMustMatchEksEndpoint": true,
+    "kubernetesReadyz": "ok",
+    "terraformStateAddressCount": 103,
+    "argocdVersion": "v3.5.2",
+    "argocdWorkloadCount": 7,
+    "argocdWorkloadsFullyReady": true,
+    "albApplicationStatus": "Synced/Healthy",
+    "albChartVersion": "1.14.0",
+    "albVpcMustMatchTerraform": true,
+    "rootApplicationMustBeAbsent": true,
+    "secretsManagerContainerValidatedWithoutSecretRead": true,
+    "publicRoute53ZoneMustMatchTerraform": true
+  },
+  "confirmations": {
+    "readOnlyVerification": {
+      "variable": "CONFIRM_AWS_DEV_ROOT_PREFLIGHT",
+      "value": "observe-reviewed-aws-dev-root-deploy"
+    },
+    "rootTreeDeploy": {
+      "variable": "CONFIRM_AWS_DEV_ROOT_DEPLOY",
+      "value": "deploy-reviewed-aws-dev-root-application"
+    },
+    "internalEntrypoint": {
+      "variable": "CONFIRM_AWS_DEV_ROOT_ENTRYPOINT",
+      "value": "execute-validated-aws-dev-root-deploy",
+      "operatorFacing": false
+    }
+  },
+  "approvedWriteScope": [
+    "aws-dev Root Application",
+    "External Secrets namespace and IRSA ServiceAccount",
+    "CloudNativePG backup namespace and IRSA ServiceAccount",
+    "Terraform S3 destination on the live ObjectStore",
+    "initial or idempotent Secrets Manager database credential migration",
+    "ExternalSecret forced synchronization and cleanup",
+    "CloudNativePG and demo-api basic GitOps convergence",
+    "stable demo.dev.aureumstack.com Route53 Alias reconciliation"
+  ],
+  "successBoundary": {
+    "status": "aws-dev-root-application-deploy-complete",
+    "rootApplicationSynced": true,
+    "rootApplicationHealthy": true,
+    "rootResolvedRevisionReviewed": true,
+    "databaseAndSecretBootstrapComplete": true,
+    "demoApplicationAcceptedHealth": true,
+    "stableDnsReconciled": true,
+    "runtimeQualified": false,
+    "progressiveDeliveryPromoted": false,
+    "trafficGenerated": false,
+    "automaticTeardownExecuted": false,
+    "nextAction": "review-aws-dev-runtime-qualification"
+  },
+  "failureBoundary": {
+    "partialRootStateRequiresReview": true,
+    "automaticRetry": false,
+    "automaticPromote": false,
+    "automaticRollback": false,
+    "automaticQualification": false,
+    "automaticDestroy": false,
+    "preserveTerraformState": true
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformExecuted": false,
+    "kubernetesAccessed": false,
+    "argocdAccessed": false,
+    "secretsAccessed": false,
+    "dnsChanged": false,
+    "environmentChanged": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.5-aws-dev-runtime-qualification"
+}

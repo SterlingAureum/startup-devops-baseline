@@ -652,6 +652,12 @@ Incremental scope:
                   the ALB controller Application is Synced/Healthy and both
                   IRSA identities match. Root remains absent, so `.3.6.4`
                   retains a separate implementation and approval boundary.
+                  - v0.11.9.3.6.4 implements that two-phase Root deployment
+                    boundary. It validates exact remote main, private account,
+                    EKS/Terraform/Argo state, release identity, secret container
+                    and DNS zone before one approved Root/CNPG/External Secrets/
+                    DNS execution. Runtime qualification, promotion and
+                    teardown remain later checkpoints.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

@@ -38,6 +38,16 @@ RECONCILE_DEMO_API_DNS_SCRIPT="$(
 )/reconcile-demo-api-dns.sh"
 FORCE_SYNC_ANNOTATION_SET=false
 
+if [[ "${ROOT_APPLICATION}" == "startup-devops-aws-dev-root" ]] &&
+   [[ "${CONFIRM_AWS_DEV_ROOT_ENTRYPOINT:-}" != "execute-validated-aws-dev-root-deploy" ]]; then
+  cat >&2 <<'EOF'
+Direct aws-dev Root deployment is blocked.
+Use scripts/execute-v0.11.9.3.6.4-aws-dev-root-application-deploy.py so the
+exact-main, AWS, Terraform, Argo CD, release and confirmation gates run first.
+EOF
+  exit 1
+fi
+
 for command in aws kubectl terraform jq; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2

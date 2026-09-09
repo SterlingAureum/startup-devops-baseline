@@ -451,6 +451,11 @@
 /scripts/validate-v0.11.9.3.6.3.1-aws-dev-gitops-bootstrap-execution.sh @SterlingAureum
 /docs/V0.11.9.3.6.3.1_AWS_DEV_GITOPS_BOOTSTRAP_EXECUTION.md @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.3.1-aws-dev-gitops-bootstrap-execution.json @SterlingAureum
+/scripts/execute-v0.11.9.3.6.4-aws-dev-root-application-deploy.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.4-aws-dev-root-application-deploy-executor.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.4-aws-dev-guarded-root-application-deploy.sh @SterlingAureum
+/docs/V0.11.9.3.6.4_AWS_DEV_GUARDED_ROOT_APPLICATION_DEPLOY.md @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.4-aws-dev-guarded-root-application-deploy.json @SterlingAureum
 /docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum

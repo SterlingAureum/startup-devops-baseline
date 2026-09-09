@@ -203,16 +203,25 @@ class AwsDevInventoryTests(unittest.TestCase):
                     return json.dumps({"clusters": []})
                 raise AssertionError(f"Unexpected command: {arguments}")
 
-            with mock.patch.dict(
-                os.environ,
-                {"CONFIRM_AWS_DEV_PREFLIGHT": PREFLIGHT.CONFIRMATION},
-            ), mock.patch.object(PREFLIGHT.shutil, "which", return_value="/fake"):
+            with (
+                mock.patch.dict(
+                    os.environ,
+                    {"CONFIRM_AWS_DEV_PREFLIGHT": PREFLIGHT.CONFIRMATION},
+                ),
+                mock.patch.object(PREFLIGHT.shutil, "which", return_value="/fake"),
+                mock.patch.object(
+                    PREFLIGHT,
+                    "summarize_state",
+                    return_value=self.empty_state,
+                ) as summarize_state,
+            ):
                 result, exit_code = PREFLIGHT.execute_preflight(
                     plan_path,
                     ROOT,
                     fake_command,
                 )
 
+        summarize_state.assert_called_once_with(ROOT / CHECKER.STATE_PATH)
         self.assertEqual(exit_code, 0)
         self.assertEqual(result["status"], "ready-for-separate-aws-dev-create-approval")
         self.assertFalse(result["execution_authorized"])

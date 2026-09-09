@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "v0.11.9.3.6.2.1",
+  "version": "v0.11.9.3.6.2.1",
+  "predecessor": "v0.11.9.3.6.2",
+  "status": "live-state-test-isolation-repaired",
+  "applicationBaseline": {
+    "commit": "b01e76c4155536dd85088bda462d28f49cfde07f",
+    "requiredAppliedIncrement": "v0.11.9.3.6.2-aws-dev-infrastructure-create-execution"
+  },
+  "observedFailure": {
+    "validator": "scripts/validate-v0.11.9.3.5-aws-dev-live-rehearsal-preflight.sh",
+    "test": "AwsDevInventoryTests.test_complete_ready_preflight_uses_mocked_read_only_discovery",
+    "expectedExitCode": 0,
+    "observedExitCode": 2,
+    "liveTerraformStateAddressCount": 103,
+    "mockedActiveClusters": [],
+    "classification": "blocked-partial-aws-dev-state"
+  },
+  "rootCause": {
+    "awsAndGitCommandsMocked": true,
+    "filesystemStateReaderMockedBeforeRepair": false,
+    "repositoryRootPassedToPreflight": true,
+    "environmentDependentTest": true,
+    "productionFailure": false
+  },
+  "repair": {
+    "modifiedFile": "scripts/test-v0.11.9.3.5-aws-dev-live-rehearsal-preflight.py",
+    "mockedFunction": "PREFLIGHT.summarize_state",
+    "fixture": "self.empty_state",
+    "expectedInterceptedPath": "infra/terraform/aws/environments/dev/terraform.tfstate",
+    "interceptionAsserted": true,
+    "productionPreflightModified": false,
+    "productionClassificationModified": false,
+    "liveTerraformStateModified": false
+  },
+  "operationBoundary": {
+    "awsAccessed": false,
+    "terraformExecuted": false,
+    "terraformStateRead": false,
+    "terraformStateWritten": false,
+    "kubernetesAccessed": false,
+    "argocdAccessed": false,
+    "environmentChanged": false,
+    "createExecutorRepeated": false,
+    "gitopsBootstrapExecuted": false,
+    "teardownExecuted": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.3-aws-dev-gitops-bootstrap-execution"
+}

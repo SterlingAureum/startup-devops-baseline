@@ -335,6 +335,12 @@ echo "==> Validating v0.11.9.3.6.1 aws-dev live-rehearsal create executor"
 echo "==> Validating v0.11.9.3.6.1.1 ShellCheck source-follow repair"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.1.1-shellcheck-source-follow-repair.sh"
 
+echo "==> Validating v0.11.9.3.6.2 aws-dev infrastructure create execution evidence"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.2-aws-dev-infrastructure-create-execution.sh"
+
+echo "==> Validating v0.11.9.3.6.2.1 live-state test isolation repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.2.1-live-state-test-isolation-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "v0.11.9.3.6.4.2",
+  "version": "v0.11.9.3.6.4.2",
+  "predecessor": "v0.11.9.3.6.4.1",
+  "status": "aws-dev-monitoring-convergence-execution-recorded",
+  "implementationBaselineCommit": "6421e140b3ac9a89e806896ef627b258ac201e3b",
+  "goal": "Record the separately approved Grafana Secret repair and healthy monitoring convergence without embedding private runtime evidence.",
+  "approval": {
+    "scope": "aws-dev monitoring convergence repair",
+    "timeWindowScoped": true,
+    "rootRedeployApproved": false,
+    "runtimeQualificationApproved": false,
+    "trafficApproved": false,
+    "promotionApproved": false,
+    "teardownApproved": false
+  },
+  "preExecutionState": {
+    "controlPlaneCommit": "6421e140b3ac9a89e806896ef627b258ac201e3b",
+    "clusterStatus": "ACTIVE",
+    "clusterVersion": "1.36",
+    "kubernetesReadyz": "ok",
+    "rootApplicationStatus": "Synced/Healthy",
+    "demoApplicationStatus": "Synced/Healthy",
+    "demoWorkloadKind": "Deployment",
+    "demoDeploymentReady": true,
+    "databaseReady": true,
+    "monitoringApplicationStatus": "Synced/Degraded",
+    "grafanaSecretStatus": "absent",
+    "grafanaDeploymentReady": false,
+    "convergenceState": "missing-secret-repair-required",
+    "executionAuthorizedByPreflight": false
+  },
+  "execution": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.4.1-aws-dev-monitoring-convergence.py",
+    "phase": "execute",
+    "executorExit": 0,
+    "privateLogSha256": "11905ff7f03cc121eda72bcf5ece4db9a303c9496c88ea9fbed331564e9a6e4d",
+    "privateLogCommitted": false,
+    "privateLogModeConfigured": "0600",
+    "privateLogModeIndependentlyRestated": false,
+    "credentialValuesPrinted": false,
+    "credentialValuesCommitted": false
+  },
+  "postExecutionState": {
+    "controlPlaneCommit": "6421e140b3ac9a89e806896ef627b258ac201e3b",
+    "candidateReleaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "grafanaSecretAction": "created",
+    "grafanaSecretPresent": true,
+    "grafanaSecretValuesExposed": false,
+    "grafanaDeployment": {
+      "generation": 1,
+      "observedGeneration": 1,
+      "replicas": 1,
+      "readyReplicas": 1,
+      "updatedReplicas": 1,
+      "availableReplicas": 1
+    },
+    "monitoringApplication": {
+      "sync": "Synced",
+      "health": "Healthy",
+      "chart": "kube-prometheus-stack",
+      "targetRevision": "88.5.0"
+    },
+    "rootApplicationRedeployed": false,
+    "runtimeQualified": false,
+    "trafficGenerated": false,
+    "progressiveDeliveryPromoted": false,
+    "automaticTeardownExecuted": false
+  },
+  "evidenceBoundary": {
+    "rawExecutorLogStoredOutsideRepository": true,
+    "awsAccountCommitted": false,
+    "eksArnCommitted": false,
+    "clusterEndpointCommitted": false,
+    "secretManifestCommitted": false,
+    "secretDataCommitted": false,
+    "completionTimestampClaimed": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "kubernetesAccessed": false,
+    "argocdAccessed": false,
+    "secretsAccessed": false,
+    "secretCreated": false,
+    "rootRedeployed": false,
+    "trafficGenerated": false,
+    "environmentChanged": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.5-aws-dev-runtime-qualification"
+}

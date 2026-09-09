@@ -663,6 +663,11 @@ Incremental scope:
                       and teardown as later, separately reviewed checkpoints.
                       Expired eight-hour windows require fresh state review and
                       approval rather than an in-place plan extension.
+                      - v0.11.9.3.6.4.2 records the approved repair on exact
+                        protected main: Grafana is 1/1 and monitoring is
+                        Synced/Healthy, while credentials remain private and
+                        Root redeploy, qualification, traffic, promotion and
+                        teardown remain unexecuted. `.3.6.5` stays separate.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

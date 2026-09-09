@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.4.2-aws-dev-monitoring-convergence-execution` records the
+separately approved repair on exact main `6421e140b3ac`: the independent
+Grafana Secret was created without exposed values, Grafana reached `1/1`, and
+monitoring became `Synced / Healthy` on chart `88.5.0`. Root was not redeployed
+and runtime qualification, traffic, promotion and teardown remain unexecuted.
+The private log stays outside Git and is pinned only by SHA-256. Applying and
+validating this evidence performs no live operation.
+Predecessor:
 `v0.11.9.3.6.4.1-aws-dev-monitoring-convergence` repairs the post-Root
 Grafana runtime-Secret gap. It accepts only the observed missing-Secret state
 or the already-converged state, creates or preserves the independent Secret

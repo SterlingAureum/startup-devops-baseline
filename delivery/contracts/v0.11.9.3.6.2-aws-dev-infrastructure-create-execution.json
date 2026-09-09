@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "v0.11.9.3.6.2",
+  "version": "v0.11.9.3.6.2",
+  "predecessor": "v0.11.9.3.6.1.1",
+  "status": "aws-dev-infrastructure-created-api-ready-recorded",
+  "goal": "Record the separately approved aws-dev infrastructure creation with redacted immutable evidence while retaining separate GitOps bootstrap, qualification and teardown boundaries.",
+  "controlPlane": {
+    "branch": "main",
+    "commit": "b01e76c4155536dd85088bda462d28f49cfde07f",
+    "headEqualsOriginMain": true,
+    "cleanWorktree": true
+  },
+  "selectedCandidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "awsDevReleaseFileSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46"
+  },
+  "privateEvidence": {
+    "rawCreatePlanCommitted": false,
+    "rawFreshPreflightPlanCommitted": false,
+    "rawFreshPreflightResultCommitted": false,
+    "rawVerifyResultCommitted": false,
+    "rawExecutionLogCommitted": false,
+    "rawTerraformPlanCommitted": false,
+    "rawTerraformStateCommitted": false,
+    "awsAccountIdCommitted": false,
+    "publicAccessCidrsCommitted": false,
+    "nodeNamesCommitted": false,
+    "createPlanSha256": "8bceece2ffbe93005730eb314fdce3b1405a305be3746c907ef243b4f5a79a30",
+    "freshPreflightPlanSha256": "903fb208e863837035c0ada19d879fd42fb4560a1067fdc7bd36d6bc6ce1c112",
+    "freshPreflightResultSha256": "f8920484c699c9a3cbfee0fee7c9a804aae306d06b1e4e057dcaed6169cc8a79",
+    "verifyResultSha256": "d2899be3a178cd5dd37052b17f3f8424023cbd2f7ea7479238b11383c5387478",
+    "executionLogSha256": "402222e091dd34eba4274d185a4cfcca8ce66db515d9483dc61b27441ca1b505",
+    "privateParentModeMaximum": "0700",
+    "privateFileModes": "0600"
+  },
+  "approval": {
+    "separateLiveCreateApproved": true,
+    "maximumSessionHours": 8,
+    "reviewedSessionBudgetUsd": 12,
+    "threeEnvironmentConfirmationsSatisfied": true,
+    "interactiveTerraformConfirmationSatisfied": true
+  },
+  "executionResult": {
+    "observedAt": "2026-09-09T08:52:25Z",
+    "teardownReviewDeadlineUtc": "2026-09-09T15:30:00Z",
+    "status": "aws-dev-infrastructure-created-api-ready",
+    "terraformPlanPolicy": "nonempty-create-read-no-op-only",
+    "terraformStateAddressCount": 103,
+    "eks": {
+      "name": "startup-devops-baseline-dev",
+      "status": "ACTIVE",
+      "version": "1.36",
+      "endpointPublicAccess": true,
+      "endpointPrivateAccess": true,
+      "enabledControlPlaneLogTypes": [],
+      "nodeCount": 4,
+      "readyNodeCount": 4,
+      "observedKubeletVersions": [
+        "v1.36.3-eks-cb19647"
+      ],
+      "finalReadyz": "ok"
+    },
+    "transientObservation": {
+      "initialPostCreateReadyzTlsHandshakeTimeout": true,
+      "subsequentNodeInventorySucceeded": true,
+      "readOnlyReadyzRetrySucceeded": true,
+      "creationOutcomeChanged": false
+    },
+    "gitopsBootstrapped": false,
+    "argocdNamespaceObserved": false,
+    "rootApplicationDeployed": false,
+    "runtimeQualified": false,
+    "automaticTeardownExecuted": false,
+    "nextAction": "review-separate-gitops-bootstrap"
+  },
+  "operationBoundary": {
+    "immediateByteIdenticalPreflightPassed": true,
+    "terraformPlanExecuted": true,
+    "terraformApplyExecuted": true,
+    "awsInfrastructureCreated": true,
+    "kubernetesApiChecked": true,
+    "gitopsBootstrapExecuted": false,
+    "rootApplicationDeployExecuted": false,
+    "trafficGenerated": false,
+    "runtimeQualificationExecuted": false,
+    "remoteFaultReplayed": false,
+    "awsTestPromotionExecuted": false,
+    "teardownExecuted": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformExecuted": false,
+    "kubernetesAccessed": false,
+    "argocdAccessed": false,
+    "environmentChanged": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.3-aws-dev-gitops-bootstrap-execution"
+}

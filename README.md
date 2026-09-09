@@ -3,6 +3,19 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.2.1-live-state-test-isolation-repair` makes the historical mocked
+ready-preflight unit test replace its filesystem state reader as well as AWS
+and Git commands. The test therefore remains deterministic after aws-dev has a
+real nonempty Terraform state, while production preflight and the live state
+remain unchanged.
+Predecessor:
+`v0.11.9.3.6.2-aws-dev-infrastructure-create-execution` records the separately
+approved aws-dev creation on exact protected main `b01e76c41555`. The guarded
+executor repeated a byte-identical ready preflight, accepted a nonempty
+create/read/no-op-only Terraform plan, created 103 state addresses and stopped
+with an ACTIVE EKS 1.36 API and four Ready nodes. Argo CD, the Root Application,
+runtime qualification, promotion and teardown remain separate and unexecuted.
+Predecessor:
 `v0.11.9.3.6.1.1-shellcheck-source-follow-repair` makes the `.3.6.1`
 validation entrypoint run ShellCheck with external-source following from the
 repository root. This removes deterministic `SC1091` CI/local parity failure,

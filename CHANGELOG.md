@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.11.9.3.6.2.1
+
+- Isolate the historical mocked ready-preflight test from the repository's
+  now-nonempty live aws-dev Terraform state.
+- Mock `summarize_state` with the test's explicit empty-state fixture and
+  assert that the expected repository state path was intercepted.
+- Preserve production preflight classification, the 103-address live state,
+  the created EKS environment and all `.3.6.2` evidence unchanged.
+- Perform no AWS, Terraform, Kubernetes, Argo CD, create, bootstrap,
+  qualification or teardown operation.
+
+## v0.11.9.3.6.2
+
+- Record the separately approved aws-dev infrastructure creation on exact
+  protected-main commit `b01e76c41555` with a USD 12 reviewed session budget.
+- Pin the private create-plan, fresh preflight plan/result, verify-result and
+  execution-log SHA-256 fingerprints without committing raw AWS or Terraform
+  evidence.
+- Record a machine-accepted nonempty create/read/no-op-only Terraform plan,
+  103 resulting state addresses, an ACTIVE EKS 1.36 API and four Ready nodes.
+- Record one transient post-create TLS handshake timeout followed by successful
+  node inventory and `/readyz=ok`; the final API-ready outcome is unchanged.
+- Stop before Argo CD bootstrap, Root deployment, runtime qualification,
+  promotion or teardown and retain a separate GitOps bootstrap review boundary.
+
 ## v0.11.9.3.6.1.1
 
 - Run the `.3.6.1` ShellCheck gate with `-x` from the repository root so its

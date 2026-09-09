@@ -634,6 +634,13 @@ Incremental scope:
         - v0.11.9.3.6.1.1 repairs deterministic ShellCheck source-follow
           parity by running the existing `.3.6.1` lint gate with `-x` from the
           repository root. No live operation or executor behavior changes.
+          - v0.11.9.3.6.2 records the separately approved create execution on
+            exact main, its private evidence fingerprints, create-only plan,
+            ACTIVE EKS API and four Ready nodes. It stops before the separately
+            reviewed GitOps bootstrap and preserves the live environment.
+            - v0.11.9.3.6.2.1 isolates the historical mocked ready-preflight
+              test from the now-nonempty live Terraform state. Production
+              classification and every live resource remain unchanged.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

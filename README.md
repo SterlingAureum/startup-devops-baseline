@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.3-aws-dev-guarded-gitops-bootstrap` implements a separately
+confirmed verify/execute gate for the existing aws-dev EKS environment. It
+requires clean exact protected main, the reviewed AWS account, ACTIVE EKS,
+the recorded 103-address Terraform state, `/readyz=ok`, absent Argo CD and
+valid Terraform bootstrap outputs. Execution pins Argo CD `v3.5.2` and stops
+before the Root Application, runtime qualification, traffic or teardown.
+Applying or validating this checkpoint performs no live operation.
+Predecessor:
 `v0.11.9.3.6.2.1-live-state-test-isolation-repair` makes the historical mocked
 ready-preflight unit test replace its filesystem state reader as well as AWS
 and Git commands. The test therefore remains deterministic after aws-dev has a

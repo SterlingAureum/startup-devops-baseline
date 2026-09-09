@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "v0.11.9.3.6.3",
+  "version": "v0.11.9.3.6.3",
+  "predecessor": "v0.11.9.3.6.2.1",
+  "status": "guarded-aws-dev-gitops-bootstrap-implemented-not-executed",
+  "implementationBaselineCommit": "04e5c40294c2b23c02626fcdf8e4648a9b788cdf",
+  "goal": "Implement a separately confirmed aws-dev GitOps bootstrap that revalidates the existing EKS environment and stops before Root Application deployment.",
+  "executor": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.3-aws-dev-gitops-bootstrap.py",
+    "phases": [
+      "verify",
+      "execute"
+    ],
+    "bootstrapEntrypoint": "scripts/bootstrap-eks-argocd.sh",
+    "requiredBranch": "main",
+    "cleanWorktreeRequired": true,
+    "headMustEqualOriginMainAndReviewedCommit": true,
+    "awsAccountInput": "EXPECTED_AWS_ACCOUNT_ID",
+    "awsAccountCommitted": false,
+    "region": "us-east-1",
+    "clusterName": "startup-devops-baseline-dev",
+    "clusterStatusRequired": "ACTIVE",
+    "kubernetesServerMustMatchEksEndpoint": true,
+    "kubernetesReadyzRequired": "ok",
+    "terraformStateAddressCountRequired": 103,
+    "argocdNamespaceMustBeAbsent": true,
+    "irsaRoleAccountsMustMatchCaller": true,
+    "terraformVpcIdValidated": true
+  },
+  "argocd": {
+    "exactVersion": "v3.5.2",
+    "mutableStableAliasAllowed": false,
+    "mutableLatestAliasAllowed": false,
+    "manifest": "https://raw.githubusercontent.com/argoproj/argo-cd/v3.5.2/manifests/install.yaml"
+  },
+  "confirmations": {
+    "readOnlyVerification": {
+      "variable": "CONFIRM_AWS_DEV_GITOPS_PREFLIGHT",
+      "value": "observe-reviewed-aws-dev-gitops-bootstrap"
+    },
+    "gitopsBootstrap": {
+      "variable": "CONFIRM_AWS_DEV_GITOPS_BOOTSTRAP",
+      "value": "bootstrap-reviewed-aws-dev-gitops"
+    }
+  },
+  "readOnlyVerification": {
+    "awsCalls": [
+      "sts get-caller-identity",
+      "eks describe-cluster"
+    ],
+    "terraformCalls": [
+      "state list",
+      "output -raw aws_load_balancer_controller_role_arn",
+      "output -raw karpenter_controller_role_arn",
+      "output -raw vpc_id"
+    ],
+    "kubernetesCalls": [
+      "config view --minify server",
+      "get --raw=/readyz",
+      "get namespace argocd --ignore-not-found"
+    ],
+    "mutationsAllowed": false
+  },
+  "successBoundary": {
+    "status": "aws-dev-gitops-bootstrap-complete",
+    "argocdInstalled": true,
+    "awsLoadBalancerControllerApplicationApplied": true,
+    "karpenterServiceAccountPrepared": true,
+    "rootApplicationDeployed": false,
+    "applicationRuntimeQualified": false,
+    "trafficGenerated": false,
+    "automaticTeardownExecuted": false,
+    "nextAction": "review-separate-root-application-deploy"
+  },
+  "failureBoundary": {
+    "partialArgocdNamespaceRequiresReview": true,
+    "automaticRetry": false,
+    "automaticRootDeploy": false,
+    "automaticQualification": false,
+    "automaticDestroy": false,
+    "preserveTerraformState": true
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformExecuted": false,
+    "kubernetesAccessed": false,
+    "argocdAccessed": false,
+    "environmentChanged": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.4-aws-dev-root-application-deploy"
+}

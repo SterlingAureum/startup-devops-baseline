@@ -427,6 +427,16 @@
 /docs/V0.11.9.3.6_AWS_DEV_LIVE_REHEARSAL_CREATE_PLAN.md @SterlingAureum
 /delivery/contracts/v0.11.9.3.6-aws-dev-live-rehearsal-create-plan.json @SterlingAureum
 /delivery/examples/v0.11.9.3.6-aws-dev-live-rehearsal-create-plan.json @SterlingAureum
+/scripts/check-aws-dev-create-terraform-plan.py @SterlingAureum
+/scripts/test-aws-dev-create-terraform-plan.py @SterlingAureum
+/scripts/execute-v0.11.9.3.6.1-aws-dev-live-rehearsal-create.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.1-aws-dev-live-rehearsal-create-executor.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.1-aws-dev-live-rehearsal-create-executor.sh @SterlingAureum
+/docs/V0.11.9.3.6.1_AWS_DEV_LIVE_REHEARSAL_CREATE_EXECUTOR.md @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.1-aws-dev-live-rehearsal-create-executor.json @SterlingAureum
+/scripts/validate-v0.11.9.3.6.1.1-shellcheck-source-follow-repair.sh @SterlingAureum
+/docs/V0.11.9.3.6.1.1_SHELLCHECK_SOURCE_FOLLOW_REPAIR.md @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.1.1-shellcheck-source-follow-repair.json @SterlingAureum
 /docs/V0.11.9.2.2.1_EMPTY_DIGEST_GITOPS_CONVERGENCE_REPAIR.md @SterlingAureum
 /docs/V0.11.9.1_LOCAL_RELEASE_REHEARSAL.md @SterlingAureum
 /scripts/check-aws-prod-observability-qualification.py @SterlingAureum

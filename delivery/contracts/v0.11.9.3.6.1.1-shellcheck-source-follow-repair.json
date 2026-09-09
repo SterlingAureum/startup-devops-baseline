@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "v0.11.9.3.6.1.1",
+  "version": "v0.11.9.3.6.1.1",
+  "predecessor": "v0.11.9.3.6.1",
+  "status": "shellcheck-source-follow-parity-repaired",
+  "applicationBaseline": {
+    "commit": "4ecf8515c636066a4e8e9cc640ee96473fbfd21d",
+    "requiredAppliedIncrement": "v0.11.9.3.6.1-aws-dev-live-rehearsal-create-executor"
+  },
+  "goal": "Make the existing create-executor ShellCheck gate follow its controlled repository source without changing any runtime execution path.",
+  "diagnostic": {
+    "code": "SC1091",
+    "severity": "info",
+    "checkedScript": "scripts/apply-eks-api-access-cidr.sh",
+    "controlledSource": "scripts/aws-environment-context.sh",
+    "sourceAnnotationRetained": true,
+    "cause": "The validator invoked ShellCheck without external-source following."
+  },
+  "repair": {
+    "validator": "scripts/validate-v0.11.9.3.6.1-aws-dev-live-rehearsal-create-executor.sh",
+    "shellcheckExternalSources": true,
+    "shellcheckFlag": "-x",
+    "workingDirectory": "repository-root",
+    "offlineInvocationRegression": "scripts/validate-v0.11.9.3.6.1.1-shellcheck-source-follow-repair.sh",
+    "runtimeSemanticsChanged": false
+  },
+  "producerExecution": {
+    "freshPreflightExecuted": false,
+    "awsAccessed": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "clusterAccessed": false,
+    "environmentCreated": false,
+    "gitopsBootstrapped": false,
+    "runtimeQualificationExecuted": false,
+    "teardownExecuted": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.2-aws-dev-infrastructure-create-execution"
+}

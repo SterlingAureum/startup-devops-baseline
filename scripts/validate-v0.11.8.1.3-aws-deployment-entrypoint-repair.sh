@@ -11,7 +11,18 @@ with open(os.environ['CALL_LOG'], 'a') as f: f.write(name + ' ' + ' '.join(args)
 if name == 'terraform':
     if 'show' in args:
         if case == 'state-error': sys.exit(1)
-        print(json.dumps({'values':{'root_module':{'resources':[{'address':'existing'}]}}} if case == 'state-full' else {'format_version':'1.0'}))
+        if args[-1].endswith('.tfplan'):
+            actions = {
+                'plan-delete': ['delete'],
+                'plan-replace': ['delete','create'],
+                'plan-update': ['update'],
+            }.get(case, ['create'])
+            changes = [] if case == 'plan-empty' else [
+                {'address':'module.fixture.resource','change':{'actions':actions}}
+            ]
+            print(json.dumps({'format_version':'1.2','resource_changes':changes}))
+        else:
+            print(json.dumps({'values':{'root_module':{'resources':[{'address':'existing'}]}}} if case == 'state-full' else {'format_version':'1.0'}))
     sys.exit(0)
 if name == 'kubectl': sys.exit(0)
 if name == 'aws':
@@ -30,7 +41,9 @@ with tempfile.TemporaryDirectory() as tmp:
     for cmd in ('aws','terraform','kubectl','curl'):
         path = temp / cmd; path.write_text(mock); path.chmod(0o755)
     cases = [('create',True),('denied',False),('existing',False),('account',False),
-             ('state-full',False),('state-error',False),('missing-maintain',False),('maintain',True)]
+             ('state-full',False),('state-error',False),('plan-delete',False),
+             ('plan-replace',False),('plan-update',False),('plan-empty',False),
+             ('missing-maintain',False),('maintain',True)]
     for case, success in cases:
         env = dict(os.environ)
         for key in ('AWS_ENVIRONMENT','TF_DIR','CLUSTER_NAME','EKS_ACCESS_MODE','EKS_CLUSTER_LOG_TYPES_JSON'):

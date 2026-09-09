@@ -1,0 +1,102 @@
+{
+  "schemaVersion": "v0.11.9.3.6.1",
+  "version": "v0.11.9.3.6.1",
+  "predecessor": "v0.11.9.3.6",
+  "status": "guarded-aws-dev-create-executor-implemented-not-executed",
+  "implementationBaselineCommit": "4ecf8515c636066a4e8e9cc640ee96473fbfd21d",
+  "goal": "Implement a separately confirmed aws-dev infrastructure creation executor that revalidates exact protected main and a byte-identical immediate preflight before a machine-approved create-only Terraform plan can be applied.",
+  "executor": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.1-aws-dev-live-rehearsal-create.py",
+    "phases": [
+      "verify",
+      "execute"
+    ],
+    "createPlanChecker": "scripts/check-v0.11.9.3.6-aws-dev-live-rehearsal-create-plan.py",
+    "preflightEntrypoint": "scripts/preflight-v0.11.9.3.5-aws-dev-live-rehearsal.py",
+    "infrastructureCreateEntrypoint": "scripts/apply-aws-dev.sh",
+    "requiredBranch": "main",
+    "cleanWorktreeRequired": true,
+    "headMustEqualOriginMainAndPlan": true,
+    "privateInputFileMode": "0600",
+    "privateParentDirectoryModeMaximum": "0700",
+    "freshPreflightRerunImmediatelyBeforeCreate": true,
+    "freshPreflightMustBeByteIdentical": true
+  },
+  "confirmations": {
+    "preflight": {
+      "variable": "CONFIRM_AWS_DEV_PREFLIGHT",
+      "value": "observe-reviewed-aws-dev-rehearsal"
+    },
+    "rehearsalCreate": {
+      "variable": "CONFIRM_AWS_DEV_REHEARSAL_CREATE",
+      "value": "execute-reviewed-aws-dev-rehearsal-create"
+    },
+    "infrastructureApply": {
+      "variable": "CONFIRM_AWS_DEV_APPLY",
+      "value": "create-ephemeral-aws-dev"
+    },
+    "interactiveTerraformPlan": "apply-aws-dev"
+  },
+  "terraformPlanGate": {
+    "checker": "scripts/check-aws-dev-create-terraform-plan.py",
+    "source": "terraform show -json saved-plan",
+    "allowedActionVectors": [
+      [
+        "create"
+      ],
+      [
+        "read"
+      ],
+      [
+        "no-op"
+      ]
+    ],
+    "atLeastOneCreateRequired": true,
+    "updateAllowed": false,
+    "deleteAllowed": false,
+    "replacementAllowed": false,
+    "emptyPlanAllowed": false,
+    "malformedPlanAllowed": false,
+    "rawPlanPersistedByChecker": false
+  },
+  "successBoundary": {
+    "status": "aws-dev-infrastructure-created-api-ready",
+    "eksApiReadyRequired": true,
+    "gitopsBootstrapped": false,
+    "rootApplicationDeployed": false,
+    "runtimeQualified": false,
+    "trafficGenerated": false,
+    "automaticTeardownExecuted": false,
+    "nextAction": "review-separate-gitops-bootstrap"
+  },
+  "failureBoundary": {
+    "preserveTerraformState": true,
+    "preservePrivateEvidence": true,
+    "uncertaintyIsAbsence": false,
+    "automaticRetry": false,
+    "automaticDestroy": false,
+    "remoteFaultReplay": false
+  },
+  "selectedCandidate": {
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "awsDevReleaseFileSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46"
+  },
+  "producerExecution": {
+    "freshPreflightExecuted": false,
+    "awsAccessed": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "clusterAccessed": false,
+    "environmentCreated": false,
+    "gitopsBootstrapped": false,
+    "runtimeQualificationExecuted": false,
+    "teardownExecuted": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.2-aws-dev-infrastructure-create-execution"
+}

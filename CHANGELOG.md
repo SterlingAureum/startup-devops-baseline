@@ -1,5 +1,30 @@
 # Changelog
 
+## v0.11.9.3.6.1.1
+
+- Run the `.3.6.1` ShellCheck gate with `-x` from the repository root so its
+  controlled `aws-environment-context.sh` source annotation is followed.
+- Add an offline fake-ShellCheck regression that proves the predecessor
+  validator actually supplies `-x`, including where ShellCheck is unavailable.
+- Retain the existing source annotation and all create-executor, Terraform,
+  AWS, Kubernetes and GitOps runtime semantics unchanged.
+- Keep fresh preflight, infrastructure creation and every live operation
+  unexecuted and unauthorized at this repair checkpoint.
+
+## v0.11.9.3.6.1
+
+- Implement a two-phase aws-dev create executor that verifies exact main,
+  private file modes, fresh hashes, ready inventory, cost window and identity.
+- Re-run the reviewed read-only preflight immediately before create and require
+  its output to be byte-identical to the saved private result.
+- Add a Terraform JSON gate that accepts only nonempty create/read/no-op plans
+  and rejects update, delete, replacement, empty, unknown or malformed plans.
+- Retain the existing environment and interactive Terraform confirmations and
+  add a separate rehearsal-create execution token.
+- Stop successful execution at EKS API readiness; do not bootstrap GitOps,
+  deploy the Root Application, qualify runtime, promote or automatically tear
+  down the environment.
+
 ## v0.11.9.3.6
 
 - Add a private, offline-only aws-dev creation-plan template and strict

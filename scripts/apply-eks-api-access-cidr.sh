@@ -63,7 +63,9 @@ PY
 )"
 MANAGEMENT_CIDR="${PUBLIC_IP}/32"
 PLAN_FILE="$(mktemp "${TMPDIR:-/tmp}/v086-eks-access.XXXXXX.tfplan")"
-trap 'rm -f -- "${PLAN_FILE}"' EXIT
+PLAN_JSON="$(mktemp "${TMPDIR:-/tmp}/v0119361-aws-dev-create.XXXXXX.json")"
+CREATE_PLAN_CHECKER="${ROOT_DIR}/scripts/check-aws-dev-create-terraform-plan.py"
+trap 'rm -f -- "${PLAN_FILE}" "${PLAN_JSON}"' EXIT
 
 echo "==> AWS identity"
 aws sts get-caller-identity >/dev/null
@@ -75,7 +77,7 @@ if [[ "${EKS_ACCESS_MODE}" == create-dev ]]; then
   }
 fi
 DISCOVERY_ERROR="$(mktemp)"
-trap 'rm -f -- "${PLAN_FILE}" "${DISCOVERY_ERROR}"' EXIT
+trap 'rm -f -- "${PLAN_FILE}" "${PLAN_JSON}" "${DISCOVERY_ERROR}"' EXIT
 if CLUSTER_JSON="$(aws eks describe-cluster --region "${AWS_REGION}" --name "${CLUSTER_NAME}" --output json 2>"${DISCOVERY_ERROR}")"; then
   [[ "${EKS_ACCESS_MODE}" == maintain ]] || {
     echo 'Cluster already exists; use the maintenance entrypoint after reviewing Terraform state.' >&2; exit 1;
@@ -133,6 +135,15 @@ terraform -chdir="${TF_DIR}" plan \
   -var="eks_enabled_cluster_log_types=${EKS_CLUSTER_LOG_TYPES_JSON}" \
   -var="eks_cluster_log_retention_days=${EKS_CLUSTER_LOG_RETENTION_DAYS}"
 if [[ "${EKS_ACCESS_MODE}" == create-dev ]]; then
+  [[ -x "${CREATE_PLAN_CHECKER}" ]] || {
+    echo "Required executable is missing: ${CREATE_PLAN_CHECKER}" >&2
+    exit 1
+  }
+  terraform -chdir="${TF_DIR}" show -json "${PLAN_FILE}" > "${PLAN_JSON}" || {
+    echo 'Cannot inspect the saved Terraform creation plan; stopping.' >&2
+    exit 1
+  }
+  python3 "${CREATE_PLAN_CHECKER}" --plan-json "${PLAN_JSON}"
   read -r -p 'Review the plan above. Type apply-aws-dev to apply: ' PLAN_CONFIRMATION
   [[ "${PLAN_CONFIRMATION}" == apply-aws-dev ]] || exit 1
 fi

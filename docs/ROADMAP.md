@@ -627,6 +627,13 @@ Incremental scope:
       estimate, eight-hour/USD 50 ceiling, two create confirmations, ordered
       GitOps bootstrap and separate teardown approval. Live creation remains
       blocked until the `.3.6.1` executor review.
+      - v0.11.9.3.6.1 implements the guarded two-phase create executor and a
+        machine create-only Terraform plan gate. It requires a byte-identical
+        immediate preflight and four total decisions, then stops at EKS API
+        readiness so GitOps bootstrap remains separately reviewed.
+        - v0.11.9.3.6.1.1 repairs deterministic ShellCheck source-follow
+          parity by running the existing `.3.6.1` lint gate with `-x` from the
+          repository root. No live operation or executor behavior changes.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

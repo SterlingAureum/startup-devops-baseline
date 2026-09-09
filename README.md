@@ -3,6 +3,19 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.1.1-shellcheck-source-follow-repair` makes the `.3.6.1`
+validation entrypoint run ShellCheck with external-source following from the
+repository root. This removes deterministic `SC1091` CI/local parity failure,
+adds a ShellCheck-independent invocation regression and changes no AWS,
+Terraform, Kubernetes or executor runtime behavior.
+Predecessor:
+`v0.11.9.3.6.1-aws-dev-live-rehearsal-create-executor` implements a two-phase
+verify/execute gate for initial aws-dev infrastructure. It binds three private
+files to exact main, re-runs a byte-identical read-only preflight, requires
+three environment confirmations plus the Terraform prompt, and accepts only a
+nonempty create/read/no-op plan. Success stops at EKS API readiness; GitOps,
+qualification and teardown remain separate.
+Predecessor:
 `v0.11.9.3.6-aws-dev-live-rehearsal-create-plan` adds an offline-only private
 aws-dev creation-plan contract. It requires a fresh post-merge preflight,
 exact candidate and main identities, two Terraform confirmations, a reviewed

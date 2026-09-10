@@ -3469,3 +3469,9 @@ All notable changes to this repository are documented in this file.
 - Argo CD App of Apps.
 - Helm-based demo-api deployment.
 - ingress-nginx and lightweight monitoring.
+## v0.11.9.3.6.6.2
+
+- Decoupled the historical v0.11.9.3.2 checkpoint from mutable aws-test state.
+- Reused the reviewed two-state aws-test successor validator.
+- Kept aws-prod immutable and fail-closed before its separate promotion.
+- Added an offline regression contract and validation entry point.

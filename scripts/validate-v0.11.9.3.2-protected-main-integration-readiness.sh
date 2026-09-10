@@ -127,7 +127,10 @@ assert "Preview only" in preview_overlay
 assert preview["revision"] in preview_overlay
 
 for relative, expected_sha256 in contract["releaseFiles"].items():
-    if relative == "apps/demo-api/helm/values/releases/aws-dev.yaml":
+    if relative in (
+        "apps/demo-api/helm/values/releases/aws-dev.yaml",
+        "apps/demo-api/helm/values/releases/aws-test.yaml",
+    ):
         continue
     data = (root / relative).read_bytes()
     actual = hashlib.sha256(data).hexdigest()
@@ -190,6 +193,10 @@ for relative, marker in (
 
 print("v0.11.9.3.2 active main revisions, release immutability, historical preview and trusted boundaries passed.")
 PY
+
+"${ROOT_DIR}/scripts/check-v0.11.9.3.6.6.1-aws-test-release-successor.py" \
+  --release-file "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml" \
+  >/dev/null
 
 "${ROOT_DIR}/scripts/check-v0.11.9.3.2-release-successor.py" \
   --release-file "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml" \

@@ -376,14 +376,42 @@ class AwsDevRuntimeQualificationTests(unittest.TestCase):
             mock.patch.object(MODULE, "free_loopback_port", return_value=19092),
             mock.patch.object(MODULE.subprocess, "Popen", return_value=process),
             mock.patch.object(MODULE, "urlopen", side_effect=URLError("connection refused")),
-            mock.patch.object(MODULE.time, "monotonic", side_effect=[0, 31]),
+            mock.patch.object(
+                MODULE.time,
+                "monotonic",
+                side_effect=[0, MODULE.PROMETHEUS_FORWARD_READY_SECONDS + 1],
+            ),
         ):
-            with self.assertRaisesRegex(MODULE.CommandFailure, "readiness timed out"):
+            with self.assertRaisesRegex(MODULE.CommandFailure, "readiness timed out") as stopped:
                 with MODULE.prometheus_port_forward():
                     self.fail("Unreachable port-forward must not yield a reader")
 
+        self.assertIn("last probe: Prometheus request failed", str(stopped.exception))
+        self.assertIn("connection refused", str(stopped.exception))
         self.assertEqual(process.terminate_calls, 1)
         self.assertEqual(process.kill_calls, 0)
+
+    def test_port_forward_accepts_readiness_needing_more_than_one_second(self) -> None:
+        process = FakeProcess()
+        observed_timeouts: list[int] = []
+
+        def delayed_readiness(_url: str, timeout: int) -> FakeResponse:
+            observed_timeouts.append(timeout)
+            if timeout <= 1:
+                raise TimeoutError("simulated response exceeds one second")
+            return FakeResponse("Prometheus Server is Ready.")
+
+        with (
+            mock.patch.object(MODULE, "free_loopback_port", return_value=19093),
+            mock.patch.object(MODULE.subprocess, "Popen", return_value=process),
+            mock.patch.object(MODULE, "urlopen", side_effect=delayed_readiness),
+        ):
+            with MODULE.prometheus_port_forward():
+                pass
+
+        self.assertEqual(observed_timeouts, [MODULE.PROMETHEUS_FORWARD_PROBE_SECONDS])
+        self.assertGreater(MODULE.PROMETHEUS_FORWARD_PROBE_SECONDS, 1)
+        self.assertEqual(process.terminate_calls, 1)
 
     def test_cli_interrupt_reports_exit_130_after_context_cleanup(self) -> None:
         stderr = io.StringIO()

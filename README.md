@@ -3,6 +3,16 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.5.1.1-port-forward-readiness-budget-repair` keeps the repaired
+loopback-only Prometheus transport and corrects its remaining timing race. The
+observed tunnel accepted 13 connections and cleaned up correctly, but its
+one-second readiness probes expired before the ready response arrived. The
+successor uses bounded 90-second startup, 10-second readiness-probe and
+60-second Prometheus request budgets, and reports the last probe error. It
+still stops before traffic and requires a fresh post-merge preflight plus
+separate approval. Applying and validating this package performs no AWS,
+Kubernetes or traffic operation.
+Predecessor:
 `v0.11.9.3.6.5.1-runtime-qualification-prometheus-transport-repair` replaces
 the failed EKS API Service Proxy telemetry path with the already reviewed
 loopback-only `pods/portforward` transport. It uses a dynamic port, bounded

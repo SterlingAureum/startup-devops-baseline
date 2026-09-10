@@ -50,9 +50,9 @@ MAXIMUM_WINDOW_SECONDS = 8 * 60 * 60
 WARMUP_ROUNDS = 12
 FINAL_ROUNDS = 6
 REQUESTS_PER_ROUND = 3
-PROMETHEUS_FORWARD_READY_SECONDS = 30
-PROMETHEUS_FORWARD_PROBE_SECONDS = 1
-PROMETHEUS_REQUEST_TIMEOUT_SECONDS = 20
+PROMETHEUS_FORWARD_READY_SECONDS = 90
+PROMETHEUS_FORWARD_PROBE_SECONDS = 10
+PROMETHEUS_REQUEST_TIMEOUT_SECONDS = 60
 PROMETHEUS_FORWARD_STOP_SECONDS = 5
 
 
@@ -139,6 +139,7 @@ def prometheus_port_forward() -> Iterator[PrometheusReader]:
         )
         try:
             deadline = time.monotonic() + PROMETHEUS_FORWARD_READY_SECONDS
+            last_probe_error = "readiness probe has not completed"
             while True:
                 if process.poll() is not None:
                     detail = read_forward_log(log_file) or "kubectl port-forward exited without output"
@@ -150,11 +151,15 @@ def prometheus_port_forward() -> Iterator[PrometheusReader]:
                     )
                     if "Ready" in ready:
                         break
-                except CommandFailure:
-                    pass
+                    last_probe_error = "Prometheus readiness endpoint did not report Ready"
+                except CommandFailure as error:
+                    last_probe_error = str(error)
                 if time.monotonic() >= deadline:
                     detail = read_forward_log(log_file) or "no kubectl port-forward output"
-                    raise CommandFailure(f"Prometheus port-forward readiness timed out: {detail}")
+                    raise CommandFailure(
+                        "Prometheus port-forward readiness timed out; "
+                        f"last probe: {last_probe_error}; kubectl: {detail}"
+                    )
                 time.sleep(1)
 
             def read_prometheus(suffix: str) -> str:

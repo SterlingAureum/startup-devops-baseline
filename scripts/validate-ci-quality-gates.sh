@@ -368,6 +368,9 @@ echo "==> Validating v0.11.9.3.6.5.1 runtime qualification Prometheus transport 
 echo "==> Validating v0.11.9.3.6.5.1.1 port-forward readiness budget repair"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.5.1.1-port-forward-readiness-budget-repair.sh"
 
+echo "==> Validating v0.11.9.3.6.5.2 aws-dev runtime qualification execution evidence"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

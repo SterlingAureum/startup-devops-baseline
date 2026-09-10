@@ -142,6 +142,9 @@
 /scripts/validate-v0.11.9.3.6.5.1.1-port-forward-readiness-budget-repair.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.5.1.1-port-forward-readiness-budget-repair.json @SterlingAureum
 /docs/V0.11.9.3.6.5.1.1_PORT_FORWARD_READINESS_BUDGET_REPAIR.md @SterlingAureum
+/scripts/validate-v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution.json @SterlingAureum
+/docs/V0.11.9.3.6.5.2_AWS_DEV_RUNTIME_QUALIFICATION_EXECUTION.md @SterlingAureum
 /scripts/write-v0.9-final-evidence.sh @SterlingAureum
 /scripts/validate-v0.9-final-evidence.sh @SterlingAureum
 /docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md @SterlingAureum

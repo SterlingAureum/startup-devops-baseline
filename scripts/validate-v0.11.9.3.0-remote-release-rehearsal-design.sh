@@ -2,6 +2,7 @@
 set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+AWS_TEST_RELEASE_FILE="${AWS_TEST_RELEASE_FILE:-${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml}"
 CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.0-remote-release-rehearsal-design.json"
 TEMPLATE="${ROOT_DIR}/delivery/examples/v0.11.9.3.0-remote-release-rehearsal-plan.json"
 AWS_DEV_RELEASE_FILE="${AWS_DEV_RELEASE_FILE:-${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml}"
@@ -101,9 +102,8 @@ assert prod["runtime_mutations"] is False
 assert prod["automatic_deployment"] is False
 assert prod["prod_qualified"] is False
 
-for environment in ("aws-test", "aws-prod"):
-    release = (root / f"apps/demo-api/helm/values/releases/{environment}.yaml").read_text()
-    assert candidate["digest"] not in release
+release = (root / "apps/demo-api/helm/values/releases/aws-prod.yaml").read_text()
+assert candidate["digest"] not in release
 
 dev_overlay = (root / "clusters/aws/overlays/dev/kustomization.yaml").read_text()
 successor = json.loads((root / "delivery/contracts/v0.11.9.3.2-protected-main-integration-readiness.json").read_text())
@@ -126,6 +126,9 @@ for relative, marker in (
 
 print("v0.11.9.3.0 candidate, main boundary, environment order, local-failure disposition, and cost contracts passed.")
 PY
+
+"${ROOT_DIR}/scripts/check-v0.11.9.3.6.6.1-aws-test-release-successor.py" \
+  --release-file "${AWS_TEST_RELEASE_FILE}" >/dev/null
 
 aws_dev_release_state="$(
   "${SUCCESSOR_CHECK}" \

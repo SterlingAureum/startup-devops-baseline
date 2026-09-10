@@ -9,6 +9,7 @@ READINESS_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.2-protected-main-in
 SUCCESSOR_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.3-reviewed-main-integration.json"
 SUCCESSOR_CHECK="${ROOT_DIR}/scripts/check-v0.11.9.3.2-release-successor.py"
 AWS_DEV_RELEASE_FILE="${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml"
+AWS_TEST_RELEASE_FILE="${AWS_TEST_RELEASE_FILE:-${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml}"
 
 for command_name in bash python3; do
   command -v "${command_name}" >/dev/null 2>&1 || {
@@ -89,7 +90,7 @@ for text in (design_text, prior_repair_text):
     assert "reviewed-selected-candidate" in text
     assert 'AWS_DEV_RELEASE_FILE="${AWS_DEV_RELEASE_FILE:-' in text
 
-assert 'for environment in ("aws-test", "aws-prod"):' in design_text
+assert 'apps/demo-api/helm/values/releases/aws-prod.yaml' in design_text
 assert 'for environment in ("aws-dev", "aws-test", "aws-prod"):' not in design_text
 assert "hashlib.sha256(current_aws_dev)" not in prior_repair_text
 
@@ -105,10 +106,9 @@ for path in sorted((root / "scripts").glob("validate-v0.11*.sh")):
     if "hashlib.sha256(current_aws_dev)" in text:
         raise SystemExit(f"Permanent current aws-dev fingerprint assertion remains: {path.name}")
 
-for environment in ("aws-test", "aws-prod"):
-    release = (root / f"apps/demo-api/helm/values/releases/{environment}.yaml").read_text()
-    assert contract["selectedCandidate"]["digest"] not in release
-    assert contract["selectedCandidate"]["sourceCommit"] not in release
+release = (root / "apps/demo-api/helm/values/releases/aws-prod.yaml").read_text()
+assert contract["selectedCandidate"]["digest"] not in release
+assert contract["selectedCandidate"]["sourceCommit"] not in release
 
 for relative, marker in (
     ("README.md", "v0.11.9.3.3.2-remote-successor-chain-repair"),
@@ -122,6 +122,9 @@ for relative, marker in (
 
 print("v0.11.9.3.3.2 remaining successor-chain assertions and no-runtime scope passed.")
 PY
+
+"${ROOT_DIR}/scripts/check-v0.11.9.3.6.6.1-aws-test-release-successor.py" \
+  --release-file "${AWS_TEST_RELEASE_FILE}" >/dev/null
 
 FIXTURE_DIR="$(mktemp -d)"
 trap 'rm -rf "${FIXTURE_DIR}"' EXIT

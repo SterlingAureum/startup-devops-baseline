@@ -4,6 +4,7 @@ set -Eeuo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "${ROOT_DIR}"
 AWS_DEV_RELEASE_FILE="${AWS_DEV_RELEASE_FILE:-apps/demo-api/helm/values/releases/aws-dev.yaml}"
+AWS_TEST_RELEASE_FILE="${AWS_TEST_RELEASE_FILE:-apps/demo-api/helm/values/releases/aws-test.yaml}"
 
 python3 - <<'PY'
 import json
@@ -74,14 +75,14 @@ for marker in (
 assert restore.index('derive-demo-api-release-id.py') < restore.index(
     'exec "${ROOT_DIR}/scripts/restore-local-gitops-baseline.sh"')
 
-for release_file in (
-    'apps/demo-api/helm/values/releases/aws-test.yaml',
-    'apps/demo-api/helm/values/releases/aws-prod.yaml',
-):
-    text = Path(release_file).read_text()
-    assert contract['image']['digest'] not in text, release_file
-    assert contract['source']['commit'] not in text, release_file
+release_file = 'apps/demo-api/helm/values/releases/aws-prod.yaml'
+text = Path(release_file).read_text()
+assert contract['image']['digest'] not in text, release_file
+assert contract['source']['commit'] not in text, release_file
 PY
+
+scripts/check-v0.11.9.3.6.6.1-aws-test-release-successor.py \
+  --release-file "${AWS_TEST_RELEASE_FILE}" >/dev/null
 
 aws_dev_release_state="$(
   scripts/check-v0.11.9.3.2-release-successor.py \

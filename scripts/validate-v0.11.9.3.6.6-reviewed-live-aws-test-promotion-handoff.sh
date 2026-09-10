@@ -20,7 +20,8 @@ assert contract["implementationBaselineCommit"] == "5b592ac8958b4227048403bf1ff7
 assert contract["reviewedQualification"]["sha256"] == "a5994ebce978e55842dabe22cfbb6c48adcfaf61fa46503d06001a6cc3b2b92e"
 assert contract["sourceRelease"]["sha256"] == "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46"
 assert contract["sourceRelease"]["releaseId"] == "demo-api-cf0a6bcbc466-cdffd3d71763"
-assert contract["targetRelease"]["currentSha256"] == "2817d5dbcb902b53956f564aa2024617249ee8e3cb003092bdf0724943342a91"
+assert contract["targetRelease"]["prePromotionSha256"] == "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22"
+assert contract["targetRelease"]["reviewedPromotedSha256"] == "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46"
 handoff = contract["workflowHandoff"]
 assert handoff["qualificationMode"] == "reviewed-live-contract"
 assert handoff["allowedEdge"] == "aws-dev->aws-test"

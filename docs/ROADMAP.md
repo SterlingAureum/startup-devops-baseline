@@ -702,6 +702,16 @@ Incremental scope:
                               without network-policy or security-group changes.
                               A fresh post-merge preflight and approval remain
                               mandatory before the original traffic boundary.
+                              - v0.11.9.3.6.5.1.1 corrects the remaining
+                                port-forward readiness race observed after
+                                `.3.6.5.1` reached main. The loopback tunnel
+                                accepted 13 connections and cleaned up, but
+                                one-second probes timed out before Prometheus
+                                returned readiness. Bounded 90/10/60-second
+                                startup, probe and request budgets plus the
+                                last-probe diagnostic retain all transport,
+                                traffic, approval and teardown boundaries.
+                                A fresh post-merge preflight is still required.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

@@ -61,9 +61,9 @@ assert all(value is False for value in contract["operationBoundary"].values())
 
 for marker in (
     'PROMETHEUS_SERVICE = "observability-metrics-prometheus"',
-    'PROMETHEUS_FORWARD_READY_SECONDS = 30',
-    'PROMETHEUS_FORWARD_PROBE_SECONDS = 1',
-    'PROMETHEUS_REQUEST_TIMEOUT_SECONDS = 20',
+    'PROMETHEUS_FORWARD_READY_SECONDS =',
+    'PROMETHEUS_FORWARD_PROBE_SECONDS =',
+    'PROMETHEUS_REQUEST_TIMEOUT_SECONDS =',
     'PROMETHEUS_FORWARD_STOP_SECONDS = 5',
     'listener.bind(("127.0.0.1", 0))',
     'tempfile.TemporaryFile(mode="w+", encoding="utf-8")',

@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.11.9.3.6.5.1.1
+
+- Record that the repaired loopback port-forward established successfully,
+  handled 13 readiness connections and left no residual process, while the
+  preflight still stopped before traffic or qualification.
+- Correct the remaining readiness race by increasing the overall port-forward
+  readiness budget from 30 to 90 seconds and each readiness probe from one to
+  10 seconds; retain a bounded 60-second Prometheus request timeout.
+- Include the last readiness-probe failure in the terminal diagnostic so a
+  future stop distinguishes tunnel startup, HTTP latency and readiness-body
+  failures without exposing the anonymous kubectl log.
+- Add delayed-readiness and timeout-diagnostic regression coverage while
+  preserving exact-main, loopback-only transport, exact-child cleanup,
+  54-request, no-promotion and no-teardown boundaries.
+- Require a fresh post-merge preflight and separate approval. Applying and
+  validating this repair performs no live operation or traffic.
+
 ## v0.11.9.3.6.5.1
 
 - Record that the first `.3.6.5` read-only preflight stopped before traffic

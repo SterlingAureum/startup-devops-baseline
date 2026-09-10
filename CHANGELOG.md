@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.11.9.3.6.5
+
+- Add separate read-only and execution confirmations for aws-dev runtime
+  qualification on one clean exact protected-main commit and reviewed account.
+- Require at least 15 minutes remaining in an explicit UTC window no more than
+  eight hours away before any traffic can be generated.
+- Verify Root, demo-api and monitoring health; immutable Deployment/Pod image
+  identity; CloudNativePG, Grafana and public HTTPS readiness; and the
+  Prometheus target/SLO rule inventory during preflight.
+- Bound execution to 54 normal `/health`, `/ready` and `/version` requests
+  across two scrape waits, then require a populated request series,
+  availability >= 0.999, latency >= 0.99 and zero firing critical aws-dev
+  alerts.
+- Preserve the aws-dev Deployment model: no Rollout promotion or AnalysisRun,
+  no fault injection, no automatic retry and no teardown. Live execution and
+  its evidence remain separately approved.
+
 ## v0.11.9.3.6.4.3
 
 - Record the approved aws-dev teardown sequence from 103 Terraform addresses

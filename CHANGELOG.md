@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.9.3.6.6.1
+
+- Repair historical validators that permanently required the reviewed candidate
+  to remain absent from aws-test after an authorized release-only promotion.
+- Accept only the exact historical aws-test release or the exact reviewed
+  promoted candidate; reject unknown and partial identities.
+- Keep aws-prod pre-promotion and correct the aws-test historical SHA typo in
+  the `.3.6.6` handoff contract.
+- Add promoted-state regression coverage without dispatching a workflow,
+  updating or merging a PR, accessing an environment, or executing teardown.
+
 ## v0.11.9.3.6.6
 
 - Add a reviewed-live-contract promotion mode for the completed aws-dev live

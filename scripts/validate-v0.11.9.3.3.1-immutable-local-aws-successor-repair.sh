@@ -8,6 +8,7 @@ READINESS_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.2-protected-main-in
 SUCCESSOR_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.3-reviewed-main-integration.json"
 SUCCESSOR_CHECK="${ROOT_DIR}/scripts/check-v0.11.9.3.2-release-successor.py"
 AWS_DEV_RELEASE_FILE="${AWS_DEV_RELEASE_FILE:-${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml}"
+AWS_TEST_RELEASE_FILE="${AWS_TEST_RELEASE_FILE:-${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml}"
 
 for command_name in bash python3; do
   command -v "${command_name}" >/dev/null 2>&1 || {
@@ -74,10 +75,9 @@ local_values = (root / "apps/demo-api/helm/values.yaml").read_text()
 assert repair["selectedCandidateDigest"] in local_values
 assert repair["selectedCandidateSourceCommit"] in local_values
 
-for environment in ("aws-test", "aws-prod"):
-    release = (root / f"apps/demo-api/helm/values/releases/{environment}.yaml").read_text()
-    assert repair["selectedCandidateDigest"] not in release
-    assert repair["selectedCandidateSourceCommit"] not in release
+release = (root / "apps/demo-api/helm/values/releases/aws-prod.yaml").read_text()
+assert repair["selectedCandidateDigest"] not in release
+assert repair["selectedCandidateSourceCommit"] not in release
 
 readiness = json.loads((root / "delivery/contracts/v0.11.9.3.2-protected-main-integration-readiness.json").read_text())
 assert readiness["releaseFiles"]["apps/demo-api/helm/values/releases/aws-dev.yaml"] == (
@@ -113,6 +113,9 @@ for relative, marker in (
 
 print("v0.11.9.3.3.1 historical validator boundary and no-runtime scope passed.")
 PY
+
+"${ROOT_DIR}/scripts/check-v0.11.9.3.6.6.1-aws-test-release-successor.py" \
+  --release-file "${AWS_TEST_RELEASE_FILE}" >/dev/null
 
 current_aws_dev_state="$(
   "${SUCCESSOR_CHECK}" \

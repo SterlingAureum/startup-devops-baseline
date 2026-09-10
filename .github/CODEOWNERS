@@ -150,6 +150,10 @@
 /scripts/validate-v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.json @SterlingAureum
 /docs/V0.11.9.3.6.6_REVIEWED_LIVE_AWS_TEST_PROMOTION_HANDOFF.md @SterlingAureum
+/scripts/check-v0.11.9.3.6.6.1-aws-test-release-successor.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.6.1-aws-test-successor-validation-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.6.1-aws-test-successor-validation-repair.json @SterlingAureum
+/docs/V0.11.9.3.6.6.1_AWS_TEST_SUCCESSOR_VALIDATION_REPAIR.md @SterlingAureum
 /scripts/write-v0.9-final-evidence.sh @SterlingAureum
 /scripts/validate-v0.9-final-evidence.sh @SterlingAureum
 /docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md @SterlingAureum

@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.6.1-aws-test-successor-validation-repair` replaces permanent
+candidate-absence assertions with an exact two-state aws-test allowlist. The
+historical and reviewed promoted release bytes pass, unknown or partial
+identities fail closed, and aws-prod remains unchanged. The existing promotion
+PR stays held until this repair is merged and its branch is updated.
+Predecessor:
 `v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff` connects the reviewed
 aws-dev live qualification contract to a release-only aws-test promotion PR.
 It pins the exact evidence and source-release hashes, release ID and protected

@@ -1,12 +1,12 @@
 image:
   repository: ghcr.io/sterlingaureum/startup-devops-baseline/demo-api
-  tag: "sha-e43b535"
-  digest: "sha256:45744978f664522cc3c952eba6e358aba261640338fa6d39820f165c18dbc5b0"
+  tag: "sha-cf0a6bc"
+  digest: "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623"
 
 release:
-  applicationVersion: "sha-e43b535"
+  applicationVersion: "sha-cf0a6bc"
 
 delivery:
   sourceRepository: "SterlingAureum/startup-devops-baseline"
-  sourceCommit: "e43b535a1dd802c221a24c0bfde3c471c6a5df5f"
-  workflowRunId: "31950329805"
+  sourceCommit: "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8"
+  workflowRunId: "34070524953"

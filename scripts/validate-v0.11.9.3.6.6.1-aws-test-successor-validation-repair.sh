@@ -23,9 +23,14 @@ assert all(value is False for value in c["scope"].values())
 assert c["executionAuthorized"] is False
 PY
 
-historical="${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml"
+current="${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml"
 promoted="${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml"
-test "$("${CHECK}" --release-file "${historical}")" = historical-aws-test
+current_state="$("${CHECK}" --release-file "${current}")"
+if [[ "${current_state}" != historical-aws-test && \
+      "${current_state}" != reviewed-promoted-candidate ]]; then
+  echo "Unexpected current aws-test release state: ${current_state}" >&2
+  exit 1
+fi
 test "$("${CHECK}" --release-file "${promoted}")" = reviewed-promoted-candidate
 
 cp "${promoted}" "${FIXTURE_DIR}/unknown.yaml"

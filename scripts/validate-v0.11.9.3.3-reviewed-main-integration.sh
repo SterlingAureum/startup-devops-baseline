@@ -6,6 +6,7 @@ CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.3-reviewed-main-integration.j
 READINESS_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.2-protected-main-integration-readiness.json"
 RELEASE_FILE="${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml"
 SUCCESSOR_CHECK="${ROOT_DIR}/scripts/check-v0.11.9.3.2-release-successor.py"
+AWS_TEST_SUCCESSOR_CHECK="${ROOT_DIR}/scripts/check-v0.11.9.3.6.6.1-aws-test-release-successor.py"
 
 for command_name in bash python3; do
   command -v "${command_name}" >/dev/null 2>&1 || {
@@ -107,12 +108,9 @@ assert policy == {
     "otherAwsDevIdentityAllowed": False,
     "awsTestOrProdChangeAllowed": False,
 }
-for environment, fingerprint_key in (
-    ("aws-test", "awsTestSha256"),
-    ("aws-prod", "awsProdSha256"),
-):
-    path = root / f"apps/demo-api/helm/values/releases/{environment}.yaml"
-    assert hashlib.sha256(path.read_bytes()).hexdigest() == policy[fingerprint_key]
+aws_prod = root / "apps/demo-api/helm/values/releases/aws-prod.yaml"
+assert hashlib.sha256(aws_prod.read_bytes()).hexdigest() == policy["awsProdSha256"]
+assert selected["digest"] not in aws_prod.read_text()
 
 for environment in ("dev", "test", "prod"):
     root_application = yaml.safe_load((root / f"clusters/aws/overlays/{environment}/root-app.yaml").read_text())
@@ -155,6 +153,10 @@ for relative, marker in (
 
 print("v0.11.9.3.3 main integration, candidate selection and no-runtime boundaries passed.")
 PY
+
+"${AWS_TEST_SUCCESSOR_CHECK}" \
+  --release-file "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml" \
+  >/dev/null
 
 current_state="$(
   "${SUCCESSOR_CHECK}" \

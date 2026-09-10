@@ -3475,3 +3475,10 @@ All notable changes to this repository are documented in this file.
 - Reused the reviewed two-state aws-test successor validator.
 - Kept aws-prod immutable and fail-closed before its separate promotion.
 - Added an offline regression contract and validation entry point.
+## v0.11.9.3.6.6.3
+
+- Converged v0.11.9.3.3, v0.11.9.3.4, and v0.11.9.3.5 on the reviewed
+  aws-test successor checker.
+- Made the v0.11.9.3.6.6.1 and .2 validators accept either reviewed current
+  state while continuing to reject unknown identities.
+- Preserved exact aws-prod immutability before its separately reviewed edge.

@@ -1,0 +1,124 @@
+{
+  "schemaVersion": "v0.11.9.3.6.5",
+  "version": "v0.11.9.3.6.5",
+  "predecessor": "v0.11.9.3.6.4.3",
+  "status": "guarded-aws-dev-runtime-qualification-implemented-not-executed",
+  "implementationBaselineCommit": "bdda08c018b3bb47378857216fe4dbe6b2848cd2",
+  "goal": "Qualify the exact aws-dev Deployment and observability runtime with one separately approved bounded traffic batch without promotion, fault injection or teardown.",
+  "executor": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.5-aws-dev-runtime-qualification.py",
+    "phases": [
+      "verify",
+      "execute"
+    ],
+    "requiredBranch": "main",
+    "cleanWorktreeRequired": true,
+    "headOriginAndRemoteMainMustMatchReviewedCommit": true,
+    "awsAccountInput": "EXPECTED_AWS_ACCOUNT_ID",
+    "awsAccountCommitted": false,
+    "reviewedEndInput": "AWS_DEV_RUNTIME_QUALIFICATION_END_UTC",
+    "minimumRemainingMinutes": 15,
+    "maximumWindowHours": 8
+  },
+  "immutableInputs": {
+    "awsDevRelease": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+    "awsDevReleaseSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46",
+    "candidateReleaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "applicationVersion": "sha-cf0a6bc",
+    "imageRepository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "imageDigest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "monitoringChartVersion": "88.5.0"
+  },
+  "livePrerequisites": {
+    "region": "us-east-1",
+    "clusterName": "startup-devops-baseline-dev",
+    "clusterStatus": "ACTIVE",
+    "kubectlContextMustEqualExactEksArn": true,
+    "kubernetesReadyz": "ok",
+    "rootApplicationStatus": "Synced/Healthy on reviewed main",
+    "demoApplicationStatus": "Synced/Healthy on reviewed main",
+    "monitoringApplicationStatus": "Synced/Healthy on kube-prometheus-stack 88.5.0",
+    "demoWorkloadKind": "Deployment",
+    "demoImmutableIdentityAndPodDigestRequired": true,
+    "databaseFullyReady": true,
+    "grafanaSecretNameOnlyDiscovery": true,
+    "grafanaDeploymentFullyReady": true,
+    "publicHealthReadyAndVersionRequired": true,
+    "prometheusDemoTargetUp": true,
+    "sloRuleInventoryRequired": true
+  },
+  "confirmations": {
+    "readOnlyVerification": {
+      "variable": "CONFIRM_AWS_DEV_RUNTIME_QUALIFICATION_PREFLIGHT",
+      "value": "observe-reviewed-aws-dev-runtime-qualification"
+    },
+    "boundedRuntimeQualification": {
+      "variable": "CONFIRM_AWS_DEV_RUNTIME_QUALIFICATION",
+      "value": "qualify-reviewed-aws-dev-runtime"
+    }
+  },
+  "approvedTrafficScope": {
+    "hostname": "demo.dev.aureumstack.com",
+    "paths": [
+      "/health",
+      "/ready",
+      "/version"
+    ],
+    "warmupRounds": 12,
+    "finalRounds": 6,
+    "requestsPerRound": 3,
+    "maximumRequests": 54,
+    "prometheusScrapeWaitsSeconds": [
+      40,
+      35
+    ]
+  },
+  "qualificationChecks": [
+    "demo-api Prometheus target remains up",
+    "release-scoped request recording series is populated",
+    "30-day availability ratio is at least 0.999",
+    "30-day latency ratio is at least 0.99",
+    "no critical aws-dev alert is firing",
+    "final demo-api, database and Grafana runtime remains healthy"
+  ],
+  "successBoundary": {
+    "status": "aws-dev-runtime-qualification-complete",
+    "runtimeQualified": true,
+    "trafficGenerated": true,
+    "boundedRequestCount": 54,
+    "progressiveDeliveryPromoted": false,
+    "analysisRunExpected": false,
+    "faultInjected": false,
+    "automaticTeardownExecuted": false,
+    "nextAction": "review-separate-aws-dev-runtime-qualification-execution-evidence"
+  },
+  "failureBoundary": {
+    "automaticRetry": false,
+    "automaticPromotion": false,
+    "automaticRollback": false,
+    "automaticDestroy": false,
+    "preserveLiveAndTerraformState": true,
+    "expiredOrInsufficientWindowStopsBeforeTraffic": true,
+    "postTrafficFailureRequiresReview": true
+  },
+  "explicitlyOutOfScope": [
+    "EKS or Terraform creation",
+    "GitOps bootstrap or Root deployment",
+    "Kubernetes desired-state mutation",
+    "Argo Rollouts promote, retry or abort",
+    "fault injection or synthetic error traffic",
+    "aws-test promotion",
+    "automatic or manual teardown"
+  ],
+  "packageProducer": {
+    "awsAccessed": false,
+    "kubernetesAccessed": false,
+    "argocdAccessed": false,
+    "trafficGenerated": false,
+    "runtimeQualified": false,
+    "environmentChanged": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.5.1-aws-dev-runtime-qualification-execution"
+}

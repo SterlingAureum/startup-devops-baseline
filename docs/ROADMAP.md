@@ -679,6 +679,19 @@ Incremental scope:
                           Offline fixtures cover dev/test and prod refusal; a
                           future live teardown must still validate the repair.
                           `.3.6.5` runtime qualification remains separate.
+                          - v0.11.9.3.6.5 implements that separate aws-dev
+                            runtime boundary. It requires clean exact remote
+                            main, a reviewed account and remaining UTC window,
+                            healthy Root/demo/monitoring/database/Grafana,
+                            immutable Deployment and Pod identity, and an up
+                            Prometheus target/rule inventory before one
+                            approved 54-request normal-traffic batch. It then
+                            requires populated request telemetry, passing
+                            availability/latency ratios and no firing critical
+                            aws-dev alert. aws-dev remains a Deployment, so no
+                            Rollout promotion or AnalysisRun is introduced.
+                            Live execution, evidence and repaired teardown
+                            validation remain separate.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

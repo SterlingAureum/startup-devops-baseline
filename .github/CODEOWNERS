@@ -131,6 +131,11 @@
 /scripts/validate-v0.11.9.3.6.4.3-aws-environment-teardown-convergence.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.4.3-aws-environment-teardown-convergence.json @SterlingAureum
 /docs/V0.11.9.3.6.4.3_AWS_ENVIRONMENT_TEARDOWN_CONVERGENCE.md @SterlingAureum
+/scripts/execute-v0.11.9.3.6.5-aws-dev-runtime-qualification.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.5-aws-dev-runtime-qualification.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.5-aws-dev-runtime-qualification.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.5-aws-dev-runtime-qualification.json @SterlingAureum
+/docs/V0.11.9.3.6.5_AWS_DEV_RUNTIME_QUALIFICATION.md @SterlingAureum
 /scripts/write-v0.9-final-evidence.sh @SterlingAureum
 /scripts/validate-v0.9-final-evidence.sh @SterlingAureum
 /docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md @SterlingAureum

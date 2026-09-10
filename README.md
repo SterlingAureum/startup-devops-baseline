@@ -3,6 +3,16 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.5-aws-dev-runtime-qualification` implements a separately
+confirmed exact-main preflight and one bounded aws-dev qualification. It
+requires the immutable Deployment, database, Grafana, public HTTPS and
+Prometheus target/rule inventory to be healthy before allowing at most 54
+normal `/health`, `/ready` and `/version` requests. It then requires populated
+request telemetry, passing availability/latency ratios and no critical alert.
+aws-dev has no Rollout promotion or AnalysisRun; fault injection, aws-test
+promotion and teardown remain separate. Applying and validating this package
+performs no AWS, Kubernetes or traffic operation.
+Predecessor:
 `v0.11.9.3.6.4.3-aws-environment-teardown-convergence` records the completed
 aws-dev teardown closure and repairs the shared aws-dev/aws-test destroy path.
 It captures every EBS-backed PVC, waits for Root child pruning, safely
@@ -11,8 +21,7 @@ and an unreferenced EKS-created security group, inventories unknown VPC
 dependencies, and requires a new interactive Terraform confirmation before
 one retry. The observed final state and next-day residual audit were clean,
 but the repaired path remains live-unvalidated. Applying and validating this
-checkpoint performs no AWS, Terraform or Kubernetes operation. `.3.6.5`
-runtime qualification remains separate.
+checkpoint performs no AWS, Terraform or Kubernetes operation.
 Predecessor:
 `v0.11.9.3.6.4.2-aws-dev-monitoring-convergence-execution` records the
 separately approved repair on exact main `6421e140b3ac`: the independent

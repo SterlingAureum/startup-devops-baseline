@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.11.9.3.6.5.1
+
+- Record that the first `.3.6.5` read-only preflight stopped before traffic
+  because the EKS API Service Proxy could not dial a healthy, Ready Prometheus
+  Pod endpoint, while a bounded loopback port-forward reached Prometheus.
+- Replace Service Proxy telemetry reads with the repository's existing
+  `pods/portforward` transport without opening port `9090` in an AWS security
+  group or broadening a NetworkPolicy.
+- Bind the tunnel only to `127.0.0.1`, select a dynamic local port, keep its
+  diagnostics in an anonymous `0600` temporary file and bound readiness,
+  request and shutdown waits.
+- Guarantee exact-child cleanup on normal return, failure and
+  `KeyboardInterrupt`, with a forced-kill fallback only after graceful shutdown
+  times out.
+- Preserve exact-main, immutable image, 54-request, SLO, no-promotion and
+  no-teardown boundaries. Applying and validating this repair performs no
+  live operation or traffic.
+
 ## v0.11.9.3.6.5
 
 - Add separate read-only and execution confirmations for aws-dev runtime

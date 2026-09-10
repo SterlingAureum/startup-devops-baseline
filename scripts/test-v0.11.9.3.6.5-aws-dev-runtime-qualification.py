@@ -3,11 +3,14 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
+import stat
 import unittest
 from unittest import mock
+from urllib.error import URLError
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +46,46 @@ def ready_workload(name: str) -> dict:
 
 def query(value: str) -> str:
     return json.dumps({"status": "success", "data": {"result": [{"value": [1, value]}]}})
+
+
+class FakeResponse:
+    def __init__(self, body: str) -> None:
+        self.body = body.encode("utf-8")
+
+    def __enter__(self) -> FakeResponse:
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return self.body
+
+
+class FakeProcess:
+    def __init__(self, stubborn: bool = False) -> None:
+        self.returncode: int | None = None
+        self.stubborn = stubborn
+        self.terminate_calls = 0
+        self.kill_calls = 0
+        self.wait_calls: list[int] = []
+
+    def poll(self) -> int | None:
+        return self.returncode
+
+    def terminate(self) -> None:
+        self.terminate_calls += 1
+
+    def kill(self) -> None:
+        self.kill_calls += 1
+        self.returncode = -9
+
+    def wait(self, timeout: int) -> int:
+        self.wait_calls.append(timeout)
+        if self.stubborn and self.kill_calls == 0:
+            raise MODULE.subprocess.TimeoutExpired("kubectl", timeout)
+        self.returncode = 0 if self.returncode is None else self.returncode
+        return self.returncode
 
 
 class Fixture:
@@ -81,6 +124,7 @@ class Fixture:
         self.latency = "0.999"
         self.critical_alerts: list[dict] = []
         self.read_calls: list[tuple[str, ...]] = []
+        self.prometheus_calls: list[str] = []
 
     def git_runner(self, arguments: list[str]) -> str:
         key = tuple(arguments)
@@ -107,28 +151,30 @@ class Fixture:
         }
         if key in direct:
             return direct[key]
-        if len(key) == 3 and key[:2] == ("kubectl", "get") and key[2].startswith("--raw="):
-            raw = key[2]
-            if raw.endswith("/api/v1/targets?state=active"):
-                return json.dumps({"data": {"activeTargets": [{"labels": {"job": "demo-api"}, "health": "up"}]}})
-            if raw.endswith("/api/v1/rules"):
-                names = [
-                    "demo_api:slo_http_requests:rate30d",
-                    "demo_api:slo_availability:ratio30d",
-                    "demo_api:slo_latency:ratio30d",
-                    "DemoApiAvailabilityErrorBudgetFastBurn",
-                    "DemoApiLatencyErrorBudgetFastBurn",
-                ]
-                return json.dumps({"data": {"groups": [{"rules": [{"name": name} for name in names]}]}})
-            if "slo_http_requests" in raw:
-                return query(self.request_rate)
-            if "slo_availability" in raw:
-                return query(self.availability)
-            if "slo_latency" in raw:
-                return query(self.latency)
-            if "ALERTS" in raw:
-                return json.dumps({"status": "success", "data": {"result": self.critical_alerts}})
         raise AssertionError(f"Unexpected command: {key}")
+
+    def prometheus_reader(self, suffix: str) -> str:
+        self.prometheus_calls.append(suffix)
+        if suffix == "/api/v1/targets?state=active":
+            return json.dumps({"data": {"activeTargets": [{"labels": {"job": "demo-api"}, "health": "up"}]}})
+        if suffix == "/api/v1/rules":
+            names = [
+                "demo_api:slo_http_requests:rate30d",
+                "demo_api:slo_availability:ratio30d",
+                "demo_api:slo_latency:ratio30d",
+                "DemoApiAvailabilityErrorBudgetFastBurn",
+                "DemoApiLatencyErrorBudgetFastBurn",
+            ]
+            return json.dumps({"data": {"groups": [{"rules": [{"name": name} for name in names]}]}})
+        if "slo_http_requests" in suffix:
+            return query(self.request_rate)
+        if "slo_availability" in suffix:
+            return query(self.availability)
+        if "slo_latency" in suffix:
+            return query(self.latency)
+        if "ALERTS" in suffix:
+            return json.dumps({"status": "success", "data": {"result": self.critical_alerts}})
+        raise AssertionError(f"Unexpected Prometheus request: {suffix}")
 
 
 class AwsDevRuntimeQualificationTests(unittest.TestCase):
@@ -141,7 +187,13 @@ class AwsDevRuntimeQualificationTests(unittest.TestCase):
 
     def verify(self, fixture: Fixture) -> dict:
         with mock.patch.dict(os.environ, self.controls, clear=True):
-            return MODULE.verify_live_inputs(CONTROL_PLANE, fixture.git_runner, fixture.read_runner, NOW)
+            return MODULE.verify_live_inputs(
+                CONTROL_PLANE,
+                fixture.git_runner,
+                fixture.read_runner,
+                NOW,
+                fixture.prometheus_reader,
+            )
 
     def test_preflight_is_read_only_and_reports_not_authorized(self) -> None:
         result = MODULE.verification_result(self.verify(Fixture()))
@@ -228,7 +280,14 @@ class AwsDevRuntimeQualificationTests(unittest.TestCase):
         traffic: list[str] = []
         controls = {**self.controls, "CONFIRM_AWS_DEV_RUNTIME_QUALIFICATION": MODULE.EXECUTION_CONFIRMATION}
         with mock.patch.dict(os.environ, controls, clear=True):
-            result = MODULE.execute(CONTROL_PLANE, fixture.git_runner, fixture.read_runner, lambda host: traffic.append(host) or {"request_count": 54}, NOW)
+            result = MODULE.execute(
+                CONTROL_PLANE,
+                fixture.git_runner,
+                fixture.read_runner,
+                lambda host: traffic.append(host) or {"request_count": 54},
+                NOW,
+                fixture.prometheus_reader,
+            )
         self.assertEqual(traffic, [MODULE.PUBLIC_HOSTNAME])
         self.assertEqual(result["status"], "aws-dev-runtime-qualification-complete")
         self.assertEqual(result["bounded_request_count"], 54)
@@ -249,7 +308,95 @@ class AwsDevRuntimeQualificationTests(unittest.TestCase):
             mutate(fixture)
             with mock.patch.dict(os.environ, controls, clear=True):
                 with self.subTest(message=message), self.assertRaisesRegex(ValueError, message):
-                    MODULE.execute(CONTROL_PLANE, fixture.git_runner, fixture.read_runner, lambda _host: {"request_count": 54}, NOW)
+                    MODULE.execute(
+                        CONTROL_PLANE,
+                        fixture.git_runner,
+                        fixture.read_runner,
+                        lambda _host: {"request_count": 54},
+                        NOW,
+                        fixture.prometheus_reader,
+                    )
+
+    def test_port_forward_is_loopback_only_secure_and_cleaned_after_success(self) -> None:
+        process = FakeProcess()
+        opened: list[tuple[str, int]] = []
+
+        def fake_urlopen(url: str, timeout: int) -> FakeResponse:
+            opened.append((url, timeout))
+            if url.endswith("/-/ready"):
+                return FakeResponse("Prometheus Server is Ready.")
+            return FakeResponse('{"status":"success"}')
+
+        def fake_popen(arguments: list[str], **kwargs: object) -> FakeProcess:
+            self.assertEqual(arguments, [
+                "kubectl", "-n", "observability", "port-forward",
+                "--address", "127.0.0.1",
+                f"service/{MODULE.PROMETHEUS_SERVICE}",
+                "19090:9090",
+            ])
+            self.assertTrue(kwargs["start_new_session"])
+            self.assertEqual(
+                stat.S_IMODE(os.fstat(kwargs["stdout"].fileno()).st_mode),
+                0o600,
+            )
+            return process
+
+        with (
+            mock.patch.object(MODULE, "free_loopback_port", return_value=19090),
+            mock.patch.object(MODULE.subprocess, "Popen", side_effect=fake_popen),
+            mock.patch.object(MODULE, "urlopen", side_effect=fake_urlopen),
+        ):
+            with MODULE.prometheus_port_forward() as reader:
+                self.assertEqual(json.loads(reader("/api/v1/rules"))["status"], "success")
+
+        self.assertEqual(process.terminate_calls, 1)
+        self.assertEqual(process.kill_calls, 0)
+        self.assertEqual(opened, [
+            ("http://127.0.0.1:19090/-/ready", MODULE.PROMETHEUS_FORWARD_PROBE_SECONDS),
+            ("http://127.0.0.1:19090/api/v1/rules", MODULE.PROMETHEUS_REQUEST_TIMEOUT_SECONDS),
+        ])
+
+    def test_port_forward_is_cleaned_on_interrupt_and_forcibly_killed_if_needed(self) -> None:
+        process = FakeProcess(stubborn=True)
+        with (
+            mock.patch.object(MODULE, "free_loopback_port", return_value=19091),
+            mock.patch.object(MODULE.subprocess, "Popen", return_value=process),
+            mock.patch.object(MODULE, "urlopen", return_value=FakeResponse("Prometheus Server is Ready.")),
+        ):
+            with self.assertRaises(KeyboardInterrupt):
+                with MODULE.prometheus_port_forward():
+                    raise KeyboardInterrupt
+
+        self.assertEqual(process.terminate_calls, 1)
+        self.assertEqual(process.kill_calls, 1)
+
+    def test_port_forward_readiness_timeout_fails_closed_and_cleans_up(self) -> None:
+        process = FakeProcess()
+        with (
+            mock.patch.object(MODULE, "free_loopback_port", return_value=19092),
+            mock.patch.object(MODULE.subprocess, "Popen", return_value=process),
+            mock.patch.object(MODULE, "urlopen", side_effect=URLError("connection refused")),
+            mock.patch.object(MODULE.time, "monotonic", side_effect=[0, 31]),
+        ):
+            with self.assertRaisesRegex(MODULE.CommandFailure, "readiness timed out"):
+                with MODULE.prometheus_port_forward():
+                    self.fail("Unreachable port-forward must not yield a reader")
+
+        self.assertEqual(process.terminate_calls, 1)
+        self.assertEqual(process.kill_calls, 0)
+
+    def test_cli_interrupt_reports_exit_130_after_context_cleanup(self) -> None:
+        stderr = io.StringIO()
+        with (
+            mock.patch("sys.argv", [str(EXECUTOR), "verify", "--expected-control-plane-commit", CONTROL_PLANE]),
+            mock.patch.object(MODULE, "verify_live_inputs", side_effect=KeyboardInterrupt),
+            mock.patch("sys.stderr", stderr),
+        ):
+            with self.assertRaises(SystemExit) as stopped:
+                MODULE.main()
+
+        self.assertEqual(stopped.exception.code, 130)
+        self.assertIn("Prometheus port-forward cleaned up", stderr.getvalue())
 
 
 if __name__ == "__main__":

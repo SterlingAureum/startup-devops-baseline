@@ -3,6 +3,15 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.5.1-runtime-qualification-prometheus-transport-repair` replaces
+the failed EKS API Service Proxy telemetry path with the already reviewed
+loopback-only `pods/portforward` transport. It uses a dynamic port, bounded
+readiness and request timeouts, an anonymous private log and deterministic
+normal/error/interrupt cleanup without broadening security groups or
+NetworkPolicies. The observed preflight stopped before traffic; a fresh
+post-merge preflight and separate approval remain required. Applying and
+validating this package performs no AWS, Kubernetes or traffic operation.
+Predecessor:
 `v0.11.9.3.6.5-aws-dev-runtime-qualification` implements a separately
 confirmed exact-main preflight and one bounded aws-dev qualification. It
 requires the immutable Deployment, database, Grafana, public HTTPS and

@@ -4,16 +4,21 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import hashlib
 import json
 import os
 from pathlib import Path
 import re
+import socket
 import subprocess
+import tempfile
 import time
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
+from urllib.error import HTTPError, URLError
 from urllib.parse import quote
+from urllib.request import urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -34,7 +39,8 @@ EXPECTED_IMAGE_DIGEST = "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812
 EXPECTED_SOURCE_COMMIT = "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8"
 EXPECTED_IMAGE = f"{EXPECTED_IMAGE_REPOSITORY}@{EXPECTED_IMAGE_DIGEST}"
 PUBLIC_HOSTNAME = "demo.dev.aureumstack.com"
-PROMETHEUS_PROXY = "/api/v1/namespaces/observability/services/http:observability-metrics-prometheus:9090/proxy"
+PROMETHEUS_SERVICE = "observability-metrics-prometheus"
+PROMETHEUS_REMOTE_PORT = 9090
 OBSERVATION_CONFIRMATION = "observe-reviewed-aws-dev-runtime-qualification"
 EXECUTION_CONFIRMATION = "qualify-reviewed-aws-dev-runtime"
 ACCOUNT_RE = re.compile(r"^[0-9]{12}$")
@@ -44,6 +50,10 @@ MAXIMUM_WINDOW_SECONDS = 8 * 60 * 60
 WARMUP_ROUNDS = 12
 FINAL_ROUNDS = 6
 REQUESTS_PER_ROUND = 3
+PROMETHEUS_FORWARD_READY_SECONDS = 30
+PROMETHEUS_FORWARD_PROBE_SECONDS = 1
+PROMETHEUS_REQUEST_TIMEOUT_SECONDS = 20
+PROMETHEUS_FORWARD_STOP_SECONDS = 5
 
 
 class CommandFailure(RuntimeError):
@@ -54,6 +64,7 @@ GitRunner = Callable[[list[str]], str]
 ReadRunner = Callable[[list[str]], str]
 TrafficRunner = Callable[[str], dict[str, Any]]
 SleepRunner = Callable[[float], None]
+PrometheusReader = Callable[[str], str]
 
 
 def require(condition: bool, message: str) -> None:
@@ -71,6 +82,90 @@ def run_command(arguments: list[str]) -> str:
 
 def run_git(arguments: list[str]) -> str:
     return run_command(["git", "-C", str(ROOT), *arguments])
+
+
+def free_loopback_port() -> int:
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        return int(listener.getsockname()[1])
+
+
+def read_forward_log(log_file: Any) -> str:
+    log_file.flush()
+    position = log_file.tell()
+    log_file.seek(0)
+    detail = log_file.read().strip()
+    log_file.seek(position)
+    return detail[-2000:]
+
+
+def stop_port_forward(process: subprocess.Popen[str]) -> None:
+    if process.poll() is not None:
+        return
+    process.terminate()
+    try:
+        process.wait(timeout=PROMETHEUS_FORWARD_STOP_SECONDS)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=PROMETHEUS_FORWARD_STOP_SECONDS)
+
+
+def read_loopback_url(url: str, timeout: int) -> str:
+    try:
+        with urlopen(url, timeout=timeout) as response:  # noqa: S310 - loopback-only transport
+            return response.read().decode("utf-8")
+    except (HTTPError, URLError, TimeoutError, OSError) as error:
+        raise CommandFailure(f"Prometheus request failed: {error}") from error
+
+
+@contextmanager
+def prometheus_port_forward() -> Iterator[PrometheusReader]:
+    local_port = free_loopback_port()
+    base_url = f"http://127.0.0.1:{local_port}"
+    with tempfile.TemporaryFile(mode="w+", encoding="utf-8") as log_file:
+        process = subprocess.Popen(
+            [
+                "kubectl", "-n", "observability", "port-forward",
+                "--address", "127.0.0.1",
+                f"service/{PROMETHEUS_SERVICE}",
+                f"{local_port}:{PROMETHEUS_REMOTE_PORT}",
+            ],
+            cwd=ROOT,
+            stdin=subprocess.DEVNULL,
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            text=True,
+            start_new_session=True,
+        )
+        try:
+            deadline = time.monotonic() + PROMETHEUS_FORWARD_READY_SECONDS
+            while True:
+                if process.poll() is not None:
+                    detail = read_forward_log(log_file) or "kubectl port-forward exited without output"
+                    raise CommandFailure(f"Prometheus port-forward exited before readiness: {detail}")
+                try:
+                    ready = read_loopback_url(
+                        f"{base_url}/-/ready",
+                        PROMETHEUS_FORWARD_PROBE_SECONDS,
+                    )
+                    if "Ready" in ready:
+                        break
+                except CommandFailure:
+                    pass
+                if time.monotonic() >= deadline:
+                    detail = read_forward_log(log_file) or "no kubectl port-forward output"
+                    raise CommandFailure(f"Prometheus port-forward readiness timed out: {detail}")
+                time.sleep(1)
+
+            def read_prometheus(suffix: str) -> str:
+                return read_loopback_url(
+                    f"{base_url}{suffix}",
+                    PROMETHEUS_REQUEST_TIMEOUT_SECONDS,
+                )
+
+            yield read_prometheus
+        finally:
+            stop_port_forward(process)
 
 
 def parse_json(raw: str, label: str) -> dict[str, Any]:
@@ -132,16 +227,16 @@ def workload_is_ready(workload: dict[str, Any]) -> bool:
     )
 
 
-def prometheus_read(read_runner: ReadRunner, suffix: str) -> dict[str, Any]:
-    return parse_json(read_runner(["kubectl", "get", f"--raw={PROMETHEUS_PROXY}{suffix}"]), f"Prometheus {suffix}")
+def prometheus_read(prometheus_reader: PrometheusReader, suffix: str) -> dict[str, Any]:
+    return parse_json(prometheus_reader(suffix), f"Prometheus {suffix}")
 
 
-def query_prometheus(read_runner: ReadRunner, expression: str) -> dict[str, Any]:
-    return prometheus_read(read_runner, f"/api/v1/query?query={quote(expression, safe='')}")
+def query_prometheus(prometheus_reader: PrometheusReader, expression: str) -> dict[str, Any]:
+    return prometheus_read(prometheus_reader, f"/api/v1/query?query={quote(expression, safe='')}")
 
 
-def scalar_query(read_runner: ReadRunner, expression: str, label: str) -> float:
-    payload = query_prometheus(read_runner, expression)
+def scalar_query(prometheus_reader: PrometheusReader, expression: str, label: str) -> float:
+    payload = query_prometheus(prometheus_reader, expression)
     require(payload.get("status") == "success", f"{label} query failed")
     result = payload.get("data", {}).get("result", [])
     require(len(result) == 1, f"{label} query must return exactly one series")
@@ -151,7 +246,11 @@ def scalar_query(read_runner: ReadRunner, expression: str, label: str) -> float:
         raise ValueError(f"{label} query returned a non-numeric value") from error
 
 
-def read_live_state(expected_commit: str, read_runner: ReadRunner) -> dict[str, Any]:
+def read_live_state(
+    expected_commit: str,
+    read_runner: ReadRunner,
+    prometheus_reader: PrometheusReader | None = None,
+) -> dict[str, Any]:
     expected_account = os.environ.get("EXPECTED_AWS_ACCOUNT_ID", "")
     require(bool(ACCOUNT_RE.fullmatch(expected_account)), "EXPECTED_AWS_ACCOUNT_ID must be a 12-digit account ID")
     actual_account = read_runner(["aws", "sts", "get-caller-identity", "--query", "Account", "--output", "text"])
@@ -208,19 +307,26 @@ def read_live_state(expected_commit: str, read_runner: ReadRunner) -> dict[str, 
     grafana = parse_json(read_runner(["kubectl", "-n", "observability", "get", "deployment", GRAFANA_DEPLOYMENT, "-o", "json"]), "Grafana Deployment")
     require(workload_is_ready(grafana), "Grafana Deployment is not fully Ready")
 
-    targets = prometheus_read(read_runner, "/api/v1/targets?state=active")
-    active = targets.get("data", {}).get("activeTargets", [])
-    require(any(item.get("labels", {}).get("job") == "demo-api" and item.get("health") == "up" for item in active), "demo-api Prometheus target is not up")
-    rules = prometheus_read(read_runner, "/api/v1/rules")
-    names = {item.get("name") for group in rules.get("data", {}).get("groups", []) for item in group.get("rules", [])}
-    required_rules = {
-        "demo_api:slo_http_requests:rate30d",
-        "demo_api:slo_availability:ratio30d",
-        "demo_api:slo_latency:ratio30d",
-        "DemoApiAvailabilityErrorBudgetFastBurn",
-        "DemoApiLatencyErrorBudgetFastBurn",
-    }
-    require(required_rules <= names, "required demo-api SLO rule inventory changed")
+    def validate_prometheus(reader: PrometheusReader) -> None:
+        targets = prometheus_read(reader, "/api/v1/targets?state=active")
+        active = targets.get("data", {}).get("activeTargets", [])
+        require(any(item.get("labels", {}).get("job") == "demo-api" and item.get("health") == "up" for item in active), "demo-api Prometheus target is not up")
+        rules = prometheus_read(reader, "/api/v1/rules")
+        names = {item.get("name") for group in rules.get("data", {}).get("groups", []) for item in group.get("rules", [])}
+        required_rules = {
+            "demo_api:slo_http_requests:rate30d",
+            "demo_api:slo_availability:ratio30d",
+            "demo_api:slo_latency:ratio30d",
+            "DemoApiAvailabilityErrorBudgetFastBurn",
+            "DemoApiLatencyErrorBudgetFastBurn",
+        }
+        require(required_rules <= names, "required demo-api SLO rule inventory changed")
+
+    if prometheus_reader is None:
+        with prometheus_port_forward() as session_reader:
+            validate_prometheus(session_reader)
+    else:
+        validate_prometheus(prometheus_reader)
     return {
         "control_plane_commit": expected_commit,
         "cluster_status": cluster[0],
@@ -237,13 +343,19 @@ def read_live_state(expected_commit: str, read_runner: ReadRunner) -> dict[str, 
     }
 
 
-def verify_live_inputs(expected_commit: str, git_runner: GitRunner = run_git, read_runner: ReadRunner = run_command, now: datetime | None = None) -> dict[str, Any]:
+def verify_live_inputs(
+    expected_commit: str,
+    git_runner: GitRunner = run_git,
+    read_runner: ReadRunner = run_command,
+    now: datetime | None = None,
+    prometheus_reader: PrometheusReader | None = None,
+) -> dict[str, Any]:
     require(os.environ.get("CONFIRM_AWS_DEV_RUNTIME_QUALIFICATION_PREFLIGHT") == OBSERVATION_CONFIRMATION, f"Set CONFIRM_AWS_DEV_RUNTIME_QUALIFICATION_PREFLIGHT={OBSERVATION_CONFIRMATION}")
     current_time = now or datetime.now(timezone.utc)
     deadline, remaining = parse_deadline(current_time)
     validate_exact_main(expected_commit, git_runner)
     require(file_sha256(AWS_DEV_RELEASE) == AWS_DEV_RELEASE_SHA256, "aws-dev release identity changed")
-    state = read_live_state(expected_commit, read_runner)
+    state = read_live_state(expected_commit, read_runner, prometheus_reader)
     return {**state, "qualification_end_utc": deadline, "remaining_window_seconds": remaining}
 
 
@@ -288,12 +400,17 @@ def generate_bounded_traffic(hostname: str, sleep_runner: SleepRunner = time.sle
     return {"request_count": requests, "paths": ["/health", "/ready", "/version"], "bounded": True}
 
 
-def read_qualified_telemetry(read_runner: ReadRunner) -> dict[str, Any]:
+def read_qualified_telemetry(
+    prometheus_reader: PrometheusReader | None = None,
+) -> dict[str, Any]:
+    if prometheus_reader is None:
+        with prometheus_port_forward() as session_reader:
+            return read_qualified_telemetry(session_reader)
     identity = f'deployment_environment_name="aws-dev",platform_release_id="{EXPECTED_RELEASE_ID}"'
-    request_rate = scalar_query(read_runner, f'demo_api:slo_http_requests:rate30d{{{identity}}}', "request series")
-    availability = scalar_query(read_runner, f'demo_api:slo_availability:ratio30d{{{identity}}}', "availability SLO")
-    latency = scalar_query(read_runner, f'demo_api:slo_latency:ratio30d{{{identity}}}', "latency SLO")
-    critical = query_prometheus(read_runner, 'ALERTS{alertstate="firing",severity="critical",deployment_environment_name="aws-dev"}')
+    request_rate = scalar_query(prometheus_reader, f'demo_api:slo_http_requests:rate30d{{{identity}}}', "request series")
+    availability = scalar_query(prometheus_reader, f'demo_api:slo_availability:ratio30d{{{identity}}}', "availability SLO")
+    latency = scalar_query(prometheus_reader, f'demo_api:slo_latency:ratio30d{{{identity}}}', "latency SLO")
+    critical = query_prometheus(prometheus_reader, 'ALERTS{alertstate="firing",severity="critical",deployment_environment_name="aws-dev"}')
     require(critical.get("status") == "success", "critical alert query failed")
     critical_count = len(critical.get("data", {}).get("result", []))
     require(request_rate > 0, "release-scoped request series is not populated")
@@ -308,13 +425,30 @@ def read_qualified_telemetry(read_runner: ReadRunner) -> dict[str, Any]:
     }
 
 
-def execute(expected_commit: str, git_runner: GitRunner = run_git, read_runner: ReadRunner = run_command, traffic_runner: TrafficRunner = generate_bounded_traffic, now: datetime | None = None) -> dict[str, Any]:
+def execute(
+    expected_commit: str,
+    git_runner: GitRunner = run_git,
+    read_runner: ReadRunner = run_command,
+    traffic_runner: TrafficRunner = generate_bounded_traffic,
+    now: datetime | None = None,
+    prometheus_reader: PrometheusReader | None = None,
+) -> dict[str, Any]:
     require(os.environ.get("CONFIRM_AWS_DEV_RUNTIME_QUALIFICATION") == EXECUTION_CONFIRMATION, f"Set CONFIRM_AWS_DEV_RUNTIME_QUALIFICATION={EXECUTION_CONFIRMATION}")
-    inventory = verify_live_inputs(expected_commit, git_runner, read_runner, now)
+    if prometheus_reader is None:
+        with prometheus_port_forward() as session_reader:
+            return execute(
+                expected_commit,
+                git_runner,
+                read_runner,
+                traffic_runner,
+                now,
+                session_reader,
+            )
+    inventory = verify_live_inputs(expected_commit, git_runner, read_runner, now, prometheus_reader)
     traffic = traffic_runner(PUBLIC_HOSTNAME)
     validate_exact_main(expected_commit, git_runner)
-    telemetry = read_qualified_telemetry(read_runner)
-    final_state = read_live_state(expected_commit, read_runner)
+    telemetry = read_qualified_telemetry(prometheus_reader)
+    final_state = read_live_state(expected_commit, read_runner, prometheus_reader)
     return {
         "status": "aws-dev-runtime-qualification-complete",
         "control_plane_commit": expected_commit,
@@ -338,6 +472,8 @@ def main() -> int:
     args = parser.parse_args()
     try:
         result = verification_result(verify_live_inputs(args.expected_control_plane_commit)) if args.phase == "verify" else execute(args.expected_control_plane_commit)
+    except KeyboardInterrupt:
+        parser.exit(130, "aws-dev runtime qualification interrupted; Prometheus port-forward cleaned up\n")
     except (CommandFailure, KeyError, OSError, TypeError, ValueError) as error:
         parser.exit(1, f"aws-dev runtime qualification stopped: {error}\n")
     print(json.dumps(result, indent=2, sort_keys=True))

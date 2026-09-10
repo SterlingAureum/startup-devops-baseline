@@ -692,6 +692,16 @@ Incremental scope:
                             Rollout promotion or AnalysisRun is introduced.
                             Live execution, evidence and repaired teardown
                             validation remain separate.
+                            - v0.11.9.3.6.5.1 repairs the first live
+                              preflight's Prometheus transport mismatch. A
+                              healthy Endpoint and Pod were unreachable through
+                              EKS API Service Proxy but Ready through the
+                              already authorized loopback port-forward path.
+                              The repair adds bounded connect/read/shutdown
+                              timeouts and deterministic interrupt cleanup,
+                              without network-policy or security-group changes.
+                              A fresh post-merge preflight and approval remain
+                              mandatory before the original traffic boundary.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

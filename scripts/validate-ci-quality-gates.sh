@@ -362,6 +362,9 @@ echo "==> Validating v0.11.9.3.6.4.3 AWS environment teardown convergence"
 echo "==> Validating v0.11.9.3.6.5 aws-dev runtime qualification"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.5-aws-dev-runtime-qualification.sh"
 
+echo "==> Validating v0.11.9.3.6.5.1 runtime qualification Prometheus transport repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.5.1-runtime-qualification-prometheus-transport-repair.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

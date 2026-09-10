@@ -136,6 +136,9 @@
 /scripts/validate-v0.11.9.3.6.5-aws-dev-runtime-qualification.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.5-aws-dev-runtime-qualification.json @SterlingAureum
 /docs/V0.11.9.3.6.5_AWS_DEV_RUNTIME_QUALIFICATION.md @SterlingAureum
+/scripts/validate-v0.11.9.3.6.5.1-runtime-qualification-prometheus-transport-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.5.1-runtime-qualification-prometheus-transport-repair.json @SterlingAureum
+/docs/V0.11.9.3.6.5.1_RUNTIME_QUALIFICATION_PROMETHEUS_TRANSPORT_REPAIR.md @SterlingAureum
 /scripts/write-v0.9-final-evidence.sh @SterlingAureum
 /scripts/validate-v0.9-final-evidence.sh @SterlingAureum
 /docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md @SterlingAureum

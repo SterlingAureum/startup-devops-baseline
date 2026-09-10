@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "v0.11.9.3.6.6.2",
+  "version": "v0.11.9.3.6.6.2",
+  "predecessor": "v0.11.9.3.6.6.1",
+  "implementationBaselineCommit": "6052984541d8b46d003ee5f53eec25ab7dc9b1de",
+  "status": "historical-checkpoint-current-state-decoupled",
+  "policy": {
+    "historicalEvidenceRetained": true,
+    "awsTestValidatedByCurrentSuccessorPolicy": true,
+    "awsProdHistoricalIdentityRequired": true,
+    "unknownAwsTestIdentityRejected": true,
+    "historicalCheckpointRemoved": false,
+    "historicalCheckpointRunsInMainCI": true
+  },
+  "scope": {
+    "workflowDispatched": false,
+    "promotionPrUpdated": false,
+    "promotionPrMerged": false,
+    "awsAccessed": false,
+    "clusterAccessed": false,
+    "environmentCreated": false,
+    "environmentDestroyed": false
+  },
+  "executionAuthorized": false,
+  "nextAction": "merge-repair-then-refresh-existing-aws-test-promotion-pr"
+}

@@ -376,6 +376,7 @@ echo "==> Validating v0.11.9.3.6.6 reviewed live aws-test promotion handoff"
 
 echo "==> Validating v0.11.9.3.6.6.1 aws-test successor validation repair"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.6.1-aws-test-successor-validation-repair.sh"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.6.2-historical-checkpoint-ci-decoupling.sh"
 
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"

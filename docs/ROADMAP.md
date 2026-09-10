@@ -810,3 +810,9 @@ Planned scope:
   - v0.11.7.1 adds paired-window availability and latency error-budget burn-rate
     recording rules, four actionable alerts, Runbooks, Dashboard panels, and
     deterministic acceptance without changing progressive delivery decisions.
+### v0.11.9.3.6.6.2
+
+Historical checkpoint evidence is retained, but mutable release identities are
+validated by current successor policy. The aws-test promotion PR may proceed
+after CI passes; aws-test deployment and aws-dev teardown remain separately
+approved operations.

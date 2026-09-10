@@ -816,3 +816,8 @@ Historical checkpoint evidence is retained, but mutable release identities are
 validated by current successor policy. The aws-test promotion PR may proceed
 after CI passes; aws-test deployment and aws-dev teardown remain separately
 approved operations.
+### v0.11.9.3.6.6.3
+
+The inherited main-CI chain now distinguishes immutable historical evidence
+from the current aws-test release state. Continue with the held release-only PR
+after this repair merges and its checks pass.

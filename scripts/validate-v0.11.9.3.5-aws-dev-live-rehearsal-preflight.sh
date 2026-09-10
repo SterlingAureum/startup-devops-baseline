@@ -7,6 +7,7 @@ PLAN_TEMPLATE="${ROOT_DIR}/delivery/examples/v0.11.9.3.5-aws-dev-live-rehearsal-
 PLAN_CHECKER="${ROOT_DIR}/scripts/check-v0.11.9.3.5-aws-dev-live-rehearsal-plan.py"
 PREFLIGHT="${ROOT_DIR}/scripts/preflight-v0.11.9.3.5-aws-dev-live-rehearsal.py"
 TESTS="${ROOT_DIR}/scripts/test-v0.11.9.3.5-aws-dev-live-rehearsal-preflight.py"
+AWS_TEST_SUCCESSOR_CHECK="${ROOT_DIR}/scripts/check-v0.11.9.3.6.6.1-aws-test-release-successor.py"
 
 for command_name in bash python3; do
   command -v "${command_name}" >/dev/null 2>&1 || {
@@ -117,12 +118,11 @@ assert yaml.safe_load(release_path.read_text()) == {
     },
 }
 
-for environment in ("aws-test", "aws-prod"):
-    release = root / f"apps/demo-api/helm/values/releases/{environment}.yaml"
-    assert hashlib.sha256(release.read_bytes()).hexdigest() == (
-        "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22"
-    )
-    assert candidate["digest"] not in release.read_text()
+aws_prod = root / "apps/demo-api/helm/values/releases/aws-prod.yaml"
+assert hashlib.sha256(aws_prod.read_bytes()).hexdigest() == (
+    "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22"
+)
+assert candidate["digest"] not in aws_prod.read_text()
 
 operation = contract["operationBoundary"]
 assert operation["awsReadsOnly"] is True
@@ -187,6 +187,10 @@ for relative, marker in (
 
 print("v0.11.9.3.5 private-plan, read-only AWS inventory and no-execution boundaries passed.")
 PY
+
+"${AWS_TEST_SUCCESSOR_CHECK}" \
+  --release-file "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml" \
+  >/dev/null
 
 if PYTHONDONTWRITEBYTECODE=1 python3 "${PLAN_CHECKER}" \
   --plan "${PLAN_TEMPLATE}" >/dev/null 2>&1; then

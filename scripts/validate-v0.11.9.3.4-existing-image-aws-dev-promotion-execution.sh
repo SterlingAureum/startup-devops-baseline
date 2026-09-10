@@ -8,6 +8,7 @@ SUCCESSOR_CONTRACT="${ROOT_DIR}/delivery/contracts/v0.11.9.3.3-reviewed-main-int
 SUCCESSOR_CHECK="${ROOT_DIR}/scripts/check-v0.11.9.3.2-release-successor.py"
 DERIVE_RELEASE_ID="${ROOT_DIR}/scripts/derive-demo-api-release-id.py"
 AWS_DEV_RELEASE_FILE="${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml"
+AWS_TEST_SUCCESSOR_CHECK="${ROOT_DIR}/scripts/check-v0.11.9.3.6.6.1-aws-test-release-successor.py"
 
 for command_name in bash python3; do
   command -v "${command_name}" >/dev/null 2>&1 || {
@@ -82,7 +83,6 @@ release_hashes = {
 }
 boundary = contract["environmentBoundary"]
 assert release_hashes["aws-dev"] == candidate["awsDevReleaseFileSha256"]
-assert release_hashes["aws-test"] == boundary["awsTestReleaseFileSha256"]
 assert release_hashes["aws-prod"] == boundary["awsProdReleaseFileSha256"]
 
 expected_release = {
@@ -100,10 +100,9 @@ expected_release = {
 }
 assert yaml.safe_load(release_paths["aws-dev"].read_text()) == expected_release
 
-for name in ("aws-test", "aws-prod"):
-    release_text = release_paths[name].read_text()
-    assert candidate["digest"] not in release_text
-    assert candidate["sourceCommit"] not in release_text
+aws_prod_text = release_paths["aws-prod"].read_text()
+assert candidate["digest"] not in aws_prod_text
+assert candidate["sourceCommit"] not in aws_prod_text
 
 assert boundary == {
     "awsDevDesiredStateUpdated": True,
@@ -161,6 +160,10 @@ for relative, marker in (
 
 print("v0.11.9.3.4 Git handoff evidence, immutable aws-dev identity and no-runtime boundary passed.")
 PY
+
+"${AWS_TEST_SUCCESSOR_CHECK}" \
+  --release-file "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml" \
+  >/dev/null
 
 successor_state="$(
   "${SUCCESSOR_CHECK}" \

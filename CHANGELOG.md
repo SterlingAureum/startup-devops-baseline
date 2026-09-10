@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.11.9.3.6.5.2
+
+- Record the fresh successful preflight and separately approved aws-dev runtime
+  qualification on exact protected main `489c8036b21e`.
+- Pin the private preflight and execution results by SHA-256 while keeping raw
+  files, paths, account identity, cluster ARN and endpoint outside Git.
+- Record exactly 54 normal `/health`, `/ready` and `/version` requests, a
+  populated release-scoped request series, passing availability/latency SLOs,
+  no firing critical alert and a healthy final runtime.
+- Preserve the explicit absence of fault injection, Root/monitoring mutation,
+  Rollout/AnalysisRun activity, progressive promotion and teardown.
+- Close aws-dev runtime qualification and require separate review for the
+  aws-dev-to-aws-test release-only promotion. Package validation performs no
+  live operation or traffic.
+
 ## v0.11.9.3.6.5.1.1
 
 - Record that the repaired loopback port-forward established successfully,

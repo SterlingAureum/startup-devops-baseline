@@ -3,6 +3,16 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution` records the fresh
+successful preflight and separately approved bounded qualification on exact
+protected main `489c8036b21e`. Exactly 54 normal requests populated the
+release-scoped series; availability and latency SLOs passed, no critical alert
+was firing, and the final runtime stayed healthy. Raw evidence remains private
+and is pinned only by SHA-256. No fault, Root/monitoring mutation,
+Rollout/AnalysisRun, promotion or teardown occurred. The next environment
+requires separate review. Applying and validating this evidence performs no
+AWS, Kubernetes, Prometheus or traffic operation.
+Predecessor:
 `v0.11.9.3.6.5.1.1-port-forward-readiness-budget-repair` keeps the repaired
 loopback-only Prometheus transport and corrects its remaining timing race. The
 observed tunnel accepted 13 connections and cleaned up correctly, but its

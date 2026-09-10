@@ -712,6 +712,15 @@ Incremental scope:
                                 last-probe diagnostic retain all transport,
                                 traffic, approval and teardown boundaries.
                                 A fresh post-merge preflight is still required.
+                                - v0.11.9.3.6.5.2 records that fresh preflight
+                                  and the separately approved exact-main
+                                  execution. All 54 normal requests completed,
+                                  release-scoped telemetry populated,
+                                  availability/latency SLOs passed, no critical
+                                  alert fired and final health remained good.
+                                  Private results are SHA-bound outside Git;
+                                  aws-test promotion and aws-dev teardown remain
+                                  separately reviewed next boundaries.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

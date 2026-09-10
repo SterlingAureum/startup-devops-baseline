@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff` connects the reviewed
+aws-dev live qualification contract to a release-only aws-test promotion PR.
+It pins the exact evidence and source-release hashes, release ID and protected
+main, permits only `aws-dev -> aws-test`, and does not merge or access either
+environment. Workflow dispatch, PR review/merge, aws-dev teardown and aws-test
+creation remain separate checkpoints.
+Predecessor:
 `v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution` records the fresh
 successful preflight and separately approved bounded qualification on exact
 protected main `489c8036b21e`. Exactly 54 normal requests populated the

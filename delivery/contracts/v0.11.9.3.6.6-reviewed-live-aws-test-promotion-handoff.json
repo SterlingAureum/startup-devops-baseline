@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "v0.11.9.3.6.6",
+  "version": "v0.11.9.3.6.6",
+  "predecessor": "v0.11.9.3.6.5.2",
+  "status": "reviewed-live-aws-dev-to-aws-test-promotion-handoff-implemented-not-executed",
+  "implementationBaselineCommit": "5b592ac8958b4227048403bf1ff716f76f692b82",
+  "reviewedQualification": {
+    "path": "delivery/contracts/v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution.json",
+    "sha256": "a5994ebce978e55842dabe22cfbb6c48adcfaf61fa46503d06001a6cc3b2b92e",
+    "executionCommit": "489c8036b21ee465160a1de0973a24b95b73dbfb",
+    "runtimeQualified": true
+  },
+  "sourceRelease": {
+    "path": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+    "sha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46",
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "imageTag": "sha-cf0a6bc",
+    "imageDigest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623"
+  },
+  "targetRelease": {
+    "path": "apps/demo-api/helm/values/releases/aws-test.yaml",
+    "currentSha256": "2817d5dbcb902b53956f564aa2024617249ee8e3cb003092bdf0724943342a91"
+  },
+  "workflowHandoff": {
+    "workflow": ".github/workflows/demo-api-promote-environment.yaml",
+    "qualificationMode": "reviewed-live-contract",
+    "allowedEdge": "aws-dev->aws-test",
+    "exactProtectedMainRequired": true,
+    "legacyEvidenceInputsRejected": true,
+    "qualificationBundleInputsRejected": true,
+    "mutationScope": "target-release-only-pr",
+    "automaticMerge": false
+  },
+  "operationBoundary": {
+    "workflowDispatched": false,
+    "pullRequestCreated": false,
+    "pullRequestMerged": false,
+    "awsAccessed": false,
+    "kubernetesAccessed": false,
+    "trafficGenerated": false,
+    "environmentChanged": false,
+    "teardownExecuted": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "merge-handoff-then-dispatch-reviewed-aws-dev-to-aws-test-release-only-pr"
+}

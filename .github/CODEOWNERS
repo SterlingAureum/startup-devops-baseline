@@ -145,6 +145,11 @@
 /scripts/validate-v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution.json @SterlingAureum
 /docs/V0.11.9.3.6.5.2_AWS_DEV_RUNTIME_QUALIFICATION_EXECUTION.md @SterlingAureum
+/scripts/validate-reviewed-aws-dev-qualification-for-promotion.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.6-reviewed-live-promotion-handoff.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.json @SterlingAureum
+/docs/V0.11.9.3.6.6_REVIEWED_LIVE_AWS_TEST_PROMOTION_HANDOFF.md @SterlingAureum
 /scripts/write-v0.9-final-evidence.sh @SterlingAureum
 /scripts/validate-v0.9-final-evidence.sh @SterlingAureum
 /docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md @SterlingAureum

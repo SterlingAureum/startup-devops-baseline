@@ -116,6 +116,8 @@ EXPECTED = {
             "runtime_evidence_id": "string",
             "qualification_bundle_path": "string",
             "qualification_bundle_sha256": "string",
+            "reviewed_live_contract_path": "string",
+            "reviewed_live_contract_sha256": "string",
             "release_id": "string",
             "control_plane_sha": "string",
         },

@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.11.9.3.6.6
+
+- Add a reviewed-live-contract promotion mode for the completed aws-dev live
+  qualification, limited to the `aws-dev -> aws-test` edge.
+- Bind the handoff to the exact reviewed `.3.6.5.2` contract SHA-256,
+  immutable aws-dev release SHA-256, release ID and protected-main SHA.
+- Reject legacy evidence and Qualification Bundle inputs in this mode and
+  retain the target-release-only PR mutation boundary with no automatic merge.
+- Add semantic tamper tests and inherited promotion regressions. Applying and
+  validating this package dispatches no workflow, creates no PR, accesses no
+  environment and performs no teardown.
+
 ## v0.11.9.3.6.5.2
 
 - Record the fresh successful preflight and separately approved aws-dev runtime

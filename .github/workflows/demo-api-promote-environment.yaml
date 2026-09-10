@@ -12,7 +12,7 @@ on:
         required: true
         type: string
       qualification_mode:
-        description: legacy-evidence or qualification-bundle
+        description: legacy-evidence, qualification-bundle, or reviewed-live-contract
         required: true
         type: string
       evidence_run_id:
@@ -29,6 +29,14 @@ on:
         type: string
       qualification_bundle_sha256:
         description: SHA-256 of the reviewed Qualification Bundle
+        required: false
+        type: string
+      reviewed_live_contract_path:
+        description: Reviewed live qualification execution contract on main
+        required: false
+        type: string
+      reviewed_live_contract_sha256:
+        description: SHA-256 of the reviewed live qualification contract
         required: false
         type: string
       release_id:
@@ -77,13 +85,37 @@ on:
           - aws-dev
           - aws-test
           - aws-prod
+      qualification_mode:
+        description: Evidence gate used for this promotion
+        required: true
+        default: legacy-evidence
+        type: choice
+        options:
+          - legacy-evidence
+          - reviewed-live-contract
       evidence_run_id:
         description: Successful source release-evidence workflow run ID
-        required: true
+        required: false
         type: string
       runtime_evidence_id:
         description: Reviewed source AWS runtime evidence ID (UTC YYYYMMDDHHMMSS)
-        required: true
+        required: false
+        type: string
+      reviewed_live_contract_path:
+        description: Reviewed live qualification contract path on main
+        required: false
+        type: string
+      reviewed_live_contract_sha256:
+        description: SHA-256 of the reviewed live qualification contract
+        required: false
+        type: string
+      release_id:
+        description: Deterministic release ID bound by the reviewed contract
+        required: false
+        type: string
+      control_plane_sha:
+        description: Exact protected-main SHA used to prepare the PR
+        required: false
         type: string
 
 permissions:
@@ -145,6 +177,8 @@ jobs:
           RUNTIME_EVIDENCE_ID: ${{ inputs.runtime_evidence_id }}
           QUALIFICATION_BUNDLE_PATH: ${{ inputs.qualification_bundle_path }}
           QUALIFICATION_BUNDLE_SHA256: ${{ inputs.qualification_bundle_sha256 }}
+          REVIEWED_LIVE_CONTRACT_PATH: ${{ inputs.reviewed_live_contract_path }}
+          REVIEWED_LIVE_CONTRACT_SHA256: ${{ inputs.reviewed_live_contract_sha256 }}
           RELEASE_ID: ${{ inputs.release_id }}
           CONTROL_PLANE_SHA: ${{ inputs.control_plane_sha }}
           EXPECTED_SOURCE_REPOSITORY: ${{ github.repository }}
@@ -174,8 +208,8 @@ jobs:
                 echo "::error::Legacy mode requires evidence_run_id and runtime_evidence_id."
                 exit 1
               fi
-              if [[ -n "${QUALIFICATION_BUNDLE_PATH}${QUALIFICATION_BUNDLE_SHA256}${RELEASE_ID}${CONTROL_PLANE_SHA}" ]]; then
-                echo "::error::Legacy and Qualification Bundle inputs may not be mixed."
+              if [[ -n "${QUALIFICATION_BUNDLE_PATH}${QUALIFICATION_BUNDLE_SHA256}${REVIEWED_LIVE_CONTRACT_PATH}${REVIEWED_LIVE_CONTRACT_SHA256}${RELEASE_ID}${CONTROL_PLANE_SHA}" ]]; then
+                echo "::error::Legacy and Qualification Bundle inputs may not be mixed; reviewed-live-contract inputs are also rejected."
                 exit 1
               fi
               ;;
@@ -187,8 +221,8 @@ jobs:
                   exit 1
                   ;;
               esac
-              if [[ -n "${EVIDENCE_RUN_ID}${RUNTIME_EVIDENCE_ID}" ]]; then
-                echo "::error::Qualification Bundle mode rejects legacy evidence inputs."
+              if [[ -n "${EVIDENCE_RUN_ID}${RUNTIME_EVIDENCE_ID}${REVIEWED_LIVE_CONTRACT_PATH}${REVIEWED_LIVE_CONTRACT_SHA256}" ]]; then
+                echo "::error::Qualification Bundle mode rejects legacy and reviewed-live-contract inputs."
                 exit 1
               fi
               if [[ ! "${RELEASE_ID}" =~ ^demo-api-[0-9a-f]{12}-[0-9a-f]{12}$ || \
@@ -196,6 +230,25 @@ jobs:
                     ! "${QUALIFICATION_BUNDLE_SHA256}" =~ ^[0-9a-f]{64}$ || \
                     ! "${QUALIFICATION_BUNDLE_PATH}" =~ ^evidence/demo-api/qualification/${SOURCE_ENVIRONMENT}/${RELEASE_ID}/[1-9][0-9]*-[1-9][0-9]*\.json$ ]]; then
                 echo "::error::Qualification Bundle inputs violate the immutable identity contract."
+                exit 1
+              fi
+              ;;
+            reviewed-live-contract)
+              if [[ "${SOURCE_ENVIRONMENT}->${TARGET_ENVIRONMENT}" != "aws-dev->aws-test" ]]; then
+                echo "::error::Reviewed live contract mode permits only aws-dev -> aws-test."
+                exit 1
+              fi
+              if [[ -n "${EVIDENCE_RUN_ID}${RUNTIME_EVIDENCE_ID}${QUALIFICATION_BUNDLE_PATH}${QUALIFICATION_BUNDLE_SHA256}" ]]; then
+                echo "::error::Reviewed live contract mode rejects legacy and Qualification Bundle inputs."
+                exit 1
+              fi
+              if [[ "${REVIEWED_LIVE_CONTRACT_PATH}" != \
+                    "delivery/contracts/v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution.json" || \
+                    "${REVIEWED_LIVE_CONTRACT_SHA256}" != \
+                    "a5994ebce978e55842dabe22cfbb6c48adcfaf61fa46503d06001a6cc3b2b92e" || \
+                    "${RELEASE_ID}" != "demo-api-cf0a6bcbc466-cdffd3d71763" || \
+                    ! "${CONTROL_PLANE_SHA}" =~ ^[0-9a-f]{40}$ ]]; then
+                echo "::error::Reviewed live contract inputs do not match the accepted aws-dev qualification."
                 exit 1
               fi
               ;;
@@ -208,9 +261,10 @@ jobs:
           git fetch --no-tags origin \
             "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
           base_revision="$(git rev-parse "origin/${BASE_BRANCH}")"
-          if [[ "${QUALIFICATION_MODE}" == "qualification-bundle" && \
+          if [[ ( "${QUALIFICATION_MODE}" == "qualification-bundle" || \
+                  "${QUALIFICATION_MODE}" == "reviewed-live-contract" ) && \
                 "${base_revision}" != "${CONTROL_PLANE_SHA}" ]]; then
-            echo "::error::Protected main differs from the orchestrator control-plane SHA."
+            echo "::error::Protected main differs from the reviewed control-plane SHA."
             exit 1
           fi
           source_release_path="apps/demo-api/helm/values/releases/${SOURCE_ENVIRONMENT}.yaml"
@@ -221,6 +275,7 @@ jobs:
           runtime_evidence_snapshot="${RUNNER_TEMP}/demo-api-${SOURCE_ENVIRONMENT}-runtime-evidence.json"
           runtime_evidence_path=""
           qualification_bundle_snapshot="${RUNNER_TEMP}/demo-api-${SOURCE_ENVIRONMENT}-qualification-bundle.json"
+          reviewed_live_contract_snapshot="${RUNNER_TEMP}/demo-api-${SOURCE_ENVIRONMENT}-reviewed-live-contract.json"
 
           source_release_blob="$(
             git rev-parse "origin/${BASE_BRANCH}:${source_release_path}"
@@ -254,7 +309,7 @@ jobs:
             EVIDENCE_FILE="${runtime_evidence_snapshot}" \
             RELEASE_FILE="${source_release_snapshot}" \
               ./scripts/validate-demo-api-runtime-evidence.sh
-          else
+          elif [[ "${QUALIFICATION_MODE}" == "qualification-bundle" ]]; then
             git show "origin/${BASE_BRANCH}:${QUALIFICATION_BUNDLE_PATH}" \
               > "${qualification_bundle_snapshot}" || {
                 echo "::error::Reviewed Qualification Bundle is missing from main: ${QUALIFICATION_BUNDLE_PATH}"
@@ -280,6 +335,18 @@ jobs:
                 echo "::error::Qualification Bundle does not bind the current ${SOURCE_ENVIRONMENT} release."
                 exit 1
               }
+          else
+            git show "origin/${BASE_BRANCH}:${REVIEWED_LIVE_CONTRACT_PATH}" \
+              > "${reviewed_live_contract_snapshot}" || {
+                echo "::error::Reviewed live qualification contract is missing from main: ${REVIEWED_LIVE_CONTRACT_PATH}"
+                exit 1
+              }
+            ./scripts/validate-reviewed-aws-dev-qualification-for-promotion.py \
+              --evidence-contract "${reviewed_live_contract_snapshot}" \
+              --release-file "${source_release_snapshot}" \
+              --expected-contract-sha256 "${REVIEWED_LIVE_CONTRACT_SHA256}" \
+              --expected-release-sha256 "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46" \
+              --expected-release-id "${RELEASE_ID}"
           fi
 
           promotion_branch="release/demo-api-${SOURCE_ENVIRONMENT}-to-${TARGET_ENVIRONMENT}-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
@@ -330,6 +397,8 @@ jobs:
             echo "qualification-mode=${QUALIFICATION_MODE}"
             echo "qualification-bundle-path=${QUALIFICATION_BUNDLE_PATH}"
             echo "qualification-bundle-sha256=${QUALIFICATION_BUNDLE_SHA256}"
+            echo "reviewed-live-contract-path=${REVIEWED_LIVE_CONTRACT_PATH}"
+            echo "reviewed-live-contract-sha256=${REVIEWED_LIVE_CONTRACT_SHA256}"
             echo "promotion-branch=${promotion_branch}"
             echo "changed=${changed}"
           } >> "${GITHUB_OUTPUT}"
@@ -379,6 +448,8 @@ jobs:
           QUALIFICATION_MODE: ${{ steps.promotion.outputs.qualification-mode }}
           QUALIFICATION_BUNDLE_PATH: ${{ steps.promotion.outputs.qualification-bundle-path }}
           QUALIFICATION_BUNDLE_SHA256: ${{ steps.promotion.outputs.qualification-bundle-sha256 }}
+          REVIEWED_LIVE_CONTRACT_PATH: ${{ steps.promotion.outputs.reviewed-live-contract-path }}
+          REVIEWED_LIVE_CONTRACT_SHA256: ${{ steps.promotion.outputs.reviewed-live-contract-sha256 }}
         run: |
           git fetch --no-tags origin \
             "+refs/heads/${BASE_BRANCH}:refs/remotes/origin/${BASE_BRANCH}"
@@ -409,6 +480,9 @@ jobs:
             if [[ "${QUALIFICATION_MODE}" == "qualification-bundle" ]]; then
               echo "- Reviewed Qualification Bundle: \`${QUALIFICATION_BUNDLE_PATH}\`"
               echo "- Qualification Bundle SHA-256: \`${QUALIFICATION_BUNDLE_SHA256}\`"
+            elif [[ "${QUALIFICATION_MODE}" == "reviewed-live-contract" ]]; then
+              echo "- Reviewed live qualification contract: \`${REVIEWED_LIVE_CONTRACT_PATH}\`"
+              echo "- Reviewed contract SHA-256: \`${REVIEWED_LIVE_CONTRACT_SHA256}\`"
             else
               echo "- Reviewed evidence: \`${EVIDENCE_PATH}\`"
               echo "- Evidence workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${EVIDENCE_RUN_ID}"
@@ -448,6 +522,7 @@ jobs:
           RUNTIME_EVIDENCE_ID: ${{ inputs.runtime_evidence_id }}
           QUALIFICATION_MODE: ${{ steps.promotion.outputs.qualification-mode }}
           QUALIFICATION_BUNDLE_PATH: ${{ steps.promotion.outputs.qualification-bundle-path }}
+          REVIEWED_LIVE_CONTRACT_PATH: ${{ steps.promotion.outputs.reviewed-live-contract-path }}
         run: |
           if [[ "${CHANGED}" == "true" ]]; then
             status="${PR_STATUS}"
@@ -463,6 +538,8 @@ jobs:
             echo "- Qualification mode: \`${QUALIFICATION_MODE}\`"
             if [[ "${QUALIFICATION_MODE}" == "qualification-bundle" ]]; then
               echo "- Qualification Bundle: \`${QUALIFICATION_BUNDLE_PATH}\`"
+            elif [[ "${QUALIFICATION_MODE}" == "reviewed-live-contract" ]]; then
+              echo "- Reviewed live qualification contract: \`${REVIEWED_LIVE_CONTRACT_PATH}\`"
             else
               echo "- Evidence workflow: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${EVIDENCE_RUN_ID}"
               echo "- Runtime evidence ID: \`${RUNTIME_EVIDENCE_ID}\`"

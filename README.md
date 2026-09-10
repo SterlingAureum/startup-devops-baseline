@@ -3,11 +3,23 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.4.3-aws-environment-teardown-convergence` records the completed
+aws-dev teardown closure and repairs the shared aws-dev/aws-test destroy path.
+It captures every EBS-backed PVC, waits for Root child pruning, safely
+converges only exact detached dynamic-PVC volumes, detached `aws-K8S-*` ENIs
+and an unreferenced EKS-created security group, inventories unknown VPC
+dependencies, and requires a new interactive Terraform confirmation before
+one retry. The observed final state and next-day residual audit were clean,
+but the repaired path remains live-unvalidated. Applying and validating this
+checkpoint performs no AWS, Terraform or Kubernetes operation. `.3.6.5`
+runtime qualification remains separate.
+Predecessor:
 `v0.11.9.3.6.4.2-aws-dev-monitoring-convergence-execution` records the
 separately approved repair on exact main `6421e140b3ac`: the independent
 Grafana Secret was created without exposed values, Grafana reached `1/1`, and
 monitoring became `Synced / Healthy` on chart `88.5.0`. Root was not redeployed
-and runtime qualification, traffic, promotion and teardown remain unexecuted.
+and runtime qualification, traffic and promotion remain unexecuted at that
+checkpoint.
 The private log stays outside Git and is pinned only by SHA-256. Applying and
 validating this evidence performs no live operation.
 Predecessor:

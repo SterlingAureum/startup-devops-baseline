@@ -68,6 +68,28 @@ Secret is not stored in Git and must not remain after the database is removed.
 It also removes the demo-api Alias before deleting the ALB. Domain registration
 and the public `aureumstack.com` hosted zone remain intact.
 
+Before pruning, the workflow captures every cluster EBS-backed PVC, including
+StatefulSet-generated monitoring volumes that are not deleted by Helm or Argo
+CD application pruning. After Karpenter cleanup it waits for Root Application
+finalizers, deletes those captured PVCs explicitly and converges only exact
+detached dynamic-PVC volumes owned by the selected cluster.
+
+The shared aws-dev/aws-test dependency helper may delete a detached
+`aws-K8S-*` ENI only when it is `available`, non-requester-managed, unattached,
+inside the exact Terraform VPC and its encoded parent instance is terminal or
+absent. It may delete an EKS-created cluster security group only after EKS is
+absent and only when the group belongs to the caller, is non-default and has
+no ENI or security-group-rule reference. Unknown resources fail closed.
+
+If the first Terraform destroy exits with only Terraform-owned VPC/subnet
+state remaining, the helper inventories dynamic VPC dependencies. A clean
+inventory permits one retry; Terraform displays a new plan and requires a new
+interactive `yes`. Any other remaining state or dependency stops the script.
+
+Do not pipe the interactive destroy entrypoint through `tee`. Use it directly,
+or use `script --quiet --return --command ...` when a private pseudo-TTY
+transcript is required. Keep that transcript outside Git with mode `0600`.
+
 ## Manual Checks
 
 ```bash

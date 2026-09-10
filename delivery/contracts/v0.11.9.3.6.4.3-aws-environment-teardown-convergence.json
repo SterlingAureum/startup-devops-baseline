@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "v0.11.9.3.6.4.3",
+  "version": "v0.11.9.3.6.4.3",
+  "predecessor": "v0.11.9.3.6.4.2",
+  "status": "aws-environment-teardown-convergence-repaired",
+  "implementationBaselineCommit": "bca8168004b0cce81c532519c5a301ea9ce4bf16",
+  "goal": "Repair the shared aws-dev/aws-test teardown path after live aws-dev closure exposed asynchronous dynamic-resource dependencies.",
+  "liveObservation": {
+    "environment": "aws-dev",
+    "controlPlaneCommit": "bca8168004b0cce81c532519c5a301ea9ce4bf16",
+    "timeWindowScopedApproval": true,
+    "initialTerraformStateAddressCount": 103,
+    "terraformPromptTransportAttempt": {
+      "executorExit": 1,
+      "terraformStateAddressCount": 103,
+      "terraformMutationStarted": false,
+      "privateLogSha256": "9485a5cbc5973ff3f11cda81b16a2d426267ad6fadb0da0ab6a316243b392537"
+    },
+    "subnetDependencyFailure": {
+      "executorExit": 1,
+      "terraformStateAddressCount": 2,
+      "dependencyClass": "detached-unmanaged-aws-k8s-eni",
+      "privateLogSha256": "04a55f73e027ce719c3cc9da176f055d46fa951a3e8856118976dbf5b7521661"
+    },
+    "vpcDependencyFailure": {
+      "executorExit": 1,
+      "terraformStateAddressCount": 1,
+      "dependencyClass": "unreferenced-eks-created-security-group",
+      "privateLogSha256": "fdcba9242873d327de7ff3b27a241ff51643f7010028481e0ba0990e69433d54"
+    },
+    "postTerraformAuditFailure": {
+      "terraformStateAddressCount": 0,
+      "dependencyClass": "detached-dynamic-pvc-ebs-volumes",
+      "residualCount": 2
+    },
+    "closure": {
+      "terraformStateAddressCount": 0,
+      "cleanupAuditExit": 0,
+      "terminalFleetRecordsAccepted": 4,
+      "continuingBillableResourceIdentityFound": false
+    }
+  },
+  "repair": {
+    "sharedImplementation": "scripts/destroy-aws-dev.sh",
+    "awsTestWrapper": "scripts/destroy-aws-test.sh",
+    "dependencyHelper": "scripts/converge-aws-destroy-dependencies.sh",
+    "allEbsBackedPvcsCapturedBeforePruning": true,
+    "rootAndChildPruningWaited": true,
+    "detachedDynamicPvcVolumeGuardedCleanup": true,
+    "detachedAwsK8sEniGuardedCleanup": true,
+    "unreferencedEksSecurityGroupGuardedCleanup": true,
+    "vpcDependencyInventoryBeforeRetry": true,
+    "terraformRetryRequiresNewInteractivePlanConfirmation": true,
+    "unknownDependencyFailsClosed": true,
+    "awsProdRefused": true,
+    "repairLiveValidated": false
+  },
+  "evidenceBoundary": {
+    "rawLogsStoredOutsideRepository": true,
+    "awsAccountCommitted": false,
+    "resourceIdsCommitted": false,
+    "cidrsCommitted": false,
+    "terraformStateCommitted": false,
+    "kubeconfigCommitted": false,
+    "secretDataCommitted": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformExecuted": false,
+    "kubernetesAccessed": false,
+    "environmentChanged": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "v0.11.9.3.6.5-aws-dev-runtime-qualification"
+}

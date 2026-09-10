@@ -126,7 +126,11 @@
 /scripts/complete-aws-test-rollout.sh @SterlingAureum
 /scripts/destroy-aws-dev.sh @SterlingAureum
 /scripts/destroy-aws-test.sh @SterlingAureum
+/scripts/converge-aws-destroy-dependencies.sh @SterlingAureum
 /scripts/validate-aws-cost-cleanup.sh @SterlingAureum
+/scripts/validate-v0.11.9.3.6.4.3-aws-environment-teardown-convergence.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.4.3-aws-environment-teardown-convergence.json @SterlingAureum
+/docs/V0.11.9.3.6.4.3_AWS_ENVIRONMENT_TEARDOWN_CONVERGENCE.md @SterlingAureum
 /scripts/write-v0.9-final-evidence.sh @SterlingAureum
 /scripts/validate-v0.9-final-evidence.sh @SterlingAureum
 /docs/V0.10_FINAL_ACCEPTANCE_RUNBOOK.md @SterlingAureum

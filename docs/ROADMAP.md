@@ -668,6 +668,17 @@ Incremental scope:
                         Synced/Healthy, while credentials remain private and
                         Root redeploy, qualification, traffic, promotion and
                         teardown remain unexecuted. `.3.6.5` stays separate.
+                        - v0.11.9.3.6.4.3 records the later approved aws-dev
+                          teardown closure and repairs the shared dev/test
+                          dependency convergence. It captures all EBS-backed
+                          PVCs, waits for Root pruning, safely classifies exact
+                          detached dynamic-PVC volumes, `aws-K8S-*` ENIs and an
+                          unreferenced EKS-created security group, inventories
+                          unknown VPC dependencies and requires another
+                          interactive Terraform confirmation before one retry.
+                          Offline fixtures cover dev/test and prod refusal; a
+                          future live teardown must still validate the repair.
+                          `.3.6.5` runtime qualification remains separate.
   - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
     approve main integration, prod deployment and .8.3 read-only observation.
     Do not claim full prod acceptance before that checkpoint is complete.

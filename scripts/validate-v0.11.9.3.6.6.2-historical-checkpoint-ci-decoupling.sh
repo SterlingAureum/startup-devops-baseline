@@ -32,7 +32,12 @@ assert prod_path in json.loads(
 )["releaseFiles"]
 PY
 
-test "$("${SUCCESSOR}" --release-file "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml")" = historical-aws-test
+current_state="$("${SUCCESSOR}" --release-file "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-test.yaml")"
+if [[ "${current_state}" != historical-aws-test && \
+      "${current_state}" != reviewed-promoted-candidate ]]; then
+  echo "Unexpected current aws-test release state: ${current_state}" >&2
+  exit 1
+fi
 test "$("${SUCCESSOR}" --release-file "${ROOT_DIR}/apps/demo-api/helm/values/releases/aws-dev.yaml")" = reviewed-promoted-candidate
 
 bash "${READINESS}"

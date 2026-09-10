@@ -893,3 +893,8 @@ The protected-main readiness checkpoint now preserves its historical evidence
 while delegating the mutable aws-test release to the reviewed successor
 validator. Production remains byte-for-byte pinned until its own promotion.
 See `docs/V0.11.9.3.6.6.2_HISTORICAL_CHECKPOINT_CI_DECOUPLING.md`.
+### v0.11.9.3.6.6.3 successor policy convergence
+
+All remaining main-CI checkpoints that inspected mutable aws-test release bytes
+now delegate to the reviewed successor policy. Historical evidence remains
+immutable and aws-prod remains pinned pending separate promotion.

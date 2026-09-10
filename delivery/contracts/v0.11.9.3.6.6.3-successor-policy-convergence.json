@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "v0.11.9.3.6.6.3",
+  "version": "v0.11.9.3.6.6.3",
+  "predecessor": "v0.11.9.3.6.6.2",
+  "implementationBaselineCommit": "bdbb7f1224352d12d83b52c17b44254f3275ac75",
+  "status": "aws-test-successor-policy-converged-across-main-ci",
+  "repairedValidators": [
+    "scripts/validate-v0.11.9.3.3-reviewed-main-integration.sh",
+    "scripts/validate-v0.11.9.3.4-existing-image-aws-dev-promotion-execution.sh",
+    "scripts/validate-v0.11.9.3.5-aws-dev-live-rehearsal-preflight.sh",
+    "scripts/validate-v0.11.9.3.6.6.1-aws-test-successor-validation-repair.sh",
+    "scripts/validate-v0.11.9.3.6.6.2-historical-checkpoint-ci-decoupling.sh"
+  ],
+  "policy": {
+    "historicalContractsModified": false,
+    "awsTestCurrentStateUsesReviewedSuccessorChecker": true,
+    "allowedAwsTestStateCount": 2,
+    "unknownAwsTestIdentityRejected": true,
+    "awsProdHistoricalIdentityRequired": true
+  },
+  "scope": {
+    "workflowDispatched": false,
+    "promotionPrUpdated": false,
+    "promotionPrMerged": false,
+    "awsAccessed": false,
+    "clusterAccessed": false,
+    "environmentCreated": false,
+    "environmentDestroyed": false
+  },
+  "executionAuthorized": false,
+  "nextAction": "merge-repair-refresh-held-promotion-pr-and-rerun-ci"
+}

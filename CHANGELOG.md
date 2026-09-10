@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.11.9.3.6.4.3
+
+- Record the approved aws-dev teardown sequence from 103 Terraform addresses
+  through two known dynamic VPC dependency failures, zero state, two detached
+  dynamic-PVC volumes and a successful next-day residual-cost audit.
+- Keep raw logs and AWS resource identities private while pinning three known
+  failure-log SHA-256 fingerprints and the final zero-cost-resource outcome.
+- Capture every EBS-backed PVC before pruning, wait for Root child deletion and
+  explicitly remove StatefulSet-generated PVCs that Argo CD/Helm do not own.
+- Add a shared aws-dev/aws-test helper that deletes only exact detached
+  dynamic-PVC volumes, detached `aws-K8S-*` ENIs with terminal/absent parents,
+  and one unreferenced EKS-created security group after EKS is absent.
+- Inventory live VPC dependencies and permit one Terraform retry only when
+  remaining state is limited to Terraform-owned VPC/subnet addresses and every
+  unknown dependency count is zero; the retry requires another interactive
+  `yes` and never uses auto-approve.
+- Add mock-only dev/test success, unknown-dependency refusal and aws-prod
+  rejection coverage. The repaired path remains live-unvalidated and
+  `.3.6.5` runtime qualification remains separately reviewed.
+
 ## v0.11.9.3.6.4.2
 
 - Record the separately approved `.3.6.4.1` monitoring-convergence execution

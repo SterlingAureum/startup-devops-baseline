@@ -356,6 +356,9 @@ echo "==> Validating v0.11.9.3.6.4.1 aws-dev monitoring convergence repair"
 echo "==> Validating v0.11.9.3.6.4.2 aws-dev monitoring convergence execution evidence"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.4.2-aws-dev-monitoring-convergence-execution.sh"
 
+echo "==> Validating v0.11.9.3.6.4.3 AWS environment teardown convergence"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.4.3-aws-environment-teardown-convergence.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

@@ -23,6 +23,7 @@ ALB_WAIT_SECONDS="${ALB_WAIT_SECONDS:-600}"
 KARPENTER_WAIT_SECONDS="${KARPENTER_WAIT_SECONDS:-600}"
 EBS_WAIT_SECONDS="${EBS_WAIT_SECONDS:-600}"
 RECONCILE_DNS_SCRIPT="${ROOT_DIR}/scripts/reconcile-demo-api-dns.sh"
+DESTROY_DEPENDENCY_SCRIPT="${ROOT_DIR}/scripts/converge-aws-destroy-dependencies.sh"
 
 require_command() {
   command -v "$1" >/dev/null 2>&1 || {
@@ -35,6 +36,11 @@ require_command() {
 for command_name in aws jq kubectl terraform; do
   require_command "${command_name}"
 done
+
+[[ -x "${DESTROY_DEPENDENCY_SCRIPT}" ]] || {
+  echo "Required destroy dependency helper is not executable." >&2
+  exit 1
+}
 
 cat <<EOF
 WARNING: this operation will destroy the ${AWS_ENVIRONMENT} environment.
@@ -67,6 +73,12 @@ if [[ "${confirmation}" != "${expected_confirmation}" ]]; then
   exit 0
 fi
 
+DESTROY_VPC_ID="$(terraform -chdir="${TF_DIR}" output -raw vpc_id 2>/dev/null || true)"
+if [[ -n "${DESTROY_VPC_ID}" && ! "${DESTROY_VPC_ID}" =~ ^vpc-[0-9a-f]+$ ]]; then
+  echo "Terraform returned an invalid destroy VPC identity." >&2
+  exit 1
+fi
+
 CLUSTER_AVAILABLE=false
 EKS_PUBLIC_ACCESS_CIDRS_JSON="[]"
 if cluster_json="$(aws eks describe-cluster \
@@ -94,6 +106,26 @@ fi
 
 if [[ "${CLUSTER_AVAILABLE}" == "true" ]]; then
   aws eks update-kubeconfig --region "${AWS_REGION}" --name "${CLUSTER_NAME}"
+
+EBS_PVC_RECORDS=()
+while IFS= read -r pvc_record; do
+  [[ -n "${pvc_record}" ]] || continue
+  EBS_PVC_RECORDS+=("${pvc_record}")
+done < <(
+  kubectl get pv -o json | jq -r '
+    .items[]
+    | select(.spec.csi.driver == "ebs.csi.aws.com")
+    | select(.spec.claimRef.namespace != null)
+    | select(.spec.claimRef.name != null)
+    | [
+        .spec.claimRef.namespace,
+        .spec.claimRef.name,
+        .spec.csi.volumeHandle
+      ]
+    | @tsv
+  '
+)
+printf 'Captured %s EBS-backed PVC identity record(s).\n' "${#EBS_PVC_RECORDS[@]}"
 
 ROOT_APPLICATION_EXISTS=false
 if kubectl get application "${ROOT_APPLICATION}" -n "${ARGOCD_NAMESPACE}" >/dev/null 2>&1; then
@@ -226,10 +258,30 @@ DNS_ACTION=delete \
   "${RECONCILE_DNS_SCRIPT}"
 
 if [[ "${ROOT_APPLICATION_EXISTS}" == "true" ]]; then
-  kubectl delete application "${ROOT_APPLICATION}" -n "${ARGOCD_NAMESPACE}" --wait=false
+  echo "==> Deleting the Root Application and waiting for child pruning"
+  kubectl delete application "${ROOT_APPLICATION}" \
+    --namespace "${ARGOCD_NAMESPACE}" \
+    --wait=true \
+    --timeout=15m
 else
   echo "Root Application not found; continuing."
 fi
+
+echo "==> Deleting every captured EBS-backed PVC"
+for pvc_record in "${EBS_PVC_RECORDS[@]}"; do
+  IFS=$'\t' read -r pvc_namespace pvc_name volume_id <<<"${pvc_record}"
+  [[ "${volume_id}" == vol-* ]] || {
+    echo "Refusing invalid captured EBS volume identity: ${volume_id}" >&2
+    exit 1
+  }
+  if kubectl get namespace "${pvc_namespace}" >/dev/null 2>&1; then
+    kubectl delete pvc "${pvc_name}" \
+      --namespace "${pvc_namespace}" \
+      --ignore-not-found=true \
+      --wait=true \
+      --timeout=15m
+  fi
+done
 
 if kubectl get namespace "${APP_NAMESPACE}" >/dev/null 2>&1; then
   kubectl delete ingress --all -n "${APP_NAMESPACE}" --ignore-not-found=true --wait=false
@@ -252,8 +304,46 @@ sleep 30
 kubectl get service -A --field-selector spec.type=LoadBalancer || true
 fi
 
-terraform -chdir="${TF_DIR}" destroy \
-  -var="eks_public_access_cidrs=${EKS_PUBLIC_ACCESS_CIDRS_JSON}"
+run_dependency_convergence() {
+  local mode="$1"
+  [[ -n "${DESTROY_VPC_ID}" ]] || return 0
+  AWS_ENVIRONMENT="${AWS_ENVIRONMENT}" \
+  DESTROY_VPC_ID="${DESTROY_VPC_ID}" \
+  INTERNAL_AWS_DESTROY_DEPENDENCY_TOKEN="converge-reviewed-destroy-dependencies" \
+    "${DESTROY_DEPENDENCY_SCRIPT}" "${mode}"
+}
+
+run_terraform_destroy() {
+  terraform -chdir="${TF_DIR}" destroy \
+    -var="eks_public_access_cidrs=${EKS_PUBLIC_ACCESS_CIDRS_JSON}"
+}
+
+assert_retry_state_is_vpc_only() {
+  local remaining_state unexpected_state
+  remaining_state="$(terraform -chdir="${TF_DIR}" state list)"
+  unexpected_state="$(sed '/^$/d' <<<"${remaining_state}" | grep -Ev \
+    '^module\.vpc\.aws_(subnet\.(private|public)\[|vpc\.this$)' || true)"
+  if [[ -n "${unexpected_state}" ]]; then
+    echo "Terraform destroy failed with non-VPC state remaining:" >&2
+    printf '%s\n' "${unexpected_state}" >&2
+    echo "Refusing automatic dependency convergence and retry." >&2
+    return 1
+  fi
+}
+
+run_dependency_convergence pre-terraform
+
+if run_terraform_destroy; then
+  run_dependency_convergence post-success
+else
+  terraform_destroy_exit=$?
+  echo "Terraform destroy exited ${terraform_destroy_exit}; inspecting exact residual state." >&2
+  assert_retry_state_is_vpc_only
+  run_dependency_convergence post-failure
+  echo "Known dynamic dependencies converged. Review the new Terraform plan and confirm again."
+  run_terraform_destroy
+  run_dependency_convergence post-success
+fi
 
 echo "==> Retiring Karpenter Instant Fleet request records"
 TAGGED_FLEET_JSON="$(aws resourcegroupstaggingapi get-resources \

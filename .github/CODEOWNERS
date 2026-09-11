@@ -162,6 +162,12 @@
 /scripts/validate-v0.11.9.3.6.7-aws-test-live-creation-preflight.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.7-aws-test-live-creation-preflight.json @SterlingAureum
 /docs/V0.11.9.3.6.7_GUARDED_AWS_TEST_LIVE_CREATION_PREFLIGHT.md @SterlingAureum
+/scripts/check-v0.11.9.3.6.7.1-aws-test-live-creation-plan.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.1-aws-test-live-creation-plan.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.1-aws-test-live-creation-plan-design.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7.1-aws-test-live-creation-plan-design.json @SterlingAureum
+/delivery/examples/v0.11.9.3.6.7.1-aws-test-live-creation-plan.json @SterlingAureum
+/docs/V0.11.9.3.6.7.1_GUARDED_AWS_TEST_PRIVATE_CREATION_PLAN_DESIGN.md @SterlingAureum
 /scripts/validate-reviewed-aws-dev-qualification-for-promotion.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.6-reviewed-live-promotion-handoff.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.sh @SterlingAureum

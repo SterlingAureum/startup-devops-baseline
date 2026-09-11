@@ -3,6 +3,19 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.1-guarded-aws-test-private-creation-plan-design` binds the
+reviewed `.6.7` readiness result and adds an offline validator for an
+owner-only aws-test creation plan. It fixes exact main, candidate, account,
+management-IP, local-variable, cost/time and create/read/no-op-only plan
+boundaries. Merging and validating it runs no AWS or Terraform command; a
+fresh post-merge preflight, a guarded plan executor and separate plan approval
+are still required before Terraform planning.
+Predecessor:
+`v0.11.9.3.6.7-guarded-aws-test-live-creation-preflight` adds an exact-main,
+exact-account read-only gate after the completed aws-dev teardown and residual
+audit. It confirms no active rehearsal environment and an empty aws-test local
+state without invoking Terraform or the legacy plan-and-apply wrapper.
+Predecessor:
 `v0.11.9.3.6.6.1-aws-test-successor-validation-repair` replaces permanent
 candidate-absence assertions with an exact two-state aws-test allowlist. The
 historical and reviewed promoted release bytes pass, unknown or partial
@@ -959,3 +972,14 @@ AWS account and zero active rehearsal EKS environments, and accepts only an
 absent or valid empty aws-test local Terraform state. It runs no Terraform
 command and explicitly forbids direct use of the historical plan-and-apply
 wrapper. This implementation performs no live preflight or environment action.
+
+### v0.11.9.3.6.7.1 guarded aws-test private creation-plan design
+
+The successful `.6.7` preflight is now pinned by its redacted SHA-256 and exact
+protected main. A new offline-only private-plan checker requires a later
+post-merge main, a fresh preflight fingerprint, the immutable promoted release,
+the current global management IPv4 and a fingerprint of the ignored local
+Terraform variables. It enforces an eight-hour/USD 50 ceiling, one active
+environment maximum, private `0700/0600` artifacts, one-hour plan review and a
+nonempty create/read/no-op-only Terraform policy. This checkpoint runs no live
+plan and leaves plan, apply and environment creation unauthorized.

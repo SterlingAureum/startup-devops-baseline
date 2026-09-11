@@ -882,3 +882,15 @@ absent or valid empty version-4 aws-test state without running Terraform or
 emitting private identity. Direct legacy wrapper use remains forbidden because
 it does not separate plan from apply. After merge, run and review one fresh
 private preflight before designing a bounded, create-only Terraform plan.
+
+### v0.11.9.3.6.7.1
+
+Bind the reviewed `.6.7` aws-test readiness result on protected main
+`05f481b5ce06` and implement an offline private creation-plan contract. Require
+a fresh post-merge preflight, exact immutable release, private account/current
+management IPv4/local-variable fingerprint, reviewed current pricing, an
+eight-hour/USD 50 session ceiling and one active environment maximum. Define a
+private saved Terraform plan with a one-hour review TTL and machine-check only
+nonempty create/read/no-op actions. Plan execution moves to `.6.7.2`; apply,
+GitOps bootstrap, qualification, promotion and teardown remain separately
+reviewed later phases.

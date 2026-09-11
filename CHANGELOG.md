@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.11.9.3.6.7.1
+
+- Bind the successful redacted `.6.7` aws-test readiness result to exact
+  protected main `05f481b5ce06` and its SHA-256 without committing its private
+  path, account identity or AWS inventory.
+- Add an offline-only private aws-test creation-plan template and strict checker
+  for a later protected-main SHA, fresh post-merge preflight, immutable release,
+  current management IPv4 and ignored `terraform.tfvars` fingerprint.
+- Require a reviewed current-price estimate, eight-hour/USD 50 ceiling, one
+  active rehearsal environment maximum and separately approved teardown plus
+  residual-cost audit.
+- Specify a new private Terraform bundle, a one-hour plan-review TTL and a
+  machine gate accepting only nonempty create/read/no-op actions; update,
+  delete, replacement, unknown actions and apply during the plan phase fail
+  closed.
+- Keep both the legacy plan-and-apply wrapper and historical feature planner
+  outside the new main-based execution path. Applying and validating this
+  increment performs no AWS or Terraform command and authorizes neither plan,
+  apply nor aws-test creation.
+
 ## v0.11.9.3.6.7
 
 - Add an exact-main, exact-account, read-only aws-test live-creation preflight

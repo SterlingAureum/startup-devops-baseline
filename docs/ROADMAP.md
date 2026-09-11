@@ -826,3 +826,7 @@ after this repair merges and its checks pass.
 The aws-dev to aws-test Git handoff is complete. The next phase is a separately
 reviewed aws-dev teardown preflight, teardown execution, and residual-cost audit
 before aws-test infrastructure is created in a new test window.
+### v0.11.9.3.6.6.5
+
+Run and review the new aws-dev teardown preflight before separately approving
+destruction. Residual-cost audit remains mandatory before aws-test creation.

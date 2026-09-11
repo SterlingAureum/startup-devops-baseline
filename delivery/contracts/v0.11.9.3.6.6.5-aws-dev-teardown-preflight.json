@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "v0.11.9.3.6.6.5",
+  "version": "v0.11.9.3.6.6.5",
+  "predecessor": "v0.11.9.3.6.6.4",
+  "implementationBaselineCommit": "02878e4e1239f18ab9148f06667ec2eb34f91a8d",
+  "status": "aws-dev-teardown-read-only-preflight-implemented-not-executed",
+  "entrypoint": "scripts/preflight-v0.11.9.3.6.6.5-aws-dev-teardown.py",
+  "confirmation": "observe-reviewed-aws-dev-teardown-preflight",
+  "checks": [
+    "clean-exact-protected-main",
+    "expected-aws-account-and-region",
+    "only-aws-dev-rehearsal-cluster-active",
+    "active-aws-dev-cluster",
+    "terraform-state-owns-resources",
+    "terraform-cluster-and-vpc-identity",
+    "cnpg-backup-bucket-present",
+    "promotion-execution-evidence-present"
+  ],
+  "allowedCommandFamilies": [
+    "git branch/status/rev-parse",
+    "aws sts get-caller-identity",
+    "aws eks list-clusters/describe-cluster",
+    "aws s3api head-bucket",
+    "terraform state list/output"
+  ],
+  "forbidden": [
+    "destroy wrapper invocation",
+    "terraform apply/destroy",
+    "aws mutation",
+    "kubectl mutation",
+    "destructive confirmation acceptance"
+  ],
+  "executionAuthorized": false,
+  "teardownAuthorized": false,
+  "nextAction": "execute-read-only-preflight-and-review-private-result"
+}

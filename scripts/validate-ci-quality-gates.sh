@@ -394,6 +394,9 @@ echo "==> Validating v0.11.9.3.6.6.6.1 aws-dev residual-cost audit execution evi
 echo "==> Validating v0.11.9.3.6.7 guarded aws-test live-creation preflight"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7-aws-test-live-creation-preflight.sh"
 
+echo "==> Validating v0.11.9.3.6.7.1 guarded aws-test private creation-plan design"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.1-aws-test-live-creation-plan-design.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

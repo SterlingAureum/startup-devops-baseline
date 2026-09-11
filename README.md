@@ -913,3 +913,13 @@ presence before any destructive approval can be requested.
 The destructive aws-dev wrapper is now reachable through a guarded executor
 that binds reviewed preflight evidence, exact main, a bounded UTC window, an
 immediate matching preflight, and a separate explicit approval.
+### v0.11.9.3.6.6.5.2 aws-dev teardown execution evidence
+
+The separately approved aws-dev teardown completed on exact protected main
+`0a90e86ca844`. The immediate preflight matched its reviewed fingerprint, the
+executor exited `0`, Terraform destroyed 90 resources, post-success dependency
+convergence passed and Fleet retirement completed. The private preflight and
+execution result remain outside Git and are pinned only by SHA-256. The first
+missing-confirmation attempt is retained as a fail-closed, pre-AWS rejection.
+No aws-test environment was created, no automatic retry ran, and the required
+residual-cost audit remains a separate reviewed phase.

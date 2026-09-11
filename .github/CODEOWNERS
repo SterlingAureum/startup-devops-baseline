@@ -154,6 +154,9 @@
 /scripts/validate-v0.11.9.3.6.6.6-guarded-aws-dev-residual-cost-audit.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.6.6-guarded-aws-dev-residual-cost-audit.json @SterlingAureum
 /docs/V0.11.9.3.6.6.6_GUARDED_AWS_DEV_RESIDUAL_COST_AUDIT.md @SterlingAureum
+/scripts/validate-v0.11.9.3.6.6.6.1-aws-dev-residual-cost-audit-execution-evidence.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.6.6.1-aws-dev-residual-cost-audit-execution-evidence.json @SterlingAureum
+/docs/V0.11.9.3.6.6.6.1_AWS_DEV_RESIDUAL_COST_AUDIT_EXECUTION_EVIDENCE.md @SterlingAureum
 /scripts/validate-reviewed-aws-dev-qualification-for-promotion.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.6-reviewed-live-promotion-handoff.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.sh @SterlingAureum

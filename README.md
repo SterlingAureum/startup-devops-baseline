@@ -935,3 +935,17 @@ absence. Raw AWS output stays in private `0600` files; the public result is
 redacted. This checkpoint
 implements and offline-tests the path but performs no live audit and does not
 authorize aws-test creation.
+
+### v0.11.9.3.6.6.6.1 aws-dev residual-cost audit execution evidence
+
+The separately approved read-only audit completed once on exact protected
+main `0ae04e26188a`. Its immediate preflight matched the reviewed result, the
+executor and audit exited `0`, and no continuing cost identity was found.
+Eight terminal or expired Fleet records were accepted as non-continuing
+records. Private output remains outside Git and is represented only by
+SHA-256, modes and byte counts; no account or resource identity is committed.
+No mutation, automatic retry or aws-test creation occurred.
+
+The aws-dev teardown and residual-cost audit chain is complete. The next phase
+is a fresh, separately reviewed exact-main aws-test live-creation preflight,
+plan and bounded execution window.

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "v0.11.9.3.6.6.6",
+  "version": "v0.11.9.3.6.6.6",
+  "predecessor": "v0.11.9.3.6.6.5.2",
+  "implementationBaselineCommit": "c876331f1191d489d2bf369047ec68990dac3885",
+  "status": "guarded-aws-dev-residual-cost-audit-implemented-not-executed",
+  "goal": "Bind one redacted read-only aws-dev residual-cost audit to exact main, expected account, zero Terraform state, reviewed teardown evidence, a fresh preflight fingerprint, and a separate UTC execution window.",
+  "entrypoints": {
+    "preflight": "scripts/preflight-v0.11.9.3.6.6.6-aws-dev-residual-cost-audit.py",
+    "executor": "scripts/execute-v0.11.9.3.6.6.6-aws-dev-residual-cost-audit.py",
+    "existingAudit": "scripts/validate-aws-cost-cleanup.sh"
+  },
+  "inputFingerprints": {
+    "teardownExecutionEvidenceSha256": "85a4eed6b50b75883cfeccd11081f915591ea28c5aa1a03d97c34fbcd9067b4b",
+    "existingAuditSha256": "ab0bad09b228d09e9451863c047c8da3e4ebf77198f277ad78117b99383f3df7"
+  },
+  "confirmations": {
+    "preflight": "observe-reviewed-aws-dev-residual-cost-audit-preflight",
+    "execute": "execute-reviewed-aws-dev-residual-cost-audit"
+  },
+  "controls": {
+    "exactProtectedMainRequired": true,
+    "expectedAwsAccountRequired": true,
+    "targetEnvironment": "aws-dev",
+    "noActiveRehearsalEksEnvironmentRequired": true,
+    "terraformBackendMustBeReadable": true,
+    "terraformStateMustBeEmpty": true,
+    "authoritativeBucketListMustProveAbsence": true,
+    "secretMustBeAbsentOrRecoveryWindowTombstone": true,
+    "freshReviewedPreflightRequired": true,
+    "immediatePreflightMustMatchReviewedResult": true,
+    "maximumWindowSeconds": 14400,
+    "minimumRemainingSeconds": 900,
+    "fullAuditMaximumExecutions": 1,
+    "automaticRetryAllowed": false,
+    "privateOutputDirectoryMode": "0700",
+    "privateOutputFileMode": "0600",
+    "publicResultRedacted": true
+  },
+  "allowedCommandFamilies": [
+    "git branch/status/rev-parse",
+    "aws sts get-caller-identity",
+    "aws eks list-clusters",
+    "aws s3api list-buckets",
+    "aws secretsmanager list-secrets including planned deletion",
+    "terraform state list",
+    "existing read-only residual-cost audit"
+  ],
+  "forbidden": [
+    "aws mutation",
+    "terraform apply/destroy",
+    "kubectl",
+    "environment create or teardown",
+    "automatic retry",
+    "aws-test create",
+    "raw resource identity in public result"
+  ],
+  "boundaries": {
+    "auditExecuted": false,
+    "mutationExecuted": false,
+    "awsTestCreated": false,
+    "executionAuthorized": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformAccessed": false,
+    "kubernetesAccessed": false,
+    "auditExecuted": false,
+    "environmentChanged": false
+  },
+  "nextAction": "merge-run-fresh-preflight-review-verify-and-obtain-separate-read-only-audit-approval"
+}

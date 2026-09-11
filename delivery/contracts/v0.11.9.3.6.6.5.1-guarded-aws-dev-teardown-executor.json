@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "v0.11.9.3.6.6.5.1",
+  "version": "v0.11.9.3.6.6.5.1",
+  "predecessor": "v0.11.9.3.6.6.5",
+  "implementationBaselineCommit": "1dc2bd44a123931fc56e808110179b9e6d902a11",
+  "status": "guarded-aws-dev-teardown-executor-implemented-not-executed",
+  "entrypoint": "scripts/execute-v0.11.9.3.6.6.5.1-aws-dev-teardown.py",
+  "implementationPreflightSha256": "03dfc9860cc931e866418928a25cb36ecd701b2335a4e85614aa853f6e649ab6",
+  "controls": {
+    "exactProtectedMainRequired": true,
+    "freshPostMergePreflightRequired": true,
+    "immediatePreflightRequired": true,
+    "immediateResultMustMatchReviewedResult": true,
+    "maximumWindowSeconds": 14400,
+    "minimumRemainingSeconds": 900,
+    "separateExecutionConfirmation": "execute-reviewed-aws-dev-teardown",
+    "targetEnvironment": "aws-dev",
+    "destroyConfirmationInjectedOnlyAfterAllGates": true
+  },
+  "boundaries": {
+    "awsTestCreationIncluded": false,
+    "residualCostAuditIncluded": false,
+    "automaticRetryAllowed": false,
+    "automaticTeardownExecuted": false,
+    "executionAuthorized": false
+  },
+  "nextAction": "merge-run-verify-review-and-obtain-separate-execution-approval"
+}

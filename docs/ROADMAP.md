@@ -830,3 +830,8 @@ before aws-test infrastructure is created in a new test window.
 
 Run and review the new aws-dev teardown preflight before separately approving
 destruction. Residual-cost audit remains mandatory before aws-test creation.
+### v0.11.9.3.6.6.5.1
+
+After merge, establish a fresh UTC teardown window, rerun the guarded verify
+phase, obtain separate approval, and execute once. Follow with an independently
+reviewed residual-cost audit before creating aws-test.

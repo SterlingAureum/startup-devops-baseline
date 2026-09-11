@@ -908,3 +908,8 @@ remains unchanged. No live environment operation is authorized by this record.
 A dedicated read-only preflight now verifies the exact main commit, AWS
 identity, single active aws-dev cluster, Terraform ownership, and backup-bucket
 presence before any destructive approval can be requested.
+### v0.11.9.3.6.6.5.1 guarded aws-dev teardown executor
+
+The destructive aws-dev wrapper is now reachable through a guarded executor
+that binds reviewed preflight evidence, exact main, a bounded UTC window, an
+immediate matching preflight, and a separate explicit approval.

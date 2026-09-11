@@ -3493,3 +3493,9 @@ All notable changes to this repository are documented in this file.
 - Required exact protected main, expected AWS account, Terraform ownership,
   aws-test absence, and backup-bucket presence.
 - Kept destructive confirmation and execution outside the preflight.
+## v0.11.9.3.6.6.5.1
+
+- Added a guarded, time-bounded aws-dev teardown executor.
+- Bound execution to the reviewed preflight SHA and a byte-equivalent immediate
+  preflight result.
+- Kept aws-test creation and residual-cost audit outside teardown execution.

@@ -3487,3 +3487,9 @@ All notable changes to this repository are documented in this file.
 - Recorded the successful merge of release-only promotion PR #91.
 - Bound aws-test to the previously qualified aws-dev immutable identity.
 - Preserved the unchanged aws-prod identity and the separate teardown gate.
+## v0.11.9.3.6.6.5
+
+- Added an independent, read-only aws-dev teardown preflight.
+- Required exact protected main, expected AWS account, Terraform ownership,
+  aws-test absence, and backup-bucket presence.
+- Kept destructive confirmation and execution outside the preflight.

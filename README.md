@@ -903,3 +903,8 @@ immutable and aws-prod remains pinned pending separate promotion.
 PR #91 completed the reviewed release-only aws-dev to aws-test Git handoff.
 The immutable release identity is now equal in dev and test while production
 remains unchanged. No live environment operation is authorized by this record.
+### v0.11.9.3.6.6.5 aws-dev teardown preflight
+
+A dedicated read-only preflight now verifies the exact main commit, AWS
+identity, single active aws-dev cluster, Terraform ownership, and backup-bucket
+presence before any destructive approval can be requested.

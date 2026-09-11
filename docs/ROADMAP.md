@@ -821,3 +821,8 @@ approved operations.
 The inherited main-CI chain now distinguishes immutable historical evidence
 from the current aws-test release state. Continue with the held release-only PR
 after this repair merges and its checks pass.
+### v0.11.9.3.6.6.4
+
+The aws-dev to aws-test Git handoff is complete. The next phase is a separately
+reviewed aws-dev teardown preflight, teardown execution, and residual-cost audit
+before aws-test infrastructure is created in a new test window.

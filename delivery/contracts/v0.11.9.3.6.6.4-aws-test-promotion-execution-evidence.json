@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "v0.11.9.3.6.6.4",
+  "version": "v0.11.9.3.6.6.4",
+  "predecessor": "v0.11.9.3.6.6.3",
+  "status": "reviewed-aws-dev-to-aws-test-release-only-promotion-merged",
+  "protectedMainCommit": "1ea533e809df32b31689500252f6ed98c06171e0",
+  "promotion": {
+    "pullRequestNumber": 91,
+    "title": "release: promote demo-api aws-dev to aws-test",
+    "baseRef": "main",
+    "headRef": "release/demo-api-aws-dev-to-aws-test-34480347745-1",
+    "mergedAt": "2026-09-10T15:08:22Z",
+    "mergeCommit": "1ea533e809df32b31689500252f6ed98c06171e0",
+    "changedPaths": [
+      "apps/demo-api/helm/values/releases/aws-test.yaml"
+    ],
+    "checks": {
+      "demoApiReleaseCurrentness": "success",
+      "qualityGates": "success",
+      "cancelled": 0,
+      "failing": 0,
+      "successful": 2,
+      "skipped": 0,
+      "pending": 0
+    }
+  },
+  "release": {
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "repository": "ghcr.io/sterlingaureum/startup-devops-baseline/demo-api",
+    "tag": "sha-cf0a6bc",
+    "digest": "sha256:cdffd3d71763540976570da1f201661d24c641ec459be812b20f1517f3fd2623",
+    "applicationVersion": "sha-cf0a6bc",
+    "sourceRepository": "SterlingAureum/startup-devops-baseline",
+    "sourceCommit": "cf0a6bcbc466b61f2018a0a92c961d7c03f128e8",
+    "workflowRunId": "34070524953",
+    "awsDevReleaseFileSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46",
+    "awsTestReleaseFileSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46",
+    "awsProdReleaseFileSha256": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22"
+  },
+  "qualificationEvidence": {
+    "contractPath": "delivery/contracts/v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution.json",
+    "contractSha256": "a5994ebce978e55842dabe22cfbb6c48adcfaf61fa46503d06001a6cc3b2b92e",
+    "privateExecutionResultSha256": "2d56815b00bbcd050966b761828a093ee9fee7ab0aa63b15c77ebfa967c07d61",
+    "boundedRequestCount": 54,
+    "runtimeQualified": true
+  },
+  "boundaries": {
+    "awsDevRuntimeQualificationRepeated": false,
+    "imageRebuilt": false,
+    "awsAccessedByEvidenceIncrement": false,
+    "clusterAccessedByEvidenceIncrement": false,
+    "awsTestInfrastructureCreated": false,
+    "awsDevTeardownAuthorized": false,
+    "awsDevTeardownExecuted": false,
+    "automaticPromotionMergeAllowed": false
+  },
+  "nextAction": "review-separate-aws-dev-teardown-preflight"
+}

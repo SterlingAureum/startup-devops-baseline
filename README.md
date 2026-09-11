@@ -898,3 +898,8 @@ See `docs/V0.11.9.3.6.6.2_HISTORICAL_CHECKPOINT_CI_DECOUPLING.md`.
 All remaining main-CI checkpoints that inspected mutable aws-test release bytes
 now delegate to the reviewed successor policy. Historical evidence remains
 immutable and aws-prod remains pinned pending separate promotion.
+### v0.11.9.3.6.6.4 aws-test promotion execution evidence
+
+PR #91 completed the reviewed release-only aws-dev to aws-test Git handoff.
+The immutable release identity is now equal in dev and test while production
+remains unchanged. No live environment operation is authorized by this record.

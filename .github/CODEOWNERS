@@ -157,6 +157,11 @@
 /scripts/validate-v0.11.9.3.6.6.6.1-aws-dev-residual-cost-audit-execution-evidence.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.6.6.1-aws-dev-residual-cost-audit-execution-evidence.json @SterlingAureum
 /docs/V0.11.9.3.6.6.6.1_AWS_DEV_RESIDUAL_COST_AUDIT_EXECUTION_EVIDENCE.md @SterlingAureum
+/scripts/preflight-v0.11.9.3.6.7-aws-test-live-creation.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7-aws-test-live-creation-preflight.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7-aws-test-live-creation-preflight.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7-aws-test-live-creation-preflight.json @SterlingAureum
+/docs/V0.11.9.3.6.7_GUARDED_AWS_TEST_LIVE_CREATION_PREFLIGHT.md @SterlingAureum
 /scripts/validate-reviewed-aws-dev-qualification-for-promotion.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.6-reviewed-live-promotion-handoff.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.sh @SterlingAureum

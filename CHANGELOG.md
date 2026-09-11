@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.11.9.3.6.7
+
+- Add an exact-main, exact-account, read-only aws-test live-creation preflight
+  after the recorded aws-dev residual-cost audit.
+- Bind the `.6.1` cleanup evidence, `.6.4` release-promotion evidence,
+  dev/test/prod release files, aws-test local-backend declaration and legacy
+  apply wrapper by SHA-256.
+- Require zero active rehearsal EKS environments and an absent or valid empty
+  version-4 aws-test local Terraform state; malformed, symlinked or nonempty
+  state fails closed without emitting attributes or paths.
+- Limit live discovery to STS caller identity and EKS cluster listing, redact
+  account and cluster identities, and reject every create, destroy or prior
+  execution control.
+- Forbid direct use of the legacy wrapper because it plans and immediately
+  applies in one invocation. A future reviewed plan and executor remain
+  separate; applying and validating this increment performs no live operation.
+
 ## v0.11.9.3.6.6.6.1
 
 - Record the separately approved, read-only aws-dev residual-cost audit on

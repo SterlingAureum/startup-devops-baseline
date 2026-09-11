@@ -870,3 +870,15 @@ identity and accepted eight terminal or expired Fleet records. No mutation,
 automatic retry or aws-test creation occurred. The aws-dev teardown and audit
 chain is closed; aws-test infrastructure creation now requires a fresh
 exact-main preflight, plan and separately approved bounded execution window.
+
+### v0.11.9.3.6.7
+
+Implement the guarded read-only aws-test live-creation preflight on baseline
+`c95af1633718`. Bind the completed aws-dev residual-cost audit, the reviewed
+aws-test promotion, immutable dev/test release equality, held production
+release, local-backend declaration and legacy apply wrapper by SHA-256.
+Require the expected account, zero active rehearsal EKS environments and an
+absent or valid empty version-4 aws-test state without running Terraform or
+emitting private identity. Direct legacy wrapper use remains forbidden because
+it does not separate plan from apply. After merge, run and review one fresh
+private preflight before designing a bounded, create-only Terraform plan.

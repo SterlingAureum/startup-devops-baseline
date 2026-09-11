@@ -949,3 +949,13 @@ No mutation, automatic retry or aws-test creation occurred.
 The aws-dev teardown and residual-cost audit chain is complete. The next phase
 is a fresh, separately reviewed exact-main aws-test live-creation preflight,
 plan and bounded execution window.
+
+### v0.11.9.3.6.7 guarded aws-test live-creation preflight
+
+The next environment now starts with a redacted exact-main readiness gate. It
+binds the completed aws-dev audit and aws-test release-promotion evidence,
+requires dev/test release equality with production held, confirms the expected
+AWS account and zero active rehearsal EKS environments, and accepts only an
+absent or valid empty aws-test local Terraform state. It runs no Terraform
+command and explicitly forbids direct use of the historical plan-and-apply
+wrapper. This implementation performs no live preflight or environment action.

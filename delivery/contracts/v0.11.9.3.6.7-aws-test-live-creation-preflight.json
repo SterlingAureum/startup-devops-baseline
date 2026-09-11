@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7",
+  "version": "v0.11.9.3.6.7",
+  "predecessor": "v0.11.9.3.6.6.6.1",
+  "status": "aws-test-live-creation-preflight-implemented-not-executed",
+  "implementationBaselineCommit": "c95af1633718eed3429e34311ed55910dbb53a7e",
+  "goal": "Insert an exact-main, redacted, read-only readiness gate after the completed aws-dev residual-cost audit and before any aws-test Terraform plan or billable creation action.",
+  "inputFingerprints": {
+    "awsDevResidualCostAuditEvidence": {
+      "path": "delivery/contracts/v0.11.9.3.6.6.6.1-aws-dev-residual-cost-audit-execution-evidence.json",
+      "sha256": "d73e4b5107b4c99ae1feebd2a34197040e4d0f50b6c6ccbecdf951bbe1da25e9",
+      "requiredStatus": "aws-dev-residual-cost-audit-execution-recorded"
+    },
+    "awsTestPromotionEvidence": {
+      "path": "delivery/contracts/v0.11.9.3.6.6.4-aws-test-promotion-execution-evidence.json",
+      "sha256": "4977ddfb21738530681ce671ebaf9d71d4132e4e81c9ea1135e4b3527c27a96e",
+      "requiredStatus": "reviewed-aws-dev-to-aws-test-release-only-promotion-merged"
+    },
+    "awsDevReleaseSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46",
+    "awsTestReleaseSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46",
+    "awsProdReleaseSha256": "2817d5d1a0f728a4e88e289ca46f5259a511339924daf303fe285316ccaffa22",
+    "testLocalBackendDeclarationSha256": "374c263bc0de2200590d27c33707bfc426bc24fe0d6a3db4dd587a89cd4d9192",
+    "legacyApplyWrapperSha256": "e418af18ac98ae3a1c5c7c8a2f684d76634e454e321b4ad2813f215860d6b114"
+  },
+  "selectedRelease": {
+    "releaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "devAndTestByteEqual": true,
+    "prodHeldAtPriorRelease": true,
+    "imageRebuildRequired": false
+  },
+  "preflight": {
+    "entrypoint": "scripts/preflight-v0.11.9.3.6.7-aws-test-live-creation.py",
+    "testEntrypoint": "scripts/test-v0.11.9.3.6.7-aws-test-live-creation-preflight.py",
+    "confirmationEnvironmentVariable": "CONFIRM_AWS_TEST_CREATE_PREFLIGHT",
+    "confirmationValue": "observe-reviewed-aws-test-create-preflight",
+    "targetEnvironment": "aws-test",
+    "requiredAwsRegion": "us-east-1",
+    "expectedAwsAccountRequired": true,
+    "requiredGitBranch": "main",
+    "cleanWorktreeRequired": true,
+    "headAndOriginMainMustEqualReviewedCommit": true,
+    "implementationBaselineMustBeAncestor": true,
+    "imageSourceCommitMustBeAncestor": true,
+    "maximumActiveRehearsalEksEnvironments": 0,
+    "readOnlyAwsCommands": [
+      "sts get-caller-identity",
+      "eks list-clusters"
+    ],
+    "terraformCommandAllowed": false
+  },
+  "terraformStateBoundary": {
+    "backendKind": "local",
+    "backendDeclarationPath": "infra/terraform/aws/environments/test/backend.tf",
+    "statePath": "infra/terraform/aws/environments/test/terraform.tfstate",
+    "acceptedState": "absent-or-valid-version-four-with-zero-resource-blocks-and-instances",
+    "symlinkAllowed": false,
+    "resourceAttributesEmitted": false,
+    "statePathEmitted": false,
+    "stateDeletionAllowed": false
+  },
+  "legacyApplyBoundary": {
+    "entrypoint": "scripts/apply-aws-test.sh",
+    "directInvocationAllowed": false,
+    "reason": "legacy wrapper creates a plan and immediately applies it without a separately reviewed executor boundary",
+    "futurePlanMustRemainSeparateFromApply": true
+  },
+  "redaction": {
+    "accountIdEmitted": false,
+    "activeClusterNamesEmittedOnReady": false,
+    "terraformResourceAttributesEmitted": false,
+    "privateResultDirectoryMode": "0700",
+    "privateResultFileMode": "0600"
+  },
+  "forbidden": [
+    "terraform init/plan/apply/destroy",
+    "direct apply-aws-test invocation",
+    "kubectl or argocd",
+    "aws mutation",
+    "environment creation or teardown",
+    "GitOps bootstrap",
+    "traffic generation",
+    "automatic retry or teardown"
+  ],
+  "boundaries": {
+    "livePreflightExecuted": false,
+    "awsAccessed": false,
+    "terraformCommandExecuted": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "legacyApplyWrapperInvoked": false,
+    "environmentCreated": false,
+    "gitopsBootstrapped": false,
+    "trafficGenerated": false,
+    "awsTestCreated": false,
+    "executionAuthorized": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformAccessed": false,
+    "kubernetesAccessed": false,
+    "environmentCreated": false,
+    "environmentDestroyed": false
+  },
+  "executionAuthorized": false,
+  "nextAction": "merge-run-fresh-private-preflight-and-review-before-aws-test-plan-design"
+}

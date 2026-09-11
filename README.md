@@ -923,3 +923,15 @@ execution result remain outside Git and are pinned only by SHA-256. The first
 missing-confirmation attempt is retained as a fail-closed, pre-AWS rejection.
 No aws-test environment was created, no automatic retry ran, and the required
 residual-cost audit remains a separate reviewed phase.
+### v0.11.9.3.6.6.6 guarded aws-dev residual-cost audit
+
+The post-teardown residual-cost sweep now has an exact-main, exact-account
+guard with strict Terraform backend readability and zero-state checks. It
+binds the `.5.2` teardown evidence and existing audit script by SHA-256,
+requires no active rehearsal EKS environment, separates verify from one
+explicitly approved execution and never retries automatically. Authoritative
+bucket and secret listings prevent permission errors from masquerading as
+absence. Raw AWS output stays in private `0600` files; the public result is
+redacted. This checkpoint
+implements and offline-tests the path but performs no live audit and does not
+authorize aws-test creation.

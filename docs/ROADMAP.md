@@ -846,3 +846,15 @@ Fleet retirement counts are retained. The initial missing-confirmation attempt
 failed closed before AWS access or mutation. Private paths and resource
 identities remain outside Git. A separately reviewed residual-cost audit is
 still mandatory before any aws-test infrastructure creation window.
+
+### v0.11.9.3.6.6.6
+
+Implement the guarded read-only aws-dev residual-cost audit on baseline
+`c876331f1191`. Bind exact protected main, expected account, `.5.2` teardown
+evidence, the existing audit fingerprint, no active rehearsal EKS environment,
+strict Terraform backend readability, zero state, authoritative bucket absence
+and an absent-or-tombstoned runtime secret. Verify and execute remain
+separate, the UTC window is bounded, the full sweep runs at most once without
+automatic retry, raw output remains private and public JSON is redacted. This
+implementation executes no audit; a successful separately approved live result
+must be recorded before any aws-test infrastructure creation window.

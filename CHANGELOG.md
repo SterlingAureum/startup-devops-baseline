@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.11.9.3.6.6.6
+
+- Add an exact-main, exact-account aws-dev residual-cost audit preflight that
+  binds the recorded teardown evidence and existing audit entrypoint by
+  SHA-256.
+- Require no active rehearsal EKS environment and a successful Terraform
+  backend read with zero aws-dev state resources; backend or credential errors
+  fail closed instead of being interpreted as absence.
+- Require authoritative bucket and Secrets Manager listings so AccessDenied or
+  other lookup errors cannot masquerade as bucket/secret absence.
+- Add verify/execute separation, a maximum four-hour UTC window, one explicit
+  read-only execution confirmation and no automatic retry.
+- Capture raw audit stdout/stderr only in new private `0600` files and emit a
+  redacted result containing pass/fail state, aggregate terminal-Fleet count
+  and file hashes.
+- Preserve the historical audit entrypoint for compatibility while declaring
+  direct invocation insufficient for this live evidence checkpoint. Applying
+  and validating this increment performs no live audit or cloud operation.
+
 ## v0.11.9.3.6.6.5.2
 
 - Record the separately approved aws-dev teardown on exact protected main

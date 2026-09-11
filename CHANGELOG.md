@@ -3482,3 +3482,8 @@ All notable changes to this repository are documented in this file.
 - Made the v0.11.9.3.6.6.1 and .2 validators accept either reviewed current
   state while continuing to reject unknown identities.
 - Preserved exact aws-prod immutability before its separately reviewed edge.
+## v0.11.9.3.6.6.4
+
+- Recorded the successful merge of release-only promotion PR #91.
+- Bound aws-test to the previously qualified aws-dev immutable identity.
+- Preserved the unchanged aws-prod identity and the separate teardown gate.

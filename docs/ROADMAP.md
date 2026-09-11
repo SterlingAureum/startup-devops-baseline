@@ -858,3 +858,15 @@ separate, the UTC window is bounded, the full sweep runs at most once without
 automatic retry, raw output remains private and public JSON is redacted. This
 implementation executes no audit; a successful separately approved live result
 must be recorded before any aws-test infrastructure creation window.
+
+### v0.11.9.3.6.6.6.1
+
+Record the successful separately approved read-only aws-dev residual-cost
+audit on exact protected main `0ae04e26188a`. Bind the private preflight,
+executor verify, redacted execution result and private stdout/stderr by
+SHA-256 without committing paths, raw output, account identity or resource
+identities. The full audit ran once, exited `0`, found no continuing cost
+identity and accepted eight terminal or expired Fleet records. No mutation,
+automatic retry or aws-test creation occurred. The aws-dev teardown and audit
+chain is closed; aws-test infrastructure creation now requires a fresh
+exact-main preflight, plan and separately approved bounded execution window.

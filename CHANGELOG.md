@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.11.9.3.6.6.6.1
+
+- Record the separately approved, read-only aws-dev residual-cost audit on
+  exact protected main `0ae04e26188a`, with a matching immediate preflight and
+  executor exit `0`.
+- Pin the reviewed preflight, executor verify, redacted execution result and
+  private stdout/stderr by SHA-256 while keeping private paths, raw output,
+  account identity and AWS resource identities outside Git.
+- Record a successful full audit, no continuing cost identity and eight
+  accepted terminal or expired Fleet records without committing individual
+  identities.
+- Preserve the no-mutation boundary: no Terraform apply/destroy, environment
+  operation, automatic retry or aws-test creation occurred. Applying and
+  validating this evidence performs no live operation.
+- Close the aws-dev teardown and residual-audit chain; require a new exact-main
+  preflight, plan and approval before aws-test infrastructure creation.
+
 ## v0.11.9.3.6.6.6
 
 - Add an exact-main, exact-account aws-dev residual-cost audit preflight that

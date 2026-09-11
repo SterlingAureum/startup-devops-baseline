@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "v0.11.9.3.6.6.5.2",
+  "version": "v0.11.9.3.6.6.5.2",
+  "predecessor": "v0.11.9.3.6.6.5.1",
+  "status": "aws-dev-teardown-execution-recorded",
+  "implementationBaselineCommit": "0a90e86ca84498b1d639bbb009491f72e5142454",
+  "goal": "Record the separately approved aws-dev teardown and fail-closed input rejection without committing private paths, AWS resource identities, or residual-cost-audit claims.",
+  "reviewedPreflight": {
+    "status": "aws-dev-teardown-preflight-ready-for-separate-approval",
+    "controlPlaneCommit": "0a90e86ca84498b1d639bbb009491f72e5142454",
+    "privateResultSha256": "98dc729f588f0167f7c89ce19d3c978232855c7e477576b3b1b464fd65b0ae7a",
+    "directoryModeRestated": "0700",
+    "resultFileModeRestated": "0600",
+    "executionAuthorized": false,
+    "teardownAuthorized": false,
+    "mutationExecuted": false
+  },
+  "approval": {
+    "scope": "one aws-dev teardown",
+    "startUtc": "2026-09-11T05:26:01Z",
+    "endUtc": "2026-09-11T08:26:01Z",
+    "awsDevTeardownApproved": true,
+    "eksVpcComputeStorageAndAlbDeletionApproved": true,
+    "cnpgBackupBucketBaseBackupWalCurrentAndHistoricalDeletionApproved": true,
+    "awsTestCreationApproved": false,
+    "automaticRetryApproved": false,
+    "residualCostAuditApproved": false
+  },
+  "failClosedAttempt": {
+    "status": "immediate-preflight-confirmation-rejected",
+    "reason": "missing-immediate-preflight-confirmation",
+    "executorExit": 1,
+    "awsAccessed": false,
+    "destroyWrapperInvoked": false,
+    "mutationExecuted": false,
+    "approvalConsumed": false
+  },
+  "execution": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.6.5.1-aws-dev-teardown.py",
+    "phase": "execute",
+    "executorExit": 0,
+    "status": "aws-dev-teardown-execution-complete",
+    "controlPlaneCommit": "0a90e86ca84498b1d639bbb009491f72e5142454",
+    "reviewedPreflightSha256": "98dc729f588f0167f7c89ce19d3c978232855c7e477576b3b1b464fd65b0ae7a",
+    "privateResultSha256": "4801d61d55a08af08ecec4469e64b8f215254b9fdc0eff5d89ba984b6b8c76cf",
+    "privateResultFileModeRestated": "0600",
+    "immediatePreflightMatched": true,
+    "remainingWindowSeconds": 3481,
+    "targetEnvironment": "aws-dev",
+    "destroyExitCode": 0,
+    "terraformDestroyedResourceCount": 90,
+    "postSuccessDependencyConvergencePassed": true,
+    "fleetRecordsObserved": 8,
+    "fleetDeleteRequestsIssued": 4,
+    "fleetRecordsAlreadyTerminal": 4,
+    "teardownExecuted": true,
+    "automaticRetryPerformed": false,
+    "awsTestCreated": false,
+    "residualCostAuditExecuted": false
+  },
+  "privateEvidence": {
+    "rawPreflightStoredOutsideRepository": true,
+    "rawExecutionResultStoredOutsideRepository": true,
+    "rawFilesCommitted": false,
+    "privatePathCommitted": false,
+    "awsAccountCommitted": false,
+    "eksArnCommitted": false,
+    "clusterEndpointCommitted": false,
+    "vpcOrVolumeIdentityCommitted": false,
+    "fleetIdentityCommitted": false,
+    "completionTimestampClaimed": false
+  },
+  "operationBoundary": {
+    "awsDevTeardownExecuted": true,
+    "permanentBackupDeletionIncluded": true,
+    "awsTestCreated": false,
+    "automaticRetryPerformed": false,
+    "residualCostAuditExecuted": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformAccessed": false,
+    "kubernetesAccessed": false,
+    "environmentCreated": false,
+    "environmentDestroyed": false,
+    "residualCostAuditExecuted": false
+  },
+  "executionAuthorized": false,
+  "nextCheckpoint": "review-separate-aws-dev-residual-cost-audit"
+}

@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.11.9.3.6.6.5.2
+
+- Record the separately approved aws-dev teardown on exact protected main
+  `0a90e86ca844`, with byte-equivalent immediate preflight and executor exit
+  `0`.
+- Pin the private reviewed preflight and successful execution result by
+  SHA-256 while keeping their paths, AWS identities and raw output outside
+  Git.
+- Preserve the initial missing-confirmation rejection as fail-closed evidence:
+  it exited before AWS access, destroy-wrapper invocation or mutation.
+- Record 90 Terraform resources destroyed, successful post-destroy dependency
+  convergence and only aggregate Fleet retirement counts without committing
+  resource IDs.
+- Keep aws-test creation, automatic retry and residual-cost audit outside the
+  completed teardown scope. Applying and validating this evidence performs no
+  live operation.
+
 ## v0.11.9.3.6.6.1
 
 - Repair historical validators that permanently required the reviewed candidate

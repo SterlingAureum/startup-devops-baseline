@@ -382,6 +382,9 @@ echo "==> Validating v0.11.9.3.6.6.1 aws-test successor validation repair"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.6.5-aws-dev-teardown-preflight.sh"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.6.5.1-guarded-aws-dev-teardown-executor.sh"
 
+echo "==> Validating v0.11.9.3.6.6.5.2 aws-dev teardown execution evidence"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.6.5.2-aws-dev-teardown-execution-evidence.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

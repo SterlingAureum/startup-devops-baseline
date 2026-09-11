@@ -835,3 +835,14 @@ destruction. Residual-cost audit remains mandatory before aws-test creation.
 After merge, establish a fresh UTC teardown window, rerun the guarded verify
 phase, obtain separate approval, and execute once. Follow with an independently
 reviewed residual-cost audit before creating aws-test.
+
+### v0.11.9.3.6.6.5.2
+
+The separately approved aws-dev teardown completed once on exact protected
+main `0a90e86ca844`. The immediate preflight matched the reviewed fingerprint,
+the guarded executor and destroy wrapper exited `0`, Terraform destroyed 90
+resources, post-success dependency convergence passed, and only aggregate
+Fleet retirement counts are retained. The initial missing-confirmation attempt
+failed closed before AWS access or mutation. Private paths and resource
+identities remain outside Git. A separately reviewed residual-cost audit is
+still mandatory before any aws-test infrastructure creation window.

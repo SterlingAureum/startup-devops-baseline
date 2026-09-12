@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.11.9.3.6.7.3
+
+- Add a local-only aws-test apply `verify` phase that binds a new post-merge
+  main, fresh preflight, private creation plan and every saved-plan artifact by
+  owner-only mode, SHA-256, plan record and unexpired review window.
+- Reject the expired `.7.2.1` plan and its historical main explicitly; a new
+  `.7`, `.7.1` and separately approved `.7.2` plan sequence is mandatory after
+  this increment merges.
+- Add a separately confirmed execute phase that reruns the byte-identical
+  preflight, proves empty state and Secret absence, rerenders and regates the
+  exact binary plan, and invokes `terraform apply` once without replanning.
+- Verify planned state addresses, ACTIVE EKS status, the reviewed public `/32`
+  and Secret metadata after success without reading credential values.
+- Preserve private output and local state on failure; prohibit automatic
+  retry, replan, destroy, legacy wrapper, GitOps, traffic and qualification.
+  Applying and validating this increment performs no AWS or Terraform action.
+
 ## v0.11.9.3.6.7.2.1
 
 - Record the separately approved aws-test Terraform plan-only execution on

@@ -1024,3 +1024,15 @@ and the expected Karpenter and runtime access entries. Secret metadata proved
 the fixed name absent before and after planning. Apply, mutation and aws-test
 creation did not occur. The plan expired after its one-hour review period and
 cannot be reused; the next executor must require fresh post-merge evidence.
+
+### v0.11.9.3.6.7.3 guarded aws-test Terraform apply executor
+
+The create phase now has a local-only verify and separately confirmed execute
+boundary. A post-merge protected main, fresh byte-identical preflight, new
+private creation plan and unexpired saved plan are mandatory; the expired
+`.7.2.1` plan is evidence only. Immediately before mutation, the executor
+rechecks empty state, Secret absence and exact `terraform show -json` bytes,
+then applies that saved plan once without replanning. Successful completion
+requires reviewed state addresses, an ACTIVE aws-test EKS cluster and Secret
+metadata, while GitOps, traffic and qualification remain separate. Applying
+and validating this implementation performs no live operation.

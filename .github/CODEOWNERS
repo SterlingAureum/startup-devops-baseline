@@ -188,6 +188,9 @@
 /scripts/validate-v0.11.9.3.6.7.3.1-aws-test-state-classification-repair.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.7.3.1-aws-test-state-classification-repair.json @SterlingAureum
 /docs/V0.11.9.3.6.7.3.1_AWS_TEST_STATE_CLASSIFICATION_REPAIR.md @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.3.1.1-aws-test-apply-and-resume-execution-evidence.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7.3.1.1-aws-test-apply-and-resume-execution-evidence.json @SterlingAureum
+/docs/V0.11.9.3.6.7.3.1.1_AWS_TEST_APPLY_AND_RESUME_EXECUTION_EVIDENCE.md @SterlingAureum
 /scripts/validate-reviewed-aws-dev-qualification-for-promotion.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.6-reviewed-live-promotion-handoff.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.sh @SterlingAureum

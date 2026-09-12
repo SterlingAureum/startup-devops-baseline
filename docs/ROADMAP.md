@@ -942,3 +942,15 @@ reject any extra managed or unknown address, and add a post-merge local verify
 plus separately approved AWS-read-only resume. Never rerun Terraform apply.
 After resume evidence is recorded, continue with separately reviewed GitOps
 bootstrap and environment qualification.
+
+### v0.11.9.3.6.7.3.1.1
+
+Record the completed aws-test infrastructure-creation chain. The exact
+reviewed saved plan created all 90 planned addresses; the wrapper then stopped
+in a conservative classifier rather than retrying. The repaired post-merge
+resume confirmed zero missing creates, zero unexpected managed addresses,
+seven exact read-only data entries, ACTIVE EKS and present credential-container
+metadata without rerunning Terraform or mutating AWS. Keep state and raw output
+private. The next checkpoint is a newly guarded aws-test GitOps bootstrap with
+fresh exact-main preflight, separate review and explicit approval; traffic and
+qualification remain later phases.

@@ -3,13 +3,28 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.3.1.1-aws-test-apply-and-resume-execution-evidence` records the
+exact saved-plan apply, the fail-closed post-apply classifier incident and the
+successful separately approved no-reapply resume. All 90 planned creates are
+present, no extra managed address exists, aws-test EKS is ACTIVE and the
+credential-container metadata check passed. Raw state, AWS output and private
+identities remain outside Git. GitOps bootstrap, traffic and qualification
+remain separate checkpoints.
+Predecessor:
+`v0.11.9.3.6.7.3.1-aws-test-state-classification-repair` distinguishes
+Terraform managed addresses from the seven exact read-only data-source entries
+that caused the original wrapper to stop after a successful apply. Its local
+verify and AWS-read-only resume cannot run Terraform or retry apply.
+Predecessor:
+`v0.11.9.3.6.7.3-guarded-aws-test-terraform-apply-executor` applies one exact,
+unexpired, reviewed saved plan without replanning and preserves state and
+private evidence on every uncertain outcome.
+Predecessor:
 `v0.11.9.3.6.7.2.1-aws-test-terraform-plan-execution-evidence` records the
 separately approved and human-reviewed plan-only execution on exact protected
-main. The private plan contained 90 creates and six reads, passed the
-create/read/no-op machine gate, and was never applied. Its private binary,
-JSON, text and record remain outside Git and are pinned by SHA-256. The saved
-plan is expired evidence; a later apply executor must require a new main,
-preflight, private plan and Terraform plan.
+main. The private plan contained 90 creates and six reads and passed the
+create/read/no-op machine gate. Its private binary, JSON, text and record
+remain outside Git and are pinned by SHA-256.
 Predecessor:
 `v0.11.9.3.6.7.2-guarded-aws-test-terraform-plan-executor` adds a two-phase,
 exact-main executor for a private aws-test Terraform plan. Its zero-command
@@ -1048,3 +1063,16 @@ data modes, and allows only the exact reviewed data types and counts. After a
 new protected-main merge and local verify, a separately approved execution may
 finish only STS, EKS and Secret metadata checks. It cannot run Terraform,
 mutate AWS, bootstrap GitOps, generate traffic or qualify the environment.
+
+### v0.11.9.3.6.7.3.1.1 aws-test apply and resume execution evidence
+
+The exact human-reviewed saved plan was applied once on protected main
+`1376129d42c`. Terraform succeeded, but the wrapper stopped in its post-apply
+classifier because seven legitimate read-only data sources were not listed as
+resource changes. The `.7.3.1` repair merged on `8b039bddbb56`, verified all 90
+planned creates, zero missing creates and zero unexpected managed addresses,
+then completed separately approved caller identity, EKS inventory/ACTIVE/API
+boundary and credential-container metadata reads. It did not rerun Terraform
+or mutate AWS. State and raw AWS output remain private and are represented only
+by aggregate facts and SHA-256 fingerprints. GitOps bootstrap, traffic and
+qualification remain unexecuted and require new post-merge controls.

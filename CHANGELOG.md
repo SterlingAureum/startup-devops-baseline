@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.11.9.3.6.7.3.1.1
+
+- Record the one approved aws-test saved-plan apply: Terraform succeeded and
+  created all 90 reviewed addresses before the wrapper failed closed in its
+  post-apply state classifier.
+- Bind the original plan, apply output, resulting state, repair merge, resume
+  verify and resume execution by SHA-256 without committing raw content or
+  private identity.
+- Record the repaired classification: 90 planned creates present, no missing
+  create, no unexpected managed address, and exactly seven accepted read-only
+  data-source state entries.
+- Record the separately approved read-only resume: caller identity, cluster
+  inventory, EKS ACTIVE/API boundary and credential-container metadata checks
+  passed with empty stderr.
+- Confirm that apply was not reexecuted, state was unchanged by resume, and no
+  replan, destroy, AWS mutation, automatic retry, GitOps bootstrap, traffic,
+  qualification, promotion or teardown occurred during recovery.
+- Keep local state, private paths, AWS output, account/network/resource
+  identities and credential values outside Git. Applying and validating this
+  evidence performs no live operation.
+
 ## v0.11.9.3.6.7.3.1
 
 - Record that the separately approved saved-plan apply succeeded while the

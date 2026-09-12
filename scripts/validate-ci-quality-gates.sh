@@ -409,6 +409,9 @@ echo "==> Validating v0.11.9.3.6.7.3 guarded aws-test Terraform apply executor"
 echo "==> Validating v0.11.9.3.6.7.3.1 aws-test state-classification repair"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.3.1-aws-test-state-classification-repair.sh"
 
+echo "==> Validating v0.11.9.3.6.7.3.1.1 aws-test apply and resume execution evidence"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.3.1.1-aws-test-apply-and-resume-execution-evidence.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

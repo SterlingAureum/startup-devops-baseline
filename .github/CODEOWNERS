@@ -191,6 +191,11 @@
 /scripts/validate-v0.11.9.3.6.7.3.1.1-aws-test-apply-and-resume-execution-evidence.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.7.3.1.1-aws-test-apply-and-resume-execution-evidence.json @SterlingAureum
 /docs/V0.11.9.3.6.7.3.1.1_AWS_TEST_APPLY_AND_RESUME_EXECUTION_EVIDENCE.md @SterlingAureum
+/scripts/execute-v0.11.9.3.6.7.4-aws-test-gitops-bootstrap.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.4-aws-test-gitops-bootstrap.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.4-guarded-aws-test-gitops-bootstrap.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7.4-guarded-aws-test-gitops-bootstrap.json @SterlingAureum
+/docs/V0.11.9.3.6.7.4_GUARDED_AWS_TEST_GITOPS_BOOTSTRAP.md @SterlingAureum
 /scripts/validate-reviewed-aws-dev-qualification-for-promotion.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.6-reviewed-live-promotion-handoff.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.sh @SterlingAureum

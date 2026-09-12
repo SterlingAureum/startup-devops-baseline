@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.11.9.3.6.7.4
+
+- Add a fresh exact-main, live read-only aws-test GitOps bootstrap preflight
+  bound to the `.7.3.1.1` evidence, private creation plan and byte-identical
+  owner-only Terraform state.
+- Require the reviewed account, only the aws-test rehearsal cluster, ACTIVE
+  EKS with the reviewed `/32`, matching kubeconfig endpoint, Kubernetes
+  readiness, Secret metadata and an empty Argo CD/bootstrap surface.
+- Add a separately confirmed execute phase that reruns the preflight, captures
+  private command output and invokes the exact shared EKS bootstrap once with
+  Argo CD `v3.5.2`.
+- Require ready Argo CD core workloads, exact Terraform-derived IRSA
+  annotations, the AWS Load Balancer Controller Application and unchanged
+  Terraform state after bootstrap.
+- Explicitly prohibit the legacy aws-test wrapper because it deploys the Root
+  Application; also prohibit Terraform mutation, Root deployment, traffic,
+  qualification, promotion, teardown and automatic retry. Applying and
+  validating this increment performs no live operation.
+
 ## v0.11.9.3.6.7.3.1.1
 
 - Record the one approved aws-test saved-plan apply: Terraform succeeded and

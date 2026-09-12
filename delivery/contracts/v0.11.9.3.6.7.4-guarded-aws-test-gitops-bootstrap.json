@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.4",
+  "version": "v0.11.9.3.6.7.4",
+  "predecessor": "v0.11.9.3.6.7.3.1.1",
+  "status": "guarded-aws-test-gitops-bootstrap-implemented-offline",
+  "implementationBaselineCommit": "8ff28f9f047d866c494db04cf71333efcdfe1f34",
+  "goal": "Implement a separately reviewed aws-test GitOps bootstrap that installs exact Argo CD and the AWS Load Balancer Controller child Application, then stops before the aws-test Root Application.",
+  "reviewedInputs": {
+    "applyAndResumeEvidence": {
+      "path": "delivery/contracts/v0.11.9.3.6.7.3.1.1-aws-test-apply-and-resume-execution-evidence.json",
+      "sha256": "6ff2fef31b72a513289fcb1a20204545012ddd24fbdb37ccc5806789686ab56f"
+    },
+    "terraformState": {
+      "sha256": "a53f7bb1091990195680c9b3918a6110d4b3b8cb61441ce22aec2faf68fa725b",
+      "bytes": 241960,
+      "fileMode": "0600",
+      "committed": false
+    },
+    "privateCreationPlan": {
+      "sha256": "70a3899c8475552b2bf155e287477e7f81091e3cee9cfb01deb7932e3c449be8",
+      "committed": false
+    },
+    "sharedBootstrap": {
+      "path": "scripts/bootstrap-eks-argocd.sh",
+      "sha256": "e849aa6b6e9cf688c8425c8670cb67dba00e2c794b481c83c9f89570c1d2f37f"
+    },
+    "awsTestRootApplication": {
+      "path": "clusters/aws/overlays/test/root-app.yaml",
+      "sha256": "3a0d0d15c03524d6255019bec7591b2b00b514f08e394582d34ce3a42ce2c5e4"
+    }
+  },
+  "livePreflight": {
+    "requiresFreshPostMergeProtectedMain": true,
+    "requiresCleanMain": true,
+    "requiresExpectedPrivateAccount": true,
+    "requiresOnlyAwsTestRehearsalCluster": true,
+    "requiresEksActive": true,
+    "requiresReviewedPublicCidr": true,
+    "requiresKubeconfigEndpointMatch": true,
+    "requiresKubernetesReadyz": true,
+    "requiresSecretMetadataPresent": true,
+    "readsSecretValue": false,
+    "requiresTerraformStateSha256": true,
+    "requiresTerraformStateAddressCount": 103,
+    "requiresArgocdNamespaceAbsent": true,
+    "requiresBootstrapServiceAccountsAbsent": true,
+    "requiresRootApplicationAbsent": true,
+    "minimumRemainingTeardownReviewSeconds": 900,
+    "teardownReviewDeadlineUtc": "2026-09-12T17:38:53Z",
+    "authorizesExecution": false
+  },
+  "execution": {
+    "requiresSeparateApproval": true,
+    "requiresReviewedVerifyResultSha256": true,
+    "rerunsImmediatePreflight": true,
+    "sharedBootstrapInvocationCount": 1,
+    "argocdVersion": "v3.5.2",
+    "targetEnvironment": "aws-test",
+    "targetCluster": "startup-devops-baseline-test",
+    "createsIrsaServiceAccounts": [
+      "aws-load-balancer-controller",
+      "karpenter"
+    ],
+    "installsArgocd": true,
+    "appliesAwsLoadBalancerControllerApplication": true,
+    "deploysRootApplication": false,
+    "invokesLegacyAwsTestBootstrap": false,
+    "runsTerraformPlan": false,
+    "runsTerraformApply": false,
+    "runsTerraformDestroy": false,
+    "runsTraffic": false,
+    "runsQualification": false,
+    "runsPromotion": false,
+    "runsTeardown": false,
+    "automaticRetry": false
+  },
+  "postBootstrapChecks": {
+    "argocdNamespacePresent": true,
+    "argocdCoreWorkloadsReady": true,
+    "irsaRoleAnnotationsMatchTerraformOutputs": true,
+    "awsLoadBalancerControllerApplicationPresent": true,
+    "rootApplicationAbsent": true,
+    "terraformStateUnchanged": true
+  },
+  "privacy": {
+    "privateOutputDirectoryMode": "0700",
+    "privateOutputFileMode": "0600",
+    "accountIdEmitted": false,
+    "networkIdentityEmitted": false,
+    "resourceIdentityEmitted": false,
+    "secretValueRead": false,
+    "rawLiveOutputCommitted": false
+  },
+  "nextCheckpoint": "merge-run-fresh-private-preflight-and-obtain-separate-bootstrap-approval"
+}

@@ -907,3 +907,15 @@ the private binary and rendered plan, enforce a one-hour review TTL, and reject
 updates, deletes, replacements, unknown actions or identity drift. Apply,
 environment readiness, GitOps, traffic and qualification remain later,
 separately reviewed phases.
+
+### v0.11.9.3.6.7.2.1
+
+Record the successful separately approved aws-test plan-only execution on
+exact protected main `845d918bbf27`. Bind the fresh preflight, private plan,
+executor verify and execution results plus private binary/JSON/text/gate/record
+artifacts by SHA-256. Preserve the accepted 90-create/six-read resource-type
+inventory and human review without publishing account, management IP, paths,
+ARNs or raw plan values. No apply or environment creation occurred. Treat the
+expired saved plan as evidence only; the next guarded apply-executor phase must
+require a fresh post-merge preflight, private plan, Terraform plan, review and
+separate approval.

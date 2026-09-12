@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.2.1-aws-test-terraform-plan-execution-evidence` records the
+separately approved and human-reviewed plan-only execution on exact protected
+main. The private plan contained 90 creates and six reads, passed the
+create/read/no-op machine gate, and was never applied. Its private binary,
+JSON, text and record remain outside Git and are pinned by SHA-256. The saved
+plan is expired evidence; a later apply executor must require a new main,
+preflight, private plan and Terraform plan.
+Predecessor:
 `v0.11.9.3.6.7.2-guarded-aws-test-terraform-plan-executor` adds a two-phase,
 exact-main executor for a private aws-test Terraform plan. Its zero-command
 `verify` phase binds a fresh post-merge preflight and owner-only creation plan;
@@ -1005,3 +1013,14 @@ create/read/no-op aws-test plan with exact variables and identities; updates,
 deletes, replacements and unknown actions fail closed. Applying and validating
 this checkpoint runs no AWS or Terraform command and authorizes neither plan
 nor apply.
+
+### v0.11.9.3.6.7.2.1 aws-test Terraform plan execution evidence
+
+The separately approved plan-only execution completed on exact protected main
+`845d918bbf27`. A byte-matched fresh preflight and zero-command executor verify
+preceded Terraform init/plan/show. The private plan passed both the machine
+gate and human review with 90 creates, six read-only lookups, one EKS cluster
+and the expected Karpenter and runtime access entries. Secret metadata proved
+the fixed name absent before and after planning. Apply, mutation and aws-test
+creation did not occur. The plan expired after its one-hour review period and
+cannot be reused; the next executor must require fresh post-merge evidence.

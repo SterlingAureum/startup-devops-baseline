@@ -1,5 +1,23 @@
 # Changelog
 
+## v0.11.9.3.6.7.2.1
+
+- Record the separately approved aws-test Terraform plan-only execution on
+  exact protected main `845d918bbf27`, bound to the fresh preflight, private
+  creation plan and zero-command executor verify by SHA-256.
+- Record a machine- and human-reviewed plan containing 90 creates, six
+  read-only lookups, no update/delete/replacement, exactly one aws-test EKS
+  cluster and the expected two bounded EKS access entries.
+- Pin the private binary, JSON, text, plan gate and plan record by SHA-256 and
+  byte count while keeping raw content, paths, account, management address,
+  ARNs, resource addresses and pricing reference outside Git.
+- Record successful before/after Secret absence checks, unchanged variable
+  inputs, no apply, no environment creation and no automatic retry.
+- Mark the one-hour saved plan as expired evidence. A later apply executor must
+  require a new protected main, fresh preflight, private plan, Terraform plan
+  and separate approval. Applying and validating this increment performs no
+  live operation.
+
 ## v0.11.9.3.6.7.2
 
 - Bind the successful `.6.7` readiness result on implementation baseline

@@ -400,6 +400,9 @@ echo "==> Validating v0.11.9.3.6.7.1 guarded aws-test private creation-plan desi
 echo "==> Validating v0.11.9.3.6.7.2 guarded aws-test Terraform plan executor"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.2-aws-test-terraform-plan-executor.sh"
 
+echo "==> Validating v0.11.9.3.6.7.2.1 aws-test Terraform plan execution evidence"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.2.1-aws-test-terraform-plan-execution-evidence.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

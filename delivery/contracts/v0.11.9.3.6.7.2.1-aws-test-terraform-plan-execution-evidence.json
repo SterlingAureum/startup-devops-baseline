@@ -1,0 +1,247 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.2.1",
+  "version": "v0.11.9.3.6.7.2.1",
+  "predecessor": "v0.11.9.3.6.7.2",
+  "status": "aws-test-terraform-plan-execution-evidence-recorded",
+  "implementationBaselineCommit": "845d918bbf272b485461cc6ac193789bd57e9ef8",
+  "goal": "Record the separately approved and human-reviewed aws-test Terraform plan-only execution without committing private paths, account identity, management address, resource identities, or raw plan output.",
+  "reviewedRepositoryInputs": {
+    "planExecutorContract": {
+      "path": "delivery/contracts/v0.11.9.3.6.7.2-aws-test-terraform-plan-executor.json",
+      "sha256": "8591ed8ce73575973fec775a7841a47c4b1c0e9aab83415e8ee9d5dba6b3b3f6"
+    },
+    "planExecutor": {
+      "path": "scripts/execute-v0.11.9.3.6.7.2-aws-test-terraform-plan.py",
+      "sha256": "6bee71419d5398c0623a7ac9434c3803107dba77bdb9908f204db56fbe1792b5"
+    },
+    "terraformPlanGate": {
+      "path": "scripts/check-aws-test-create-terraform-plan.py",
+      "sha256": "d61a840c164a8e6a22b0ffde5f85c5b5a13de036b24530b3c98cc35002ff23c8"
+    }
+  },
+  "freshPreflight": {
+    "status": "aws-test-live-creation-preflight-ready-for-separate-plan-review",
+    "controlPlaneCommit": "845d918bbf272b485461cc6ac193789bd57e9ef8",
+    "resultSha256": "7a3212227faca5809e5ab4d0313d5cf2ed94d50596bf9fdca41d7b4a1389b0b7",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "directoryModeRestated": "0700",
+    "fileModeRestated": "0600",
+    "activeRehearsalEnvironmentCount": 0,
+    "terraformStateResourceBlockCount": 0,
+    "terraformStateResourceInstanceCount": 0,
+    "terraformCommandExecuted": false,
+    "environmentCreationAuthorized": false,
+    "mutationExecuted": false
+  },
+  "privateCreationPlan": {
+    "sha256": "3d1dec2c651de87053189cfc3e755b24e95d109cdc2027a66b0f2d70420a1237",
+    "fileModeRestated": "0600",
+    "checkerResultSha256": "1513b16a538d3319dc17669a6cf6ff473b1f89eb53451565db495d56df1150fd",
+    "checkerStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "checkerStatus": "aws-test-private-creation-plan-design-validated-offline",
+    "plannedStartUtc": "2026-09-12T08:06:18Z",
+    "teardownReviewDeadlineUtc": "2026-09-12T16:06:18Z",
+    "maximumSessionHours": 8,
+    "reviewedSessionBudgetUsd": 12.0,
+    "pricingReferenceCommitted": false
+  },
+  "executorVerification": {
+    "resultSha256": "67610e394c2242e336ef0bb572ed4153125e4e519d8df6c29cf27abd521424b1",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "status": "aws-test-terraform-plan-executor-inputs-verified",
+    "remainingWindowSeconds": 28757,
+    "commandsExecuted": [],
+    "terraformPlanAuthorized": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "environmentCreationAuthorized": false
+  },
+  "approval": {
+    "scope": "one aws-test Terraform plan-only operation",
+    "startUtc": "2026-09-12T08:06:18Z",
+    "endUtc": "2026-09-12T16:06:18Z",
+    "reviewedSessionBudgetUsd": 12.0,
+    "readOnlyAwsIdentityEnvironmentAndSecretMetadataApproved": true,
+    "terraformInitPlanAndShowApproved": true,
+    "privateArtifactCaptureApproved": true,
+    "terraformApplyApproved": false,
+    "terraformDestroyApproved": false,
+    "awsMutationApproved": false,
+    "environmentCreationApproved": false,
+    "gitopsBootstrapApproved": false,
+    "trafficApproved": false,
+    "qualificationApproved": false,
+    "promotionApproved": false,
+    "teardownApproved": false,
+    "automaticRetryApproved": false
+  },
+  "execution": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.7.2-aws-test-terraform-plan.py",
+    "phase": "execute",
+    "executorExit": 0,
+    "resultSha256": "513c807b7e5077d9702249580077f791fd2f8d35da9e0bc23b83fa7e9fda846e",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "resultFileModeRestated": "0600",
+    "status": "aws-test-create-only-terraform-plan-produced",
+    "controlPlaneCommit": "845d918bbf272b485461cc6ac193789bd57e9ef8",
+    "candidateReleaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "freshPreflightSha256": "7a3212227faca5809e5ab4d0313d5cf2ed94d50596bf9fdca41d7b4a1389b0b7",
+    "resourceChangeCount": 96,
+    "actionCounts": {
+      "create": 90,
+      "read": 6,
+      "no-op": 0
+    },
+    "awsTestClusterCreateCount": 1,
+    "runtimeAccessEntryCreateCount": 1,
+    "secretMetadataAbsentBeforeAndAfter": true,
+    "variableInputsMatched": true,
+    "terraformPlanExecuted": true,
+    "terraformApplyExecuted": false,
+    "environmentCreationAuthorized": false,
+    "environmentCreated": false,
+    "automaticRetryPerformed": false,
+    "privateResourceIdentityEmitted": false
+  },
+  "privateArtifacts": {
+    "directoryModeRestated": "0700",
+    "binaryPlan": {
+      "sha256": "f2165bf95e16988a86d314743053c641592151c1e2b3602ca90bf4519b2046e5",
+      "bytes": 47319,
+      "fileModeRestated": "0600"
+    },
+    "terraformPlanJson": {
+      "sha256": "94205d256d2918177f66d914576a63c0759b4068d2b85e50a0734ad22dd2cc66",
+      "bytes": 300637,
+      "fileModeRestated": "0600"
+    },
+    "terraformPlanText": {
+      "sha256": "152bf76a977a1636706987df4210c6db085f17bc7c1aa2f2c40d87d84ee1c561",
+      "bytes": 118707,
+      "fileModeRestated": "0600"
+    },
+    "planGate": {
+      "sha256": "acf67d2fc1cbf81a06d92b3d774446d5c5224f9fd0069d0e377fa11dc03b6cce",
+      "bytes": 347,
+      "fileModeRestated": "0600"
+    },
+    "planRecord": {
+      "sha256": "8f076dfe988cad9ab24b9d7ae565204cfc1072934b527b02b29a277f43d9f604",
+      "bytes": 1327,
+      "fileModeRestated": "0600"
+    },
+    "terraformInitStdoutBytes": 861,
+    "terraformInitStderrBytes": 0,
+    "terraformPlanStdoutBytes": 147814,
+    "terraformPlanStderrBytes": 0,
+    "terraformShowJsonStderrBytes": 0,
+    "terraformShowTextStderrBytes": 0,
+    "secretBeforePlanStdoutBytes": 0,
+    "secretBeforePlanStderrBytes": 139,
+    "secretAfterPlanStdoutBytes": 0,
+    "secretAfterPlanStderrBytes": 139,
+    "secretNotFoundStderrExpected": true,
+    "rawArtifactContentCommitted": false
+  },
+  "humanReview": {
+    "observedAtUtc": "2026-09-12T08:26:19Z",
+    "accepted": true,
+    "expectedPlanSummary": "90 to add, 0 to change, 0 to destroy; 6 read-only data lookups",
+    "createResourceTypeCounts": {
+      "aws_acm_certificate": 1,
+      "aws_acm_certificate_validation": 1,
+      "aws_cloudwatch_event_rule": 5,
+      "aws_cloudwatch_event_target": 5,
+      "aws_cloudwatch_log_group": 1,
+      "aws_ec2_tag": 1,
+      "aws_eip": 1,
+      "aws_eks_access_entry": 2,
+      "aws_eks_addon": 4,
+      "aws_eks_cluster": 1,
+      "aws_eks_node_group": 1,
+      "aws_fis_experiment_template": 1,
+      "aws_iam_openid_connect_provider": 1,
+      "aws_iam_policy": 9,
+      "aws_iam_role": 9,
+      "aws_iam_role_policy": 1,
+      "aws_iam_role_policy_attachment": 18,
+      "aws_internet_gateway": 1,
+      "aws_nat_gateway": 1,
+      "aws_route": 3,
+      "aws_route53_record": 1,
+      "aws_route_table": 3,
+      "aws_route_table_association": 4,
+      "aws_s3_bucket": 1,
+      "aws_s3_bucket_lifecycle_configuration": 1,
+      "aws_s3_bucket_ownership_controls": 1,
+      "aws_s3_bucket_policy": 1,
+      "aws_s3_bucket_public_access_block": 1,
+      "aws_s3_bucket_server_side_encryption_configuration": 1,
+      "aws_s3_bucket_versioning": 1,
+      "aws_secretsmanager_secret": 1,
+      "aws_sqs_queue": 1,
+      "aws_sqs_queue_policy": 1,
+      "aws_subnet": 4,
+      "aws_vpc": 1
+    },
+    "readResourceTypeCounts": {
+      "aws_iam_policy_document": 5,
+      "tls_certificate": 1
+    },
+    "eksAccessEntryInterpretation": {
+      "karpenterEc2LinuxNodeEntry": 1,
+      "githubActionsRuntimeEntry": 1,
+      "unexpectedEntry": 0
+    },
+    "unexpectedResourceTypeReported": false,
+    "updateDeleteOrReplacementReported": false,
+    "unexpectedEnvironmentReported": false,
+    "unexpectedCostScopeReported": false
+  },
+  "planLifecycle": {
+    "reviewExpiresAtUtc": "2026-09-12T09:19:02Z",
+    "reviewedPlanMayBeAppliedByThisCheckpoint": false,
+    "expiredPlanMayBeApplied": false,
+    "timestampEditingAllowed": false,
+    "freshPreflightRequiredAfterEvidenceMerge": true,
+    "freshPrivateCreationPlanRequiredAfterEvidenceMerge": true,
+    "freshTerraformPlanRequiredAfterEvidenceMerge": true
+  },
+  "privateEvidence": {
+    "rawPreflightStoredOutsideRepository": true,
+    "rawPrivateCreationPlanStoredOutsideRepository": true,
+    "rawExecutorVerificationStoredOutsideRepository": true,
+    "rawTerraformPlanBundleStoredOutsideRepository": true,
+    "rawFilesCommitted": false,
+    "privatePathCommitted": false,
+    "awsAccountCommitted": false,
+    "managementIpv4Committed": false,
+    "arnCommitted": false,
+    "resourceAddressOrIdentityCommitted": false,
+    "pricingReferenceCommitted": false
+  },
+  "operationBoundary": {
+    "terraformPlanExecuted": true,
+    "terraformApplyExecuted": false,
+    "terraformDestroyExecuted": false,
+    "awsMutationExecuted": false,
+    "environmentCreated": false,
+    "gitopsBootstrapped": false,
+    "trafficGenerated": false,
+    "qualificationExecuted": false,
+    "promotionExecuted": false,
+    "teardownExecuted": false,
+    "automaticRetryPerformed": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformAccessed": false,
+    "kubernetesAccessed": false,
+    "environmentCreated": false,
+    "environmentDestroyed": false,
+    "planReexecuted": false,
+    "applyExecuted": false
+  },
+  "applyAuthorized": false,
+  "nextCheckpoint": "implement-guarded-aws-test-apply-executor-with-fresh-post-merge-plan"
+}

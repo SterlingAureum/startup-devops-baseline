@@ -966,3 +966,25 @@ stop after Argo CD, IRSA ServiceAccounts and the AWS Load Balancer Controller
 child Application are present. The aws-test Root Application, Terraform
 mutation, traffic and qualification remain later, independently reviewed
 checkpoints.
+
+### v0.11.9.3.6.7.4.1
+
+Record the completed aws-test GitOps platform bootstrap on protected main
+`4aa621267676`. The evidence covers the initial safe kubeconfig mismatch stop,
+private isolated kubeconfig, successful verify and separately approved exact
+shared-bootstrap execution. Argo CD `v3.5.2`, both IRSA ServiceAccounts and the
+AWS Load Balancer Controller child Application passed post-checks while state
+remained unchanged and the Root Application stayed absent. The next checkpoint
+is a newly guarded Root Application deployment with fresh exact-main preflight,
+review and approval; traffic and qualification remain later phases.
+
+### v0.11.9.3.6.7.4.1.1
+
+Repair the single Gitleaks `generic-api-key` false positive reported on the
+`.7.4.1` metadata-observation fingerprint at PR-head commit `121d8328d36a`.
+Rename only the property, preserve the exact SHA-256 value and strengthen the
+predecessor validator to assert the complete stable read-only output map. Do
+not change `.gitleaksignore` or add any suppression. After the repair merges
+with successful protected-main workflows, continue to the independently
+guarded aws-test Root Application deployment; traffic and qualification remain
+later checkpoints.

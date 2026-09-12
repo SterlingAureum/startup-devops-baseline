@@ -196,6 +196,12 @@
 /scripts/validate-v0.11.9.3.6.7.4-guarded-aws-test-gitops-bootstrap.sh @SterlingAureum
 /delivery/contracts/v0.11.9.3.6.7.4-guarded-aws-test-gitops-bootstrap.json @SterlingAureum
 /docs/V0.11.9.3.6.7.4_GUARDED_AWS_TEST_GITOPS_BOOTSTRAP.md @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.4.1-aws-test-gitops-bootstrap-execution-evidence.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7.4.1-aws-test-gitops-bootstrap-execution-evidence.json @SterlingAureum
+/docs/V0.11.9.3.6.7.4.1_AWS_TEST_GITOPS_BOOTSTRAP_EXECUTION_EVIDENCE.md @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.4.1.1-gitleaks-evidence-field-repair.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7.4.1.1-gitleaks-evidence-field-repair.json @SterlingAureum
+/docs/V0.11.9.3.6.7.4.1.1_GITLEAKS_EVIDENCE_FIELD_REPAIR.md @SterlingAureum
 /scripts/validate-reviewed-aws-dev-qualification-for-promotion.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.6-reviewed-live-promotion-handoff.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.sh @SterlingAureum

@@ -1,0 +1,223 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.4.1",
+  "version": "v0.11.9.3.6.7.4.1",
+  "predecessor": "v0.11.9.3.6.7.4",
+  "status": "aws-test-gitops-bootstrap-execution-evidence-recorded",
+  "implementationBaselineCommit": "4aa621267676339546a26444a7fe235285872a74",
+  "goal": "Record the separately approved aws-test GitOps platform bootstrap and its successful post-checks without committing raw output, private paths, account, network, role, endpoint, cluster-resource or credential identity.",
+  "reviewedRepositoryInputs": {
+    "bootstrapContract": {
+      "path": "delivery/contracts/v0.11.9.3.6.7.4-guarded-aws-test-gitops-bootstrap.json",
+      "sha256": "8c823b06cf3784bdb1229f84921979f0927c75a7a964397bc68630c00f5f4177"
+    },
+    "bootstrapExecutor": {
+      "path": "scripts/execute-v0.11.9.3.6.7.4-aws-test-gitops-bootstrap.py",
+      "sha256": "59fa05e351552e560b40a18a27fdd3b84cd7ab780c06cb62a5b98a72b592a241"
+    },
+    "bootstrapValidator": {
+      "path": "scripts/validate-v0.11.9.3.6.7.4-guarded-aws-test-gitops-bootstrap.sh",
+      "sha256": "586b2b4c625bfad2cfd162a2bbd3e9e3090d4a643dba9cae927e2334eebd8eb8"
+    },
+    "sharedBootstrap": {
+      "path": "scripts/bootstrap-eks-argocd.sh",
+      "sha256": "e849aa6b6e9cf688c8425c8670cb67dba00e2c794b481c83c9f89570c1d2f37f"
+    },
+    "applyAndResumeEvidence": {
+      "path": "delivery/contracts/v0.11.9.3.6.7.3.1.1-aws-test-apply-and-resume-execution-evidence.json",
+      "sha256": "6ff2fef31b72a513289fcb1a20204545012ddd24fbdb37ccc5806789686ab56f"
+    }
+  },
+  "initialVerifyAttempt": {
+    "executorExit": 1,
+    "resultSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderrSha256": "0296b157282a7b9c98cb2df702568da1127766a65b8008623ae5be376e15b6f1",
+    "stderrBytes": 80,
+    "failureStage": "kubeconfig-endpoint-match",
+    "awsAccountVerifiedBeforeStop": true,
+    "eksClusterActiveBeforeStop": true,
+    "terraformStateAcceptedBeforeStop": true,
+    "mutationExecuted": false,
+    "automaticRetryPerformed": false
+  },
+  "isolatedKubeconfigPreparation": {
+    "awsCliDryRun": true,
+    "defaultKubeconfigModified": false,
+    "initialSha256": "9e8bdb782ccc8a368b7e64f64abe7bfa51307f0d9855cb1c4b505cd05968f9b2",
+    "initialStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "initialStderrBytes": 0,
+    "fileModeRestated": "0600",
+    "privatePathCommitted": false
+  },
+  "successfulVerification": {
+    "executorExit": 0,
+    "resultSha256": "e56d86d139d51c93c417de6d1891ff98cdbc4141219104f4ba922d51e2306bdc",
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderrBytes": 0,
+    "status": "aws-test-gitops-bootstrap-inputs-verified",
+    "controlPlaneCommit": "4aa621267676339546a26444a7fe235285872a74",
+    "appliedControlPlaneCommit": "1376129d42c6dbc19ffb57c97244d2b31ddd4ff7",
+    "candidateReleaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "remainingSessionSeconds": 9218,
+    "stateAddressCount": 103,
+    "eksClusterActive": true,
+    "argocdNamespaceAbsent": true,
+    "rootApplicationAbsent": true,
+    "gitopsBootstrapAuthorized": false,
+    "terraformCommandExecuted": false,
+    "kubernetesMutationExecuted": false
+  },
+  "executionApproval": {
+    "notAfterUtc": "2026-09-12T17:38:53Z",
+    "oneExecutionApproved": true,
+    "reviewedVerifySha256": "e56d86d139d51c93c417de6d1891ff98cdbc4141219104f4ba922d51e2306bdc",
+    "reviewedStateSha256": "a53f7bb1091990195680c9b3918a6110d4b3b8cb61441ce22aec2faf68fa725b",
+    "reviewedKubeconfigSha256": "9e8bdb782ccc8a368b7e64f64abe7bfa51307f0d9855cb1c4b505cd05968f9b2",
+    "sharedBootstrapInvocationCountApproved": 1,
+    "argocdVersionApproved": "v3.5.2",
+    "irsaServiceAccountsApproved": 2,
+    "argocdNamespaceAndInstallApproved": true,
+    "awsLoadBalancerControllerApplicationApproved": true,
+    "privateOutputCaptureApproved": true,
+    "terraformMutationApproved": false,
+    "rootApplicationApproved": false,
+    "otherAwsOrKubernetesMutationApproved": false,
+    "secretValueReadApproved": false,
+    "automaticRetryApproved": false,
+    "automaticRepairApproved": false,
+    "trafficApproved": false,
+    "qualificationApproved": false,
+    "promotionApproved": false,
+    "teardownApproved": false
+  },
+  "execution": {
+    "executorExit": 0,
+    "resultSha256": "ad674765975674e1f5aa0abad2cb6bbccd17b5c78cf868b8cffe4a098d4bf80a",
+    "resultBytes": 1003,
+    "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stderrBytes": 0,
+    "status": "aws-test-gitops-bootstrap-complete",
+    "controlPlaneCommit": "4aa621267676339546a26444a7fe235285872a74",
+    "appliedControlPlaneCommit": "1376129d42c6dbc19ffb57c97244d2b31ddd4ff7",
+    "candidateReleaseId": "demo-api-cf0a6bcbc466-cdffd3d71763",
+    "argocdVersion": "v3.5.2",
+    "gitopsBootstrapExecuted": true,
+    "rootApplicationDeployed": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "terraformDestroyExecuted": false,
+    "automaticRetryPerformed": false,
+    "trafficGenerated": false,
+    "qualificationExecuted": false,
+    "privateResourceIdentityEmitted": false
+  },
+  "stateAndKubeconfig": {
+    "terraformState": {
+      "beforeSha256": "a53f7bb1091990195680c9b3918a6110d4b3b8cb61441ce22aec2faf68fa725b",
+      "afterSha256": "a53f7bb1091990195680c9b3918a6110d4b3b8cb61441ce22aec2faf68fa725b",
+      "unchanged": true,
+      "fileModeRestated": "0600",
+      "committed": false
+    },
+    "isolatedKubeconfig": {
+      "beforeSha256": "9e8bdb782ccc8a368b7e64f64abe7bfa51307f0d9855cb1c4b505cd05968f9b2",
+      "afterSha256": "b1f390903139c1d49a76bf5afcfdad892c2c6a7828310a3ecf791efd6808cd0f",
+      "changedOnlyByApprovedBootstrap": true,
+      "fileModeRestated": "0600",
+      "committed": false
+    }
+  },
+  "privateArtifactInventory": {
+    "directoryModeRestated": "0700",
+    "fileModeRestated": "0600",
+    "fileCount": 62,
+    "totalBytes": 174294,
+    "stdoutFileCount": 31,
+    "stderrFileCount": 31,
+    "emptyFileCount": 30,
+    "nonemptyFileCount": 32,
+    "bootstrapStdout": {
+      "sha256": "e1004e6cea91de51abb370a37c398ce91e584ad408c8257b6989de995c0c9142",
+      "bytes": 4969
+    },
+    "bootstrapStderr": {
+      "sha256": "f9d72d2ce3318e9381de39d14d85fba0e3ce452ce9b68d721a51e4d21242dc78",
+      "bytes": 193,
+      "lineCount": 1,
+      "warningLineCount": 1,
+      "otherLineCount": 0,
+      "failureMarkerFound": false,
+      "humanReviewedAsNonFatal": true
+    },
+    "stableReadOnlyOutputs": {
+      "callerIdentitySha256": "66010a9aa506310c53e81087b9b6228cd6632dc72a8afe96d5556b56c64f6d27",
+      "clusterInventorySha256": "9e95155afd2fcca6cd7eebc4158020b8b32800ac42948a6237f9b80949615ef9",
+      "clusterDescriptionSha256": "f1de181f9e03d379a819468ea6b3f5df3774cf0a32f26eff8cae66980515888f",
+      "metadataObservationSha256": "b56815ad21d9c784844929c040d9ec27a83ad016bdfff7405798801b5ae3a1ac",
+      "terraformStateListSha256": "9c0c0fbce81f313a12d088bb0d071cfa20f911c1abb69fb35841de8dea7cdd96",
+      "kubernetesReadyzSha256": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df",
+      "albRoleOutputSha256": "4af8a2de9f2adfb166517d77914ddb16aa4c2ee79bc87f0680f148f5cf2a3903",
+      "karpenterRoleOutputSha256": "5bc9c8117d5439152376eb5bcfb09e025d5378c5f9ebbe07dae3d7caae5231da",
+      "matchedBeforeAndAfter": true
+    },
+    "postBootstrapOutputs": {
+      "argocdNamespaceSha256": "93f84d6b2897cfd61f3487473ad28a8fee9d7bbe39a5cbfd34821078e7b468c3",
+      "argocdServerSha256": "cfc97845442cff8f16bbd9562f003ef5e4c682f81e6f312eb9ee69916b884483",
+      "argocdRepoServerSha256": "b0a9c714a7341bd628c541182cda6a6a1969419387bc16f85e7c219bb40e46b4",
+      "argocdApplicationControllerSha256": "c783555d4dc47000c62ce1a51e5af3a5a9607a9f366a29f9dcea4765912f7b5c",
+      "albServiceAccountSha256": "f7a5464fc6609084ded5eb48aab1a214e92e39e30c16b7c8dd7bbe260cef3e99",
+      "karpenterServiceAccountSha256": "0358897efd53d62f58a16c6da3599273c6110dc36a35d15dadd947e06ba5ce2a",
+      "awsLoadBalancerControllerApplicationSha256": "7b8727d81d93e4be884a70734ad34625d8fec0b51632244a051b1b0fda5990fa",
+      "rootApplicationAbsenceStderrSha256": "062b70b1725e148cdf31ba1abc1c8f00ec86ccad823c42edcefec0041220b0dd"
+    },
+    "rawContentCommitted": false,
+    "privatePathCommitted": false
+  },
+  "finalRepositoryState": {
+    "head": "4aa621267676339546a26444a7fe235285872a74",
+    "originMain": "4aa621267676339546a26444a7fe235285872a74",
+    "worktreeClean": true,
+    "protectedMainChecksPassed": true
+  },
+  "privacyBoundary": {
+    "rawAwsOutputCommitted": false,
+    "rawKubernetesOutputCommitted": false,
+    "terraformStateCommitted": false,
+    "kubeconfigCommitted": false,
+    "privatePathCommitted": false,
+    "awsAccountCommitted": false,
+    "managementAddressCommitted": false,
+    "arnCommitted": false,
+    "endpointCommitted": false,
+    "resourceIdentityCommitted": false,
+    "credentialValueCommitted": false
+  },
+  "operationBoundary": {
+    "gitopsBootstrapExecutedOnce": true,
+    "argocdInstalled": true,
+    "irsaServiceAccountsConfigured": true,
+    "awsLoadBalancerControllerApplicationApplied": true,
+    "rootApplicationDeployed": false,
+    "terraformStateMutated": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "terraformDestroyExecuted": false,
+    "secretValueRead": false,
+    "trafficGenerated": false,
+    "qualificationExecuted": false,
+    "promotionExecuted": false,
+    "teardownExecuted": false,
+    "automaticRetryPerformed": false,
+    "automaticRepairPerformed": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformAccessed": false,
+    "kubernetesAccessed": false,
+    "bootstrapReexecuted": false,
+    "privateArtifactsRead": false,
+    "stateReadFromPrivateFile": false,
+    "environmentMutated": false,
+    "environmentDestroyed": false
+  },
+  "nextCheckpoint": "design-guarded-aws-test-root-application-deploy-with-fresh-preflight-and-separate-approval"
+}

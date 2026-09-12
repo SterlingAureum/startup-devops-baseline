@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.4.1.1",
+  "version": "v0.11.9.3.6.7.4.1.1",
+  "predecessor": "v0.11.9.3.6.7.4.1",
+  "status": "gitleaks-evidence-field-false-positive-repaired",
+  "implementationBaselineCommit": "121d8328d36ace3c18e2b85a3bc47006432cd8ab",
+  "goal": "Remove one scanner false positive from the GitOps bootstrap evidence without suppressing detection, changing the recorded observation, exposing private output or repeating any live operation.",
+  "scannerFinding": {
+    "scanner": "gitleaks",
+    "ruleId": "generic-api-key",
+    "findingCount": 1,
+    "commit": "121d8328d36ace3c18e2b85a3bc47006432cd8ab",
+    "path": "delivery/contracts/v0.11.9.3.6.7.4.1-aws-test-gitops-bootstrap-execution-evidence.json",
+    "reportedLine": 155,
+    "reportedValueRedacted": true,
+    "classification": "false-positive-sha256-fingerprint",
+    "credentialMaterialCommitted": false
+  },
+  "repair": {
+    "replacementProperty": "metadataObservationSha256",
+    "digestAlgorithm": "SHA-256",
+    "digest": "b56815ad21d9c784844929c040d9ec27a83ad016bdfff7405798801b5ae3a1ac",
+    "digestUnchanged": true,
+    "evidenceMeaningUnchanged": true,
+    "allowlistChanged": false,
+    "broadSuppressionAdded": false,
+    "predecessorValidatorStrengthened": true
+  },
+  "repositoryInputs": {
+    "failedEvidenceContract": {
+      "path": "delivery/contracts/v0.11.9.3.6.7.4.1-aws-test-gitops-bootstrap-execution-evidence.json",
+      "preRepairSha256": "eff97c7fbf3a7149d38b42e89cdfd2617d79cc6bf8f8aba1a31e08b933a7732f",
+      "repairedSha256": "bc323b3a50dcf4bcec79e26130470dbfb73c98756052b921425a04fa6f105052"
+    },
+    "strengthenedEvidenceValidator": {
+      "path": "scripts/validate-v0.11.9.3.6.7.4.1-aws-test-gitops-bootstrap-execution-evidence.sh",
+      "sha256": "55fe56674d388f430fa7f6816e7b37cb6d457c5195f0f8dfc3c4415ce42da045"
+    },
+    "unchangedScannerAllowlist": {
+      "path": ".gitleaksignore",
+      "sha256": "a346e54f717b6b076560273da964b20697e0b727fe2d44e3d16b7c128fbd13ca"
+    },
+    "repairValidator": {
+      "path": "scripts/validate-v0.11.9.3.6.7.4.1.1-gitleaks-evidence-field-repair.sh"
+    }
+  },
+  "operationBoundary": {
+    "awsAccessed": false,
+    "kubernetesAccessed": false,
+    "terraformAccessed": false,
+    "gitopsBootstrapRepeated": false,
+    "rootApplicationDeployed": false,
+    "trafficGenerated": false,
+    "qualificationExecuted": false,
+    "promotionExecuted": false,
+    "teardownExecuted": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "kubernetesAccessed": false,
+    "terraformAccessed": false,
+    "privateOutputRead": false,
+    "privateIdentityCommitted": false,
+    "credentialMaterialCommitted": false
+  },
+  "nextCheckpoint": "merge-repair-then-design-guarded-aws-test-root-application-deploy"
+}

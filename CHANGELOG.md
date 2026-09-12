@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.11.9.3.6.7.3.1
+
+- Record that the separately approved saved-plan apply succeeded while the
+  `.7.3` executor exited during post-apply state classification.
+- Bind the failed result, private apply output and resulting local state by
+  SHA-256 without publishing paths, account, network or resource identities.
+- Classify state by Terraform `managed` versus `data` mode: require all 90
+  planned creates, reject every additional managed/unclassified address, and
+  accept only three caller-identity, three partition and one Route53-zone data
+  lookup.
+- Add local-only `verify` and separately approved read-only `execute` phases to
+  finish STS, EKS ACTIVE/CIDR and Secret metadata checks without any Terraform
+  command or AWS mutation.
+- Prohibit a second apply, replan, destroy, automatic retry, GitOps bootstrap,
+  traffic and qualification. Applying and validating this repair performs no
+  live operation.
+
 ## v0.11.9.3.6.7.3
 
 - Add a local-only aws-test apply `verify` phase that binds a new post-merge

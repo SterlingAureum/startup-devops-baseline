@@ -931,3 +931,14 @@ preflight and plan gate, prove empty state and Secret absence, and apply the
 exact saved plan once without replanning. Preserve partial evidence and state
 on failure with no automatic retry. GitOps bootstrap, traffic, qualification,
 promotion and teardown remain later, separately reviewed checkpoints.
+
+### v0.11.9.3.6.7.3.1
+
+Repair the post-apply state classifier on baseline `1376129d42c`. The exact
+saved plan applied successfully and all 90 planned creates are present, but
+seven legitimate data-source state entries caused `.7.3` to stop before EKS
+and Secret post-checks. Bind the partial-success evidence and state by SHA-256,
+reject any extra managed or unknown address, and add a post-merge local verify
+plus separately approved AWS-read-only resume. Never rerun Terraform apply.
+After resume evidence is recorded, continue with separately reviewed GitOps
+bootstrap and environment qualification.

@@ -894,3 +894,16 @@ private saved Terraform plan with a one-hour review TTL and machine-check only
 nonempty create/read/no-op actions. Plan execution moves to `.6.7.2`; apply,
 GitOps bootstrap, qualification, promotion and teardown remain separately
 reviewed later phases.
+
+### v0.11.9.3.6.7.2
+
+Implement a guarded two-phase aws-test Terraform plan executor on baseline
+`a94b69c75210`. After merge, require a new exact-main `.6.7` preflight and a
+new populated owner-only `.6.7.1` plan. The local-only verify phase binds Git,
+private files, hashes, pricing/time inputs and preflight bytes without running
+commands. A separately approved execute phase may perform only read-only
+account/environment/Secret metadata checks and Terraform init/plan/show. Save
+the private binary and rendered plan, enforce a one-hour review TTL, and reject
+updates, deletes, replacements, unknown actions or identity drift. Apply,
+environment readiness, GitOps, traffic and qualification remain later,
+separately reviewed phases.

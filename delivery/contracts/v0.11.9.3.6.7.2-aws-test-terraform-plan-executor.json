@@ -1,0 +1,187 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.2",
+  "version": "v0.11.9.3.6.7.2",
+  "predecessor": "v0.11.9.3.6.7.1",
+  "status": "guarded-aws-test-terraform-plan-executor-implemented-not-executed",
+  "implementationBaselineCommit": "a94b69c75210a98210a3b9da7d4d32b0e8cbf93d",
+  "goal": "Implement a separately approved plan-only executor that revalidates exact protected main and a byte-identical aws-test preflight, produces a private create/read/no-op Terraform plan, and stops before apply or environment creation.",
+  "designInput": {
+    "reviewedPreflightControlPlaneCommit": "a94b69c75210a98210a3b9da7d4d32b0e8cbf93d",
+    "reviewedPreflightResultSha256": "5f12981fc2720ff4ac9a03b11d5d3444f03bbb0408d0e87190643549e81e18c3",
+    "reviewedPreflightStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "reviewedPreflightStatus": "aws-test-live-creation-preflight-ready-for-separate-plan-review",
+    "reviewedPreflightExecutedTerraform": false,
+    "reviewedPreflightCreatedAwsTest": false,
+    "freshPreflightRequiredAfterExecutorMerge": true
+  },
+  "reviewedRepositoryInputs": {
+    "planDesignContract": {
+      "path": "delivery/contracts/v0.11.9.3.6.7.1-aws-test-live-creation-plan-design.json",
+      "sha256": "02eb0395f0e54a2698f728d06750b4206b698ae14b2bcfdc6290c89acfe7cdb8"
+    },
+    "privatePlanTemplate": {
+      "path": "delivery/examples/v0.11.9.3.6.7.1-aws-test-live-creation-plan.json",
+      "sha256": "07e4cf748f93878b05164aba9a032aa9baaa27477d3fdb218ecc19bbb1ef53d1"
+    },
+    "privatePlanChecker": {
+      "path": "scripts/check-v0.11.9.3.6.7.1-aws-test-live-creation-plan.py",
+      "sha256": "eadc9322d00027916b1d2c8f14cc87bd51ef3585aed40e2302a8827e5389311d"
+    },
+    "livePreflightEntrypoint": {
+      "path": "scripts/preflight-v0.11.9.3.6.7-aws-test-live-creation.py",
+      "sha256": "b41a1c58865ffd44ae35165a7a17e941dd19d4b05dd0b1d6f2f09938afeec487"
+    },
+    "terraformPlanGate": {
+      "path": "scripts/check-aws-test-create-terraform-plan.py",
+      "sha256": "d61a840c164a8e6a22b0ffde5f85c5b5a13de036b24530b3c98cc35002ff23c8"
+    },
+    "planExecutor": {
+      "path": "scripts/execute-v0.11.9.3.6.7.2-aws-test-terraform-plan.py",
+      "sha256": "6bee71419d5398c0623a7ac9434c3803107dba77bdb9908f204db56fbe1792b5"
+    }
+  },
+  "executor": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.7.2-aws-test-terraform-plan.py",
+    "phases": ["verify", "execute"],
+    "requiredBranch": "main",
+    "cleanWorktreeRequired": true,
+    "headAndOriginMainMustEqualPrivatePlan": true,
+    "implementationBaselineMustBeAncestor": true,
+    "postImplementationMainRequired": true,
+    "privateInputFileMode": "0600",
+    "privateInputParentMaximumMode": "0700",
+    "minimumRemainingSessionWindowSeconds": 900,
+    "verifyRunsCommands": false,
+    "verifyAuthorizesPlan": false,
+    "executeRequiresSeparateApproval": true,
+    "immediatePreflightRequired": true,
+    "immediatePreflightMustBeByteIdentical": true,
+    "automaticRetryAllowed": false
+  },
+  "confirmations": {
+    "preflight": {
+      "variable": "CONFIRM_AWS_TEST_CREATE_PREFLIGHT",
+      "value": "observe-reviewed-aws-test-create-preflight"
+    },
+    "terraformPlan": {
+      "variable": "CONFIRM_AWS_TEST_TERRAFORM_PLAN_EXECUTION",
+      "value": "execute-reviewed-aws-test-create-plan"
+    },
+    "expectedAccountVariable": "EXPECTED_AWS_ACCOUNT_ID",
+    "requiredEnvironmentVariable": "AWS_ENVIRONMENT",
+    "requiredEnvironmentValue": "aws-test",
+    "terraformApplyConfirmationMustBeUnset": true,
+    "destroyConfirmationsMustBeUnset": true
+  },
+  "commandBoundary": {
+    "verifyAllowedCommands": [],
+    "executeReadOnlyAwsCommands": [
+      "sts get-caller-identity",
+      "eks list-clusters",
+      "secretsmanager describe-secret before plan",
+      "secretsmanager describe-secret after plan"
+    ],
+    "executeTerraformCommands": [
+      "terraform init -input=false -lockfile=readonly",
+      "terraform plan -input=false -lock=true -out=private",
+      "terraform show -json private-plan",
+      "terraform show -no-color private-plan"
+    ],
+    "terraformApplyAllowed": false,
+    "terraformDestroyAllowed": false,
+    "kubectlAllowed": false,
+    "argocdAllowed": false,
+    "gitMutationAllowed": false,
+    "awsMutationAllowed": false
+  },
+  "secretMetadataBoundary": {
+    "name": "startup-devops-baseline-test/demo-api/postgresql",
+    "lookup": "secretsmanager DescribeSecret metadata only",
+    "credentialValueReadAllowed": false,
+    "requiredStateBeforeAndAfterPlan": "ResourceNotFoundException",
+    "activeSecretAllowedForInitialCreate": false,
+    "tombstoneAllowedForInitialCreate": false,
+    "accessDeniedMeansAbsent": false,
+    "automaticDeleteRestoreOrImportAllowed": false
+  },
+  "terraformPlanGate": {
+    "checker": "scripts/check-aws-test-create-terraform-plan.py",
+    "source": "private terraform show -json output",
+    "requiredFixedVariables": [
+      "environment=test",
+      "project_name=startup-devops-baseline",
+      "aws_region=us-east-1",
+      "eks_node_min_size=4",
+      "eks_node_desired_size=4",
+      "eks_node_max_size=4",
+      "eks_public_access_cidrs=current-private-management-ipv4/32"
+    ],
+    "allowedActionVectors": [["create"], ["read"], ["no-op"]],
+    "atLeastOneCreateRequired": true,
+    "exactlyOneAwsTestEksClusterCreateRequired": true,
+    "foreignAccountArnAllowed": false,
+    "nonTestEnvironmentTagAllowed": false,
+    "runtimeAccessEntryMustMatchExactOptionalRole": true,
+    "updateAllowed": false,
+    "deleteAllowed": false,
+    "replacementAllowed": false,
+    "unknownActionAllowed": false,
+    "emptyPlanAllowed": false
+  },
+  "privateOutput": {
+    "newDirectoryRequired": true,
+    "directoryMode": "0700",
+    "fileMode": "0600",
+    "terraformDataDirectoryInsidePrivateOutput": true,
+    "savedBinaryPlan": true,
+    "terraformShowJson": true,
+    "terraformShowText": true,
+    "commandStdoutAndStderr": true,
+    "redactedPlanGate": true,
+    "privatePlanRecord": true,
+    "planRecordContainsAccountAndManagementCidr": true,
+    "planReviewTtlSeconds": 3600,
+    "publicOutputContainsPrivatePath": false,
+    "publicOutputContainsAccountId": false,
+    "publicOutputContainsManagementIpv4": false,
+    "publicOutputContainsResourceIdentity": false
+  },
+  "successBoundary": {
+    "status": "aws-test-create-only-terraform-plan-produced",
+    "terraformPlanExecuted": true,
+    "terraformApplyExecuted": false,
+    "environmentCreationAuthorized": false,
+    "environmentCreated": false,
+    "gitopsBootstrapped": false,
+    "trafficGenerated": false,
+    "automaticRetryPerformed": false,
+    "nextAction": "review-private-plan-before-separate-apply-executor-design"
+  },
+  "failureBoundary": {
+    "preservePrivatePlanBundle": true,
+    "preserveTerraformState": true,
+    "uncertaintyMeansAbsence": false,
+    "variableInputDriftStops": true,
+    "secretCollisionStops": true,
+    "destructiveOrUnknownActionStops": true,
+    "automaticRetry": false,
+    "automaticApply": false,
+    "automaticDestroy": false
+  },
+  "packageProducer": {
+    "freshPreflightExecuted": false,
+    "awsAccessed": false,
+    "terraformInitExecuted": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "kubernetesAccessed": false,
+    "environmentCreated": false,
+    "environmentDestroyed": false
+  },
+  "terraformPlanAuthorized": false,
+  "terraformPlanExecuted": false,
+  "terraformApplyAuthorized": false,
+  "terraformApplyExecuted": false,
+  "environmentCreationAuthorized": false,
+  "nextAction": "merge-run-fresh-preflight-populate-private-plan-run-verify-and-obtain-separate-plan-approval"
+}

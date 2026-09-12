@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.11.9.3.6.7.2
+
+- Bind the successful `.6.7` readiness result on implementation baseline
+  `a94b69c75210` as design evidence while requiring a new post-merge preflight
+  and populated owner-only `.6.7.1` plan for live use.
+- Add a zero-command `verify` phase that checks exact protected main, private
+  modes and hashes, reviewed time/cost inputs, local Terraform variables and
+  the byte-level fresh preflight result without authorizing planning.
+- Add a separately confirmed plan-only `execute` phase limited to STS/EKS and
+  Secret metadata reads plus Terraform init, plan and show; sanitize Terraform
+  injection and AWS endpoint overrides before subprocess execution.
+- Preserve the binary plan, JSON/text renders and command evidence in private
+  `0700/0600` storage, with a one-hour review TTL and redacted public result.
+- Machine-gate the plan to exact aws-test variables and nonempty
+  create/read/no-op actions. Reject update, delete, replacement, unknown
+  actions, foreign identities, Secret collisions and every apply path.
+- Applying and validating this increment performs no AWS or Terraform command,
+  does not create aws-test and authorizes neither plan nor apply.
+
 ## v0.11.9.3.6.7.1
 
 - Bind the successful redacted `.6.7` aws-test readiness result to exact

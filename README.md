@@ -3,6 +3,15 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.2-guarded-aws-test-terraform-plan-executor` adds a two-phase,
+exact-main executor for a private aws-test Terraform plan. Its zero-command
+`verify` phase binds a fresh post-merge preflight and owner-only creation plan;
+its separately approved `execute` phase may run only read-only AWS discovery
+and Terraform init/plan/show. A machine gate rejects update, delete,
+replacement, unknown actions and identity drift. Applying and validating this
+increment performs no live operation; a new post-merge preflight, populated
+private plan and separate approval are still required before planning.
+Predecessor:
 `v0.11.9.3.6.7.1-guarded-aws-test-private-creation-plan-design` binds the
 reviewed `.6.7` readiness result and adds an offline validator for an
 owner-only aws-test creation plan. It fixes exact main, candidate, account,
@@ -983,3 +992,16 @@ Terraform variables. It enforces an eight-hour/USD 50 ceiling, one active
 environment maximum, private `0700/0600` artifacts, one-hour plan review and a
 nonempty create/read/no-op-only Terraform policy. This checkpoint runs no live
 plan and leaves plan, apply and environment creation unauthorized.
+
+### v0.11.9.3.6.7.2 guarded aws-test Terraform plan executor
+
+The guarded plan path now has distinct local-only `verify` and separately
+confirmed `execute` phases. It requires a clean post-implementation protected
+main, a fresh byte-identical `.6.7` preflight, the populated owner-only `.7.1`
+plan and unchanged reviewed repository inputs. Live execution is limited to
+read-only account/environment/Secret metadata checks plus Terraform
+init/plan/show. The saved private plan is machine-gated to a nonempty
+create/read/no-op aws-test plan with exact variables and identities; updates,
+deletes, replacements and unknown actions fail closed. Applying and validating
+this checkpoint runs no AWS or Terraform command and authorizes neither plan
+nor apply.

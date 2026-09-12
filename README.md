@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.4-guarded-aws-test-gitops-bootstrap` adds a two-phase,
+exact-main aws-test platform bootstrap. Its read-only verify requires the
+reviewed live state, ACTIVE EKS, exact API boundary, ready Kubernetes API and
+an empty Argo CD/bootstrap surface. A separately approved execute may install
+exact Argo CD and the AWS Load Balancer Controller child Application once,
+then must stop before the Root Application. Applying and validating the
+increment performs no live operation.
+Predecessor:
 `v0.11.9.3.6.7.3.1.1-aws-test-apply-and-resume-execution-evidence` records the
 exact saved-plan apply, the fail-closed post-apply classifier incident and the
 successful separately approved no-reapply resume. All 90 planned creates are
@@ -1076,3 +1084,15 @@ boundary and credential-container metadata reads. It did not rerun Terraform
 or mutate AWS. State and raw AWS output remain private and are represented only
 by aggregate facts and SHA-256 fingerprints. GitOps bootstrap, traffic and
 qualification remain unexecuted and require new post-merge controls.
+
+### v0.11.9.3.6.7.4 guarded aws-test GitOps bootstrap
+
+The next live checkpoint has an exact-main, separately reviewed two-phase
+executor. Its preflight binds the `.7.3.1.1` evidence, private creation plan
+and byte-identical live state; it allows only account, EKS, Secret metadata,
+Terraform state/output and Kubernetes readiness/object reads. Execution must
+bind the reviewed verify result and rerun the preflight before invoking the
+shared EKS bootstrap exactly once. Success requires Argo CD core workloads,
+two Terraform-derived IRSA annotations and the AWS Load Balancer Controller
+Application while the aws-test Root Application remains absent. Terraform
+mutation, Root deployment, traffic, qualification and retry are prohibited.

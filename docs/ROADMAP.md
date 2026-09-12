@@ -954,3 +954,15 @@ metadata without rerunning Terraform or mutating AWS. Keep state and raw output
 private. The next checkpoint is a newly guarded aws-test GitOps bootstrap with
 fresh exact-main preflight, separate review and explicit approval; traffic and
 qualification remain later phases.
+
+### v0.11.9.3.6.7.4
+
+Implement the guarded aws-test GitOps platform bootstrap on baseline
+`8ff28f9f047d`. After merge, require a new exact clean protected-main SHA,
+byte-identical live state, reviewed account/environment/API boundary,
+Kubernetes readiness and an empty Argo CD/bootstrap surface. A separately
+approved execution may invoke only the shared Argo CD bootstrap once and must
+stop after Argo CD, IRSA ServiceAccounts and the AWS Load Balancer Controller
+child Application are present. The aws-test Root Application, Terraform
+mutation, traffic and qualification remain later, independently reviewed
+checkpoints.

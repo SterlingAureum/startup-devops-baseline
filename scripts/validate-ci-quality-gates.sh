@@ -412,6 +412,9 @@ echo "==> Validating v0.11.9.3.6.7.3.1 aws-test state-classification repair"
 echo "==> Validating v0.11.9.3.6.7.3.1.1 aws-test apply and resume execution evidence"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.3.1.1-aws-test-apply-and-resume-execution-evidence.sh"
 
+echo "==> Validating v0.11.9.3.6.7.4 guarded aws-test GitOps bootstrap"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.4-guarded-aws-test-gitops-bootstrap.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

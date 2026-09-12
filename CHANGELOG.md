@@ -1,5 +1,37 @@
 # Changelog
 
+## v0.11.9.3.6.7.4.1.1
+
+- Classify the single Gitleaks `generic-api-key` report at the `.7.4.1`
+  evidence property as a SHA-256 fingerprint false positive rather than
+  credential material.
+- Rename the property to `metadataObservationSha256` without changing its
+  digest or evidentiary meaning.
+- Strengthen the `.7.4.1` validator to assert the complete stable read-only
+  output map and exact renamed digest.
+- Keep `.gitleaksignore` byte-identical and add no inline, fingerprint, path or
+  broad scanner suppression.
+- Bind the PR-head finding, pre-repair and repaired contract hashes and the
+  no-operation boundary. Applying and validating this increment performs no
+  AWS, Terraform or Kubernetes operation.
+
+## v0.11.9.3.6.7.4.1
+
+- Record the initial safe kubeconfig-target verifier stop and the subsequent
+  owner-only AWS CLI dry-run kubeconfig preparation without changing the
+  default kubeconfig or authorizing mutation.
+- Bind the successful fresh verify, explicit approval, protected main,
+  infrastructure state, shared bootstrap and one execution result by SHA-256.
+- Record successful Argo CD `v3.5.2`, two Terraform-derived IRSA
+  ServiceAccounts and AWS Load Balancer Controller child Application checks.
+- Record 62 private `0600` artifacts under a `0700` directory, including one
+  193-byte bootstrap warning line that was separately reviewed with no failure
+  marker; keep all raw content and private identity outside Git.
+- Confirm Terraform state stayed byte-identical, the Root Application remained
+  absent, and no Terraform mutation, retry, repair, traffic, qualification,
+  promotion or teardown occurred. Applying and validating this evidence
+  performs no live operation.
+
 ## v0.11.9.3.6.7.4
 
 - Add a fresh exact-main, live read-only aws-test GitOps bootstrap preflight

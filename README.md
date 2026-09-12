@@ -3,6 +3,21 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.4.1.1-gitleaks-evidence-field-repair` removes the single
+`generic-api-key` false positive reported for a SHA-256 evidence fingerprint.
+It uses a neutral digest property, strengthens the complete stable-output-map
+assertion and leaves `.gitleaksignore` byte-identical. The evidence value and
+meaning are unchanged, no credential material is committed, and applying or
+validating the repair performs no live operation.
+Predecessor:
+`v0.11.9.3.6.7.4.1-aws-test-gitops-bootstrap-execution-evidence` records the
+separately approved one-time aws-test platform bootstrap on exact protected
+main. Argo CD `v3.5.2`, both reviewed IRSA ServiceAccounts and the AWS Load
+Balancer Controller child Application passed post-checks while Terraform state
+remained unchanged and the Root Application stayed absent. Raw output and
+private identities remain outside Git. Applying and validating this evidence
+performs no live operation.
+Predecessor:
 `v0.11.9.3.6.7.4-guarded-aws-test-gitops-bootstrap` adds a two-phase,
 exact-main aws-test platform bootstrap. Its read-only verify requires the
 reviewed live state, ACTIVE EKS, exact API boundary, ready Kubernetes API and
@@ -1096,3 +1111,15 @@ shared EKS bootstrap exactly once. Success requires Argo CD core workloads,
 two Terraform-derived IRSA annotations and the AWS Load Balancer Controller
 Application while the aws-test Root Application remains absent. Terraform
 mutation, Root deployment, traffic, qualification and retry are prohibited.
+
+### v0.11.9.3.6.7.4.1 aws-test GitOps bootstrap execution evidence
+
+The first verifier run stopped safely on a stale kubeconfig target. A private
+AWS CLI dry-run kubeconfig then enabled a fresh successful verify, which was
+separately reviewed and approved. The exact shared bootstrap ran once on
+protected main `4aa621267676`, installed Argo CD `v3.5.2`, configured both
+Terraform-derived IRSA ServiceAccounts and applied the AWS Load Balancer
+Controller child Application. All post-checks passed, Terraform state remained
+byte-identical, and the Root Application remained absent. One nonempty
+bootstrap stderr line was independently classified as a warning with no
+failure marker. Raw evidence and identities remain private.

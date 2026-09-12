@@ -919,3 +919,15 @@ ARNs or raw plan values. No apply or environment creation occurred. Treat the
 expired saved plan as evidence only; the next guarded apply-executor phase must
 require a fresh post-merge preflight, private plan, Terraform plan, review and
 separate approval.
+
+### v0.11.9.3.6.7.3
+
+Implement the guarded aws-test saved-plan apply executor on baseline
+`52e99fcfb86e`. The historical `.7.2.1` plan is expired and cannot be reused.
+After merge, require a new exact-main preflight, private creation plan,
+separately approved `.7.2` saved plan, human review and local `.7.3` verify.
+Only a separately approved execute phase may rerun the immediate byte-identical
+preflight and plan gate, prove empty state and Secret absence, and apply the
+exact saved plan once without replanning. Preserve partial evidence and state
+on failure with no automatic retry. GitOps bootstrap, traffic, qualification,
+promotion and teardown remain later, separately reviewed checkpoints.

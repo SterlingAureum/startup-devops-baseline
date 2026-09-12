@@ -1,0 +1,159 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.3",
+  "version": "v0.11.9.3.6.7.3",
+  "predecessor": "v0.11.9.3.6.7.2.1",
+  "status": "guarded-aws-test-terraform-apply-executor-implemented-not-executed",
+  "implementationBaselineCommit": "52e99fcfb86e7159eea037926954e81d1bc5f26f",
+  "goal": "Implement a separately approved, single-use aws-test executor that applies only a fresh, reviewed saved Terraform plan and stops before GitOps bootstrap, traffic or qualification.",
+  "reviewedHistoricalEvidence": {
+    "path": "delivery/contracts/v0.11.9.3.6.7.2.1-aws-test-terraform-plan-execution-evidence.json",
+    "sha256": "beaaf8195253b085db17729793e9c8365a006d52a9b93e41fb12badf572d3692",
+    "historicalControlPlaneCommit": "845d918bbf272b485461cc6ac193789bd57e9ef8",
+    "historicalBinaryPlanSha256": "f2165bf95e16988a86d314743053c641592151c1e2b3602ca90bf4519b2046e5",
+    "historicalPlanExpiredAtUtc": "2026-09-12T09:19:02Z",
+    "historicalPlanReusable": false,
+    "timestampEditingAllowed": false
+  },
+  "reviewedRepositoryInputs": {
+    "planExecutor": {
+      "path": "scripts/execute-v0.11.9.3.6.7.2-aws-test-terraform-plan.py",
+      "sha256": "6bee71419d5398c0623a7ac9434c3803107dba77bdb9908f204db56fbe1792b5"
+    },
+    "terraformPlanGate": {
+      "path": "scripts/check-aws-test-create-terraform-plan.py",
+      "sha256": "d61a840c164a8e6a22b0ffde5f85c5b5a13de036b24530b3c98cc35002ff23c8"
+    },
+    "livePreflightEntrypoint": {
+      "path": "scripts/preflight-v0.11.9.3.6.7-aws-test-live-creation.py",
+      "sha256": "b41a1c58865ffd44ae35165a7a17e941dd19d4b05dd0b1d6f2f09938afeec487"
+    }
+  },
+  "freshEvidenceRequiredAfterMerge": {
+    "postImplementationProtectedMain": true,
+    "byteIdenticalLivePreflight": true,
+    "populatedPrivateCreationPlan": true,
+    "savedBinaryPlan": true,
+    "terraformShowJsonAndText": true,
+    "machinePlanGate": true,
+    "humanPlanReview": true,
+    "separateApplyApproval": true,
+    "planReviewTtlSeconds": 3600,
+    "minimumRemainingPlanReviewSeconds": 900
+  },
+  "executor": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.7.3-aws-test-terraform-apply.py",
+    "phases": ["verify", "execute"],
+    "requiredBranch": "main",
+    "cleanWorktreeRequired": true,
+    "headAndOriginMainMustEqualPrivatePlan": true,
+    "implementationBaselineMustBeAncestor": true,
+    "privateInputDirectoryMode": "0700",
+    "privateInputFileMode": "0600",
+    "verifyRunsOperationalCommands": false,
+    "verifyAuthorizesApply": false,
+    "executeRequiresSeparateApproval": true,
+    "automaticRetryAllowed": false
+  },
+  "confirmations": {
+    "preflightVariable": "CONFIRM_AWS_TEST_CREATE_PREFLIGHT",
+    "preflightValue": "observe-reviewed-aws-test-create-preflight",
+    "applyVariable": "CONFIRM_AWS_TEST_TERRAFORM_APPLY_EXECUTION",
+    "applyValue": "apply-reviewed-aws-test-saved-plan",
+    "planConfirmationMustBeUnset": true,
+    "legacyApplyConfirmationMustBeUnset": true,
+    "destroyConfirmationsMustBeUnset": true
+  },
+  "immediateBeforeApply": {
+    "freshPreflightMustBeByteIdentical": true,
+    "activeRehearsalEnvironmentCount": 0,
+    "localTerraformStateMustBeEmpty": true,
+    "secretMetadataMustBeAbsent": true,
+    "savedPlanHashesMustMatchRecord": true,
+    "terraformShowJsonMustBeByteIdentical": true,
+    "machinePlanGateMustPassAgain": true,
+    "variableInputFingerprintsMustMatch": true
+  },
+  "commandBoundary": {
+    "verifyAllowedOperationalCommands": [],
+    "executeReadOnlyAwsCommands": [
+      "preflight STS identity and EKS cluster inventory",
+      "Secrets Manager DescribeSecret before apply",
+      "EKS DescribeCluster after apply",
+      "Secrets Manager DescribeSecret metadata after apply"
+    ],
+    "executeTerraformCommands": [
+      "terraform show -json exact-saved-plan",
+      "terraform apply -input=false -auto-approve exact-saved-plan",
+      "terraform state list"
+    ],
+    "terraformPlanAllowed": false,
+    "terraformDestroyAllowed": false,
+    "legacyApplyWrapperAllowed": false,
+    "kubectlAllowed": false,
+    "argocdAllowed": false,
+    "gitMutationAllowed": false
+  },
+  "postApplyBoundary": {
+    "plannedCreateAddressesMustExistInState": true,
+    "unreviewedStateAddressesAllowed": false,
+    "localStateMustBeValidVersion4": true,
+    "eksClusterMustBeActive": true,
+    "eksPublicAccessCidrMustMatchPrivatePlan": true,
+    "secretMetadataMustExist": true,
+    "secretValueReadAllowed": false,
+    "gitopsBootstrapAllowed": false,
+    "trafficAllowed": false,
+    "qualificationAllowed": false,
+    "promotionAllowed": false,
+    "teardownAllowed": false
+  },
+  "failureBoundary": {
+    "preservePrivateApplyEvidence": true,
+    "preserveTerraformState": true,
+    "partialApplyRequiresManualReview": true,
+    "automaticRetry": false,
+    "automaticReplan": false,
+    "automaticDestroy": false,
+    "uncertaintyMeansSuccess": false
+  },
+  "privateOutput": {
+    "newDirectoryRequired": true,
+    "directoryMode": "0700",
+    "fileMode": "0600",
+    "rawCommandOutputCommitted": false,
+    "privatePathCommitted": false,
+    "awsAccountCommitted": false,
+    "managementIpv4Committed": false,
+    "resourceIdentityCommitted": false
+  },
+  "successBoundary": {
+    "status": "aws-test-reviewed-saved-plan-applied",
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": true,
+    "environmentCreationAuthorized": true,
+    "environmentCreated": true,
+    "eksClusterActive": true,
+    "gitopsBootstrapExecuted": false,
+    "trafficGenerated": false,
+    "qualificationExecuted": false,
+    "automaticRetryPerformed": false,
+    "nextAction": "record-aws-test-terraform-apply-execution-evidence"
+  },
+  "packageProducer": {
+    "freshPreflightExecuted": false,
+    "awsAccessed": false,
+    "terraformShowExecuted": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "kubernetesAccessed": false,
+    "environmentCreated": false,
+    "environmentDestroyed": false
+  },
+  "terraformPlanAuthorized": false,
+  "terraformPlanExecuted": false,
+  "terraformApplyAuthorized": false,
+  "terraformApplyExecuted": false,
+  "environmentCreationAuthorized": false,
+  "environmentCreated": false,
+  "nextAction": "merge-run-fresh-preflight-plan-review-verify-and-obtain-separate-apply-approval"
+}

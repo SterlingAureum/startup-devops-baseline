@@ -168,6 +168,13 @@
 /delivery/contracts/v0.11.9.3.6.7.1-aws-test-live-creation-plan-design.json @SterlingAureum
 /delivery/examples/v0.11.9.3.6.7.1-aws-test-live-creation-plan.json @SterlingAureum
 /docs/V0.11.9.3.6.7.1_GUARDED_AWS_TEST_PRIVATE_CREATION_PLAN_DESIGN.md @SterlingAureum
+/scripts/check-aws-test-create-terraform-plan.py @SterlingAureum
+/scripts/test-aws-test-create-terraform-plan.py @SterlingAureum
+/scripts/execute-v0.11.9.3.6.7.2-aws-test-terraform-plan.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.2-aws-test-terraform-plan-executor.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.2-aws-test-terraform-plan-executor.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7.2-aws-test-terraform-plan-executor.json @SterlingAureum
+/docs/V0.11.9.3.6.7.2_GUARDED_AWS_TEST_TERRAFORM_PLAN_EXECUTOR.md @SterlingAureum
 /scripts/validate-reviewed-aws-dev-qualification-for-promotion.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.6-reviewed-live-promotion-handoff.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.6-reviewed-live-aws-test-promotion-handoff.sh @SterlingAureum

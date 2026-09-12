@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.3.1",
+  "version": "v0.11.9.3.6.7.3.1",
+  "predecessor": "v0.11.9.3.6.7.3",
+  "status": "aws-test-state-classification-repair-and-post-apply-resume-implemented-not-executed",
+  "implementationBaselineCommit": "1376129d42c6dbc19ffb57c97244d2b31ddd4ff7",
+  "incident": {
+    "appliedControlPlaneCommit": "1376129d42c6dbc19ffb57c97244d2b31ddd4ff7",
+    "applyExecutorExit": 1,
+    "terraformApplyCommandSucceeded": true,
+    "terraformStateListCommandSucceeded": true,
+    "failureStage": "post-apply-state-address-classification",
+    "failureReason": "all terraform state list addresses were incorrectly required to appear in plan resource_changes",
+    "failedResultSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "failedStderrSha256": "410415ad92580ecd0650655776821821caf6653bbc57cb4dd70f63995760be4e",
+    "failedStderrBytes": 88,
+    "automaticRetryPerformed": false,
+    "secondApplyAllowed": false
+  },
+  "reviewedInputs": {
+    "freshPreflightSha256": "444ecdd6fb17bba42f48dc72083501d3cc64753aa38b8eda907d03d258f37f79",
+    "privateCreationPlanSha256": "70a3899c8475552b2bf155e287477e7f81091e3cee9cfb01deb7932e3c449be8",
+    "planExecutionResultSha256": "4bedd473845ec6d3b43b9b8afeeeece7c3dc5f33bf10e88d0574bbc7d18e0ec6",
+    "applyVerifyResultSha256": "ffdc54c2c152654b63ceac050a5e951de4a2fa0bf259ba821c52440ce691b1e5",
+    "binaryPlanSha256": "7c8b5c17b17dcface9fbc97810ec1cedc1985bcb32f3157f4e476b8211d82d0e",
+    "terraformPlanJsonSha256": "d93343ca8b7294537eeccff8797827c8af3a63ea6f0088a7dc101236dbf231f3",
+    "terraformPlanTextSha256": "152bf76a977a1636706987df4210c6db085f17bc7c1aa2f2c40d87d84ee1c561",
+    "planGateSha256": "acf67d2fc1cbf81a06d92b3d774446d5c5224f9fd0069d0e377fa11dc03b6cce",
+    "planRecordSha256": "a196b0b7370d7c3772c3a4a60ebeff43fd39ddd59aa7921fa8afabdefab98852"
+  },
+  "privateApplyEvidence": {
+    "immediatePreflightStdoutSha256": "444ecdd6fb17bba42f48dc72083501d3cc64753aa38b8eda907d03d258f37f79",
+    "secretBeforeApplyStderrSha256": "0b434d98da1f8aae5510ee92e0e256138139ab4293b0ed566305ca1e48cca4cf",
+    "terraformShowJsonStdoutSha256": "d93343ca8b7294537eeccff8797827c8af3a63ea6f0088a7dc101236dbf231f3",
+    "terraformApplyStdoutSha256": "ca2e3d7e1884e40a0339ce7912dae61d28be9abb720b0e3262df5e93a446e046",
+    "terraformApplyStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "terraformStateListStdoutSha256": "9c0c0fbce81f313a12d088bb0d071cfa20f911c1abb69fb35841de8dea7cdd96",
+    "terraformStateListStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "terraformStateSha256": "a53f7bb1091990195680c9b3918a6110d4b3b8cb61441ce22aec2faf68fa725b",
+    "terraformStateBytes": 241960,
+    "privateDirectoryMode": "0700",
+    "privateFileMode": "0600",
+    "rawContentCommitted": false,
+    "privatePathCommitted": false
+  },
+  "stateClassification": {
+    "planResourceChangeCount": 96,
+    "planCreateAddressCount": 90,
+    "stateListAddressCount": 103,
+    "stateResourceBlockCount": 80,
+    "stateResourceInstanceCount": 103,
+    "missingPlannedCreateCount": 0,
+    "unexpectedManagedAddressCount": 0,
+    "acceptedUnplannedDataAddressCount": 7,
+    "unexpectedUnclassifiedAddressCount": 0,
+    "acceptedUnplannedDataTypes": {
+      "aws_caller_identity": 3,
+      "aws_partition": 3,
+      "aws_route53_zone": 1
+    },
+    "arbitraryDataSourceAllowed": false,
+    "additionalManagedResourceAllowed": false,
+    "missingPlannedCreateAllowed": false
+  },
+  "resumeExecutor": {
+    "entrypoint": "scripts/execute-v0.11.9.3.6.7.3.1-aws-test-post-apply-resume.py",
+    "phases": ["verify", "execute"],
+    "postRepairProtectedMainRequired": true,
+    "incidentMainMustBeAncestor": true,
+    "cleanExactMainRequired": true,
+    "verifyOperationalCommands": [],
+    "verifyAuthorizesResume": false,
+    "executeRequiresSeparateApproval": true,
+    "confirmationVariable": "CONFIRM_AWS_TEST_POST_APPLY_RESUME",
+    "confirmationValue": "verify-reviewed-aws-test-post-apply-state"
+  },
+  "resumeCommandBoundary": {
+    "allowedAwsReads": [
+      "sts get-caller-identity",
+      "eks list-clusters",
+      "eks describe-cluster",
+      "secretsmanager describe-secret metadata"
+    ],
+    "terraformCommandAllowed": false,
+    "terraformPlanAllowed": false,
+    "terraformApplyAllowed": false,
+    "terraformDestroyAllowed": false,
+    "awsMutationAllowed": false,
+    "kubernetesCommandAllowed": false,
+    "argocdCommandAllowed": false,
+    "gitMutationAllowed": false
+  },
+  "resumeSuccessBoundary": {
+    "status": "aws-test-post-apply-resume-verification-complete",
+    "priorTerraformApplySucceeded": true,
+    "terraformApplyReexecuted": false,
+    "resumeAwsMutationExecuted": false,
+    "eksClusterActive": true,
+    "secretMetadataPresent": true,
+    "gitopsBootstrapExecuted": false,
+    "trafficGenerated": false,
+    "qualificationExecuted": false,
+    "automaticRetryPerformed": false,
+    "nextAction": "record-aws-test-apply-and-resume-execution-evidence"
+  },
+  "failureBoundary": {
+    "preserveTerraformState": true,
+    "preserveOriginalApplyEvidence": true,
+    "preserveResumeEvidence": true,
+    "automaticRetry": false,
+    "automaticApply": false,
+    "automaticDestroy": false,
+    "uncertaintyMeansSuccess": false
+  },
+  "packageProducer": {
+    "awsAccessed": false,
+    "terraformAccessed": false,
+    "kubernetesAccessed": false,
+    "applyRetried": false,
+    "environmentMutated": false,
+    "environmentDestroyed": false,
+    "resumeExecuted": false
+  },
+  "resumeAuthorized": false,
+  "terraformPlanAuthorized": false,
+  "terraformApplyAuthorized": false,
+  "terraformDestroyAuthorized": false,
+  "nextAction": "merge-run-local-resume-verify-and-obtain-separate-read-only-resume-approval"
+}

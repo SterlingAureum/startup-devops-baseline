@@ -1036,3 +1036,15 @@ then applies that saved plan once without replanning. Successful completion
 requires reviewed state addresses, an ACTIVE aws-test EKS cluster and Secret
 metadata, while GitOps, traffic and qualification remain separate. Applying
 and validating this implementation performs no live operation.
+
+### v0.11.9.3.6.7.3.1 aws-test state-classification repair
+
+The reviewed `.7.3` saved plan applied successfully, but its post-apply state
+gate rejected seven legitimate read-only data sources that were persisted in
+state without appearing in `plan.resource_changes`. All 90 planned creates are
+present and no additional managed address exists. A no-reapply resume executor
+now binds the original private evidence and state, distinguishes managed and
+data modes, and allows only the exact reviewed data types and counts. After a
+new protected-main merge and local verify, a separately approved execution may
+finish only STS, EKS and Secret metadata checks. It cannot run Terraform,
+mutate AWS, bootstrap GitOps, generate traffic or qualify the environment.

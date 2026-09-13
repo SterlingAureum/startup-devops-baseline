@@ -439,6 +439,9 @@ echo "==> Validating v0.11.9.3.6.7.6 guarded aws-test teardown"
 echo "==> Validating v0.11.9.3.6.7.6.1 explicit cleanup-window renewal"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6.1-cleanup-window-renewal.sh"
 
+echo "==> Validating v0.11.9.3.6.7.6.2 partial runtime-cleanup continuation"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6.2-runtime-cleanup-resume.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

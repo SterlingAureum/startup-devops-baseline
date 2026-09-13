@@ -1052,3 +1052,11 @@ residual-cost closure are not claimed by deployment or evidence recording.
 - [x] Whole-session allowance projection and offline renewal/deletion gates.
 - [ ] Fresh post-merge inventory, independent phase approvals and live saved plans.
 - [ ] Final residual-cost audit and sanitized execution evidence.
+
+### v0.11.9.3.6.7.6.2
+
+- [x] Invalid kubectl delete output diagnosis and real CLI regression fixture.
+- [x] Original-marker preservation and bounded partial-cleanup continuation.
+- [x] Confirm runtime stop 12:30Z/completion 14:00Z and whole-session model.
+- [ ] Fresh post-merge read-only resume, human review and independent deletion approval.
+- [ ] Live EKS/final saved plans, independent applies and residual-cost audit.

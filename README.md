@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.6.2-runtime-cleanup-resume` repairs invalid kubectl delete output
+and verifies the 19 already-paused Applications and consumed failure evidence.
+It handles Root presence/absence with UID/source binding, avoids repeating freeze
+and uses independently approved continuation. Runtime latest start is September 13
+12:10Z, stop 12:30Z, completion 14:00Z; reviewed allowances project USD 31.97
+against USD 36 with billing unknown. No live deletion occurred during packaging.
+See [partial cleanup continuation](docs/V0.11.9.3.6.7.6.2_AWS_TEST_RUNTIME_CLEANUP_RESUME.md).
+Predecessor:
 `v0.11.9.3.6.7.6.1-cleanup-window-renewal` preserves the expired-window stop
 and binds fresh cleanup proofs to the user-confirmed September 13 window:
 runtime latest start 10:40Z, stop 11:00Z, cleanup complete 12:30Z. Existing reviewed

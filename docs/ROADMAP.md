@@ -1070,3 +1070,10 @@ residual-cost closure are not claimed by deployment or evidence recording.
 - [ ] Merge CI, fresh exact-main verification, schedule review and phase approvals.
 - [ ] Complete EKS/final saved deletes and separate residual-cost audit/evidence.
 - [ ] Correct generic future teardown order so ESO scoped permissions outlive cleanup.
+
+### v0.11.9.3.6.7.6.4 — exact EKS dependency deletion repair
+
+- Replace module-prefix rejection with exact hash-bound state address/ID/definition matching.
+- Preserve original saved-plan expiry; stop without replan when it expires.
+- Obtain independent approval for fresh plan, reviewed saved apply and final deletion.
+- Keep cleanup deadline/budget unchanged; full residual-cost audit remains separate.

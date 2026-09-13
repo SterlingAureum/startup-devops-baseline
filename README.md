@@ -3,6 +3,11 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.6.4-eks-dependency-plan-repair` replaces the module-only EKS gate
+with the exact 50 state-bound deletes, preserves the original saved-plan clock and
+requires separate fresh-plan/apply approvals. Cleanup still ends at 16:00 UTC.
+See [exact EKS dependency repair](docs/V0.11.9.3.6.7.6.4_AWS_TEST_EKS_DEPENDENCY_PLAN_REPAIR.md).
+
 `v0.11.9.3.6.7.6.3-remaining-cleanup` preserves two consumed runtime attempts
 and the separately approved ESO finalizer repair. A read-only observation found
 only two NodePools, three NodeClasses, four system nodes/root disks and retained

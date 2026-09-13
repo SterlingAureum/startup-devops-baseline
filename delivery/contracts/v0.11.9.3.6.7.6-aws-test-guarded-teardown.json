@@ -1,0 +1,381 @@
+{
+  "awsRegion": "us-east-1",
+  "budget": {
+    "estimateIsBillingGuarantee": false,
+    "expectedSpendTargetUsd": "20.00",
+    "historicalBilledSpendUsd": null,
+    "totalLimitUsd": "36.00"
+  },
+  "cleanupCompleteByUtc": "2026-09-13T10:51:13Z",
+  "implementationBaselineCommit": "7349131a93f4aabf770965017758fe1cb0f74841",
+  "machinePlanGate": {
+    "allowedActions": [
+      [
+        "delete"
+      ],
+      [
+        "no-op"
+      ],
+      [
+        "read"
+      ]
+    ],
+    "attemptMarkersExclusive": true,
+    "createUpdateReplacementForbidden": true,
+    "humanTextReviewRequired": true,
+    "managedIdsBoundToPrivateState": true,
+    "remoteAbsenceRecordedSeparately": true
+  },
+  "minimumRuntimeStartSeconds": 1200,
+  "minimumTerraformStartSeconds": 900,
+  "packageProducer": {
+    "cloudAccessExecuted": false,
+    "clusterMutationExecuted": false,
+    "deletionExecuted": false,
+    "terraformCommandExecuted": false
+  },
+  "phases": {
+    "apply-eks": {
+      "deleteCapturedUnreferencedEksCreatedSecurityGroup": true,
+      "exactSavedBinaryPlanOnly": true,
+      "separateExplicitApprovalRequired": true
+    },
+    "apply-final": {
+      "deleteBackupBucketAndAllVersionsPermanently": true,
+      "deleteCredentialContainerPerTerraformRecoveryWindow": true,
+      "exactSavedBinaryPlanOnly": true,
+      "fullResidualCostAuditIncluded": false,
+      "liveCredentialValueReadAllowed": false,
+      "separateExplicitApprovalRequired": true
+    },
+    "execute-runtime": {
+      "deleteCapturedPvVolumesOnly": true,
+      "deleteNamespaces": [
+        "startup-apps",
+        "data-platform",
+        "observability"
+      ],
+      "deleteNodePoolsAndNodeClassesWithControllersRetained": true,
+      "deleteOwnedTestAlias": true,
+      "removeApplicationsWithKnownFinalizersAndOrphanResources": true,
+      "separateExplicitApprovalRequired": true,
+      "terraformCommandAllowed": false
+    },
+    "plan-eks": {
+      "separateExplicitApprovalRequired": true,
+      "target": "module.eks",
+      "terraformDestroyPlanOnly": true,
+      "vpcDeletionForbidden": true
+    },
+    "plan-final": {
+      "allRemainingManagedStateMustBeAccountedFor": true,
+      "separateExplicitApprovalRequired": true,
+      "terraformDestroyPlanOnly": true
+    },
+    "verify-runtime": {
+      "freshRuntimeScopeRequired": true,
+      "mutationAuthorized": false
+    }
+  },
+  "predecessor": "v0.11.9.3.6.7.5.2.1",
+  "privacyBoundary": {
+    "accountIdCommitted": false,
+    "credentialValueCommitted": false,
+    "kubeconfigCommitted": false,
+    "privatePathCommitted": false,
+    "resourceIdCommitted": false,
+    "terraformStateCommitted": false
+  },
+  "prohibitedActions": [
+    "legacy-destroy-wrapper",
+    "default-kubeconfig-update",
+    "repeated-apply",
+    "automatic-retry",
+    "automatic-repair",
+    "force-storage-finalizer-removal",
+    "create-update-replacement",
+    "credential-value-read",
+    "traffic",
+    "qualification",
+    "promotion",
+    "silent-deadline-extension"
+  ],
+  "reviewedFiles": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.5.2.1-aws-test-root-deployment-execution-evidence.json",
+      "sha256": "5bdfd154c93ff79bab4bb5730ecd778d382f4173f7f06663e60523556d5afe4d"
+    },
+    {
+      "path": "infra/terraform/aws/environments/dev/backend.tf",
+      "sha256": "9873db1c59ff9f2b14c4a3464aa1841aea4fd55e94ddb76e295c02c054e678d9"
+    },
+    {
+      "path": "infra/terraform/aws/environments/dev/main.tf",
+      "sha256": "f955ce8b0528f9b5d69143119852bc376544f126cc552c04ab089651bffd5176"
+    },
+    {
+      "path": "infra/terraform/aws/environments/dev/outputs.tf",
+      "sha256": "fd330673766b4c2dfb3aaba28a0ab0a3d2591969b740051b9afd5b4211b652ff"
+    },
+    {
+      "path": "infra/terraform/aws/environments/dev/providers.tf",
+      "sha256": "9a466f347c8c4cf8cadea24a136d86b0576daeb7b0873abfc71b26ea7cc901b9"
+    },
+    {
+      "path": "infra/terraform/aws/environments/dev/variables.tf",
+      "sha256": "a23ade019b43de8f7f4205bac5356565d30b35e02f57f9be878f6ff5653d692c"
+    },
+    {
+      "path": "infra/terraform/aws/environments/dev/versions.tf",
+      "sha256": "bab349b5a20400dfaf72355220fb22749b7f09795d14d455d7a200be82480dd3"
+    },
+    {
+      "path": "infra/terraform/aws/environments/prod/backend.tf",
+      "sha256": "fced6ddb343fa64e2b0b6a65af75c77ae545537080983b118b6fc6836de7d084"
+    },
+    {
+      "path": "infra/terraform/aws/environments/prod/main.tf",
+      "sha256": "064f9dd196910d84ca3138eef3b6b221898e876392d1aa969a3522eb077e3472"
+    },
+    {
+      "path": "infra/terraform/aws/environments/prod/outputs.tf",
+      "sha256": "c526b39fd2efa5b5a2da9a0e5b019fbdb6f0a6f835fff081d1a8024079d9a781"
+    },
+    {
+      "path": "infra/terraform/aws/environments/prod/providers.tf",
+      "sha256": "9a466f347c8c4cf8cadea24a136d86b0576daeb7b0873abfc71b26ea7cc901b9"
+    },
+    {
+      "path": "infra/terraform/aws/environments/prod/variables.tf",
+      "sha256": "93d438720795cc8243eeb5cec58dcae82643ba08c17306246c3dd525a1487a2a"
+    },
+    {
+      "path": "infra/terraform/aws/environments/prod/versions.tf",
+      "sha256": "bab349b5a20400dfaf72355220fb22749b7f09795d14d455d7a200be82480dd3"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/backend.tf",
+      "sha256": "374c263bc0de2200590d27c33707bfc426bc24fe0d6a3db4dd587a89cd4d9192"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/main.tf",
+      "sha256": "76922f3bbc7cccfc379c337ba156ea377405b740b4657907250f532baf709479"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/outputs.tf",
+      "sha256": "0c4c11e4b31a3c67884cce2373033f0154bb2b54acf76b524181c549f8083fb6"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/providers.tf",
+      "sha256": "9a466f347c8c4cf8cadea24a136d86b0576daeb7b0873abfc71b26ea7cc901b9"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/variables.tf",
+      "sha256": "f52336b5086cb88a727ecefc371f71b508f19bfe2b1ba5b1d2f9356bad2cc98b"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/versions.tf",
+      "sha256": "bab349b5a20400dfaf72355220fb22749b7f09795d14d455d7a200be82480dd3"
+    },
+    {
+      "path": "infra/terraform/aws/modules/cnpg-backup/main.tf",
+      "sha256": "2c9089f32b4721c6315856590b37097ebe6a41f24168f3ad3a5ad194386019ba"
+    },
+    {
+      "path": "infra/terraform/aws/modules/cnpg-backup/outputs.tf",
+      "sha256": "464e6354ac950626c3c650c93cd1942cede3e1c1380dbbb974eec3d2db4cda63"
+    },
+    {
+      "path": "infra/terraform/aws/modules/cnpg-backup/variables.tf",
+      "sha256": "ff496595c97c3987f727812c2b657afb446ceb77451e5c80b467c24dd2d72668"
+    },
+    {
+      "path": "infra/terraform/aws/modules/eks/main.tf",
+      "sha256": "ef7b1dca15300049f514ea9f9033f9c236d5ae7423e7ddecd49bef7f97ed3f8c"
+    },
+    {
+      "path": "infra/terraform/aws/modules/eks/outputs.tf",
+      "sha256": "753c9f50dbf79e690dea7795d102c47fe4511d75bb1feedd55df92357aec8c66"
+    },
+    {
+      "path": "infra/terraform/aws/modules/eks/variables.tf",
+      "sha256": "dbaa2ee4736160d1dfb324d456c5b49580cd6c5430e99273836e3f3b040b42da"
+    },
+    {
+      "path": "infra/terraform/aws/modules/external-secrets/main.tf",
+      "sha256": "06418cdf3c14b37e5b762be4563d7a8259c4764e872cc8591a6d0b7af2d93be4"
+    },
+    {
+      "path": "infra/terraform/aws/modules/external-secrets/outputs.tf",
+      "sha256": "cf8be5fda269564196a6359c64c952d2adc9597e956913f2d15b12fa9722ebd2"
+    },
+    {
+      "path": "infra/terraform/aws/modules/external-secrets/variables.tf",
+      "sha256": "58b30191d8a50d77a6e124285d4680b16c3f700d3a294026d9ac060803b24f0e"
+    },
+    {
+      "path": "infra/terraform/aws/modules/fis/main.tf",
+      "sha256": "bb2c2f63ca4211e170aed6f9c5d2a46d3df52b9ed9327a7f627a3bc94fb0e455"
+    },
+    {
+      "path": "infra/terraform/aws/modules/fis/outputs.tf",
+      "sha256": "b007d739b201ceff2da20473515d598f0c1326ecd88b54da23a0cb1abbd2e5b5"
+    },
+    {
+      "path": "infra/terraform/aws/modules/fis/variables.tf",
+      "sha256": "f178c4bc941eeb72cd596b8a476345cbf859e2a4a3e1f1653db33ef46a541b39"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-identity/main.tf",
+      "sha256": "8acee0d31eb0bf06d0a34192c344fcf8ba7b028de16f08b0f2d858a48e17e34e"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-identity/outputs.tf",
+      "sha256": "767ca76bdcb45ba13b130d91df7c8ef15cfe795ef6daa5f8199d4eb30c72e75c"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-identity/variables.tf",
+      "sha256": "ac300c93caa2bd91ebf50f098240f553dc9f938fc5416a939d1ca145f0bca92d"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-role/main.tf",
+      "sha256": "797cf2b68f08b61811b4810cfab7bc19e3e1a73373ed0c834110aa2d6df2bbd4"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-role/outputs.tf",
+      "sha256": "9a8c4c5421cf519500393e2a7233993d7f57a44e930a1075c27dc63607fcfbc3"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-role/variables.tf",
+      "sha256": "91dcac256e07e3f1488784063a065da17f3c13dff2af278be174fc2c9b2c5fbe"
+    },
+    {
+      "path": "infra/terraform/aws/modules/karpenter/main.tf",
+      "sha256": "a5d6e865311c5cfa1d5158b9db21b7f2795cdcadefe2ff8bc32e4f4257237bf2"
+    },
+    {
+      "path": "infra/terraform/aws/modules/karpenter/outputs.tf",
+      "sha256": "384f1a88a52c7a63c05cfcbb5ef49ae0a630d6992e49d87c771e2d72b9ec677c"
+    },
+    {
+      "path": "infra/terraform/aws/modules/karpenter/policies.tf",
+      "sha256": "4e1e1b2e52bc5928e91fee8c53154d9426d2a607da7a42dec16b66af89dbc1e6"
+    },
+    {
+      "path": "infra/terraform/aws/modules/karpenter/variables.tf",
+      "sha256": "494cc739d8d1f86c6182a6ccef75b5569873f5ab5e9967d492b4c54c39e3595f"
+    },
+    {
+      "path": "infra/terraform/aws/modules/tls-dns/main.tf",
+      "sha256": "cb968d2811d31ee4bc34319ca4629ab29cd91e820c7fd6fd672e473d44acdbff"
+    },
+    {
+      "path": "infra/terraform/aws/modules/tls-dns/outputs.tf",
+      "sha256": "3cfea9997760f29b9be9b42eec5320fbedf449cff764314524eb6970641e5f01"
+    },
+    {
+      "path": "infra/terraform/aws/modules/tls-dns/variables.tf",
+      "sha256": "1c4993765a79bdd210d1031b43727c66f7bb170b6ed63ad3b117a24ca290cb4a"
+    },
+    {
+      "path": "infra/terraform/aws/modules/vpc/main.tf",
+      "sha256": "8c7b6767de7716a8511faae112d52725dc22b57e2a5faedaa650532efae704d6"
+    },
+    {
+      "path": "infra/terraform/aws/modules/vpc/outputs.tf",
+      "sha256": "704c52a80ee127f3bfc82dc56a693c3840a2aa602dffbc68c298ea11671f3240"
+    },
+    {
+      "path": "infra/terraform/aws/modules/vpc/variables.tf",
+      "sha256": "f60fb9f251fa7deb21e723092f698c120c5927b3377ccc8104de7dc592532a23"
+    },
+    {
+      "path": "infra/terraform/aws/runtime-identities/backend.tf",
+      "sha256": "6b6fa998205cd3219b7e4868f21afd99a55218ae2ea4fd3733379b3a18a3227b"
+    },
+    {
+      "path": "infra/terraform/aws/runtime-identities/main.tf",
+      "sha256": "415f18f9de56190741afbd0d78cb0910e90e06ba709b1a37fb2fcc48aaca9e3c"
+    },
+    {
+      "path": "infra/terraform/aws/runtime-identities/outputs.tf",
+      "sha256": "c5ee05fdc9f21a353fd688d93e7b8c7b364f98b03e3ec5a796458dc3ca68b6f2"
+    },
+    {
+      "path": "infra/terraform/aws/runtime-identities/providers.tf",
+      "sha256": "bb7bb8e7c41cde8859bbbb3b287731cac96e2a18a3d3ef24a7481bdc832ca1b5"
+    },
+    {
+      "path": "infra/terraform/aws/runtime-identities/variables.tf",
+      "sha256": "91a843c770eef4ad7eac759fa881b44e1d7f23925b041edb660d8e843526a696"
+    },
+    {
+      "path": "infra/terraform/aws/runtime-identities/versions.tf",
+      "sha256": "fd09df4f62d7accaa5515916f8abee4fbd1dc4b30d5dcb8d1578fe2ada26061a"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6-aws-test-teardown.py",
+      "sha256": "f8897dd5fd8525704c74bb3efe7ad9c016b254a590f30411ac981a2fee361424"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6-aws-test-teardown.py",
+      "sha256": "09f1a0b70a18a123e5a41bb61a333c4a9d40c5b30bd8f56c8b22e2dff97b906f"
+    },
+    {
+      "path": "scripts/validate-v0.11.9.3.6.7.5.2.1-aws-test-root-execution-evidence.sh",
+      "sha256": "2ededc57e9b85117df4ef7f1725045aa4bdf23471b50ab0b4cd2f23a8ae532f2"
+    }
+  ],
+  "reviewedInventory": {
+    "artifact": {
+      "bytes": 1483,
+      "sha256": "e7d352857c9ce76c77e6c8d8ca1c168386ce8fd053afcafb8fdb77bc97bdcdca"
+    },
+    "summary": {
+      "active_application_operation_count": 0,
+      "application_count": 19,
+      "application_health_counts": {
+        "Healthy": 19
+      },
+      "attached_volume_count": 13,
+      "attached_volume_total_gib": 312,
+      "automatic_retry_performed": false,
+      "backup_delete_marker_count": 0,
+      "backup_inventory_is_atomic": false,
+      "backup_recorded_version_bytes": 3603496,
+      "backup_version_count": 8,
+      "cleanup_complete_by_utc": "2026-09-13T10:51:13Z",
+      "compute_counts_by_type": {
+        "c6i.large": 4,
+        "t3.medium": 4
+      },
+      "control_plane_commit": "7349131a93f4aabf770965017758fe1cb0f74841",
+      "credential_value_read": false,
+      "current_credential_version_present": true,
+      "database_count": 1,
+      "deployed_control_plane_commit": "375417830174723598a2565b8f197f74c2c50697",
+      "deployment_result_sha256": "7b645bbf7ef954a886111bf4a4431b4627bf6f938d3d0c95d46af2713622a68c",
+      "mutation_executed": false,
+      "next_action": "review-private-inventory-and-implement-guarded-teardown-before-separate-approval",
+      "nodeclaims_count": 4,
+      "nodeclasses_count": 3,
+      "nodepools_count": 2,
+      "nodes_count": 8,
+      "observed_at_utc": "2026-09-13T08:35:45Z",
+      "persistent_volumes_count": 5,
+      "pvc_count": 5,
+      "secret_metadata_present": true,
+      "status": "aws-test-cleanup-read-only-inventory-complete",
+      "teardown_authorized": false,
+      "terraform_command_executed": false,
+      "terraform_state_sha256": "a53f7bb1091990195680c9b3918a6110d4b3b8cb61441ce22aec2faf68fa725b",
+      "volume_inventory_exhaustive": false
+    }
+  },
+  "runtimeProofTtlSeconds": 900,
+  "runtimeStopUtc": "2026-09-13T09:21:13Z",
+  "savedPlanTtlSeconds": 1800,
+  "schemaVersion": "v0.11.9.3.6.7.6",
+  "targetEnvironment": "aws-test",
+  "version": "v0.11.9.3.6.7.6"
+}

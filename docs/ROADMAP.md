@@ -1036,3 +1036,11 @@ a new destructive approval. Do not call the legacy destroy wrapper directly;
 its retry/repair behavior and default kubeconfig updates need replacement.
 Cleanup must finish by September 13 10:51:13Z. Runtime qualification and
 residual-cost closure are not claimed by deployment or evidence recording.
+
+### v0.11.9.3.6.7.6
+
+- [x] Guarded runtime and two-stage saved Terraform deletion implementation.
+- [x] Offline scope/ID/timeout/no-retry/plan-byte and predecessor verification.
+- [ ] Merge CI, fresh exact-main runtime verification and independent deletion approvals.
+- [ ] Live saved-plan reviews and execution before the fixed cleanup deadline.
+- [ ] Independent residual-cost audit and sanitized execution evidence.

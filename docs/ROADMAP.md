@@ -1044,3 +1044,11 @@ residual-cost closure are not claimed by deployment or evidence recording.
 - [ ] Merge CI, fresh exact-main runtime verification and independent deletion approvals.
 - [ ] Live saved-plan reviews and execution before the fixed cleanup deadline.
 - [ ] Independent residual-cost audit and sanitized execution evidence.
+
+### v0.11.9.3.6.7.6.1
+
+- [x] Confirm renewed runtime stop 11:00Z and cleanup completion 12:30Z.
+- [x] Preserve historical proofs and bind fresh proofs to the new fixed window.
+- [x] Whole-session allowance projection and offline renewal/deletion gates.
+- [ ] Fresh post-merge inventory, independent phase approvals and live saved plans.
+- [ ] Final residual-cost audit and sanitized execution evidence.

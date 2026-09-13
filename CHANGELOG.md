@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.9.3.6.7.6.1
+
+- Preserve the expired time gate and implement a separately confirmed fixed
+  cleanup window, with fresh read-only observer and window-bound phase proofs.
+- Retain historical source/approval bytes, persistent recovery inputs and the
+  completed environment without repeating create, bootstrap or Root execution.
+- Project the whole session through 12:30Z using existing reviewed allowances,
+  USD 29.55 against USD 36, without claiming known billing or a new price quote.
+- Add renewal/stale-proof/budget gates alongside all 17 deletion behavior tests;
+  actual deletion retains independent approvals and consumed attempt markers.
+
 ## v0.11.9.3.6.7.6
 
 - Record the verified cleanup inventory and implement private, exact-main staged

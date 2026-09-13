@@ -621,3 +621,11 @@
 /scripts/execute-v0.11.9.3.6.7.6-aws-test-teardown.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.6-aws-test-teardown.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.6-guarded-aws-test-teardown.sh @SterlingAureum
+
+# v0.11.9.3.6.7.6.1 explicit cleanup-window renewal
+/delivery/contracts/v0.11.9.3.6.7.6.1-aws-test-cleanup-window-renewal.json @SterlingAureum
+/docs/V0.11.9.3.6.7.6.1_AWS_TEST_CLEANUP_WINDOW_RENEWAL.md @SterlingAureum
+/scripts/execute-v0.11.9.3.6.7.6.1-aws-test-teardown.py @SterlingAureum
+/scripts/observe-v0.11.9.3.6.7.6.1-aws-test-cleanup.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.6.1-aws-test-teardown.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.6.1-cleanup-window-renewal.sh @SterlingAureum

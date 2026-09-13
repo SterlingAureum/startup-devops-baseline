@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.6.1-cleanup-window-renewal` preserves the expired-window stop
+and binds fresh cleanup proofs to the user-confirmed September 13 window:
+runtime latest start 10:40Z, stop 11:00Z, cleanup complete 12:30Z. Existing reviewed
+allowances project USD 29.55 against USD 36; billing is unknown and deletion still
+needs independent approvals. Historical scripts/proofs stay unchanged.
+See [the renewed cleanup procedure](docs/V0.11.9.3.6.7.6.1_AWS_TEST_CLEANUP_WINDOW_RENEWAL.md).
+Predecessor:
 `v0.11.9.3.6.7.6-guarded-aws-test-teardown` implements independently reviewed
 runtime cleanup, an EKS saved destroy plan/apply and a remaining-infrastructure
 saved destroy plan/apply. Every mutation needs separate approval; no cleanup

@@ -433,6 +433,9 @@ echo "==> Validating v0.11.9.3.6.7.5.2 immutable aws-test Root deployment"
 echo "==> Validating v0.11.9.3.6.7.5.2.1 Root execution evidence and cleanup inventory"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.5.2.1-aws-test-root-execution-evidence.sh"
 
+echo "==> Validating v0.11.9.3.6.7.6 guarded aws-test teardown"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6-guarded-aws-test-teardown.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

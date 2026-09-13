@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.6-guarded-aws-test-teardown` implements independently reviewed
+runtime cleanup, an EKS saved destroy plan/apply and a remaining-infrastructure
+saved destroy plan/apply. Every mutation needs separate approval; no cleanup
+was executed while producing this increment. Fixed cleanup completion remains
+September 13 10:51:13Z; runtime phases require a start by 09:01:13Z.
+See [the staged teardown procedure](docs/V0.11.9.3.6.7.6_GUARDED_AWS_TEST_TEARDOWN.md).
+Predecessor:
 `v0.11.9.3.6.7.5.2.1-aws-test-root-execution-evidence` records the one-time
 successful immutable deployment: Root/demo Healthy, database/ESO ready,
 owned DNS INSYNC and unchanged state. It adds a read-only cleanup dependency

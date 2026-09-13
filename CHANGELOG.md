@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.9.3.6.7.6
+
+- Record the verified cleanup inventory and implement private, exact-main staged
+  runtime cleanup followed by separately reviewed EKS/final saved delete plans.
+- Preserve dependency controllers; deliberately orphan known Argo Applications,
+  delete owned DNS/storage/NodePools and gate EKS-created SG ownership/references.
+- Require state/plan/source/provider bindings, independent human approvals,
+  exclusive attempt markers and fixed UTC limits without automatic retry/repair.
+- Add 17 offline behavioral tests and predecessor gates. Actual deletion and an
+  exhaustive residual-cost audit remain separately authorized live work.
+
 ## v0.11.9.3.6.7.5.2.1
 
 - Record the separately approved one-time Root/controller, initial credential

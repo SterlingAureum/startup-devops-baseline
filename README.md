@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.5.2-aws-test-immutable-root-deployment` implements private
+immutable Root/child preparation, fresh read-only verify and separately
+approved one-time Root/credential/DNS execution. The revised USD 36 total
+model covers the earlier session through cleanup at September 13 10:51:13Z;
+commands stop at 09:21:13Z with no automatic cleanup or billing cap. USD 20
+remains an expectation. No infrastructure apply/bootstrap is repeated.
+See [the immutable deployment procedure](docs/V0.11.9.3.6.7.5.2_AWS_TEST_IMMUTABLE_ROOT_DEPLOYMENT.md).
+Predecessor:
 `v0.11.9.3.6.7.5.1-aws-test-root-capacity-cost` adds a complete configured
 node/disk ledger and offline cost-profile preparation/review. Unknown prices
 stop review; elapsed next-day cost and cleanup time stay inside the USD 8

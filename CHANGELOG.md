@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.11.9.3.6.7.5
+
+- Record the expired September 12 session, lost temporary creation plan and
+  kubeconfig, unchanged persistent state and newly reviewed recovery evidence.
+- Add a fresh exact-main read-only recovery preflight using persistent private
+  inputs, with no dependency on lost original bytes and no Terraform command.
+- Check EKS, API target, metadata, IRSA, Argo CD, ALB and Root absence; capture
+  private compute/volume inventories without claiming an exhaustive cost audit.
+- Add an offline private Root-plan checker for the USD 8 additional budget,
+  elapsed next-day time, eight-hour maximum window and one-hour cleanup reserve.
+- Document Root/child automated reconciliation, revision drift, controller cost
+  scope, credential migration and DNS as part of the future deployment review.
+- Leave all mutation and deployment authorization false. This design increment
+  has no execute entry point and performs no live operation during validation.
+
 ## v0.11.9.3.6.7.4.1.1
 
 - Classify the single Gitleaks `generic-api-key` report at the `.7.4.1`

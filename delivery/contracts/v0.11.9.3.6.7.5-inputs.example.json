@@ -1,0 +1,7 @@
+{
+  "aws_account_id": "__PRIVATE_ACCOUNT_ID__",
+  "management_cidr": "__CURRENT_PUBLIC_IPV4__/32",
+  "kubeconfig_path": "__ABSOLUTE_PERSISTENT_KUBECONFIG_PATH__",
+  "recovery_summary_path": "__ABSOLUTE_PERSISTENT_RECOVERY_SUMMARY_PATH__",
+  "old_temporary_evidence_lost": true
+}

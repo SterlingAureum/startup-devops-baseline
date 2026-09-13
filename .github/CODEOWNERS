@@ -1,6 +1,14 @@
 # GitHub enforces these reviewers only when branch protection or a ruleset
 # requires code-owner review. Keep the repository setting aligned with this file.
 
+/scripts/check-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.5-aws-test-recovery-root-design.sh @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7.5-aws-test-recovery-root-design.json @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7.5-inputs.example.json @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7.5-private-plan.example.json @SterlingAureum
+/docs/V0.11.9.3.6.7.5_AWS_TEST_RECOVERY_ROOT_DESIGN.md @SterlingAureum
+
 /apps/demo-api/helm/values/releases/ @SterlingAureum
 /apps/demo-api/helm/values/environments/aws-test.yaml @SterlingAureum
 /apps/demo-api/helm/values/environments/aws-prod.yaml @SterlingAureum

@@ -1,0 +1,42 @@
+{
+  "target_environment": "aws-test",
+  "control_plane_commit": "__POST_MERGE_MAIN_SHA__",
+  "candidate_release_id": "demo-api-cf0a6bcbc466-cdffd3d71763",
+  "observation_sha256": "__FRESH_OBSERVATION_SHA256__",
+  "historical_spend_usd": null,
+  "historical_spend_unattributed": true,
+  "additional_budget_limit_usd": "8.00",
+  "start_utc": "__REVIEWED_START_UTC__",
+  "cleanup_complete_by_utc": "__REVIEWED_END_UTC__",
+  "cleanup_reserve_seconds": 3600,
+  "hourly_upper_bound_usd": {
+    "eks": null,
+    "ec2": null,
+    "ebs": null,
+    "nat_and_ipv4": null,
+    "load_balancing": null,
+    "storage_backups": null,
+    "logs_metrics": null,
+    "dns_and_other": null,
+    "transfer": null
+  },
+  "fixed_and_uncertainty_reserve_usd": null,
+  "estimate_covers_idle_and_post_root_peak": false,
+  "estimate_covers_all_resources_not_only_tag_matches": false,
+  "pricing_reference": "__REQUIRED_PRIVATE_PRICING_REVIEW__",
+  "reviewed_scope": {
+    "root_and_child_auto_sync": false,
+    "compute_and_storage_controllers": false,
+    "cnpg_backups_and_irsa": false,
+    "eso_and_credential_transfer": false,
+    "dns_reconciliation": false,
+    "monitoring_reconciliation": false,
+    "cleanup_and_failure_handling": false,
+    "immutable_revision_strategy": false
+  },
+  "root_deployment_authorized": false,
+  "credential_transfer_authorized": false,
+  "dns_write_authorized": false,
+  "teardown_authorized": false,
+  "automatic_budget_enforcement": false
+}

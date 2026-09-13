@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.5-aws-test-recovery-root-design` records the expired session and
+lost temporary evidence, pins the new persistent recovery observation and adds
+a read-only preflight plus an offline private Root-plan checker. Historical
+spend remains unknown; the USD 8 additional budget includes elapsed next-day
+idle time, a conservative post-Root estimate and a cleanup reserve. Root
+auto-sync, controller-created resources, credential transfer and DNS require
+complete scope review. This increment contains no deployment executor.
+Predecessor:
 `v0.11.9.3.6.7.4.1.1-gitleaks-evidence-field-repair` removes the single
 `generic-api-key` false positive reported for a SHA-256 evidence fingerprint.
 It uses a neutral digest property, strengthens the complete stable-output-map

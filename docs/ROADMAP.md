@@ -988,3 +988,16 @@ not change `.gitleaksignore` or add any suppression. After the repair merges
 with successful protected-main workflows, continue to the independently
 guarded aws-test Root Application deployment; traffic and qualification remain
 later checkpoints.
+
+### v0.11.9.3.6.7.5
+
+Recover the aws-test rehearsal after the original eight-hour session expired
+and temporary plan/kubeconfig evidence was lost. Reuse the verified persistent
+state and new recovery observation without repeating apply or platform
+bootstrap. Implement fresh read-only preflight and offline Root-plan review
+before a separate deployment executor. Preserve unknown historical spend and
+bound the additional budget to USD 8 including next-day idle time and cleanup.
+Review the full Root/child reconciliation, compute/storage, credential and DNS
+scope; selecting an immutable revision policy and writing the bounded mutation
+executor remain required before live Root deployment. If the new budget/day
+cannot fit, review cleanup or another explicit recovery plan instead.

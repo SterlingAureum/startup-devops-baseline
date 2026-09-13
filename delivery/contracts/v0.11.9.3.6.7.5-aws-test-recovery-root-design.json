@@ -1,0 +1,82 @@
+{
+  "version": "v0.11.9.3.6.7.5",
+  "predecessor": "v0.11.9.3.6.7.4.1.1",
+  "status": "aws-test-recovery-and-root-deployment-design-only",
+  "implementationBaselineCommit": "0d281b630388ce61e88922f5244a3683e6a33687",
+  "recovery": {
+    "originalWindowEndUtc": "2026-09-12T17:38:53Z",
+    "oldTemporaryPlanAndKubeconfigLost": true,
+    "rawHistoricalEvidenceRecoverable": false,
+    "historicalDigestsAreEvidenceOnly": true,
+    "observationSha256": "d747771ffac984068f6bf2e09fec4ca6f2dd9d79237ce8e0f7823ff0becf91c7",
+    "kubeconfigSha256": "9f2bca0f8b708bde91987dfe3c56c1078b731a09ff36c42e6805550c98a2fe98",
+    "stateSha256": "a53f7bb1091990195680c9b3918a6110d4b3b8cb61441ce22aec2faf68fa725b",
+    "stateAddressCount": 103,
+    "reapplyRequired": false,
+    "repeatBootstrapRequired": false
+  },
+  "cost": {
+    "historicalAwsTestSpendUsd": null,
+    "historicalSpendAttribution": "unavailable",
+    "additionalBudgetLimitUsd": "8.00",
+    "conservativeAccountingStartUtc": "2026-09-13T00:27:58Z",
+    "operatorAvailableUntilUtc": "2026-09-13T12:48:28Z",
+    "maximumNewWindowSeconds": 28800,
+    "minimumCleanupReserveSeconds": 3600,
+    "observationTtlSeconds": 900,
+    "automaticBudgetEnforcement": false,
+    "automaticTeardown": false,
+    "pricingEstimateProvided": false
+  },
+  "reviewedFiles": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.4.1-aws-test-gitops-bootstrap-execution-evidence.json",
+      "sha256": "bc323b3a50dcf4bcec79e26130470dbfb73c98756052b921425a04fa6f105052"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.4.1.1-gitleaks-evidence-field-repair.json",
+      "sha256": "925c0cecb82410606aa135aba6cd5c52dea1e6fd7b3b0a2a1c3f8c4aca900dd5"
+    },
+    {
+      "path": "scripts/deploy-aws-dev-root-app.sh",
+      "sha256": "1772aa27ef7c182d4196ec1971d2a3a0de7ff95326037e77c3edf5af924bd714"
+    },
+    {
+      "path": "scripts/migrate-demo-api-postgresql-secret.sh",
+      "sha256": "29b1ce6c8dfd3cf9683ae233758bc9bd27dc529e6ecd888343cf5afb0788c3f5"
+    },
+    {
+      "path": "scripts/reconcile-demo-api-dns.sh",
+      "sha256": "c6fe76189f44a23266de956877c1220ef176d5c1b742b8578d52c96a3dd63557"
+    }
+  ],
+  "reviewedTrees": {
+    "clusters/aws": "19c936dec49bf14da3d3478f9668007eeca0bcfcd0a7179968decd81ec579eb3",
+    "apps/demo-api/helm": "649861044ce3df54cc453eac876f80669e42bf18832e39d69b3ad4e675cf65ff",
+    "platform": "36b2ab1e05edeb04c325422e86037f298f28f649381ff00b3ff7f0b4332b63c3"
+  },
+  "rootDeploymentScope": {
+    "directRootObjectIsNotWholeMutationScope": true,
+    "automaticRootAndChildSync": true,
+    "rootTracksMutableMain": true,
+    "sameRepositoryChildrenTrackMutableMain": true,
+    "controllersMayCreateComputeStorageAndLoadBalancers": true,
+    "cnpgAndBackupConfigurationRequired": true,
+    "esoIrsaAndCredentialSeedingRequired": true,
+    "credentialValueTransferRequiresSeparateApproval": true,
+    "dnsReconciliationRequiresSeparateApproval": true,
+    "allReferencedChartsAndCandidateMustBeReviewed": true
+  },
+  "operationBoundary": {
+    "terraformCommandsAllowed": false,
+    "kubernetesMutationAllowed": false,
+    "awsMutationAllowed": false,
+    "rootDeployAllowed": false,
+    "credentialValueReadAllowed": false,
+    "trafficAllowed": false,
+    "qualificationAllowed": false,
+    "promotionAllowed": false,
+    "teardownAllowed": false
+  },
+  "nextCheckpoint": "review-complete-private-root-plan-before-implementing-separate-deployment-executor"
+}

@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.11.9.3.6.7.5.2.1
+
+- Record the separately approved one-time Root/controller, initial credential
+  transfer and owned test DNS execution, exact result/journal/marker hashes,
+  Healthy Argo objects and byte-identical private Terraform state.
+- Preserve unknown actual billing, no traffic/qualification, consumed approval
+  and the fixed cleanup-completion deadline without extending permissions.
+- Add a fresh exact-main, read-only cleanup dependency observer with strict
+  command allowlists, persistent private capture and source/proof binding.
+- Record legacy destroy retry/repair/default-kubeconfig risks and the remaining
+  independently approved deletion workflow. No deletion executor is included.
+- Add offline inventory/identity/drift/no-write tests and predecessor gates.
+
 ## v0.11.9.3.6.7.5.2
 
 - Use the revised USD 36 total estimate through the fixed cleanup deadline;

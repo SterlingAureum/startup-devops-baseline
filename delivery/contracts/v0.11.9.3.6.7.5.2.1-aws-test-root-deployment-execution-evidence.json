@@ -1,0 +1,194 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.5.2.1",
+  "version": "v0.11.9.3.6.7.5.2.1",
+  "predecessor": "v0.11.9.3.6.7.5.2",
+  "implementationBaselineCommit": "375417830174723598a2565b8f197f74c2c50697",
+  "status": "aws-test-immutable-root-deployment-execution-evidence-recorded",
+  "evidenceSource": "operator-provided sanitized output and separately approved execution; producer did not access AWS",
+  "verifiedAtUtc": "2026-09-13T07:39:44Z",
+  "verifyExpiredAtUtc": "2026-09-13T07:54:44Z",
+  "completionEvidenceRecordedAtUtc": "2026-09-13T08:03:11Z",
+  "privateAttemptTokenCommitted": false,
+  "oneTimeApprovalConsumed": true,
+  "executorExit": 0,
+  "artifacts": {
+    "preparationResult": {
+      "sha256": "01dfaf9948558e4a3c2cbf4a55d13b1828db2ed6e5cdea50373967228ba0b573"
+    },
+    "privatePlan": {
+      "sha256": "bf2290acc00ffc61508253ba966a2490b5f02dc66a9091952b2f63b2eb734de4"
+    },
+    "rootManifest": {
+      "sha256": "4adb75f87300e48ef74c5bf90a326321ea125892444e8b88c7869cf6ac0d3147"
+    },
+    "verificationResult": {
+      "sha256": "af7ac34f61bf57d944ceef47a88cd7d30f58b676e5580e69f565db9dee7d76d5"
+    },
+    "stablePreflight": {
+      "sha256": "8de0e9aa1d348cce45d207295af47220db1b220c25209ca1d7c69128f1bab341"
+    },
+    "executionResult": {
+      "sha256": "7b645bbf7ef954a886111bf4a4431b4627bf6f938d3d0c95d46af2713622a68c",
+      "bytes": 821,
+      "reportedMode": "0600"
+    },
+    "executionStderr": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "reportedMode": "0600"
+    },
+    "mutationJournal": {
+      "sha256": "7f00e5b4c312dd0875062a459a6939aa9b733e2d83d79157cf72c3ad33c32c9f",
+      "bytes": 1149,
+      "reportedMode": "0600"
+    },
+    "attemptMarker": {
+      "sha256": "57602d7c83888d647576693e3b4d37b2311ca843c191ae9f3d4b5bc6d866015f",
+      "bytes": 195,
+      "reportedMode": "0600"
+    },
+    "terraformState": {
+      "sha256": "a53f7bb1091990195680c9b3918a6110d4b3b8cb61441ce22aec2faf68fa725b",
+      "bytes": 241960,
+      "reportedMode": "0600",
+      "unchanged": true
+    }
+  },
+  "executionSummary": {
+    "automatic_retry_performed": false,
+    "automatic_teardown_executed": false,
+    "control_plane_commit": "375417830174723598a2565b8f197f74c2c50697",
+    "credential_seeded_and_eso_verified": true,
+    "database_ready": true,
+    "demo_application_health": "Healthy",
+    "dns_alias_insync": true,
+    "next_action": "review-runtime-health-and-independent-cleanup-before-deadline",
+    "qualification_executed": false,
+    "reviewed_verify_sha256": "af7ac34f61bf57d944ceef47a88cd7d30f58b676e5580e69f565db9dee7d76d5",
+    "root_deployed": true,
+    "root_health": "Healthy",
+    "root_manifest_sha256": "4adb75f87300e48ef74c5bf90a326321ea125892444e8b88c7869cf6ac0d3147",
+    "same_repository_revisions_pinned": true,
+    "status": "aws-test-immutable-root-deployment-complete",
+    "terraform_state_unchanged": true,
+    "traffic_generated": false
+  },
+  "approvalScope": {
+    "rootAndDeclaredControllerReconciliationApproved": true,
+    "twoNamespacesAndIrsaAccountsApproved": true,
+    "initialCredentialTransferAndReadbackApproved": true,
+    "testAliasUpsertApproved": true,
+    "terraformApproved": false,
+    "repeatBootstrapApproved": false,
+    "automaticRetryApproved": false,
+    "automaticRepairApproved": false,
+    "trafficApproved": false,
+    "qualificationApproved": false,
+    "promotionApproved": false,
+    "teardownApproved": false
+  },
+  "budget": {
+    "totalLimitUsd": "36.00",
+    "expectedSpendTargetUsd": "20.00",
+    "prepareEstimatedTotalUsd": "26.99",
+    "verifyEstimatedTotalUsd": "26.88",
+    "historicalBilledSpendUsd": null,
+    "estimateIsBillingGuarantee": false,
+    "accountingStartUtc": "2026-09-12T09:38:53Z",
+    "mutationStopUtc": "2026-09-13T09:21:13Z",
+    "cleanupCompleteByUtc": "2026-09-13T10:51:13Z",
+    "automaticTeardown": false
+  },
+  "cleanupPreparation": {
+    "status": "read-only-inventory-implemented-deletion-executor-still-required",
+    "targetEnvironment": "aws-test",
+    "cleanupCompleteByUtc": "2026-09-13T10:51:13Z",
+    "minimumRemainingCleanupSeconds": 5400,
+    "maximumObservationSeconds": 600,
+    "rootRemainsPinnedToDeploymentCommit": true,
+    "historicalPrivatePlanTtlDoesNotAuthorizeAnotherDeployment": true,
+    "terraformDestroyPlanProduced": false,
+    "deletionAuthorized": false,
+    "legacyWrapperMayBeCalledDirectly": false,
+    "legacyWrapperFindings": [
+      "updates default kubeconfig",
+      "suspends only Root and PostgreSQL automation before deleting shared resources",
+      "contains dynamic AWS dependency convergence",
+      "may call Terraform destroy again after failure",
+      "does not enforce the session-wide UTC deadline"
+    ],
+    "requiredNextStages": [
+      "review read-only private dependency inventory",
+      "implement exact-main/state/inventory-bound one-time cleanup executor",
+      "separately approve the precise destructive scope and fixed deadline",
+      "snapshot state and control in-flight and automated sync for every Application",
+      "delete only the exact test alias and application/database storage while controllers remain available",
+      "drain NodeClaims and EC2NodeClass dependencies before stopping their controllers",
+      "review and apply one exact Terraform destroy plan without automatic retry",
+      "verify EKS/VPC/compute/EBS/ALB/backup/container residuals and perform a separately reviewed cost audit"
+    ],
+    "permanentBackupDeletionMustBeExplicitlyApproved": true,
+    "globalHostedZoneDeletionAllowed": false
+  },
+  "privacyBoundary": {
+    "privatePathsCommitted": false,
+    "accountIdentityCommitted": false,
+    "resourceIdentityCommitted": false,
+    "credentialValuesCommitted": false,
+    "rawApiOutputCommitted": false,
+    "stateCommitted": false
+  },
+  "packageProducer": {
+    "awsAccessPerformed": false,
+    "kubernetesAccessPerformed": false,
+    "terraformCommandPerformed": false,
+    "deploymentReexecuted": false,
+    "cleanupExecuted": false
+  },
+  "reviewedFiles": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.5.2-aws-test-immutable-root-deployment.json",
+      "sha256": "7ef6eba963f56508b97547eff24dc56bf75e84b48c8c4d4107a8f4ad28343e7e"
+    },
+    {
+      "path": "scripts/aws_test_immutable_root.py",
+      "sha256": "3007feace51f86d560d061cfde8c049fd2b01b32bd01f39d31385d7a2fe6d71a"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.5.2-aws-test-root-deployment.py",
+      "sha256": "7762d048037a8d21f97d9a32eb3e1deb9d4a558e31cae7f5f8ccd5200839385d"
+    },
+    {
+      "path": "scripts/validate-v0.11.9.3.6.7.5.2-aws-test-immutable-root-deployment.sh",
+      "sha256": "c9a61b874fdc43006fcf9be499c8c8688f72e00845911688822969162fc47233"
+    },
+    {
+      "path": "scripts/destroy-aws-test.sh",
+      "sha256": "bd544e6a9ff7e42c7b067c949e56219fb615fc480a8f99454bdec94a4f70f428"
+    },
+    {
+      "path": "scripts/destroy-aws-dev.sh",
+      "sha256": "6f28b176200689f05acbc373b2fcb393aeba98ea2c8dbc0c14127faf530a305d"
+    },
+    {
+      "path": "scripts/aws-environment-context.sh",
+      "sha256": "efda1858c5e2e655a608fe24759b6fbc788f79917ba94a05506a903ee5a8947f"
+    },
+    {
+      "path": "scripts/reconcile-demo-api-dns.sh",
+      "sha256": "c6fe76189f44a23266de956877c1220ef176d5c1b742b8578d52c96a3dd63557"
+    },
+    {
+      "path": "scripts/converge-aws-destroy-dependencies.sh",
+      "sha256": "587196951e91d0fafc643de0b1c00ba41cb704cb75bda161e7269b4439c3e599"
+    },
+    {
+      "path": "scripts/observe-v0.11.9.3.6.7.5.2.1-aws-test-cleanup.py",
+      "sha256": "c8e960f4a8e26984a53be42ae10a37bc30f57b8537aca40ec3cfc3b78f69ee9d"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.5.2.1-aws-test-cleanup-observer.py",
+      "sha256": "cf5f05b4dd45395fea9db2f93c1fcb659999de0d3f2174f4f95bacdaca26f3a3"
+    }
+  ]
+}

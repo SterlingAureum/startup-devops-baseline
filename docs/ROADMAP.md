@@ -1023,3 +1023,16 @@ Root/controller scope, initial credential transfer and the test alias. Keep
 prior apply/bootstrap and recovered state unchanged. Runtime health acceptance,
 qualification and independent cleanup remain later explicit checkpoints; no
 automatic cleanup or billing guarantee is introduced.
+
+### v0.11.9.3.6.7.5.2.1
+
+Record the successful immutable Root deployment and preserved state without
+repeating any execution. Keep live children pinned to the original deployment
+commit when evidence main advances. Freshly capture cleanup dependencies with
+an allowlisted read-only observer, including every Application/in-flight sync,
+PV/PVC, NodeClaim/NodeClass, owned ALB/DNS and backup versions. Review the exact
+private inventory before implementing a no-retry cleanup executor and issuing
+a new destructive approval. Do not call the legacy destroy wrapper directly;
+its retry/repair behavior and default kubeconfig updates need replacement.
+Cleanup must finish by September 13 10:51:13Z. Runtime qualification and
+residual-cost closure are not claimed by deployment or evidence recording.

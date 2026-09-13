@@ -608,3 +608,9 @@
 /scripts/execute-v0.11.9.3.6.7.5.2-aws-test-root-deployment.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.5.2-aws-test-root-deployment.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.5.2-aws-test-immutable-root-deployment.sh @SterlingAureum
+
+/delivery/contracts/v0.11.9.3.6.7.5.2.1-aws-test-root-deployment-execution-evidence.json @SterlingAureum
+/docs/V0.11.9.3.6.7.5.2.1_AWS_TEST_ROOT_EXECUTION_EVIDENCE_AND_CLEANUP.md @SterlingAureum
+/scripts/observe-v0.11.9.3.6.7.5.2.1-aws-test-cleanup.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.5.2.1-aws-test-cleanup-observer.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.5.2.1-aws-test-root-execution-evidence.sh @SterlingAureum

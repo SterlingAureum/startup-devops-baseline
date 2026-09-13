@@ -1060,3 +1060,13 @@ residual-cost closure are not claimed by deployment or evidence recording.
 - [x] Confirm runtime stop 12:30Z/completion 14:00Z and whole-session model.
 - [ ] Fresh post-merge read-only resume, human review and independent deletion approval.
 - [ ] Live EKS/final saved plans, independent applies and residual-cost audit.
+
+### v0.11.9.3.6.7.6.3
+
+- [x] Record interrupted namespace wait and separately approved ESO finalizer repair.
+- [x] Bind observation of removed business resources and four retained system nodes.
+- [x] Implement five-object conditional continuation and independent EKS/final gates.
+- [x] Propose 14:30Z/16:00Z candidate schedule with USD 35.20 conservative model.
+- [ ] Merge CI, fresh exact-main verification, schedule review and phase approvals.
+- [ ] Complete EKS/final saved deletes and separate residual-cost audit/evidence.
+- [ ] Correct generic future teardown order so ESO scoped permissions outlive cleanup.

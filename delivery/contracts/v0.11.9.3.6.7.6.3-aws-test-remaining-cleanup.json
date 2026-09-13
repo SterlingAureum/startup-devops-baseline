@@ -1,0 +1,170 @@
+{
+  "awsRegion": "us-east-1",
+  "budget": {
+    "estimateIsBillingGuarantee": false,
+    "expectedSpendTargetUsd": "20.00",
+    "historicalBilledSpendUsd": null,
+    "totalLimitUsd": "36.00"
+  },
+  "cleanupCompleteByUtc": "2026-09-13T16:00:00Z",
+  "costProjection": {
+    "accountingStartUtc": "2026-09-12T09:38:53Z",
+    "currentPriceQuoteVerified": false,
+    "historicalBillingKnown": false,
+    "modelIncludesPeakCapacityUntilCleanup": true,
+    "peakAssumedFromUtc": "2026-09-13T07:39:44Z",
+    "reviewedRatesContract": "delivery/contracts/v0.11.9.3.6.7.5.2-aws-test-immutable-root-deployment.json"
+  },
+  "esoCleanupResult": {
+    "automatic_retry_performed": false,
+    "aws_mutation_executed": false,
+    "completed_at_utc": "2026-09-13T12:33:49.889593+00:00",
+    "finalizer_patch_attempted_once": true,
+    "namespace_absent": true,
+    "secret_value_read": false,
+    "state_unchanged": true,
+    "status": "aws-test-externalsecret-finalizer-cleanup-complete",
+    "terraform_command_executed": false
+  },
+  "estimatedTotalUsd": "35.20",
+  "history": {
+    "esoCleanupResult": "a87bf0c7b7f85c3e3aeca3a0d36b3d82fecf092fabe8e144c8abf20b96ff244f",
+    "failure": "4d6614f18668805edd693d29dd1105c45476b72846b435c0fb1974c091539bce",
+    "remainingObservation": "e281291aaf4ba83f39503ee899d36139c8e34b321effbfb99102f9c6681467e6",
+    "reviewedProof": "5cd84c3663ae81fc5062bb87c592ce5787c28ed39e873ba2c383b353a0cd5f18",
+    "runtimeRecord": "08792d42eeff0196f0766f1c4b584b7c3d061e05ce3471c38adf6a2278c7b78a"
+  },
+  "implementationBaselineCommit": "b111d58a70b6eae5c9380e1477a84b651e2555ab",
+  "inputsSha256": "22e16887f716156b6ae6e2da3497ebc6138d80db05040c342f89ebc8a35ecbbc",
+  "minimumRuntimeStartSeconds": 1200,
+  "minimumTerraformStartSeconds": 900,
+  "oldApprovalReused": false,
+  "orderingDefect": {
+    "automaticRepairAdded": false,
+    "controllerPatchAuthorization": false,
+    "controllerReady": true,
+    "genericFutureOrderFixRequired": true,
+    "namespaceFinalizerForced": false,
+    "namespaceRoleBindingCount": 0,
+    "namespaceRoleCount": 0
+  },
+  "packageProducer": {
+    "cloudAccessExecuted": false,
+    "clusterMutationExecuted": false,
+    "deletionExecuted": false,
+    "terraformCommandExecuted": false
+  },
+  "phases": {
+    "apply-eks": {
+      "deleteCapturedUnreferencedEksCreatedSecurityGroup": true,
+      "exactSavedBinaryPlanOnly": true,
+      "separateExplicitApprovalRequired": true
+    },
+    "apply-final": {
+      "deleteBackupBucketAndAllVersionsPermanently": true,
+      "deleteCredentialContainerPerTerraformRecoveryWindow": true,
+      "exactSavedBinaryPlanOnly": true,
+      "fullResidualCostAuditIncluded": false,
+      "liveCredentialValueReadAllowed": false,
+      "separateExplicitApprovalRequired": true
+    },
+    "execute-remaining": {
+      "forceFinalizerRemoval": false,
+      "nodeclassDeleteCount": 3,
+      "nodepoolDeleteCount": 2,
+      "repeatCompletedRuntimeDeletion": false,
+      "separateExplicitApprovalRequired": true,
+      "serverUidAndResourceVersionPreconditions": true,
+      "terraformCommandAllowed": false
+    },
+    "plan-eks": {
+      "otherModuleDeletionForbidden": true,
+      "separateExplicitApprovalRequired": true,
+      "target": "module.eks"
+    },
+    "plan-final": {
+      "allManagedStateAccountedFor": true,
+      "privateBackupAndContainerInventoriesPinned": true,
+      "separateExplicitApprovalRequired": true
+    },
+    "verify-remaining": {
+      "authorizationGranted": false,
+      "readOnly": true
+    }
+  },
+  "predecessor": "v0.11.9.3.6.7.6.2",
+  "priorFailureResult": {
+    "automatic_retry_performed": false,
+    "mutation_attempted": true,
+    "outcome_requires_read_only_review": true,
+    "preserve_state_and_private_evidence": true,
+    "stage": "wait-namespace-startup-apps",
+    "status": "aws-test-teardown-stopped"
+  },
+  "privacyBoundary": {
+    "accountIdCommitted": false,
+    "credentialValueCommitted": false,
+    "kubeconfigCommitted": false,
+    "privatePathCommitted": false,
+    "resourceIdCommitted": false,
+    "terraformStateCommitted": false
+  },
+  "recovery": {
+    "kubeconfig_path": "9f2bca0f8b708bde91987dfe3c56c1078b731a09ff36c42e6805550c98a2fe98",
+    "recovery_summary_path": "d747771ffac984068f6bf2e09fec4ca6f2dd9d79237ce8e0f7823ff0becf91c7"
+  },
+  "remainingObservation": {
+    "account_verified": true,
+    "applications_count": 0,
+    "captured_volume_count": 4,
+    "captured_volume_total_gib": 120,
+    "completed_at_utc": "2026-09-13T12:37:46.643576+00:00",
+    "compute_counts": {
+      "t3.medium:running": 4
+    },
+    "mutation_executed": false,
+    "nodeclaims_count": 0,
+    "nodeclasses_count": 3,
+    "nodeclasses_specs_match_original": true,
+    "nodepools_count": 2,
+    "nodepools_specs_match_original": true,
+    "persistent_volumes_count": 0,
+    "remaining_business_namespace_count": 0,
+    "remaining_captured_pv_volume_states": {},
+    "remaining_original_karpenter_instance_count": 0,
+    "remaining_test_dns_record_count": 0,
+    "state_unchanged": true,
+    "unexpected_instance_count": 0,
+    "volume_inventory_exhaustive": false,
+    "vpc_load_balancer_count": 0,
+    "vpc_target_group_count": 0
+  },
+  "reviewedFiles": [
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.3-aws-test-teardown.py",
+      "sha256": "627a939459d89a15d694982c63338285858d4bfb9b550b5a84f364fac07e4d31"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.3-aws-test-teardown.py",
+      "sha256": "b1c19f2c445754a8b6b0146804449a4ded4900cc325f757b29dacf5f8adf2c34"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.2-aws-test-teardown.py",
+      "sha256": "627fcbf85ef07fa4022507eed79dba5f3b0ddde519d1a1b3df3d941ed5699b74"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.2-aws-test-runtime-cleanup-resume.json",
+      "sha256": "e59acf63f41ee791b14f2fae8b3013aeabac20d01046afab467454b2b5bab009"
+    }
+  ],
+  "runtimeLatestStartUtc": "2026-09-13T14:10:00Z",
+  "runtimeProofTtlSeconds": 900,
+  "runtimeStopUtc": "2026-09-13T14:30:00Z",
+  "savedPlanTtlSeconds": 1800,
+  "scheduleConfirmationAuthorizesDeletion": false,
+  "scheduleRequiresNewExplicitApproval": true,
+  "schemaVersion": "v0.11.9.3.6.7.6.3",
+  "stateSha256": "a53f7bb1091990195680c9b3918a6110d4b3b8cb61441ce22aec2faf68fa725b",
+  "targetEnvironment": "aws-test",
+  "version": "v0.11.9.3.6.7.6.3"
+}

@@ -1001,3 +1001,13 @@ Review the full Root/child reconciliation, compute/storage, credential and DNS
 scope; selecting an immutable revision policy and writing the bounded mutation
 executor remain required before live Root deployment. If the new budget/day
 cannot fit, review cleanup or another explicit recovery plan instead.
+
+### v0.11.9.3.6.7.5.1
+
+Finish the offline Root capacity ledger and price-bound private-plan review.
+Include all configured pools, persistent volumes, node overshoot, T3 credit,
+ALB/IPv4, backups and transfer instead of extrapolating only system-node cost.
+Generate a draft only when the additional USD 8 model fits elapsed next-day
+time through cleanup and operator availability. Price and scope evidence remain
+required; implement a consistent immutable cascade and bounded deployment
+executor before separate mutation approval. Do not repeat apply/bootstrap.

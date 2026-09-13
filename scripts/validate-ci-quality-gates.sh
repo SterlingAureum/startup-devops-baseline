@@ -424,6 +424,9 @@ echo "==> Validating v0.11.9.3.6.7.4.1.1 Gitleaks evidence-field repair"
 echo "==> Validating v0.11.9.3.6.7.5 aws-test recovery and Root plan design"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.5-aws-test-recovery-root-design.sh"
 
+echo "==> Validating v0.11.9.3.6.7.5.1 aws-test Root capacity and cost"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.5.1-aws-test-root-capacity-cost.sh"
+
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
 

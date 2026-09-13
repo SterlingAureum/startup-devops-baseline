@@ -1,0 +1,117 @@
+{
+  "target_environment": "aws-test",
+  "region": "us-east-1",
+  "currency": "USD",
+  "rates": {
+    "eks_hourly": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "system_instance_hourly": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "system_credit_hourly_total": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "ebs_gib_hourly": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "nat_gateway_hourly": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "public_ipv4_hourly": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "alb_hourly_with_lcu": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "storage_backups_hourly": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "logs_metrics_hourly": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "dns_other_hourly": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "transfer_hourly": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "extra_ec2_hourly": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    }
+  },
+  "pool_node_hourly_upper_usd": {
+    "database-ondemand": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "application-ondemand": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "application-spot": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "database-recovery-ondemand": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    },
+    "application-spot-fis": {
+      "usd": null,
+      "reference": "__REGION_AND_BILLING_RATE_SOURCE__",
+      "reviewed_at_utc": "__REVIEWED_UTC__",
+      "coverage_note": "__RATE_AND_USAGE_BOUND_JUSTIFICATION__"
+    }
+  },
+  "overshoot_node_reserve": 1,
+  "extra_ebs_gib": 0,
+  "public_ipv4_count_upper": 3,
+  "fixed_and_uncertainty_reserve_usd": null,
+  "all_eligible_instance_types_and_spot_fallback_reviewed": false,
+  "all_ebs_snapshots_backups_transfer_and_lcu_reviewed": false
+}

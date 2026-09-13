@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.5.1-aws-test-root-capacity-cost` adds a complete configured
+node/disk ledger and offline cost-profile preparation/review. Unknown prices
+stop review; elapsed next-day cost and cleanup time stay inside the USD 8
+model. Root deployment still requires an immutable, bounded executor.
+See [the capacity and cost procedure](docs/V0.11.9.3.6.7.5.1_AWS_TEST_ROOT_CAPACITY_COST.md).
+Predecessor:
 `v0.11.9.3.6.7.5-aws-test-recovery-root-design` records the expired session and
 lost temporary evidence, pins the new persistent recovery observation and adds
 a read-only preflight plus an offline private Root-plan checker. Historical

@@ -1,0 +1,126 @@
+{
+  "version": "v0.11.9.3.6.7.5.1",
+  "predecessor": "v0.11.9.3.6.7.5",
+  "implementationBaselineCommit": "a5a934b7208804f7ec693ca401a130628b06f31a",
+  "status": "aws-test-root-capacity-and-cost-review-tooling",
+  "historicalSpendUsd": null,
+  "additionalBudgetLimitUsd": "8.00",
+  "accountingStartUtc": "2026-09-13T00:27:58Z",
+  "operatorAvailableUntilUtc": "2026-09-13T12:48:28Z",
+  "archivedObservation": {
+    "sha256": "7d9528901ecde9a83ea86255bde89745a98c08bbb693aad076d80d41a3ccc36f",
+    "observedAtUtc": "2026-09-13T01:24:43Z",
+    "commit": "a5a934b7208804f7ec693ca401a130628b06f31a",
+    "isFreshExecutionApproval": false
+  },
+  "baselineInventory": {
+    "eks_count": 1,
+    "eks_version": "1.36",
+    "system_instance_type": "t3.medium",
+    "system_instance_count": 4,
+    "system_capacity": "on-demand",
+    "system_root_volume_gib": 120,
+    "nat_gateway_count": 1,
+    "eip_count": 1,
+    "attached_volume_count": 4,
+    "volume_type": "gp3",
+    "volume_iops": 3000,
+    "volume_throughput_mibps": 125,
+    "inventoryObservedAtUtc": "2026-09-13T01:32:18Z",
+    "billedSpendObserved": false
+  },
+  "nodePools": [
+    {
+      "name": "database-ondemand",
+      "path": "clusters/aws/base/platform/karpenter-nodepool-database.yaml",
+      "configured_node_limit": 3,
+      "cpu_limit": 6,
+      "memory_limit": "24Gi",
+      "root_disk_gib": 30
+    },
+    {
+      "name": "application-ondemand",
+      "path": "clusters/aws/base/platform/karpenter-nodepool-ondemand.yaml",
+      "configured_node_limit": 2,
+      "cpu_limit": 4,
+      "memory_limit": "16Gi",
+      "root_disk_gib": 30
+    },
+    {
+      "name": "application-spot",
+      "path": "clusters/aws/base/platform/karpenter-nodepool-spot.yaml",
+      "configured_node_limit": 2,
+      "cpu_limit": 4,
+      "memory_limit": "16Gi",
+      "root_disk_gib": 30
+    },
+    {
+      "name": "database-recovery-ondemand",
+      "path": "clusters/aws/base/platform/karpenter-nodepool-database-recovery.yaml",
+      "configured_node_limit": 1,
+      "cpu_limit": 2,
+      "memory_limit": "8Gi",
+      "root_disk_gib": 30
+    },
+    {
+      "name": "application-spot-fis",
+      "path": "clusters/aws/base/platform/karpenter-nodepool-spot-fis.yaml",
+      "configured_node_limit": 2,
+      "cpu_limit": 4,
+      "memory_limit": "32Gi",
+      "root_disk_gib": 30
+    }
+  ],
+  "persistentVolumes": {
+    "cnpg_instances": 3,
+    "cnpg_each_gib": 20,
+    "prometheus_gib": 10,
+    "alertmanager_gib": 2
+  },
+  "revisionPolicy": {
+    "rootTracksMain": true,
+    "sameRepoChildrenTrackMain": true,
+    "pinningRootAloneIsInsufficient": true,
+    "immutableCascadeImplementationComplete": false
+  },
+  "costRules": {
+    "minimumOvershootNodeReserve": 1,
+    "minimumPublicIpv4Count": 3,
+    "minimumCleanupReserveSeconds": 3600,
+    "minimumRootWorkSeconds": 1800,
+    "maximumWindowSeconds": 28800,
+    "priceReviewTtlSeconds": 86400,
+    "allConfiguredPoolsIncluded": true,
+    "limitsAreBillingHardCaps": false,
+    "unknownRatesFailClosed": true,
+    "peakRateAppliedSinceAccountingStart": true
+  },
+  "mutationScope": {
+    "cnpgRequiresSeparateDatabaseNodes": true,
+    "rootTriggersAutomaticChildSync": true,
+    "credentialValueTransferRequiresApproval": true,
+    "dnsAliasUpsertRequiresApproval": true,
+    "sharedDevWrapperDirectInvocationAllowed": false,
+    "failureTrapCanMutateAnnotation": true,
+    "controllerReconciliationCanContinueAfterWrapperStops": true,
+    "fisAndRecoveryDrillsIncluded": false
+  },
+  "reviewedFiles": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.5-aws-test-recovery-root-design.json",
+      "sha256": "330aad260f0fe495159a12b5f45fcffab1dc25cacad40e83491ce95de8c94a09"
+    },
+    {
+      "path": "scripts/check-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py",
+      "sha256": "05c3c01dc340d3257a7664dc93fd4dbb301da366dd4c3b062ce8590690a1aa82"
+    }
+  ],
+  "operationBoundary": {
+    "liveCommandsAllowed": false,
+    "rootDeploymentAuthorized": false,
+    "credentialTransferAuthorized": false,
+    "dnsWriteAuthorized": false,
+    "teardownAuthorized": false,
+    "automaticBudgetEnforcement": false
+  }
+}

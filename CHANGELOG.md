@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.11.9.3.6.7.5.1
+
+- Record the reviewed four-node / 120 GiB gp3 baseline and five NodePools
+  totaling ten configured additional nodes, plus CNPG and monitoring storage.
+- Add an offline price-profile calculator with overshoot, credit, IPv4,
+  backup/transfer and fixed uncertainty reserves; unknown rates fail review.
+- Account for elapsed next-day time through cleanup completion within USD 8,
+  the operator availability limit and a minimum cleanup/work reserve.
+- Generate private plan drafts only when the model fits; bind fresh plan review
+  to the exact price profile and reject understated capacity components.
+- Document credential/DNS writes, mutable child revisions and helper failure
+  behavior as remaining deployment-executor requirements. No live operation.
+
 ## v0.11.9.3.6.7.5
 
 - Record the expired September 12 session, lost temporary creation plan and

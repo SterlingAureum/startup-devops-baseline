@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.9.3.6.7.6.4
+
+- Fix the EKS-targeted destroy gate to accept exactly the reviewed 19 EKS and 31
+  dependency deletes, derived from unchanged state with exact address and ID checks.
+- Preserve the failed plan and consumed marker; read-only adoption cannot reset its
+  original clock. Expired candidates require an independently approved fresh plan.
+- Label machine/saved-plan gate failures correctly and carry new-version receipts
+  through separately approved EKS and final infrastructure phases.
+- Retain the 16:00 UTC cleanup deadline, 36 USD limit, inventory guards and privacy
+  boundary. Add 18 offline behavioral regressions; no live operation is performed.
+
 ## v0.11.9.3.6.7.6.3
 
 - Preserve interrupted namespace cleanup, explicit one-time ESO finalizer repair,

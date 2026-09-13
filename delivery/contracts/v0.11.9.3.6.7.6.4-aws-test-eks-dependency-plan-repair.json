@@ -1,0 +1,481 @@
+{
+  "allowedDefinitions": [
+    {
+      "count": 1,
+      "module": "module.cnpg_backup",
+      "name": "this",
+      "type": "aws_iam_role"
+    },
+    {
+      "count": 1,
+      "module": "module.cnpg_backup",
+      "name": "this",
+      "type": "aws_iam_role_policy_attachment"
+    },
+    {
+      "count": 1,
+      "module": "module.external_secrets",
+      "name": "this",
+      "type": "aws_iam_role"
+    },
+    {
+      "count": 1,
+      "module": "module.external_secrets",
+      "name": "this",
+      "type": "aws_iam_role_policy_attachment"
+    },
+    {
+      "count": 1,
+      "module": "module.github_actions_runtime_identity[0]",
+      "name": "runtime",
+      "type": "aws_eks_access_entry"
+    },
+    {
+      "count": 5,
+      "module": "module.karpenter",
+      "name": "interruption",
+      "type": "aws_cloudwatch_event_rule"
+    },
+    {
+      "count": 5,
+      "module": "module.karpenter",
+      "name": "interruption",
+      "type": "aws_cloudwatch_event_target"
+    },
+    {
+      "count": 1,
+      "module": "module.karpenter",
+      "name": "cluster_security_group_discovery",
+      "type": "aws_ec2_tag"
+    },
+    {
+      "count": 1,
+      "module": "module.karpenter",
+      "name": "node",
+      "type": "aws_eks_access_entry"
+    },
+    {
+      "count": 1,
+      "module": "module.karpenter",
+      "name": "eks_integration",
+      "type": "aws_iam_policy"
+    },
+    {
+      "count": 1,
+      "module": "module.karpenter",
+      "name": "iam_integration",
+      "type": "aws_iam_policy"
+    },
+    {
+      "count": 1,
+      "module": "module.karpenter",
+      "name": "interruption",
+      "type": "aws_iam_policy"
+    },
+    {
+      "count": 1,
+      "module": "module.karpenter",
+      "name": "node_lifecycle",
+      "type": "aws_iam_policy"
+    },
+    {
+      "count": 1,
+      "module": "module.karpenter",
+      "name": "zonal_shift",
+      "type": "aws_iam_policy"
+    },
+    {
+      "count": 1,
+      "module": "module.karpenter",
+      "name": "controller",
+      "type": "aws_iam_role"
+    },
+    {
+      "count": 6,
+      "module": "module.karpenter",
+      "name": "controller",
+      "type": "aws_iam_role_policy_attachment"
+    },
+    {
+      "count": 1,
+      "module": "module.karpenter",
+      "name": "interruption",
+      "type": "aws_sqs_queue"
+    },
+    {
+      "count": 1,
+      "module": "module.karpenter",
+      "name": "interruption",
+      "type": "aws_sqs_queue_policy"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "cluster",
+      "type": "aws_cloudwatch_log_group"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "cluster",
+      "type": "aws_iam_role"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "cluster_policy",
+      "type": "aws_iam_role_policy_attachment"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "this",
+      "type": "aws_eks_cluster"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "cluster",
+      "type": "aws_iam_openid_connect_provider"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "node",
+      "type": "aws_iam_role"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "node_worker",
+      "type": "aws_iam_role_policy_attachment"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "node_ecr",
+      "type": "aws_iam_role_policy_attachment"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "node_cni",
+      "type": "aws_iam_role_policy_attachment"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "general",
+      "type": "aws_eks_node_group"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "ebs_csi",
+      "type": "aws_iam_role"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "ebs_csi",
+      "type": "aws_iam_role_policy_attachment"
+    },
+    {
+      "count": 2,
+      "module": "module.eks",
+      "name": "network",
+      "type": "aws_eks_addon"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "coredns",
+      "type": "aws_eks_addon"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "ebs_csi",
+      "type": "aws_eks_addon"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "aws_load_balancer_controller",
+      "type": "aws_iam_policy"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "aws_load_balancer_controller",
+      "type": "aws_iam_role"
+    },
+    {
+      "count": 1,
+      "module": "module.eks",
+      "name": "aws_load_balancer_controller",
+      "type": "aws_iam_role_policy_attachment"
+    }
+  ],
+  "automaticReplanAllowed": false,
+  "awsRegion": "us-east-1",
+  "budget": {
+    "estimateIsBillingGuarantee": false,
+    "expectedSpendTargetUsd": "20.00",
+    "historicalBilledSpendUsd": null,
+    "totalLimitUsd": "36.00"
+  },
+  "cleanupCompleteByUtc": "2026-09-13T16:00:00Z",
+  "costProjection": {
+    "accountingStartUtc": "2026-09-12T09:38:53Z",
+    "currentPriceQuoteVerified": false,
+    "historicalBillingKnown": false,
+    "modelIncludesPeakCapacityUntilCleanup": true,
+    "peakAssumedFromUtc": "2026-09-13T07:39:44Z",
+    "reviewedRatesContract": "delivery/contracts/v0.11.9.3.6.7.5.2-aws-test-immutable-root-deployment.json"
+  },
+  "estimatedTotalUsd": "35.20",
+  "exactManagedDeleteCount": 50,
+  "existingCandidate": {
+    "binaryDigest": "90e5605063eb8d8e65122a7eb8434e17de216c907667c5530ec3e68818ec80b2",
+    "jsonDigest": "5f363de00b5c21690f079b39e8a495897b5f97f08c2374a90f763d9d7b9319f1",
+    "textDigest": "2289785b2387917ba555424f0c97494c3a265ead1d45aa5bc4f480583bf7e97e"
+  },
+  "existingCandidateClock": {
+    "anchor": "successful-prior-runtime-completion",
+    "conservativeCreatedAtUtc": "2026-09-13T13:20:04Z",
+    "conservativeExpiresAtUtc": "2026-09-13T13:50:04Z",
+    "mtimeCanExtendTtl": false
+  },
+  "expectedModuleCounts": {
+    "module.cnpg_backup": 2,
+    "module.eks": 19,
+    "module.external_secrets": 2,
+    "module.github_actions_runtime_identity[0]": 1,
+    "module.karpenter": 26
+  },
+  "history": {
+    "failure": "3ae6045a2811ba23cf1bd1d63310985c1897751e9f4fd10abc12a12674ee628a",
+    "gateObservation": "6e532969bd898ba6c62f13f5e8c8e0bc067f0e94c171553bdfa77081db640db9",
+    "runtimeComplete": "52156b58f95664a436d950a5771d6a6df7afc1ab7b3e94a8586657a6e1fbb9f4",
+    "runtimeRecord": "67a642cc38bbf1198d3bab31da6814b6b79d266fa180a9a8a752827f0dc171ab",
+    "runtimeResult": "98c1a53e12f5320be3d40343a958eda6cd13be753a393a60f5d5368e6dda347e"
+  },
+  "implementationBaselineCommit": "721419913123e18c37d3c3998256e89c6a81b8c1",
+  "inputsSha256": "22e16887f716156b6ae6e2da3497ebc6138d80db05040c342f89ebc8a35ecbbc",
+  "minimumTerraformStartSeconds": 900,
+  "oldApprovalReused": false,
+  "originalPlanClockResetAllowed": false,
+  "originalPlanCompletedAtUtc": "2026-09-13T13:25:41Z",
+  "originalPlanEarliestAtUtc": "2026-09-13T13:20:04Z",
+  "originalWindowDigest": "672afc566e198fb9ceafb37c68dcd9957f8bdeabce126ce2fd72910d5cd67879",
+  "packageProducer": {
+    "cloudAccessExecuted": false,
+    "clusterMutationExecuted": false,
+    "deletionExecuted": false,
+    "terraformCommandExecuted": false
+  },
+  "phases": {
+    "adopt-eks": {
+      "initOrPlanAllowed": false,
+      "preserveOriginalClock": true,
+      "readOnly": true
+    },
+    "apply-eks": {
+      "exactSavedBinaryPlanOnly": true,
+      "separateExplicitApprovalRequired": true
+    },
+    "apply-final": {
+      "exactSavedBinaryPlanOnly": true,
+      "separateExplicitApprovalRequired": true
+    },
+    "plan-eks": {
+      "exactSavedBinaryPlanOnly": false,
+      "separateExplicitApprovalRequired": true
+    },
+    "plan-final": {
+      "exactSavedBinaryPlanOnly": false,
+      "separateExplicitApprovalRequired": true
+    }
+  },
+  "predecessor": "v0.11.9.3.6.7.6.3",
+  "priorFailureResult": {
+    "automatic_retry_performed": false,
+    "mutation_attempted": false,
+    "outcome_requires_read_only_review": true,
+    "preserve_state_and_private_evidence": true,
+    "stage": "terraform-show-text",
+    "status": "aws-test-teardown-stopped"
+  },
+  "privacyBoundary": {
+    "accountIdCommitted": false,
+    "credentialValueCommitted": false,
+    "kubeconfigCommitted": false,
+    "privatePathCommitted": false,
+    "resourceIdCommitted": false,
+    "terraformStateCommitted": false
+  },
+  "recovery": {
+    "kubeconfig_path": "9f2bca0f8b708bde91987dfe3c56c1078b731a09ff36c42e6805550c98a2fe98",
+    "recovery_summary_path": "d747771ffac984068f6bf2e09fec4ca6f2dd9d79237ce8e0f7823ff0becf91c7"
+  },
+  "reviewedFiles": [
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.3-aws-test-teardown.py",
+      "sha256": "627a939459d89a15d694982c63338285858d4bfb9b550b5a84f364fac07e4d31"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.3-aws-test-remaining-cleanup.json",
+      "sha256": "672afc566e198fb9ceafb37c68dcd9957f8bdeabce126ce2fd72910d5cd67879"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/backend.tf",
+      "sha256": "374c263bc0de2200590d27c33707bfc426bc24fe0d6a3db4dd587a89cd4d9192"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/main.tf",
+      "sha256": "76922f3bbc7cccfc379c337ba156ea377405b740b4657907250f532baf709479"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/outputs.tf",
+      "sha256": "0c4c11e4b31a3c67884cce2373033f0154bb2b54acf76b524181c549f8083fb6"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/providers.tf",
+      "sha256": "9a466f347c8c4cf8cadea24a136d86b0576daeb7b0873abfc71b26ea7cc901b9"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/variables.tf",
+      "sha256": "f52336b5086cb88a727ecefc371f71b508f19bfe2b1ba5b1d2f9356bad2cc98b"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/versions.tf",
+      "sha256": "bab349b5a20400dfaf72355220fb22749b7f09795d14d455d7a200be82480dd3"
+    },
+    {
+      "path": "infra/terraform/aws/modules/cnpg-backup/main.tf",
+      "sha256": "2c9089f32b4721c6315856590b37097ebe6a41f24168f3ad3a5ad194386019ba"
+    },
+    {
+      "path": "infra/terraform/aws/modules/cnpg-backup/outputs.tf",
+      "sha256": "464e6354ac950626c3c650c93cd1942cede3e1c1380dbbb974eec3d2db4cda63"
+    },
+    {
+      "path": "infra/terraform/aws/modules/cnpg-backup/variables.tf",
+      "sha256": "ff496595c97c3987f727812c2b657afb446ceb77451e5c80b467c24dd2d72668"
+    },
+    {
+      "path": "infra/terraform/aws/modules/eks/main.tf",
+      "sha256": "ef7b1dca15300049f514ea9f9033f9c236d5ae7423e7ddecd49bef7f97ed3f8c"
+    },
+    {
+      "path": "infra/terraform/aws/modules/eks/outputs.tf",
+      "sha256": "753c9f50dbf79e690dea7795d102c47fe4511d75bb1feedd55df92357aec8c66"
+    },
+    {
+      "path": "infra/terraform/aws/modules/eks/variables.tf",
+      "sha256": "dbaa2ee4736160d1dfb324d456c5b49580cd6c5430e99273836e3f3b040b42da"
+    },
+    {
+      "path": "infra/terraform/aws/modules/external-secrets/main.tf",
+      "sha256": "06418cdf3c14b37e5b762be4563d7a8259c4764e872cc8591a6d0b7af2d93be4"
+    },
+    {
+      "path": "infra/terraform/aws/modules/external-secrets/outputs.tf",
+      "sha256": "cf8be5fda269564196a6359c64c952d2adc9597e956913f2d15b12fa9722ebd2"
+    },
+    {
+      "path": "infra/terraform/aws/modules/external-secrets/variables.tf",
+      "sha256": "58b30191d8a50d77a6e124285d4680b16c3f700d3a294026d9ac060803b24f0e"
+    },
+    {
+      "path": "infra/terraform/aws/modules/fis/main.tf",
+      "sha256": "bb2c2f63ca4211e170aed6f9c5d2a46d3df52b9ed9327a7f627a3bc94fb0e455"
+    },
+    {
+      "path": "infra/terraform/aws/modules/fis/outputs.tf",
+      "sha256": "b007d739b201ceff2da20473515d598f0c1326ecd88b54da23a0cb1abbd2e5b5"
+    },
+    {
+      "path": "infra/terraform/aws/modules/fis/variables.tf",
+      "sha256": "f178c4bc941eeb72cd596b8a476345cbf859e2a4a3e1f1653db33ef46a541b39"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-identity/main.tf",
+      "sha256": "8acee0d31eb0bf06d0a34192c344fcf8ba7b028de16f08b0f2d858a48e17e34e"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-identity/outputs.tf",
+      "sha256": "767ca76bdcb45ba13b130d91df7c8ef15cfe795ef6daa5f8199d4eb30c72e75c"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-identity/variables.tf",
+      "sha256": "ac300c93caa2bd91ebf50f098240f553dc9f938fc5416a939d1ca145f0bca92d"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-role/main.tf",
+      "sha256": "797cf2b68f08b61811b4810cfab7bc19e3e1a73373ed0c834110aa2d6df2bbd4"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-role/outputs.tf",
+      "sha256": "9a8c4c5421cf519500393e2a7233993d7f57a44e930a1075c27dc63607fcfbc3"
+    },
+    {
+      "path": "infra/terraform/aws/modules/github-actions-runtime-role/variables.tf",
+      "sha256": "91dcac256e07e3f1488784063a065da17f3c13dff2af278be174fc2c9b2c5fbe"
+    },
+    {
+      "path": "infra/terraform/aws/modules/karpenter/main.tf",
+      "sha256": "a5d6e865311c5cfa1d5158b9db21b7f2795cdcadefe2ff8bc32e4f4257237bf2"
+    },
+    {
+      "path": "infra/terraform/aws/modules/karpenter/outputs.tf",
+      "sha256": "384f1a88a52c7a63c05cfcbb5ef49ae0a630d6992e49d87c771e2d72b9ec677c"
+    },
+    {
+      "path": "infra/terraform/aws/modules/karpenter/policies.tf",
+      "sha256": "4e1e1b2e52bc5928e91fee8c53154d9426d2a607da7a42dec16b66af89dbc1e6"
+    },
+    {
+      "path": "infra/terraform/aws/modules/karpenter/variables.tf",
+      "sha256": "494cc739d8d1f86c6182a6ccef75b5569873f5ab5e9967d492b4c54c39e3595f"
+    },
+    {
+      "path": "infra/terraform/aws/modules/tls-dns/main.tf",
+      "sha256": "cb968d2811d31ee4bc34319ca4629ab29cd91e820c7fd6fd672e473d44acdbff"
+    },
+    {
+      "path": "infra/terraform/aws/modules/tls-dns/outputs.tf",
+      "sha256": "3cfea9997760f29b9be9b42eec5320fbedf449cff764314524eb6970641e5f01"
+    },
+    {
+      "path": "infra/terraform/aws/modules/tls-dns/variables.tf",
+      "sha256": "1c4993765a79bdd210d1031b43727c66f7bb170b6ed63ad3b117a24ca290cb4a"
+    },
+    {
+      "path": "infra/terraform/aws/modules/vpc/main.tf",
+      "sha256": "8c7b6767de7716a8511faae112d52725dc22b57e2a5faedaa650532efae704d6"
+    },
+    {
+      "path": "infra/terraform/aws/modules/vpc/outputs.tf",
+      "sha256": "704c52a80ee127f3bfc82dc56a693c3840a2aa602dffbc68c298ea11671f3240"
+    },
+    {
+      "path": "infra/terraform/aws/modules/vpc/variables.tf",
+      "sha256": "f60fb9f251fa7deb21e723092f698c120c5927b3377ccc8104de7dc592532a23"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+      "sha256": "e9bc6c2f7283728fec6ded285abab40979d6296906222f8fefc517aa348382e2"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+      "sha256": "a171135125cd5425bce2eb68d40a885f8c4bfa54d4d3ac8b22f233e60d0e5b17"
+    }
+  ],
+  "savedPlanTtlSeconds": 1800,
+  "schemaVersion": "v0.11.9.3.6.7.6.4",
+  "stateSha256": "a53f7bb1091990195680c9b3918a6110d4b3b8cb61441ce22aec2faf68fa725b",
+  "targetEnvironment": "aws-test",
+  "version": "v0.11.9.3.6.7.6.4"
+}

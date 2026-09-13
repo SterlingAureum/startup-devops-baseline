@@ -643,3 +643,10 @@
 /scripts/execute-v0.11.9.3.6.7.6.3-aws-test-teardown.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.6.3-aws-test-teardown.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.6.3-remaining-cleanup.sh @SterlingAureum
+
+# v0.11.9.3.6.7.6.4 exact EKS dependency plan repair
+/delivery/contracts/v0.11.9.3.6.7.6.4-aws-test-eks-dependency-plan-repair.json @SterlingAureum
+/docs/V0.11.9.3.6.7.6.4_AWS_TEST_EKS_DEPENDENCY_PLAN_REPAIR.md @SterlingAureum
+/scripts/execute-v0.11.9.3.6.7.6.4-aws-test-teardown.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.6.4-aws-test-teardown.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.6.4-eks-dependency-plan-repair.sh @SterlingAureum

@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.5.2.1-aws-test-root-execution-evidence` records the one-time
+successful immutable deployment: Root/demo Healthy, database/ESO ready,
+owned DNS INSYNC and unchanged state. It adds a read-only cleanup dependency
+observer; no deletion executor or teardown approval is included. Preserve the
+September 13 10:51:13Z cleanup-completion deadline and consumed attempt proof.
+See [execution evidence and cleanup preparation](docs/V0.11.9.3.6.7.5.2.1_AWS_TEST_ROOT_EXECUTION_EVIDENCE_AND_CLEANUP.md).
+Predecessor:
 `v0.11.9.3.6.7.5.2-aws-test-immutable-root-deployment` implements private
 immutable Root/child preparation, fresh read-only verify and separately
 approved one-time Root/credential/DNS execution. The revised USD 36 total

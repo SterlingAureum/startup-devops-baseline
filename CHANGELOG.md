@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.11.9.3.6.7.6.2
+
+- Record the exact failed kubectl output error and 21 attempted mutations; use
+  delete -o name with private text capture, verified against a loopback fake API.
+- Add UID/source/state-bound partial-cleanup observation and independently
+  approved continuation, accepting Root presence/absence without repeat freeze.
+- Retain original attempt/evidence bytes; bind fresh proofs to the confirmed
+  runtime stop 12:30Z and cleanup completion 14:00Z, with USD 31.97 allowance
+  projection against unchanged USD 36 and unknown actual billing.
+- Add 25 behavioral/real-CLI tests and predecessor gates. Actual deletion,
+  Terraform plans/applies and residual audit keep separate approval boundaries.
+
 ## v0.11.9.3.6.7.6.1
 
 - Preserve the expired time gate and implement a separately confirmed fixed

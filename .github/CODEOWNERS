@@ -636,3 +636,10 @@
 /scripts/execute-v0.11.9.3.6.7.6.2-aws-test-teardown.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.6.2-aws-test-teardown.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.6.2-runtime-cleanup-resume.sh @SterlingAureum
+
+# v0.11.9.3.6.7.6.3 remaining configuration and staged cleanup
+/delivery/contracts/v0.11.9.3.6.7.6.3-aws-test-remaining-cleanup.json @SterlingAureum
+/docs/V0.11.9.3.6.7.6.3_AWS_TEST_REMAINING_CLEANUP.md @SterlingAureum
+/scripts/execute-v0.11.9.3.6.7.6.3-aws-test-teardown.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.6.3-aws-test-teardown.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.6.3-remaining-cleanup.sh @SterlingAureum

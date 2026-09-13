@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.11.9.3.6.7.6.3
+
+- Preserve interrupted namespace cleanup, explicit one-time ESO finalizer repair,
+  and reduced-runtime observation hashes without private resource identities.
+- Record the scoped-RBAC namespace deletion ordering defect; do not introduce an
+  automatic finalizer-removal or controller-repair fallback.
+- Verify absence of completed runtime resources and delete only the original two
+  NodePools/three NodeClasses using UID/resourceVersion-conditioned DELETE.
+- Propose a fresh 14:30Z configuration/16:00Z completion schedule; reviewed
+  conservative whole-session allowances project USD 35.20 against USD 36.
+- Require independent EKS-only/final saved-plan approvals, private backup/container
+  inventory consistency, exclusive markers and no retry/repair or Secret value read.
+- Add offline partial-state/CLI/concurrency/receipt/plan-inventory regression gates.
+
 ## v0.11.9.3.6.7.6.2
 
 - Record the exact failed kubectl output error and 21 attempted mutations; use

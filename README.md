@@ -3,12 +3,19 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.9.3.6.7.6.2-runtime-cleanup-resume` repairs invalid kubectl delete output
-and verifies the 19 already-paused Applications and consumed failure evidence.
-It handles Root presence/absence with UID/source binding, avoids repeating freeze
-and uses independently approved continuation. Runtime latest start is September 13
-12:10Z, stop 12:30Z, completion 14:00Z; reviewed allowances project USD 31.97
-against USD 36 with billing unknown. No live deletion occurred during packaging.
+`v0.11.9.3.6.7.6.3-remaining-cleanup` preserves two consumed runtime attempts
+and the separately approved ESO finalizer repair. A read-only observation found
+only two NodePools, three NodeClasses, four system nodes/root disks and retained
+Terraform infrastructure. Fresh continuation deletes only those five configuration
+objects before independent EKS/final saved-plan reviews. Candidate completion is
+September 13 16:00Z, configuration stop 14:30Z; existing conservative allowances
+project USD 35.20 against USD 36, with billing unknown. New schedule and phase
+approvals are required; packaging performs no live deletion.
+See [remaining cleanup](docs/V0.11.9.3.6.7.6.3_AWS_TEST_REMAINING_CLEANUP.md).
+Predecessor:
+`v0.11.9.3.6.7.6.2-runtime-cleanup-resume` preserved partial runtime execution
+and avoided repeating already-completed freezes. Its consumed proofs and
+historical window remain unchanged.
 See [partial cleanup continuation](docs/V0.11.9.3.6.7.6.2_AWS_TEST_RUNTIME_CLEANUP_RESUME.md).
 Predecessor:
 `v0.11.9.3.6.7.6.1-cleanup-window-renewal` preserves the expired-window stop

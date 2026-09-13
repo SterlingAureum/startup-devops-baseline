@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.11.9.3.6.7.5.2
+
+- Use the revised USD 36 total estimate through the fixed cleanup deadline;
+  retain USD 20 as expectation and preserve historical unknown billing.
+- Render immutable Root and all same-repository children privately, with two
+  fixed On-Demand pools and state-derived backup/IRSA/VPC configuration.
+- Add fresh read-only verify and separately approved one-time Root, initial
+  credential transfer and test DNS execution with strict identity checks.
+- Stop on drift, existing credentials/alias, timeout or failure; preserve
+  private evidence and state without retries, repair or automatic teardown.
+- Add offline rendering/reconciliation/failure tests and predecessor gates.
+  Applying this increment grants no deployment or cleanup approval.
+
 ## v0.11.9.3.6.7.5.1
 
 - Record the reviewed four-node / 120 GiB gp3 baseline and five NodePools

@@ -1,0 +1,1227 @@
+{
+  "version": "v0.11.9.3.6.7.5.2",
+  "predecessor": "v0.11.9.3.6.7.5.1",
+  "implementationBaselineCommit": "766498dbe6f305cb40e73b09328fd114dadcf6f7",
+  "status": "aws-test-guarded-immutable-root-deployment-implementation",
+  "budget": {
+    "totalLimitUsd": "36.00",
+    "expectedSpendTargetUsd": "20.00",
+    "previousSessionApprovedUsd": "12.00",
+    "additionalApprovedUsd": "24.00",
+    "accountingStartUtc": "2026-09-12T09:38:53Z",
+    "cleanupCompleteByUtc": "2026-09-13T10:51:13Z",
+    "cleanupReserveSeconds": 5400,
+    "maximumDeploymentSeconds": 5400,
+    "minimumDeploymentSeconds": 1800,
+    "verifyTtlSeconds": 900,
+    "historicalBilledSpendUsd": null,
+    "automaticBudgetEnforcement": false,
+    "automaticTeardown": false
+  },
+  "capacity": {
+    "instanceType": "c6i.large",
+    "databaseNodes": 3,
+    "applicationNodes": 2,
+    "overshootReserveNodes": 2,
+    "modeledNewRootDiskGib": 210,
+    "modeledTotalEbsGib": 402,
+    "publicIpv4PeakCount": 5,
+    "removedNodePools": [
+      "application-spot",
+      "application-spot-fis",
+      "database-recovery-ondemand"
+    ],
+    "billingHardCap": false
+  },
+  "costEnvelope": {
+    "idleHourlyUsd": {
+      "eks": "0.10",
+      "system_ec2": "0.1664",
+      "t3_credit_reserve": "0.40",
+      "ebs": "0.014",
+      "nat_gateway": "0.060",
+      "ipv4": "0.005",
+      "alb": "0",
+      "storage_backups": "0.015",
+      "logs_metrics": "0.025",
+      "dns_metadata_queue": "0.015",
+      "transfer": "0.050"
+    },
+    "peakHourlyUsd": {
+      "eks": "0.10",
+      "system_ec2": "0.1664",
+      "t3_credit_reserve": "0.40",
+      "new_ec2": "0.595",
+      "ebs": "0.045",
+      "nat_gateway": "0.060",
+      "ipv4": "0.025",
+      "alb": "0.060",
+      "storage_backups": "0.025",
+      "logs_metrics": "0.040",
+      "dns_metadata_queue": "0.020",
+      "transfer": "0.080"
+    },
+    "fixedReserveUsd": "3.00",
+    "envelopeIsGuaranteedQuote": false,
+    "humanPricingAndUsageReviewRequired": true,
+    "natLogsBackupTransferArePlanningAllowances": true
+  },
+  "applications": [
+    {
+      "name": "application-admission-policies-aws-test",
+      "source": {
+        "directory": {
+          "recurse": true
+        },
+        "path": "platform/security/admission-policies/application-workloads",
+        "repoURL": "https://github.com/SterlingAureum/startup-devops-baseline.git",
+        "targetRevision": "main"
+      }
+    },
+    {
+      "name": "argo-rollouts",
+      "source": {
+        "chart": "argo-rollouts",
+        "helm": {
+          "releaseName": "argo-rollouts",
+          "values": "controller:\n  metrics:\n    enabled: true\ndashboard:\n  enabled: false\n"
+        },
+        "repoURL": "https://argoproj.github.io/argo-helm",
+        "targetRevision": "2.41.1"
+      }
+    },
+    {
+      "name": "aws-load-balancer-controller",
+      "source": {
+        "chart": "aws-load-balancer-controller",
+        "helm": {
+          "releaseName": "aws-load-balancer-controller",
+          "valuesObject": {
+            "clusterName": "startup-devops-baseline-test",
+            "region": "us-east-1",
+            "replicaCount": 2,
+            "serviceAccount": {
+              "create": false,
+              "name": "aws-load-balancer-controller"
+            },
+            "vpcId": "__VPC_ID__"
+          }
+        },
+        "repoURL": "https://aws.github.io/eks-charts",
+        "targetRevision": "1.14.0"
+      }
+    },
+    {
+      "name": "barman-cloud-plugin",
+      "source": {
+        "chart": "plugin-barman-cloud",
+        "helm": {
+          "releaseName": "barman-cloud"
+        },
+        "repoURL": "https://cloudnative-pg.github.io/charts",
+        "targetRevision": "0.7.0"
+      }
+    },
+    {
+      "name": "cert-manager",
+      "source": {
+        "chart": "cert-manager",
+        "helm": {
+          "releaseName": "cert-manager",
+          "valuesObject": {
+            "crds": {
+              "enabled": true
+            }
+          }
+        },
+        "repoURL": "https://charts.jetstack.io",
+        "targetRevision": "v1.21.0"
+      }
+    },
+    {
+      "name": "cloudnative-pg",
+      "source": {
+        "chart": "cloudnative-pg",
+        "helm": {
+          "releaseName": "cnpg",
+          "values": "replicaCount: 2\nresources:\n  requests:\n    cpu: 100m\n    memory: 128Mi\n  limits:\n    cpu: 500m\n    memory: 512Mi\naffinity:\n  nodeAffinity:\n    requiredDuringSchedulingIgnoredDuringExecution:\n      nodeSelectorTerms:\n        - matchExpressions:\n            - key: karpenter.sh/nodepool\n              operator: DoesNotExist\n            - key: workload\n              operator: In\n              values:\n                - system\n  podAntiAffinity:\n    requiredDuringSchedulingIgnoredDuringExecution:\n      - topologyKey: kubernetes.io/hostname\n        labelSelector:\n          matchLabels:\n            app.kubernetes.io/name: cloudnative-pg\n"
+        },
+        "repoURL": "https://cloudnative-pg.github.io/charts",
+        "targetRevision": "0.29.0"
+      }
+    },
+    {
+      "name": "data-platform-network-policy-aws-test",
+      "source": {
+        "path": "clusters/aws/overlays/test/security/network-policies/data-platform",
+        "repoURL": "https://github.com/SterlingAureum/startup-devops-baseline.git",
+        "targetRevision": "main"
+      }
+    },
+    {
+      "name": "demo-api-aws-test",
+      "source": {
+        "helm": {
+          "releaseName": "demo-api",
+          "valueFiles": [
+            "values/environments/aws-test.yaml",
+            "values/releases/aws-test.yaml"
+          ]
+        },
+        "path": "apps/demo-api/helm",
+        "repoURL": "https://github.com/SterlingAureum/startup-devops-baseline.git",
+        "targetRevision": "main"
+      }
+    },
+    {
+      "name": "external-secrets",
+      "source": {
+        "chart": "external-secrets",
+        "helm": {
+          "releaseName": "external-secrets",
+          "valuesObject": {
+            "affinity": {
+              "nodeAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": {
+                  "nodeSelectorTerms": [
+                    {
+                      "matchExpressions": [
+                        {
+                          "key": "karpenter.sh/nodepool",
+                          "operator": "DoesNotExist"
+                        },
+                        {
+                          "key": "workload",
+                          "operator": "In",
+                          "values": [
+                            "system"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            },
+            "certController": {
+              "affinity": {
+                "nodeAffinity": {
+                  "requiredDuringSchedulingIgnoredDuringExecution": {
+                    "nodeSelectorTerms": [
+                      {
+                        "matchExpressions": [
+                          {
+                            "key": "karpenter.sh/nodepool",
+                            "operator": "DoesNotExist"
+                          },
+                          {
+                            "key": "workload",
+                            "operator": "In",
+                            "values": [
+                              "system"
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "resources": {
+                "limits": {
+                  "cpu": "250m",
+                  "memory": "256Mi"
+                },
+                "requests": {
+                  "cpu": "25m",
+                  "memory": "64Mi"
+                }
+              }
+            },
+            "crds": {
+              "createClusterExternalSecret": false,
+              "createClusterGenerator": false,
+              "createClusterPushSecret": false,
+              "createClusterSecretStore": false,
+              "createPushSecret": false,
+              "createSecretStore": true
+            },
+            "installCRDs": true,
+            "leaderElect": true,
+            "processClusterExternalSecret": false,
+            "processClusterGenerator": false,
+            "processClusterPushSecret": false,
+            "processClusterStore": false,
+            "processPushSecret": false,
+            "rbac": {
+              "aggregateToAdmin": false,
+              "aggregateToEdit": false,
+              "aggregateToView": false,
+              "serviceAccountTokenCreate": false,
+              "servicebindings": {
+                "create": false
+              }
+            },
+            "resources": {
+              "limits": {
+                "cpu": "500m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "50m",
+                "memory": "128Mi"
+              }
+            },
+            "scopedNamespace": "startup-apps",
+            "scopedRBAC": true,
+            "serviceAccount": {
+              "create": false,
+              "name": "external-secrets"
+            },
+            "webhook": {
+              "affinity": {
+                "nodeAffinity": {
+                  "requiredDuringSchedulingIgnoredDuringExecution": {
+                    "nodeSelectorTerms": [
+                      {
+                        "matchExpressions": [
+                          {
+                            "key": "karpenter.sh/nodepool",
+                            "operator": "DoesNotExist"
+                          },
+                          {
+                            "key": "workload",
+                            "operator": "In",
+                            "values": [
+                              "system"
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              },
+              "resources": {
+                "limits": {
+                  "cpu": "250m",
+                  "memory": "256Mi"
+                },
+                "requests": {
+                  "cpu": "25m",
+                  "memory": "64Mi"
+                }
+              }
+            }
+          }
+        },
+        "repoURL": "https://charts.external-secrets.io",
+        "targetRevision": "2.8.0"
+      }
+    },
+    {
+      "name": "external-secrets-startup-apps",
+      "source": {
+        "path": "clusters/aws/overlays/test/security/external-secrets/startup-apps",
+        "repoURL": "https://github.com/SterlingAureum/startup-devops-baseline.git",
+        "targetRevision": "main"
+      }
+    },
+    {
+      "name": "karpenter",
+      "source": {
+        "chart": "karpenter",
+        "helm": {
+          "releaseName": "karpenter",
+          "skipCrds": true,
+          "valuesObject": {
+            "affinity": {
+              "nodeAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": {
+                  "nodeSelectorTerms": [
+                    {
+                      "matchExpressions": [
+                        {
+                          "key": "karpenter.sh/nodepool",
+                          "operator": "DoesNotExist"
+                        },
+                        {
+                          "key": "workload",
+                          "operator": "In",
+                          "values": [
+                            "system"
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "podAntiAffinity": {
+                "requiredDuringSchedulingIgnoredDuringExecution": [
+                  {
+                    "labelSelector": {
+                      "matchLabels": {
+                        "app.kubernetes.io/name": "karpenter"
+                      }
+                    },
+                    "topologyKey": "kubernetes.io/hostname"
+                  }
+                ]
+              }
+            },
+            "controller": {
+              "resources": {
+                "limits": {
+                  "cpu": 1,
+                  "memory": "1Gi"
+                },
+                "requests": {
+                  "cpu": 1,
+                  "memory": "1Gi"
+                }
+              }
+            },
+            "replicas": 2,
+            "serviceAccount": {
+              "create": false,
+              "name": "karpenter"
+            },
+            "settings": {
+              "clusterName": "startup-devops-baseline-test",
+              "interruptionQueue": "startup-devops-baseline-test-karpenter-interruptions"
+            }
+          }
+        },
+        "repoURL": "public.ecr.aws/karpenter",
+        "targetRevision": "1.14.0"
+      }
+    },
+    {
+      "name": "karpenter-crd",
+      "source": {
+        "chart": "karpenter-crd",
+        "helm": {
+          "releaseName": "karpenter-crd"
+        },
+        "repoURL": "public.ecr.aws/karpenter",
+        "targetRevision": "1.14.0"
+      }
+    },
+    {
+      "name": "monitoring-aws-test",
+      "source": {
+        "chart": "kube-prometheus-stack",
+        "helm": {
+          "releaseName": "observability-metrics",
+          "valuesObject": {
+            "alertmanager": {
+              "alertmanagerSpec": {
+                "automountServiceAccountToken": false,
+                "nodeSelector": {
+                  "workload": "system"
+                },
+                "replicas": 1,
+                "resources": {
+                  "limits": {
+                    "cpu": "200m",
+                    "memory": "256Mi"
+                  },
+                  "requests": {
+                    "cpu": "50m",
+                    "memory": "64Mi"
+                  }
+                },
+                "retention": "48h",
+                "storage": {
+                  "volumeClaimTemplate": {
+                    "spec": {
+                      "accessModes": [
+                        "ReadWriteOnce"
+                      ],
+                      "resources": {
+                        "requests": {
+                          "storage": "2Gi"
+                        }
+                      },
+                      "storageClassName": "gp3-observability-alertmanager"
+                    }
+                  }
+                }
+              },
+              "config": {
+                "global": {
+                  "resolve_timeout": "5m"
+                },
+                "inhibit_rules": [
+                  {
+                    "equal": [
+                      "environment",
+                      "cluster",
+                      "component",
+                      "alert_family"
+                    ],
+                    "source_matchers": [
+                      "severity = \"critical\""
+                    ],
+                    "target_matchers": [
+                      "severity = \"warning\""
+                    ]
+                  }
+                ],
+                "receivers": [
+                  {
+                    "name": "platform-observation"
+                  },
+                  {
+                    "name": "critical-observation"
+                  },
+                  {
+                    "name": "warning-observation"
+                  },
+                  {
+                    "name": "critical-drill-webhook",
+                    "webhook_configs": [
+                      {
+                        "send_resolved": true,
+                        "url": "http://alert-lifecycle-drill-sink.observability.svc.cluster.local:8080/critical"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "warning-drill-webhook",
+                    "webhook_configs": [
+                      {
+                        "send_resolved": true,
+                        "url": "http://alert-lifecycle-drill-sink.observability.svc.cluster.local:8080/warning"
+                      }
+                    ]
+                  }
+                ],
+                "route": {
+                  "group_by": [
+                    "environment",
+                    "cluster",
+                    "component",
+                    "alert_family"
+                  ],
+                  "group_interval": "5m",
+                  "group_wait": "30s",
+                  "receiver": "platform-observation",
+                  "repeat_interval": "4h",
+                  "routes": [
+                    {
+                      "continue": true,
+                      "group_interval": "2s",
+                      "group_wait": "1s",
+                      "matchers": [
+                        "drill = \"true\"",
+                        "alert_family = \"alert-lifecycle-drill\"",
+                        "severity = \"critical\""
+                      ],
+                      "receiver": "critical-drill-webhook",
+                      "repeat_interval": "1h"
+                    },
+                    {
+                      "continue": true,
+                      "group_interval": "2s",
+                      "group_wait": "1s",
+                      "matchers": [
+                        "drill = \"true\"",
+                        "alert_family = \"alert-lifecycle-drill\"",
+                        "severity = \"warning\""
+                      ],
+                      "receiver": "warning-drill-webhook",
+                      "repeat_interval": "1h"
+                    },
+                    {
+                      "matchers": [
+                        "severity = \"critical\""
+                      ],
+                      "receiver": "critical-observation"
+                    },
+                    {
+                      "matchers": [
+                        "severity = \"warning\""
+                      ],
+                      "receiver": "warning-observation"
+                    }
+                  ]
+                },
+                "templates": [
+                  "/etc/alertmanager/config/*.tmpl"
+                ]
+              },
+              "enabled": true,
+              "ingress": {
+                "enabled": false
+              },
+              "networkPolicy": {
+                "enabled": false
+              },
+              "service": {
+                "type": "ClusterIP"
+              }
+            },
+            "commonLabels": {
+              "app.kubernetes.io/part-of": "startup-devops-baseline",
+              "platform.startup.dev/managed-by": "gitops"
+            },
+            "defaultRules": {
+              "create": false
+            },
+            "extraManifests": [
+              {
+                "allowVolumeExpansion": true,
+                "apiVersion": "storage.k8s.io/v1",
+                "kind": "StorageClass",
+                "metadata": {
+                  "annotations": {
+                    "argocd.argoproj.io/sync-options": "Prune=false",
+                    "argocd.argoproj.io/sync-wave": "-1"
+                  },
+                  "labels": {
+                    "app.kubernetes.io/managed-by": "argocd",
+                    "app.kubernetes.io/part-of": "startup-devops-baseline"
+                  },
+                  "name": "gp3-observability"
+                },
+                "parameters": {
+                  "csi.storage.k8s.io/fstype": "ext4",
+                  "encrypted": "true",
+                  "iops": "3000",
+                  "tagSpecification_1": "Project=startup-devops-baseline",
+                  "tagSpecification_2": "Environment=test",
+                  "tagSpecification_3": "Component=observability-prometheus",
+                  "throughput": "125",
+                  "type": "gp3"
+                },
+                "provisioner": "ebs.csi.aws.com",
+                "reclaimPolicy": "Delete",
+                "volumeBindingMode": "WaitForFirstConsumer"
+              },
+              {
+                "allowVolumeExpansion": true,
+                "apiVersion": "storage.k8s.io/v1",
+                "kind": "StorageClass",
+                "metadata": {
+                  "annotations": {
+                    "argocd.argoproj.io/sync-options": "Prune=false",
+                    "argocd.argoproj.io/sync-wave": "-1"
+                  },
+                  "labels": {
+                    "app.kubernetes.io/managed-by": "argocd",
+                    "app.kubernetes.io/part-of": "startup-devops-baseline"
+                  },
+                  "name": "gp3-observability-alertmanager"
+                },
+                "parameters": {
+                  "csi.storage.k8s.io/fstype": "ext4",
+                  "encrypted": "true",
+                  "iops": "3000",
+                  "tagSpecification_1": "Project=startup-devops-baseline",
+                  "tagSpecification_2": "Environment=test",
+                  "tagSpecification_3": "Component=observability-alertmanager",
+                  "throughput": "125",
+                  "type": "gp3"
+                },
+                "provisioner": "ebs.csi.aws.com",
+                "reclaimPolicy": "Delete",
+                "volumeBindingMode": "WaitForFirstConsumer"
+              },
+              {
+                "apiVersion": "networking.k8s.io/v1",
+                "kind": "NetworkPolicy",
+                "metadata": {
+                  "labels": {
+                    "app.kubernetes.io/part-of": "startup-devops-baseline"
+                  },
+                  "name": "alertmanager-cluster-only",
+                  "namespace": "observability"
+                },
+                "spec": {
+                  "egress": [
+                    {
+                      "ports": [
+                        {
+                          "port": 8080,
+                          "protocol": "TCP"
+                        }
+                      ],
+                      "to": [
+                        {
+                          "namespaceSelector": {
+                            "matchLabels": {
+                              "kubernetes.io/metadata.name": "observability"
+                            }
+                          },
+                          "podSelector": {
+                            "matchLabels": {
+                              "app.kubernetes.io/name": "alert-lifecycle-drill-sink"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "ports": [
+                        {
+                          "port": 9094,
+                          "protocol": "TCP"
+                        },
+                        {
+                          "port": 9094,
+                          "protocol": "UDP"
+                        }
+                      ],
+                      "to": [
+                        {
+                          "namespaceSelector": {
+                            "matchLabels": {
+                              "kubernetes.io/metadata.name": "observability"
+                            }
+                          },
+                          "podSelector": {
+                            "matchLabels": {
+                              "app.kubernetes.io/name": "alertmanager"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "ports": [
+                        {
+                          "port": 53,
+                          "protocol": "UDP"
+                        },
+                        {
+                          "port": 53,
+                          "protocol": "TCP"
+                        }
+                      ],
+                      "to": [
+                        {
+                          "namespaceSelector": {
+                            "matchLabels": {
+                              "kubernetes.io/metadata.name": "kube-system"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "ingress": [
+                    {
+                      "from": [
+                        {
+                          "namespaceSelector": {
+                            "matchLabels": {
+                              "kubernetes.io/metadata.name": "observability"
+                            }
+                          },
+                          "podSelector": {
+                            "matchLabels": {
+                              "app.kubernetes.io/name": "prometheus"
+                            }
+                          }
+                        }
+                      ],
+                      "ports": [
+                        {
+                          "port": 9093,
+                          "protocol": "TCP"
+                        }
+                      ]
+                    },
+                    {
+                      "from": [
+                        {
+                          "namespaceSelector": {
+                            "matchLabels": {
+                              "kubernetes.io/metadata.name": "observability"
+                            }
+                          },
+                          "podSelector": {
+                            "matchLabels": {
+                              "app.kubernetes.io/name": "alertmanager"
+                            }
+                          }
+                        }
+                      ],
+                      "ports": [
+                        {
+                          "port": 9094,
+                          "protocol": "TCP"
+                        },
+                        {
+                          "port": 9094,
+                          "protocol": "UDP"
+                        }
+                      ]
+                    }
+                  ],
+                  "podSelector": {
+                    "matchLabels": {
+                      "app.kubernetes.io/name": "alertmanager"
+                    }
+                  },
+                  "policyTypes": [
+                    "Ingress",
+                    "Egress"
+                  ]
+                }
+              },
+              {
+                "apiVersion": "networking.k8s.io/v1",
+                "kind": "NetworkPolicy",
+                "metadata": {
+                  "labels": {
+                    "app.kubernetes.io/part-of": "startup-devops-baseline"
+                  },
+                  "name": "prometheus-cluster-only",
+                  "namespace": "observability"
+                },
+                "spec": {
+                  "egress": [
+                    {
+                      "to": [
+                        {
+                          "namespaceSelector": {}
+                        }
+                      ]
+                    },
+                    {
+                      "ports": [
+                        {
+                          "port": 443,
+                          "protocol": "TCP"
+                        },
+                        {
+                          "port": 10249,
+                          "protocol": "TCP"
+                        },
+                        {
+                          "port": 10250,
+                          "protocol": "TCP"
+                        },
+                        {
+                          "port": 9100,
+                          "protocol": "TCP"
+                        }
+                      ],
+                      "to": [
+                        {
+                          "ipBlock": {
+                            "cidr": "0.0.0.0/0"
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "ingress": [
+                    {
+                      "from": [
+                        {
+                          "namespaceSelector": {}
+                        }
+                      ],
+                      "ports": [
+                        {
+                          "port": 9090,
+                          "protocol": "TCP"
+                        }
+                      ]
+                    }
+                  ],
+                  "podSelector": {
+                    "matchLabels": {
+                      "app.kubernetes.io/name": "prometheus"
+                    }
+                  },
+                  "policyTypes": [
+                    "Ingress",
+                    "Egress"
+                  ]
+                }
+              },
+              {
+                "apiVersion": "networking.k8s.io/v1",
+                "kind": "NetworkPolicy",
+                "metadata": {
+                  "labels": {
+                    "app.kubernetes.io/part-of": "startup-devops-baseline"
+                  },
+                  "name": "grafana-cluster-only",
+                  "namespace": "observability"
+                },
+                "spec": {
+                  "egress": [
+                    {
+                      "ports": [
+                        {
+                          "port": 443,
+                          "protocol": "TCP"
+                        }
+                      ],
+                      "to": [
+                        {
+                          "ipBlock": {
+                            "cidr": "0.0.0.0/0"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "ports": [
+                        {
+                          "port": 9090,
+                          "protocol": "TCP"
+                        }
+                      ],
+                      "to": [
+                        {
+                          "namespaceSelector": {
+                            "matchLabels": {
+                              "kubernetes.io/metadata.name": "observability"
+                            }
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "ports": [
+                        {
+                          "port": 53,
+                          "protocol": "UDP"
+                        },
+                        {
+                          "port": 53,
+                          "protocol": "TCP"
+                        }
+                      ],
+                      "to": [
+                        {
+                          "namespaceSelector": {
+                            "matchLabels": {
+                              "kubernetes.io/metadata.name": "kube-system"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ],
+                  "ingress": [
+                    {
+                      "from": [
+                        {
+                          "namespaceSelector": {}
+                        }
+                      ],
+                      "ports": [
+                        {
+                          "port": 3000,
+                          "protocol": "TCP"
+                        }
+                      ]
+                    }
+                  ],
+                  "podSelector": {
+                    "matchLabels": {
+                      "app.kubernetes.io/name": "grafana"
+                    }
+                  },
+                  "policyTypes": [
+                    "Ingress",
+                    "Egress"
+                  ]
+                }
+              }
+            ],
+            "fullnameOverride": "observability-metrics",
+            "grafana": {
+              "defaultDashboardsEnabled": false,
+              "enabled": true,
+              "grafana.ini": {
+                "analytics": {
+                  "check_for_updates": false,
+                  "reporting_enabled": false
+                },
+                "auth.anonymous": {
+                  "enabled": false
+                },
+                "users": {
+                  "allow_sign_up": false
+                }
+              },
+              "ingress": {
+                "enabled": false
+              },
+              "nodeSelector": {
+                "workload": "system"
+              },
+              "persistence": {
+                "enabled": false
+              },
+              "resources": {
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "512Mi"
+                },
+                "requests": {
+                  "cpu": "100m",
+                  "memory": "128Mi"
+                }
+              },
+              "service": {
+                "type": "ClusterIP"
+              },
+              "sidecar": {
+                "dashboards": {
+                  "enabled": true,
+                  "label": "grafana_dashboard",
+                  "labelValue": "1",
+                  "searchNamespace": "observability"
+                },
+                "datasources": {
+                  "defaultDatasourceEnabled": true,
+                  "enabled": true,
+                  "uid": "prometheus"
+                }
+              }
+            },
+            "kube-state-metrics": {
+              "nodeSelector": {
+                "workload": "system"
+              },
+              "resources": {
+                "limits": {
+                  "cpu": "250m",
+                  "memory": "256Mi"
+                },
+                "requests": {
+                  "cpu": "50m",
+                  "memory": "64Mi"
+                }
+              }
+            },
+            "kubeControllerManager": {
+              "enabled": false
+            },
+            "kubeEtcd": {
+              "enabled": false
+            },
+            "kubeProxy": {
+              "enabled": false
+            },
+            "kubeScheduler": {
+              "enabled": false
+            },
+            "prometheus": {
+              "ingress": {
+                "enabled": false
+              },
+              "prometheusSpec": {
+                "enableAdminAPI": false,
+                "externalLabels": {
+                  "cluster": "startup-devops-baseline-test",
+                  "environment": "aws-test"
+                },
+                "nodeSelector": {
+                  "workload": "system"
+                },
+                "podMonitorNamespaceSelector": {},
+                "podMonitorSelector": {},
+                "podMonitorSelectorNilUsesHelmValues": false,
+                "replicas": 1,
+                "resources": {
+                  "limits": {
+                    "cpu": "1",
+                    "memory": "1Gi"
+                  },
+                  "requests": {
+                    "cpu": "250m",
+                    "memory": "512Mi"
+                  }
+                },
+                "retention": "48h",
+                "retentionSize": "8GiB",
+                "ruleNamespaceSelector": {},
+                "ruleSelector": {},
+                "ruleSelectorNilUsesHelmValues": false,
+                "serviceMonitorNamespaceSelector": {},
+                "serviceMonitorSelector": {},
+                "serviceMonitorSelectorNilUsesHelmValues": false,
+                "storageSpec": {
+                  "volumeClaimTemplate": {
+                    "spec": {
+                      "accessModes": [
+                        "ReadWriteOnce"
+                      ],
+                      "resources": {
+                        "requests": {
+                          "storage": "10Gi"
+                        }
+                      },
+                      "storageClassName": "gp3-observability"
+                    }
+                  }
+                }
+              },
+              "service": {
+                "type": "ClusterIP"
+              }
+            },
+            "prometheus-node-exporter": {
+              "resources": {
+                "limits": {
+                  "cpu": "200m",
+                  "memory": "128Mi"
+                },
+                "requests": {
+                  "cpu": "25m",
+                  "memory": "32Mi"
+                }
+              },
+              "tolerations": [
+                {
+                  "operator": "Exists"
+                }
+              ]
+            },
+            "prometheusOperator": {
+              "admissionWebhooks": {
+                "patch": {
+                  "nodeSelector": {
+                    "workload": "system"
+                  }
+                }
+              },
+              "nodeSelector": {
+                "workload": "system"
+              },
+              "resources": {
+                "limits": {
+                  "cpu": "500m",
+                  "memory": "512Mi"
+                },
+                "requests": {
+                  "cpu": "100m",
+                  "memory": "128Mi"
+                }
+              }
+            },
+            "windowsMonitoring": {
+              "enabled": false
+            }
+          }
+        },
+        "repoURL": "https://prometheus-community.github.io/helm-charts",
+        "targetRevision": "88.5.0"
+      }
+    },
+    {
+      "name": "namespace-guardrails-aws-test",
+      "source": {
+        "directory": {
+          "recurse": true
+        },
+        "path": "platform/security/namespace-guardrails/startup-apps",
+        "repoURL": "https://github.com/SterlingAureum/startup-devops-baseline.git",
+        "targetRevision": "main"
+      }
+    },
+    {
+      "name": "observability-views-aws-test",
+      "source": {
+        "helm": {
+          "parameters": [
+            {
+              "name": "environment",
+              "value": "aws-test"
+            },
+            {
+              "name": "cluster",
+              "value": "startup-devops-baseline-test"
+            },
+            {
+              "name": "controllerMonitors.cloudNativePG.enabled",
+              "value": "true"
+            }
+          ],
+          "releaseName": "observability-views"
+        },
+        "path": "platform/observability/helm",
+        "repoURL": "https://github.com/SterlingAureum/startup-devops-baseline.git",
+        "targetRevision": "main"
+      }
+    },
+    {
+      "name": "postgresql-baseline",
+      "source": {
+        "path": "clusters/aws/overlays/test/data-platform/postgresql",
+        "repoURL": "https://github.com/SterlingAureum/startup-devops-baseline.git",
+        "targetRevision": "main"
+      }
+    },
+    {
+      "name": "runtime-qualification-rbac-aws-test",
+      "source": {
+        "path": "clusters/aws/base/security/runtime-qualification",
+        "repoURL": "https://github.com/SterlingAureum/startup-devops-baseline.git",
+        "targetRevision": "main"
+      }
+    },
+    {
+      "name": "startup-apps-network-policy-aws-test",
+      "source": {
+        "path": "clusters/aws/overlays/test/security/network-policies/startup-apps",
+        "repoURL": "https://github.com/SterlingAureum/startup-devops-baseline.git",
+        "targetRevision": "main"
+      }
+    }
+  ],
+  "reviewedFiles": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.5.1-aws-test-root-capacity-cost.json",
+      "sha256": "d4b8900af6cfd2e86d84a3552e8b08e110a8c9ee1e79d0463bf7ae3b16fe8ecf"
+    },
+    {
+      "path": "scripts/review-v0.11.9.3.6.7.5.1-aws-test-root-cost.py",
+      "sha256": "c57456e83dada7226e7a0565d02851abc1702336b1e6edbb25fbf87cde9428b6"
+    },
+    {
+      "path": "scripts/aws_test_immutable_root.py",
+      "sha256": "3007feace51f86d560d061cfde8c049fd2b01b32bd01f39d31385d7a2fe6d71a"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.5.2-aws-test-root-deployment.py",
+      "sha256": "7762d048037a8d21f97d9a32eb3e1deb9d4a558e31cae7f5f8ccd5200839385d"
+    }
+  ],
+  "operationBoundary": {
+    "applyingIncrementRunsLiveCommands": false,
+    "terraformCommandsAllowed": false,
+    "directSharedDevWrapperAllowed": false,
+    "automaticRetryAllowed": false,
+    "automaticRepairAllowed": false,
+    "trafficAllowed": false,
+    "qualificationAllowed": false,
+    "promotionAllowed": false,
+    "teardownAllowed": false
+  },
+  "approvedExecutionScopeRequired": [
+    "root-and-controller-reconciliation",
+    "namespaces-and-two-irsa-serviceaccounts",
+    "cnpg-secret-value-read",
+    "initial-secrets-manager-version-write-and-readback",
+    "eso-target-secret-value-verification",
+    "test-dns-alias-upsert",
+    "read-only-postchecks"
+  ],
+  "notes": [
+    "All same-repository child Applications pinned to exact main; external charts retain reviewed versions.",
+    "No approval is granted by budget increase or by applying this increment.",
+    "Controllers and cloud billing can continue after executor stops."
+  ]
+}

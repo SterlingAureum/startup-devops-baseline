@@ -601,3 +601,10 @@
 /scripts/review-v0.11.9.3.6.7.5.1-aws-test-root-cost.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.5.1-aws-test-root-cost.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.5.1-aws-test-root-capacity-cost.sh @SterlingAureum
+
+/delivery/contracts/v0.11.9.3.6.7.5.2-aws-test-immutable-root-deployment.json @SterlingAureum
+/docs/V0.11.9.3.6.7.5.2_AWS_TEST_IMMUTABLE_ROOT_DEPLOYMENT.md @SterlingAureum
+/scripts/aws_test_immutable_root.py @SterlingAureum
+/scripts/execute-v0.11.9.3.6.7.5.2-aws-test-root-deployment.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.5.2-aws-test-root-deployment.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.5.2-aws-test-immutable-root-deployment.sh @SterlingAureum

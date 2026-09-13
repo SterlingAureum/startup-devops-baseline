@@ -1011,3 +1011,15 @@ Generate a draft only when the additional USD 8 model fits elapsed next-day
 time through cleanup and operator availability. Price and scope evidence remain
 required; implement a consistent immutable cascade and bounded deployment
 executor before separate mutation approval. Do not repeat apply/bootstrap.
+
+### v0.11.9.3.6.7.5.2
+
+Implement the immutable private Root cascade and bounded one-time deployment
+under the revised USD 36 total envelope, accounting for the earlier session
+through cleanup completion at September 13 10:51:13Z. Preserve a 90-minute
+cleanup reserve and stop commands at 09:21:13Z. Fresh exact-main preparation,
+human manifest/cost review and read-only verify precede separate approval for
+Root/controller scope, initial credential transfer and the test alias. Keep
+prior apply/bootstrap and recovered state unchanged. Runtime health acceptance,
+qualification and independent cleanup remain later explicit checkpoints; no
+automatic cleanup or billing guarantee is introduced.

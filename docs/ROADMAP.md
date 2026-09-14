@@ -1127,3 +1127,16 @@ Next: merge, new persistent preflight/verify session and separately approved sco
 audit. Before prod live work, consolidate applicable guarded runtime logic and
 replay discovered dev/test edge cases; do not assume manifests imply identical
 execution semantics. See [Fleet repair](V0.11.9.3.6.7.6.6.2_AWS_TEST_INSTANT_FLEET_CLASSIFICATION_REPAIR.md).
+
+
+### v0.11.9.3.6.7.6.6.3 — aws-test residual-cost audit execution evidence
+
+Recorded: the independently approved September 14 audit passed its captured/test-
+tagged regional and captured global IAM/DNS scope. Four instant request-history
+records and four native instance checks were accepted; ninety managed definitions
+and empty state remained bound. Prior failed attempts and markers stay preserved.
+
+Teardown and scoped residual-audit checks are closed. Historical account billing,
+all-region/untagged absence and test qualification are not certified. Next work is
+offline common guarded-runtime review and dev/test edge-case replay before any new
+live test/prod rehearsal, which needs its own design and approval. See [audit evidence](V0.11.9.3.6.7.6.6.3_AWS_TEST_RESIDUAL_COST_AUDIT_EXECUTION_EVIDENCE.md).

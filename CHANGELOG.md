@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.11.9.3.6.7.6.6.3
+
+- Record the independently approved successful scoped aws-test residual audit,
+  byte-exact redacted preflight/verify/execution hashes and raw manifest digests.
+- Preserve failed attempts and markers; record four instant request-history records,
+  four native instance checks, ninety captured definitions and unchanged empty state.
+- Close teardown/residual-audit evidence only; no account-wide bill, qualification
+  pass, prod authorization or new live execution is claimed.
+- Add static source/hash/clock/privacy gates and reuse the frozen offline regression
+  chain; packaging did not access AWS, Terraform, Kubernetes or private raw logs.
+
 ## v0.11.9.3.6.7.6.6.2
 
 - Classify active instant Fleet request history separately from terminal records,

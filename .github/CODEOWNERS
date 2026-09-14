@@ -677,3 +677,8 @@
 /scripts/test-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py @SterlingAureum
 /scripts/aws_fleet_audit_classification.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.6.6.2-instant-fleet-classification-repair.sh @SterlingAureum
+
+# v0.11.9.3.6.7.6.6.3 successful scoped residual audit evidence
+/delivery/contracts/v0.11.9.3.6.7.6.6.3-aws-test-residual-cost-audit-execution-evidence.json @SterlingAureum
+/docs/V0.11.9.3.6.7.6.6.3_AWS_TEST_RESIDUAL_COST_AUDIT_EXECUTION_EVIDENCE.md @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.6.6.3-residual-cost-audit-execution-evidence.sh @SterlingAureum

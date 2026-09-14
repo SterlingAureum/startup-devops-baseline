@@ -669,3 +669,11 @@
 /scripts/execute-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.6.6.1-audit-error-envelope-repair.sh @SterlingAureum
+
+# v0.11.9.3.6.7.6.6.2 typed Fleet repair and reusable semantic rules
+/delivery/contracts/v0.11.9.3.6.7.6.6.2-aws-test-instant-fleet-classification-repair.json @SterlingAureum
+/docs/V0.11.9.3.6.7.6.6.2_AWS_TEST_INSTANT_FLEET_CLASSIFICATION_REPAIR.md @SterlingAureum
+/scripts/execute-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py @SterlingAureum
+/scripts/aws_fleet_audit_classification.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.6.6.2-instant-fleet-classification-repair.sh @SterlingAureum

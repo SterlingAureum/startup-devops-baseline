@@ -827,3 +827,6 @@ echo "==> Validating v0.11.9.3.6.7.6.6 guarded aws-test residual-cost audit"
 
 echo "==> Validating v0.11.9.3.6.7.6.6.1 AWS CLI error envelope repair"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6.6.1-audit-error-envelope-repair.sh"
+
+echo "==> Validating v0.11.9.3.6.7.6.6.2 typed instant Fleet classification"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6.6.2-instant-fleet-classification-repair.sh"

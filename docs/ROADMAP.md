@@ -1168,3 +1168,16 @@ Next: dependency-aware cleanup planning (ESO permission/controller lifetime) and
 captured ENI/SG continuation fixtures; then migrate exact dependency gates and
 versioned environment adapters with fake transport. No new live test/prod operation
 is enabled. See [pure rules](V0.11.9.3.6.7.7.1_SHARED_GUARDED_RUNTIME_PURE_RULES.md).
+
+
+### v0.11.9.3.6.7.7.2 — shared cleanup dependency and captured ENI/SG rules
+
+Implemented: ordered confirmed-receipt prerequisites, ESO permission retention before
+namespace deletion, runtime/controller lifetime and captured ENI/SG scope/absence/attempt
+decisions. Twenty-eight pure offline fixtures cover earlier ordering and continuation
+rule gaps; this is not live adapter integration or exhaustive native cloud validation.
+Prior executors, evidence and rules stay frozen; test cleanup/scoped audit remain closed.
+
+Next: extract exact dependency plan-scope gates and integrate a durable exclusive attempt
+journal, then create versioned fake-transport adapters. Prod live scope/pricing/window
+and authorization remain independent. See [cleanup rules](V0.11.9.3.6.7.7.2_SHARED_GUARDED_CLEANUP_RULES.md).

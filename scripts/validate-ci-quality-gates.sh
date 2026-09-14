@@ -833,3 +833,6 @@ echo "==> Validating v0.11.9.3.6.7.6.6.2 typed instant Fleet classification"
 
 echo "==> Validating v0.11.9.3.6.7.6.6.3 aws-test residual audit execution evidence"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6.6.3-residual-cost-audit-execution-evidence.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7 offline cross-environment guarded runtime review"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7-cross-environment-guarded-runtime-review.sh"

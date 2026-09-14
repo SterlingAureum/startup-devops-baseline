@@ -1102,3 +1102,15 @@ IAM/DNS; no account-wide billing or all-untagged coverage claim.
 Next: merge, run fresh private preflight, review executor verify, separately approve
 one metadata-only audit, then record execution evidence. Completed teardown stays
 complete and historical mutation windows remain consumed. See [guarded residual-cost audit](V0.11.9.3.6.7.6.6_GUARDED_AWS_TEST_RESIDUAL_COST_AUDIT.md).
+
+
+### v0.11.9.3.6.7.6.6.1 — strict AWS CLI error compatibility repair
+
+Implemented: preserve the backup-bucket preflight stop and narrowly accept the
+standard exact absence envelope with a zero-retry formatter annotation. All
+read-only scopes, input/state hashes, proof clocks and one-time markers remain
+unchanged; positive retry counts or ambiguous errors still stop.
+
+Next: merge, fresh private preflight on new main, verify review, then independently
+approve one read-only scoped residual audit. No audit or repeat teardown ran during
+repair. See [error envelope repair](V0.11.9.3.6.7.6.6.1_AWS_TEST_AUDIT_ERROR_ENVELOPE_REPAIR.md).

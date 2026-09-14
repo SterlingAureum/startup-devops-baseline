@@ -662,3 +662,10 @@
 /scripts/execute-v0.11.9.3.6.7.6.6-aws-test-residual-cost-audit.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.6.6-aws-test-residual-cost-audit.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.6.6-guarded-residual-cost-audit.sh @SterlingAureum
+
+# v0.11.9.3.6.7.6.6.1 zero-retry error repair
+/delivery/contracts/v0.11.9.3.6.7.6.6.1-aws-test-audit-error-envelope-repair.json @SterlingAureum
+/docs/V0.11.9.3.6.7.6.6.1_AWS_TEST_AUDIT_ERROR_ENVELOPE_REPAIR.md @SterlingAureum
+/scripts/execute-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.6.6.1-audit-error-envelope-repair.sh @SterlingAureum

@@ -1077,3 +1077,15 @@ residual-cost closure are not claimed by deployment or evidence recording.
 - Preserve original saved-plan expiry; stop without replan when it expires.
 - Obtain independent approval for fresh plan, reviewed saved apply and final deletion.
 - Keep cleanup deadline/budget unchanged; full residual-cost audit remains separate.
+
+
+### v0.11.9.3.6.7.6.5 — aws-test teardown execution evidence
+
+Completed: record user-confirmed deletion results, independent ENI/SG continuation,
+final empty state and durable evidence checks. Preserve stopped wrapper results
+and consumed one-time attempts. Offline validation grants no live authorization.
+
+Next: implement guarded aws-test read-only residual-cost audit with fresh exact-main,
+strict cloud error handling, private durable output and separately approved execution.
+No repeat teardown or reuse of September 13 approvals. Historical USD 35.20 is an
+estimate; billing remains unknown. See [v0.11.9.3.6.7.6.5 evidence](V0.11.9.3.6.7.6.5_AWS_TEST_TEARDOWN_EXECUTION_EVIDENCE.md).

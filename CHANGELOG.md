@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.11.9.3.6.7.6.6
+
+- Implement strict aws-test read-only residual preflight/verify/execute, binding
+  teardown evidence, private inputs, completion receipt and final empty state.
+- Reject ambiguous AWS errors, malformed/incomplete responses, drift, unknown
+  resources, expired proofs and reused one-time attempts; preserve private raw logs.
+- Check captured/native/tagged resources without Terraform, Kubernetes or value reads.
+- Add offline behavior tests and ownership/quality-gate integration; no live audit
+  or new execution approval is included.
+
 ## v0.11.9.3.6.7.6.5
 
 - Record five configuration deletions, the exact 50-delete EKS saved apply and its

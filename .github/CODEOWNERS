@@ -701,3 +701,11 @@
 /scripts/guarded_cleanup_rules.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.2-guarded-cleanup-rules.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.2-guarded-cleanup-rules.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.3 shared plan scope and journal
+/delivery/contracts/v0.11.9.3.6.7.7.3-shared-plan-scope-and-attempt-journal.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.3_SHARED_PLAN_SCOPE_AND_ATTEMPT_JOURNAL.md @SterlingAureum
+/scripts/guarded_plan_rules.py @SterlingAureum
+/scripts/guarded_attempt_journal.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.3-plan-scope-and-attempt-journal.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.3-plan-scope-and-attempt-journal.sh @SterlingAureum

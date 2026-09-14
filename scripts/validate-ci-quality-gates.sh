@@ -842,3 +842,6 @@ echo "==> Validating v0.11.9.3.6.7.7.1 shared guarded runtime pure rules"
 
 echo "==> Validating v0.11.9.3.6.7.7.2 shared cleanup pure rules"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.2-guarded-cleanup-rules.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.3 plan scope and attempt journal"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.3-plan-scope-and-attempt-journal.sh"

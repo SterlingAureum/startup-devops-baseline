@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.3
+
+- Add pure reviewed-address/definition/before-ID destroy gate with explicit dependency closure and final-state coverage.
+- Add Linux exclusive durable attempt journal with write-ahead intent, flock, fsync and independent committed head.
+- Add 36 offline fixtures for scope drift, historical output parity, concurrency, truncation and uncertain IO.
+- Freeze historical live adapters and previous rules; versioned adapter integration remains pending.
+
 ## v0.11.9.3.6.7.7.2
 
 - Add pure dependency-ordered cleanup and exact captured ENI/SG continuation rules.

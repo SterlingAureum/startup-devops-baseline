@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.3-shared-plan-scope-and-attempt-journal` adds exact reviewed destroy
+scope and a durable Linux write-ahead journal with 36 offline fixtures. Pending or
+failed attempts stop; live adapter integration remains pending. See
+[plan scope and attempt journal](docs/V0.11.9.3.6.7.7.3_SHARED_PLAN_SCOPE_AND_ATTEMPT_JOURNAL.md).
+
+Recorded cleanup-rule checkpoint:
 `v0.11.9.3.6.7.7.2-shared-guarded-cleanup-rules` implements dependency-order and
 captured ENI/SG pure decisions with 28 offline fixtures. ESO permissions outlive
 dependent cleanup; repeated attempts and changed scope fail. Live adapter migration

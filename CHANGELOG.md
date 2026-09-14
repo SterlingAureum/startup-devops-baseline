@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.11.9.3.6.7.6.6.2
+
+- Classify active instant Fleet request history separately from terminal records,
+  requiring exact native ownership, captured IDs and fresh native instance absence.
+- Extract a pure environment-parameterized classifier; active maintain/request and
+  unknown, live or malformed resources still fail closed.
+- Record the consumed stopped audit and dev/test coverage gap; freeze old evidence
+  and require a fresh session/proof/approval after merge. No live operation ran.
+
 ## v0.11.9.3.6.7.6.6.1
 
 - Fix the backup-bucket preflight false negative for an exact NoSuchBucket error

@@ -1114,3 +1114,16 @@ unchanged; positive retry counts or ambiguous errors still stop.
 Next: merge, fresh private preflight on new main, verify review, then independently
 approve one read-only scoped residual audit. No audit or repeat teardown ran during
 repair. See [error envelope repair](V0.11.9.3.6.7.6.6.1_AWS_TEST_AUDIT_ERROR_ENVELOPE_REPAIR.md).
+
+
+### v0.11.9.3.6.7.6.6.2 — typed instant Fleet history and cross-environment coverage
+
+Implemented: shared pure Fleet classification, captured launch-ID binding and fresh
+native instance absence checks. Active instant history receives a separate counter;
+active maintain/request and live/unclassified resources remain failures. The prior
+audit is stopped with its marker preserved, not recorded as a pass.
+
+Next: merge, new persistent preflight/verify session and separately approved scoped
+audit. Before prod live work, consolidate applicable guarded runtime logic and
+replay discovered dev/test edge cases; do not assume manifests imply identical
+execution semantics. See [Fleet repair](V0.11.9.3.6.7.6.6.2_AWS_TEST_INSTANT_FLEET_CLASSIFICATION_REPAIR.md).

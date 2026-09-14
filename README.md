@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.6.6.2-instant-fleet-classification-repair` adds a reusable typed Fleet
+classifier and fresh captured-instance absence checks for active instant history.
+The prior audit remains stopped; fresh proofs and separate approval are required.
+See [typed Fleet repair](docs/V0.11.9.3.6.7.6.6.2_AWS_TEST_INSTANT_FLEET_CLASSIFICATION_REPAIR.md).
+
+Predecessor implementation:
 `v0.11.9.3.6.7.6.6.1-audit-error-envelope-repair` fixes the strict parser false
 negative for a standard NoSuchBucket error with the zero-retry annotation.
 The failed preflight remains preserved; merge requires a fresh private preflight.

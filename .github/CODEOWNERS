@@ -694,3 +694,10 @@
 /scripts/guarded_runtime_rules.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.1-guarded-runtime-rules.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.1-guarded-runtime-rules.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.2 shared cleanup rules
+/delivery/contracts/v0.11.9.3.6.7.7.2-shared-guarded-cleanup-rules.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.2_SHARED_GUARDED_CLEANUP_RULES.md @SterlingAureum
+/scripts/guarded_cleanup_rules.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.2-guarded-cleanup-rules.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.2-guarded-cleanup-rules.sh @SterlingAureum

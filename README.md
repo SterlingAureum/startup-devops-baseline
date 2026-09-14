@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.2-shared-guarded-cleanup-rules` implements dependency-order and
+captured ENI/SG pure decisions with 28 offline fixtures. ESO permissions outlive
+dependent cleanup; repeated attempts and changed scope fail. Live adapter migration
+remains pending. See [shared cleanup rules](docs/V0.11.9.3.6.7.7.2_SHARED_GUARDED_CLEANUP_RULES.md).
+
+Recorded pure-rule checkpoint:
 `v0.11.9.3.6.7.7.1-shared-guarded-runtime-pure-rules` extracts clock/proof, exact
 phase confirmations, CLI absence and managed/data state rules with 29 offline
 parity tests. Existing live adapters remain frozen; common adapter migration is

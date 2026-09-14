@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.2
+
+- Add pure dependency-ordered cleanup and exact captured ENI/SG continuation rules.
+- Replay ESO ready-without-patch incident and retained-permission drain before namespace/RBAC deletion.
+- Add 28 offline fixtures for ownership/attachment/reference/schema drift, confirmed absence,
+  skipped/repeated stages and consumed attempts without finalizer/privilege repair or transport.
+- Freeze prior pure rules, historical executors/evidence; durable journal and live adapters remain pending.
+
 ## v0.11.9.3.6.7.7.1
 
 - Extract pure UTC/window/proof, exact phase confirmation, strict CLI absence and

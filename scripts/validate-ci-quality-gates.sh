@@ -839,3 +839,6 @@ echo "==> Validating v0.11.9.3.6.7.7 offline cross-environment guarded runtime r
 
 echo "==> Validating v0.11.9.3.6.7.7.1 shared guarded runtime pure rules"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.1-guarded-runtime-rules.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.2 shared cleanup pure rules"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.2-guarded-cleanup-rules.sh"

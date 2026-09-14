@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.6.6.3-residual-cost-audit-execution-evidence` records the passed
+September 14 scoped aws-test residual audit: four instant request-history records,
+four natively verified instances, ninety captured managed definitions and unchanged
+empty state. Teardown/residual checks are closed; historical billing and runtime
+qualification are not certified. See [audit execution evidence](docs/V0.11.9.3.6.7.6.6.3_AWS_TEST_RESIDUAL_COST_AUDIT_EXECUTION_EVIDENCE.md).
+
+Historical repair checkpoint:
 `v0.11.9.3.6.7.6.6.2-instant-fleet-classification-repair` adds a reusable typed Fleet
 classifier and fresh captured-instance absence checks for active instant history.
 The prior audit remains stopped; fresh proofs and separate approval are required.
@@ -23,8 +30,9 @@ See [guarded residual-cost audit](docs/V0.11.9.3.6.7.6.6_GUARDED_AWS_TEST_RESIDU
 Recorded predecessor:
 `v0.11.9.3.6.7.6.5-teardown-execution-evidence` records completed aws-test
 teardown, the separately approved ENI/SG post-apply continuation, and the
-September 14 empty-state/private-evidence confirmation. Full residual-cost audit
-is pending; consumed teardown windows grant no new live authorization.
+September 14 empty-state/private-evidence confirmation. At that checkpoint the full
+residual audit was pending; the current evidence above records its later scoped pass.
+Consumed teardown windows grant no new live authorization.
 See [teardown execution evidence](docs/V0.11.9.3.6.7.6.5_AWS_TEST_TEARDOWN_EXECUTION_EVIDENCE.md).
 
 Historical implementation checkpoint:

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.11.9.3.6.7.7
+
+- Review frozen dev/test execution paths, shared Terraform module sources and typed Fleet reuse.
+- Pin seven discovered boundaries to source/AST test references; preserve explicit ESO ordering
+  and ENI continuation coverage gaps for the future common runtime.
+- Define pure-core interfaces and migration acceptance without changing historical executors,
+  state, evidence, approvals or enabling prod live work.
+- Add offline review/profile/privacy gate and replay the existing predecessor regression chain.
+
 ## v0.11.9.3.6.7.6.6.3
 
 - Record the independently approved successful scoped aws-test residual audit,

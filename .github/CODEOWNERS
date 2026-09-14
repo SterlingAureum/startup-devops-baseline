@@ -682,3 +682,8 @@
 /delivery/contracts/v0.11.9.3.6.7.6.6.3-aws-test-residual-cost-audit-execution-evidence.json @SterlingAureum
 /docs/V0.11.9.3.6.7.6.6.3_AWS_TEST_RESIDUAL_COST_AUDIT_EXECUTION_EVIDENCE.md @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.6.6.3-residual-cost-audit-execution-evidence.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7 offline common runtime review
+/delivery/contracts/v0.11.9.3.6.7.7-cross-environment-guarded-runtime-review.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7_CROSS_ENVIRONMENT_GUARDED_RUNTIME_REVIEW.md @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7-cross-environment-guarded-runtime-review.sh @SterlingAureum

@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7-cross-environment-guarded-runtime-review` records source-bound
+offline dev/test review, common module profiles and the remaining cleanup coverage
+gaps. Shared runtime migration remains pending; no new live operation is enabled.
+See [cross-environment review](docs/V0.11.9.3.6.7.7_CROSS_ENVIRONMENT_GUARDED_RUNTIME_REVIEW.md).
+
+Recorded audit checkpoint:
 `v0.11.9.3.6.7.6.6.3-residual-cost-audit-execution-evidence` records the passed
 September 14 scoped aws-test residual audit: four instant request-history records,
 four natively verified instances, ninety captured managed definitions and unchanged

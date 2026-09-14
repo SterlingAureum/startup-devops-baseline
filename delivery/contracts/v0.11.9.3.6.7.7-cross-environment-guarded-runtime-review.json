@@ -1,0 +1,292 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7",
+  "version": "v0.11.9.3.6.7.7",
+  "predecessor": "v0.11.9.3.6.7.6.6.3",
+  "implementationBaselineCommit": "383966da430bf560403e399978a549c6efd38348",
+  "status": "cross-environment-guarded-runtime-reviewed-offline",
+  "commonRuntimeMigrationImplemented": false,
+  "liveExecutionAuthorized": false,
+  "prodQualified": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "historicalApprovalsReusable": false,
+  "reviewSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.6.6.1-aws-dev-residual-cost-audit-execution-evidence.json",
+      "sha256": "d73e4b5107b4c99ae1feebd2a34197040e4d0f50b6c6ccbecdf951bbe1da25e9"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.5-aws-test-teardown-execution-evidence.json",
+      "sha256": "684e0fe9d13005dffd08f4dbbc53709dafc6404edc776c1e783eaab473a68531"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.6.3-aws-test-residual-cost-audit-execution-evidence.json",
+      "sha256": "90d6945c04b6ba6f308fb8de705bd5b5c730557938cfc12c9acd2f29756b8f67"
+    },
+    {
+      "path": "docs/V0.11.9.3.6.7.6.3_AWS_TEST_REMAINING_CLEANUP.md",
+      "sha256": "0ca7c71d5cc440f4aade2942ba8ba4ea9e82e3937d3e9c23a65b92fbf868d808"
+    },
+    {
+      "path": "infra/terraform/aws/environments/dev/main.tf",
+      "sha256": "f955ce8b0528f9b5d69143119852bc376544f126cc552c04ab089651bffd5176"
+    },
+    {
+      "path": "infra/terraform/aws/environments/prod/main.tf",
+      "sha256": "064f9dd196910d84ca3138eef3b6b221898e876392d1aa969a3522eb077e3472"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/main.tf",
+      "sha256": "76922f3bbc7cccfc379c337ba156ea377405b740b4657907250f532baf709479"
+    },
+    {
+      "path": "scripts/apply-aws-dev.sh",
+      "sha256": "fcdb1698a4e70b6a1be2d2f9a859ab32e47c9432b630ba9aef31014121f547b1"
+    },
+    {
+      "path": "scripts/apply-aws-test.sh",
+      "sha256": "e418af18ac98ae3a1c5c7c8a2f684d76634e454e321b4ad2813f215860d6b114"
+    },
+    {
+      "path": "scripts/aws_fleet_audit_classification.py",
+      "sha256": "cd223acc08b5643c71385d2b71b2379a6d50d0a51bb30253d880b8941df3d206"
+    },
+    {
+      "path": "scripts/bootstrap-eks-argocd.sh",
+      "sha256": "e849aa6b6e9cf688c8425c8670cb67dba00e2c794b481c83c9f89570c1d2f37f"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.6.6-aws-dev-residual-cost-audit.py",
+      "sha256": "6528137035535b1cd4dd865584b7d9ef5861d9e81a1443b2d4283dce41646989"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+      "sha256": "e9bc6c2f7283728fec6ded285abab40979d6296906222f8fefc517aa348382e2"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py",
+      "sha256": "efa6112cbc221e6f7c7508becb1eb76534f7719321785a06ff04264c0996a275"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.3.1-aws-test-post-apply-resume.py",
+      "sha256": "33fec066f6babab8b9f7fc1ce50bcb195c4355c58ca462b88ff2b9f4fd008db9"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.2-aws-test-teardown.py",
+      "sha256": "d12fc8c06b940adf70a30201761c55efac21b2b0148a74d424ac6de457a6dbc5"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+      "sha256": "a171135125cd5425bce2eb68d40a885f8c4bfa54d4d3ac8b22f233e60d0e5b17"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py",
+      "sha256": "bd1b4bc7715011f0c1ea3ae33f1edbc10661bf80b92f4d14efccf367a7fa46dc"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py",
+      "sha256": "01a6eb1039e6b1cb0ae5edb671ed52d991a4d0fb51185daa5817b0963902545c"
+    },
+    {
+      "path": "scripts/validate-aws-cost-cleanup.sh",
+      "sha256": "ab0bad09b228d09e9451863c047c8da3e4ebf77198f277ad78117b99383f3df7"
+    },
+    {
+      "path": "scripts/validate-v0.11.9.3.6.7.6.6.3-residual-cost-audit-execution-evidence.sh",
+      "sha256": "c432307a3c475bc3f862c86ad52a33844e5e508076ac89b544b3400070907417"
+    }
+  ],
+  "environmentProfiles": [
+    {
+      "environment": "aws-dev",
+      "terraformMainPath": "infra/terraform/aws/environments/dev/main.tf",
+      "moduleSources": [
+        "../../modules/cnpg-backup",
+        "../../modules/eks",
+        "../../modules/external-secrets",
+        "../../modules/fis",
+        "../../modules/github-actions-runtime-identity",
+        "../../modules/karpenter",
+        "../../modules/tls-dns",
+        "../../modules/vpc"
+      ],
+      "liveAdapterEnabledByThisIncrement": false
+    },
+    {
+      "environment": "aws-test",
+      "terraformMainPath": "infra/terraform/aws/environments/test/main.tf",
+      "moduleSources": [
+        "../../modules/cnpg-backup",
+        "../../modules/eks",
+        "../../modules/external-secrets",
+        "../../modules/fis",
+        "../../modules/github-actions-runtime-identity",
+        "../../modules/karpenter",
+        "../../modules/tls-dns",
+        "../../modules/vpc"
+      ],
+      "liveAdapterEnabledByThisIncrement": false
+    },
+    {
+      "environment": "aws-prod",
+      "terraformMainPath": "infra/terraform/aws/environments/prod/main.tf",
+      "moduleSources": [
+        "../../modules/cnpg-backup",
+        "../../modules/eks",
+        "../../modules/external-secrets",
+        "../../modules/karpenter",
+        "../../modules/tls-dns",
+        "../../modules/vpc"
+      ],
+      "liveAdapterEnabledByThisIncrement": false
+    }
+  ],
+  "findings": [
+    {
+      "id": "aws-error-envelope",
+      "coverageStatus": "implemented-test-specific",
+      "observedBoundary": "Zero-retry CLI absence formatting must be matched by exact operation/code, not converted into a permission or connectivity pass.",
+      "replayReferences": [
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py",
+          "method": "test_observed_no_such_bucket_hash_and_zero_annotation"
+        },
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py",
+          "method": "test_positive_malformed_and_duplicate_retry_annotations_rejected"
+        }
+      ],
+      "futureAcceptance": "Extract a pure absence-envelope rule; replay malformed, multiple-error, nonempty stdout, positive retry and wrong-operation cases through each new adapter."
+    },
+    {
+      "id": "state-data-classification",
+      "coverageStatus": "implemented-test-specific",
+      "observedBoundary": "Plan resource changes and state addresses are different sets; managed and data addresses need separate classification.",
+      "replayReferences": [
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.3.1-aws-test-post-apply-resume.py",
+          "method": "test_classifies_unplanned_data_separately_from_managed_state"
+        },
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.3.1-aws-test-post-apply-resume.py",
+          "method": "test_unplanned_managed_address_is_never_accepted"
+        }
+      ],
+      "futureAcceptance": "Derive per-run managed/data sets and allowed data definitions from reviewed state and inputs. Never copy the incident-specific seven-address exception into prod."
+    },
+    {
+      "id": "eso-cleanup-order",
+      "coverageStatus": "partial-regression-open-ordering-gap",
+      "observedBoundary": "ESO ready workloads could not patch a deleting ExternalSecret after namespace-scoped RBAC was removed. Interruption exposed the wait but did not create this ordering dependency.",
+      "replayReferences": [
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.6.2-aws-test-teardown.py",
+          "method": "test_resume_never_repeats_freeze_and_keeps_controllers"
+        }
+      ],
+      "futureAcceptance": "Add a controller/RBAC dependency fixture: keep ESO permissions until dependent ExternalSecrets finish; unknown finalizers stop; no generic force-finalizer option."
+    },
+    {
+      "id": "eks-dependency-closure",
+      "coverageStatus": "implemented-test-specific",
+      "observedBoundary": "Targeted EKS destruction included reviewed dependents outside module.eks. Prefix-only rejection was too narrow.",
+      "replayReferences": [
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+          "method": "test_exact_fifty_deletes_and_module_counts"
+        },
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+          "method": "test_same_type_same_module_unknown_resource_name_rejected"
+        }
+      ],
+      "futureAcceptance": "Common gate must compare exact reviewed addresses, definitions and before IDs, managed drift and action sets. Fifty deletes is historical test data, not a universal count."
+    },
+    {
+      "id": "orphan-eni-sg",
+      "coverageStatus": "partial-regression-open-continuation-gap",
+      "observedBoundary": "EKS Terraform deletion completed before an available unattached interface blocked the orphan security-group guard; independently approved cleanup completed later.",
+      "replayReferences": [
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.6.2-aws-test-teardown.py",
+          "method": "test_sg_ownership_and_reference_gate"
+        }
+      ],
+      "futureAcceptance": "Add saved-snapshot ENI continuation fixtures for attachment, requester management, owner, VPC/subnet, public association, references, disappearance and once-only deletion. Do not introduce detach or auto-repair."
+    },
+    {
+      "id": "instant-fleet-history",
+      "coverageStatus": "shared-pure-rule-test-adapter",
+      "observedBoundary": "Active instant request history is not evidence that launched instances still exist. Native exact captured-instance absence remains required.",
+      "replayReferences": [
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py",
+          "method": "test_shared_rules_are_environment_parameterized_but_executor_remains_test_only"
+        },
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py",
+          "method": "test_instant_launched_instances_are_checked_fresh_after_previous_native_query"
+        }
+      ],
+      "futureAcceptance": "Reuse the pure classifier with explicit environment inputs, then perform fresh uncached native ID checks in each adapter. Active maintain/request and live instances fail."
+    },
+    {
+      "id": "proof-clock-attempt",
+      "coverageStatus": "implemented-test-specific",
+      "observedBoundary": "Expired proofs and consumed markers require a newly reviewed session; changing main or resuming cannot renew an old saved plan.",
+      "replayReferences": [
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+          "method": "test_clock_is_not_reset_by_adoption_or_modified_mtime"
+        },
+        {
+          "path": "scripts/test-v0.11.9.3.6.7.6.2-aws-test-teardown.py",
+          "method": "test_attempt_markers_are_exclusive"
+        }
+      ],
+      "futureAcceptance": "Extract clock/input/phase validation and exclusive journal rules. Transport failures and timeouts preserve a consumed attempt; continuation is a separate reviewed operation."
+    }
+  ],
+  "unresolvedCoverageIds": [
+    "eso-cleanup-order",
+    "orphan-eni-sg"
+  ],
+  "proposedCoreInterfaces": [
+    {
+      "name": "EnvironmentProfile",
+      "responsibility": "Explicit account/region/cluster/state/release/DNS bindings; no default dev fallback and no inherited prod authorization."
+    },
+    {
+      "name": "ReviewProof",
+      "responsibility": "Exact input bytes, main, state, phase, TTL and execution deadline; unchanged saved-plan creation clock."
+    },
+    {
+      "name": "ServiceObservation",
+      "responsibility": "Pure strict JSON and native absence/type/ownership rules; transport cannot grant scope or permission."
+    },
+    {
+      "name": "PlanScope",
+      "responsibility": "Exact reviewed managed definitions, addresses, IDs and dependency closure; separate data and remote absence."
+    },
+    {
+      "name": "CleanupDependencies",
+      "responsibility": "Keep controllers and scoped permissions while dependent objects/finalizers drain; phase receipts record only confirmed completion."
+    },
+    {
+      "name": "AttemptJournal",
+      "responsibility": "Exclusive attempt reservation, write-ahead mutation stages and redacted failure plus durable raw logs; no implicit retry."
+    }
+  ],
+  "migrationSequence": [
+    "Extract pure clock/phase/error/state rules into new modules with offline parity tests; leave frozen historical executors and contracts unchanged.",
+    "Implement dependency-aware cleanup planning and captured ENI/SG continuation with explicit approvals and new coverage for both gaps.",
+    "Add explicit environment adapters and shared fake-transport replay; compare dev/test/prod configuration without enabling live prod.",
+    "Review immutable release, current price/budget, fresh main/account/state and independent prod design before any separately approved live operation."
+  ],
+  "scopeLimits": [
+    "No account-wide billing conclusion",
+    "No all-region or untagged exhaustive inventory conclusion",
+    "No test qualification or prod readiness certification",
+    "No raw private inputs or credential values inspected"
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.6.6.3-residual-cost-audit-execution-evidence.sh"
+}

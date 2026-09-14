@@ -3,9 +3,16 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.6.5-teardown-execution-evidence` records completed aws-test
+teardown, the separately approved ENI/SG post-apply continuation, and the
+September 14 empty-state/private-evidence confirmation. Full residual-cost audit
+is pending; consumed teardown windows grant no new live authorization.
+See [teardown execution evidence](docs/V0.11.9.3.6.7.6.5_AWS_TEST_TEARDOWN_EXECUTION_EVIDENCE.md).
+
+Historical implementation checkpoint:
 `v0.11.9.3.6.7.6.4-eks-dependency-plan-repair` replaces the module-only EKS gate
 with the exact 50 state-bound deletes, preserves the original saved-plan clock and
-requires separate fresh-plan/apply approvals. Cleanup still ends at 16:00 UTC.
+requires separate fresh-plan/apply approvals. Its historical cleanup deadline was September 13 16:00 UTC.
 See [exact EKS dependency repair](docs/V0.11.9.3.6.7.6.4_AWS_TEST_EKS_DEPENDENCY_PLAN_REPAIR.md).
 
 `v0.11.9.3.6.7.6.3-remaining-cleanup` preserves two consumed runtime attempts

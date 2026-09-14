@@ -818,3 +818,6 @@ IMAGE_NAME="demo-api-ci-test:runtime" \
   "${ROOT_DIR}/scripts/validate-demo-api-workload-security.sh"
 
 echo "CI quality gates passed."
+
+echo "==> Validating v0.11.9.3.6.7.6.5 aws-test teardown execution evidence"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6.5-teardown-execution-evidence.sh"

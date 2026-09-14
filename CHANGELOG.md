@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.11.9.3.6.7.6.5
+
+- Record five configuration deletions, the exact 50-delete EKS saved apply and its
+  postcheck stop, independent one-time ENI/SG continuation, and final 40-delete apply.
+- Bind supplied private result/receipt hashes and the September 14 empty-state
+  confirmation; retain failure records, attempt markers and historical windows.
+- Add offline evidence/state/clock/privacy validation and quality-gate ownership.
+- Full residual-cost audit remains pending; no live action or new approval is included.
+
 ## v0.11.9.3.6.7.6.4
 
 - Fix the EKS-targeted destroy gate to accept exactly the reviewed 19 EKS and 31

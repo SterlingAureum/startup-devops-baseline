@@ -1,0 +1,263 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.3",
+  "version": "v0.11.9.3.6.7.7.3",
+  "predecessor": "v0.11.9.3.6.7.7.2",
+  "implementationBaselineCommit": "38d51cd0e9161373c8614fb28e606e99c5cc5dac",
+  "status": "shared-plan-scope-and-attempt-journal-implemented-offline",
+  "modules": [
+    {
+      "path": "scripts/guarded_plan_rules.py",
+      "sha256": "919ce9c50605e9646f7228e4ff36e30423bffb7e5f5f58c3aa7ea45d1340cbb7"
+    },
+    {
+      "path": "scripts/guarded_attempt_journal.py",
+      "sha256": "94cab7865c0de8febe036b6012a2b14865f7fbd36e2939128313db9655b3d7df"
+    }
+  ],
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.3-plan-scope-and-attempt-journal.py",
+  "testSha256": "6b9779dc5127df8e03f62507abc315c46f2677afd71dd4e1b046aa91c1abf80f",
+  "testMethodCount": 36,
+  "testMethods": [
+    "test_after_missing_or_nonnull_rejected",
+    "test_binding_and_marker_hash_mismatch",
+    "test_canonical_duplicate_json_and_chain_drift_rejected",
+    "test_changed_modes_symlinks_and_hardlinks_rejected",
+    "test_completion_scope_and_outcome_without_intent",
+    "test_concurrent_intents_have_one_winner",
+    "test_concurrent_reservation_has_one_winner",
+    "test_create_update_replacement_noop_read_data_rejected",
+    "test_ephemeral_repository_or_symlink_directory_rejected",
+    "test_exclusive_reservation_and_modes",
+    "test_explicit_reviewed_remote_absence",
+    "test_failed_phase_terminal_after_reopen",
+    "test_final_covers_every_current_managed_resource",
+    "test_final_subset_rejected",
+    "test_fsync_failure_blocks_transport_and_reopen",
+    "test_gate_has_no_io_transport_or_clock_imports",
+    "test_head_bool_and_hash_mismatch_rejected",
+    "test_head_write_failure_preserves_uncertainty",
+    "test_historical_fifty_dependency_gate_parity",
+    "test_incomplete_tail_and_full_line_truncation",
+    "test_inputs_immutable_and_errors_redacted",
+    "test_intent_is_durable_before_fake_transport",
+    "test_invalid_state_schema_id_deposed_and_duplicate",
+    "test_leftover_head_commit_preserved",
+    "test_marker_only_partial_reservation_preserved",
+    "test_missing_extra_duplicate_changes",
+    "test_native_observed_absence_skips_transport",
+    "test_pending_reopen_blocks_repeat_and_next_operation",
+    "test_reviewed_absence_missing_from_plan",
+    "test_root_nested_and_indexed_definitions",
+    "test_same_type_name_module_index_and_id_substitutions",
+    "test_success_cannot_repeat_operation",
+    "test_targeted_subset_retains_unreviewed_state",
+    "test_time_regression_rejected",
+    "test_two_ordered_operations_and_exact_completion",
+    "test_unreviewed_unknown_duplicate_or_overlapping_drift"
+  ],
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.6.6.1-aws-dev-residual-cost-audit-execution-evidence.json",
+      "sha256": "d73e4b5107b4c99ae1feebd2a34197040e4d0f50b6c6ccbecdf951bbe1da25e9"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.5-aws-test-teardown-execution-evidence.json",
+      "sha256": "684e0fe9d13005dffd08f4dbbc53709dafc6404edc776c1e783eaab473a68531"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.6.3-aws-test-residual-cost-audit-execution-evidence.json",
+      "sha256": "90d6945c04b6ba6f308fb8de705bd5b5c730557938cfc12c9acd2f29756b8f67"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.1-shared-guarded-runtime-pure-rules.json",
+      "sha256": "1037ae9da4c3275601b68ad2c802ca645affdd8af8f26e9055d83c4f0a5c5e39"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.2-shared-guarded-cleanup-rules.json",
+      "sha256": "30e4a853f9e64e946659afa3502b7b3139a9162242cf75a03e6d5329896e5f52"
+    },
+    {
+      "path": "docs/V0.11.9.3.6.7.6.3_AWS_TEST_REMAINING_CLEANUP.md",
+      "sha256": "0ca7c71d5cc440f4aade2942ba8ba4ea9e82e3937d3e9c23a65b92fbf868d808"
+    },
+    {
+      "path": "infra/terraform/aws/environments/dev/main.tf",
+      "sha256": "f955ce8b0528f9b5d69143119852bc376544f126cc552c04ab089651bffd5176"
+    },
+    {
+      "path": "infra/terraform/aws/environments/prod/main.tf",
+      "sha256": "064f9dd196910d84ca3138eef3b6b221898e876392d1aa969a3522eb077e3472"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/main.tf",
+      "sha256": "76922f3bbc7cccfc379c337ba156ea377405b740b4657907250f532baf709479"
+    },
+    {
+      "path": "scripts/apply-aws-dev.sh",
+      "sha256": "fcdb1698a4e70b6a1be2d2f9a859ab32e47c9432b630ba9aef31014121f547b1"
+    },
+    {
+      "path": "scripts/apply-aws-test.sh",
+      "sha256": "e418af18ac98ae3a1c5c7c8a2f684d76634e454e321b4ad2813f215860d6b114"
+    },
+    {
+      "path": "scripts/aws_fleet_audit_classification.py",
+      "sha256": "cd223acc08b5643c71385d2b71b2379a6d50d0a51bb30253d880b8941df3d206"
+    },
+    {
+      "path": "scripts/bootstrap-eks-argocd.sh",
+      "sha256": "e849aa6b6e9cf688c8425c8670cb67dba00e2c794b481c83c9f89570c1d2f37f"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.6.6-aws-dev-residual-cost-audit.py",
+      "sha256": "6528137035535b1cd4dd865584b7d9ef5861d9e81a1443b2d4283dce41646989"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+      "sha256": "e9bc6c2f7283728fec6ded285abab40979d6296906222f8fefc517aa348382e2"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py",
+      "sha256": "efa6112cbc221e6f7c7508becb1eb76534f7719321785a06ff04264c0996a275"
+    },
+    {
+      "path": "scripts/guarded_cleanup_rules.py",
+      "sha256": "5141ee801f98c84adcb555ddfe12a5dc4d41d0a91f0c6e4bd5ec0894c7223738"
+    },
+    {
+      "path": "scripts/guarded_runtime_rules.py",
+      "sha256": "b95b0f846c2cf415855f78b709c5eb85b945afe1d37884c76f1e6b255f88347d"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.3.1-aws-test-post-apply-resume.py",
+      "sha256": "33fec066f6babab8b9f7fc1ce50bcb195c4355c58ca462b88ff2b9f4fd008db9"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.2-aws-test-teardown.py",
+      "sha256": "d12fc8c06b940adf70a30201761c55efac21b2b0148a74d424ac6de457a6dbc5"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+      "sha256": "a171135125cd5425bce2eb68d40a885f8c4bfa54d4d3ac8b22f233e60d0e5b17"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py",
+      "sha256": "bd1b4bc7715011f0c1ea3ae33f1edbc10661bf80b92f4d14efccf367a7fa46dc"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py",
+      "sha256": "01a6eb1039e6b1cb0ae5edb671ed52d991a4d0fb51185daa5817b0963902545c"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.7.1-guarded-runtime-rules.py",
+      "sha256": "e8f07fe810a0112ca36c4bb5831375f05a6bc3aea3cb963a46f7cd7848435e38"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.7.2-guarded-cleanup-rules.py",
+      "sha256": "a628914a882c437b0c0c45f0ea20ed9f15896852dd59f65cacd8a3175171648a"
+    },
+    {
+      "path": "scripts/validate-aws-cost-cleanup.sh",
+      "sha256": "ab0bad09b228d09e9451863c047c8da3e4ebf77198f277ad78117b99383f3df7"
+    },
+    {
+      "path": "scripts/validate-v0.11.9.3.6.7.6.6.3-residual-cost-audit-execution-evidence.sh",
+      "sha256": "c432307a3c475bc3f862c86ad52a33844e5e508076ac89b544b3400070907417"
+    },
+    {
+      "path": "scripts/validate-v0.11.9.3.6.7.7.1-guarded-runtime-rules.sh",
+      "sha256": "991cd6cb9350c9ed1a4c0f89e0041bd426a4660b3cdcb57ef87bfe373d58f31f"
+    },
+    {
+      "path": "scripts/validate-v0.11.9.3.6.7.7.2-guarded-cleanup-rules.sh",
+      "sha256": "24786d2b698d2077b02e3a8ad4f9842c59578034cba220d2bbb648e4dfd5ea61"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.2-guarded-cleanup-rules.sh",
+  "planGate": {
+    "publicFunctions": [
+      "managed_inventory",
+      "validate_destroy_plan"
+    ],
+    "reviewFields": [
+      "address",
+      "module",
+      "type",
+      "name",
+      "id"
+    ],
+    "targetedReview": "Exact reviewed dependency closure from current strict v4 managed state; never infer from a prefix or historical resource count.",
+    "finalReview": "Every current managed address must be reviewed and covered exactly once by delete or explicitly reviewed native remote absence.",
+    "rejections": [
+      "Missing/extra/duplicate address",
+      "Definition or before ID drift",
+      "Non-delete and non-null after",
+      "Unreviewed/duplicate remote drift",
+      "Delete/drift overlap",
+      "Malformed state or deposed instance"
+    ],
+    "intentionalTightening": "This narrow interface rejects data/read/no-op changes and delete/drift overlap; an unfamiliar Terraform shape stops pending explicit review.",
+    "remoteAbsence": "Adapter must supply hash-bound fresh native absence proof; Terraform drift alone never authorizes removal.",
+    "outputPrivacy": "Address lists and IDs remain private; aggregate counts may enter public evidence."
+  },
+  "journal": {
+    "class": "AttemptJournal",
+    "platform": "Linux fcntl/flock with local durable filesystem and fsync semantics",
+    "bindingFields": [
+      "environment",
+      "phase",
+      "main",
+      "inputs_sha256",
+      "state_sha256",
+      "proof_sha256",
+      "scope_sha256"
+    ],
+    "files": [
+      "attempt.json",
+      "events.jsonl",
+      "head.json",
+      "head-next.json"
+    ],
+    "methods": [
+      "reserve",
+      "open",
+      "snapshot",
+      "before",
+      "success",
+      "failure",
+      "observed_absent",
+      "complete",
+      "close"
+    ],
+    "reserve": "Exclusive 0600 marker plus events/head; directory 0700, owner checked, no symlink/hardlink files, outside repository and known ephemeral/system roots.",
+    "writeAhead": "Intent is appended and file/directory fsynced, then head committed and directory fsynced before before returns; only then may caller invoke one transport call.",
+    "integrity": "Canonical event hash chain plus separately persisted sequence, byte length and log digest detect incomplete tails and whole-line truncation; head-next presence stops.",
+    "failurePolicy": "Pending intent blocks new calls; explicit failure is terminal; partial reservation or commit is retained, never reset or automatically repaired.",
+    "scopeLimit": "At-most-once is per directory and operation tag. Adapter must pin one path and allowed tags to a single reviewed approval; another directory does not renew authorization.",
+    "trustLimit": "Owner is trusted; hash chain and head are not authentication against a writer that can rewrite both. External reviewed digests remain trust anchors.",
+    "completion": "Expected tag set must match recorded successful/observed-absent operations. Caller must independently verify all phase postconditions before receipt creation."
+  },
+  "adapterResponsibilities": [
+    "Check fresh exact main/account/environment/state/release, proof TTL, budget and phase approval before reserving.",
+    "Validate one persistent journal path, binding, reviewed operation tags and original marker digest; never substitute a new directory after failure.",
+    "Pin binary/JSON/text plan and provider lock hashes, Terraform version/workspace, and native identity/range/absence observations.",
+    "Call before, one transport call, independent postcondition checks, then success; uncertain result preserves pending and stops.",
+    "Recovery after uncertainty requires separate fresh approval and read-only review; do not infer outcome from a return code or reuse an expired proof.",
+    "Write completion receipt only after independent current postconditions and exact completion scope pass."
+  ],
+  "effectFlags": {
+    "planRuleFileAccess": false,
+    "journalPrivateFileAccess": true,
+    "clockReads": false,
+    "transport": false,
+    "cloudMutation": false,
+    "terraformCommands": false
+  },
+  "existingLiveAdaptersModified": false,
+  "completeAdapterMigrationImplemented": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalApprovalsReusable": false,
+  "prodQualified": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "nextImplementation": "New versioned dev/test/prod fake-transport adapters composing runtime rules, cleanup rules, plan gate and pinned durable journal."
+}

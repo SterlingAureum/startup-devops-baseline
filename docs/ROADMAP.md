@@ -1181,3 +1181,16 @@ Prior executors, evidence and rules stay frozen; test cleanup/scoped audit remai
 Next: extract exact dependency plan-scope gates and integrate a durable exclusive attempt
 journal, then create versioned fake-transport adapters. Prod live scope/pricing/window
 and authorization remain independent. See [cleanup rules](V0.11.9.3.6.7.7.2_SHARED_GUARDED_CLEANUP_RULES.md).
+
+
+### v0.11.9.3.6.7.7.3 — shared plan scope and durable attempt journal
+
+Implemented exact address/definition/ID destroy scope, explicit dependency closure,
+final-state coverage and Linux O_EXCL/flock/fsync journal with independent head.
+Thirty-six offline fixtures cover historical plan parity and crash/concurrency failure
+boundaries. At-most-once is per pinned directory/tag; authorization and native checks
+remain adapter responsibilities. Historical test cleanup/audit stay closed.
+
+Next: new versioned dev/test/prod fake-transport adapters composing shared runtime,
+cleanup, plan scope and journal rules. No prod qualification or live authorization.
+See [plan scope and journal](V0.11.9.3.6.7.7.3_SHARED_PLAN_SCOPE_AND_ATTEMPT_JOURNAL.md).

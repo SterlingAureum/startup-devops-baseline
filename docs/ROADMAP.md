@@ -1154,3 +1154,17 @@ Next: extract pure clock/phase/error/state rules with compatibility replay, then
 implement dependency-aware cleanup and captured ENI/SG continuation tests before
 new environment adapters. Prod stays disabled pending independent design, current
 pricing/budget, fresh proof and authorization. See [review](V0.11.9.3.6.7.7_CROSS_ENVIRONMENT_GUARDED_RUNTIME_REVIEW.md).
+
+
+### v0.11.9.3.6.7.7.1 — shared guarded-runtime pure rules
+
+Implemented: explicit UTC/window/proof validation, exact phase confirmations, native
+absence envelope and exact managed/data state rules without IO/transport. Twenty-
+nine behavioral/parity tests replay frozen dev/test functions and indexed incident
+fixture aggregates, with explicit stricter schema and run-specific extra-data scope.
+Historical executors and evidence stay frozen; full adapter migration is pending.
+
+Next: dependency-aware cleanup planning (ESO permission/controller lifetime) and
+captured ENI/SG continuation fixtures; then migrate exact dependency gates and
+versioned environment adapters with fake transport. No new live test/prod operation
+is enabled. See [pure rules](V0.11.9.3.6.7.7.1_SHARED_GUARDED_RUNTIME_PURE_RULES.md).

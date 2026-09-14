@@ -836,3 +836,6 @@ echo "==> Validating v0.11.9.3.6.7.6.6.3 aws-test residual audit execution evide
 
 echo "==> Validating v0.11.9.3.6.7.7 offline cross-environment guarded runtime review"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7-cross-environment-guarded-runtime-review.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.1 shared guarded runtime pure rules"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.1-guarded-runtime-rules.sh"

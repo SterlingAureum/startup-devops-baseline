@@ -1,0 +1,223 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.1",
+  "version": "v0.11.9.3.6.7.7.1",
+  "predecessor": "v0.11.9.3.6.7.7",
+  "implementationBaselineCommit": "6927b6a256bb45ad85a12d9f8824a3b0e1352b68",
+  "status": "shared-guarded-runtime-pure-rules-implemented-offline",
+  "corePath": "scripts/guarded_runtime_rules.py",
+  "coreSha256": "b95b0f846c2cf415855f78b709c5eb85b945afe1d37884c76f1e6b255f88347d",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.1-guarded-runtime-rules.py",
+  "testSha256": "e8f07fe810a0112ca36c4bb5831375f05a6bc3aea3cb963a46f7cd7848435e38",
+  "publicRuleFunctions": [
+    "parse_utc",
+    "validate_window",
+    "validate_observation_age",
+    "validate_proof",
+    "validate_confirmations",
+    "absence_error",
+    "json_object",
+    "state_addresses",
+    "classify_state",
+    "validate_post_apply"
+  ],
+  "testMethodCount": 29,
+  "testMethods": [
+    "test_data_whitelist_is_exact_address_not_type_count_or_default",
+    "test_dev_test_prod_rules_are_explicit_and_do_not_enable_an_adapter",
+    "test_duplicate_definitions_instances_invalid_indexes_and_deposed_fail",
+    "test_duplicate_plan_addresses_and_malformed_actions_are_rejected",
+    "test_empty_cross_environment_or_invalid_policy_is_rejected",
+    "test_empty_state_noop_and_managed_read_semantics",
+    "test_errors_are_redacted_and_inputs_are_not_modified",
+    "test_exact_historical_96_90_103_80_fixture_replayed_without_incident_waiver",
+    "test_invalid_duration_and_policy_are_rejected",
+    "test_json_duplicates_nonfinite_overflow_invalid_and_nonobjects_are_rejected",
+    "test_legacy_fixture_aggregate_parity_and_explicit_extra_data_scope",
+    "test_missing_create_and_extra_managed_are_diagnostic_then_rejected",
+    "test_missing_once_suffix_or_execute_flag_fails_parity",
+    "test_module_has_no_io_environment_or_clock_reads",
+    "test_nested_indexed_modules_and_quoted_for_each_keys",
+    "test_nonempty_stdout_and_undefined_policy_are_rejected",
+    "test_observation_ttl_inclusive_and_future_observation_rejected",
+    "test_offset_fraction_bad_calendar_and_nonstring_are_rejected",
+    "test_operation_specific_absence_matches_frozen_parser",
+    "test_positive_malformed_extra_and_permission_errors_match_frozen_rejection",
+    "test_post_apply_rejects_update_delete_replacement_and_data_create",
+    "test_proof_exclusive_expiry_and_original_clock_are_enforced",
+    "test_proof_expiry_is_clamped_to_deadline",
+    "test_reset_creation_and_expiry_together_cannot_renew_bound_proof",
+    "test_state_list_mismatch_and_duplicate_lines_are_intentional_strict_failures",
+    "test_strict_utc_matches_frozen_test_and_normal_dev_utc",
+    "test_test_phase_values_match_frozen_environment_rule",
+    "test_unrelated_empty_confirmation_and_overrides_fail_parity",
+    "test_window_parity_including_reserve_boundary"
+  ],
+  "frozenReviewSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.6.6.1-aws-dev-residual-cost-audit-execution-evidence.json",
+      "sha256": "d73e4b5107b4c99ae1feebd2a34197040e4d0f50b6c6ccbecdf951bbe1da25e9"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.5-aws-test-teardown-execution-evidence.json",
+      "sha256": "684e0fe9d13005dffd08f4dbbc53709dafc6404edc776c1e783eaab473a68531"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.6.3-aws-test-residual-cost-audit-execution-evidence.json",
+      "sha256": "90d6945c04b6ba6f308fb8de705bd5b5c730557938cfc12c9acd2f29756b8f67"
+    },
+    {
+      "path": "docs/V0.11.9.3.6.7.6.3_AWS_TEST_REMAINING_CLEANUP.md",
+      "sha256": "0ca7c71d5cc440f4aade2942ba8ba4ea9e82e3937d3e9c23a65b92fbf868d808"
+    },
+    {
+      "path": "infra/terraform/aws/environments/dev/main.tf",
+      "sha256": "f955ce8b0528f9b5d69143119852bc376544f126cc552c04ab089651bffd5176"
+    },
+    {
+      "path": "infra/terraform/aws/environments/prod/main.tf",
+      "sha256": "064f9dd196910d84ca3138eef3b6b221898e876392d1aa969a3522eb077e3472"
+    },
+    {
+      "path": "infra/terraform/aws/environments/test/main.tf",
+      "sha256": "76922f3bbc7cccfc379c337ba156ea377405b740b4657907250f532baf709479"
+    },
+    {
+      "path": "scripts/apply-aws-dev.sh",
+      "sha256": "fcdb1698a4e70b6a1be2d2f9a859ab32e47c9432b630ba9aef31014121f547b1"
+    },
+    {
+      "path": "scripts/apply-aws-test.sh",
+      "sha256": "e418af18ac98ae3a1c5c7c8a2f684d76634e454e321b4ad2813f215860d6b114"
+    },
+    {
+      "path": "scripts/aws_fleet_audit_classification.py",
+      "sha256": "cd223acc08b5643c71385d2b71b2379a6d50d0a51bb30253d880b8941df3d206"
+    },
+    {
+      "path": "scripts/bootstrap-eks-argocd.sh",
+      "sha256": "e849aa6b6e9cf688c8425c8670cb67dba00e2c794b481c83c9f89570c1d2f37f"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.6.6-aws-dev-residual-cost-audit.py",
+      "sha256": "6528137035535b1cd4dd865584b7d9ef5861d9e81a1443b2d4283dce41646989"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+      "sha256": "e9bc6c2f7283728fec6ded285abab40979d6296906222f8fefc517aa348382e2"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py",
+      "sha256": "efa6112cbc221e6f7c7508becb1eb76534f7719321785a06ff04264c0996a275"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.3.1-aws-test-post-apply-resume.py",
+      "sha256": "33fec066f6babab8b9f7fc1ce50bcb195c4355c58ca462b88ff2b9f4fd008db9"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.2-aws-test-teardown.py",
+      "sha256": "d12fc8c06b940adf70a30201761c55efac21b2b0148a74d424ac6de457a6dbc5"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+      "sha256": "a171135125cd5425bce2eb68d40a885f8c4bfa54d4d3ac8b22f233e60d0e5b17"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py",
+      "sha256": "bd1b4bc7715011f0c1ea3ae33f1edbc10661bf80b92f4d14efccf367a7fa46dc"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.6.2-aws-test-residual-cost-audit.py",
+      "sha256": "01a6eb1039e6b1cb0ae5edb671ed52d991a4d0fb51185daa5817b0963902545c"
+    },
+    {
+      "path": "scripts/validate-aws-cost-cleanup.sh",
+      "sha256": "ab0bad09b228d09e9451863c047c8da3e4ebf77198f277ad78117b99383f3df7"
+    },
+    {
+      "path": "scripts/validate-v0.11.9.3.6.7.6.6.3-residual-cost-audit-execution-evidence.sh",
+      "sha256": "c432307a3c475bc3f862c86ad52a33844e5e508076ac89b544b3400070907417"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7-cross-environment-guarded-runtime-review.json",
+      "sha256": "a94fefb61c3771954e905a55309a0db881e23a1b2a6feb72ddbabd58e3a1c58f"
+    },
+    {
+      "path": "scripts/validate-v0.11.9.3.6.7.7-cross-environment-guarded-runtime-review.sh",
+      "sha256": "8f74b505011eac7595fdcea5220bc5ce868f5fa54d56d13334fe654ed8a7d79c"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7-cross-environment-guarded-runtime-review.sh",
+  "implementedReviewIds": [
+    "aws-error-envelope",
+    "state-data-classification",
+    "proof-clock-attempt"
+  ],
+  "implementationScope": "New pure module and offline parity tests; frozen adapters do not import the new module.",
+  "clockSemantics": {
+    "windowStartInclusive": true,
+    "minimumReserveInclusive": true,
+    "observationTtlInclusive": true,
+    "proofExpiryExclusive": true,
+    "proofExpiryClampedToDeadline": true,
+    "originalCreationTimestampRequired": true,
+    "systemClockRead": false
+  },
+  "confirmationSemantics": {
+    "explicitTargets": [
+      "aws-dev",
+      "aws-test",
+      "aws-prod"
+    ],
+    "phaseMappingSuppliedByReviewedAdapter": true,
+    "unrelatedEmptyConfirmationRejected": true,
+    "exactConfirmationValuesRequired": true,
+    "callerEnvironmentNotModified": true,
+    "accountIdentityCheckedByThisModule": false
+  },
+  "stateSemantics": {
+    "version": 4,
+    "deriveExactInstanceAddresses": true,
+    "managedAndDataSeparate": true,
+    "listedAddressesMustEqualDerivedState": true,
+    "reviewedExtraDataIsExactRunSpecificAddressSet": true,
+    "legacyAggregateParityOnWellFormedFixtures": true,
+    "historicalSevenAddressWaiverEmbedded": false,
+    "remoteIdentityOrAbsenceCheckedByThisModule": false
+  },
+  "intentionalTightenings": [
+    "UTC requires exact second-resolution Z form; offset/fraction legacy dev spellings are not part of the new interface.",
+    "Reject duplicate JSON keys and nonfinite numbers including exponent overflow.",
+    "Reject duplicate plan/state/list addresses, deposed instances, unknown modes and invalid instance indexes.",
+    "Reject listed-state mismatch instead of accepting partial prefix classification.",
+    "Require exact reviewed extra-data addresses rather than only aggregate types/counts.",
+    "Reject update/delete/replacement and managed-read/data-create actions in post-apply validation."
+  ],
+  "supportedAddressSubset": "ASCII Terraform identifiers, nested indexed modules, count indexes and JSON quoted for_each string keys; unsupported syntax stops.",
+  "adapterResponsibilities": [
+    "Bind account/region/release/main/state/input hashes and phase policy to reviewed scope.",
+    "Bind original_created to unchanged reviewed proof or saved-plan bytes, never mtime or renewed current time.",
+    "Supply fresh current UTC from an adapter clock and recheck deadlines during transport.",
+    "Bind absence codes to exact native operation and identity; provide versioned service allowlists.",
+    "Check remote identity/existence and exact managed before IDs; pure state classification is not a Terraform plan gate.",
+    "Reserve exclusive durable attempts and journal raw outputs before mutations; false rules do not permit retry."
+  ],
+  "remainingReviewIds": [
+    "eso-cleanup-order",
+    "eks-dependency-closure",
+    "orphan-eni-sg"
+  ],
+  "nextImplementation": "Dependency-aware cleanup planning and captured ENI/SG continuation fixtures, then explicit versioned adapters.",
+  "historicalTeardownAndScopedAuditClosed": true,
+  "historicalApprovalsReusable": false,
+  "completeCommonAdapterMigrationImplemented": false,
+  "existingLiveAdaptersModified": false,
+  "newLiveExecutionAuthorized": false,
+  "prodQualified": false,
+  "moduleEffects": {
+    "fileAccess": false,
+    "environmentReads": false,
+    "clockReads": false,
+    "transport": false,
+    "mutation": false
+  }
+}

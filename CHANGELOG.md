@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.1
+
+- Extract pure UTC/window/proof, exact phase confirmation, strict CLI absence and
+  managed/data state rules for future explicitly reviewed adapters.
+- Add 29 offline behavioral/parity tests against frozen dev/test functions and the
+  historical indexed state fixture; reject stale clocks, scope overrides and
+  duplicate/inconsistent state inputs without an incident-specific data waiver.
+- Preserve all historical executors/evidence and leave adapter migration, cleanup
+  dependency/ENI continuation and prod live design for subsequent increments.
+
 ## v0.11.9.3.6.7.7
 
 - Review frozen dev/test execution paths, shared Terraform module sources and typed Fleet reuse.

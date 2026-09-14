@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.1-shared-guarded-runtime-pure-rules` extracts clock/proof, exact
+phase confirmations, CLI absence and managed/data state rules with 29 offline
+parity tests. Existing live adapters remain frozen; common adapter migration is
+pending. See [shared pure rules](docs/V0.11.9.3.6.7.7.1_SHARED_GUARDED_RUNTIME_PURE_RULES.md).
+
+Recorded review checkpoint:
 `v0.11.9.3.6.7.7-cross-environment-guarded-runtime-review` records source-bound
 offline dev/test review, common module profiles and the remaining cleanup coverage
 gaps. Shared runtime migration remains pending; no new live operation is enabled.

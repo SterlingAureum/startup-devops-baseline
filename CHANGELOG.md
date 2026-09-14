@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.11.9.3.6.7.6.6.1
+
+- Fix the backup-bucket preflight false negative for an exact NoSuchBucket error
+  containing the standard reached-max-retries zero annotation. Preserve the stop.
+- Require one full error line, exact allowed code, matching operation and empty
+  stdout; positive/malformed retry counts and ambiguous errors still stop.
+- Freeze predecessor sources and retain scope/state/approval/one-attempt invariants;
+  add hash-exact error replay and inherited offline behavior coverage.
+- No live AWS request, mutation, full audit or automatic retry was performed.
+
 ## v0.11.9.3.6.7.6.6
 
 - Implement strict aws-test read-only residual preflight/verify/execute, binding

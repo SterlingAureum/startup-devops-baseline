@@ -1,0 +1,165 @@
+{
+  "awsMaximumAttempts": 1,
+  "awsRegion": "us-east-1",
+  "eksCompleteSha256": "0ea5c2ef00c07a0e940fdac98d57b0beee61e8e93de9a0e672ae9bd7dc67c323",
+  "errorCompatibility": {
+    "awsMaximumAttemptsUnchanged": 1,
+    "failureStageUnchanged": "backup-bucket",
+    "genericNotFoundTextAccepted": false,
+    "matchingAbsenceCodeRequired": true,
+    "matchingOperationRequired": true,
+    "multipleErrorLinesAccepted": false,
+    "nonemptyStdoutAccepted": false,
+    "positiveRetryAnnotationAccepted": false,
+    "zeroRetryAnnotationAccepted": true
+  },
+  "finalResultSha256": "55feb6ca65193980b910b322236d6bc4a1e2b3ec33cba3d3a6680d56b6b7019e",
+  "finalStateSha256": "accd1dc4515df7abc6f2294ff675a1729e2b8cbf1fa5fe3f9a8f42759a58944e",
+  "fullAuditScope": {
+    "accountWideBillingAudit": false,
+    "allCertificateOriginsClaimed": false,
+    "allRegionsCovered": false,
+    "capturedComputeCount": 8,
+    "capturedGlobalInventories": [
+      "IAM roles/policies/OIDC",
+      "Route53 exact captured zone and record identities"
+    ],
+    "capturedManagedResourceCount": 90,
+    "capturedOtherInventories": [
+      "EventBridge rule/target",
+      "SQS queue metadata",
+      "FIS template metadata",
+      "S3 bucket metadata",
+      "Secrets Manager container metadata"
+    ],
+    "capturedVolumeCount": 13,
+    "certificateListIncludesAllConfiguredKeyTypes": true,
+    "fleetDeletedRunningAccepted": false,
+    "fleetDeletedTerminatingRequiresComputeAbsence": true,
+    "instantFleetInstancesApiInvoked": false,
+    "inventoryIsAtomic": false,
+    "regionalServiceNativeInventories": [
+      "EC2 tagged instances including shutting-down",
+      "EC2 tagged volumes, ENIs, NAT, EIP, VPC, snapshots",
+      "ELBv2 captured VPC load balancers and target groups",
+      "ACM test domain certificate inventory and captured certificate",
+      "CloudWatch exact EKS log group",
+      "Resource Groups Project/test and cluster-owned resource sweeps"
+    ],
+    "staleTagRecordsNeedAuthoritativeChecks": true,
+    "unknownResourcesAreFailures": true,
+    "untrackedUntaggedInventoryExhaustive": false
+  },
+  "historicalWindowSha256": "e202e0369d300b626c3457e4544ccae31c7b5b35b518029ba3ae570f45575ffb",
+  "implementationBaselineCommit": "decbb109a71e2f0698611ea47a4a7e21169f2331",
+  "intermediateStateSha256": "d03102927cbb4bddbf634fb7b107fbd1bdb9bb4e816f25a349d6b7c97d09ebb2",
+  "maximumCommandSeconds": 120,
+  "maximumPreflightSeconds": 900,
+  "maximumWindowSeconds": 14400,
+  "minimumStartRemainingSeconds": 900,
+  "nextCheckpoint": "merge-run-fresh-private-preflight-and-verify-before-separate-one-time-read-only-audit-approval",
+  "operationBoundary": {
+    "auditExecutedByPackageProducer": false,
+    "automaticRetryOrRepairAllowed": false,
+    "awsMutationExecuted": false,
+    "completedTeardownRepeated": false,
+    "kubernetesAccessed": false,
+    "newLiveExecutionAuthorized": false,
+    "oldApprovalReused": false,
+    "terraformExecuted": false
+  },
+  "phaseConfirmations": {
+    "execute": "execute-reviewed-aws-test-residual-cost-audit-once",
+    "preflight": "observe-reviewed-aws-test-residual-cost-audit-preflight"
+  },
+  "phases": [
+    "preflight",
+    "verify",
+    "execute"
+  ],
+  "predecessor": "v0.11.9.3.6.7.6.6",
+  "preflightCalls": [
+    "STS caller identity",
+    "EKS regional cluster inventory",
+    "S3 backup bucket list-object-versions (metadata only)",
+    "Secrets Manager describe-secret (metadata only)"
+  ],
+  "preflightTtlSeconds": 3600,
+  "priorStoppedPreflight": {
+    "auditAttemptConsumed": false,
+    "awsErrorCode": "NoSuchBucket",
+    "awsMutationExecuted": false,
+    "bucketCommandExit": 254,
+    "bucketCommandStderrBytes": 142,
+    "bucketCommandStderrSha256": "ecd76333f2a3c4953915fcb46ab976755f9840211a13e51d3416df3e69d09ac7",
+    "bucketCommandStdoutBytes": 0,
+    "bucketCommandStdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "controlPlaneCommit": "decbb109a71e2f0698611ea47a4a7e21169f2331",
+    "diagnosticIsLocalFileReadOnly": true,
+    "fullAuditExecuted": false,
+    "rawOutputManifestSha256": "51c218f1521b8287b8eb8edd279d80134298b583c56b23120cf3e25fd0a2acbe",
+    "rawPrivateFilesReadByPackageProducer": false,
+    "redactedResultSha256": "5664b57115c1abad497349c7f48cd5d8beee14ab22359d25a468014277132307",
+    "resultBytes": 626,
+    "retryAnnotationCount": 0,
+    "stage": "backup-bucket",
+    "startedAtUtcRestated": "2026-09-14T02:00:15Z",
+    "status": "aws-test-residual-cost-audit-stopped",
+    "stderrBytes": 88,
+    "wrapperStderrSha256": "9e0af01087c3a8c99578d4dc27d9be51fbf981bb93f1e34b0bd6015efb7a021e"
+  },
+  "privateEvidenceBoundary": {
+    "credentialValuesRead": false,
+    "directoryMode": "0700",
+    "existingAttemptsOverwritten": false,
+    "fileMode": "0600",
+    "persistentPathsOutsideRepositoryRequired": true,
+    "preflightParentOneAttemptMarkerRequired": true,
+    "privatePathsEmitted": false,
+    "rawOutputManifestRequired": true
+  },
+  "privateInputsSha256": "22e16887f716156b6ae6e2da3497ebc6138d80db05040c342f89ebc8a35ecbbc",
+  "reviewedFiles": [
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py",
+      "sha256": "a3bd6fc7fd2c5fb69ddaa18404bb47559a97d05f64a33f8655960ac83bedb2d8"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.6.1-aws-test-residual-cost-audit.py",
+      "sha256": "bd1b4bc7715011f0c1ea3ae33f1edbc10661bf80b92f4d14efccf367a7fa46dc"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.6-aws-test-residual-cost-audit.py",
+      "sha256": "caf76c3a63e7f0eaaa49f7f1945c58ec1805403285ad89ac666a77e6e923bf60"
+    },
+    {
+      "path": "scripts/test-v0.11.9.3.6.7.6.6-aws-test-residual-cost-audit.py",
+      "sha256": "fd3a1c5a01676a752e113cab81a2d25c583cec74dafbd31fd66c9036f08afd38"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.6-guarded-aws-test-residual-cost-audit.json",
+      "sha256": "1f152a7aa8ad4f11b06a9bcd86fe94cdb69c7e5715870a134190ed706848f0ac"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.5-aws-test-teardown-execution-evidence.json",
+      "sha256": "684e0fe9d13005dffd08f4dbbc53709dafc6404edc776c1e783eaab473a68531"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.4-aws-test-eks-dependency-plan-repair.json",
+      "sha256": "e202e0369d300b626c3457e4544ccae31c7b5b35b518029ba3ae570f45575ffb"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.6.4-aws-test-teardown.py",
+      "sha256": "e9bc6c2f7283728fec6ded285abab40979d6296906222f8fefc517aa348382e2"
+    }
+  ],
+  "runtimeRecordSha256": "67a642cc38bbf1198d3bab31da6814b6b79d266fa180a9a8a752827f0dc171ab",
+  "schemaVersion": "v0.11.9.3.6.7.6.6.1",
+  "status": "aws-test-read-only-audit-error-envelope-repaired",
+  "targetEnvironment": "aws-test",
+  "teardownControlPlaneCommit": "00de317b356d9318288fbd30acaf8df0caa6ca93",
+  "teardownEvidencePath": "delivery/contracts/v0.11.9.3.6.7.6.5-aws-test-teardown-execution-evidence.json",
+  "teardownEvidenceSha256": "684e0fe9d13005dffd08f4dbbc53709dafc6404edc776c1e783eaab473a68531",
+  "verifyTtlSeconds": 900,
+  "version": "v0.11.9.3.6.7.6.6.1"
+}

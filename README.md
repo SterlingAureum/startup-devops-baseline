@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.6.6.1-audit-error-envelope-repair` fixes the strict parser false
+negative for a standard NoSuchBucket error with the zero-retry annotation.
+The failed preflight remains preserved; merge requires a fresh private preflight.
+See [error envelope repair](docs/V0.11.9.3.6.7.6.6.1_AWS_TEST_AUDIT_ERROR_ENVELOPE_REPAIR.md).
+
+Predecessor implementation:
 `v0.11.9.3.6.7.6.6-guarded-residual-cost-audit` implements strict aws-test
 read-only preflight, verify and separately approved one-time residual inventory.
 It binds completed teardown and empty state; no audit ran during implementation.

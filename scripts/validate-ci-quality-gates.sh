@@ -824,3 +824,6 @@ echo "==> Validating v0.11.9.3.6.7.6.5 aws-test teardown execution evidence"
 
 echo "==> Validating v0.11.9.3.6.7.6.6 guarded aws-test residual-cost audit"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6.6-guarded-residual-cost-audit.sh"
+
+echo "==> Validating v0.11.9.3.6.7.6.6.1 AWS CLI error envelope repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6.6.1-audit-error-envelope-repair.sh"

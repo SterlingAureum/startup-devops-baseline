@@ -1089,3 +1089,16 @@ Next: implement guarded aws-test read-only residual-cost audit with fresh exact-
 strict cloud error handling, private durable output and separately approved execution.
 No repeat teardown or reuse of September 13 approvals. Historical USD 35.20 is an
 estimate; billing remains unknown. See [v0.11.9.3.6.7.6.5 evidence](V0.11.9.3.6.7.6.5_AWS_TEST_TEARDOWN_EXECUTION_EVIDENCE.md).
+
+
+### v0.11.9.3.6.7.6.6 — guarded aws-test read-only residual inventory
+
+Implemented: strict service-native/captured/tagged audit with fixed read-only
+allowlist, persisted raw evidence, exact fresh-main/account and state bindings,
+reviewed preflight/verify TTLs, exclusive attempt marker and no automatic retry.
+No live audit executed. Scope is regional rehearsal resources plus captured global
+IAM/DNS; no account-wide billing or all-untagged coverage claim.
+
+Next: merge, run fresh private preflight, review executor verify, separately approve
+one metadata-only audit, then record execution evidence. Completed teardown stays
+complete and historical mutation windows remain consumed. See [guarded residual-cost audit](V0.11.9.3.6.7.6.6_GUARDED_AWS_TEST_RESIDUAL_COST_AUDIT.md).

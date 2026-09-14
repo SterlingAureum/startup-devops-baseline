@@ -655,3 +655,10 @@
 /delivery/contracts/v0.11.9.3.6.7.6.5-aws-test-teardown-execution-evidence.json @SterlingAureum
 /docs/V0.11.9.3.6.7.6.5_AWS_TEST_TEARDOWN_EXECUTION_EVIDENCE.md @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.6.5-teardown-execution-evidence.sh @SterlingAureum
+
+# v0.11.9.3.6.7.6.6 guarded read-only audit
+/delivery/contracts/v0.11.9.3.6.7.6.6-guarded-aws-test-residual-cost-audit.json @SterlingAureum
+/docs/V0.11.9.3.6.7.6.6_GUARDED_AWS_TEST_RESIDUAL_COST_AUDIT.md @SterlingAureum
+/scripts/execute-v0.11.9.3.6.7.6.6-aws-test-residual-cost-audit.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.6.6-aws-test-residual-cost-audit.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.6.6-guarded-residual-cost-audit.sh @SterlingAureum

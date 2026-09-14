@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.6.6-guarded-residual-cost-audit` implements strict aws-test
+read-only preflight, verify and separately approved one-time residual inventory.
+It binds completed teardown and empty state; no audit ran during implementation.
+See [guarded residual-cost audit](docs/V0.11.9.3.6.7.6.6_GUARDED_AWS_TEST_RESIDUAL_COST_AUDIT.md).
+
+Recorded predecessor:
 `v0.11.9.3.6.7.6.5-teardown-execution-evidence` records completed aws-test
 teardown, the separately approved ENI/SG post-apply continuation, and the
 September 14 empty-state/private-evidence confirmation. Full residual-cost audit

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.6
+
+- Audit the complete eight-stage cleanup order across `.7.7.4` and `.7.7.5`, recording seven individually simulatable stages and the explicit missing freeze adapter.
+- Distinguish the 21/24 environment-stage fixture matrix from an executable end-to-end chain; synthetic predecessor receipts cannot close the first-stage gap.
+- Add 36 pure offline tests for predecessor, clock, effect, stage, gap, closure and redacted aggregate-report drift.
+- Preserve historical live executors and closed aws-test evidence; no cloud, Kubernetes, Terraform, private evidence access or live/prod authorization.
+
 ## v0.11.9.3.6.7.7.5
 
 - Compose fixed-fake ESO/runtime drain, business Namespace, NodePool/EC2NodeClass and captured ENI→SG cleanup adapters across dev/test/prod.

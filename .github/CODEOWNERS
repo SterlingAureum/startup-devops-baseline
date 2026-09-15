@@ -723,3 +723,10 @@
 /scripts/guarded_cleanup_simulation_v6775.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.5-offline-cleanup-adapters.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.5-offline-cleanup-adapters.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.6 complete offline runtime parity review
+/delivery/contracts/v0.11.9.3.6.7.7.6-complete-offline-runtime-parity-review.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.6_COMPLETE_OFFLINE_RUNTIME_PARITY_REVIEW.md @SterlingAureum
+/scripts/guarded_runtime_parity_v6776.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.6-runtime-parity-review.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.6-runtime-parity-review.sh @SterlingAureum

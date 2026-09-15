@@ -851,3 +851,6 @@ echo "==> Validating v0.11.9.3.6.7.7.4 offline destroy adapters"
 
 echo "==> Validating v0.11.9.3.6.7.7.5 offline cleanup adapters"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.5-offline-cleanup-adapters.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.6 complete offline runtime parity review"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.6-runtime-parity-review.sh"

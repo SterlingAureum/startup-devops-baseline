@@ -1,0 +1,192 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.6",
+  "version": "v0.11.9.3.6.7.7.6",
+  "predecessor": "v0.11.9.3.6.7.7.5",
+  "implementationBaselineCommit": "f8879840d9231b995a5a83b4669aae418f30b779",
+  "status": "complete-offline-runtime-parity-reviewed",
+  "corePath": "scripts/guarded_runtime_parity_v6776.py",
+  "coreSha256": "303a8d043d0daf389f6bc644dfc803f51ec4727b7f28c16eacb99b1896e5623b",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.6-runtime-parity-review.py",
+  "testSha256": "c73dbc211d60341620d9dedec2c4838936e8bb1cf0b7401ed31c970669ab2a7d",
+  "testMethodCount": 36,
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.4-shared-offline-destroy-adapters.json",
+      "sha256": "0ba0aef6bbee3250727291c7931f153d622125c8cb1d009ba32ddd13becc57fb"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.5-shared-offline-cleanup-adapters.json",
+      "sha256": "267ee834e20ed2df6640eb0b72eb389382b2117063e084fdcc1babeed3fd4aa1"
+    },
+    {
+      "path": "scripts/guarded_runtime_simulation_v6774.py",
+      "sha256": "8a5c74f2b638581203a10156a82831cae57c425d3a75e67b526ebf86490c8f1a"
+    },
+    {
+      "path": "scripts/guarded_cleanup_simulation_v6775.py",
+      "sha256": "0e9f503e154bdd0752d2d6595e72b90e753d961a6b5b1c048f305a083d668494"
+    },
+    {
+      "path": "scripts/guarded_cleanup_rules.py",
+      "sha256": "5141ee801f98c84adcb555ddfe12a5dc4d41d0a91f0c6e4bd5ec0894c7223738"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.5-offline-cleanup-adapters.sh",
+  "parityManifest": {
+    "schema": "offline-runtime-parity-manifest-v1",
+    "environments": [
+      "aws-dev",
+      "aws-test",
+      "aws-prod"
+    ],
+    "stages": [
+      {
+        "step": "freeze-applications",
+        "adapterVersion": null,
+        "adapterKind": null,
+        "coverageStatus": "unimplemented-adapter-gap",
+        "emitsConfirmedReceipt": false,
+        "liveEnabled": false
+      },
+      {
+        "step": "drain-external-secrets",
+        "adapterVersion": "v0.11.9.3.6.7.7.5",
+        "adapterKind": "fixed-fake-cleanup",
+        "coverageStatus": "individually-simulatable",
+        "emitsConfirmedReceipt": true,
+        "liveEnabled": false
+      },
+      {
+        "step": "delete-business-namespaces",
+        "adapterVersion": "v0.11.9.3.6.7.7.5",
+        "adapterKind": "fixed-fake-cleanup",
+        "coverageStatus": "individually-simulatable",
+        "emitsConfirmedReceipt": true,
+        "liveEnabled": false
+      },
+      {
+        "step": "drain-runtime",
+        "adapterVersion": "v0.11.9.3.6.7.7.5",
+        "adapterKind": "fixed-fake-cleanup",
+        "coverageStatus": "individually-simulatable",
+        "emitsConfirmedReceipt": true,
+        "liveEnabled": false
+      },
+      {
+        "step": "delete-node-config",
+        "adapterVersion": "v0.11.9.3.6.7.7.5",
+        "adapterKind": "fixed-fake-cleanup",
+        "coverageStatus": "individually-simulatable",
+        "emitsConfirmedReceipt": true,
+        "liveEnabled": false
+      },
+      {
+        "step": "eks-delete",
+        "adapterVersion": "v0.11.9.3.6.7.7.4",
+        "adapterKind": "fixed-fake-destroy",
+        "coverageStatus": "individually-simulatable",
+        "emitsConfirmedReceipt": true,
+        "liveEnabled": false
+      },
+      {
+        "step": "eni-sg-cleanup",
+        "adapterVersion": "v0.11.9.3.6.7.7.5",
+        "adapterKind": "fixed-fake-cleanup",
+        "coverageStatus": "individually-simulatable",
+        "emitsConfirmedReceipt": true,
+        "liveEnabled": false
+      },
+      {
+        "step": "final-delete",
+        "adapterVersion": "v0.11.9.3.6.7.7.4",
+        "adapterKind": "fixed-fake-destroy",
+        "coverageStatus": "individually-simulatable",
+        "emitsConfirmedReceipt": true,
+        "liveEnabled": false
+      }
+    ],
+    "gaps": [
+      {
+        "id": "freeze-applications-adapter",
+        "blocksLiveMigration": true,
+        "incidentOnly": false,
+        "prodBlocking": true
+      },
+      {
+        "id": "live-observation-and-mutation-transports",
+        "blocksLiveMigration": true,
+        "incidentOnly": false,
+        "prodBlocking": true
+      },
+      {
+        "id": "live-approval-command-and-receipt-handoff",
+        "blocksLiveMigration": true,
+        "incidentOnly": false,
+        "prodBlocking": true
+      },
+      {
+        "id": "externalsecret-finalizer-exception",
+        "blocksLiveMigration": true,
+        "incidentOnly": true,
+        "prodBlocking": true
+      },
+      {
+        "id": "namespace-pv-forced-cleanup",
+        "blocksLiveMigration": true,
+        "incidentOnly": true,
+        "prodBlocking": true
+      },
+      {
+        "id": "backup-secret-destructive-lifecycle",
+        "blocksLiveMigration": true,
+        "incidentOnly": true,
+        "prodBlocking": true
+      },
+      {
+        "id": "prod-fresh-scope-price-proof",
+        "blocksLiveMigration": false,
+        "incidentOnly": false,
+        "prodBlocking": true
+      }
+    ]
+  },
+  "reviewResult": {
+    "environmentCount": 3,
+    "totalStageCount": 8,
+    "individuallySimulatableStageCount": 7,
+    "unimplementedStageCount": 1,
+    "implementedFixtureMatrixSize": 21,
+    "completeFixtureMatrixSize": 24,
+    "missingFixtureMatrixSize": 3,
+    "firstUnimplementedStep": "freeze-applications",
+    "syntheticPredecessorReceiptRequired": true,
+    "endToEndOfflineChainExecutable": false
+  },
+  "limitations": [
+    "The seven implemented phases are independently simulatable only after tests supply a synthetic confirmed predecessor receipt; this is not an executable eight-stage chain.",
+    "No freeze-applications adapter, live observation transport, live mutation transport, command schema or durable cross-phase receipt handoff is implemented.",
+    "ExternalSecret finalizer repair, forced Namespace or PV cleanup and backup or Secret destructive lifecycle remain incident-only gaps and are not generalized permissions.",
+    "All existing live executors and execution evidence remain frozen; the historical aws-test teardown and scoped residual audit stay closed.",
+    "Production remains unqualified and requires fresh account, release, scope, current price, budget, proof and explicit approval before any live design or operation."
+  ],
+  "effectFlags": {
+    "repositoryFileReadsByValidator": true,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "systemClockReads": false,
+    "privateEvidenceReads": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetry": false
+  },
+  "existingLiveAdaptersModified": false,
+  "completeAdapterMigrationImplemented": false,
+  "liveMigrationReady": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalApprovalsReusable": false,
+  "prodQualified": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "nextImplementation": "Implement and test the fixed-fake freeze-applications adapter, then review a versioned live transport and cross-phase receipt migration without reopening historical execution."
+}

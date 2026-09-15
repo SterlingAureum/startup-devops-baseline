@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.4-shared-offline-destroy-adapters` composes four shared cores for
+EKS dependency/final stages across explicit dev/test/prod profiles, using fixed fake
+transport and 39 offline tests. Live migration remains pending. See
+[offline destroy adapters](docs/V0.11.9.3.6.7.7.4_SHARED_OFFLINE_DESTROY_ADAPTERS.md).
+
+Recorded plan/journal checkpoint:
 `v0.11.9.3.6.7.7.3-shared-plan-scope-and-attempt-journal` adds exact reviewed destroy
 scope and a durable Linux write-ahead journal with 36 offline fixtures. Pending or
 failed attempts stop; live adapter integration remains pending. See

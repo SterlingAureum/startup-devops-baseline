@@ -1,0 +1,157 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.7",
+  "version": "v0.11.9.3.6.7.7.7",
+  "predecessor": "v0.11.9.3.6.7.7.6",
+  "implementationBaselineCommit": "d9f9e96972a25f0a5894cd9c93ca018d27c28a96",
+  "status": "shared-offline-freeze-adapter-implemented",
+  "corePath": "scripts/guarded_freeze_simulation_v6777.py",
+  "coreSha256": "567a853c1042052ef3b7785774b1e0c1913c1d75f0c4453436903a41a23386f4",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.7-offline-freeze-adapter.py",
+  "testSha256": "dfbb58d4ff3b3acdbf0187159c5b2cef16a461f39a3f1dcfebcd3a318c4d8fc6",
+  "testMethodCount": 36,
+  "testMethods": [
+    "test_three_environment_profiles_complete",
+    "test_two_pass_root_then_sorted_children_order",
+    "test_success_returns_confirmed_first_stage_receipt",
+    "test_fixed_fake_types_only",
+    "test_explicit_environment_and_main_required",
+    "test_approval_scope_and_digest_drift_stop_before_observation",
+    "test_every_artifact_byte_is_pinned",
+    "test_journal_path_substitution_rejected",
+    "test_confirmation_and_inherited_override_rejected",
+    "test_proof_expiry_and_renewal_rejected",
+    "test_root_must_be_first_and_children_sorted",
+    "test_scope_requires_at_least_root_and_child",
+    "test_initial_application_must_be_automated_idle_and_not_deleting",
+    "test_unknown_or_missing_initial_finalizer_rejected",
+    "test_uid_resource_version_and_digest_schema_rejected",
+    "test_pre_and_immediate_inventory_must_match_reviewed_scope",
+    "test_identity_state_inventory_budget_and_freshness_gates",
+    "test_active_operation_or_deletion_before_each_call_stops",
+    "test_resource_version_must_change_after_freeze_and_orphan",
+    "test_source_destination_or_uid_drift_after_mutation_stops",
+    "test_unrelated_application_drift_during_freeze_stops",
+    "test_all_applications_must_be_frozen_before_orphan_pass",
+    "test_orphan_must_remove_only_known_target_finalizer",
+    "test_delete_post_must_remove_exact_first_application",
+    "test_explicit_false_records_terminal_failure",
+    "test_unknown_or_interrupted_result_preserves_pending",
+    "test_existing_success_failure_or_pending_never_repeats",
+    "test_clock_expiry_after_intent_preserves_pending_without_fake_call",
+    "test_stale_observation_after_intent_preserves_pending",
+    "test_final_application_set_and_state_are_exact",
+    "test_completion_write_failure_does_not_return_receipt",
+    "test_failure_report_is_redacted",
+    "test_receipt_helper_rejects_waiting_failed_live_or_wrong_version",
+    "test_confirmed_freeze_receipt_is_consumed_by_first_cleanup_stage",
+    "test_complete_three_environment_eight_stage_receipt_chain",
+    "test_core_ast_has_no_live_or_dynamic_backend_primitive"
+  ],
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.6-complete-offline-runtime-parity-review.json",
+      "sha256": "2ba483784f30efd79191bee2dac7731878b7c4437ec9db852e575d577da02ad7"
+    },
+    {
+      "path": "scripts/guarded_cleanup_simulation_v6775.py",
+      "sha256": "0e9f503e154bdd0752d2d6595e72b90e753d961a6b5b1c048f305a083d668494"
+    },
+    {
+      "path": "scripts/guarded_runtime_simulation_v6774.py",
+      "sha256": "8a5c74f2b638581203a10156a82831cae57c425d3a75e67b526ebf86490c8f1a"
+    },
+    {
+      "path": "scripts/guarded_attempt_journal.py",
+      "sha256": "94cab7865c0de8febe036b6012a2b14865f7fbd36e2939128313db9655b3d7df"
+    },
+    {
+      "path": "scripts/guarded_cleanup_rules.py",
+      "sha256": "5141ee801f98c84adcb555ddfe12a5dc4d41d0a91f0c6e4bd5ec0894c7223738"
+    },
+    {
+      "path": "scripts/guarded_runtime_rules.py",
+      "sha256": "b95b0f846c2cf415855f78b709c5eb85b945afe1d37884c76f1e6b255f88347d"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.6-runtime-parity-review.sh",
+  "environmentProfiles": [
+    "aws-dev",
+    "aws-test",
+    "aws-prod"
+  ],
+  "implementedPhase": "freeze-applications",
+  "applicationOrder": "Exact captured Root first, then unique lexically sorted child Applications.",
+  "twoPassSequence": [
+    "Remove automated sync from every reviewed Application in exact order.",
+    "After all Applications are frozen, remove one known Argo finalizer and delete each exact Application in the same order."
+  ],
+  "applicationIdentityFields": [
+    "name",
+    "namespace",
+    "uid",
+    "resource_version",
+    "source_sha256",
+    "destination_sha256",
+    "automated_sync_enabled",
+    "finalizers",
+    "deletion_requested",
+    "active_operation"
+  ],
+  "knownArgoFinalizers": [
+    "resources-finalizer.argocd.argoproj.io",
+    "resources-finalizer.argocd.argoproj.io/background"
+  ],
+  "approvalContract": "offline-freeze-approval-v1 with simulation_only=true, exact environment/phase/main, immutable input/scope/state digests, original proof clock, budget and durable journal path.",
+  "confirmationPolicy": "Exact CONFIRM_<ENV>_OFFLINE_FREEZE = simulate-reviewed-<environment>-freeze-applications-once; unrelated confirmations and inherited AWS/Terraform overrides reject.",
+  "clocks": {
+    "maximumWindowSeconds": 28800,
+    "minimumRemainingSeconds": 60,
+    "proofTtlSeconds": 900,
+    "observationTtlSeconds": 60,
+    "recheckedAfterIntentBarrier": true,
+    "postDeadlineEnforced": true,
+    "monotonicScriptedUtc": true
+  },
+  "receiptContract": {
+    "schema": "Synthetic canonical JSON containing only step, environment, confirmed=true and simulation_only=true.",
+    "requiresTerminalSuccessReport": true,
+    "consumedByFrozenCleanupAndDestroyAdapters": true,
+    "durableLiveCrossPhaseHandoffImplemented": false
+  },
+  "offlineComposition": {
+    "orderedStageCount": 8,
+    "environmentCount": 3,
+    "successfulEnvironmentStageMatrixSize": 24,
+    "endToEndOfflineReceiptChainTested": true,
+    "syntheticOnly": true
+  },
+  "limitations": [
+    "Application objects, identities, clocks, prices, observations and mutation acknowledgements are scripted fixture bytes, not live Kubernetes evidence.",
+    "The adapter performs no SDK, CLI, subprocess, environment, endpoint, Terraform or system-clock access.",
+    "The fixed fake type prevents accidental backend substitution but is not a hostile-code sandbox.",
+    "The generated receipt links offline test stages in memory; it is not a durable live cross-phase handoff or authorization.",
+    "Only known Argo Application finalizers are simulated; ExternalSecret finalizer repair, forced Namespace/PV cleanup and backup/Secret destructive lifecycle remain incident-only gaps.",
+    "Historical aws-test teardown and scoped audit remain closed; prior approvals, windows, evidence and markers cannot be reused.",
+    "Production remains unqualified and requires fresh account, release, scope, current price, budget, proof and explicit approval."
+  ],
+  "effectFlags": {
+    "privateJournalFileAccess": true,
+    "fakeTransportCalls": true,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "systemClockReads": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetry": false
+  },
+  "existingLiveAdaptersModified": false,
+  "completeAdapterMigrationImplemented": false,
+  "liveMigrationReady": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalApprovalsReusable": false,
+  "prodQualified": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "nextImplementation": "Design a versioned live transport, approval-command and durable cross-phase receipt migration contract while keeping incident-only repair powers and prod execution disabled."
+}

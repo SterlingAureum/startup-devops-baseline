@@ -1,0 +1,305 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.8",
+  "version": "v0.11.9.3.6.7.7.8",
+  "predecessor": "v0.11.9.3.6.7.7.7",
+  "implementationBaselineCommit": "50b27de63e48ff4602f3f4d8680f2ece75bc8adc",
+  "status": "versioned-live-migration-contract-designed",
+  "corePath": "scripts/guarded_live_migration_contract_v6778.py",
+  "coreSha256": "ce413f54a34223e9a55ce0b14116115e4b22916cfb4a23e39bda16fedd4630d6",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.8-live-migration-contract.py",
+  "testSha256": "90f73f57152b4af65da0fb9cf682dde78c64576ee2a1648fb6edf9b37378565f",
+  "testMethodCount": 38,
+  "testMethods": [
+    "test_exact_design_validates",
+    "test_stage_order_is_exact_eight_stage_chain",
+    "test_environment_schema_order_is_dev_test_prod",
+    "test_no_environment_is_live_enabled_by_design",
+    "test_test_waits_for_dev_migration_evidence",
+    "test_prod_remains_disabled_and_separately_qualified",
+    "test_transport_schema_and_closed_dispatch_are_exact",
+    "test_each_stage_operation_set_is_nonempty_and_unique",
+    "test_raw_shell_dynamic_commands_and_overrides_are_forbidden",
+    "test_saved_plan_apply_exists_only_in_destroy_stages",
+    "test_transport_has_no_replan_operation",
+    "test_normal_transport_excludes_incident_only_powers",
+    "test_secret_value_return_retry_and_repair_are_forbidden",
+    "test_verify_and_execute_are_distinct_commands",
+    "test_approval_is_one_phase_and_one_attempt",
+    "test_approval_binds_identity_scope_clock_budget_and_predecessor",
+    "test_historical_approval_and_synthetic_receipt_are_not_accepted",
+    "test_receipt_storage_is_private_atomic_and_durable",
+    "test_receipt_requires_terminal_success_and_exact_predecessor",
+    "test_receipt_field_set_binds_state_journal_and_raw_manifest",
+    "test_synthetic_receipts_cannot_be_converted_to_live",
+    "test_live_chain_starts_fresh_and_survives_restart",
+    "test_any_design_drift_is_rejected",
+    "test_valid_dev_first_stage_approval_shape_is_reviewed_only",
+    "test_valid_test_later_stage_requires_exact_predecessor",
+    "test_prod_approval_shape_is_rejected",
+    "test_approval_main_and_target_drift_are_rejected",
+    "test_first_and_later_approval_predecessor_rules_are_strict",
+    "test_expired_window_or_proof_is_rejected",
+    "test_budget_schema_and_positive_value_are_required",
+    "test_approval_authority_flags_cannot_be_pregranted",
+    "test_valid_terminal_receipt_shape_is_reviewed_not_persisted",
+    "test_synthetic_fields_are_rejected_from_live_receipt",
+    "test_failed_pending_retry_or_repair_receipt_is_rejected",
+    "test_receipt_field_hash_main_and_predecessor_drift_rejected",
+    "test_complete_receipt_prefix_has_exact_eight_links",
+    "test_receipt_prefix_reorder_cross_environment_and_link_drift_rejected",
+    "test_core_ast_has_no_io_or_execution_primitives"
+  ],
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.7-shared-offline-freeze-adapter.json",
+      "sha256": "ef82ce618fe0a93e2c678c3f646a2db5ed887be75611dae74fde5cd6fc2f23df"
+    },
+    {
+      "path": "scripts/guarded_freeze_simulation_v6777.py",
+      "sha256": "567a853c1042052ef3b7785774b1e0c1913c1d75f0c4453436903a41a23386f4"
+    },
+    {
+      "path": "scripts/guarded_cleanup_simulation_v6775.py",
+      "sha256": "0e9f503e154bdd0752d2d6595e72b90e753d961a6b5b1c048f305a083d668494"
+    },
+    {
+      "path": "scripts/guarded_runtime_simulation_v6774.py",
+      "sha256": "8a5c74f2b638581203a10156a82831cae57c425d3a75e67b526ebf86490c8f1a"
+    },
+    {
+      "path": "scripts/guarded_attempt_journal.py",
+      "sha256": "94cab7865c0de8febe036b6012a2b14865f7fbd36e2939128313db9655b3d7df"
+    },
+    {
+      "path": "scripts/guarded_cleanup_rules.py",
+      "sha256": "5141ee801f98c84adcb555ddfe12a5dc4d41d0a91f0c6e4bd5ec0894c7223738"
+    },
+    {
+      "path": "scripts/guarded_runtime_rules.py",
+      "sha256": "b95b0f846c2cf415855f78b709c5eb85b945afe1d37884c76f1e6b255f88347d"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.7-offline-freeze-adapter.sh",
+  "designContract": {
+    "schema": "guarded-live-migration-design-v1",
+    "version": "v0.11.9.3.6.7.7.8",
+    "mode": "offline-design-only",
+    "stage_order": [
+      "freeze-applications",
+      "drain-external-secrets",
+      "delete-business-namespaces",
+      "drain-runtime",
+      "delete-node-config",
+      "eks-delete",
+      "eni-sg-cleanup",
+      "final-delete"
+    ],
+    "environment_rollout": {
+      "schema_coverage": [
+        "aws-dev",
+        "aws-test",
+        "aws-prod"
+      ],
+      "first_candidate": "aws-dev",
+      "aws-dev": "future-separate-migration-candidate",
+      "aws-test": "blocked-until-dev-migration-evidence",
+      "aws-prod": "disabled-until-separate-qualification",
+      "currently_live_enabled": []
+    },
+    "transport": {
+      "schema": "guarded-live-transport-v1",
+      "dispatch": "closed-enum-per-stage",
+      "stage_operations": {
+        "freeze-applications": [
+          "kubernetes-observe-applications",
+          "kubernetes-freeze-exact-application",
+          "kubernetes-remove-known-argo-finalizer",
+          "kubernetes-delete-exact-application"
+        ],
+        "drain-external-secrets": [
+          "kubernetes-observe-external-secrets",
+          "kubernetes-observe-controller-rbac"
+        ],
+        "delete-business-namespaces": [
+          "kubernetes-observe-business-namespaces",
+          "kubernetes-delete-reviewed-business-resources",
+          "kubernetes-delete-reviewed-business-namespaces"
+        ],
+        "drain-runtime": [
+          "kubernetes-observe-runtime-absence",
+          "aws-observe-captured-runtime-absence"
+        ],
+        "delete-node-config": [
+          "kubernetes-observe-node-configuration",
+          "kubernetes-delete-reviewed-node-configuration"
+        ],
+        "eks-delete": [
+          "kubernetes-observe-runtime-absence",
+          "aws-observe-eks-dependency-scope",
+          "terraform-show-reviewed-saved-plan",
+          "terraform-apply-reviewed-saved-plan"
+        ],
+        "eni-sg-cleanup": [
+          "aws-observe-captured-eni-sg",
+          "aws-delete-reviewed-captured-eni",
+          "aws-delete-reviewed-captured-security-group"
+        ],
+        "final-delete": [
+          "aws-observe-final-scope-and-inventories",
+          "terraform-show-reviewed-saved-plan",
+          "terraform-apply-reviewed-saved-plan"
+        ]
+      },
+      "raw-shell": false,
+      "dynamic-command-template": false,
+      "endpoint-or-credential-override": false,
+      "automatic-retry-or-repair": false,
+      "secret-value-return": false,
+      "prod-enabled": false
+    },
+    "approval": {
+      "schema": "guarded-live-phase-approval-v1",
+      "commands": [
+        "verify",
+        "execute"
+      ],
+      "verify_can_mutate": false,
+      "execute_requires_separate_human_approval": true,
+      "one_phase_per_approval": true,
+      "one_attempt_per_approval": true,
+      "confirmation_template": "CONFIRM_<ENV>_<PHASE>_EXECUTION",
+      "binds": [
+        "environment",
+        "phase",
+        "transport_version",
+        "control_plane_commit",
+        "approval_text_sha256",
+        "inputs_sha256",
+        "scope_sha256",
+        "state_sha256",
+        "predecessor_receipt_sha256",
+        "operation_set_sha256",
+        "proof_sha256",
+        "start_utc",
+        "end_utc",
+        "proof_created_at_utc",
+        "proof_expires_at_utc",
+        "total_budget_limit_usd"
+      ],
+      "historical_approval_reusable": false,
+      "synthetic_receipt_acceptable": false,
+      "prod_approval_supported": false
+    },
+    "receipt": {
+      "schema": "guarded-live-phase-receipt-v1",
+      "storage": "private-durable-append-only",
+      "directory_mode": "0700",
+      "file_mode": "0600",
+      "canonical_json": true,
+      "exclusive_create": true,
+      "file_and_directory_fsync": true,
+      "symlink_or_hardlink_rejected": true,
+      "terminal_success_only": true,
+      "exact_predecessor_chain": true,
+      "failed_or_pending_is_terminal_stop": true,
+      "public_resource_identity_emitted": false,
+      "required_fields": [
+        "schema",
+        "transport_version",
+        "environment",
+        "phase",
+        "phase_index",
+        "status",
+        "control_plane_commit",
+        "approval_sha256",
+        "inputs_sha256",
+        "scope_sha256",
+        "operation_set_sha256",
+        "predecessor_receipt_sha256",
+        "journal_completion_sha256",
+        "raw_output_manifest_sha256",
+        "state_before_sha256",
+        "state_after_sha256",
+        "completed_at_utc",
+        "attempt_count",
+        "automatic_retry_performed",
+        "incident_repair_performed"
+      ]
+    },
+    "migration": {
+      "synthetic_receipt_convertible": false,
+      "historical_live_receipt_reusable": false,
+      "fresh_live_preflight_and_verify_required": true,
+      "first_live_stage_has_no_predecessor": true,
+      "later_stage_requires_exact_previous_receipt": true,
+      "skip_reorder_or_cross_environment_receipt": false,
+      "receipt_chain_survives_process_restart": true,
+      "live_completion_inferred_from_offline_fixture": false
+    },
+    "incident_boundary": {
+      "normal_transport_excludes": [
+        "externalsecret-finalizer-removal",
+        "namespace-finalizer-force",
+        "persistent-volume-finalizer-force",
+        "uncaptured-resource-deletion",
+        "backup-version-ad-hoc-deletion",
+        "secret-force-delete-or-value-read",
+        "state-edit-or-import"
+      ],
+      "requires_new_observation_design_and_approval": true,
+      "cannot_resume_normal_chain_automatically": true
+    },
+    "effects": {
+      "repository_reads_by_validator": true,
+      "cloud_transport": false,
+      "kubernetes_transport": false,
+      "terraform_commands": false,
+      "private_evidence_reads": false,
+      "system_clock_reads": false,
+      "cloud_mutation": false,
+      "kubernetes_mutation": false,
+      "secret_value_read": false,
+      "automatic_retry_or_repair": false,
+      "new_live_execution_authorized": false
+    }
+  },
+  "reviewResult": {
+    "environmentSchemaCount": 3,
+    "orderedStageCount": 8,
+    "closedOperationCount": 23,
+    "durableReceiptSchemaDesigned": true,
+    "offlineSyntheticReceiptConvertible": false,
+    "currentlyLiveEnabledEnvironmentCount": 0,
+    "firstFutureMigrationCandidate": "aws-dev",
+    "testRequiresDevMigrationEvidence": true,
+    "prodEnabled": false
+  },
+  "limitations": [
+    "This increment is a pure offline contract review; it does not implement a live transport, command entry point, clock, receipt store or private evidence reader.",
+    "Offline synthetic receipts and historical live receipts cannot seed the future live chain; every migration begins with fresh live preflight and verify evidence.",
+    "The first future candidate is aws-dev only. aws-test remains blocked on dev migration evidence and aws-prod remains disabled pending independent qualification.",
+    "ExternalSecret finalizer removal, forced Namespace/PV cleanup, uncaptured deletion, backup/Secret repair and state edits remain incident-only powers outside the normal transport.",
+    "Historical teardown, residual-audit evidence, approvals, windows and markers remain closed and cannot authorize future work."
+  ],
+  "effectFlags": {
+    "repositoryFileReadsByValidator": true,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "privateEvidenceReads": false,
+    "systemClockReads": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetryOrRepair": false
+  },
+  "existingLiveAdaptersModified": false,
+  "liveTransportImplemented": false,
+  "durableReceiptStoreImplemented": false,
+  "approvalCommandImplemented": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalApprovalsReusable": false,
+  "prodQualified": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "nextImplementation": "Implement a dev-only offline conformance harness for the versioned transport and durable receipt store before any separately reviewed live integration."
+}

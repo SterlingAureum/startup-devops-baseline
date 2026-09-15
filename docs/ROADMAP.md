@@ -1249,3 +1249,18 @@ cross-phase receipt handoff before migrating any existing executor. Incident-onl
 finalizer/forced cleanup/destructive lifecycle powers remain excluded; prod still
 requires fresh scope, current price, budget, proof and approval. See
 [freeze adapter](V0.11.9.3.6.7.7.7_SHARED_OFFLINE_FREEZE_ADAPTER.md).
+
+
+### v0.11.9.3.6.7.7.8 — live transport and durable receipt migration design
+
+Implemented offline: a closed operation enum for all eight stages, separate
+verify/execute approval shapes, and a private append-only terminal-success receipt
+schema with exact same-environment predecessor chaining. Synthetic or historical
+receipts cannot seed the future live chain, and incident-only repair powers remain
+outside the normal transport.
+
+No environment is live-enabled by this design. Future conformance work starts with
+aws-dev; aws-test waits for dev migration evidence and aws-prod remains disabled
+until separate qualification. Next: build a dev-only offline transport conformance
+harness and durable receipt store before any live integration. See
+[live migration design](V0.11.9.3.6.7.7.8_LIVE_TRANSPORT_AND_RECEIPT_MIGRATION_DESIGN.md).

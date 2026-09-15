@@ -857,3 +857,6 @@ echo "==> Validating v0.11.9.3.6.7.7.6 complete offline runtime parity review"
 
 echo "==> Validating v0.11.9.3.6.7.7.7 offline Application freeze adapter"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.7-offline-freeze-adapter.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.8 live migration design contract"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.8-live-migration-contract.sh"

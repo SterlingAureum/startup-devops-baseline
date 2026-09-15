@@ -1207,3 +1207,17 @@ This is two-stage simulation coverage, not full live migration or native/billing
 Next: offline ESO/runtime dependency-drain and captured ENI/SG continuation adapters,
 then separately reviewed live migration. Test cleanup/audit remain closed; prod unqualified.
 See [offline adapters](V0.11.9.3.6.7.7.4_SHARED_OFFLINE_DESTROY_ADAPTERS.md).
+
+
+### v0.11.9.3.6.7.7.5 — three-profile offline cleanup adapters
+
+Implemented five fixed-fake dependency stages: ExternalSecret drain, business
+Namespace deletion, runtime drain, NodePool/EC2NodeClass deletion and captured
+ENI→SG continuation. Forty-one tests cover all fifteen dev/test/prod stage combinations,
+strict object/scope drift, waiting drains, intent barriers and uncertain postconditions.
+No finalizer repair, live transport, Terraform command or new authorization exists.
+
+Next: review whole-chain parity and remaining live migration gaps before any versioned
+live adapter proposal. Test teardown/audit remain closed; prod stays unqualified and
+requires independent current pricing, proof and approval. See
+[offline cleanup adapters](V0.11.9.3.6.7.7.5_SHARED_OFFLINE_CLEANUP_ADAPTERS.md).

@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.5",
+  "version": "v0.11.9.3.6.7.7.5",
+  "predecessor": "v0.11.9.3.6.7.7.4",
+  "implementationBaselineCommit": "dee9917b3e462dd21a29ebaca49685cfc3d37489",
+  "status": "shared-offline-cleanup-adapters-implemented",
+  "corePath": "scripts/guarded_cleanup_simulation_v6775.py",
+  "coreSha256": "0e9f503e154bdd0752d2d6595e72b90e753d961a6b5b1c048f305a083d668494",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.5-offline-cleanup-adapters.py",
+  "testSha256": "1cd33398462df62521d11b32727ea4fc1b12d4b9ef6faeadbdc747deb3f1298d",
+  "testMethodCount": 41,
+  "testMethods": [
+    "test_fifteen_environment_phase_combinations",
+    "test_fixed_fake_types_only",
+    "test_explicit_environment_phase_and_main_required",
+    "test_approval_scope_and_digest_drift_stop_before_observation",
+    "test_every_artifact_byte_is_pinned",
+    "test_journal_path_substitution_rejected",
+    "test_confirmation_and_inherited_override_rejected",
+    "test_proof_expiry_and_renewal_rejected",
+    "test_identity_state_inventory_budget_and_freshness_gates",
+    "test_receipt_hash_order_and_confirmation_are_exact",
+    "test_external_secret_waits_without_journal_or_fake_call",
+    "test_external_secret_policy_finalizer_and_deletion_are_exact",
+    "test_external_secret_requires_eso_health_and_scoped_rbac",
+    "test_runtime_waits_without_journal",
+    "test_absent_drain_records_no_mutation_completion",
+    "test_namespace_scope_and_kind_are_exact",
+    "test_node_config_requires_both_exact_kinds",
+    "test_unknown_object_finalizer_stops_before_journal",
+    "test_object_uid_resource_version_and_list_drift_stop",
+    "test_object_operations_are_ordered_and_journaled",
+    "test_intent_is_durable_before_object_call",
+    "test_object_explicit_failure_terminal",
+    "test_object_uncertain_result_or_post_preserves_pending",
+    "test_second_object_failure_preserves_first_success",
+    "test_existing_completed_or_pending_journal_never_repeats",
+    "test_reserve_and_intent_clock_boundaries_stop_calls",
+    "test_observation_rechecked_after_intent",
+    "test_post_deadline_prevents_success_completion",
+    "test_read_only_completion_respects_deadline",
+    "test_eni_then_sg_order_and_identity_digests",
+    "test_absent_eni_skips_delete_but_sg_is_checked",
+    "test_both_network_objects_absent_are_not_deleted",
+    "test_attached_or_identity_drifted_eni_never_calls",
+    "test_other_sg_reference_stops_after_eni_success",
+    "test_eni_or_sg_post_uncertainty_preserves_pending",
+    "test_network_call_explicit_failure_is_terminal",
+    "test_network_observation_rechecked_after_intent",
+    "test_final_state_change_prevents_completion",
+    "test_completion_write_failure_does_not_report_success",
+    "test_failures_are_redacted",
+    "test_core_ast_has_no_live_or_dynamic_backend_primitive"
+  ],
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.4-shared-offline-destroy-adapters.json",
+      "sha256": "0ba0aef6bbee3250727291c7931f153d622125c8cb1d009ba32ddd13becc57fb"
+    },
+    {
+      "path": "scripts/guarded_runtime_simulation_v6774.py",
+      "sha256": "8a5c74f2b638581203a10156a82831cae57c425d3a75e67b526ebf86490c8f1a"
+    },
+    {
+      "path": "scripts/guarded_cleanup_rules.py",
+      "sha256": "5141ee801f98c84adcb555ddfe12a5dc4d41d0a91f0c6e4bd5ec0894c7223738"
+    },
+    {
+      "path": "scripts/guarded_runtime_rules.py",
+      "sha256": "b95b0f846c2cf415855f78b709c5eb85b945afe1d37884c76f1e6b255f88347d"
+    },
+    {
+      "path": "scripts/guarded_attempt_journal.py",
+      "sha256": "94cab7865c0de8febe036b6012a2b14865f7fbd36e2939128313db9655b3d7df"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.4-offline-destroy-adapters.sh",
+  "environmentProfiles": ["aws-dev", "aws-test", "aws-prod"],
+  "implementedPhases": [
+    "drain-external-secrets",
+    "delete-business-namespaces",
+    "drain-runtime",
+    "delete-node-config",
+    "eni-sg-cleanup"
+  ],
+  "successfulFixtureMatrixSize": 15,
+  "artifactKeys": ["inputs", "scope", "state"],
+  "publicClasses": [
+    "OfflineCleanupAdapter",
+    "CleanupScenarioTransport",
+    "CleanupSimulationStopped"
+  ],
+  "approvalContract": "offline-cleanup-approval-v1 with simulation_only=true, exact environment/phase/main, immutable input/scope/state digests, original proof clock, budget and durable journal path.",
+  "confirmationPolicy": "Exact CONFIRM_<ENV>_OFFLINE_CLEANUP = simulate-reviewed-<environment>-<phase>-once; unrelated confirmations and inherited AWS/Terraform overrides reject.",
+  "clocks": {
+    "maximumWindowSeconds": 28800,
+    "minimumRemainingSeconds": 60,
+    "proofTtlSeconds": 900,
+    "observationTtlSeconds": 60,
+    "reserveClockRechecked": true,
+    "recheckedAfterIntentBarrier": true,
+    "postDeadlineEnforced": true,
+    "monotonicScriptedUtc": true
+  },
+  "phaseRules": [
+    "ExternalSecret drain waits without a journal while exact deleting objects remain; CreateOrMerge/Retain is accepted, unknown policy/finalizer or insufficient ESO/RBAC stops.",
+    "Business Namespace and NodePool/EC2NodeClass deletes require exact UID/resourceVersion and known native finalizers; no finalizer edit is implemented.",
+    "Runtime drain records completion only after all reviewed aggregate counts are zero and state is unchanged.",
+    "Captured ENI is decided and post-confirmed absent before the SG decision; exact owner/network, unattached/unassociated status and no other SG reference are mandatory.",
+    "Each simulated mutation has a durable intent, fresh recheck, one fixed fake call, independent postcondition and terminal or pending evidence semantics."
+  ],
+  "limitations": [
+    "All identities, observations, clocks, prices and mutation acknowledgements are scripted fixture bytes, not live cloud or Kubernetes evidence.",
+    "The adapter performs no SDK, CLI, subprocess, environment, endpoint, Terraform or system-clock access.",
+    "The fixed fake class guards accidental backend mixups; it is not a hostile-code sandbox.",
+    "The journal gives at-most-once semantics only for the approved directory and operation tag; it is not authorization.",
+    "No ExternalSecret finalizer removal, forced Namespace/PV cleanup, backup/container deletion or live adapter migration is implemented.",
+    "Historical aws-test teardown and scoped audit remain closed; prior approvals, windows and markers are not reusable."
+  ],
+  "effectFlags": {
+    "privateJournalFileAccess": true,
+    "fakeTransportCalls": true,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "systemClockReads": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetry": false
+  },
+  "existingLiveAdaptersModified": false,
+  "completeAdapterMigrationImplemented": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalApprovalsReusable": false,
+  "prodQualified": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "nextImplementation": "Review parity and gaps across the complete offline phase composition, then design separately approved live adapter migration without reopening historical aws-test execution."
+}

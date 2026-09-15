@@ -716,3 +716,10 @@
 /scripts/guarded_runtime_simulation_v6774.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.4-offline-destroy-adapters.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.4-offline-destroy-adapters.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.5 offline cleanup adapters
+/delivery/contracts/v0.11.9.3.6.7.7.5-shared-offline-cleanup-adapters.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.5_SHARED_OFFLINE_CLEANUP_ADAPTERS.md @SterlingAureum
+/scripts/guarded_cleanup_simulation_v6775.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.5-offline-cleanup-adapters.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.5-offline-cleanup-adapters.sh @SterlingAureum

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.5
+
+- Compose fixed-fake ESO/runtime drain, business Namespace, NodePool/EC2NodeClass and captured ENI→SG cleanup adapters across dev/test/prod.
+- Require exact receipt order, immutable scope/state, fresh proof/observations and durable intent-before-call journaling without finalizer repair.
+- Add 41 offline fixtures including all 15 environment/phase combinations, waiting drains, identity drift, uncertain outcomes and repeat prevention.
+- Preserve historical live executors and closed aws-test evidence; no cloud/Kubernetes/Terraform access or new live/prod authorization.
+
 ## v0.11.9.3.6.7.7.4
 
 - Compose frozen runtime, cleanup, exact plan and durable journal rules in versioned offline EKS/final destroy adapters.

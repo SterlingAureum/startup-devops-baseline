@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.4
+
+- Compose frozen runtime, cleanup, exact plan and durable journal rules in versioned offline EKS/final destroy adapters.
+- Use three explicit module profiles and fixed fake transport; pin simulation approval, artifacts, clock, budget and journal path.
+- Add 39 offline fixtures including all six environment/phase success cases and post-barrier expiry/freshness failures.
+- Preserve terminal/pending evidence and require independent postconditions before completion; no live migration or new authorization.
+
 ## v0.11.9.3.6.7.7.3
 
 - Add pure reviewed-address/definition/before-ID destroy gate with explicit dependency closure and final-state coverage.

@@ -709,3 +709,10 @@
 /scripts/guarded_attempt_journal.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.3-plan-scope-and-attempt-journal.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.3-plan-scope-and-attempt-journal.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.4 offline destroy adapters
+/delivery/contracts/v0.11.9.3.6.7.7.4-shared-offline-destroy-adapters.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.4_SHARED_OFFLINE_DESTROY_ADAPTERS.md @SterlingAureum
+/scripts/guarded_runtime_simulation_v6774.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.4-offline-destroy-adapters.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.4-offline-destroy-adapters.sh @SterlingAureum

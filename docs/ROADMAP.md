@@ -1194,3 +1194,16 @@ remain adapter responsibilities. Historical test cleanup/audit stay closed.
 Next: new versioned dev/test/prod fake-transport adapters composing shared runtime,
 cleanup, plan scope and journal rules. No prod qualification or live authorization.
 See [plan scope and journal](V0.11.9.3.6.7.7.3_SHARED_PLAN_SCOPE_AND_ATTEMPT_JOURNAL.md).
+
+
+### v0.11.9.3.6.7.7.4 — three-profile offline destroy adapters
+
+Implemented EKS dependency/final stage composition of runtime, cleanup, plan gate
+and durable journal; fixed fake transport, exact reviewed inputs/path and independent
+postconditions. Thirty-nine tests include six successful environment/phase combinations
+and proof/freshness expiry after intent, preserved uncertain outcomes and no repeat call.
+This is two-stage simulation coverage, not full live migration or native/billing attestation.
+
+Next: offline ESO/runtime dependency-drain and captured ENI/SG continuation adapters,
+then separately reviewed live migration. Test cleanup/audit remain closed; prod unqualified.
+See [offline adapters](V0.11.9.3.6.7.7.4_SHARED_OFFLINE_DESTROY_ADAPTERS.md).

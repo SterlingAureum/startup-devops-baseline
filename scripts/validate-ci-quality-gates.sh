@@ -860,3 +860,6 @@ echo "==> Validating v0.11.9.3.6.7.7.7 offline Application freeze adapter"
 
 echo "==> Validating v0.11.9.3.6.7.7.8 live migration design contract"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.8-live-migration-contract.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.9 dev offline transport conformance and durable receipts"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.9-dev-transport-conformance.sh"

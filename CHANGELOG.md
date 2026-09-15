@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.9
+
+- Exercise all eight aws-dev phases and 23 closed operations through a fixed fake transport; reject aws-test, aws-prod and arbitrary transport subclasses.
+- Implement owned `0700` append-only local receipt storage with canonical exclusive `0600` intent, receipt and completion files plus file/directory fsync.
+- Fail closed on partial writes, link/mode/main/chain drift and twelve deterministic I/O faults; prove restart recovery after every completed phase.
+- Add 33 offline tests and recursively replay `.7.7.8`; no live backend, command entry point, private evidence read or execution authorization is added.
+
 ## v0.11.9.3.6.7.7.8
 
 - Design a closed-enum `guarded-live-transport-v1` across the eight reviewed stages without implementing any live backend.

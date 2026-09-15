@@ -744,3 +744,10 @@
 /scripts/guarded_live_migration_contract_v6778.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.8-live-migration-contract.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.8-live-migration-contract.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.9 dev offline transport conformance and durable receipts
+/delivery/contracts/v0.11.9.3.6.7.7.9-dev-offline-transport-conformance-and-durable-receipts.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.9_DEV_OFFLINE_TRANSPORT_CONFORMANCE_AND_DURABLE_RECEIPTS.md @SterlingAureum
+/scripts/guarded_dev_transport_conformance_v6779.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.9-dev-transport-conformance.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.9-dev-transport-conformance.sh @SterlingAureum

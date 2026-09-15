@@ -3,13 +3,20 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.9-dev-offline-transport-conformance-and-durable-receipts`
+exercises the exact eight-stage/23-operation interface through a dev-only fixed
+fake and implements an append-only local receipt triplet with restart and fault
+coverage. No live backend or command entry point is enabled. See
+[dev transport conformance](docs/V0.11.9.3.6.7.7.9_DEV_OFFLINE_TRANSPORT_CONFORMANCE_AND_DURABLE_RECEIPTS.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.8-live-transport-and-receipt-migration-design` defines the
 closed versioned transport, separate phase approval and durable receipt handoff
 required before live migration. Synthetic receipts cannot become live evidence;
 no environment is enabled and prod remains disabled. See
 [live migration design](docs/V0.11.9.3.6.7.7.8_LIVE_TRANSPORT_AND_RECEIPT_MIGRATION_DESIGN.md).
 
-Predecessor development checkpoint:
+Earlier development checkpoint:
 `v0.11.9.3.6.7.7.7-shared-offline-freeze-adapter` adds the missing fixed-fake
 Application freeze/orphan/delete stage and composes confirmed synthetic receipts
 through all eight dev/test/prod phases (24/24 matrix cells). See

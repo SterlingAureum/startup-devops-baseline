@@ -1264,3 +1264,18 @@ aws-dev; aws-test waits for dev migration evidence and aws-prod remains disabled
 until separate qualification. Next: build a dev-only offline transport conformance
 harness and durable receipt store before any live integration. See
 [live migration design](V0.11.9.3.6.7.7.8_LIVE_TRANSPORT_AND_RECEIPT_MIGRATION_DESIGN.md).
+
+
+### v0.11.9.3.6.7.7.9 — dev offline transport conformance and durable receipts
+
+Implemented: all eight ordered aws-dev phases and all 23 reviewed operations run
+through one closed fixed fake. Terminal-success receipts are persisted as owned
+`0700/0600` canonical intent/receipt/completion triplets using exclusive creation
+and file/directory fsync. Restart at every stage and twelve deterministic local I/O
+faults prove complete recovery or a fail-closed pending store.
+
+No live transport, command entry point, system-clock/private-evidence reader or
+execution authorization is present. aws-test and aws-prod remain rejected. Next:
+implement a separately reviewed dev-only offline command-entry conformance layer
+with injected clock and private-input readers before any live integration. See
+[dev transport conformance](V0.11.9.3.6.7.7.9_DEV_OFFLINE_TRANSPORT_CONFORMANCE_AND_DURABLE_RECEIPTS.md).

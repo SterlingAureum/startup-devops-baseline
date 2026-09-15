@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.5-shared-offline-cleanup-adapters` composes five fixed-fake
+ESO/runtime/namespace/node-config/ENI-SG stages across dev/test/prod with 41 offline
+tests. Live migration remains pending. See
+[offline cleanup adapters](docs/V0.11.9.3.6.7.7.5_SHARED_OFFLINE_CLEANUP_ADAPTERS.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.4-shared-offline-destroy-adapters` composes four shared cores for
 EKS dependency/final stages across explicit dev/test/prod profiles, using fixed fake
 transport and 39 offline tests. Live migration remains pending. See

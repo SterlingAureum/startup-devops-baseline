@@ -758,3 +758,10 @@
 /scripts/guarded_dev_command_entry_conformance_v67710.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.10-dev-command-entry-conformance.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.10-dev-command-entry-conformance.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.11 dev local CLI preflight
+/delivery/contracts/v0.11.9.3.6.7.7.11-dev-local-cli-preflight.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.11_DEV_LOCAL_CLI_PREFLIGHT.md @SterlingAureum
+/scripts/preflight-v0.11.9.3.6.7.7.11-aws-dev-command.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.11-dev-local-cli-preflight.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.11-dev-local-cli-preflight.sh @SterlingAureum

@@ -866,3 +866,6 @@ echo "==> Validating v0.11.9.3.6.7.7.9 dev offline transport conformance and dur
 
 echo "==> Validating v0.11.9.3.6.7.7.10 dev offline command-entry conformance"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.10-dev-command-entry-conformance.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.11 dev local CLI preflight"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.11-dev-local-cli-preflight.sh"

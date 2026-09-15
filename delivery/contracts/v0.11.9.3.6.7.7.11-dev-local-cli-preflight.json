@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.11",
+  "version": "v0.11.9.3.6.7.7.11",
+  "predecessor": "v0.11.9.3.6.7.7.10",
+  "implementationBaselineCommit": "958b959fdfada3449b2f4c710141c1c1ab118c21",
+  "status": "dev-local-cli-preflight-implemented",
+  "entryPath": "scripts/preflight-v0.11.9.3.6.7.7.11-aws-dev-command.py",
+  "entrySha256": "7da8ccfe365c8f5adc5fa5c2cf3169f4e485d799c44c45c5c0173add7e119935",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.11-dev-local-cli-preflight.py",
+  "testSha256": "546f3f7cc763fed194433736e62c50965b51dfe73b10f0ad68991843b4392d5d",
+  "testMethodCount": 22,
+  "testMethods": [
+    "test_success_report_is_exact_and_writes_no_receipt",
+    "test_main_emits_one_canonical_json_line",
+    "test_real_subprocess_reads_host_clock_and_private_files",
+    "test_system_clock_is_single_use_and_utc",
+    "test_parser_exposes_only_verify_command",
+    "test_missing_and_unknown_arguments_are_redacted",
+    "test_confirmation_and_hash_syntax_are_required",
+    "test_input_hash_drift_is_rejected",
+    "test_approval_environment_main_and_phase_drift_are_rejected",
+    "test_approval_authority_budget_clock_and_operation_drift_are_rejected",
+    "test_evidence_schema_and_hashes_are_exact",
+    "test_malformed_noncanonical_empty_and_oversized_inputs_stop",
+    "test_paths_must_be_absolute_distinct_and_share_parent",
+    "test_private_parent_mode_symlink_and_unexpected_entry_stop",
+    "test_private_file_mode_symlink_and_hardlink_stop",
+    "test_receipt_directory_must_be_absolute_owned_0700_and_unlinked",
+    "test_pending_and_unexpected_receipt_entries_block_verify",
+    "test_completed_receipt_prefix_allows_exact_next_phase",
+    "test_wrong_next_phase_or_predecessor_stops",
+    "test_failure_output_does_not_disclose_paths_or_private_bytes",
+    "test_source_has_no_environment_network_cloud_or_command_backend",
+    "test_source_adapts_only_into_frozen_offline_verify"
+  ],
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.10-dev-offline-command-entry-conformance.json",
+      "sha256": "4617298230ec3f30d25da104873cd4a975a125f30a9e99170fb4c53fe5cfe883"
+    },
+    {
+      "path": "scripts/guarded_dev_command_entry_conformance_v67710.py",
+      "sha256": "e1c25c4751b221701c3f8c5718921135f86dbb8cbc320c9e0c4def3de8a11abd"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.10-dev-command-entry-conformance.sh",
+  "environmentProfile": "aws-dev",
+  "localCliPreflight": {
+    "commands": [
+      "verify"
+    ],
+    "confirmation": "observe-reviewed-aws-dev-command-preflight",
+    "phaseChoices": 8,
+    "executeCommandImplemented": false,
+    "environmentVariableReaderImplemented": false,
+    "arbitraryEndpointAccepted": false,
+    "systemUtcClockReadCount": 1,
+    "successOutput": "one-canonical-json-line",
+    "failureOutput": "one-redacted-stderr-line"
+  },
+  "privateInputContract": {
+    "files": [
+      "approval",
+      "evidence"
+    ],
+    "absolutePathsRequired": true,
+    "commonOwnedParentMode": "0700",
+    "exactDirectoryEntriesRequired": true,
+    "ownedRegularFileMode": "0600",
+    "singleHardLinkRequired": true,
+    "symbolicLinksAccepted": false,
+    "maximumBytesPerFile": 1048576,
+    "canonicalJsonRequired": true,
+    "expectedSha256Required": true,
+    "inodeDeviceSizeStabilityRequired": true,
+    "privatePathOrBytesEmitted": false
+  },
+  "offlineAdaptation": {
+    "clockAdapter": "one-system-utc-reading-into-frozen-clock",
+    "privateInputAdapter": "two-strict-files-into-fixed-private-input-reader",
+    "receiptStore": "v0.11.9.3.6.7.7.9-local-durable-store-read-only",
+    "receiptPrefixValidated": true,
+    "receiptWritten": false,
+    "dispatch": "v0.11.9.3.6.7.7.10-verify-only",
+    "fixedFakeTransportInvoked": false
+  },
+  "reviewResult": {
+    "environment": "aws-dev",
+    "commandCount": 1,
+    "orderedStageCount": 8,
+    "actualSubprocessCovered": true,
+    "strictFileScopeCovered": true,
+    "receiptRestartPrefixCovered": true,
+    "testAndProdApprovalTargetsRejected": true,
+    "currentlyLiveEnabledEnvironmentCount": 0
+  },
+  "effectFlags": {
+    "systemClockReads": true,
+    "localPrivateFileReads": true,
+    "localPrivateReceiptFileReads": true,
+    "localPrivateReceiptFileWrites": false,
+    "environmentVariableReads": false,
+    "fakeTransport": false,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetryOrRepair": false
+  },
+  "existingLiveAdaptersModified": false,
+  "liveTransportImplemented": false,
+  "liveExecutionCliImplemented": false,
+  "devLiveEnabled": false,
+  "testLiveEnabled": false,
+  "prodLiveEnabled": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "next": "Separately review a dev-only local offline execute prototype that still invokes only the fixed fake transport, requires a fresh preflight record and appends one durable receipt."
+}

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.11
+
+- Add a dev-only local `verify` CLI above `.7.7.10`, with one real host UTC read and no `execute` command or transport construction.
+- Read exactly two canonical private inputs from an owned `0700` directory using strict `0600`, link, size, hash and inode/device/size stability gates.
+- Validate an empty or completed durable receipt prefix without writing receipts; reject pending, unexpected, linked, mode-drifted and out-of-order content.
+- Add 22 offline tests plus recursive `.7.7.10` replay; no AWS, Kubernetes, Terraform, fake transport, mutation or live execution authority is added.
+
 ## v0.11.9.3.6.7.7.10
 
 - Add a dev-only programmatic `verify`/`execute` entry layer over the `.7.7.9` fixed fake transport and durable receipt store.

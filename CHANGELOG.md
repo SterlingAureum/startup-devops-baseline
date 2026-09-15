@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.12
+
+- Add a separate dev-only local `execute` CLI requiring an exact, fresh `.7.7.11` preflight and phase-specific offline confirmation.
+- Reconstruct the inherited reviewed-verify envelope without weakening the frozen preflight or command-entry contracts.
+- Invoke only the closed `.7.7.9` fixed fake and append one exclusive fsynced receipt triplet; completed prefixes advance exactly one phase and reject replay.
+- Add 23 offline tests and recursively replay `.7.7.11`; no AWS, Kubernetes, Terraform, live transport, mutation or live authority is added.
+
 ## v0.11.9.3.6.7.7.11
 
 - Add a dev-only local `verify` CLI above `.7.7.10`, with one real host UTC read and no `execute` command or transport construction.

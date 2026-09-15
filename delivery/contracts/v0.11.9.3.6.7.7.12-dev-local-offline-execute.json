@@ -1,0 +1,128 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.12",
+  "version": "v0.11.9.3.6.7.7.12",
+  "predecessor": "v0.11.9.3.6.7.7.11",
+  "implementationBaselineCommit": "bca57aa8f9e12bc002aabea97141de12a5b4f43f",
+  "status": "dev-local-offline-execute-implemented",
+  "entryPath": "scripts/execute-v0.11.9.3.6.7.7.12-aws-dev-command.py",
+  "entrySha256": "695e475afe1b27aa7e29fbaa28302d50b20d8c38014ce838646ab62faf63b923",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.12-dev-local-offline-execute.py",
+  "testSha256": "818b0c3a526314a41d44a85c8ed13557d3483399d65bda1471414e5202961737",
+  "testMethodCount": 23,
+  "testMethods": [
+    "test_success_runs_exact_fixed_fake_and_appends_one_receipt",
+    "test_success_report_effect_flags_are_fail_closed",
+    "test_receipt_triplet_is_private_canonical_and_bound",
+    "test_main_emits_one_canonical_json_line",
+    "test_real_subprocess_executes_only_local_fixed_fake",
+    "test_parser_exposes_only_execute_and_requires_all_arguments",
+    "test_confirmation_main_and_hash_syntax_are_exact",
+    "test_each_private_hash_drift_stops_without_receipt",
+    "test_each_preflight_binding_field_tamper_stops",
+    "test_preflight_extra_missing_future_and_expired_stop",
+    "test_approval_environment_phase_main_authority_and_clock_drift_stop",
+    "test_evidence_schema_and_state_hash_drift_stop",
+    "test_noncanonical_malformed_empty_and_oversized_input_stop",
+    "test_private_paths_parent_entries_modes_and_links_are_strict",
+    "test_paths_must_be_absolute_distinct_and_share_parent",
+    "test_receipt_directory_mode_relative_symlink_and_pending_stop",
+    "test_same_phase_cannot_repeat_after_receipt",
+    "test_completed_receipt_enables_exact_next_phase",
+    "test_wrong_next_predecessor_or_skipped_phase_stops",
+    "test_late_completion_stops_and_writes_no_receipt",
+    "test_failure_output_is_redacted_and_discloses_no_private_path",
+    "test_source_uses_only_fixed_fake_and_no_live_backend",
+    "test_source_dispatches_execute_only_after_reviewed_preflight"
+  ],
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.11-dev-local-cli-preflight.json",
+      "sha256": "6b5a70466197239fa52a4df6e9dc3da13fa1c3d82f16e9d6f303b899d004abdb"
+    },
+    {
+      "path": "scripts/preflight-v0.11.9.3.6.7.7.11-aws-dev-command.py",
+      "sha256": "7da8ccfe365c8f5adc5fa5c2cf3169f4e485d799c44c45c5c0173add7e119935"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.11-dev-local-cli-preflight.sh",
+  "environmentProfile": "aws-dev",
+  "localOfflineExecute": {
+    "commands": [
+      "execute"
+    ],
+    "phaseSpecificConfirmationCount": 8,
+    "freshPreflightRequired": true,
+    "preflightSha256Required": true,
+    "preflightConvertedToInheritedReviewedVerify": true,
+    "fixedFakeTransportOnly": true,
+    "onePhasePerInvocation": true,
+    "oneReceiptPerSuccessfulInvocation": true,
+    "samePhaseReplayAccepted": false,
+    "environmentVariableReaderImplemented": false,
+    "arbitraryEndpointAccepted": false,
+    "hostUtcReadCount": 2
+  },
+  "privateInputContract": {
+    "files": [
+      "approval",
+      "evidence",
+      "preflight"
+    ],
+    "absolutePathsRequired": true,
+    "commonOwnedParentMode": "0700",
+    "exactDirectoryEntriesRequired": true,
+    "ownedRegularFileMode": "0600",
+    "singleHardLinkRequired": true,
+    "symbolicLinksAccepted": false,
+    "maximumBytesPerFile": 1048576,
+    "canonicalJsonRequired": true,
+    "expectedSha256Required": true,
+    "inodeDeviceSizeStabilityRequired": true,
+    "privatePathOrBytesEmitted": false
+  },
+  "receiptContract": {
+    "store": "v0.11.9.3.6.7.7.9-local-durable-store",
+    "existingPrefixRevalidated": true,
+    "intentReceiptCompletionTriplet": true,
+    "exclusiveCreationAndFsyncInherited": true,
+    "pendingOrUnexpectedStateBlocks": true,
+    "exactPhasePredecessorRequired": true,
+    "writesOnSuccessfulFixedFakeOnly": true
+  },
+  "reviewResult": {
+    "environment": "aws-dev",
+    "commandCount": 1,
+    "orderedStageCount": 8,
+    "closedOperationCount": 23,
+    "actualSubprocessCovered": true,
+    "strictFileScopeCovered": true,
+    "freshPreflightAndCompletionClockCovered": true,
+    "receiptRestartAndReplayCovered": true,
+    "testAndProdApprovalTargetsRejected": true,
+    "currentlyLiveEnabledEnvironmentCount": 0
+  },
+  "effectFlags": {
+    "systemClockReads": true,
+    "localPrivateFileReads": true,
+    "localPrivateReceiptFileReads": true,
+    "localPrivateReceiptFileWrites": true,
+    "environmentVariableReads": false,
+    "fixedFakeTransport": true,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetryOrRepair": false
+  },
+  "existingLiveAdaptersModified": false,
+  "liveTransportImplemented": false,
+  "liveExecutionCliImplemented": false,
+  "devLiveEnabled": false,
+  "testLiveEnabled": false,
+  "prodLiveEnabled": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "next": "Exercise the complete eight-phase dev local preflight and offline fixed-fake execute chain across process restarts, then review gaps before any live transport proposal."
+}

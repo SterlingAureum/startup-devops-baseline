@@ -765,3 +765,10 @@
 /scripts/preflight-v0.11.9.3.6.7.7.11-aws-dev-command.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.11-dev-local-cli-preflight.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.11-dev-local-cli-preflight.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.12 dev local offline execute
+/delivery/contracts/v0.11.9.3.6.7.7.12-dev-local-offline-execute.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.12_DEV_LOCAL_OFFLINE_EXECUTE.md @SterlingAureum
+/scripts/execute-v0.11.9.3.6.7.7.12-aws-dev-command.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.12-dev-local-offline-execute.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.12-dev-local-offline-execute.sh @SterlingAureum

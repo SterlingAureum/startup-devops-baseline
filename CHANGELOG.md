@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.8
+
+- Design a closed-enum `guarded-live-transport-v1` across the eight reviewed stages without implementing any live backend.
+- Separate verify/execute and bind one phase, one attempt, exact main/scope/state/proof/operation/receipt hashes, clocks and budget to every future approval.
+- Define private append-only terminal-success receipts with exact predecessor chaining; synthetic and historical receipts cannot seed a live chain.
+- Keep incident-only repair powers outside normal transport, stage future migration dev first, block test on dev evidence and leave prod disabled; add 38 offline tests.
+
 ## v0.11.9.3.6.7.7.7
 
 - Add the missing fixed-fake `freeze-applications` adapter across explicit dev/test/prod profiles.

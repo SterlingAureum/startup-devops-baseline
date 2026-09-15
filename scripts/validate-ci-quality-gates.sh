@@ -869,3 +869,6 @@ echo "==> Validating v0.11.9.3.6.7.7.10 dev offline command-entry conformance"
 
 echo "==> Validating v0.11.9.3.6.7.7.11 dev local CLI preflight"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.11-dev-local-cli-preflight.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.12 dev local offline execute"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.12-dev-local-offline-execute.sh"

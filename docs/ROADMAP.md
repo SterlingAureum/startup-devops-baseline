@@ -1309,3 +1309,18 @@ reader exists. Next: separately review a dev-only local offline execute prototyp
 that binds a fresh preflight, retains the fixed fake and appends one receipt.
 aws-test and aws-prod remain disabled. See
 [dev local CLI preflight](V0.11.9.3.6.7.7.11_DEV_LOCAL_CLI_PREFLIGHT.md).
+
+
+### v0.11.9.3.6.7.7.12 — dev local offline execute
+
+Implemented: a separately invoked aws-dev local `execute` command binds an
+exact fresh `.7.7.11` preflight, reconstructs the inherited reviewed-verify
+record, calls only the closed fixed fake and appends one durable receipt.
+Twenty-three tests cover subprocess execution, strict files, freshness,
+completion clocks, receipt restart progression and replay refusal.
+
+No live transport, cloud/Kubernetes/Terraform access or live authority exists.
+Next: exercise all eight dev phases through fresh preflight/execute process
+restarts before proposing any separately reviewed live transport. aws-test and
+aws-prod remain disabled. See
+[dev local offline execute](V0.11.9.3.6.7.7.12_DEV_LOCAL_OFFLINE_EXECUTE.md).

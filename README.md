@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.12-dev-local-offline-execute` adds a separately invoked
+aws-dev local `execute` command that requires a fresh `.7.7.11` preflight,
+runs only the closed fixed fake and appends one durable offline receipt. It
+cannot access a live backend. See
+[dev local offline execute](docs/V0.11.9.3.6.7.7.12_DEV_LOCAL_OFFLINE_EXECUTE.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.11-dev-local-cli-preflight` adds a dev-only local `verify`
 command with one host UTC read and exactly two strict private-file reads. It
 validates the inherited durable receipt prefix but cannot execute a transport

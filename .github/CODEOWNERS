@@ -730,3 +730,10 @@
 /scripts/guarded_runtime_parity_v6776.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.6-runtime-parity-review.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.6-runtime-parity-review.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.7 offline Application freeze adapter
+/delivery/contracts/v0.11.9.3.6.7.7.7-shared-offline-freeze-adapter.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.7_SHARED_OFFLINE_FREEZE_ADAPTER.md @SterlingAureum
+/scripts/guarded_freeze_simulation_v6777.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.7-offline-freeze-adapter.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.7-offline-freeze-adapter.sh @SterlingAureum

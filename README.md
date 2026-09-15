@@ -3,10 +3,16 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.7-shared-offline-freeze-adapter` adds the missing fixed-fake
+Application freeze/orphan/delete stage and composes confirmed synthetic receipts
+through all eight dev/test/prod phases (24/24 matrix cells). Live transport and
+durable cross-phase migration remain pending. See
+[offline freeze adapter](docs/V0.11.9.3.6.7.7.7_SHARED_OFFLINE_FREEZE_ADAPTER.md).
+
+Predecessor parity checkpoint:
 `v0.11.9.3.6.7.7.6-complete-offline-runtime-parity-review` proves that seven of
-eight ordered cleanup stages are individually simulated across dev/test/prod (21/24
-matrix cells). `freeze-applications` is the explicit remaining adapter gap, so the
-end-to-end chain and live migration are not ready. See
+eight ordered cleanup stages were individually simulated across dev/test/prod (21/24
+matrix cells) before the freeze adapter was added. See
 [runtime parity review](docs/V0.11.9.3.6.7.7.6_COMPLETE_OFFLINE_RUNTIME_PARITY_REVIEW.md).
 
 Predecessor development checkpoint:

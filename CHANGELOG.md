@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.7
+
+- Add the missing fixed-fake `freeze-applications` adapter across explicit dev/test/prod profiles.
+- Freeze every reviewed Root/child Application before exact known-finalizer removal and deletion, with identity, active-operation, state, proof and clock gates.
+- Produce confirmed synthetic receipts only after durable intent/outcome journaling and complete postconditions; pending or failed stages cannot repeat.
+- Add 36 offline tests, including a true 24/24 environment-stage receipt chain through `.7.7.5` and `.7.7.4`; no live/prod authorization is added.
+
 ## v0.11.9.3.6.7.7.6
 
 - Audit the complete eight-stage cleanup order across `.7.7.4` and `.7.7.5`, recording seven individually simulatable stages and the explicit missing freeze adapter.

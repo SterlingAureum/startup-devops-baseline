@@ -1279,3 +1279,18 @@ execution authorization is present. aws-test and aws-prod remain rejected. Next:
 implement a separately reviewed dev-only offline command-entry conformance layer
 with injected clock and private-input readers before any live integration. See
 [dev transport conformance](V0.11.9.3.6.7.7.9_DEV_OFFLINE_TRANSPORT_CONFORMANCE_AND_DURABLE_RECEIPTS.md).
+
+
+### v0.11.9.3.6.7.7.10 — dev offline command-entry conformance
+
+Implemented: separate programmatic `verify` and confirmed `execute` commands use
+only a fixed injected UTC sequence and canonical in-memory private fixtures.
+Execute re-reads approval, evidence, reviewed verify and durable receipt prefix
+before the `.7.7.9` fixed fake can run. All eight phases and 23 operations form a
+complete restartable receipt chain in 37 offline tests.
+
+No CLI, environment reader, host clock, live private-file reader or live transport
+exists, and dev/test/prod remain disabled. Next: implement a separately reviewed
+dev-only local CLI preflight prototype with strict real clock and private-file
+adapters while retaining the fixed fake transport. See
+[dev command-entry conformance](V0.11.9.3.6.7.7.10_DEV_OFFLINE_COMMAND_ENTRY_CONFORMANCE.md).

@@ -1294,3 +1294,18 @@ exists, and dev/test/prod remain disabled. Next: implement a separately reviewed
 dev-only local CLI preflight prototype with strict real clock and private-file
 adapters while retaining the fixed fake transport. See
 [dev command-entry conformance](V0.11.9.3.6.7.7.10_DEV_OFFLINE_COMMAND_ENTRY_CONFORMANCE.md).
+
+
+### v0.11.9.3.6.7.7.11 — dev local CLI preflight
+
+Implemented: a verify-only local aws-dev CLI reads the host UTC clock once and
+exactly two owner-controlled canonical private files. It validates the existing
+durable receipt prefix and adapts only into the `.7.7.10` offline verifier.
+Twenty-two tests cover real subprocess invocation, file/link/mode/hash drift,
+receipt restart prefixes and redacted failures.
+
+No execute command, fake/live transport, receipt write or environment-variable
+reader exists. Next: separately review a dev-only local offline execute prototype
+that binds a fresh preflight, retains the fixed fake and appends one receipt.
+aws-test and aws-prod remain disabled. See
+[dev local CLI preflight](V0.11.9.3.6.7.7.11_DEV_LOCAL_CLI_PREFLIGHT.md).

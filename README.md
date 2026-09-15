@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.11-dev-local-cli-preflight` adds a dev-only local `verify`
+command with one host UTC read and exactly two strict private-file reads. It
+validates the inherited durable receipt prefix but cannot execute a transport
+or write a receipt. See
+[dev local CLI preflight](docs/V0.11.9.3.6.7.7.11_DEV_LOCAL_CLI_PREFLIGHT.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.10-dev-offline-command-entry-conformance` composes separate
 verify/execute commands with injected clocks and canonical private fixture bytes
 through the dev-only fixed fake and durable receipt store. It adds no CLI, real

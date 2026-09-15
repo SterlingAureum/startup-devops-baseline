@@ -3,13 +3,20 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.10-dev-offline-command-entry-conformance` composes separate
+verify/execute commands with injected clocks and canonical private fixture bytes
+through the dev-only fixed fake and durable receipt store. It adds no CLI, real
+private reader or live backend. See
+[dev command-entry conformance](docs/V0.11.9.3.6.7.7.10_DEV_OFFLINE_COMMAND_ENTRY_CONFORMANCE.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.9-dev-offline-transport-conformance-and-durable-receipts`
 exercises the exact eight-stage/23-operation interface through a dev-only fixed
 fake and implements an append-only local receipt triplet with restart and fault
 coverage. No live backend or command entry point is enabled. See
 [dev transport conformance](docs/V0.11.9.3.6.7.7.9_DEV_OFFLINE_TRANSPORT_CONFORMANCE_AND_DURABLE_RECEIPTS.md).
 
-Predecessor development checkpoint:
+Earlier development checkpoint:
 `v0.11.9.3.6.7.7.8-live-transport-and-receipt-migration-design` defines the
 closed versioned transport, separate phase approval and durable receipt handoff
 required before live migration. Synthetic receipts cannot become live evidence;

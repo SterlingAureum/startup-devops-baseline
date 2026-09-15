@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.10
+
+- Add a dev-only programmatic `verify`/`execute` entry layer over the `.7.7.9` fixed fake transport and durable receipt store.
+- Bind exact canonical approval, evidence and reviewed-verify bytes to injected UTC readings, main, phase, operation set, receipt predecessor and confirmation.
+- Re-read all inputs and the receipt prefix before execute; reject stale proof, prefix drift, dependency subclasses, aws-test and aws-prod without retry or repair.
+- Add 37 offline tests and recursively replay `.7.7.9`; no CLI, real private-file reader, host clock, live transport or execution authorization is added.
+
 ## v0.11.9.3.6.7.7.9
 
 - Exercise all eight aws-dev phases and 23 closed operations through a fixed fake transport; reject aws-test, aws-prod and arbitrary transport subclasses.

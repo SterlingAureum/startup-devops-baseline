@@ -751,3 +751,10 @@
 /scripts/guarded_dev_transport_conformance_v6779.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.9-dev-transport-conformance.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.9-dev-transport-conformance.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.10 dev offline command-entry conformance
+/delivery/contracts/v0.11.9.3.6.7.7.10-dev-offline-command-entry-conformance.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.10_DEV_OFFLINE_COMMAND_ENTRY_CONFORMANCE.md @SterlingAureum
+/scripts/guarded_dev_command_entry_conformance_v67710.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.10-dev-command-entry-conformance.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.10-dev-command-entry-conformance.sh @SterlingAureum

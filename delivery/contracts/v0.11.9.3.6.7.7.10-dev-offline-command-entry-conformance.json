@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.10",
+  "version": "v0.11.9.3.6.7.7.10",
+  "predecessor": "v0.11.9.3.6.7.7.9",
+  "implementationBaselineCommit": "850720c1c15b6b26afa284a4e5c80ab0940318e9",
+  "status": "dev-offline-command-entry-conformance-implemented",
+  "corePath": "scripts/guarded_dev_command_entry_conformance_v67710.py",
+  "coreSha256": "e1c25c4751b221701c3f8c5718921135f86dbb8cbc320c9e0c4def3de8a11abd",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.10-dev-command-entry-conformance.py",
+  "testSha256": "05f65bb57ee1797a20d5f50c4d54ecac2d6b463aeecb8a23a1b97b8fa11d9165",
+  "testMethodCount": 37,
+  "testMethods": [
+    "test_verify_request_schema_is_exact_and_redacted",
+    "test_verify_success_reads_two_inputs_and_writes_no_receipt",
+    "test_verify_report_schema_and_effect_flags_are_exact",
+    "test_execute_requires_separate_reviewed_verify_and_confirmation",
+    "test_execute_appends_one_durable_receipt_triplet",
+    "test_complete_eight_stage_command_chain",
+    "test_each_stage_uses_fresh_clock_reader_and_store_instance",
+    "test_first_and_later_predecessors_are_exact",
+    "test_unknown_and_mismatched_commands_stop",
+    "test_verify_rejects_transport_argument",
+    "test_request_extra_missing_and_version_drift_stop",
+    "test_request_environment_main_phase_and_simulation_drift_stop",
+    "test_test_and_prod_approval_targets_stop",
+    "test_approval_and_evidence_hash_drift_stop",
+    "test_malformed_and_noncanonical_private_inputs_stop",
+    "test_private_input_names_missing_and_extra_are_rejected",
+    "test_frozen_clock_returns_exact_readings_without_host_clock",
+    "test_clock_schema_and_exhaustion_stop_command",
+    "test_dependency_subclasses_are_rejected",
+    "test_approval_main_authority_clock_and_budget_drift_stop",
+    "test_operation_set_drift_stops_verify",
+    "test_evidence_schema_and_hashes_are_exact",
+    "test_wrong_or_missing_confirmation_stops_before_transport",
+    "test_reviewed_verify_hash_tamper_stops",
+    "test_each_reviewed_verify_field_tamper_stops",
+    "test_expired_or_future_reviewed_verify_stops",
+    "test_execute_rereads_approval_and_evidence_bytes",
+    "test_prefix_change_after_verify_stops_execute",
+    "test_transport_type_failure_and_response_failure_stop",
+    "test_completion_outside_approval_window_stops_without_receipt",
+    "test_pending_receipt_store_blocks_verify_before_private_reads",
+    "test_completed_receipt_recovers_for_next_command",
+    "test_public_failure_report_contains_no_private_bytes",
+    "test_success_reports_never_claim_live_effects",
+    "test_confirmation_set_is_exactly_eight_dev_values",
+    "test_command_builder_rejects_no_live_target_but_request_gate_does",
+    "test_core_ast_has_no_cli_environment_clock_file_or_network_reader"
+  ],
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.9-dev-offline-transport-conformance-and-durable-receipts.json",
+      "sha256": "561523ee050ce672829bbb920371cb0d85569d0a27bd9a4af4d003ee38df9742"
+    },
+    {
+      "path": "scripts/guarded_dev_transport_conformance_v6779.py",
+      "sha256": "ee0629e7dca83dc7b97abc20ab26337a209b8821e816a04b107f15f7ebed1b46"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.9-dev-transport-conformance.sh",
+  "environmentProfile": "aws-dev",
+  "commandEntry": {
+    "schema": "guarded-dev-offline-command-v1",
+    "commands": [
+      "verify",
+      "execute"
+    ],
+    "implementation": "programmatic-offline-only",
+    "verifyAcceptsTransport": false,
+    "executeRequiresReviewedVerifySha256": true,
+    "executeRequiresExactPhaseConfirmation": true,
+    "executeRereadsExactPrivateInputBytes": true,
+    "onePhasePerExecution": true,
+    "arbitraryPathOrEndpointAccepted": false,
+    "cliImplemented": false,
+    "environmentVariableReaderImplemented": false
+  },
+  "injectedDependencies": {
+    "clock": "fixed-in-memory-utc-sequence",
+    "privateInputReader": "fixed-in-memory-canonical-json-by-closed-name",
+    "transport": "v0.11.9.3.6.7.7.9-fixed-fake-only",
+    "receiptStore": "v0.11.9.3.6.7.7.9-local-durable-store",
+    "subclassesAccepted": false,
+    "systemClockConsulted": false,
+    "livePrivateFileRead": false
+  },
+  "privateInputContract": {
+    "logicalNames": [
+      "approval",
+      "evidence",
+      "reviewed-verify"
+    ],
+    "verifyExactInputs": [
+      "approval",
+      "evidence"
+    ],
+    "executeExactInputs": [
+      "approval",
+      "evidence",
+      "reviewed-verify"
+    ],
+    "canonicalJsonRequired": true,
+    "expectedSha256Required": true,
+    "privateBytesEmitted": false
+  },
+  "reviewResult": {
+    "environment": "aws-dev",
+    "commandCount": 2,
+    "orderedStageCount": 8,
+    "closedOperationCount": 23,
+    "fullVerifyExecuteReceiptChainCompletedOffline": true,
+    "freshDependenciesAtEveryStageTested": true,
+    "exactPhaseConfirmationCount": 8,
+    "testAndProdTargetsRejected": true,
+    "currentlyLiveEnabledEnvironmentCount": 0
+  },
+  "effectFlags": {
+    "inMemoryPrivateFixtureReads": true,
+    "localPrivateReceiptFileWrites": true,
+    "systemClockReads": false,
+    "livePrivateEvidenceReads": false,
+    "environmentVariableReads": false,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetryOrRepair": false
+  },
+  "existingLiveAdaptersModified": false,
+  "liveTransportImplemented": false,
+  "liveCliImplemented": false,
+  "devLiveEnabled": false,
+  "testLiveEnabled": false,
+  "prodLiveEnabled": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "next": "Implement a separately reviewed dev-only local CLI preflight prototype with strict real clock and private-file adapters while retaining the fixed fake transport and no live execution authority."
+}

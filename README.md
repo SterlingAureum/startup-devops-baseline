@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.15-dev-live-transport-design` closes the dev-only versioned
+transport interface across eight stages and 23 exact operations. Each stage
+requires exact approval, proof, state and predecessor-receipt bindings; only
+the two Terraform delete stages accept reviewed saved-plan bundles. The live
+backend, command and execution authority remain disabled. See
+[dev live transport design](docs/V0.11.9.3.6.7.7.15_DEV_LIVE_TRANSPORT_DESIGN.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.14-dev-live-parity-gap-review` compares the complete
 eight-stage fixed-fake chain with the closed aws-dev teardown and residual
 audit evidence. It preserves ten proven historical controls but identifies

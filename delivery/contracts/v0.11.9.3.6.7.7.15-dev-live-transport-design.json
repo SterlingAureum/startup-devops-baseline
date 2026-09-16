@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.15",
+  "version": "v0.11.9.3.6.7.7.15",
+  "predecessor": "v0.11.9.3.6.7.7.14",
+  "implementationBaselineCommit": "3be7f0248e11b1df0d427c7f61498f81063441d0",
+  "status": "dev-versioned-live-transport-designed-offline",
+  "corePath": "scripts/guarded_dev_live_transport_design_v67715.py",
+  "coreSha256": "25ddfaabce343762e01b0bd0877941493af55403d5f0cf3cc0fc56dcc9da9e68",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.15-dev-live-transport-design.py",
+  "testSha256": "9b21aa0c0cd304cb43ab847f242be092c9ef4c3ae5522b3a352a765c28267adc",
+  "testMethodCount": 44,
+  "canonicalDesignSha256": "3fed5555d21ffdf8f54463af7daf566d0470d84a851cf5e6214c374f3fc6a9ca",
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.14-dev-live-parity-gap-review.json",
+      "sha256": "8a96ad3a19c9182c8241520aec3367ae5959ba672e8a387ef0ed479dfa346f57"
+    },
+    {
+      "path": "scripts/guarded_dev_live_parity_review_v67714.py",
+      "sha256": "a0b7af1de08b786ee309d5908860f152c95a1da48009a871f7bfc6332cd3265a"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.8-live-transport-and-receipt-migration-design.json",
+      "sha256": "2e3da8067481abe8dc3846ec0351d8ffc2cd2879f398952fb41177a3f9272719"
+    },
+    {
+      "path": "scripts/guarded_live_migration_contract_v6778.py",
+      "sha256": "ce413f54a34223e9a55ce0b14116115e4b22916cfb4a23e39bda16fedd4630d6"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.14-dev-live-parity-gap-review.sh",
+  "designSummary": {
+    "environment": "aws-dev",
+    "transportSchema": "guarded-dev-live-transport-v1",
+    "requestSchema": "guarded-dev-live-operation-request-v1",
+    "responseSchema": "guarded-dev-live-operation-response-v1",
+    "approvalSchema": "guarded-dev-live-phase-approval-v2",
+    "receiptSchema": "guarded-dev-live-phase-receipt-v2",
+    "designedStageCount": 8,
+    "closedOperationCount": 23,
+    "gapDesignCount": 9,
+    "structuralBlockingGapDesignCount": 8,
+    "terraformSavedPlanStageCount": 2,
+    "liveImplementedGapCount": 0,
+    "incidentOnlyPowerCount": 7,
+    "incidentOnlyPowersEnabled": false,
+    "writeAheadIntentRequired": true,
+    "oneTransportCallPerIntent": true,
+    "automaticRetryOrRepair": false,
+    "terminalReceiptAfterPostconditionsOnly": true,
+    "historicalOrSyntheticReceiptAccepted": false,
+    "legacyDestroyWrapperCallable": false
+  },
+  "effectFlags": {
+    "filesystemReads": false,
+    "privateEvidenceReads": false,
+    "systemClockReads": false,
+    "environmentVariableReads": false,
+    "subprocesses": false,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetryOrRepair": false
+  },
+  "existingLiveAdaptersModified": false,
+  "liveBackendImplemented": false,
+  "liveTransportImplemented": false,
+  "liveExecutionCliImplemented": false,
+  "devLiveEnabled": false,
+  "testLiveEnabled": false,
+  "prodLiveEnabled": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "next": "Implement a dev-only injected transport protocol core and conformance harness offline; do not add a live backend or command."
+}

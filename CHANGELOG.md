@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.13
+
+- Exercise all eight aws-dev phases through eight separate `.7.7.11` preflight and eight separate `.7.7.12` fixed-fake execute processes.
+- Persist and reload eight private receipt triplets across process boundaries, binding exact predecessor hashes and continuous synthetic state-before/state-after hashes.
+- Preserve strict `0700`/`0600` inputs, child stdout/stderr and canonical summary; reject replay, frozen-entry drift, child failure, timeout and phase-result drift without retry or repair.
+- Add 21 offline integration tests and recursively replay `.7.7.12`; synthetic fixtures and receipts cannot access or authorize AWS, Kubernetes, Terraform, dev live execution, aws-test or aws-prod.
+
 ## v0.11.9.3.6.7.7.12
 
 - Add a separate dev-only local `execute` CLI requiring an exact, fresh `.7.7.11` preflight and phase-specific offline confirmation.

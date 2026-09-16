@@ -772,3 +772,10 @@
 /scripts/execute-v0.11.9.3.6.7.7.12-aws-dev-command.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.12-dev-local-offline-execute.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.12-dev-local-offline-execute.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.13 dev local offline restart chain
+/delivery/contracts/v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.13_DEV_LOCAL_OFFLINE_RESTART_CHAIN.md @SterlingAureum
+/scripts/exercise-v0.11.9.3.6.7.7.13-dev-local-offline-chain.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain.sh @SterlingAureum

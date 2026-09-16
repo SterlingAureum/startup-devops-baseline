@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.13",
+  "version": "v0.11.9.3.6.7.7.13",
+  "predecessor": "v0.11.9.3.6.7.7.12",
+  "implementationBaselineCommit": "e729e8966b3d1ab208ea47302498fb6b2416adc3",
+  "status": "dev-local-offline-restart-chain-exercised",
+  "entryPath": "scripts/exercise-v0.11.9.3.6.7.7.13-dev-local-offline-chain.py",
+  "entrySha256": "dc6c63a748665e7d2a83baa94bc9fbca93cebfdbba0c53c038b823b4319fc286",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain.py",
+  "testSha256": "507b8f1bd50b998ed4fccea33c571010b2a490a5115d6f3ae9998660274b00f0",
+  "testMethodCount": 21,
+  "testMethods": [
+    "test_complete_actual_eight_phase_chain",
+    "test_summary_is_private_canonical_and_matches_return",
+    "test_main_emits_one_canonical_json_line",
+    "test_each_phase_has_separate_process_inputs_and_outputs",
+    "test_all_artifact_directories_and_files_are_private",
+    "test_receipt_prefix_reloads_after_all_process_restarts",
+    "test_predecessor_and_receipt_chain_are_exact",
+    "test_synthetic_approvals_are_bound_and_never_authorized",
+    "test_evidence_and_operation_counts_cover_exact_design",
+    "test_success_flags_keep_every_live_effect_false",
+    "test_parser_exposes_only_exercise_and_requires_arguments",
+    "test_confirmation_and_main_are_exact",
+    "test_session_must_be_absolute_owned_empty_0700_directory",
+    "test_existing_session_cannot_be_replayed",
+    "test_frozen_preflight_or_execute_byte_drift_stops_before_child",
+    "test_child_failure_is_preserved_without_retry",
+    "test_child_timeout_stops_once_without_repair",
+    "test_preflight_or_execute_binding_drift_stops_chain",
+    "test_failure_output_is_redacted",
+    "test_source_uses_closed_local_subprocesses_without_shell_or_environment",
+    "test_source_pins_predecessor_entries_and_no_live_backend"
+  ],
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.12-dev-local-offline-execute.json",
+      "sha256": "e917e25625322a7e7998907df93f67fca2674ff59c5ab0f01e397e948f92c82b"
+    },
+    {
+      "path": "scripts/preflight-v0.11.9.3.6.7.7.11-aws-dev-command.py",
+      "sha256": "7da8ccfe365c8f5adc5fa5c2cf3169f4e485d799c44c45c5c0173add7e119935"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.7.7.12-aws-dev-command.py",
+      "sha256": "695e475afe1b27aa7e29fbaa28302d50b20d8c38014ce838646ab62faf63b923"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.12-dev-local-offline-execute.sh",
+  "environmentProfile": "aws-dev",
+  "offlineChainExercise": {
+    "commands": [
+      "exercise"
+    ],
+    "orderedPhaseCount": 8,
+    "closedOperationCount": 23,
+    "preflightChildProcessCount": 8,
+    "executeChildProcessCount": 8,
+    "independentChildProcessCount": 16,
+    "durableReceiptTripletCount": 8,
+    "durableReceiptFileCount": 24,
+    "exactPredecessorChainRequired": true,
+    "stateBeforeAfterChainRequired": true,
+    "completedSessionReplayAccepted": false,
+    "fixedFakeTransportOnly": true,
+    "syntheticApprovalFixtures": true,
+    "syntheticReceiptChain": true,
+    "syntheticReceiptConvertibleToLive": false
+  },
+  "privateSessionContract": {
+    "absolutePrecreatedEmptyDirectoryRequired": true,
+    "ownedDirectoryMode": "0700",
+    "ownedRegularFileMode": "0600",
+    "singleHardLinkRequired": true,
+    "symbolicLinksAccepted": false,
+    "exclusiveFileCreation": true,
+    "fileAndDirectoryFsync": true,
+    "preflightAndExecuteInputDirectoriesSeparate": true,
+    "rawChildStdoutAndStderrPreserved": true,
+    "privatePathOrFixtureBytesEmitted": false
+  },
+  "subprocessContract": {
+    "pythonExecutableOnly": true,
+    "shellEnabled": false,
+    "standardInput": "DEVNULL",
+    "perChildTimeoutSeconds": 30,
+    "automaticRetryOrRepair": false,
+    "arbitraryExecutableAccepted": false,
+    "environmentVariableReaderImplemented": false,
+    "endpointOrTransportSelectorAccepted": false
+  },
+  "reviewResult": {
+    "phaseCount": 8,
+    "operationCount": 23,
+    "preflightProcessCount": 8,
+    "executeProcessCount": 8,
+    "receiptTripletCount": 8,
+    "receiptFileCount": 24,
+    "processRestartRecoveryCovered": true,
+    "stateContinuityCovered": true,
+    "failureAndTimeoutStopCovered": true,
+    "currentlyLiveEnabledEnvironmentCount": 0
+  },
+  "effectFlags": {
+    "systemClockReads": true,
+    "localPrivateFixtureWrites": true,
+    "localPrivateReceiptFileReads": true,
+    "localPrivateReceiptFileWrites": true,
+    "localPythonSubprocesses": true,
+    "environmentVariableReads": false,
+    "fixedFakeTransport": true,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetryOrRepair": false
+  },
+  "existingLiveAdaptersModified": false,
+  "liveTransportImplemented": false,
+  "liveExecutionCliImplemented": false,
+  "devLiveEnabled": false,
+  "testLiveEnabled": false,
+  "prodLiveEnabled": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "next": "Perform a separate offline gap review comparing this full process chain with historical aws-dev execution evidence before proposing any versioned dev live transport."
+}

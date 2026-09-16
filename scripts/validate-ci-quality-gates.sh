@@ -872,3 +872,6 @@ echo "==> Validating v0.11.9.3.6.7.7.11 dev local CLI preflight"
 
 echo "==> Validating v0.11.9.3.6.7.7.12 dev local offline execute"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.12-dev-local-offline-execute.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.13 dev local offline restart chain"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain.sh"

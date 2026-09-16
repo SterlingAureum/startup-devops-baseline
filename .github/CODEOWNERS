@@ -800,3 +800,10 @@
 /scripts/guarded_dev_injected_transport_protocol_v67716.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.16-dev-injected-transport-protocol.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.16-dev-injected-transport-protocol.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.17 dev restart-safe receipt adapter
+/delivery/contracts/v0.11.9.3.6.7.7.17-dev-restart-safe-receipt-adapter.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.17_DEV_RESTART_SAFE_RECEIPT_ADAPTER.md @SterlingAureum
+/scripts/guarded_dev_restart_safe_receipt_adapter_v67717.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.17-dev-restart-safe-receipt-adapter.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.17-dev-restart-safe-receipt-adapter.sh @SterlingAureum

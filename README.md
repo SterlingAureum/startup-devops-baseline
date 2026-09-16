@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.17-dev-restart-safe-receipt-adapter` composes the injected
+aws-dev protocol with an owned `0700` local receipt directory, exclusive
+fsynced `0600` attempt/receipt/completion triplets and the same fixed fake.
+Restart, fault and tamper checks fail closed; no live backend, credential
+reader or command exists. See
+[dev restart-safe receipt adapter](docs/V0.11.9.3.6.7.7.17_DEV_RESTART_SAFE_RECEIPT_ADAPTER.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.16-dev-injected-transport-protocol` implements the closed
 aws-dev protocol as a pure injected core and fixed-fake harness. It exercises
 all eight stages and 23 operations with write-ahead in-memory intents, exact

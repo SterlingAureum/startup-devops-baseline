@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.17
+
+- Compose the `.7.7.16` injected aws-dev protocol with a strict restart-safe local receipt adapter and the same fixed fake.
+- Persist one exclusive fsynced `0600` attempt/receipt/completion triplet per phase in an owned `0700` directory, with the attempt durable before the first fake call.
+- Reject pending/partial triplets, unknown entries, links, mode/main/chain/state drift, replay and twelve local I/O faults without retry or repair.
+- Add 41 offline tests and recursively replay `.7.7.16`; receipts remain synthetic and cannot authorize or record live execution.
+
 ## v0.11.9.3.6.7.7.16
 
 - Implement the `.7.7.15` aws-dev protocol as a pure injected core and exact fixed-fake transport/journal harness across eight stages and 23 operations.

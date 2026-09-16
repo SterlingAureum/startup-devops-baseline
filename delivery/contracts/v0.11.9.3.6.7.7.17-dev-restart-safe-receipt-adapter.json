@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.17",
+  "version": "v0.11.9.3.6.7.7.17",
+  "predecessor": "v0.11.9.3.6.7.7.16",
+  "implementationBaselineCommit": "f3a85b5ffc22a927076c6a37a9338b18d110b50c",
+  "status": "dev-restart-safe-offline-receipt-adapter-implemented",
+  "corePath": "scripts/guarded_dev_restart_safe_receipt_adapter_v67717.py",
+  "coreSha256": "b2f7f25a34ea7026d4bbc4dc8761bbf6d819369e8f19829fabe00e8662c615d2",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.17-dev-restart-safe-receipt-adapter.py",
+  "testSha256": "8ef3a4b355762b9dbcdd284e26c1cd93a1e313ab1f4c9d910ee2dfd86a42ee03",
+  "testMethodCount": 41,
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.16-dev-injected-transport-protocol.json",
+      "sha256": "51c365ecb788f3d4bce23c76d5b11aa7bd01836ea2fd9d9bb8cf9c83c27e9060"
+    },
+    {
+      "path": "scripts/guarded_dev_injected_transport_protocol_v67716.py",
+      "sha256": "0cd9e6041155097636e2655367b199795a575f8af5517823524e543cfe3c6b57"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.16-dev-injected-transport-protocol.sh",
+  "adapterSummary": {
+    "environment": "aws-dev",
+    "designedStageCount": 8,
+    "closedOperationCount": 23,
+    "durableFileCountAfterCompleteChain": 24,
+    "strictDirectoryMode": "0700",
+    "strictFileMode": "0600",
+    "exclusiveNoFollowWrites": true,
+    "fileAndDirectoryFsync": true,
+    "attemptBeforeFixedFakeCall": true,
+    "exactAttemptReceiptCompletionTriplet": true,
+    "restartPrefixValidation": true,
+    "stateContinuityAcrossRestart": true,
+    "partialOrPendingTripletBlocks": true,
+    "unknownEntryBlocks": true,
+    "fixedFakeTransportOnly": true,
+    "automaticRetryOrRepair": false,
+    "syntheticReceiptUsableForLive": false,
+    "incidentOnlyPowersEnabled": false
+  },
+  "effectFlags": {
+    "filesystemReads": true,
+    "filesystemWrites": true,
+    "privateReceiptDirectoryReads": true,
+    "privateReceiptDirectoryWrites": true,
+    "systemClockReads": false,
+    "environmentVariableReads": false,
+    "credentialReads": false,
+    "subprocesses": false,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetryOrRepair": false
+  },
+  "existingLiveAdaptersModified": false,
+  "liveBackendImplemented": false,
+  "liveTransportImplemented": false,
+  "liveExecutionCliImplemented": false,
+  "durableLiveReceiptStoreImplemented": false,
+  "devLiveEnabled": false,
+  "testLiveEnabled": false,
+  "prodLiveEnabled": false,
+  "newLiveExecutionAuthorized": false,
+  "next": "Add a strictly local offline command boundary around this adapter and fixed fake; do not add a live backend, credential reader or live execution authority."
+}

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.18",
+  "version": "v0.11.9.3.6.7.7.18",
+  "predecessor": "v0.11.9.3.6.7.7.17",
+  "implementationBaselineCommit": "8604d32e5bc1d093323d7bb4c990fb4a1d5d2b3e",
+  "status": "dev-restart-safe-local-offline-command-implemented",
+  "commandPath": "scripts/execute-v0.11.9.3.6.7.7.18-aws-dev-offline-command.py",
+  "commandSha256": "9a2463bdd0bad3559789e1fbc6dbf80a6544473fe86d87004affb532b9e2f589",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.18-dev-local-offline-command.py",
+  "testSha256": "d9e8c2d6a04dfd2e94525e7a0d44ddb162248caeba9835c52f191b0813c9faec",
+  "testMethodCount": 38,
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.17-dev-restart-safe-receipt-adapter.json",
+      "sha256": "0972d29ce3c12dc6769020e18b0683f11cea4f38cff2c85a0ead3813cdef63bc"
+    },
+    {
+      "path": "scripts/guarded_dev_restart_safe_receipt_adapter_v67717.py",
+      "sha256": "b2f7f25a34ea7026d4bbc4dc8761bbf6d819369e8f19829fabe00e8662c615d2"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.17-dev-restart-safe-receipt-adapter.sh",
+  "commandSummary": {
+    "environment": "aws-dev",
+    "commandCount": 2,
+    "commands": [
+      "verify",
+      "execute"
+    ],
+    "designedStageCount": 8,
+    "closedOperationCount": 23,
+    "verifySystemClockReadCount": 1,
+    "executeSystemClockReadCount": 2,
+    "strictPrivateDirectoryMode": "0700",
+    "strictPrivateFileMode": "0600",
+    "bundleAndPreflightHashBound": true,
+    "separateVerifyAndExecuteConfirmations": true,
+    "prefixRevalidatedBeforeExecute": true,
+    "postconditionsNormalizedToFrozenOrder": true,
+    "restartSafeTripletAdapterOnly": true,
+    "fixedFakeTransportOnly": true,
+    "fullEightStageCommandChainCovered": true,
+    "automaticRetryOrRepair": false,
+    "syntheticReceiptUsableForLive": false
+  },
+  "effectFlags": {
+    "filesystemReads": true,
+    "filesystemWrites": true,
+    "privateInputReads": true,
+    "privateReceiptWrites": true,
+    "systemClockReads": true,
+    "environmentVariableReads": false,
+    "credentialReads": false,
+    "subprocesses": false,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetryOrRepair": false
+  },
+  "existingLiveAdaptersModified": false,
+  "localOfflineCommandImplemented": true,
+  "liveBackendImplemented": false,
+  "liveTransportImplemented": false,
+  "liveExecutionCliImplemented": false,
+  "durableLiveReceiptStoreImplemented": false,
+  "devLiveEnabled": false,
+  "testLiveEnabled": false,
+  "prodLiveEnabled": false,
+  "newLiveExecutionAuthorized": false,
+  "next": "Exercise all eight phases through separate local .7.7.18 verify and execute child processes with retained redacted outputs; do not add a live backend or authority."
+}

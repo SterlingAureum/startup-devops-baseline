@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.18
+
+- Add separate local aws-dev `verify` and `execute` commands around the `.7.7.17` restart-safe adapter and exact `.7.7.16` fixed fake.
+- Require strict single-file `0700`/`0600` canonical bundle and preflight inputs, exact hashes, phase-specific execute confirmation, fresh clocks and unchanged receipt prefix.
+- Normalize canonical JSON postconditions back into the frozen design order without changing reviewed bundle bytes or hashes.
+- Add 38 offline tests and recursively replay `.7.7.17`; no credential reader, subprocess, live backend, cloud/Kubernetes/Terraform transport or live authority is added.
+
 ## v0.11.9.3.6.7.7.17
 
 - Compose the `.7.7.16` injected aws-dev protocol with a strict restart-safe local receipt adapter and the same fixed fake.

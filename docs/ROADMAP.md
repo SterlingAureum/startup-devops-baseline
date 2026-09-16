@@ -1324,3 +1324,23 @@ Next: exercise all eight dev phases through fresh preflight/execute process
 restarts before proposing any separately reviewed live transport. aws-test and
 aws-prod remain disabled. See
 [dev local offline execute](V0.11.9.3.6.7.7.12_DEV_LOCAL_OFFLINE_EXECUTE.md).
+
+
+### v0.11.9.3.6.7.7.13 — dev local offline restart chain
+
+Implemented: the complete ordered aws-dev chain runs through eight fresh local
+preflight processes and eight fresh fixed-fake execute processes. The private
+receipt store is reopened across every process boundary and closes all eight
+phases, 23 operations, eight receipt triplets and 24 receipt files. Synthetic
+state-before/state-after hashes are continuous across the chain.
+
+The exercise writes only strict private local fixtures, child logs, receipts and
+a canonical summary. Synthetic approvals and receipts cannot become live
+evidence; replay, entry-byte drift, child failure, timeout or result drift stops
+without retry or repair. No live transport, cloud/Kubernetes/Terraform access or
+live authority exists.
+
+Next: perform a separate offline gap review against the closed historical
+aws-dev execution evidence before proposing any versioned dev live transport.
+aws-test and aws-prod remain disabled. See
+[dev local offline restart chain](V0.11.9.3.6.7.7.13_DEV_LOCAL_OFFLINE_RESTART_CHAIN.md).

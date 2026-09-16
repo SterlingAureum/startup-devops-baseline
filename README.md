@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain` runs the complete aws-dev
+eight-phase chain through 16 separate preflight/execute child processes, 23
+closed fixed-fake operations and eight restart-safe receipt triplets. Synthetic
+fixtures and receipts cannot grant or seed live authority. See
+[dev local offline restart chain](docs/V0.11.9.3.6.7.7.13_DEV_LOCAL_OFFLINE_RESTART_CHAIN.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.12-dev-local-offline-execute` adds a separately invoked
 aws-dev local `execute` command that requires a fresh `.7.7.11` preflight,
 runs only the closed fixed fake and appends one durable offline receipt. It

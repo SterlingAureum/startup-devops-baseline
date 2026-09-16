@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.14
+
+- Compare the complete `.7.7.13` aws-dev fixed-fake chain with the frozen public teardown and residual-cost-audit evidence without reading historical private files.
+- Preserve ten proven historical controls while recording zero equivalent historical live stage receipts and eight structural gaps that still block a versioned dev live transport.
+- Expose the legacy monolithic destroy, missing ExternalSecret drain, absent per-stage saved-plan/state/receipt bindings and retry-capable failure path without rewriting historical evidence.
+- Add 39 pure offline tests and recursively replay `.7.7.13`; no AWS, Kubernetes, Terraform, live transport, mutation or current execution authority is added.
+
 ## v0.11.9.3.6.7.7.13
 
 - Exercise all eight aws-dev phases through eight separate `.7.7.11` preflight and eight separate `.7.7.12` fixed-fake execute processes.

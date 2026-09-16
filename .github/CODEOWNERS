@@ -779,3 +779,10 @@
 /scripts/exercise-v0.11.9.3.6.7.7.13-dev-local-offline-chain.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.14 dev live parity gap review
+/delivery/contracts/v0.11.9.3.6.7.7.14-dev-live-parity-gap-review.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.14_DEV_LIVE_PARITY_GAP_REVIEW.md @SterlingAureum
+/scripts/guarded_dev_live_parity_review_v67714.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.14-dev-live-parity-gap-review.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.14-dev-live-parity-gap-review.sh @SterlingAureum

@@ -875,3 +875,6 @@ echo "==> Validating v0.11.9.3.6.7.7.12 dev local offline execute"
 
 echo "==> Validating v0.11.9.3.6.7.7.13 dev local offline restart chain"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.14 dev live parity gap review"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.14-dev-live-parity-gap-review.sh"

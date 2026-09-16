@@ -1364,3 +1364,23 @@ Next: design a dev-only versioned live transport and per-stage approval/receipt
 handoff offline. Do not enable a live command; aws-test and aws-prod remain
 disabled. See
 [dev live parity gap review](V0.11.9.3.6.7.7.14_DEV_LIVE_PARITY_GAP_REVIEW.md).
+
+
+### v0.11.9.3.6.7.7.15 — aws-dev versioned live-transport design
+
+Designed offline: a closed dev-only transport schema maps all eight teardown
+stages to 23 exact operations. Every request binds the reviewed phase approval,
+verify result, evidence inputs, scope, state and predecessor receipt; terminal
+receipts require the exact declared postconditions. Only EKS delete and final
+delete may carry a reviewed saved-plan bundle and state transition.
+
+The protocol records intent before effect, permits one transport call for each
+intent and stops on failure or uncertainty without retry, repair or replay. The
+ExternalSecret drain is read-only, historical and synthetic receipts cannot
+grant authority, incident-only powers remain disabled and the legacy wrapper
+is not callable.
+
+Next: implement a dev-only injected protocol core and fake conformance harness
+offline. Do not add a live backend or command; aws-test and aws-prod remain
+disabled. See
+[dev live transport design](V0.11.9.3.6.7.7.15_DEV_LIVE_TRANSPORT_DESIGN.md).

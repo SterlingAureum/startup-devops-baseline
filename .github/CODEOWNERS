@@ -786,3 +786,10 @@
 /scripts/guarded_dev_live_parity_review_v67714.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.14-dev-live-parity-gap-review.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.14-dev-live-parity-gap-review.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.15 dev live transport design
+/delivery/contracts/v0.11.9.3.6.7.7.15-dev-live-transport-design.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.15_DEV_LIVE_TRANSPORT_DESIGN.md @SterlingAureum
+/scripts/guarded_dev_live_transport_design_v67715.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.15-dev-live-transport-design.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.15-dev-live-transport-design.sh @SterlingAureum

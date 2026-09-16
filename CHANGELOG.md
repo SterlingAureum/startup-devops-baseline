@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.15
+
+- Define a closed dev-only versioned transport interface for the eight teardown stages and their 23 exact operations without constructing a live backend or command.
+- Require exact per-stage approval, reviewed-verify, proof, state, predecessor-receipt and postcondition bindings; only EKS delete and final delete accept reviewed saved-plan bundles.
+- Enforce one intent per transport call, no retry/repair/replay, a read-only ExternalSecret drain and permanently disabled incident-only powers and legacy wrapper.
+- Add 44 pure offline tests and recursively replay `.7.7.14`; no AWS, Kubernetes, Terraform, live transport, mutation or current execution authority is added.
+
 ## v0.11.9.3.6.7.7.14
 
 - Compare the complete `.7.7.13` aws-dev fixed-fake chain with the frozen public teardown and residual-cost-audit evidence without reading historical private files.

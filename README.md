@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.18-dev-local-offline-command` adds strict local `verify` and
+`execute` commands above the restart-safe adapter. Exact canonical bundle and
+preflight hashes, separate confirmations, fresh clocks and receipt-prefix
+revalidation guard one fixed-fake attempt. No live backend or authority exists.
+See [dev local offline command](docs/V0.11.9.3.6.7.7.18_DEV_LOCAL_OFFLINE_COMMAND.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.17-dev-restart-safe-receipt-adapter` composes the injected
 aws-dev protocol with an owned `0700` local receipt directory, exclusive
 fsynced `0600` attempt/receipt/completion triplets and the same fixed fake.

@@ -1420,3 +1420,20 @@ Next: add a strictly local offline command boundary around this adapter and
 fixed fake. Do not add a live backend or execution authority; aws-test and
 aws-prod remain disabled. See
 [dev restart-safe receipt adapter](V0.11.9.3.6.7.7.17_DEV_RESTART_SAFE_RECEIPT_ADAPTER.md).
+
+### v0.11.9.3.6.7.7.18 — aws-dev local offline command
+
+Implemented offline: separate local `verify` and `execute` commands read exact
+canonical bundle/preflight files, bind hashes and phase-specific confirmations,
+read bounded host UTC, and revalidate the restart-safe prefix immediately
+before one fixed-fake execution.
+
+The command adapts canonical postconditions into the frozen protocol order and
+appends only `.7.7.17` synthetic triplets. Drift, pending state, replay or an
+uncertain attempt stops without retry or repair. No environment/credential
+reader, subprocess, live backend or live authority is present.
+
+Next: exercise all eight phases through separate `.7.7.18` verify and execute
+child processes with retained redacted output. aws-test and aws-prod remain
+disabled. See
+[dev local offline command](V0.11.9.3.6.7.7.18_DEV_LOCAL_OFFLINE_COMMAND.md).

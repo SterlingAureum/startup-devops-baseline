@@ -793,3 +793,10 @@
 /scripts/guarded_dev_live_transport_design_v67715.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.15-dev-live-transport-design.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.15-dev-live-transport-design.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.16 dev injected transport protocol
+/delivery/contracts/v0.11.9.3.6.7.7.16-dev-injected-transport-protocol.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.16_DEV_INJECTED_TRANSPORT_PROTOCOL.md @SterlingAureum
+/scripts/guarded_dev_injected_transport_protocol_v67716.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.16-dev-injected-transport-protocol.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.16-dev-injected-transport-protocol.sh @SterlingAureum

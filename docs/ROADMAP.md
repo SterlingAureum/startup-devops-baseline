@@ -1402,3 +1402,21 @@ Next: compose the injected protocol with a restart-safe offline receipt adapter
 and the same fixed fake. Do not add a live backend or command; aws-test and
 aws-prod remain disabled. See
 [dev injected transport protocol](V0.11.9.3.6.7.7.16_DEV_INJECTED_TRANSPORT_PROTOCOL.md).
+
+### v0.11.9.3.6.7.7.17 — aws-dev restart-safe receipt adapter
+
+Implemented offline: the injected protocol now writes one strict local
+attempt/receipt/completion triplet for every completed phase. Attempts are
+durable before the first fixed-fake call; canonical exclusive files, file and
+directory fsync, exact prefix validation and state continuity preserve all
+eight phases across new adapter instances.
+
+Pending or partial triplets, tamper, replay and local I/O uncertainty stop
+without retry or repair. The receipts remain synthetic and cannot grant live
+authority. No credentials, host clock, subprocess, live backend or command is
+present.
+
+Next: add a strictly local offline command boundary around this adapter and
+fixed fake. Do not add a live backend or execution authority; aws-test and
+aws-prod remain disabled. See
+[dev restart-safe receipt adapter](V0.11.9.3.6.7.7.17_DEV_RESTART_SAFE_RECEIPT_ADAPTER.md).

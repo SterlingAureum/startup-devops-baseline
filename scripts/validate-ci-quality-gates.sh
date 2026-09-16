@@ -884,3 +884,6 @@ echo "==> Validating v0.11.9.3.6.7.7.15 dev live transport design"
 
 echo "==> Validating v0.11.9.3.6.7.7.16 dev injected transport protocol"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.16-dev-injected-transport-protocol.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.17 dev restart-safe receipt adapter"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.17-dev-restart-safe-receipt-adapter.sh"

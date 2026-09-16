@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.19-dev-local-offline-process-chain` exercises all eight
+aws-dev phases through sixteen fresh `.7.7.18` verify/execute processes. It
+retains strict private bundle, preflight, stdout/stderr, redacted-manifest and
+restart-safe receipt artifacts while keeping every live effect disabled. See
+[dev local offline process chain](docs/V0.11.9.3.6.7.7.19_DEV_LOCAL_OFFLINE_PROCESS_CHAIN.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.18-dev-local-offline-command` adds strict local `verify` and
 `execute` commands above the restart-safe adapter. Exact canonical bundle and
 preflight hashes, separate confirmations, fresh clocks and receipt-prefix

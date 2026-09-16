@@ -890,3 +890,6 @@ echo "==> Validating v0.11.9.3.6.7.7.17 dev restart-safe receipt adapter"
 
 echo "==> Validating v0.11.9.3.6.7.7.18 dev local offline command"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.18-dev-local-offline-command.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.19 dev local offline process chain"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.sh"

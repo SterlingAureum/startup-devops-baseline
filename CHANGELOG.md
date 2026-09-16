@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.19
+
+- Exercise all eight aws-dev phases through eight fresh `.7.7.18` verify and eight fresh execute child processes against the exact fixed fake.
+- Retain strict private bundle/preflight bytes, 32 child stdout/stderr files, eight redacted output manifests and eight restart-safe receipt triplets.
+- Enforce predecessor/state continuity, saved plans only for EKS/final delete, exact postconditions, frozen command bytes and no replay, retry or repair.
+- Add 23 offline tests and recursively replay `.7.7.18`; no credential reader, live backend, AWS/Kubernetes/Terraform transport or live authority is added.
+
 ## v0.11.9.3.6.7.7.18
 
 - Add separate local aws-dev `verify` and `execute` commands around the `.7.7.17` restart-safe adapter and exact `.7.7.16` fixed fake.

@@ -814,3 +814,10 @@
 /scripts/execute-v0.11.9.3.6.7.7.18-aws-dev-offline-command.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.18-dev-local-offline-command.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.18-dev-local-offline-command.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.19 dev local offline process chain
+/delivery/contracts/v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.19_DEV_LOCAL_OFFLINE_PROCESS_CHAIN.md @SterlingAureum
+/scripts/exercise-v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.py @SterlingAureum
+/scripts/test-v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.py @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.sh @SterlingAureum

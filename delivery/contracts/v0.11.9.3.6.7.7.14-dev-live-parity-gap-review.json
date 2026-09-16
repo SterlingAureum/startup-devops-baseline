@@ -1,0 +1,194 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.14",
+  "version": "v0.11.9.3.6.7.7.14",
+  "predecessor": "v0.11.9.3.6.7.7.13",
+  "implementationBaselineCommit": "cd78d127968fc017364bf0775d84de0f4840cbe5",
+  "status": "dev-live-parity-gap-reviewed",
+  "corePath": "scripts/guarded_dev_live_parity_review_v67714.py",
+  "coreSha256": "a0b7af1de08b786ee309d5908860f152c95a1da48009a871f7bfc6332cd3265a",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.14-dev-live-parity-gap-review.py",
+  "testSha256": "4bd4c5f938fdf3447597480aa533313dfa61d1807b1b7edaa767f30031f935e2",
+  "testMethodCount": 39,
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain.json",
+      "sha256": "fffce85e1a62c6f7c14e1d62a8fa8b1c048b41e7ce9007c330ae5e514546dd31"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.6.5.2-aws-dev-teardown-execution-evidence.json",
+      "sha256": "85a4eed6b50b75883cfeccd11081f915591ea28c5aa1a03d97c34fbcd9067b4b"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.6.6.1-aws-dev-residual-cost-audit-execution-evidence.json",
+      "sha256": "d73e4b5107b4c99ae1feebd2a34197040e4d0f50b6c6ccbecdf951bbe1da25e9"
+    },
+    {
+      "path": "scripts/execute-v0.11.9.3.6.6.5.1-aws-dev-teardown.py",
+      "sha256": "d7937f59253e36d5480d335d74c03fdf37ab7757985f3e0371f17d9144f9e451"
+    },
+    {
+      "path": "scripts/destroy-aws-dev.sh",
+      "sha256": "6f28b176200689f05acbc373b2fcb393aeba98ea2c8dbc0c14127faf530a305d"
+    },
+    {
+      "path": "scripts/converge-aws-destroy-dependencies.sh",
+      "sha256": "587196951e91d0fafc643de0b1c00ba41cb704cb75bda161e7269b4439c3e599"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.13-dev-local-offline-restart-chain.sh",
+  "gapManifest": {
+    "schema": "dev-live-parity-gap-manifest-v1",
+    "stageRows": [
+      {
+        "stage": "freeze-applications",
+        "historicalPublicCoverage": "aggregate-source-behavior",
+        "offlineFixedFakeCoverage": "complete",
+        "historicalLiveReceiptEquivalent": false,
+        "requiresFreshStageApproval": true,
+        "requiresVersionedLiveTransport": true,
+        "stageSpecificGapIds": ["exact-object-identity-and-postconditions"]
+      },
+      {
+        "stage": "drain-external-secrets",
+        "historicalPublicCoverage": "absent",
+        "offlineFixedFakeCoverage": "complete",
+        "historicalLiveReceiptEquivalent": false,
+        "requiresFreshStageApproval": true,
+        "requiresVersionedLiveTransport": true,
+        "stageSpecificGapIds": ["external-secret-drain"]
+      },
+      {
+        "stage": "delete-business-namespaces",
+        "historicalPublicCoverage": "aggregate-source-behavior",
+        "offlineFixedFakeCoverage": "complete",
+        "historicalLiveReceiptEquivalent": false,
+        "requiresFreshStageApproval": true,
+        "requiresVersionedLiveTransport": true,
+        "stageSpecificGapIds": ["exact-object-identity-and-postconditions"]
+      },
+      {
+        "stage": "drain-runtime",
+        "historicalPublicCoverage": "aggregate-source-behavior",
+        "offlineFixedFakeCoverage": "complete",
+        "historicalLiveReceiptEquivalent": false,
+        "requiresFreshStageApproval": true,
+        "requiresVersionedLiveTransport": true,
+        "stageSpecificGapIds": ["exact-object-identity-and-postconditions"]
+      },
+      {
+        "stage": "delete-node-config",
+        "historicalPublicCoverage": "aggregate-source-behavior",
+        "offlineFixedFakeCoverage": "complete",
+        "historicalLiveReceiptEquivalent": false,
+        "requiresFreshStageApproval": true,
+        "requiresVersionedLiveTransport": true,
+        "stageSpecificGapIds": ["exact-object-identity-and-postconditions"]
+      },
+      {
+        "stage": "eks-delete",
+        "historicalPublicCoverage": "monolithic-terraform-destroy",
+        "offlineFixedFakeCoverage": "complete",
+        "historicalLiveReceiptEquivalent": false,
+        "requiresFreshStageApproval": true,
+        "requiresVersionedLiveTransport": true,
+        "stageSpecificGapIds": [
+          "reviewed-saved-plan-byte-binding",
+          "per-stage-state-transition",
+          "legacy-automatic-retry-capability"
+        ]
+      },
+      {
+        "stage": "eni-sg-cleanup",
+        "historicalPublicCoverage": "aggregate-convergence-result",
+        "offlineFixedFakeCoverage": "complete",
+        "historicalLiveReceiptEquivalent": false,
+        "requiresFreshStageApproval": true,
+        "requiresVersionedLiveTransport": true,
+        "stageSpecificGapIds": ["exact-object-identity-and-postconditions"]
+      },
+      {
+        "stage": "final-delete",
+        "historicalPublicCoverage": "monolithic-terraform-destroy",
+        "offlineFixedFakeCoverage": "complete",
+        "historicalLiveReceiptEquivalent": false,
+        "requiresFreshStageApproval": true,
+        "requiresVersionedLiveTransport": true,
+        "stageSpecificGapIds": [
+          "reviewed-saved-plan-byte-binding",
+          "per-stage-state-transition",
+          "exact-object-identity-and-postconditions"
+        ]
+      }
+    ],
+    "gapRows": [
+      {"id": "per-stage-approval-and-proof", "blocksDevLiveTransport": true, "historicalEvidenceReusable": false},
+      {"id": "per-stage-live-receipt-chain", "blocksDevLiveTransport": true, "historicalEvidenceReusable": false},
+      {"id": "per-stage-state-transition", "blocksDevLiveTransport": true, "historicalEvidenceReusable": false},
+      {"id": "exact-object-identity-and-postconditions", "blocksDevLiveTransport": true, "historicalEvidenceReusable": false},
+      {"id": "external-secret-drain", "blocksDevLiveTransport": true, "historicalEvidenceReusable": false},
+      {"id": "reviewed-saved-plan-byte-binding", "blocksDevLiveTransport": true, "historicalEvidenceReusable": false},
+      {"id": "legacy-automatic-retry-capability", "blocksDevLiveTransport": true, "historicalEvidenceReusable": false},
+      {"id": "versioned-live-transport", "blocksDevLiveTransport": true, "historicalEvidenceReusable": false},
+      {"id": "fresh-live-inputs-price-budget-window", "blocksDevLiveTransport": false, "historicalEvidenceReusable": false}
+    ],
+    "provenHistoricalControls": [
+      "historical-exact-main-bound",
+      "reviewed-preflight-bound",
+      "immediate-preflight-matched",
+      "aws-dev-target-bound",
+      "bounded-separate-approval-recorded",
+      "successful-run-used-no-automatic-retry",
+      "private-identities-not-committed",
+      "post-teardown-state-empty",
+      "post-teardown-continuing-cost-identity-absent",
+      "aws-test-not-created"
+    ],
+    "historicalSourceCapabilities": {
+      "monolithicDestroyWrapper": true,
+      "perStageSavedPlanBindings": false,
+      "perStageReceiptChain": false,
+      "perStageStateTransitions": false,
+      "externalSecretDrain": false,
+      "terraformFailureMayInvokeSecondDestroy": true,
+      "separateResidualAuditRecorded": true
+    }
+  },
+  "reviewResult": {
+    "reviewedStageCount": 8,
+    "offlineCompleteStageCount": 8,
+    "historicalLiveReceiptEquivalentStageCount": 0,
+    "provenHistoricalControlCount": 10,
+    "blockingGapCount": 8,
+    "historicalRunSucceeded": true,
+    "historicalResidualAuditPassed": true,
+    "historicalApprovalsReusable": false,
+    "syntheticReceiptsReusableForLive": false,
+    "devLiveTransportReady": false,
+    "devLiveExecutionAuthorized": false,
+    "testLiveEnabled": false,
+    "prodLiveEnabled": false
+  },
+  "effectFlags": {
+    "filesystemReads": false,
+    "privateEvidenceReads": false,
+    "systemClockReads": false,
+    "environmentVariableReads": false,
+    "subprocesses": false,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetryOrRepair": false
+  },
+  "existingLiveAdaptersModified": false,
+  "liveTransportImplemented": false,
+  "liveExecutionCliImplemented": false,
+  "devLiveEnabled": false,
+  "testLiveEnabled": false,
+  "prodLiveEnabled": false,
+  "newLiveExecutionAuthorized": false,
+  "historicalTeardownAndScopedAuditClosed": true,
+  "next": "Design a dev-only versioned live transport and per-stage approval/receipt migration offline; do not enable live execution."
+}

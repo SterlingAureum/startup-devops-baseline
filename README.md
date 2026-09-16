@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.16-dev-injected-transport-protocol` implements the closed
+aws-dev protocol as a pure injected core and fixed-fake harness. It exercises
+all eight stages and 23 operations with write-ahead in-memory intents, exact
+responses, postcondition gates and non-live terminal records. No live backend,
+durable live receipt or command exists. See
+[dev injected transport protocol](docs/V0.11.9.3.6.7.7.16_DEV_INJECTED_TRANSPORT_PROTOCOL.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.15-dev-live-transport-design` closes the dev-only versioned
 transport interface across eight stages and 23 exact operations. Each stage
 requires exact approval, proof, state and predecessor-receipt bindings; only

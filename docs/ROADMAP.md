@@ -1384,3 +1384,21 @@ Next: implement a dev-only injected protocol core and fake conformance harness
 offline. Do not add a live backend or command; aws-test and aws-prod remain
 disabled. See
 [dev live transport design](V0.11.9.3.6.7.7.15_DEV_LIVE_TRANSPORT_DESIGN.md).
+
+
+### v0.11.9.3.6.7.7.16 — aws-dev injected transport protocol
+
+Implemented offline: the `.7.7.15` schema is exercised through a pure injected
+protocol core, fixed-fake transport and in-memory journal. All eight stages and
+23 operations enforce canonical bindings, intent-before-call ordering, one
+call per intent, exact responses, postcondition completion and state rules.
+
+The resulting terminal records are explicitly synthetic, non-durable and
+unusable as live authority. Failure stops without retry or repair. No
+filesystem, credentials, host clock, subprocess, cloud/Kubernetes/Terraform
+transport, backend or command is present.
+
+Next: compose the injected protocol with a restart-safe offline receipt adapter
+and the same fixed fake. Do not add a live backend or command; aws-test and
+aws-prod remain disabled. See
+[dev injected transport protocol](V0.11.9.3.6.7.7.16_DEV_INJECTED_TRANSPORT_PROTOCOL.md).

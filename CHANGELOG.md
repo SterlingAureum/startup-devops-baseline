@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.16
+
+- Implement the `.7.7.15` aws-dev protocol as a pure injected core and exact fixed-fake transport/journal harness across eight stages and 23 operations.
+- Enforce canonical request/response bindings, write-ahead intent, one call per intent, ordered postconditions and terminal record creation only after every gate passes.
+- Require reviewed saved-plan bindings and state transitions only for EKS/final delete; keep all other state unchanged and ExternalSecret drain read-only.
+- Add 50 offline tests and recursively replay `.7.7.15`; receipts remain synthetic, in-memory, non-durable and unusable for live authority.
+
 ## v0.11.9.3.6.7.7.15
 
 - Define a closed dev-only versioned transport interface for the eight teardown stages and their 23 exact operations without constructing a live backend or command.

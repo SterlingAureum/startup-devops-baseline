@@ -881,3 +881,6 @@ echo "==> Validating v0.11.9.3.6.7.7.14 dev live parity gap review"
 
 echo "==> Validating v0.11.9.3.6.7.7.15 dev live transport design"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.15-dev-live-transport-design.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.16 dev injected transport protocol"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.16-dev-injected-transport-protocol.sh"

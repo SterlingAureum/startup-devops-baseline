@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.16",
+  "version": "v0.11.9.3.6.7.7.16",
+  "predecessor": "v0.11.9.3.6.7.7.15",
+  "implementationBaselineCommit": "f006cc2be6ebbdee1dd874a89f70fbd6bdaf2a95",
+  "status": "dev-injected-transport-protocol-conformance-implemented-offline",
+  "corePath": "scripts/guarded_dev_injected_transport_protocol_v67716.py",
+  "coreSha256": "0cd9e6041155097636e2655367b199795a575f8af5517823524e543cfe3c6b57",
+  "testPath": "scripts/test-v0.11.9.3.6.7.7.16-dev-injected-transport-protocol.py",
+  "testSha256": "20609dc3a26fb87dd648da065ea32f571624960ff879d84e54a35da9a883ebaa",
+  "testMethodCount": 50,
+  "frozenSources": [
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.15-dev-live-transport-design.json",
+      "sha256": "5c5ac5a670f159e2a25013a75beeea75ec7355ec13abef5e50b506604f78a21b"
+    },
+    {
+      "path": "scripts/guarded_dev_live_transport_design_v67715.py",
+      "sha256": "25ddfaabce343762e01b0bd0877941493af55403d5f0cf3cc0fc56dcc9da9e68"
+    }
+  ],
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.15-dev-live-transport-design.sh",
+  "protocolSummary": {
+    "environment": "aws-dev",
+    "designedStageCount": 8,
+    "closedOperationCount": 23,
+    "terraformSavedPlanStageCount": 2,
+    "fixedFakeTransport": true,
+    "fixedFakeJournal": true,
+    "canonicalRequestAndResponse": true,
+    "writeAheadIntent": true,
+    "oneIntentOneCall": true,
+    "terminalRecordAfterPostconditions": true,
+    "exactReceiptPrefix": true,
+    "exactStateRelation": true,
+    "automaticRetryOrRepair": false,
+    "historicalOrLiveReceiptAcceptedAsOfflinePrefix": false,
+    "syntheticReceiptUsableForLive": false,
+    "durableReceiptWritten": false,
+    "incidentOnlyPowersEnabled": false
+  },
+  "effectFlags": {
+    "filesystemReads": false,
+    "filesystemWrites": false,
+    "privateEvidenceReads": false,
+    "systemClockReads": false,
+    "environmentVariableReads": false,
+    "credentialReads": false,
+    "subprocesses": false,
+    "cloudTransport": false,
+    "kubernetesTransport": false,
+    "terraformCommands": false,
+    "cloudMutation": false,
+    "kubernetesMutation": false,
+    "secretValueRead": false,
+    "automaticRetryOrRepair": false
+  },
+  "existingLiveAdaptersModified": false,
+  "liveBackendImplemented": false,
+  "liveTransportImplemented": false,
+  "liveExecutionCliImplemented": false,
+  "durableLiveReceiptStoreImplemented": false,
+  "devLiveEnabled": false,
+  "testLiveEnabled": false,
+  "prodLiveEnabled": false,
+  "newLiveExecutionAuthorized": false,
+  "next": "Compose the injected protocol with a restart-safe offline receipt adapter and fixed fake; do not add a live backend or command."
+}

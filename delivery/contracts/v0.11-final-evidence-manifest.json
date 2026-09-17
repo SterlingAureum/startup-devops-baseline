@@ -1,0 +1,177 @@
+{
+  "schemaVersion": "v0.11-final-evidence-manifest-v1",
+  "version": "v0.11",
+  "closureCheckpoint": "v0.11.9.3.6.7.7.20",
+  "implementationBaselineCommit": "5995e3f4427151f39dac19f0860fd3cb6e379387",
+  "status": "completed-with-explicit-environment-deferrals",
+  "goal": "observable-measurable-and-operationally-actionable-multi-environment-platform",
+  "capabilityOutcome": {
+    "metrics": "implemented-and-validated",
+    "dashboards": "implemented-and-validated",
+    "actionableAlerts": "implemented-and-validated",
+    "centralizedLogs": "implemented-and-locally-validated",
+    "minimalTracing": "implemented-and-locally-validated",
+    "sliSloErrorBudgets": "implemented-and-validated-with-environment-specific-evidence",
+    "progressiveDeliveryTelemetry": "implemented-and-locally-validated",
+    "runbooksAndOperationalResponse": "implemented-and-validated",
+    "guardedEnvironmentLifecycle": "implemented-with-live-dev-test-history-and-offline-shared-runtime-only"
+  },
+  "environmentEvidence": [
+    {
+      "environment": "local",
+      "acceptance": "qualified-and-restored",
+      "evidenceMode": "live-local",
+      "claims": [
+        "healthy-progressive-delivery-baseline",
+        "successful-analysis-runs",
+        "synced-healthy-empty-diff-gitops-state",
+        "idempotent-baseline-restoration",
+        "retained-failure-evidence-without-retry-or-promotion"
+      ]
+    },
+    {
+      "environment": "aws-dev",
+      "acceptance": "runtime-qualified-teardown-complete-and-scoped-residual-audit-passed",
+      "evidenceMode": "live-execution-records",
+      "claims": [
+        "bounded-traffic-generated",
+        "request-series-ready",
+        "availability-and-latency-slos-passed",
+        "no-critical-alert-firing-at-final-check",
+        "final-runtime-healthy",
+        "teardown-complete",
+        "no-continuing-cost-identity-found-by-scoped-audit"
+      ]
+    },
+    {
+      "environment": "aws-test",
+      "acceptance": "historical-feature-observation-qualified-current-clean-room-runtime-qualification-deferred-teardown-and-scoped-audit-complete",
+      "evidenceMode": "historical-operator-observation-plus-current-live-execution-records",
+      "claims": [
+        "historical-metrics-dashboards-and-alerts-verified",
+        "current-clean-room-root-and-demo-healthy",
+        "current-clean-room-database-dns-and-secret-delivery-ready",
+        "current-clean-room-traffic-not-generated",
+        "current-clean-room-runtime-qualification-not-executed",
+        "teardown-complete",
+        "no-residual-or-continuing-cost-identity-found-by-scoped-audit"
+      ]
+    },
+    {
+      "environment": "aws-prod",
+      "acceptance": "observer-implemented-and-offline-validated-live-acceptance-deferred",
+      "evidenceMode": "offline-validation-only",
+      "claims": [
+        "read-only-observer-implemented",
+        "no-runtime-mutation",
+        "no-automatic-deployment",
+        "no-traffic-generation",
+        "not-qualified"
+      ]
+    }
+  ],
+  "sharedGuardedRuntime": {
+    "status": "offline-conformance-only",
+    "environmentProfileExercised": "aws-dev",
+    "orderedPhaseCount": 8,
+    "closedOperationCount": 23,
+    "independentChildProcessCount": 16,
+    "fixedFakeTransportOnly": true,
+    "syntheticReceiptsConvertibleToLive": false,
+    "liveBackendImplemented": false,
+    "liveExecutionAuthorized": false
+  },
+  "permittedClaims": [
+    "v0.11-observability-and-sre-baseline-capabilities-are-complete",
+    "local-observability-and-progressive-delivery-path-is-live-validated",
+    "aws-dev-runtime-qualification-passed-and-the-environment-was-cleaned",
+    "aws-test-has-historical-feature-observation-evidence-and-a-separate-clean-room-deploy-cleanup-record",
+    "aws-dev-and-aws-test-scoped-residual-cost-audits-passed",
+    "production-readiness-work-is-explicitly-deferred-to-v0.12"
+  ],
+  "forbiddenClaims": [
+    "aws-test-current-clean-room-runtime-qualification-passed",
+    "aws-test-current-clean-room-slo-or-progressive-delivery-telemetry-passed",
+    "aws-prod-live-acceptance-passed",
+    "aws-prod-is-qualified",
+    "shared-guarded-runtime-has-a-live-backend",
+    "synthetic-receipts-authorize-live-execution",
+    "scoped-residual-audits-prove-zero-account-wide-cost",
+    "v0.11-proves-full-production-readiness"
+  ],
+  "deferredToV012": [
+    "aws-test-current-clean-room-runtime-qualification-if-still-required",
+    "aws-prod-live-read-only-observation-and-acceptance",
+    "production-least-privilege-and-break-glass-validation",
+    "production-capacity-availability-and-cost-guardrails",
+    "encrypted-remote-terraform-state-and-recovery-drills",
+    "clean-room-infrastructure-and-gitops-rebuild",
+    "rto-rpo-and-disaster-recovery-acceptance",
+    "repository-wide-production-readiness-acceptance"
+  ],
+  "sourceEvidence": [
+    {
+      "path": "delivery/contracts/v0.11-observability-sre-foundation.json",
+      "sha256": "fdd6c395d1566497e1ab0eb967bdbda6b1a75fbf86881b7c3b4bdd007ef1d428",
+      "role": "version-goal-and-security-boundary"
+    },
+    {
+      "path": "delivery/contracts/v0.11.8.2.2-test-closure-and-rebuild.json",
+      "sha256": "8879bf8e076834bc76cf37135fd5e2dd827e8d0893b46d835cdbc56e07bec944",
+      "role": "aws-test-historical-feature-observation"
+    },
+    {
+      "path": "delivery/contracts/v0.11.8.3-prod-read-only-qualification.json",
+      "sha256": "adfffeb7231e8c21a8ff6d452067bea63cf872ced8bce7928ddc31d826d0e11d",
+      "role": "aws-prod-offline-observer-boundary"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.2.2.3.3.3-baseline-restoration-closure.json",
+      "sha256": "f756dde4052b7457e1b9ed03f45be459bf5750013f8706d0b015ab150bb59fd6",
+      "role": "local-live-restoration-closure"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.5.2-aws-dev-runtime-qualification-execution.json",
+      "sha256": "a5994ebce978e55842dabe22cfbb6c48adcfaf61fa46503d06001a6cc3b2b92e",
+      "role": "aws-dev-live-runtime-qualification"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.6.5.2-aws-dev-teardown-execution-evidence.json",
+      "sha256": "85a4eed6b50b75883cfeccd11081f915591ea28c5aa1a03d97c34fbcd9067b4b",
+      "role": "aws-dev-live-teardown"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.6.6.1-aws-dev-residual-cost-audit-execution-evidence.json",
+      "sha256": "d73e4b5107b4c99ae1feebd2a34197040e4d0f50b6c6ccbecdf951bbe1da25e9",
+      "role": "aws-dev-scoped-residual-cost-audit"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.5.2.1-aws-test-root-deployment-execution-evidence.json",
+      "sha256": "5bdfd154c93ff79bab4bb5730ecd778d382f4173f7f06663e60523556d5afe4d",
+      "role": "aws-test-current-clean-room-root-deployment"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.5-aws-test-teardown-execution-evidence.json",
+      "sha256": "684e0fe9d13005dffd08f4dbbc53709dafc6404edc776c1e783eaab473a68531",
+      "role": "aws-test-current-clean-room-teardown"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.6.6.3-aws-test-residual-cost-audit-execution-evidence.json",
+      "sha256": "90d6945c04b6ba6f308fb8de705bd5b5c730557938cfc12c9acd2f29756b8f67",
+      "role": "aws-test-scoped-residual-cost-audit"
+    },
+    {
+      "path": "delivery/contracts/v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.json",
+      "sha256": "3a650417b08b580925dbca9c106ca5ccb70243aaa596460854b2236a029b82a3",
+      "role": "shared-guarded-runtime-offline-process-boundary"
+    }
+  ],
+  "privacyBoundary": {
+    "rawPrivateEvidenceCommitted": false,
+    "accountIdentifiersCommitted": false,
+    "resourceIdentifiersCommitted": false,
+    "secretValuesCommitted": false,
+    "redactedRepositoryRecordsOnly": true
+  },
+  "newLiveExecutionAuthorized": false
+}

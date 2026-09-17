@@ -821,3 +821,9 @@
 /scripts/exercise-v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.sh @SterlingAureum
+
+# v0.11.9.3.6.7.7.20 final v0.11 scope and evidence closure
+/delivery/contracts/v0.11-final-evidence-manifest.json @SterlingAureum
+/delivery/contracts/v0.11.9.3.6.7.7.20-v0.11-scope-and-evidence-closure.json @SterlingAureum
+/docs/V0.11.9.3.6.7.7.20_V0.11_SCOPE_AND_EVIDENCE_CLOSURE.md @SterlingAureum
+/scripts/validate-v0.11.9.3.6.7.7.20-v0.11-scope-and-evidence-closure.sh @SterlingAureum

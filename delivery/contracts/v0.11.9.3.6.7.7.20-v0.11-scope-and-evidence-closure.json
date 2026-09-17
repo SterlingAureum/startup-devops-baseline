@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.20",
+  "version": "v0.11.9.3.6.7.7.20",
+  "predecessor": "v0.11.9.3.6.7.7.19",
+  "implementationBaselineCommit": "5995e3f4427151f39dac19f0860fd3cb6e379387",
+  "status": "v0.11-scope-and-evidence-closed-with-explicit-deferrals",
+  "manifestPath": "delivery/contracts/v0.11-final-evidence-manifest.json",
+  "manifestSha256": "0698454efe544df7d0d9784597c991c2755b5d52606789075c754775b8bb6cc8",
+  "documentPath": "docs/V0.11.9.3.6.7.7.20_V0.11_SCOPE_AND_EVIDENCE_CLOSURE.md",
+  "documentSha256": "8775bb79eceb18e1cd24eb937cab7a7fe8908d0cc65c68408865f15ae81f8513",
+  "predecessorReplayGate": "scripts/validate-v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.sh",
+  "closureAssertions": {
+    "v011CapabilityScopeComplete": true,
+    "environmentEvidenceKeptDistinct": true,
+    "localQualified": true,
+    "awsDevRuntimeQualified": true,
+    "awsDevTeardownAndScopedAuditClosed": true,
+    "awsTestHistoricalFeatureObservationQualified": true,
+    "awsTestCurrentCleanRoomRootHealthy": true,
+    "awsTestCurrentCleanRoomRuntimeQualified": false,
+    "awsTestTeardownAndScopedAuditClosed": true,
+    "awsProdLiveAccepted": false,
+    "awsProdQualified": false,
+    "sharedGuardedRuntimeLiveBackendImplemented": false,
+    "productionReadinessClaimed": false,
+    "v012HandoffRecorded": true
+  },
+  "validationContract": {
+    "sourceEvidenceDigestCount": 11,
+    "environmentFactCrossChecksRequired": true,
+    "negativeOverclaimMutationTestsRequired": true,
+    "privacyScanRequired": true,
+    "predecessorReplayRequired": true,
+    "cloudAccessRequired": false,
+    "kubernetesAccessRequired": false,
+    "terraformExecutionRequired": false
+  },
+  "packageProducer": {
+    "liveBackendAdded": false,
+    "cloudExecutionPerformed": false,
+    "kubernetesExecutionPerformed": false,
+    "terraformExecutionPerformed": false,
+    "credentialReadPerformed": false,
+    "privateEvidenceReadPerformed": false,
+    "newLiveExecutionAuthorized": false
+  },
+  "next": "Begin v0.12 Production Readiness Capstone planning from the explicit deferred-work handoff; keep all live execution separately reviewed and authorized."
+}

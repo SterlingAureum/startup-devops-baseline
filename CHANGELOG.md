@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.20
+
+- Close the v0.11 Observability and SRE capability scope with a stable, machine-readable final evidence manifest.
+- Keep local, aws-dev, historical aws-test, current clean-room aws-test, and offline-only aws-prod evidence explicitly distinct.
+- Record permitted and forbidden release claims plus the remaining v0.12 Production Readiness Capstone handoff.
+- Pin 11 source-evidence records, cross-check their environment facts, reject 10 overclaim mutations, scan closure artifacts for private identities, and recursively replay `.7.7.19` without cloud access or new live authority.
+
 ## v0.11.9.3.6.7.7.19
 
 - Exercise all eight aws-dev phases through eight fresh `.7.7.18` verify and eight fresh execute child processes against the exact fixed fake.

@@ -263,7 +263,7 @@ and PR merge remain human controls throughout v0.10.
 
 ## v0.11 - Observability and SRE Baseline
 
-Status: In Progress
+Status: Completed with explicit production-readiness deferrals
 
 Goal:
 
@@ -520,9 +520,11 @@ Incremental scope:
     redacted and summary distinctions without rerunning destructive local drills.
     Closure must explicitly retain prod as runtime-deferred until the tail
     checkpoint supplies fresh approved evidence; offline success is not prod success.
-- v0.11.9 - clean-room dev/test/prod-live end-to-end release, successful and
-  intentionally failed Canary checks, telemetry correlation, reviewed closure
-  evidence, environment teardown, and residual-cost audit - planned
+- v0.11.9 - clean-room local/dev/test release evidence, successful and
+  intentionally failed local Canary checks, telemetry correlation, reviewed
+  closure evidence, environment teardown, and scoped residual-cost audits -
+  completed with aws-test clean-room runtime qualification and aws-prod live
+  acceptance explicitly deferred
   - v0.11.9.0 delivers scenario design and offline plan preflight only;
     live rehearsal implementation and execution remain subsequent work.
   - v0.11.9.1 adds the opt-in local successful-release runner with same-binary
@@ -721,9 +723,15 @@ Incremental scope:
                                   Private results are SHA-bound outside Git;
                                   aws-test promotion and aws-dev teardown remain
                                   separately reviewed next boundaries.
-  - Sequence environments to limit concurrent cost. At the v0.11 tail, separately
-    approve main integration, prod deployment and .8.3 read-only observation.
-    Do not claim full prod acceptance before that checkpoint is complete.
+  - Environment sequencing limited concurrent cost. aws-dev runtime
+    qualification, teardown, and scoped residual-cost audit completed. The
+    current aws-test clean-room run reached a healthy Root and demo application,
+    then completed teardown and a scoped residual-cost audit without traffic or
+    runtime qualification. aws-prod live acceptance was not executed.
+  - v0.11.9.3.6.7.7.20 closes the capability/evidence matrix without adding a
+    live backend or another cloud rehearsal. It records exact permitted and
+    forbidden claims and hands the remaining production-readiness work to
+    v0.12.
 
 v0.11 does not automatically create an EKS environment, merge a pull request,
 perform a production Kubernetes write, dispatch a rollback, or remove the
@@ -1437,3 +1445,41 @@ Next: exercise all eight phases through separate `.7.7.18` verify and execute
 child processes with retained redacted output. aws-test and aws-prod remain
 disabled. See
 [dev local offline command](V0.11.9.3.6.7.7.18_DEV_LOCAL_OFFLINE_COMMAND.md).
+
+### v0.11.9.3.6.7.7.19 — aws-dev local offline process chain
+
+Implemented offline: all eight aws-dev phases run through sixteen fresh
+`.7.7.18` verify/execute processes with exact predecessor and state continuity,
+saved-plan boundaries, private retained outputs, redacted manifests, and eight
+restart-safe receipt triplets. Failure, timeout, drift, or replay stops without
+retry or repair. Every receipt remains synthetic and every live effect remains
+disabled.
+
+See [dev local offline process chain](V0.11.9.3.6.7.7.19_DEV_LOCAL_OFFLINE_PROCESS_CHAIN.md).
+
+### v0.11.9.3.6.7.7.20 — v0.11 scope and evidence closure
+
+Completed offline: a stable final evidence manifest pins 11 repository evidence
+records and keeps local, aws-dev, historical aws-test, current clean-room
+aws-test, and offline-only aws-prod outcomes distinct. It defines permitted and
+forbidden release claims, rejects overclaim mutations, and records the v0.12
+Production Readiness Capstone handoff.
+
+v0.11 capability scope is closed. aws-test current clean-room runtime
+qualification, aws-prod live acceptance, production least privilege,
+break-glass, capacity, availability, cost, disaster recovery, and repository-
+wide production-readiness acceptance remain v0.12 work. No new cloud execution
+or live authority is introduced. See
+[v0.11 scope and evidence closure](V0.11.9.3.6.7.7.20_V0.11_SCOPE_AND_EVIDENCE_CLOSURE.md).
+
+### v0.11.9.3.6.7.7.20.1 — roadmap status successor repair
+
+Implemented offline: the original v0.11.0 foundation validator now reads the
+v0.11 status from its own roadmap section and accepts the evidence-bound `.20`
+completion state without rejecting historical `In Progress` trees.
+
+The completed state requires the final manifest, explicit environment
+deferrals, no new live authority, and retained aws-prod and full production-
+readiness claim guards. Four negative lifecycle mutations fail closed. The
+repair changes no runtime or live execution boundary. See
+[roadmap status successor repair](V0.11.9.3.6.7.7.20.1_ROADMAP_STATUS_SUCCESSOR_REPAIR.md).

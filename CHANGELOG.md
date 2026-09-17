@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.20.1
+
+- Repair the original v0.11.0 foundation validator after the `.20` closure legitimately changed the v0.11 roadmap status from `In Progress` to `Completed with explicit production-readiness deferrals`.
+- Read the status only from the v0.11 roadmap section and retain compatibility with historical in-progress trees.
+- Require the `.20` final evidence manifest, explicit environment deferrals, no new live authority, and retained aws-prod and production-readiness claim guards before accepting completion.
+- Add four fail-closed lifecycle mutations and a focused offline repair validator; no runtime, cloud, Kubernetes, Terraform, credential, or private-evidence behavior changes.
+
+## v0.11.9.3.6.7.7.20
+
+- Close the v0.11 Observability and SRE capability scope with a stable, machine-readable final evidence manifest.
+- Keep local, aws-dev, historical aws-test, current clean-room aws-test, and offline-only aws-prod evidence explicitly distinct.
+- Record permitted and forbidden release claims plus the remaining v0.12 Production Readiness Capstone handoff.
+- Pin 11 source-evidence records, cross-check their environment facts, reject 10 overclaim mutations, scan closure artifacts for private identities, and recursively replay `.7.7.19` without cloud access or new live authority.
+
 ## v0.11.9.3.6.7.7.19
 
 - Exercise all eight aws-dev phases through eight fresh `.7.7.18` verify and eight fresh execute child processes against the exact fixed fake.

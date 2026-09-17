@@ -893,3 +893,9 @@ echo "==> Validating v0.11.9.3.6.7.7.18 dev local offline command"
 
 echo "==> Validating v0.11.9.3.6.7.7.19 dev local offline process chain"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.19-dev-local-offline-process-chain.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.20 final v0.11 scope and evidence closure"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.20-v0.11-scope-and-evidence-closure.sh"
+
+echo "==> Validating v0.11.9.3.6.7.7.20.1 roadmap status successor repair"
+"${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair.sh"

@@ -3,6 +3,23 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair` makes the original
+v0.11.0 foundation gate accept the evidence-bound `.20` completed roadmap
+state while preserving historical `In Progress` validation. Completion now
+requires the final manifest, explicit deferrals, no new live authority and the
+aws-prod/production-readiness claim guards. See
+[roadmap status successor repair](docs/V0.11.9.3.6.7.7.20.1_ROADMAP_STATUS_SUCCESSOR_REPAIR.md).
+
+Predecessor development checkpoint:
+`v0.11.9.3.6.7.7.20-v0.11-scope-and-evidence-closure` closes the v0.11
+Observability and SRE capability scope while keeping local, aws-dev, aws-test,
+and aws-prod evidence distinct. Local and aws-dev have live qualification
+evidence; aws-test has separate historical feature-observation and current
+clean-room deployment/cleanup evidence; aws-prod live acceptance and full
+production readiness remain deferred to v0.12. No live authority is added. See
+[v0.11 scope and evidence closure](docs/V0.11.9.3.6.7.7.20_V0.11_SCOPE_AND_EVIDENCE_CLOSURE.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.19-dev-local-offline-process-chain` exercises all eight
 aws-dev phases through sixteen fresh `.7.7.18` verify/execute processes. It
 retains strict private bundle, preflight, stdout/stderr, redacted-manifest and
@@ -941,8 +958,17 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.11.6.1.2-kubernetes-events-grafana-loki
+v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair
 ```
+v0.11 completes the Observability and SRE Baseline capabilities with an
+evidence-bounded closure. Local is qualified and restored; aws-dev runtime
+qualification, teardown, and scoped residual-cost audit passed; aws-test has
+historical feature-observation evidence plus a separate current clean-room
+deployment, teardown, and scoped audit that did not execute traffic-based
+runtime qualification; aws-prod remains offline-observer-only and unqualified.
+See `delivery/contracts/v0.11-final-evidence-manifest.json` for the canonical
+allowed claims, forbidden claims, and v0.12 production-readiness handoff.
+
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in
 place. v0.9.0 converges every active aws-dev repository Application on `main`

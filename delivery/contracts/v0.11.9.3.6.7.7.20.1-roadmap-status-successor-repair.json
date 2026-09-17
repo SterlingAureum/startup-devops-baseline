@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "v0.11.9.3.6.7.7.20.1",
+  "version": "v0.11.9.3.6.7.7.20.1",
+  "predecessor": "v0.11.9.3.6.7.7.20",
+  "implementationBaselineCommit": "5995e3f4427151f39dac19f0860fd3cb6e379387",
+  "status": "roadmap-status-successor-validation-repaired",
+  "failureSignature": "ContractError: Roadmap marker missing: Status: In Progress",
+  "repairedValidatorPath": "scripts/validate-v0.11-observability-sre-foundation.sh",
+  "repairedValidatorSha256": "478cdc85da2fcdf64b148bff6f524ddf3d07984d381b55b44817db6484a6045c",
+  "closureManifestPath": "delivery/contracts/v0.11-final-evidence-manifest.json",
+  "closureManifestSha256": "0698454efe544df7d0d9784597c991c2755b5d52606789075c754775b8bb6cc8",
+  "closureContractPath": "delivery/contracts/v0.11.9.3.6.7.7.20-v0.11-scope-and-evidence-closure.json",
+  "closureContractSha256": "343411940aab161a84caa05a4303921d73a53a4acd521f92d76fd653f3748b45",
+  "acceptedLifecycleStates": [
+    "In Progress",
+    "Completed with explicit production-readiness deferrals"
+  ],
+  "successorRules": {
+    "statusReadOnlyFromV011Section": true,
+    "legacyInProgressRemainsAccepted": true,
+    "completedRequiresClosureManifest": true,
+    "completedRequiresCheckpoint": "v0.11.9.3.6.7.7.20",
+    "completedRequiresExplicitEnvironmentDeferrals": true,
+    "completedRequiresNoNewLiveAuthority": true,
+    "completedRequiresAwsProdQualificationGuard": true,
+    "completedRequiresProductionReadinessGuard": true
+  },
+  "negativeLifecycleMutationCount": 4,
+  "packageProducer": {
+    "roadmapCompletionReverted": false,
+    "historicalFoundationContractRewritten": false,
+    "cloudExecutionPerformed": false,
+    "kubernetesExecutionPerformed": false,
+    "terraformExecutionPerformed": false,
+    "credentialReadPerformed": false,
+    "privateEvidenceReadPerformed": false,
+    "newLiveExecutionAuthorized": false
+  },
+  "next": "Re-run the repository quality gates; retain the completed v0.11 roadmap state and the v0.12 production-readiness handoff."
+}

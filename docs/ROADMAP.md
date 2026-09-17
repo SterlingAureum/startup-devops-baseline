@@ -1471,3 +1471,15 @@ break-glass, capacity, availability, cost, disaster recovery, and repository-
 wide production-readiness acceptance remain v0.12 work. No new cloud execution
 or live authority is introduced. See
 [v0.11 scope and evidence closure](V0.11.9.3.6.7.7.20_V0.11_SCOPE_AND_EVIDENCE_CLOSURE.md).
+
+### v0.11.9.3.6.7.7.20.1 — roadmap status successor repair
+
+Implemented offline: the original v0.11.0 foundation validator now reads the
+v0.11 status from its own roadmap section and accepts the evidence-bound `.20`
+completion state without rejecting historical `In Progress` trees.
+
+The completed state requires the final manifest, explicit environment
+deferrals, no new live authority, and retained aws-prod and full production-
+readiness claim guards. Four negative lifecycle mutations fail closed. The
+repair changes no runtime or live execution boundary. See
+[roadmap status successor repair](V0.11.9.3.6.7.7.20.1_ROADMAP_STATUS_SUCCESSOR_REPAIR.md).

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.11.9.3.6.7.7.20.1
+
+- Repair the original v0.11.0 foundation validator after the `.20` closure legitimately changed the v0.11 roadmap status from `In Progress` to `Completed with explicit production-readiness deferrals`.
+- Read the status only from the v0.11 roadmap section and retain compatibility with historical in-progress trees.
+- Require the `.20` final evidence manifest, explicit environment deferrals, no new live authority, and retained aws-prod and production-readiness claim guards before accepting completion.
+- Add four fail-closed lifecycle mutations and a focused offline repair validator; no runtime, cloud, Kubernetes, Terraform, credential, or private-evidence behavior changes.
+
 ## v0.11.9.3.6.7.7.20
 
 - Close the v0.11 Observability and SRE capability scope with a stable, machine-readable final evidence manifest.

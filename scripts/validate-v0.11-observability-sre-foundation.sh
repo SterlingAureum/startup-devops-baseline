@@ -263,7 +263,6 @@ for label, mutate in mutations:
 roadmap = roadmap_path.read_text()
 for marker in (
     "## v0.11 - Observability and SRE Baseline",
-    "Status: In Progress",
     "## v0.12 - Production Readiness Capstone",
     "## v1.0 - Production-ready Commercial Baseline",
     "## v1.1 - AI Infrastructure Integration",
@@ -278,6 +277,87 @@ require(
     < roadmap.index("## v1.2 - Lightweight AIOps Extension"),
     "Roadmap version order is invalid",
 )
+
+
+def validate_v011_roadmap_lifecycle(
+    roadmap_text: str,
+    closure_manifest: dict[str, Any] | None,
+) -> None:
+    start_marker = "## v0.11 - Observability and SRE Baseline"
+    end_marker = "## v0.12 - Production Readiness Capstone"
+    require(start_marker in roadmap_text and end_marker in roadmap_text, "v0.11 roadmap section is missing")
+    start = roadmap_text.index(start_marker)
+    end = roadmap_text.index(end_marker, start)
+    section = roadmap_text[start:end]
+    match = re.search(r"^Status: (.+)$", section, re.MULTILINE)
+    require(match is not None, "v0.11 roadmap status is missing")
+    status = match.group(1)
+    allowed = {
+        "In Progress",
+        "Completed with explicit production-readiness deferrals",
+    }
+    require(status in allowed, f"Unexpected v0.11 roadmap status: {status}")
+    if status == "In Progress":
+        return
+
+    require(closure_manifest is not None, "Completed v0.11 roadmap requires the final evidence manifest")
+    require(closure_manifest.get("version") == "v0.11", "Closure manifest version changed")
+    require(
+        closure_manifest.get("closureCheckpoint") == "v0.11.9.3.6.7.7.20",
+        "Completed v0.11 roadmap is not bound to the closure checkpoint",
+    )
+    require(
+        closure_manifest.get("status") == "completed-with-explicit-environment-deferrals",
+        "Completed v0.11 roadmap lacks the explicit-deferral closure status",
+    )
+    require(
+        closure_manifest.get("newLiveExecutionAuthorized") is False,
+        "Completed v0.11 roadmap unexpectedly grants live authority",
+    )
+    forbidden = closure_manifest.get("forbiddenClaims")
+    require(isinstance(forbidden, list), "Closure manifest forbidden claims are missing")
+    require("aws-prod-is-qualified" in forbidden, "Closure manifest lost the aws-prod qualification guard")
+    require(
+        "v0.11-proves-full-production-readiness" in forbidden,
+        "Closure manifest lost the production-readiness guard",
+    )
+
+
+closure_manifest_path = root / "delivery/contracts/v0.11-final-evidence-manifest.json"
+closure_manifest = load_json(closure_manifest_path) if closure_manifest_path.is_file() else None
+validate_v011_roadmap_lifecycle(roadmap, closure_manifest)
+
+legacy_roadmap = roadmap.replace(
+    "Status: Completed with explicit production-readiness deferrals",
+    "Status: In Progress",
+    1,
+)
+validate_v011_roadmap_lifecycle(legacy_roadmap, None)
+
+for label, candidate_roadmap, candidate_manifest in (
+    ("unknown roadmap status", roadmap.replace(
+        "Status: Completed with explicit production-readiness deferrals",
+        "Status: Complete",
+        1,
+    ), closure_manifest),
+    ("missing closure manifest", roadmap, None),
+    ("live authority in closure", roadmap, {
+        **(closure_manifest or {}),
+        "newLiveExecutionAuthorized": True,
+    }),
+    ("missing production-readiness guard", roadmap, {
+        **(closure_manifest or {}),
+        "forbiddenClaims": [
+            item for item in (closure_manifest or {}).get("forbiddenClaims", [])
+            if item != "v0.11-proves-full-production-readiness"
+        ],
+    }),
+):
+    try:
+        validate_v011_roadmap_lifecycle(candidate_roadmap, candidate_manifest)
+    except ContractError:
+        continue
+    raise SystemExit(f"Unsafe v0.11 roadmap lifecycle mutation was accepted: {label}")
 
 design = design_path.read_text()
 for marker in (

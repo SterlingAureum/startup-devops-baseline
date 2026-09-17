@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair` makes the original
+v0.11.0 foundation gate accept the evidence-bound `.20` completed roadmap
+state while preserving historical `In Progress` validation. Completion now
+requires the final manifest, explicit deferrals, no new live authority and the
+aws-prod/production-readiness claim guards. See
+[roadmap status successor repair](docs/V0.11.9.3.6.7.7.20.1_ROADMAP_STATUS_SUCCESSOR_REPAIR.md).
+
+Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.20-v0.11-scope-and-evidence-closure` closes the v0.11
 Observability and SRE capability scope while keeping local, aws-dev, aws-test,
 and aws-prod evidence distinct. Local and aws-dev have live qualification
@@ -950,7 +958,7 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.11.9.3.6.7.7.20-v0.11-scope-and-evidence-closure
+v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair
 ```
 v0.11 completes the Observability and SRE Baseline capabilities with an
 evidence-bounded closure. Local is qualified and restored; aws-dev runtime

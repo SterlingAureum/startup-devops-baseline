@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "v0.12.0-production-readiness-foundation-v1",
+  "version": "v0.12.0",
+  "status": "delivered-offline-design-only",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "goal": "rebuildable-upgradeable-recoverable-and-reviewable-production-oriented-baseline",
+  "documents": {
+    "foundation": "docs/V0.12.0_PRODUCTION_READINESS_FOUNDATION.md",
+    "roadmap": "docs/ROADMAP.md",
+    "terraformState": "docs/TERRAFORM_STATE_MANAGEMENT.md",
+    "authoritativeSurface": "docs/CURRENT_AUTHORITATIVE_SURFACE.md",
+    "aiPolicy": "docs/AI_ASSISTED_CONTRIBUTION_POLICY.md"
+  },
+  "predecessorBoundary": {
+    "checkpoint": "v0.11.9.3.6.7.7.20.1",
+    "evidenceManifest": "delivery/contracts/v0.11-final-evidence-manifest.json",
+    "v011EvidenceImmutable": true,
+    "v011DeferralsPreserved": true,
+    "historicalReceiptsGrantLiveAuthority": false
+  },
+  "increments": [
+    {"id": "v0.12.0", "name": "production-readiness-foundation", "status": "delivered-offline"},
+    {"id": "v0.12.1", "name": "remote-state-foundation", "status": "planned"},
+    {"id": "v0.12.2", "name": "state-migration-and-recovery", "status": "planned"},
+    {"id": "v0.12.3", "name": "promotion-and-lifecycle-convergence", "status": "planned"},
+    {"id": "v0.12.4", "name": "upgrade-lifecycle", "status": "planned"},
+    {"id": "v0.12.5", "name": "clean-room-rebuild-and-dr", "status": "planned"},
+    {"id": "v0.12.6", "name": "production-controls", "status": "planned"},
+    {"id": "v0.12.7", "name": "technical-capstone-closure", "status": "planned"}
+  ],
+  "terraformState": {
+    "implementedBackendAtV0120": "local",
+    "implementedRoots": [
+      "infra/terraform/aws/runtime-identities",
+      "infra/terraform/aws/environments/dev",
+      "infra/terraform/aws/environments/test",
+      "infra/terraform/aws/environments/prod"
+    ],
+    "plannedBootstrapRoot": "infra/terraform/aws/state-bootstrap",
+    "targetBackend": "s3",
+    "targetKeys": [
+      "bootstrap/terraform.tfstate",
+      "runtime-identities/terraform.tfstate",
+      "environments/dev/terraform.tfstate",
+      "environments/test/terraform.tfstate",
+      "environments/prod/terraform.tfstate"
+    ],
+    "controls": {
+      "versioning": true,
+      "sseKms": true,
+      "publicAccessBlocked": true,
+      "tlsOnly": true,
+      "s3NativeLockfile": true,
+      "dynamoDbLocking": false,
+      "rootScopedIam": true,
+      "partialBackendConfiguration": true,
+      "sharedCliWorkspaces": false
+    },
+    "migrationInvariants": [
+      "reviewed-nonempty-source-state",
+      "immutable-local-backup-and-digest",
+      "lineage-preserved",
+      "managed-addresses-preserved",
+      "resource-identities-preserved",
+      "lock-contention-verified",
+      "zero-change-plan-after-migration",
+      "object-version-recovery-drill"
+    ],
+    "migrationCombinedWithRefactor": false,
+    "migrationCombinedWithUpgrade": false,
+    "foundationIncrement": "v0.12.1",
+    "migrationIncrement": "v0.12.2"
+  },
+  "releaseAndLifecycle": {
+    "buildOnce": true,
+    "sameDigestAcrossEnvironments": true,
+    "orderedEnvironments": ["aws-dev", "aws-test", "aws-prod"],
+    "testPromotionPrPreparedAutomatically": true,
+    "prodPromotionPrPreparedAutomatically": true,
+    "pullRequestMergeIsHuman": true,
+    "prodEnvironmentApprovalRequired": true,
+    "automaticEnvironmentCreation": false,
+    "automaticEnvironmentDestroy": false,
+    "automaticProductionMerge": false,
+    "automaticProductionRollback": false,
+    "absentEnvironmentStatus": "waiting_environment",
+    "applicationLifecycleOwnsTerraform": false,
+    "maximumConcurrentDisposableEksEnvironments": 1
+  },
+  "upgradeAndRecovery": {
+    "compatibilityMatrixRequired": true,
+    "deprecatedApiPreflightRequired": true,
+    "eksOneMinorAtATime": true,
+    "databaseMajorUpgradeCombinedWithEksUpgrade": false,
+    "rollbackOrRebuildDecisionRequired": true,
+    "cleanRoomUsesRemoteState": true,
+    "rtoRpoApprovedBeforeLiveExercise": true,
+    "rtoRpoMeasuredFromEvidence": true,
+    "defaultAvailabilityModel": "single-region-multi-az-rebuildable",
+    "crossRegionActiveActiveRequired": false
+  },
+  "documentationGovernance": {
+    "currentIndexRequired": true,
+    "currentDocsMaintainedWithCapability": true,
+    "archiveIsSupportedProcedure": false,
+    "archiveRewrittenForCurrentWording": false,
+    "fullRepositoryConvergence": "v1.0-rc.1"
+  },
+  "aiGovernance": {
+    "humanUnderstandingAndReviewRequired": true,
+    "normalCiAndSecurityGatesRequired": true,
+    "sourceAndLicenseReviewRequired": true,
+    "credentialsAllowedInUnapprovedAi": false,
+    "terraformStateAllowedInUnapprovedAi": false,
+    "customerDataAllowedInUnapprovedAi": false,
+    "privateEvidenceAllowedInUnapprovedAi": false,
+    "repositoryWideAssurance": "v1.0-rc.2"
+  },
+  "executionBoundary": {
+    "designAndOfflineValidationOnly": true,
+    "backendInfrastructureCreated": false,
+    "terraformBackendChanged": false,
+    "terraformInitExecuted": false,
+    "stateMigrated": false,
+    "awsAccessed": false,
+    "kubernetesAccessed": false,
+    "githubMutated": false,
+    "trafficGenerated": false,
+    "qualificationExecuted": false,
+    "liveExecutionAuthorized": false
+  },
+  "v1Boundary": {
+    "featureFreezeAfter": "v0.12.7",
+    "repositoryConvergence": "v1.0-rc.1",
+    "assurance": "v1.0-rc.2",
+    "finalSequentialDevTestProdAcceptance": "v1.0-rc.3",
+    "aiInfrastructureIntegration": "v1.1",
+    "lightweightAiops": "v1.2"
+  }
+}

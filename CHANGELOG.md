@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.0
+
+- Start the Production Readiness Capstone with a design-only, offline-validated contract and no live execution authority.
+- Define five target Terraform state keys across the planned backend bootstrap root and the existing runtime-identities, dev, test, and prod roots while preserving the current local backend until v0.12.1.
+- Separate remote-state foundation, non-empty brownfield migration/recovery, promotion convergence, upgrade lifecycle, clean-room rebuild/DR, production controls, and final technical closure into v0.12.1 through v0.12.7.
+- Preserve build-once immutable promotion, automatic Promotion PR preparation, human merge, production Environment approval, and `waiting_environment` without automatic infrastructure creation.
+- Establish the current authoritative repository surface and AI-assisted contribution policy; archive remains historical and is not rewritten.
+- Add focused positive/negative offline validation and retain the v0.11 evidence and production-readiness claim boundaries.
+
 ## v0.11.9.3.6.7.7.20.1
 
 - Repair the original v0.11.0 foundation validator after the `.20` closure legitimately changed the v0.11 roadmap status from `In Progress` to `Completed with explicit production-readiness deferrals`.

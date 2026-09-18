@@ -3,12 +3,18 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair` makes the original
-v0.11.0 foundation gate accept the evidence-bound `.20` completed roadmap
-state while preserving historical `In Progress` validation. Completion now
-requires the final manifest, explicit deferrals, no new live authority and the
-aws-prod/production-readiness claim guards. See
-[roadmap status successor repair](docs/V0.11.9.3.6.7.7.20.1_ROADMAP_STATUS_SUCCESSOR_REPAIR.md).
+`v0.12.0-production-readiness-foundation` starts the Production Readiness
+Capstone with an offline-only contract. It fixes the remote-state topology,
+state-migration invariants, release/lifecycle separation, upgrade and recovery
+boundaries, current authoritative surface, and AI-assisted contribution
+policy. It creates no backend, changes no Terraform backend, migrates no
+state, and accesses neither AWS nor Kubernetes. See
+[v0.12.0 production-readiness foundation](docs/V0.12.0_PRODUCTION_READINESS_FOUNDATION.md).
+
+Predecessor development checkpoint:
+`v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair` preserves the
+evidence-bound v0.11 completion state and its explicit production-readiness
+deferrals. See [roadmap status successor repair](docs/V0.11.9.3.6.7.7.20.1_ROADMAP_STATUS_SUCCESSOR_REPAIR.md).
 
 Predecessor development checkpoint:
 `v0.11.9.3.6.7.7.20-v0.11-scope-and-evidence-closure` closes the v0.11
@@ -958,16 +964,15 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair
+v0.12.0-production-readiness-foundation
 ```
-v0.11 completes the Observability and SRE Baseline capabilities with an
-evidence-bounded closure. Local is qualified and restored; aws-dev runtime
-qualification, teardown, and scoped residual-cost audit passed; aws-test has
-historical feature-observation evidence plus a separate current clean-room
-deployment, teardown, and scoped audit that did not execute traffic-based
-runtime qualification; aws-prod remains offline-observer-only and unqualified.
-See `delivery/contracts/v0.11-final-evidence-manifest.json` for the canonical
-allowed claims, forbidden claims, and v0.12 production-readiness handoff.
+v0.12.0 defines the offline Production Readiness contract and preserves every
+v0.11 evidence boundary. The current implementation still uses independent
+local Terraform state for runtime-identities, dev, test, and prod. Remote
+backend creation begins only in v0.12.1; state migration and recovery begin
+only in v0.12.2. See
+`delivery/contracts/v0.12.0-production-readiness-foundation.json` for the
+machine-readable boundary.
 
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

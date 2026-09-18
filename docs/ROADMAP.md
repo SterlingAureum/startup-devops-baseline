@@ -741,23 +741,50 @@ readiness remain v0.12 work.
 
 ## v0.12 - Production Readiness Capstone
 
-Status: Planned
+Status: In Progress
 
 Goal:
 
 Prove that the complete platform can be rebuilt, upgraded, recovered,
 operated, and reviewed as a production-oriented commercial baseline.
 
-Planned scope:
+Incremental scope:
 
-- encrypted remote Terraform state bootstrap and S3-native locking
-- state backup, recovery, and operator-access boundaries
-- EKS and platform dependency upgrade lifecycle
-- clean-room infrastructure and GitOps rebuild
-- measured recovery objectives and disaster-recovery review
-- production access, break-glass, capacity, availability, and cost review
-- repository-wide security, delivery, observability, recovery, and
-  documentation acceptance
+- v0.12.0 - production-readiness scope, five-key remote-state topology,
+  migration and recovery invariants, promotion/lifecycle separation, upgrade
+  and DR boundaries, current authoritative surface, AI-assisted contribution
+  policy, and offline positive/negative validation - delivered offline; no
+  backend, state migration, AWS, Kubernetes, GitHub mutation, or live authority
+  is introduced
+- v0.12.1 - encrypted S3 backend bootstrap, versioning, SSE-KMS, public-access
+  block, TLS-only access, S3-native lockfiles, root-scoped IAM and partial
+  backend configuration - planned; implementation and any approved backend
+  creation remain separate checkpoints
+- v0.12.2 - guarded non-empty local-to-remote state migration, immutable local
+  backup, lineage/address verification, lock contention, zero-change plan,
+  object-version recovery and operator Runbook - planned; migration must not
+  share a change or execution window with module refactoring or platform upgrade
+- v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
+  automatic test/prod Promotion PR preparation, human review and merge,
+  production Environment approval, immutable digest identity and
+  `waiting_environment` without automatic EKS creation - planned
+- v0.12.4 - EKS and platform dependency upgrade lifecycle, compatibility
+  matrix, deprecated-API preflight, one-minor sequencing, data-plane/add-on/
+  controller convergence, rollback/rebuild decision and dev/test evidence - planned
+- v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
+  database recovery, measured RTO/RPO, scoped disaster-recovery review and
+  terminal cleanup/cost evidence - planned
+- v0.12.6 - production least privilege, approval-protected read-only
+  observation, break-glass, capacity, availability, cost and destructive-action
+  controls - planned
+- v0.12.7 - repository-wide technical production-readiness matrix, evidence
+  manifest, permitted/forbidden claims and feature-scope freeze before v1.0 RC
+  convergence - planned
+
+The v0.12 line keeps application promotion separate from infrastructure
+lifecycle and permits at most one disposable EKS rehearsal environment at a
+time. Every live action requires a fresh, separately reviewed authorization.
+The final integrated dev/test/prod commercial rehearsal remains v1.0 RC work.
 
 ## v1.0 - Production-ready Commercial Baseline
 

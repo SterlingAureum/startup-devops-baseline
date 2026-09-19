@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.1
+
+- Add an independent local-state bootstrap root declaring a versioned, bucket-owner-enforced, public-blocked S3 state bucket and a rotation-enabled SSE-KMS key protected from ordinary destroy.
+- Define five exact state keys, S3-native `.tflock` objects, and one unattached least-privilege IAM managed policy per root; only lock objects receive delete permission.
+- Add credential-free partial backend examples and ignore materialized `*.tfbackend` files while retaining all five roots on local state until v0.12.2.
+- Raise the Terraform CLI floor to 1.11.0 for stable S3-native locking and pin Terraform validation CI to 1.16.3 without changing the AWS provider or platform versions.
+- Add a machine-readable contract, operator boundary document, successor-aware v0.12.0 validation, static positive/negative tests, and explicit separation between offline implementation, approved backend creation, and state migration.
+
 ## v0.12.0
 
 - Start the Production Readiness Capstone with a design-only, offline-validated contract and no live execution authority.

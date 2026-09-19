@@ -27,6 +27,7 @@ RC. The index does not delete or rewrite historical evidence.
 - `docs/PROMOTION_GOVERNANCE.md`
 - `docs/AI_ASSISTED_CONTRIBUTION_POLICY.md`
 - `docs/V0.12.0_PRODUCTION_READINESS_FOUNDATION.md`
+- `docs/V0.12.1_REMOTE_STATE_FOUNDATION.md`
 
 These documents are current but not yet the final v1.0 commercial review. A
 known stale statement in a current document is updated when its owning
@@ -36,8 +37,8 @@ capability changes; the repository-wide consistency pass remains v1.0 RC.1.
 
 - `.github/workflows/` for validated CI, release preparation and trusted
   runtime boundaries;
-- `infra/terraform/aws/` for the four implemented independent roots and shared
-  AWS modules;
+- `infra/terraform/aws/` for the five implemented independent roots, partial
+  backend examples and shared AWS modules;
 - `clusters/local/` and `clusters/aws/` for active GitOps declarations;
 - `apps/demo-api/` for the demonstration workload and Helm release contract;
 - `platform/` for repository-owned observability, tracing and security assets;
@@ -53,6 +54,7 @@ command. The v1.0 RC review will publish the smaller stable command surface.
 - `delivery/contracts/demo-api-failure-recovery-policy.json`
 - `delivery/contracts/v0.11-final-evidence-manifest.json`
 - `delivery/contracts/v0.12.0-production-readiness-foundation.json`
+- `delivery/contracts/v0.12.1-remote-state-foundation.json`
 
 The v0.11 manifest remains authoritative only for v0.11 evidence claims. The
 v0.12 contract cannot upgrade historical evidence or synthetic receipts into

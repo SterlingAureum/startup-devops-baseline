@@ -6,7 +6,7 @@ foundation introduced in v0.5.5, the CloudNativePG S3 backup foundation
 introduced in v0.6.3, the External Secrets AWS foundation introduced in
 v0.8.3, and the ACM/control-plane hardening foundation introduced in v0.8.6.
 
-## Current repository scope: v0.9.6
+## Current repository scope: v0.12.1
 
 Terraform owns stable AWS infrastructure and identity. Argo CD owns the
 Kubernetes controllers and application resources, while guarded scripts
@@ -18,6 +18,12 @@ the same reviewed modules but never share local state or CLI workspaces. A
 fourth account-bootstrap root, `runtime-identities`, owns the dev/test GitHub
 OIDC runtime roles independently from disposable environment state. The
 environment roots own only the corresponding EKS access entries.
+
+A fifth independent root, `state-bootstrap`, declares the versioned,
+SSE-KMS-encrypted S3 backend foundation and five exact-key IAM policies. It
+retains protected local state in v0.12.1. The managed policies are not attached,
+the four earlier roots remain local, and v0.12.2 owns backend activation and
+non-empty migration.
 
 | Profile | VPC | Service CIDR | Logs | Secret recovery | Backup destroy |
 |---|---|---|---:|---:|---|
@@ -73,10 +79,11 @@ without a mandatory v0.9 apply.
 
 ## Plan
 
-`validate-terraform.sh` formats and validates the account-bootstrap root plus
-all three environment roots with backend
-initialization disabled. Do not put a workstation address in any tracked
-tfvars. The guarded apply entrypoint currently defaults to dev:
+`validate-terraform.sh` formats and validates the state bootstrap,
+runtime-identities and all three environment roots with backend initialization
+disabled. Do not put a workstation address, backend identity or credential in
+tracked configuration. The guarded environment apply entrypoint currently
+defaults to dev:
 
 ```bash
 CONFIRM_EKS_API_CIDR_UPDATE=restrict-current-ip \

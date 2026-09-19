@@ -902,3 +902,6 @@ echo "==> Validating v0.11.9.3.6.7.7.20.1 roadmap status successor repair"
 
 echo "==> Validating v0.12.0 production-readiness foundation"
 "${ROOT_DIR}/scripts/validate-v0.12.0-production-readiness-foundation.sh"
+
+echo "==> Validating v0.12.1 remote-state foundation"
+"${ROOT_DIR}/scripts/validate-v0.12.1-remote-state-foundation.sh"

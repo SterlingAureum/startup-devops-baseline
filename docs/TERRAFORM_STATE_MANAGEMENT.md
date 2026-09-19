@@ -1,10 +1,12 @@
 # Terraform State Management
 
-## Current Design and v0.12 Boundary
+## Current Design and v0.12.1 Boundary
 
 The runtime-identities, dev, test, and prod Terraform roots each use their own
-local state. This remains the implemented v0.12.0 state. The production
-backend is defined by contract only and is not created until v0.12.1.
+local state. v0.12.1 adds the independent `state-bootstrap` root, which also
+uses local state until the backend exists. The S3/KMS foundation is now
+declared and statically validated, but this offline checkpoint does not claim
+that it has been created in AWS.
 
 State files are excluded from Git. Keep them until the environment has been destroyed.
 
@@ -16,6 +18,7 @@ inventory. The local `terraform.tfstate` remains the authoritative artifact
 that must be retained for the corresponding environment.
 
 ```text
+infra/terraform/aws/state-bootstrap/terraform.tfstate
 infra/terraform/aws/runtime-identities/terraform.tfstate
 infra/terraform/aws/environments/dev/terraform.tfstate
 infra/terraform/aws/environments/test/terraform.tfstate
@@ -31,9 +34,9 @@ Local state does not provide centralized backup, locking, team access, controlle
 
 ## Target State Topology
 
-v0.12 targets one independently addressable state object per root. A planned
-account-scoped bootstrap root owns the backend infrastructure without making a
-disposable EKS environment its dependency.
+v0.12 targets one independently addressable state object per root. The
+account-scoped bootstrap root owns the declared backend infrastructure without
+making a disposable EKS environment its dependency.
 
 ```text
 bootstrap/terraform.tfstate
@@ -43,7 +46,7 @@ environments/test/terraform.tfstate
 environments/prod/terraform.tfstate
 ```
 
-The target backend requires:
+The declared target backend provides:
 
 - S3 versioning;
 - server-side encryption with a customer-managed KMS key;
@@ -53,13 +56,23 @@ The target backend requires:
 - partial backend configuration without credentials in tracked files; and
 - no Terraform CLI workspace sharing between environments.
 
+Tracked examples live under `infra/terraform/aws/backend-config/`. Copy one to
+an ignored `*.tfbackend` path and replace every placeholder only during an
+approved migration. Never add credentials, a real account identity, a bucket
+identity or a principal identity to the tracked examples.
+
 ## Bootstrap Boundary
 
 The backend must exist before another root can initialize it. v0.12.1 therefore
-creates a dedicated bootstrap boundary before changing any existing root. The
-bootstrap state begins as a separately protected local artifact; migration of
-that state into its own isolated key requires a later reviewed step and an
-explicit backend-decommission Runbook.
+declares a dedicated bootstrap boundary without changing any existing backend
+declaration. The bootstrap state begins as a separately protected local
+artifact; migration of that state into its own isolated key requires the
+reviewed v0.12.2 procedure and an explicit backend-decommission Runbook.
+
+The bootstrap root creates five exact state/lock IAM managed-policy
+definitions, one for each root, but attaches none. The state object receives Get/Put only; its
+`.tflock` companion receives Get/Put/Delete. Application delivery and the
+existing GitHub runtime roles receive no state authority from v0.12.1.
 
 ## Migration and Recovery Invariants
 

@@ -88,6 +88,8 @@ crash.*.log
 *.tfvars
 *.tfvars.json
 !*.tfvars.example
+*.tfbackend
+!*.tfbackend.example
 
 !delivery/profiles/aws-test-observability-qualification.tfvars
 

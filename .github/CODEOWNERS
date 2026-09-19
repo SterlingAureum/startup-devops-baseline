@@ -1,6 +1,12 @@
 # GitHub enforces these reviewers only when branch protection or a ruleset
 # requires code-owner review. Keep the repository setting aligned with this file.
 
+/infra/terraform/aws/state-bootstrap/ @SterlingAureum
+/infra/terraform/aws/backend-config/ @SterlingAureum
+/delivery/contracts/v0.12.1-remote-state-foundation.json @SterlingAureum
+/docs/V0.12.1_REMOTE_STATE_FOUNDATION.md @SterlingAureum
+/scripts/validate-v0.12.1-remote-state-foundation.sh @SterlingAureum
+
 /scripts/check-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.5-aws-test-recovery-root-design.sh @SterlingAureum

@@ -1,0 +1,13 @@
+aws_region   = "us-east-1"
+project_name = "startup-devops-baseline"
+
+# Must be globally unique. Keep the real value in an ignored private tfvars
+# file and do not include account identity, operator identity, or credentials.
+state_bucket_name = "replace-with-globally-unique-state-bucket-name"
+
+state_kms_alias = "alias/startup-devops-baseline-terraform-state"
+
+additional_tags = {
+  Owner      = "replace-me"
+  Repository = "startup-devops-baseline"
+}

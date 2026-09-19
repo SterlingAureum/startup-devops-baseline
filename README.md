@@ -3,12 +3,16 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.1-remote-state-foundation` implements the independent state-bootstrap
+root, encrypted/versioned S3 declaration, S3-native lock keys, root-scoped IAM
+policies and partial backend examples. This checkpoint is offline: it creates
+no AWS resource, attaches no policy and migrates no state. See
+[v0.12.1 remote-state foundation](docs/V0.12.1_REMOTE_STATE_FOUNDATION.md).
+
+Predecessor development checkpoint:
 `v0.12.0-production-readiness-foundation` starts the Production Readiness
-Capstone with an offline-only contract. It fixes the remote-state topology,
-state-migration invariants, release/lifecycle separation, upgrade and recovery
-boundaries, current authoritative surface, and AI-assisted contribution
-policy. It creates no backend, changes no Terraform backend, migrates no
-state, and accesses neither AWS nor Kubernetes. See
+Capstone and freezes its state, lifecycle, upgrade, recovery, documentation
+and AI-governance boundaries. See
 [v0.12.0 production-readiness foundation](docs/V0.12.0_PRODUCTION_READINESS_FOUNDATION.md).
 
 Predecessor development checkpoint:
@@ -964,14 +968,15 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.0-production-readiness-foundation
+v0.12.1-remote-state-foundation
 ```
-v0.12.0 defines the offline Production Readiness contract and preserves every
-v0.11 evidence boundary. The current implementation still uses independent
-local Terraform state for runtime-identities, dev, test, and prod. Remote
-backend creation begins only in v0.12.1; state migration and recovery begin
-only in v0.12.2. See
-`delivery/contracts/v0.12.0-production-readiness-foundation.json` for the
+v0.12.1 declares the independent state-bootstrap root, versioned and
+SSE-KMS-encrypted S3 storage, TLS/public-access controls, five exact state and
+lock keys, root-scoped unattached IAM policies, and partial backend examples.
+The implementation is offline and does not claim that AWS resources exist.
+All five Terraform roots remain local until the separately reviewed v0.12.2
+non-empty migration and recovery checkpoint. See
+`delivery/contracts/v0.12.1-remote-state-foundation.json` for the
 machine-readable boundary.
 
 The completed v0.8 AWS EKS environment exposes demo-api through

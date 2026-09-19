@@ -1,0 +1,7 @@
+bucket              = "replace-with-globally-unique-state-bucket-name"
+key                 = "runtime-identities/terraform.tfstate"
+region              = "us-east-1"
+encrypt             = true
+kms_key_id          = "replace-with-kms-key-arn"
+use_lockfile        = true
+allowed_account_ids = ["replace-with-aws-account-id"]

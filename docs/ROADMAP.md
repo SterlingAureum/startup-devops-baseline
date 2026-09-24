@@ -758,8 +758,13 @@ Incremental scope:
   is introduced
 - v0.12.1 - encrypted S3 backend bootstrap, versioning, SSE-KMS, public-access
   block, TLS-only access, S3-native lockfiles, root-scoped IAM and partial
-  backend configuration - planned; implementation and any approved backend
-  creation remain separate checkpoints
+  backend configuration - delivered offline; the declaration, five exact-key
+  unattached IAM policies and negative validation are implemented, while
+  approved AWS creation remains a separate checkpoint and no state is migrated
+- v0.12.1.0.1 - CI compatibility repair - delivered offline; restore the four
+  still-local root version declarations to their reviewed historical bytes,
+  retain Terraform 1.11 for bootstrap/remote backend, canonicalize the new HCL
+  formatting and require regeneration of the un-applied v0.12.1.1 package
 - v0.12.2 - guarded non-empty local-to-remote state migration, immutable local
   backup, lineage/address verification, lock contention, zero-change plan,
   object-version recovery and operator Runbook - planned; migration must not

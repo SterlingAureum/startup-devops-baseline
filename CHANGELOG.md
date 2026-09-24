@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.12.1.0.1
+
+- Restore the four still-local existing Terraform roots to their exact v0.11 version-constraint bytes, resolving `teardown-source-drift` without changing historical contracts, hashes or live authority.
+- Retain Terraform `>= 1.11.0` for the state-bootstrap and future S3-native backend path while keeping CI pinned to Terraform 1.16.3; defer existing-root constraint changes to a dedicated pre-migration checkpoint.
+- Canonicalize the state-bootstrap KMS principal list formatting without changing the generated IAM policy.
+- Add an offline repair contract, 12 fail-closed mutations, focused validation and explicit confirmation that missing private tfvars caused neither CI failure.
+- Supersede the un-applied pre-repair v0.12.1.1 package; regenerate it only after both repaired workflows pass on protected main.
+
+## v0.12.1
+
+- Add an independent local-state bootstrap root declaring a versioned, bucket-owner-enforced, public-blocked S3 state bucket and a rotation-enabled SSE-KMS key protected from ordinary destroy.
+- Define five exact state keys, S3-native `.tflock` objects, and one unattached least-privilege IAM managed policy per root; only lock objects receive delete permission.
+- Add credential-free partial backend examples and ignore materialized `*.tfbackend` files while retaining all five roots on local state until v0.12.2.
+- Require Terraform 1.11.0 for the state-bootstrap and future S3-native backend path and pin Terraform validation CI to 1.16.3 without changing the AWS provider or platform versions; v0.12.1.0.1 restores unchanged local-root declarations until their pre-migration checkpoint.
+- Add a machine-readable contract, operator boundary document, successor-aware v0.12.0 validation, static positive/negative tests, and explicit separation between offline implementation, approved backend creation, and state migration.
+
 ## v0.12.0
 
 - Start the Production Readiness Capstone with a design-only, offline-validated contract and no live execution authority.

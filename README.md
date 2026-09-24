@@ -3,12 +3,22 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.1.0.1-ci-compatibility-repair` restores the four still-local Terraform
+roots to their reviewed v0.11 version-constraint bytes and canonicalizes the
+new state-bootstrap HCL formatting. The bootstrap and future remote-backend
+path retain the Terraform 1.11 floor; no backend resource or state is changed.
+See [v0.12.1.0.1 CI compatibility repair](docs/V0.12.1.0.1_CI_COMPATIBILITY_REPAIR.md).
+
+Predecessor development checkpoint:
+`v0.12.1-remote-state-foundation` implements the independent state-bootstrap
+root, encrypted/versioned S3 declaration, S3-native lock keys, root-scoped IAM
+policies and partial backend examples. See
+[v0.12.1 remote-state foundation](docs/V0.12.1_REMOTE_STATE_FOUNDATION.md).
+
+Predecessor development checkpoint:
 `v0.12.0-production-readiness-foundation` starts the Production Readiness
-Capstone with an offline-only contract. It fixes the remote-state topology,
-state-migration invariants, release/lifecycle separation, upgrade and recovery
-boundaries, current authoritative surface, and AI-assisted contribution
-policy. It creates no backend, changes no Terraform backend, migrates no
-state, and accesses neither AWS nor Kubernetes. See
+Capstone and freezes its state, lifecycle, upgrade, recovery, documentation
+and AI-governance boundaries. See
 [v0.12.0 production-readiness foundation](docs/V0.12.0_PRODUCTION_READINESS_FOUNDATION.md).
 
 Predecessor development checkpoint:
@@ -964,15 +974,16 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.0-production-readiness-foundation
+v0.12.1.0.1-ci-compatibility-repair
 ```
-v0.12.0 defines the offline Production Readiness contract and preserves every
-v0.11 evidence boundary. The current implementation still uses independent
-local Terraform state for runtime-identities, dev, test, and prod. Remote
-backend creation begins only in v0.12.1; state migration and recovery begin
-only in v0.12.2. See
-`delivery/contracts/v0.12.0-production-readiness-foundation.json` for the
-machine-readable boundary.
+v0.12.1.0.1 repairs the v0.12.1 quality-gate and Terraform-format failures
+without rewriting the closed v0.11 teardown contract. The state-bootstrap root
+and future S3-native backend require Terraform 1.11; the four unchanged local
+roots retain their reviewed 1.8 declaration until a dedicated pre-migration
+successor checkpoint. CI remains pinned to Terraform 1.16.3. The prior
+v0.12.1.1 package is superseded and must be regenerated after this repair is
+green on protected main. See
+`delivery/contracts/v0.12.1.0.1-ci-compatibility-repair.json`.
 
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

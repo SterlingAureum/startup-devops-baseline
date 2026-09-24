@@ -1,0 +1,147 @@
+{
+  "schemaVersion": "v0.12.1-remote-state-foundation-v1",
+  "version": "v0.12.1",
+  "status": "delivered-offline-implementation-awaiting-reviewed-live-creation",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "predecessor": {
+    "version": "v0.12.0",
+    "contract": "delivery/contracts/v0.12.0-production-readiness-foundation.json"
+  },
+  "documents": {
+    "implementation": "docs/V0.12.1_REMOTE_STATE_FOUNDATION.md",
+    "stateManagement": "docs/TERRAFORM_STATE_MANAGEMENT.md",
+    "authoritativeSurface": "docs/CURRENT_AUTHORITATIVE_SURFACE.md"
+  },
+  "terraform": {
+    "bootstrapMinimumVersion": "1.11.0",
+    "existingRootMinimumVersionDuringV0121": "1.8.0",
+    "remoteBackendMinimumVersion": "1.11.0",
+    "ciVersion": "1.16.3",
+    "awsProviderConstraint": "~> 6.0",
+    "nativeS3LockingStable": true,
+    "dynamoDbLocking": false
+  },
+  "bootstrapRoot": {
+    "path": "infra/terraform/aws/state-bootstrap",
+    "backendDuringV0121": "local",
+    "protectedLocalStateRequired": true,
+    "remoteKeyAfterV0122Migration": "bootstrap/terraform.tfstate",
+    "dependsOnEks": false,
+    "normalEnvironmentTeardownMayDestroy": false
+  },
+  "backendFoundation": {
+    "type": "s3",
+    "declaredNotCreatedByThisOfflineCheckpoint": true,
+    "resources": {
+      "singleStateBucket": true,
+      "bucketOwnerEnforced": true,
+      "versioning": true,
+      "sseKms": true,
+      "kmsKeyRotation": true,
+      "kmsDeletionWindowDays": 30,
+      "bucketKeyEnabled": true,
+      "publicAccessBlocked": true,
+      "tlsOnlyBucketPolicy": true,
+      "bucketForceDestroy": false,
+      "bucketPreventDestroy": true,
+      "kmsPreventDestroy": true
+    },
+    "stateKeys": {
+      "bootstrap": "bootstrap/terraform.tfstate",
+      "runtime-identities": "runtime-identities/terraform.tfstate",
+      "dev": "environments/dev/terraform.tfstate",
+      "test": "environments/test/terraform.tfstate",
+      "prod": "environments/prod/terraform.tfstate"
+    },
+    "backendConfigExamples": {
+      "bootstrap": "infra/terraform/aws/backend-config/bootstrap.s3.tfbackend.example",
+      "runtime-identities": "infra/terraform/aws/backend-config/runtime-identities.s3.tfbackend.example",
+      "dev": "infra/terraform/aws/backend-config/dev.s3.tfbackend.example",
+      "test": "infra/terraform/aws/backend-config/test.s3.tfbackend.example",
+      "prod": "infra/terraform/aws/backend-config/prod.s3.tfbackend.example"
+    },
+    "partialConfiguration": true,
+    "credentialsInTrackedConfiguration": false,
+    "accountIdentityInTrackedConfiguration": false,
+    "sharedCliWorkspaces": false
+  },
+  "iamBoundary": {
+    "oneManagedPolicyPerRoot": true,
+    "policyAttachmentsCreated": false,
+    "applicationDeliveryReceivesStateAccess": false,
+    "githubRuntimeRolesReceiveStateAccess": false,
+    "listRestrictedToExactStateAndLockKeys": true,
+    "stateObjectActions": [
+      "s3:GetObject",
+      "s3:PutObject"
+    ],
+    "lockObjectActions": [
+      "s3:GetObject",
+      "s3:PutObject",
+      "s3:DeleteObject"
+    ],
+    "stateObjectDeleteAllowed": false,
+    "kmsActions": [
+      "kms:Decrypt",
+      "kms:DescribeKey",
+      "kms:Encrypt",
+      "kms:GenerateDataKey"
+    ],
+    "kmsUseRestrictedThroughS3": true
+  },
+  "existingRoots": {
+    "runtime-identities": {
+      "path": "infra/terraform/aws/runtime-identities",
+      "backendDuringV0121": "local"
+    },
+    "dev": {
+      "path": "infra/terraform/aws/environments/dev",
+      "backendDuringV0121": "local"
+    },
+    "test": {
+      "path": "infra/terraform/aws/environments/test",
+      "backendDuringV0121": "local"
+    },
+    "prod": {
+      "path": "infra/terraform/aws/environments/prod",
+      "backendDuringV0121": "local"
+    }
+  },
+  "migrationBoundary": {
+    "ownerIncrement": "v0.12.2",
+    "existingBackendBlocksChanged": false,
+    "terraformInitMigrateStateExecuted": false,
+    "statePulled": false,
+    "statePushed": false,
+    "stateRestored": false,
+    "emptyStateAcceptedAsEvidence": false,
+    "combinedWithRefactor": false,
+    "combinedWithPlatformUpgrade": false
+  },
+  "liveCreationBoundary": {
+    "requiresProtectedMain": true,
+    "requiresPrivateTfvars": true,
+    "requiresSeparateReviewedPlan": true,
+    "requiresExactApprovalWindow": true,
+    "requiresPrivateEvidence": true,
+    "approvedByThisContract": false,
+    "executedByThisContract": false
+  },
+  "executionBoundary": {
+    "offlineStaticValidationOnly": true,
+    "awsAccessed": false,
+    "terraformInitExecuted": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "backendResourcesCreated": false,
+    "iamPoliciesAttached": false,
+    "stateMigrated": false,
+    "kubernetesAccessed": false,
+    "githubMutated": false,
+    "liveExecutionAuthorized": false
+  },
+  "successor": {
+    "version": "v0.12.2",
+    "scope": "guarded-nonempty-state-migration-lock-contention-and-object-version-recovery"
+  }
+}

@@ -23,6 +23,7 @@ from typing import Any, Callable
 
 root = Path(sys.argv[1])
 contract_path = root / "delivery/contracts/v0.12.0-production-readiness-foundation.json"
+successor_path = root / "delivery/contracts/v0.12.1-remote-state-foundation.json"
 
 
 class ContractError(ValueError):
@@ -119,7 +120,17 @@ def validate(value: dict[str, Any], *, check_files: bool = True) -> None:
     if check_files:
         for path in expected_roots:
             require((root / path / "backend.tf").is_file(), f"missing current backend root: {path}")
-        require(not (root / state["plannedBootstrapRoot"]).exists(), "v0.12.0 unexpectedly implements state bootstrap")
+        if successor_path.is_file():
+            successor = load(successor_path)
+            require(successor.get("version") == "v0.12.1", "invalid v0.12.1 successor")
+            require(
+                successor.get("predecessor", {}).get("contract")
+                == "delivery/contracts/v0.12.0-production-readiness-foundation.json",
+                "v0.12.1 predecessor drift",
+            )
+            require((root / state["plannedBootstrapRoot"]).is_dir(), "v0.12.1 bootstrap root missing")
+        else:
+            require(not (root / state["plannedBootstrapRoot"]).exists(), "v0.12.0 unexpectedly implements state bootstrap")
 
     release = value.get("releaseAndLifecycle")
     require(isinstance(release, dict), "missing release/lifecycle boundary")
@@ -228,4 +239,4 @@ print("v0.12.0 production-readiness contract, 12 negative mutations, authority, 
 PYTHON
 
 bash "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair.sh"
-echo "v0.12.0 passed; remote backend creation and state migration remain v0.12.1/v0.12.2 work."
+echo "v0.12.0 passed; its successor may implement the foundation, while state migration remains v0.12.2 work."

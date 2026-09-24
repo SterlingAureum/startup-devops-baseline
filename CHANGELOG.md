@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.1.1
+
+- Add separate `verify` and `execute` phases for one protected-main, private-input, time-bounded state-bootstrap Terraform plan; verification executes no external command.
+- Stage exact reviewed Terraform source bytes in a private directory, initialize with `-backend=false`, verify the AWS account through STS, and retain saved-plan, JSON/text view, logs, source manifest and hashes as owner-only evidence.
+- Accept exactly 13 declared managed creates plus known data-source reads/no-ops; reject updates, deletes, replacements, imports, policy attachments, EKS resources, prior managed state and input/source drift.
+- Keep account, bucket, ARN, AWS output and plan contents out of public output; add synthetic injected-command tests and 16 contract mutation checks.
+- Preserve separate authority: this checkpoint performs no live execution while applying the increment, never runs Terraform apply or state migration, and hands reviewed saved-plan apply to v0.12.1.2 before v0.12.2 migration.
+- Regenerate the checkpoint on top of the green v0.12.1.0.1 compatibility repair and require both the repair and remote-state foundation contracts as explicit predecessors.
+
 ## v0.12.1.0.1
 
 - Restore the four still-local existing Terraform roots to their exact v0.11 version-constraint bytes, resolving `teardown-source-drift` without changing historical contracts, hashes or live authority.

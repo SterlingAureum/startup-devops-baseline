@@ -764,7 +764,16 @@ Incremental scope:
 - v0.12.1.0.1 - CI compatibility repair - delivered offline; restore the four
   still-local root version declarations to their reviewed historical bytes,
   retain Terraform 1.11 for bootstrap/remote backend, canonicalize the new HCL
-  formatting and require regeneration of the un-applied v0.12.1.1 package
+  formatting and supersede the un-applied pre-repair v0.12.1.1 package
+- v0.12.1.1 - guarded state-bootstrap plan-only entry point - delivered; exact
+  protected main, private `0600` inputs, STS account match, bounded approval,
+  backend-disabled initialization, 13-resource create-only gate and private
+  saved-plan evidence are regenerated on the green compatibility-repair
+  predecessor, while running the live plan still needs separate approval and
+  apply remains v0.12.1.2 work
+- v0.12.1.2 - exact reviewed saved-plan apply and live S3/KMS/IAM-policy
+  validation - planned; it must retain protected local bootstrap state and may
+  neither attach state policies nor migrate a Terraform root
 - v0.12.2 - guarded non-empty local-to-remote state migration, immutable local
   backup, lineage/address verification, lock contention, zero-change plan,
   object-version recovery and operator Runbook - planned; migration must not
@@ -773,6 +782,11 @@ Incremental scope:
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and
   `waiting_environment` without automatic EKS creation - planned
+- v0.12.3.1 - CI change-impact routing and stable required-check aggregation -
+  planned; keep a lightweight mandatory classifier/result gate, run domain
+  jobs only for affected application, Terraform, GitOps, workflow or current-
+  documentation surfaces, and fail safe to the full suite for shared,
+  workflow-definition or unknown changes
 - v0.12.4 - EKS and platform dependency upgrade lifecycle, compatibility
   matrix, deprecated-API preflight, one-minor sequencing, data-plane/add-on/
   controller convergence, rollback/rebuild decision and dev/test evidence - planned

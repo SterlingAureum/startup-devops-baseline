@@ -29,6 +29,7 @@ RC. The index does not delete or rewrite historical evidence.
 - `docs/V0.12.0_PRODUCTION_READINESS_FOUNDATION.md`
 - `docs/V0.12.1_REMOTE_STATE_FOUNDATION.md`
 - `docs/V0.12.1.0.1_CI_COMPATIBILITY_REPAIR.md`
+- `docs/V0.12.1.1_GUARDED_STATE_BOOTSTRAP_PLAN.md`
 
 These documents are current but not yet the final v1.0 commercial review. A
 known stale statement in a current document is updated when its owning
@@ -57,6 +58,7 @@ command. The v1.0 RC review will publish the smaller stable command surface.
 - `delivery/contracts/v0.12.0-production-readiness-foundation.json`
 - `delivery/contracts/v0.12.1-remote-state-foundation.json`
 - `delivery/contracts/v0.12.1.0.1-ci-compatibility-repair.json`
+- `delivery/contracts/v0.12.1.1-guarded-state-bootstrap-plan.json`
 
 The v0.11 manifest remains authoritative only for v0.11 evidence claims. The
 v0.12 contract cannot upgrade historical evidence or synthetic receipts into

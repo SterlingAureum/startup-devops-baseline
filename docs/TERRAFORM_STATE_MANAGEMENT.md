@@ -1,6 +1,6 @@
 # Terraform State Management
 
-## Current Design and v0.12.1.0.1 Boundary
+## Current Design and v0.12.1.1 Boundary
 
 The runtime-identities, dev, test, and prod Terraform roots each use their own
 local state. v0.12.1 adds the independent `state-bootstrap` root, which also
@@ -16,6 +16,14 @@ roots to their reviewed `>= 1.8.0` declarations. CI still validates all five
 roots with Terraform 1.16.3. Before any v0.12.2 remote initialization, the four
 existing declarations require a separate successor-compatible floor update;
 that update and state migration must not share one execution window.
+
+v0.12.1.1 adds a guarded plan-only entry point for the first state-bootstrap
+create. It requires an absent local bootstrap state, exact protected main,
+private owner-only request/tfvars files, a matching STS account and a bounded
+approval. Its accepted plan contains exactly the 13 declared managed creates
+and remains private. It never applies the plan or initializes an S3 backend.
+The exact saved-plan apply and live foundation validation remain v0.12.1.2;
+all state migration and recovery invariants remain v0.12.2.
 
 The saved plan created by `apply-eks-api-access-cidr.sh` is different from
 state: it is a disposable, owner-readable execution artifact under `/tmp`, is

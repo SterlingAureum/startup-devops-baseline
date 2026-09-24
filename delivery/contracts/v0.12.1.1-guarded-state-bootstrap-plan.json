@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "v0.12.1.1-guarded-state-bootstrap-plan-v1",
+  "version": "v0.12.1.1",
+  "status": "delivered-guarded-plan-entrypoint-awaiting-separate-live-plan-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "predecessor": {
+    "version": "v0.12.1.0.1",
+    "contract": "delivery/contracts/v0.12.1.0.1-ci-compatibility-repair.json",
+    "foundationVersion": "v0.12.1",
+    "foundationContract": "delivery/contracts/v0.12.1-remote-state-foundation.json"
+  },
+  "documents": {
+    "operatorBoundary": "docs/V0.12.1.1_GUARDED_STATE_BOOTSTRAP_PLAN.md",
+    "stateManagement": "docs/TERRAFORM_STATE_MANAGEMENT.md",
+    "authoritativeSurface": "docs/CURRENT_AUTHORITATIVE_SURFACE.md"
+  },
+  "entrypoint": {
+    "path": "scripts/execute-v0.12.1.1-state-bootstrap-plan.py",
+    "phases": [
+      "verify",
+      "execute"
+    ],
+    "targetRoot": "infra/terraform/aws/state-bootstrap",
+    "operation": "plan-state-backend-foundation",
+    "confirmationVariable": "CONFIRM_STATE_BOOTSTRAP_PLAN",
+    "confirmationValue": "plan-state-backend-foundation"
+  },
+  "identityGates": {
+    "cleanExactProtectedMain": true,
+    "headEqualsOriginMain": true,
+    "expectedAccountPrivate": true,
+    "stsAccountMustMatch": true,
+    "awsRegion": "us-east-1",
+    "privateRequestMode": "0600",
+    "privateTfvarsMode": "0600",
+    "privateParentMode": "0700",
+    "maximumApprovalWindowSeconds": 3600,
+    "minimumRemainingWindowSeconds": 900
+  },
+  "terraformPlanGate": {
+    "minimumTerraformVersion": "1.11.0",
+    "maximumTerraformMajorExclusive": 2,
+    "initBackend": false,
+    "stagedExactSourceCopy": true,
+    "savedPlanRequired": true,
+    "privatePlanMode": "0600",
+    "expectedManagedCreateCount": 13,
+    "allowedManagedActions": [
+      [
+        "create"
+      ]
+    ],
+    "allowedDataActions": [
+      [
+        "read"
+      ],
+      [
+        "no-op"
+      ]
+    ],
+    "updateAllowed": false,
+    "deleteAllowed": false,
+    "replacementAllowed": false,
+    "importAllowed": false,
+    "policyAttachmentAllowed": false,
+    "eksResourceAllowed": false,
+    "rawPlanPublic": false,
+    "rawAwsOutputPublic": false
+  },
+  "expectedManagedResources": [
+    "aws_iam_policy.root_state_access[\"bootstrap\"]",
+    "aws_iam_policy.root_state_access[\"dev\"]",
+    "aws_iam_policy.root_state_access[\"prod\"]",
+    "aws_iam_policy.root_state_access[\"runtime-identities\"]",
+    "aws_iam_policy.root_state_access[\"test\"]",
+    "aws_kms_alias.state",
+    "aws_kms_key.state",
+    "aws_s3_bucket.state",
+    "aws_s3_bucket_ownership_controls.state",
+    "aws_s3_bucket_policy.state",
+    "aws_s3_bucket_public_access_block.state",
+    "aws_s3_bucket_server_side_encryption_configuration.state",
+    "aws_s3_bucket_versioning.state"
+  ],
+  "evidence": {
+    "privateBundleOnly": true,
+    "binaryPlanSha256": true,
+    "planJsonSha256": true,
+    "planTextSha256": true,
+    "tfvarsSha256": true,
+    "sourceManifestSha256": true,
+    "redactedStdout": true,
+    "accountIdEmitted": false,
+    "bucketNameEmitted": false,
+    "principalArnEmitted": false
+  },
+  "executionBoundary": {
+    "verificationRunsTerraform": false,
+    "verificationAccessesAws": false,
+    "executionMayReadAwsIdentity": true,
+    "executionMayRunTerraformInitBackendFalse": true,
+    "executionMayRunTerraformPlan": true,
+    "executionMayRunTerraformShow": true,
+    "terraformApplyAllowed": false,
+    "backendResourceMutationAllowed": false,
+    "iamPolicyAttachmentAllowed": false,
+    "stateMigrationAllowed": false,
+    "statePullAllowed": false,
+    "statePushAllowed": false,
+    "stateRestoreAllowed": false,
+    "kubernetesAccessAllowed": false,
+    "githubMutationAllowed": false,
+    "automaticRetryAllowed": false
+  },
+  "successor": {
+    "version": "v0.12.1.2",
+    "scope": "separately-approved-reviewed-saved-plan-apply-and-live-backend-validation"
+  }
+}

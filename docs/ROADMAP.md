@@ -772,8 +772,14 @@ Incremental scope:
   predecessor, while running the live plan still needs separate approval and
   apply remains v0.12.1.2 work
 - v0.12.1.2 - exact reviewed saved-plan apply and live S3/KMS/IAM-policy
-  validation - planned; it must retain protected local bootstrap state and may
-  neither attach state policies nor migrate a Terraform root
+  validation - delivered offline; the apply executor must merge before a fresh
+  plan is produced, consumes that exact plan only under separate approval,
+  retains protected local bootstrap state, validates the empty backend
+  foundation, and may neither attach state policies nor migrate a root
+- v0.12.1.2.1 - redacted state-bootstrap apply and live-validation execution
+  evidence - planned; bind exact protected main, private artifact hashes, local
+  state digest, live control booleans and terminal review status without
+  publishing account, bucket, ARN, state, plan or raw AWS output
 - v0.12.2 - guarded non-empty local-to-remote state migration, immutable local
   backup, lineage/address verification, lock contention, zero-change plan,
   object-version recovery and operator Runbook - planned; migration must not

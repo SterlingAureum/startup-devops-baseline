@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.1.2-reviewed-state-bootstrap-apply` adds a separately approved consumer
+for one fresh, human-reviewed v0.12.1.1 saved plan. It revalidates every private
+artifact and the live S3/KMS/IAM foundation while retaining local bootstrap
+state; applying this repository increment performs no live operation. See
+[v0.12.1.2 reviewed state-bootstrap apply](docs/V0.12.1.2_REVIEWED_STATE_BOOTSTRAP_APPLY.md).
+
+Predecessor development checkpoint:
 `v0.12.1.1-guarded-state-bootstrap-plan` adds a protected-main, private-input,
 bounded-approval entry point that can verify or produce one exact create-only
 saved plan for the v0.12.1 state foundation. It cannot apply the plan, create
@@ -981,22 +988,18 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.1.1-guarded-state-bootstrap-plan
+v0.12.1.2-reviewed-state-bootstrap-apply
 ```
-v0.12.1.1 adds separate command-free verification and approved plan execution
-for the independent state-bootstrap root. It binds a private request to exact
-protected main, AWS account, tfvars digest, source bytes and a one-hour maximum
-window, then accepts only the 13 declared managed creates. The saved plan and
-all raw output remain private. Terraform apply, IAM attachment, backend
-creation and state migration remain forbidden. v0.12.1.2 owns a separately
-approved reviewed-plan apply; v0.12.2 still owns non-empty migration and
-recovery. See
-`delivery/contracts/v0.12.1.1-guarded-state-bootstrap-plan.json` for the
-machine-readable boundary.
-It is regenerated on the green v0.12.1.0.1 compatibility-repair predecessor;
-the four existing local roots remain at their reviewed Terraform 1.8 floor
-while the bootstrap plan requires Terraform 1.11 and CI remains pinned to
-Terraform 1.16.3.
+v0.12.1.2 must merge before the fresh state-bootstrap plan is produced. It
+binds one separately approved apply to the exact protected main, private plan
+request, saved binary plan, JSON/text views, gate, source manifest, Terraform
+version and expected AWS account. It can apply only that plan once, then
+validates the 13-address local state plus the encrypted, versioned, public-
+blocked and empty S3 foundation, rotating customer KMS key, and five unattached
+IAM policies. It cannot initialize a backend, replan, destroy, migrate state or
+attach a policy. v0.12.1.2.1 owns redacted execution evidence and v0.12.2 owns
+all state migration and recovery. See
+`delivery/contracts/v0.12.1.2-reviewed-state-bootstrap-apply.json`.
 
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

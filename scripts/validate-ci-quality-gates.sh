@@ -911,3 +911,6 @@ echo "==> Validating v0.12.1.0.1 CI compatibility repair"
 
 echo "==> Validating v0.12.1.1 guarded state-bootstrap plan"
 "${ROOT_DIR}/scripts/validate-v0.12.1.1-guarded-state-bootstrap-plan.sh"
+
+echo "==> Validating v0.12.1.2 reviewed state-bootstrap apply"
+"${ROOT_DIR}/scripts/validate-v0.12.1.2-reviewed-state-bootstrap-apply.sh"

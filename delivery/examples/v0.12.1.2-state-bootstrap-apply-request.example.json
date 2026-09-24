@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "v0.12.1.2-state-bootstrap-apply-request-v1",
+  "operation": "apply-reviewed-state-backend-foundation",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "privatePlanRequestPath": "/private/owner-readable/state-bootstrap-plan-request.json",
+  "privatePlanRequestSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "privatePlanBundleDirectory": "/private/owner-readable/state-bootstrap-plan-REPLACE_WITH_ATTEMPT_ID",
+  "planRecordSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "binaryPlanSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "terraformPlanJsonSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "terraformPlanTextSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "planGateSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "sourceManifestSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "terraformVersionJsonSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "privateApplyOutputDirectory": "/private/owner-readable/state-bootstrap-apply-REPLACE_WITH_ATTEMPT_ID",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR_AND_PLAN_EXPIRY"
+  },
+  "executionBoundary": {
+    "terraformApplyExactSavedPlan": true,
+    "terraformPlan": false,
+    "terraformInit": false,
+    "stateMigration": false,
+    "iamPolicyAttachment": false
+  }
+}

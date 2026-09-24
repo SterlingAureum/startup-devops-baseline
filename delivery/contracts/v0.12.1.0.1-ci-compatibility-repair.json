@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "v0.12.1.0.1-ci-compatibility-repair-v1",
+  "version": "v0.12.1.0.1",
+  "status": "delivered-offline-ci-compatibility-repair",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "predecessor": {
+    "version": "v0.12.1",
+    "contract": "delivery/contracts/v0.12.1-remote-state-foundation.json"
+  },
+  "observedFailures": {
+    "qualityGate": {
+      "validator": "scripts/validate-v0.11.9.3.6.7.6-guarded-aws-test-teardown.sh",
+      "error": "teardown-source-drift",
+      "cause": "premature-existing-local-root-terraform-floor-change"
+    },
+    "terraformValidate": {
+      "validator": "scripts/validate-terraform.sh",
+      "error": "terraform-fmt-check-exit-3",
+      "path": "infra/terraform/aws/state-bootstrap/main.tf",
+      "cause": "noncanonical-hcl-formatting"
+    },
+    "missingTfvarsWasCause": false
+  },
+  "terraformFloorBoundary": {
+    "ciVersion": "1.16.3",
+    "stateBootstrapMinimumVersion": "1.11.0",
+    "remoteBackendMinimumVersion": "1.11.0",
+    "existingLocalRootMinimumVersionDuringV0121": "1.8.0",
+    "existingRootsStillUseLocalBackend": true,
+    "existingRootFloorRaiseOwner": "v0.12.2-pre-migration-successor-compatible-checkpoint",
+    "floorRaiseCombinedWithStateMigration": false
+  },
+  "restoredHistoricalPins": {
+    "infra/terraform/aws/environments/dev/versions.tf": "bab349b5a20400dfaf72355220fb22749b7f09795d14d455d7a200be82480dd3",
+    "infra/terraform/aws/environments/test/versions.tf": "bab349b5a20400dfaf72355220fb22749b7f09795d14d455d7a200be82480dd3",
+    "infra/terraform/aws/environments/prod/versions.tf": "bab349b5a20400dfaf72355220fb22749b7f09795d14d455d7a200be82480dd3",
+    "infra/terraform/aws/runtime-identities/versions.tf": "fd09df4f62d7accaa5515916f8abee4fbd1dc4b30d5dcb8d1578fe2ada26061a"
+  },
+  "formatRepair": {
+    "path": "infra/terraform/aws/state-bootstrap/main.tf",
+    "sha256": "28569c01d928ed664522fb0ca279db0736e88ee392305b2898c2a2f249430be7",
+    "semanticChange": false,
+    "terraformFmtCheckRequiredInCi": true
+  },
+  "historicalBoundary": {
+    "v011ContractRewritten": false,
+    "v011ExecutorReauthorized": false,
+    "v011ReviewedHashesWeakened": false,
+    "closedExecutionEvidenceRewritten": false
+  },
+  "executionBoundary": {
+    "offlineRepairOnly": true,
+    "awsAccessed": false,
+    "terraformInitExecuted": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "stateMigrated": false,
+    "backendResourcesCreated": false,
+    "liveExecutionAuthorized": false
+  },
+  "documents": {
+    "repair": "docs/V0.12.1.0.1_CI_COMPATIBILITY_REPAIR.md",
+    "remoteStateFoundation": "docs/V0.12.1_REMOTE_STATE_FOUNDATION.md",
+    "stateManagement": "docs/TERRAFORM_STATE_MANAGEMENT.md"
+  },
+  "successor": {
+    "version": "v0.12.1.1",
+    "scope": "regenerated-guarded-state-bootstrap-plan-after-green-ci"
+  }
+}

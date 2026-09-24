@@ -3,10 +3,16 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.1.0.1-ci-compatibility-repair` restores the four still-local Terraform
+roots to their reviewed v0.11 version-constraint bytes and canonicalizes the
+new state-bootstrap HCL formatting. The bootstrap and future remote-backend
+path retain the Terraform 1.11 floor; no backend resource or state is changed.
+See [v0.12.1.0.1 CI compatibility repair](docs/V0.12.1.0.1_CI_COMPATIBILITY_REPAIR.md).
+
+Predecessor development checkpoint:
 `v0.12.1-remote-state-foundation` implements the independent state-bootstrap
 root, encrypted/versioned S3 declaration, S3-native lock keys, root-scoped IAM
-policies and partial backend examples. This checkpoint is offline: it creates
-no AWS resource, attaches no policy and migrates no state. See
+policies and partial backend examples. See
 [v0.12.1 remote-state foundation](docs/V0.12.1_REMOTE_STATE_FOUNDATION.md).
 
 Predecessor development checkpoint:
@@ -968,16 +974,16 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.1-remote-state-foundation
+v0.12.1.0.1-ci-compatibility-repair
 ```
-v0.12.1 declares the independent state-bootstrap root, versioned and
-SSE-KMS-encrypted S3 storage, TLS/public-access controls, five exact state and
-lock keys, root-scoped unattached IAM policies, and partial backend examples.
-The implementation is offline and does not claim that AWS resources exist.
-All five Terraform roots remain local until the separately reviewed v0.12.2
-non-empty migration and recovery checkpoint. See
-`delivery/contracts/v0.12.1-remote-state-foundation.json` for the
-machine-readable boundary.
+v0.12.1.0.1 repairs the v0.12.1 quality-gate and Terraform-format failures
+without rewriting the closed v0.11 teardown contract. The state-bootstrap root
+and future S3-native backend require Terraform 1.11; the four unchanged local
+roots retain their reviewed 1.8 declaration until a dedicated pre-migration
+successor checkpoint. CI remains pinned to Terraform 1.16.3. The prior
+v0.12.1.1 package is superseded and must be regenerated after this repair is
+green on protected main. See
+`delivery/contracts/v0.12.1.0.1-ci-compatibility-repair.json`.
 
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

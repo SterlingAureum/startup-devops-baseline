@@ -92,7 +92,12 @@ def validate(value: dict[str, Any], *, check_files: bool = True) -> None:
 
     terraform = value.get("terraform")
     require(isinstance(terraform, dict), "missing Terraform toolchain")
-    require(terraform.get("minimumVersion") == "1.11.0", "unsafe Terraform floor")
+    require(terraform.get("bootstrapMinimumVersion") == "1.11.0", "unsafe bootstrap Terraform floor")
+    require(
+        terraform.get("existingRootMinimumVersionDuringV0121") == "1.8.0",
+        "existing local-root Terraform floor drift",
+    )
+    require(terraform.get("remoteBackendMinimumVersion") == "1.11.0", "unsafe remote-backend Terraform floor")
     require(terraform.get("ciVersion") == "1.16.3", "Terraform CI pin drift")
     require(terraform.get("awsProviderConstraint") == "~> 6.0", "AWS provider scope drift")
     require(terraform.get("nativeS3LockingStable") is True, "native locking disabled")
@@ -213,7 +218,9 @@ contract = load(contract_path)
 validate(contract)
 
 mutations: list[tuple[str, Callable[[dict[str, Any]], None]]] = [
-    ("old Terraform floor", lambda item: item["terraform"].__setitem__("minimumVersion", "1.8.0")),
+    ("old bootstrap Terraform floor", lambda item: item["terraform"].__setitem__("bootstrapMinimumVersion", "1.8.0")),
+    ("old remote backend floor", lambda item: item["terraform"].__setitem__("remoteBackendMinimumVersion", "1.8.0")),
+    ("premature local-root floor", lambda item: item["terraform"].__setitem__("existingRootMinimumVersionDuringV0121", "1.11.0")),
     ("DynamoDB locking", lambda item: item["terraform"].__setitem__("dynamoDbLocking", True)),
     ("versioning disabled", lambda item: item["backendFoundation"]["resources"].__setitem__("versioning", False)),
     ("KMS disabled", lambda item: item["backendFoundation"]["resources"].__setitem__("sseKms", False)),
@@ -295,10 +302,18 @@ for name, key in expected_keys.items():
 materialized = [path for path in backend_config_root.glob("*.tfbackend") if path.is_file()]
 require(not materialized, "materialized private tfbackend file is tracked")
 
-version_roots = [bootstrap_root, *(root / path for path in expected_roots.values())]
-for tf_root in version_roots:
+bootstrap_versions = (bootstrap_root / "versions.tf").read_text()
+require(
+    'required_version = ">= 1.11.0, < 2.0.0"' in bootstrap_versions,
+    "state-bootstrap Terraform floor drift",
+)
+require('version = "~> 6.0"' in bootstrap_versions, "state-bootstrap AWS provider drift")
+for tf_root in (root / path for path in expected_roots.values()):
     versions = (tf_root / "versions.tf").read_text()
-    require('required_version = ">= 1.11.0, < 2.0.0"' in versions, f"Terraform floor drift: {tf_root.relative_to(root)}")
+    require(
+        'required_version = ">= 1.8.0, < 2.0.0"' in versions,
+        f"existing local-root Terraform floor drift: {tf_root.relative_to(root)}",
+    )
     require('version = "~> 6.0"' in versions, f"AWS provider drift: {tf_root.relative_to(root)}")
 
 workflow = (root / ".github/workflows/terraform-validate.yaml").read_text()
@@ -340,7 +355,7 @@ for path in checked_paths:
     require("AKIA" not in text, f"access key material in {path.relative_to(root)}")
     require(re.search(r"(?<![A-Za-z0-9])[0-9]{12}(?![A-Za-z0-9])", text) is None, f"account identity in {path.relative_to(root)}")
 
-print("v0.12.1 remote-state declaration, five-key IAM boundary and 16 negative mutations passed offline.")
+print("v0.12.1 remote-state declaration, scoped Terraform floors, five-key IAM boundary and 18 negative mutations passed offline.")
 PYTHON
 
 bash "${ROOT_DIR}/scripts/validate-v0.12.0-production-readiness-foundation.sh"

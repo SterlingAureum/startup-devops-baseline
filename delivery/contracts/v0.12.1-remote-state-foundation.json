@@ -13,7 +13,9 @@
     "authoritativeSurface": "docs/CURRENT_AUTHORITATIVE_SURFACE.md"
   },
   "terraform": {
-    "minimumVersion": "1.11.0",
+    "bootstrapMinimumVersion": "1.11.0",
+    "existingRootMinimumVersionDuringV0121": "1.8.0",
+    "remoteBackendMinimumVersion": "1.11.0",
     "ciVersion": "1.16.3",
     "awsProviderConstraint": "~> 6.0",
     "nativeS3LockingStable": true,

@@ -36,6 +36,9 @@ Offline validation performs no Terraform initialization or AWS call:
 bash scripts/validate-v0.12.1-remote-state-foundation.sh
 ```
 
-The separately approved live plan/apply procedure is documented in
-`docs/V0.12.1_REMOTE_STATE_FOUNDATION.md`. Do not initialize or migrate the
-other four roots during v0.12.1.
+The guarded plan-only entry point is documented in
+`docs/V0.12.1.1_GUARDED_STATE_BOOTSTRAP_PLAN.md`. It stages an exact private
+source copy and initializes only that copy with `-backend=false`. Plan
+execution still needs separate approval, and a successful plan cannot be
+applied until the v0.12.1.2 reviewed saved-plan checkpoint. Do not initialize
+or migrate the other four roots during v0.12.1.

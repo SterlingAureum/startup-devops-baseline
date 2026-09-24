@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.1.1-guarded-state-bootstrap-plan` adds a protected-main, private-input,
+bounded-approval entry point that can verify or produce one exact create-only
+saved plan for the v0.12.1 state foundation. It cannot apply the plan, create
+backend resources or migrate state. See
+[v0.12.1.1 guarded state-bootstrap plan](docs/V0.12.1.1_GUARDED_STATE_BOOTSTRAP_PLAN.md).
+
+Predecessor development checkpoint:
 `v0.12.1.0.1-ci-compatibility-repair` restores the four still-local Terraform
 roots to their reviewed v0.11 version-constraint bytes and canonicalizes the
 new state-bootstrap HCL formatting. The bootstrap and future remote-backend
@@ -974,16 +981,22 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.1.0.1-ci-compatibility-repair
+v0.12.1.1-guarded-state-bootstrap-plan
 ```
-v0.12.1.0.1 repairs the v0.12.1 quality-gate and Terraform-format failures
-without rewriting the closed v0.11 teardown contract. The state-bootstrap root
-and future S3-native backend require Terraform 1.11; the four unchanged local
-roots retain their reviewed 1.8 declaration until a dedicated pre-migration
-successor checkpoint. CI remains pinned to Terraform 1.16.3. The prior
-v0.12.1.1 package is superseded and must be regenerated after this repair is
-green on protected main. See
-`delivery/contracts/v0.12.1.0.1-ci-compatibility-repair.json`.
+v0.12.1.1 adds separate command-free verification and approved plan execution
+for the independent state-bootstrap root. It binds a private request to exact
+protected main, AWS account, tfvars digest, source bytes and a one-hour maximum
+window, then accepts only the 13 declared managed creates. The saved plan and
+all raw output remain private. Terraform apply, IAM attachment, backend
+creation and state migration remain forbidden. v0.12.1.2 owns a separately
+approved reviewed-plan apply; v0.12.2 still owns non-empty migration and
+recovery. See
+`delivery/contracts/v0.12.1.1-guarded-state-bootstrap-plan.json` for the
+machine-readable boundary.
+It is regenerated on the green v0.12.1.0.1 compatibility-repair predecessor;
+the four existing local roots remain at their reviewed Terraform 1.8 floor
+while the bootstrap plan requires Terraform 1.11 and CI remains pinned to
+Terraform 1.16.3.
 
 The completed v0.8 AWS EKS environment exposes demo-api through
 `https://demo.dev.aureumstack.com` with the production-security baseline in

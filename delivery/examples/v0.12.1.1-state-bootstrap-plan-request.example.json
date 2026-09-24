@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "v0.12.1.1-state-bootstrap-plan-request-v1",
+  "operation": "plan-state-backend-foundation",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "awsRegion": "us-east-1",
+  "terraformRoot": "infra/terraform/aws/state-bootstrap",
+  "privateTfvarsPath": "/private/owner-readable/state-bootstrap.tfvars",
+  "privateTfvarsSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "expectedInputs": {
+    "projectName": "startup-devops-baseline",
+    "stateBucketName": "REPLACE_WITH_GLOBALLY_UNIQUE_PRIVATE_BUCKET_NAME",
+    "stateKmsAlias": "alias/startup-devops-baseline-terraform-state",
+    "additionalTags": {
+      "Owner": "REPLACE_WITH_REVIEWED_OWNER",
+      "Repository": "startup-devops-baseline"
+    }
+  },
+  "privateOutputDirectory": "/private/owner-readable/state-bootstrap-plan-REPLACE_WITH_ATTEMPT_ID",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "terraformInitBackend": false,
+    "terraformPlan": true,
+    "terraformShow": true,
+    "terraformApply": false,
+    "stateMigration": false
+  }
+}

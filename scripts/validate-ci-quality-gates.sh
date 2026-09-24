@@ -908,3 +908,6 @@ echo "==> Validating v0.12.1 remote-state foundation"
 
 echo "==> Validating v0.12.1.0.1 CI compatibility repair"
 "${ROOT_DIR}/scripts/validate-v0.12.1.0.1-ci-compatibility-repair.sh"
+
+echo "==> Validating v0.12.1.1 guarded state-bootstrap plan"
+"${ROOT_DIR}/scripts/validate-v0.12.1.1-guarded-state-bootstrap-plan.sh"

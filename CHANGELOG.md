@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.1.2
+
+- Add separate local verification and approved execution for one fresh, reviewed v0.12.1.1 state-bootstrap saved plan produced only after this apply executor reaches protected main.
+- Bind protected main, expected AWS account, original private request, plan record, binary plan, JSON/text views, machine gate, source manifest and Terraform version by SHA-256 and active expiry.
+- Re-run the exact 13-create plan gate and resource-absence checks immediately before one saved-plan apply; prohibit init, replan, destroy, state transfer, backend migration, IAM attachment and automatic retry.
+- Preserve private local bootstrap state and validate S3 versioning/ownership/public blocking/TLS/SSE-KMS/emptiness, KMS enablement/rotation, exact state addresses and five unattached IAM policies.
+- Keep this package offline and hand redacted live execution evidence to v0.12.1.2.1 before v0.12.2 migration.
+
 ## v0.12.1.1
 
 - Add separate `verify` and `execute` phases for one protected-main, private-input, time-bounded state-bootstrap Terraform plan; verification executes no external command.

@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "v0.12.1.2.1-state-bootstrap-execution-evidence-v1",
+  "version": "v0.12.1.2.1",
+  "status": "completed-state-bootstrap-created-recovered-and-live-validated",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "completedAtUtc": "2026-09-25T08:21:14Z",
+  "predecessors": [
+    {
+      "version": "v0.12.1.2",
+      "contract": "delivery/contracts/v0.12.1.2-reviewed-state-bootstrap-apply.json"
+    },
+    {
+      "version": "v0.12.1.2.0.1",
+      "contract": "delivery/contracts/v0.12.1.2.0.1-state-bootstrap-post-apply-recovery.json"
+    }
+  ],
+  "controlPlane": {
+    "incidentMainCommit": "bcd653ca3705df177864c5a3f12201f9a987191f",
+    "recoveryMainCommit": "10c018fa935f777d6bd04c43fa856e5e650f53b5",
+    "trustedRef": "refs/heads/main"
+  },
+  "artifactBindings": {
+    "privatePlanRequestSha256": "9f041fa9b98c15b7309df8b87af79bb50d3871eb0501b9977bbdb772c41a326b",
+    "privateApplyRequestSha256": "91406ddbac3f75415c383da3b369070ec93c0c8874a11023ee1a7b50e307de07",
+    "privateRecoveryRequestSha256": "cd31e26adc15932215985f27db865717a674382d22b34d8f0d2327e977a6c7a7",
+    "planRecordSha256": "b15e169dec207dfdbdd966d4940e3b5ee3d14e0de9b2fbdfd5cb179a634504a9",
+    "binaryPlanSha256": "7b27f5ee122fd4289c5532f995604a084b1a5e7b10a065ae82f29477441c254f",
+    "terraformPlanJsonSha256": "adab49c6018cf33bc709b32edaf48e943df93eddfbf8574b9a898ef5101510ca",
+    "terraformPlanTextSha256": "e13599ef67f06828634ea578c03e74a4cee01eb04b92bc0779da2dbc0a3cb08c",
+    "planGateSha256": "379cf7996ca60ba37492b61ed150f761cf09e35b55c54d5bf2a41ca790f38db6",
+    "privateTfvarsSha256": "1eccb524be6254e2939130b7c2300fbdc3ef76fe3672339ea05f4cdd3e1ddf18",
+    "appliedStateSha256": "83bca892fef5f5eefffba3de247c4694daccf7201309262ff8dd73b61bc1b995",
+    "liveValidationSha256": "6f929213b687c44652c5f265f577767dcc422ab363f4cb598ed1c68395c1c091",
+    "recoveryResultSha256": "c65f405bdb67779af4a9b074e5760ba62b2aff78f075ff10985108ba70ba4365"
+  },
+  "reviewedPlan": {
+    "managedCreateCount": 13,
+    "dataChangeCount": 6,
+    "updateCount": 0,
+    "deleteCount": 0,
+    "replaceCount": 0,
+    "importCount": 0,
+    "unexpectedResourceCount": 0,
+    "iamAttachmentCount": 0,
+    "humanReviewPassed": true
+  },
+  "incident": {
+    "stage": "post-apply-live-validation",
+    "errorCode": "InvalidArnException",
+    "rootCause": "kms-alias-used-where-key-id-or-arn-was-required",
+    "terraformApplySucceededBeforeFailure": true,
+    "automaticRetryPerformed": false,
+    "repairVersion": "v0.12.1.2.0.1",
+    "recoveryWasReadOnly": true
+  },
+  "validatedOutcome": {
+    "backendFoundationCreated": true,
+    "priorTerraformApplySucceeded": true,
+    "managedStateAddressCount": 13,
+    "stateCopiesMatchedBeforeRecovery": true,
+    "s3VersioningEnabled": true,
+    "s3BucketOwnerEnforced": true,
+    "s3PublicAccessBlocked": true,
+    "s3SseKmsEnabled": true,
+    "s3BucketKeyEnabled": true,
+    "s3TlsOnlyPolicy": true,
+    "s3PolicyNotPublic": true,
+    "stateBucketObjectVersionCount": 0,
+    "kmsRotationEnabled": true,
+    "kmsKeyEnabled": true,
+    "kmsKeyManager": "CUSTOMER",
+    "rootStatePolicyCount": 5,
+    "attachedRootStatePolicyCount": 0,
+    "bootstrapStateRemainsLocalAndPrivate": true
+  },
+  "negativeExecutionEvidence": {
+    "terraformApplyReexecuted": false,
+    "terraformInitExecutedDuringRecovery": false,
+    "terraformPlanExecutedDuringRecovery": false,
+    "stateMigrationExecuted": false,
+    "destroyExecuted": false,
+    "iamPolicyAttachmentExecuted": false,
+    "automaticRetryPerformed": false,
+    "privateResourceIdentityEmitted": false
+  },
+  "privacyBoundary": {
+    "publishesAwsAccountId": false,
+    "publishesBucketIdentity": false,
+    "publishesResourceArn": false,
+    "publishesStateBytes": false,
+    "publishesPlanBytes": false,
+    "publishesRawAwsOutput": false,
+    "publishesPrivateFilesystemPath": false,
+    "allowedPublicMaterial": [
+      "protected-main-commit",
+      "sha256-digest",
+      "bounded-count",
+      "boolean-control-result",
+      "terminal-status",
+      "completion-time"
+    ]
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "reexecutesApply": false,
+    "migratesState": false,
+    "destroysResources": false
+  },
+  "successor": {
+    "version": "v0.12.2",
+    "scope": "separately-approved-guarded-non-empty-local-to-remote-state-migration",
+    "migrationAuthorizedByThisEvidence": false
+  }
+}

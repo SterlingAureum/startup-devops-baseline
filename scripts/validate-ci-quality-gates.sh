@@ -917,3 +917,6 @@ echo "==> Validating v0.12.1.2 reviewed state-bootstrap apply"
 
 echo "==> Validating v0.12.1.2.0.1 state-bootstrap post-apply recovery"
 "${ROOT_DIR}/scripts/validate-v0.12.1.2.0.1-state-bootstrap-recovery.sh"
+
+echo "==> Validating v0.12.1.2.1 state-bootstrap execution evidence"
+"${ROOT_DIR}/scripts/validate-v0.12.1.2.1-state-bootstrap-execution-evidence.sh"

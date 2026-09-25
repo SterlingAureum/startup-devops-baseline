@@ -1,12 +1,12 @@
 # Terraform State Management
 
-## Current Design and v0.12.1.2.0.1 Boundary
+## Current Design and v0.12.1.2.1 Boundary
 
 The runtime-identities, dev, test, and prod Terraform roots each use their own
 local state. v0.12.1 adds the independent `state-bootstrap` root, which also
-uses local state until the backend exists. The S3/KMS foundation is now
-declared and statically validated, but this offline checkpoint does not claim
-that it has been created in AWS.
+uses local state until migration. The S3/KMS foundation has now been created
+and live-validated, but the bootstrap state remains a private local artifact
+and the four existing runtime/environment roots remain on local state.
 
 State files are excluded from Git. Keep them until the environment has been destroyed.
 
@@ -30,8 +30,8 @@ the fresh v0.12.1.1 plan is produced so both plan and apply bind the same exact
 protected-main revision. The executor can consume only the reviewed binary
 plan, preserves the resulting bootstrap state under the private plan source,
 and validates the live but empty S3/KMS/IAM-policy foundation. It cannot attach
-the policies, configure a remote backend or migrate any state. Redacted live
-execution evidence remains v0.12.1.2.1 work.
+the policies, configure a remote backend or migrate any state. Its completed
+redacted live execution evidence is recorded by v0.12.1.2.1.
 
 v0.12.1.2.0.1 repairs a post-apply validation defect without repeating the
 successful bootstrap apply. `kms:GetKeyRotationStatus` now receives the exact
@@ -41,6 +41,14 @@ preserved state, the exact 13 managed addresses and unchanged plan/source
 artifacts. Recovery performs only read-only S3/KMS/IAM validation; it cannot
 run Terraform, mutate state, attach a policy, destroy resources or migrate a
 backend.
+
+v0.12.1.2.1 records the resulting redacted execution evidence. It binds the
+exact reviewed-plan and private-request digests, matching applied-state digest,
+incident/recovery protected-main revisions and terminal recovery/live-
+validation digests. The foundation has now been created and live-validated:
+the state bucket is still empty, the customer-managed KMS key is enabled with
+rotation, and all five root-scoped policies remain unattached. This checkpoint
+adds no executor and does not authorize backend initialization or migration.
 
 The saved plan created by `apply-eks-api-access-cidr.sh` is different from
 state: it is a disposable, owner-readable execution artifact under `/tmp`, is

@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.12.1.2.1
+
+- Record the terminal redacted evidence for the reviewed state-bootstrap creation and read-only post-apply recovery completed at `2026-09-25T08:21:14Z`.
+- Bind the exact incident/recovery protected-main commits, private request and reviewed-plan digests, applied local-state digest, live-validation digest and recovery-result digest.
+- Record 13 managed creates, six data-source changes and zero updates, deletes, replacements, imports, unexpected resources or IAM attachments after human review.
+- Record the live-validated empty S3 foundation, enabled rotating customer KMS key, five unattached root-scoped IAM policies and preserved private local bootstrap state.
+- Keep AWS account, bucket, ARN, state, plan, private paths and raw AWS output out of the repository; add no live execution or migration authority.
+- Validate tracked plan/apply executables through Git index mode `100755`, avoiding false `0755` versus `0775` drift on WSL and other umask-sensitive hosts.
+- Hand the next separately approved non-empty local-to-remote state migration to v0.12.2.
+
 ## v0.12.1.2.0.1
 
 - Repair the state-bootstrap live KMS validation to pass the reviewed key ARN, not an unsupported alias, to rotation-status and key-description reads.

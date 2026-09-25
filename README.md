@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.1.2.1-state-bootstrap-execution-evidence` records the redacted terminal
+evidence for the reviewed state-bootstrap creation and read-only recovery. The
+foundation is live-validated, the bootstrap state remains private and local,
+and no state migration has occurred. See
+[v0.12.1.2.1 state-bootstrap execution evidence](docs/V0.12.1.2.1_STATE_BOOTSTRAP_EXECUTION_EVIDENCE.md).
+
+Predecessor development checkpoint:
 `v0.12.1.2.0.1-state-bootstrap-post-apply-recovery` repairs the KMS
 rotation-status identifier and adds a separately approved read-only recovery
 for an apply that completed before post-apply validation stopped. It cannot
@@ -995,15 +1002,20 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.1.2.0.1-state-bootstrap-post-apply-recovery
+v0.12.1.2.1-state-bootstrap-execution-evidence
 ```
-v0.12.1.2.0.1 repairs future KMS rotation-status reads to use the exact key ARN
-and provides a fail-closed, read-only continuation after a successful apply
-whose live validation stopped on the unsupported alias. It verifies the exact
-prior plan, apply request, local state and failure evidence before reading the
-live S3/KMS/IAM controls. It never repeats Terraform apply or mutates state.
-v0.12.1.2.1 owns redacted execution evidence and v0.12.2 owns migration. See
-`delivery/contracts/v0.12.1.2.0.1-state-bootstrap-post-apply-recovery.json`.
+v0.12.1.2.1 binds the exact incident and recovery protected-main commits,
+private artifact digests, applied local-state digest, reviewed-plan counts and
+terminal live S3/KMS/IAM control results. The state-bootstrap foundation was
+created and recovered without a second apply; its state remains private and
+local, the state bucket remains empty, and no policy attachment or migration
+occurred. This evidence adds no live authority. See
+`delivery/contracts/v0.12.1.2.1-state-bootstrap-execution-evidence.json`.
+
+The predecessor v0.12.1.2.0.1 repairs future KMS rotation-status reads to use
+the exact key ARN and provides a fail-closed, read-only continuation after a
+successful apply whose live validation stopped on the unsupported alias. It
+never repeats Terraform apply or mutates state. v0.12.2 alone owns migration.
 
 The predecessor v0.12.1.2 must merge before the fresh state-bootstrap plan is
 produced. It binds one separately approved apply to the exact protected main, private plan
@@ -1012,8 +1024,8 @@ version and expected AWS account. It can apply only that plan once, then
 validates the 13-address local state plus the encrypted, versioned, public-
 blocked and empty S3 foundation, rotating customer KMS key, and five unattached
 IAM policies. It cannot initialize a backend, replan, destroy, migrate state or
-attach a policy. v0.12.1.2.1 owns redacted execution evidence and v0.12.2 owns
-all state migration and recovery. See
+attach a policy. v0.12.1.2.1 records the completed redacted execution evidence,
+and v0.12.2 owns all state migration and recovery. See
 `delivery/contracts/v0.12.1.2-reviewed-state-bootstrap-apply.json`.
 
 The completed v0.8 AWS EKS environment exposes demo-api through

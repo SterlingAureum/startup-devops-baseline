@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
-for command in bash python3; do
+for command in bash git python3; do
   command -v "${command}" >/dev/null 2>&1 || {
     echo "Required command not found: ${command}" >&2
     exit 1
@@ -18,7 +18,7 @@ from __future__ import annotations
 from copy import deepcopy
 import json
 from pathlib import Path
-import stat
+import subprocess
 import sys
 from typing import Any, Callable
 
@@ -42,6 +42,17 @@ def load(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text())
     require(isinstance(value, dict), f"Expected JSON object: {path.relative_to(root)}")
     return value
+
+
+def git_index_mode(relative: str) -> str:
+    result = subprocess.run(
+        ["git", "-C", str(root), "ls-files", "-s", "--", relative],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    require(result.returncode == 0 and result.stdout.strip(), f"missing index entry: {relative}")
+    return result.stdout.split()[0]
 
 
 def validate(value: dict[str, Any], *, check_files: bool = True) -> None:
@@ -147,7 +158,7 @@ def validate(value: dict[str, Any], *, check_files: bool = True) -> None:
         ):
             path = root / relative
             require(path.is_file() and not path.is_symlink(), f"missing executable: {relative}")
-            require(stat.S_IMODE(path.stat().st_mode) == 0o755, f"executable mode drift: {relative}")
+            require(git_index_mode(relative) == "100755", f"Git executable mode drift: {relative}")
         for relative in (
             "delivery/examples/v0.12.1.2-state-bootstrap-apply-request.example.json",
             "docs/V0.12.1.2_REVIEWED_STATE_BOOTSTRAP_APPLY.md",

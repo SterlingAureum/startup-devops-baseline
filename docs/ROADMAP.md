@@ -807,8 +807,11 @@ Incremental scope:
   the third immutable backup, revalidates the empty live foundation and writes
   the private command plan without initializing a backend or migrating state
 - v0.12.2.2 - separately approved bootstrap local-to-S3 state migration -
-  planned; migrate exactly one reviewed state with no apply, refactor, upgrade,
-  automatic retry or local-backup deletion
+  delivered awaiting separate execution approval; command-free verification
+  binds every human-reviewed v0.12.2.1 artifact, while the one-shot executor
+  may run only the exact reviewed init migration and post-migration state/S3
+  identity reads with no plan, apply, refactor, upgrade, retry, rollback or
+  local-backup deletion
 - v0.12.2.3 - lock-contention, zero-change, controlled object-version recovery
   and redacted terminal evidence - planned; recovery uses its own approval and
   execution window

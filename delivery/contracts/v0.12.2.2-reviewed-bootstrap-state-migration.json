@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "v0.12.2.2-reviewed-bootstrap-state-migration-v1",
+  "version": "v0.12.2.2",
+  "status": "delivered-awaiting-separate-state-migration-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "33734683159315171e8de9d524691b94806dbc15",
+  "predecessor": {
+    "version": "v0.12.2.1",
+    "contract": "delivery/contracts/v0.12.2.1-private-bootstrap-migration-preflight.json",
+    "requiredStatus": "delivered-awaiting-separate-private-preflight-approval",
+    "humanReviewCompleted": true
+  },
+  "reviewedPreflightBindings": {
+    "privatePreflightRequestSha256": "1ac1f2be621fd5c5b9da05b82f1bc43eac3b10b0bf4d351179f6905096a77204",
+    "preflightResultSha256": "4e5a060e9a8ce7660ce56033b0b29153ae6a37c52a4a5501d8c46921e185add9",
+    "stateInventorySha256": "fc25de78ab8d6e86b65a26a4bbbc992e1c631c46623e3dd81925c0d69d1829ff",
+    "migrationSourceManifestSha256": "8c9ef5076aeea7ef2cb617faf080f24db24839caf3a134129800ac9b4c3ce9e3",
+    "migrationCommandPlanSha256": "16e56fcbf1d59c20bb273291719bf7f24d4d0144da1ba52bce9c17b9c8ddbaab",
+    "immutableBackupSha256": "83bca892fef5f5eefffba3de247c4694daccf7201309262ff8dd73b61bc1b995",
+    "resourceIdentitySha256": "c59b979c1449d5212ceb72319995fbd01da9715c3dbf99ef9ca08d0bc8e282c4",
+    "preflightLiveValidationSha256": "6f929213b687c44652c5f265f577767dcc422ab363f4cb598ed1c68395c1c091",
+    "managedAddressCount": 13,
+    "remoteStateObjectVersionCount": 0,
+    "reviewedCommandExecuted": false
+  },
+  "verifyBoundary": {
+    "awsCommands": false,
+    "terraformCommands": false,
+    "writesPrivateEvidence": false,
+    "requiresProtectedMain": true,
+    "requiresFreshWindow": true,
+    "revalidatesAllPreflightArtifacts": true,
+    "revalidatesExactCommand": true,
+    "migrationAuthorizedByVerify": false
+  },
+  "executeBoundary": {
+    "exactReviewedTerraformInitMigrateState": true,
+    "forceCopyReviewedNonInteractiveMigration": true,
+    "preMigrationAwsReadOnlyValidation": true,
+    "postMigrationStatePull": true,
+    "postMigrationStateList": true,
+    "postMigrationS3ObjectVersionRead": true,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "localBackupDeletion": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  },
+  "postMigrationGate": {
+    "lineageMustMatch": true,
+    "serialMustNotRegress": true,
+    "managedAndDataAddressesMustMatch": true,
+    "resourceIdentityMustMatch": true,
+    "outputsMustMatch": true,
+    "sseKmsMustMatch": true,
+    "bucketKeyMustBeEnabled": true,
+    "exactStateObjectVersionRequired": true,
+    "stateObjectDeleteMarkerForbidden": true,
+    "immutableBackupMustRemainUntouched": true
+  },
+  "failureBoundary": {
+    "preserveMigrationOutput": true,
+    "preserveAllPriorPrivateEvidence": true,
+    "preserveRemoteObjectVersions": true,
+    "retryWithoutNewReview": false,
+    "rollbackWithoutNewReview": false,
+    "uncertaintyMeansSuccess": false
+  },
+  "privacyBoundary": {
+    "publishesAwsAccount": false,
+    "publishesBucket": false,
+    "publishesKmsArn": false,
+    "publishesStateBytes": false,
+    "publishesPrivatePaths": false,
+    "publishesStateObjectVersionId": false,
+    "allowsPublicDigestsCountsAndBooleans": true
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "migratesState": false
+  },
+  "successor": {
+    "version": "v0.12.2.3",
+    "scope": "separate-lock-contention-zero-change-and-object-version-recovery-proof",
+    "authorizedByThisPackage": false
+  }
+}

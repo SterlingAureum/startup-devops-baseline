@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.2.2
+
+- Bind a new migration request to the exact human-reviewed v0.12.2.1 request, result, state inventory, source manifest, command plan, immutable backup, resource identity and live-validation digests.
+- Add command-free verification that rechecks protected main, the complete private chain, three preserved state copies, current source, backend configuration and the exact migration command.
+- Add a separately approved, one-shot executor for only the reviewed `terraform init -migrate-state -force-copy` command after an immediate read-only empty-backend validation.
+- Privately pull and list the migrated state and require matching lineage, non-regressing serial, exact addresses, resource identity, outputs, SSE-KMS identity and one current S3 state-object version.
+- Prohibit Terraform plan/apply, state push, destroy, IAM attachment, backup deletion, automatic retry and automatic rollback; ambiguous failure preserves all evidence.
+- Keep package application offline and defer lock contention, zero-change saved-plan review and object-version recovery to v0.12.2.3.
+
 ## v0.12.2.1
 
 - Declare the state-bootstrap root's empty partial S3 backend without tracking backend identity, credentials or private configuration.

@@ -929,3 +929,6 @@ echo "==> Validating v0.12.2.0.1 private bootstrap-state location repair"
 
 echo "==> Validating v0.12.2.1 private bootstrap migration preflight"
 "${ROOT_DIR}/scripts/validate-v0.12.2.1-private-bootstrap-migration-preflight.sh"
+
+echo "==> Validating v0.12.2.2 reviewed bootstrap state migration"
+"${ROOT_DIR}/scripts/validate-v0.12.2.2-reviewed-bootstrap-state-migration.sh"

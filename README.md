@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.1-private-bootstrap-migration-preflight` declares the empty partial
+S3 backend and adds command-free verification plus a separately approved,
+read-only preflight that preserves a third private state copy and produces an
+exact private migration command plan. It does not initialize the backend or
+migrate state. See
+[v0.12.2.1 private bootstrap migration preflight](docs/V0.12.2.1_PRIVATE_BOOTSTRAP_MIGRATION_PREFLIGHT.md).
+
+Predecessor development checkpoint:
 `v0.12.2.0.1-private-bootstrap-state-location-repair` corrects the migration
 source from an unused repository-root path to the byte-identical private plan-
 bundle working state and preserved apply copy verified by recovery. It performs
@@ -1016,9 +1024,16 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.2.0.1-private-bootstrap-state-location-repair
+v0.12.2.1-private-bootstrap-migration-preflight
 ```
-v0.12.2.0.1 binds the future migration source to the original private plan-
+v0.12.2.1 binds command-free verification and the separately approved
+read-only preflight to the exact private plan/apply/recovery evidence chain.
+It declares only an empty partial S3 backend, creates a third private immutable
+state copy and produces a reviewed command plan; it does not execute Terraform
+init, plan, apply, state push, destroy or migration. See
+`delivery/contracts/v0.12.2.1-private-bootstrap-migration-preflight.json`.
+
+The predecessor v0.12.2.0.1 binds the future migration source to the original private plan-
 bundle `source/terraform.tfstate` and its byte-identical preserved apply copy.
 It explicitly rejects the unused repository-root state path as a fallback and
 requires v0.12.2.1 to revalidate the complete private plan/apply/recovery

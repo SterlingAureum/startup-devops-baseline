@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.2.1
+
+- Declare the state-bootstrap root's empty partial S3 backend without tracking backend identity, credentials or private configuration.
+- Add command-free verification bound to protected main, the exact private plan/apply/recovery request chain, both byte-identical state copies and terminal recovery evidence.
+- Add a separately approved preflight that creates a third private immutable backup and staged migration source, then repeats read-only S3/KMS/IAM validation.
+- Record private lineage, serial, exact addresses, resource-identity digest, current source manifest, live validation and the exact reviewed migration command plan.
+- Keep migration authority separate: no Terraform init, plan, apply, state push, destroy, IAM attachment, automatic retry or state migration occurs in this increment.
+- Require v0.12.2.2 to use a new approval request and time window for the exact reviewed migration.
+
 ## v0.12.2.0.1
 
 - Correct the bootstrap migration source from an unused repository-root path to the original private plan-bundle `source/terraform.tfstate`.

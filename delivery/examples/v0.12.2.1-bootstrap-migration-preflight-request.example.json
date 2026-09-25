@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "v0.12.2.1-bootstrap-migration-preflight-request-v1",
+  "operation": "prepare-reviewed-bootstrap-state-migration",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "privatePlanRequestPath": "/private/owner-readable/state-bootstrap-plan-request.json",
+  "privatePlanRequestSha256": "9f041fa9b98c15b7309df8b87af79bb50d3871eb0501b9977bbdb772c41a326b",
+  "privateApplyRequestPath": "/private/owner-readable/state-bootstrap-apply-request.json",
+  "privateApplyRequestSha256": "91406ddbac3f75415c383da3b369070ec93c0c8874a11023ee1a7b50e307de07",
+  "privateRecoveryRequestPath": "/private/owner-readable/state-bootstrap-recovery-request.json",
+  "privateRecoveryRequestSha256": "cd31e26adc15932215985f27db865717a674382d22b34d8f0d2327e977a6c7a7",
+  "privatePlanBundleDirectory": "/private/owner-readable/state-bootstrap-plan-ATTEMPT_ID",
+  "privateApplyOutputDirectory": "/private/owner-readable/state-bootstrap-apply-ATTEMPT_ID",
+  "privateRecoveryOutputDirectory": "/private/owner-readable/state-bootstrap-recovery-ATTEMPT_ID",
+  "appliedStateSha256": "83bca892fef5f5eefffba3de247c4694daccf7201309262ff8dd73b61bc1b995",
+  "recoveryResultSha256": "c65f405bdb67779af4a9b074e5760ba62b2aff78f075ff10985108ba70ba4365",
+  "liveValidationSha256": "6f929213b687c44652c5f265f577767dcc422ab363f4cb598ed1c68395c1c091",
+  "privateBackendConfigPath": "/private/owner-readable/bootstrap.s3.tfbackend",
+  "privateBackendConfigSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "privatePreflightOutputDirectory": "/private/owner-readable/bootstrap-migration-preflight-ATTEMPT_ID",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "stateMigration": false,
+    "statePush": false,
+    "destroy": false,
+    "awsReadOnlyValidation": true,
+    "localPrivateBackup": true
+  }
+}

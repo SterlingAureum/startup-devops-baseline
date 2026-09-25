@@ -796,6 +796,10 @@ Incremental scope:
   require a pre-init immutable private backup and split preflight, migration,
   lock/zero-change proof and object-version recovery into separately reviewed
   boundaries without changing any backend declaration or live authority
+- v0.12.2.0.1 - private bootstrap-state location repair - delivered offline;
+  supersede the unused repository-root state assumption with the original
+  private plan-bundle working state plus its byte-identical preserved apply
+  copy, while retaining both artifacts and all live authority unchanged
 - v0.12.2.1 - private bootstrap migration preflight and reviewed command plan -
   planned; command-free verification must bind exact protected main, account,
   source, backend config, local state, remote-key absence and live foundation

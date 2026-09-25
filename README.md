@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.0.1-private-bootstrap-state-location-repair` corrects the migration
+source from an unused repository-root path to the byte-identical private plan-
+bundle working state and preserved apply copy verified by recovery. It performs
+no live operation. See
+[v0.12.2.0.1 private bootstrap-state location repair](docs/V0.12.2.0.1_PRIVATE_BOOTSTRAP_STATE_LOCATION_REPAIR.md).
+
+Predecessor development checkpoint:
 `v0.12.2.0-state-migration-design-foundation` defines the offline safety
 contract and phased authority boundary for the first non-empty bootstrap-state
 migration. It changes no backend, runs no Terraform or AWS command and grants
@@ -1009,9 +1016,16 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.2.0-state-migration-design-foundation
+v0.12.2.0.1-private-bootstrap-state-location-repair
 ```
-v0.12.2.0 freezes the first migration to the non-empty 13-address bootstrap
+v0.12.2.0.1 binds the future migration source to the original private plan-
+bundle `source/terraform.tfstate` and its byte-identical preserved apply copy.
+It explicitly rejects the unused repository-root state path as a fallback and
+requires v0.12.2.1 to revalidate the complete private plan/apply/recovery
+chain before any command. No state is copied, moved or migrated. See
+`delivery/contracts/v0.12.2.0.1-private-bootstrap-state-location-repair.json`.
+
+The predecessor v0.12.2.0 freezes the first migration to the non-empty 13-address bootstrap
 state and its isolated `bootstrap/terraform.tfstate` key. It requires a private
 immutable local backup, lineage/serial/address/resource-identity comparison,
 zero-change plan, S3-native lock contention and separately approved object-

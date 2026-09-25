@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.2.0.1
+
+- Correct the bootstrap migration source from an unused repository-root path to the original private plan-bundle `source/terraform.tfstate`.
+- Bind its independent `state-bootstrap.tfstate.applied` copy and the already published applied-state SHA-256 as mandatory byte-identical evidence.
+- Require v0.12.2.1 to consume the original private plan, apply and recovery request chain before any operational command.
+- Reject repository-root or otherwise unreviewed state as a fallback; preserve both existing private evidence copies unchanged.
+- Keep the repair offline: no AWS, Terraform, backend change, state copy, migration, repeat apply or live approval window.
+
 ## v0.12.2.0
 
 - Define the offline safety and phased authority contract for the first non-empty local-to-S3 Terraform state migration.

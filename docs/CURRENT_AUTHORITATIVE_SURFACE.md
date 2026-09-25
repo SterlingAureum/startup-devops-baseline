@@ -34,6 +34,7 @@ RC. The index does not delete or rewrite historical evidence.
 - `docs/V0.12.1.2.0.1_STATE_BOOTSTRAP_POST_APPLY_RECOVERY.md`
 - `docs/V0.12.1.2.1_STATE_BOOTSTRAP_EXECUTION_EVIDENCE.md`
 - `docs/V0.12.2.0_STATE_MIGRATION_DESIGN_FOUNDATION.md`
+- `docs/V0.12.2.0.1_PRIVATE_BOOTSTRAP_STATE_LOCATION_REPAIR.md`
 
 These documents are current but not yet the final v1.0 commercial review. A
 known stale statement in a current document is updated when its owning
@@ -67,6 +68,7 @@ command. The v1.0 RC review will publish the smaller stable command surface.
 - `delivery/contracts/v0.12.1.2.0.1-state-bootstrap-post-apply-recovery.json`
 - `delivery/contracts/v0.12.1.2.1-state-bootstrap-execution-evidence.json`
 - `delivery/contracts/v0.12.2.0-state-migration-design-foundation.json`
+- `delivery/contracts/v0.12.2.0.1-private-bootstrap-state-location-repair.json`
 
 The v0.11 manifest remains authoritative only for v0.11 evidence claims. The
 v0.12 contract cannot upgrade historical evidence or synthetic receipts into

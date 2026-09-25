@@ -277,7 +277,17 @@ required_fragments = (
 for fragment in required_fragments:
     require(fragment in main_tf, f"bootstrap declaration missing: {fragment}")
 require(main_tf.count("prevent_destroy = true") == 2, "bucket/KMS prevent_destroy drift")
-require('backend "s3"' not in backend_tf, "bootstrap migrated before v0.12.2")
+preflight_contract_path = root / "delivery/contracts/v0.12.2.1-private-bootstrap-migration-preflight.json"
+if preflight_contract_path.exists():
+    preflight_contract = load(preflight_contract_path)
+    require(preflight_contract.get("version") == "v0.12.2.1", "unknown bootstrap backend successor")
+    require(
+        preflight_contract.get("status") == "delivered-awaiting-separate-private-preflight-approval",
+        "unsafe bootstrap backend successor",
+    )
+    require(backend_tf.count('backend "s3" {}') == 1, "bootstrap partial backend declaration drift")
+else:
+    require('backend "s3"' not in backend_tf, "bootstrap migrated before v0.12.2")
 require("dynamodb" not in all_bootstrap_tf.lower(), "DynamoDB locking found")
 require("aws_iam_role_policy_attachment" not in all_bootstrap_tf, "IAM policy attachment added")
 require("aws_iam_user_policy_attachment" not in all_bootstrap_tf, "IAM user attachment added")

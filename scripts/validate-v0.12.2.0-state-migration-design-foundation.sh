@@ -236,8 +236,30 @@ for relative in (
 ):
     require('required_version = ">= 1.8.0, < 2.0.0"' in (root / relative).read_text(), f"existing root floor changed early: {relative}")
 
+successor_path = root / "delivery/contracts/v0.12.2.1-private-bootstrap-migration-preflight.json"
+bootstrap_backend_path = root / "infra/terraform/aws/state-bootstrap/backend.tf"
+if successor_path.exists():
+    successor = load(successor_path)
+    require(successor.get("version") == "v0.12.2.1", "unknown backend-declaration successor")
+    require(
+        successor.get("status") == "delivered-awaiting-separate-private-preflight-approval",
+        "unsafe backend-declaration successor status",
+    )
+    require(
+        successor.get("predecessor", {}).get("contract") == str(contract_path.relative_to(root)).replace(
+            "v0.12.2.0-state-migration-design-foundation.json",
+            "v0.12.2.0.1-private-bootstrap-state-location-repair.json",
+        ),
+        "backend successor chain drift",
+    )
+    backend_text = bootstrap_backend_path.read_text()
+    require(backend_text.count('backend "s3" {}') == 1, "bootstrap partial backend declaration drift")
+    for secret in ("access_key", "secret_key", "session_token"):
+        require(secret not in backend_text, f"credential field present in bootstrap backend: {secret}")
+else:
+    require('backend "s3"' not in bootstrap_backend_path.read_text(), "backend activated early")
+
 for relative in (
-    "infra/terraform/aws/state-bootstrap/backend.tf",
     "infra/terraform/aws/runtime-identities/backend.tf",
     "infra/terraform/aws/environments/dev/backend.tf",
     "infra/terraform/aws/environments/test/backend.tf",

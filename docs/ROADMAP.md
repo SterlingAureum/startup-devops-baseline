@@ -801,8 +801,11 @@ Incremental scope:
   private plan-bundle working state plus its byte-identical preserved apply
   copy, while retaining both artifacts and all live authority unchanged
 - v0.12.2.1 - private bootstrap migration preflight and reviewed command plan -
-  planned; command-free verification must bind exact protected main, account,
-  source, backend config, local state, remote-key absence and live foundation
+  delivered; command-free verification binds exact protected main, account,
+  source, backend config, both private state copies and the complete original
+  plan/apply/recovery chain; a separately approved read-only preflight creates
+  the third immutable backup, revalidates the empty live foundation and writes
+  the private command plan without initializing a backend or migrating state
 - v0.12.2.2 - separately approved bootstrap local-to-S3 state migration -
   planned; migrate exactly one reviewed state with no apply, refactor, upgrade,
   automatic retry or local-backup deletion

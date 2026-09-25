@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "v0.12.2.1-private-bootstrap-migration-preflight-v1",
+  "version": "v0.12.2.1",
+  "status": "delivered-awaiting-separate-private-preflight-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "236f28ee095aa11c56e1127960efe715b8b4f391",
+  "predecessor": {
+    "version": "v0.12.2.0.1",
+    "contract": "delivery/contracts/v0.12.2.0.1-private-bootstrap-state-location-repair.json",
+    "requiredStatus": "delivered-offline-private-state-location-repair"
+  },
+  "privateInputChain": {
+    "planRequestSha256": "9f041fa9b98c15b7309df8b87af79bb50d3871eb0501b9977bbdb772c41a326b",
+    "applyRequestSha256": "91406ddbac3f75415c383da3b369070ec93c0c8874a11023ee1a7b50e307de07",
+    "recoveryRequestSha256": "cd31e26adc15932215985f27db865717a674382d22b34d8f0d2327e977a6c7a7",
+    "appliedStateSha256": "83bca892fef5f5eefffba3de247c4694daccf7201309262ff8dd73b61bc1b995",
+    "recoveryResultSha256": "c65f405bdb67779af4a9b074e5760ba62b2aff78f075ff10985108ba70ba4365",
+    "liveValidationSha256": "6f929213b687c44652c5f265f577767dcc422ab363f4cb598ed1c68395c1c091",
+    "canonicalStateRelativePath": "source/terraform.tfstate",
+    "preservedStateRelativePath": "state-bootstrap.tfstate.applied",
+    "byteIdentityRequiredBeforeCommands": true,
+    "repositoryStateFallbackAllowed": false
+  },
+  "partialBackendDeclaration": {
+    "root": "infra/terraform/aws/state-bootstrap",
+    "backendType": "s3",
+    "emptyDeclarationOnly": true,
+    "credentialsAllowed": false,
+    "privateConfigRequired": true,
+    "expectedKey": "bootstrap/terraform.tfstate",
+    "useLockfile": true
+  },
+  "verifyBoundary": {
+    "awsCommands": false,
+    "terraformCommands": false,
+    "writesPrivateEvidence": false,
+    "validatesProtectedMain": true,
+    "validatesPriorPrivateChain": true,
+    "validatesStateIdentity": true,
+    "validatesBackendConfig": true
+  },
+  "executeBoundary": {
+    "awsReadOnlyValidation": true,
+    "terraformVersionRead": true,
+    "createsThirdPrivateStateCopy": true,
+    "createsPrivateStagedMigrationSource": true,
+    "createsReviewedCommandPlan": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "stateMigration": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "automaticRetry": false
+  },
+  "privateEvidence": {
+    "ownerOnlyDirectoryMode": "0700",
+    "ownerOnlyFileMode": "0600",
+    "recordsStateSha256": true,
+    "recordsLineageAndSerial": true,
+    "recordsManagedAndDataAddresses": true,
+    "recordsResourceIdentitySha256": true,
+    "recordsCurrentSourceManifest": true,
+    "recordsLiveFoundationValidation": true,
+    "publishesPrivatePaths": false,
+    "publishesResourceIdentity": false
+  },
+  "approval": {
+    "maximumWindowSeconds": 3600,
+    "minimumRemainingSecondsAtStart": 900,
+    "preflightExecutionRequiresSeparateConfirmation": true,
+    "migrationRequiresNewV01222Window": true
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "copiesState": false,
+    "migratesState": false
+  },
+  "successor": {
+    "version": "v0.12.2.2",
+    "scope": "separately-approved-exact-bootstrap-local-to-s3-state-migration",
+    "authorizedByThisPackage": false
+  }
+}

@@ -58,6 +58,14 @@ acceptance requires lineage, serial, exact address and resource-identity
 comparison, a reviewed zero-change plan and S3-native lock contention proof.
 Controlled object-version recovery remains a separate approved window.
 
+v0.12.2.0.1 corrects the source location before preflight implementation. The
+reviewed apply wrote state beneath the private attempt-02 plan-bundle source
+and preserved a byte-identical copy beneath the private apply output. Those two
+files, not a repository-root `terraform.tfstate`, form the canonical migration
+input and cross-check. They remain private, mode `0600`, unchanged and bound to
+the original plan/apply/recovery request chain. The new immutable migration
+backup will be a third private copy and cannot replace either evidence file.
+
 The runtime-identities, dev, test and prod roots remain local with their
 reviewed Terraform 1.8 floors. Each floor must be raised in its own successor-
 compatible checkpoint before that root can migrate; no floor change may share

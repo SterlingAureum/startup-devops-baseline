@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "v0.12.2.0.1-private-bootstrap-state-location-repair-v1",
+  "version": "v0.12.2.0.1",
+  "status": "delivered-offline-private-state-location-repair",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "c9008874bbcc1c864114c9067d7d54026f5f1338",
+  "predecessor": {
+    "version": "v0.12.2.0",
+    "contract": "delivery/contracts/v0.12.2.0-state-migration-design-foundation.json",
+    "supersededField": "firstMigration.localStatePath"
+  },
+  "observedMismatch": {
+    "incorrectTrackedPath": "infra/terraform/aws/state-bootstrap/terraform.tfstate",
+    "trackedPathWasApplyTarget": false,
+    "actualApplyUsedPrivateStagedSource": true,
+    "actualRecoveryVerifiedPrivateStagedSource": true,
+    "repositoryStateFileRequired": false
+  },
+  "canonicalPrivateStateEvidence": {
+    "planBundleRequestField": "privatePlanBundleDirectory",
+    "planBundleStateRelativePath": "source/terraform.tfstate",
+    "applyOutputRequestField": "privateApplyOutputDirectory",
+    "preservedApplyStateRelativePath": "state-bootstrap.tfstate.applied",
+    "expectedAppliedStateSha256": "83bca892fef5f5eefffba3de247c4694daccf7201309262ff8dd73b61bc1b995",
+    "copiesMustBeByteIdentical": true,
+    "bothFilesMustBeRegularAndNotSymlinks": true,
+    "bothFilesMustBeMode0600": true,
+    "bothParentsMustRemainPrivate": true,
+    "privatePathsMayBePublished": false,
+    "stateBytesMayBePublished": false
+  },
+  "migrationSourceBoundary": {
+    "sourceIsPrivatePlanBundleWorkingState": true,
+    "preservedApplyCopyIsIndependentCrossCheck": true,
+    "repositoryRootStateMayBeCreatedOrSelected": false,
+    "unreviewedStateFileMayBeSelected": false,
+    "sourceMayBeRenamedMovedOrEditedBeforeMigration": false,
+    "sourceMustRemainBoundToOriginalPlanApplyRecoveryChain": true,
+    "newImmutableBackupMustCopyCanonicalPrivateSource": true,
+    "newBackupMustNotReplaceExistingEvidenceCopies": true
+  },
+  "v01221RequestBoundary": {
+    "privatePlanRequestRequired": true,
+    "privateApplyRequestRequired": true,
+    "privateRecoveryRequestRequired": true,
+    "privatePlanBundleDirectoryRequired": true,
+    "privateApplyOutputDirectoryRequired": true,
+    "privateRecoveryOutputDirectoryRequired": true,
+    "allPriorRequestSha256BindingsRequired": true,
+    "appliedStateSha256Required": true,
+    "byteComparisonRequiredBeforeAnyOperationalCommand": true,
+    "trackedRepositoryStatePathAccepted": false
+  },
+  "executionBoundary": {
+    "offlineRepairOnly": true,
+    "runsAws": false,
+    "runsTerraform": false,
+    "changesBackendDeclaration": false,
+    "migratesState": false,
+    "copiesState": false,
+    "movesPrivateEvidence": false,
+    "reexecutesApply": false,
+    "grantsLiveAuthority": false
+  },
+  "successor": {
+    "version": "v0.12.2.1",
+    "scope": "private-bootstrap-migration-preflight-bound-to-original-plan-apply-recovery-state-chain"
+  }
+}

@@ -15,11 +15,13 @@ decommission action, never a normal environment teardown.
 
 ## Bootstrap state
 
-This root deliberately remains local during v0.12.1 because the backend does
-not exist before its first apply. Protect its local `terraform.tfstate` as a
-sensitive, owner-readable artifact. v0.12.2.0 now defines the offline design
-for migrating that non-empty state to `bootstrap/terraform.tfstate`; it does
-not activate the backend or authorize migration.
+This root deliberately remains local because the backend did not exist before
+its first apply. The reviewed apply used a private staged source rather than a
+repository-root state file. Protect both its private
+`source/terraform.tfstate` and byte-identical preserved apply copy as sensitive,
+owner-readable artifacts. v0.12.2.0.1 binds those private artifacts as the
+future migration source and cross-check; it does not activate the backend or
+authorize migration.
 
 ## Access boundary
 

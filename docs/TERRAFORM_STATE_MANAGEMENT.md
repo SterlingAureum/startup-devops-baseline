@@ -1,6 +1,6 @@
 # Terraform State Management
 
-## Current Design and v0.12.1.2 Boundary
+## Current Design and v0.12.1.2.0.1 Boundary
 
 The runtime-identities, dev, test, and prod Terraform roots each use their own
 local state. v0.12.1 adds the independent `state-bootstrap` root, which also
@@ -32,6 +32,15 @@ plan, preserves the resulting bootstrap state under the private plan source,
 and validates the live but empty S3/KMS/IAM-policy foundation. It cannot attach
 the policies, configure a remote backend or migrate any state. Redacted live
 execution evidence remains v0.12.1.2.1 work.
+
+v0.12.1.2.0.1 repairs a post-apply validation defect without repeating the
+successful bootstrap apply. `kms:GetKeyRotationStatus` now receives the exact
+Terraform output key ARN instead of the alias. Its recovery entry point accepts
+only the bound `InvalidArnException` incident, byte-identical working and
+preserved state, the exact 13 managed addresses and unchanged plan/source
+artifacts. Recovery performs only read-only S3/KMS/IAM validation; it cannot
+run Terraform, mutate state, attach a policy, destroy resources or migrate a
+backend.
 
 The saved plan created by `apply-eks-api-access-cidr.sh` is different from
 state: it is a disposable, owner-readable execution artifact under `/tmp`, is

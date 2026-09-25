@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.1.2.0.1-state-bootstrap-post-apply-recovery` repairs the KMS
+rotation-status identifier and adds a separately approved read-only recovery
+for an apply that completed before post-apply validation stopped. It cannot
+repeat apply, destroy, attach policies or migrate state. See
+[v0.12.1.2.0.1 state-bootstrap post-apply recovery](docs/V0.12.1.2.0.1_STATE_BOOTSTRAP_POST_APPLY_RECOVERY.md).
+
+Predecessor development checkpoint:
 `v0.12.1.2-reviewed-state-bootstrap-apply` adds a separately approved consumer
 for one fresh, human-reviewed v0.12.1.1 saved plan. It revalidates every private
 artifact and the live S3/KMS/IAM foundation while retaining local bootstrap
@@ -988,10 +995,18 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.1.2-reviewed-state-bootstrap-apply
+v0.12.1.2.0.1-state-bootstrap-post-apply-recovery
 ```
-v0.12.1.2 must merge before the fresh state-bootstrap plan is produced. It
-binds one separately approved apply to the exact protected main, private plan
+v0.12.1.2.0.1 repairs future KMS rotation-status reads to use the exact key ARN
+and provides a fail-closed, read-only continuation after a successful apply
+whose live validation stopped on the unsupported alias. It verifies the exact
+prior plan, apply request, local state and failure evidence before reading the
+live S3/KMS/IAM controls. It never repeats Terraform apply or mutates state.
+v0.12.1.2.1 owns redacted execution evidence and v0.12.2 owns migration. See
+`delivery/contracts/v0.12.1.2.0.1-state-bootstrap-post-apply-recovery.json`.
+
+The predecessor v0.12.1.2 must merge before the fresh state-bootstrap plan is
+produced. It binds one separately approved apply to the exact protected main, private plan
 request, saved binary plan, JSON/text views, gate, source manifest, Terraform
 version and expected AWS account. It can apply only that plan once, then
 validates the 13-address local state plus the encrypted, versioned, public-

@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "v0.12.1.2.0.1-state-bootstrap-post-apply-recovery-v1",
+  "version": "v0.12.1.2.0.1",
+  "status": "delivered-read-only-recovery-entrypoint-awaiting-separate-live-recovery-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "predecessor": {
+    "version": "v0.12.1.2",
+    "contract": "delivery/contracts/v0.12.1.2-reviewed-state-bootstrap-apply.json",
+    "incident": "terraform-apply-succeeded-post-apply-kms-validation-used-unsupported-alias"
+  },
+  "defectRepair": {
+    "entrypoint": "scripts/execute-v0.12.1.2-state-bootstrap-apply.py",
+    "operation": "kms:GetKeyRotationStatus",
+    "unsupportedInputRemoved": "kms-alias",
+    "requiredInput": "kms-key-arn",
+    "futureApplyReexecutionRequired": false
+  },
+  "recoveryEntrypoint": {
+    "path": "scripts/execute-v0.12.1.2.0.1-state-bootstrap-recovery.py",
+    "phases": [
+      "verify",
+      "execute"
+    ],
+    "operation": "complete-read-only-state-bootstrap-post-apply-validation",
+    "confirmationVariable": "CONFIRM_STATE_BOOTSTRAP_RECOVERY",
+    "confirmationValue": "complete-read-only-state-bootstrap-post-apply-validation"
+  },
+  "incidentBindings": {
+    "incidentControlPlaneCommit": true,
+    "recoveryControlPlaneCommit": true,
+    "expectedAwsAccount": true,
+    "privateApplyRequestSha256": true,
+    "planRecordSha256": true,
+    "binaryPlanSha256": true,
+    "appliedStateSha256": true,
+    "failedKmsRotationStderrSha256": true,
+    "invalidArnExceptionRequired": true,
+    "privatePlanBundle": true,
+    "privateFailedApplyOutput": true
+  },
+  "priorApplyProof": {
+    "workingStateAndPreservedCopyMustMatch": true,
+    "expectedManagedStateAddressCount": 13,
+    "unreviewedManagedStateAllowed": false,
+    "unreviewedDataStateAllowed": false,
+    "capturedTerraformOutputsMustMatchState": true,
+    "priorApplyResultMustBeAbsent": true,
+    "priorLiveValidationResultMustBeAbsent": true,
+    "planGateMustPassAgain": true,
+    "terraformSourceManifestMustRemainExact": true
+  },
+  "recoveryCommandBoundary": {
+    "verifyRunsOperationalCommands": false,
+    "executeMayReadAwsIdentity": true,
+    "executeMayRunReadOnlyS3Validation": true,
+    "executeMayRunReadOnlyKmsValidation": true,
+    "executeMayRunReadOnlyIamPolicyValidation": true,
+    "terraformInitAllowed": false,
+    "terraformPlanAllowed": false,
+    "terraformApplyAllowed": false,
+    "terraformDestroyAllowed": false,
+    "terraformStateMutationAllowed": false,
+    "backendMigrationAllowed": false,
+    "iamPolicyAttachmentAllowed": false,
+    "kubernetesAccessAllowed": false,
+    "githubMutationAllowed": false,
+    "automaticRetryOfPriorApplyAllowed": false
+  },
+  "liveValidation": {
+    "s3VersioningEnabled": true,
+    "s3PublicAccessBlocked": true,
+    "s3BucketOwnerEnforced": true,
+    "s3SseKmsEnabled": true,
+    "s3BucketKeyEnabled": true,
+    "s3TlsOnlyPolicy": true,
+    "s3PolicyNotPublic": true,
+    "s3ObjectInventoryEmpty": true,
+    "kmsKeyArnUsedForRotationRead": true,
+    "kmsRotationEnabled": true,
+    "kmsCustomerManagedEnabled": true,
+    "rootStatePolicyCount": 5,
+    "rootStatePoliciesUnattached": true
+  },
+  "approvalBoundary": {
+    "maximumWindowSeconds": 3600,
+    "minimumRemainingSeconds": 900,
+    "separateRecoveryApprovalRequired": true,
+    "cleanExactProtectedRecoveryMainRequired": true
+  },
+  "failureBoundary": {
+    "preservePriorApplyEvidence": true,
+    "preserveAppliedLocalState": true,
+    "preserveRecoveryEvidence": true,
+    "automaticApplyRetry": false,
+    "automaticDestroy": false,
+    "manualCloudMutation": false,
+    "uncertaintyMeansSuccess": false
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "reexecutesApply": false,
+    "migratesState": false,
+    "destroysResources": false
+  },
+  "successor": {
+    "version": "v0.12.1.2.1",
+    "scope": "redacted-state-bootstrap-apply-and-recovery-execution-evidence"
+  }
+}

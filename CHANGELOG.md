@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.1.2.0.1
+
+- Repair the state-bootstrap live KMS validation to pass the reviewed key ARN, not an unsupported alias, to rotation-status and key-description reads.
+- Add a separately approved, read-only recovery path for the exact incident where Terraform apply succeeded and post-apply validation stopped with `InvalidArnException`.
+- Bind the recovery to protected main, the prior apply request, plan record, binary plan, failed KMS evidence, byte-identical local state copies and the expected 13-address managed inventory.
+- Re-run only read-only S3/KMS/IAM live validation; prohibit Terraform init/plan/apply/destroy, state mutation or migration, IAM attachment and automatic retry.
+- Preserve the redacted v0.12.1.2.1 evidence and v0.12.2 migration boundaries.
+
 ## v0.12.1.2
 
 - Add separate local verification and approved execution for one fresh, reviewed v0.12.1.1 state-bootstrap saved plan produced only after this apply executor reaches protected main.

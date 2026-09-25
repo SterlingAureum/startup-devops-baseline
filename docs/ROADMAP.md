@@ -776,10 +776,16 @@ Incremental scope:
   plan is produced, consumes that exact plan only under separate approval,
   retains protected local bootstrap state, validates the empty backend
   foundation, and may neither attach state policies nor migrate a root
+- v0.12.1.2.0.1 - state-bootstrap post-apply validation repair and read-only
+  recovery - delivered offline; use the exact KMS key ARN for rotation reads,
+  bind the successful prior apply and byte-identical local state after the
+  alias-triggered `InvalidArnException`, then resume only S3/KMS/IAM reads
+  without a second apply, destroy, state mutation or migration
 - v0.12.1.2.1 - redacted state-bootstrap apply and live-validation execution
-  evidence - planned; bind exact protected main, private artifact hashes, local
-  state digest, live control booleans and terminal review status without
-  publishing account, bucket, ARN, state, plan or raw AWS output
+  evidence - planned; bind exact incident/recovery protected mains, private
+  artifact hashes, local state digest, live control booleans and terminal
+  review status without publishing account, bucket, ARN, state, plan or raw
+  AWS output
 - v0.12.2 - guarded non-empty local-to-remote state migration, immutable local
   backup, lineage/address verification, lock contention, zero-change plan,
   object-version recovery and operator Runbook - planned; migration must not

@@ -538,7 +538,6 @@ def validate_live_foundation(
     cwd: Path,
 ) -> dict[str, Any]:
     bucket = identities["bucket"]
-    alias = identities["alias"]
 
     def aws_json(label: str, arguments: list[str]) -> Any:
         result = run_logged(
@@ -582,9 +581,14 @@ def validate_live_foundation(
     inventory = aws_json("s3-object-versions", ["s3api", "list-object-versions", "--bucket", bucket])
     require(not inventory.get("Versions") and not inventory.get("DeleteMarkers"), "State bucket is not empty")
 
-    rotation = aws_json("kms-rotation", ["kms", "get-key-rotation-status", "--key-id", alias])
+    rotation = aws_json(
+        "kms-rotation",
+        ["kms", "get-key-rotation-status", "--key-id", identities["kms_arn"]],
+    )
     require(rotation.get("KeyRotationEnabled") is True, "KMS rotation is disabled")
-    key = aws_json("kms-key", ["kms", "describe-key", "--key-id", alias]).get("KeyMetadata", {})
+    key = aws_json("kms-key", ["kms", "describe-key", "--key-id", identities["kms_arn"]]).get(
+        "KeyMetadata", {}
+    )
     require(key.get("Arn") == identities["kms_arn"], "KMS key identity changed")
     require(key.get("Enabled") is True and key.get("KeyState") == "Enabled", "KMS key is not enabled")
     require(key.get("KeyManager") == "CUSTOMER", "KMS key is not customer managed")

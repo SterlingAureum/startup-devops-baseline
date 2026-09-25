@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "v0.12.1.2.0.1-state-bootstrap-recovery-request-v1",
+  "operation": "complete-read-only-state-bootstrap-post-apply-validation",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedRecoveryMainCommit": "REPLACE_WITH_40_CHARACTER_RECOVERY_MAIN_SHA",
+  "incidentControlPlaneCommit": "REPLACE_WITH_40_CHARACTER_INCIDENT_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "privateApplyRequestPath": "/private/owner-readable/state-bootstrap-apply-request.json",
+  "privateApplyRequestSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "privatePlanBundleDirectory": "/private/owner-readable/state-bootstrap-plan-ATTEMPT_ID",
+  "planRecordSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "binaryPlanSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "privateFailedApplyOutputDirectory": "/private/owner-readable/state-bootstrap-apply-ATTEMPT_ID",
+  "failedKmsRotationStderrSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "appliedStateSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "privateRecoveryOutputDirectory": "/private/owner-readable/state-bootstrap-recovery-ATTEMPT_ID",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "terraformApply": false,
+    "terraformPlan": false,
+    "terraformInit": false,
+    "stateMigration": false,
+    "destroy": false,
+    "awsReadOnlyLiveValidation": true
+  }
+}

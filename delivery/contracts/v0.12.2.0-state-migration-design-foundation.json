@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "v0.12.2.0-state-migration-design-foundation-v1",
+  "version": "v0.12.2.0",
+  "status": "delivered-offline-bootstrap-state-migration-design",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "cdda05b3b98643ac690458787f43070b63ff7beb",
+  "predecessor": {
+    "version": "v0.12.1.2.1",
+    "contract": "delivery/contracts/v0.12.1.2.1-state-bootstrap-execution-evidence.json",
+    "requiredStatus": "completed-state-bootstrap-created-recovered-and-live-validated"
+  },
+  "firstMigration": {
+    "rootId": "bootstrap",
+    "rootPath": "infra/terraform/aws/state-bootstrap",
+    "localStatePath": "infra/terraform/aws/state-bootstrap/terraform.tfstate",
+    "backendConfigExample": "infra/terraform/aws/backend-config/bootstrap.s3.tfbackend.example",
+    "remoteStateKey": "bootstrap/terraform.tfstate",
+    "expectedManagedAddressCount": 13,
+    "nonEmptyStateRequired": true,
+    "terraformMinimumVersion": "1.11.0",
+    "terraformMaximumExclusiveVersion": "2.0.0",
+    "defaultWorkspaceOnly": true
+  },
+  "rootSequencing": {
+    "bootstrapMigratesFirst": true,
+    "oneRootPerApprovalAndExecutionWindow": true,
+    "parallelRootMigrationAllowed": false,
+    "emptyStateAcceptedAsMigrationEvidence": false,
+    "runtimeIdentitiesAndEnvironmentRootsRemainLocal": true,
+    "existingRootFloorRaiseRequiredBeforeEachLaterMigration": true,
+    "floorRaiseMayShareMigrationExecutionWindow": false
+  },
+  "privatePreflightEvidence": {
+    "exactProtectedMainRequired": true,
+    "cleanWorktreeRequired": true,
+    "expectedAwsAccountRequired": true,
+    "terraformVersionRecorded": true,
+    "backendConfigSha256Required": true,
+    "sourceManifestSha256Required": true,
+    "localStateSha256Required": true,
+    "localStateLineageRequired": true,
+    "localStateSerialRequired": true,
+    "managedAddressInventoryRequired": true,
+    "resourceIdentityDigestRequired": true,
+    "remoteStateKeyMustBeAbsent": true,
+    "remoteLockKeyMustBeAbsent": true,
+    "stateBucketVersionInventoryRequired": true,
+    "liveFoundationRevalidationRequired": true
+  },
+  "immutableBackup": {
+    "createdBeforeBackendInitialization": true,
+    "ownerOnlyDirectoryMode": "0700",
+    "ownerOnlyFileMode": "0600",
+    "sha256Recorded": true,
+    "lineageAndSerialRecorded": true,
+    "storedOutsideRepository": true,
+    "retainedAfterSuccess": true,
+    "automaticDeletionAllowed": false
+  },
+  "migrationCommandDesign": {
+    "backendType": "s3",
+    "partialBackendConfigurationRequired": true,
+    "credentialsInBackendConfigAllowed": false,
+    "terraformInitMigrateStateRequired": true,
+    "terraformInitForceCopyRequiresSeparateApproval": true,
+    "terraformApplyAllowed": false,
+    "terraformDestroyAllowed": false,
+    "terraformStatePushAllowed": false,
+    "terraformStatePushForceAllowed": false,
+    "terraformImportAllowed": false,
+    "resourceAddressRefactorAllowed": false,
+    "moduleUpgradeAllowed": false,
+    "providerUpgradeAllowed": false,
+    "platformUpgradeAllowed": false
+  },
+  "postMigrationProof": {
+    "remoteStateObjectVersionRequired": true,
+    "remoteStatePullStoredPrivately": true,
+    "lineageMustMatchBackup": true,
+    "serialMustNotRegress": true,
+    "managedAddressesMustMatchExactly": true,
+    "resourceIdentityDigestMustMatch": true,
+    "zeroChangeSavedPlanRequired": true,
+    "zeroChangePlanHumanReviewRequired": true,
+    "s3NativeLockContentionProofRequired": true,
+    "lockObjectMustBeAbsentAfterTest": true,
+    "localBackupMustRemainUntouched": true
+  },
+  "recoveryDrillBoundary": {
+    "separateApprovalRequired": true,
+    "separateExecutionWindowRequired": true,
+    "reviewedObjectVersionIdsRequired": true,
+    "canonicalStateLockRequired": true,
+    "preDrillRemoteStateBackupRequired": true,
+    "controlledObjectVersionRecoveryRequired": true,
+    "postRecoveryLineageAddressAndIdentityVerificationRequired": true,
+    "postRecoveryZeroChangePlanRequired": true,
+    "automaticRollbackAllowed": false,
+    "unreviewedS3CopyAllowed": false,
+    "forceStatePushAllowed": false
+  },
+  "failureBoundary": {
+    "automaticMigrationRetryAllowed": false,
+    "automaticBackendRollbackAllowed": false,
+    "automaticLocalStateDeletionAllowed": false,
+    "uncertaintyMeansSuccess": false,
+    "preservePrivateEvidence": true,
+    "preserveLocalBackup": true,
+    "preserveRemoteObjectVersions": true,
+    "manualReviewRequiredAfterAmbiguousInit": true
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "changesBackendDeclaration": false,
+    "migratesState": false,
+    "writesRemoteState": false,
+    "attachesIamPolicy": false,
+    "destroysResources": false,
+    "grantsLiveAuthority": false
+  },
+  "implementationSequence": [
+    {
+      "version": "v0.12.2.1",
+      "scope": "private-bootstrap-migration-preflight-and-reviewed-command-plan",
+      "liveMutation": false
+    },
+    {
+      "version": "v0.12.2.2",
+      "scope": "separately-approved-bootstrap-local-to-s3-state-migration",
+      "liveMutation": true
+    },
+    {
+      "version": "v0.12.2.3",
+      "scope": "lock-contention-zero-change-object-version-recovery-and-redacted-evidence",
+      "liveMutation": true
+    }
+  ]
+}

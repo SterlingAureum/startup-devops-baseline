@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.2.0
+
+- Define the offline safety and phased authority contract for the first non-empty local-to-S3 Terraform state migration.
+- Limit the first migration to the 13-address `state-bootstrap` root and exact `bootstrap/terraform.tfstate` key; retain the four historical roots on local state.
+- Require a pre-init private immutable backup plus state hash, lineage, serial, managed-address and canonical resource-identity evidence.
+- Separate migration, lock/zero-change proof and controlled object-version recovery into distinct approved execution boundaries.
+- Prohibit apply, destroy, import, force state push, refactoring, upgrades, parallel root migration, automatic retry and automatic rollback.
+- Keep this package offline: no backend declaration, AWS access, Terraform command, state write, IAM attachment or live migration authority is added.
+
 ## v0.12.1.2.1
 
 - Record the terminal redacted evidence for the reviewed state-bootstrap creation and read-only post-apply recovery completed at `2026-09-25T08:21:14Z`.

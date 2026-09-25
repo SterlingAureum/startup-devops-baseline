@@ -31,6 +31,9 @@
 /delivery/contracts/v0.12.1.2.1-state-bootstrap-execution-evidence.json @SterlingAureum
 /docs/V0.12.1.2.1_STATE_BOOTSTRAP_EXECUTION_EVIDENCE.md @SterlingAureum
 /scripts/validate-v0.12.1.2.1-state-bootstrap-execution-evidence.sh @SterlingAureum
+/delivery/contracts/v0.12.2.0-state-migration-design-foundation.json @SterlingAureum
+/docs/V0.12.2.0_STATE_MIGRATION_DESIGN_FOUNDATION.md @SterlingAureum
+/scripts/validate-v0.12.2.0-state-migration-design-foundation.sh @SterlingAureum
 
 /scripts/check-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum

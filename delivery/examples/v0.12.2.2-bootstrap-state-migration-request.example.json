@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "v0.12.2.2-bootstrap-state-migration-request-v1",
+  "operation": "migrate-reviewed-bootstrap-state-to-s3",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "privatePreflightRequestPath": "/private/owner-readable/bootstrap-migration-preflight-request-attempt-01.json",
+  "privatePreflightRequestSha256": "1ac1f2be621fd5c5b9da05b82f1bc43eac3b10b0bf4d351179f6905096a77204",
+  "privatePreflightOutputDirectory": "/private/owner-readable/bootstrap-migration-preflight-output-attempt-01",
+  "preflightResultSha256": "4e5a060e9a8ce7660ce56033b0b29153ae6a37c52a4a5501d8c46921e185add9",
+  "stateInventorySha256": "fc25de78ab8d6e86b65a26a4bbbc992e1c631c46623e3dd81925c0d69d1829ff",
+  "migrationSourceManifestSha256": "8c9ef5076aeea7ef2cb617faf080f24db24839caf3a134129800ac9b4c3ce9e3",
+  "migrationCommandPlanSha256": "16e56fcbf1d59c20bb273291719bf7f24d4d0144da1ba52bce9c17b9c8ddbaab",
+  "immutableBackupSha256": "83bca892fef5f5eefffba3de247c4694daccf7201309262ff8dd73b61bc1b995",
+  "resourceIdentitySha256": "c59b979c1449d5212ceb72319995fbd01da9715c3dbf99ef9ca08d0bc8e282c4",
+  "preflightLiveValidationSha256": "6f929213b687c44652c5f265f577767dcc422ab363f4cb598ed1c68395c1c091",
+  "privateMigrationOutputDirectory": "/private/owner-readable/bootstrap-state-migration-attempt-01",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "terraformInitMigrateState": true,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "stateMigration": true,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "automaticRetry": false,
+    "localBackupDeletion": false
+  }
+}

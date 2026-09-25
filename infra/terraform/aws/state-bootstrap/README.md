@@ -17,8 +17,9 @@ decommission action, never a normal environment teardown.
 
 This root deliberately remains local during v0.12.1 because the backend does
 not exist before its first apply. Protect its local `terraform.tfstate` as a
-sensitive, owner-readable artifact. v0.12.2 owns migration of that non-empty
-state to `bootstrap/terraform.tfstate` after the backend exists.
+sensitive, owner-readable artifact. v0.12.2.0 now defines the offline design
+for migrating that non-empty state to `bootstrap/terraform.tfstate`; it does
+not activate the backend or authorize migration.
 
 ## Access boundary
 
@@ -41,4 +42,5 @@ The guarded plan-only entry point is documented in
 source copy and initializes only that copy with `-backend=false`. Plan
 execution still needs separate approval, and a successful plan cannot be
 applied until the v0.12.1.2 reviewed saved-plan checkpoint. Do not initialize
-or migrate the other four roots during v0.12.1.
+or migrate the other four roots. v0.12.2.1 owns the first private bootstrap
+migration preflight.

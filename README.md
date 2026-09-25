@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.0-state-migration-design-foundation` defines the offline safety
+contract and phased authority boundary for the first non-empty bootstrap-state
+migration. It changes no backend, runs no Terraform or AWS command and grants
+no migration authority. See
+[v0.12.2.0 state-migration design foundation](docs/V0.12.2.0_STATE_MIGRATION_DESIGN_FOUNDATION.md).
+
+Predecessor development checkpoint:
 `v0.12.1.2.1-state-bootstrap-execution-evidence` records the redacted terminal
 evidence for the reviewed state-bootstrap creation and read-only recovery. The
 foundation is live-validated, the bootstrap state remains private and local,
@@ -1002,14 +1009,23 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.1.2.1-state-bootstrap-execution-evidence
+v0.12.2.0-state-migration-design-foundation
 ```
-v0.12.1.2.1 binds the exact incident and recovery protected-main commits,
-private artifact digests, applied local-state digest, reviewed-plan counts and
-terminal live S3/KMS/IAM control results. The state-bootstrap foundation was
-created and recovered without a second apply; its state remains private and
-local, the state bucket remains empty, and no policy attachment or migration
-occurred. This evidence adds no live authority. See
+v0.12.2.0 freezes the first migration to the non-empty 13-address bootstrap
+state and its isolated `bootstrap/terraform.tfstate` key. It requires a private
+immutable local backup, lineage/serial/address/resource-identity comparison,
+zero-change plan, S3-native lock contention and separately approved object-
+version recovery. The four historical roots remain local and retain their
+reviewed Terraform floors. This checkpoint adds no backend declaration or live
+authority. See
+`delivery/contracts/v0.12.2.0-state-migration-design-foundation.json`.
+
+The predecessor v0.12.1.2.1 binds the exact incident and recovery protected-
+main commits, private artifact digests, applied local-state digest, reviewed-
+plan counts and terminal live S3/KMS/IAM control results. The state-bootstrap
+foundation was created and recovered without a second apply; its state remains
+private and local, the state bucket remains empty, and no policy attachment or
+migration occurred. That evidence adds no live authority. See
 `delivery/contracts/v0.12.1.2.1-state-bootstrap-execution-evidence.json`.
 
 The predecessor v0.12.1.2.0.1 repairs future KMS rotation-status reads to use

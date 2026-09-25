@@ -791,6 +791,20 @@ Incremental scope:
   backup, lineage/address verification, lock contention, zero-change plan,
   object-version recovery and operator Runbook - planned; migration must not
   share a change or execution window with module refactoring or platform upgrade
+- v0.12.2.0 - bootstrap state-migration design foundation - delivered offline;
+  freeze the first migration to the non-empty 13-address bootstrap state,
+  require a pre-init immutable private backup and split preflight, migration,
+  lock/zero-change proof and object-version recovery into separately reviewed
+  boundaries without changing any backend declaration or live authority
+- v0.12.2.1 - private bootstrap migration preflight and reviewed command plan -
+  planned; command-free verification must bind exact protected main, account,
+  source, backend config, local state, remote-key absence and live foundation
+- v0.12.2.2 - separately approved bootstrap local-to-S3 state migration -
+  planned; migrate exactly one reviewed state with no apply, refactor, upgrade,
+  automatic retry or local-backup deletion
+- v0.12.2.3 - lock-contention, zero-change, controlled object-version recovery
+  and redacted terminal evidence - planned; recovery uses its own approval and
+  execution window
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and

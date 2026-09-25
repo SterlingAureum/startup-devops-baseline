@@ -920,3 +920,6 @@ echo "==> Validating v0.12.1.2.0.1 state-bootstrap post-apply recovery"
 
 echo "==> Validating v0.12.1.2.1 state-bootstrap execution evidence"
 "${ROOT_DIR}/scripts/validate-v0.12.1.2.1-state-bootstrap-execution-evidence.sh"
+
+echo "==> Validating v0.12.2.0 state-migration design foundation"
+"${ROOT_DIR}/scripts/validate-v0.12.2.0-state-migration-design-foundation.sh"

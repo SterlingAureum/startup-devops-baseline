@@ -1,6 +1,6 @@
 # Terraform State Management
 
-## Current Design and v0.12.1.2.1 Boundary
+## Current Design and v0.12.2.0 Boundary
 
 The runtime-identities, dev, test, and prod Terraform roots each use their own
 local state. v0.12.1 adds the independent `state-bootstrap` root, which also
@@ -49,6 +49,19 @@ validation digests. The foundation has now been created and live-validated:
 the state bucket is still empty, the customer-managed KMS key is enabled with
 rotation, and all five root-scoped policies remain unattached. This checkpoint
 adds no executor and does not authorize backend initialization or migration.
+
+v0.12.2.0 now freezes the first migration design without changing a backend.
+Only the non-empty 13-address `state-bootstrap` state may migrate first, to
+`bootstrap/terraform.tfstate`, under one-root/one-approval/one-window rules. A
+private immutable local backup must precede initialization. Post-migration
+acceptance requires lineage, serial, exact address and resource-identity
+comparison, a reviewed zero-change plan and S3-native lock contention proof.
+Controlled object-version recovery remains a separate approved window.
+
+The runtime-identities, dev, test and prod roots remain local with their
+reviewed Terraform 1.8 floors. Each floor must be raised in its own successor-
+compatible checkpoint before that root can migrate; no floor change may share
+a live migration window.
 
 The saved plan created by `apply-eks-api-access-cidr.sh` is different from
 state: it is a disposable, owner-readable execution artifact under `/tmp`, is

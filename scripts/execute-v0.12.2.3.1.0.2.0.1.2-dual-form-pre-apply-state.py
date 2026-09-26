@@ -123,6 +123,7 @@ def verify_inputs(
     repository_root: Path = ROOT,
     git_runner: GitRunner = run_git,
     now: datetime | None = None,
+    allow_existing_output: bool = False,
 ) -> dict[str, Any]:
     repository_root = repository_root.resolve(strict=True)
     private_request = BASE.require_private_file(request_path, "Private dual-form request")
@@ -174,7 +175,12 @@ def verify_inputs(
     require(hashlib.sha256(BASE.compact_json(projection)).hexdigest() == SEMANTIC_PROJECTION_SHA256, "Canonical semantic projection changed")
     managed, data = BASE.RECOVERY_EXECUTOR.RECOVERY_EXECUTOR.state_addresses(canonical_state)
     require(managed == context["managed"] and data == context["data"], "Canonical state address inventory changed")
-    new_output = BASE.require_new_private_directory(Path(request["privateApplyOutputDirectory"]), "Private dual-form output")
+    output_path = Path(request["privateApplyOutputDirectory"])
+    new_output = (
+        BASE.require_private_directory(output_path, "Private dual-form output")
+        if allow_existing_output
+        else BASE.require_new_private_directory(output_path, "Private dual-form output")
+    )
     require(not BASE.is_within(new_output, repository_root), "Dual-form output must remain outside repository")
     context.update({
         "request": request,

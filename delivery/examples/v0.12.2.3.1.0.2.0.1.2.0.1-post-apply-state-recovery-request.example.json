@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery-request-v1",
+  "operation": "complete-read-only-post-apply-refresh-state-recovery",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "privateDualFormRequestPath": "/private/owner-readable/bootstrap-dual-form-pre-apply-state-request-attempt-01.json",
+  "privateDualFormRequestSha256": "e2b13a02d47b5a7fa45fa723b17e99ea9b01048e8234e1949d6241d10d9f7262",
+  "privateDualFormOutputDirectory": "/private/owner-readable/bootstrap-dual-form-state-reconciliation-output-attempt-01",
+  "incidentAfterStateSha256": "5b97b9ab595c7d072f420edf029435948135711a31b9251b7799ab3a0034b156",
+  "incidentAfterStateShowSha256": "9c8dfccbe046aa41a2e88e60253d5ca58b46f0044558f19a2d5b921f0593c8bd",
+  "incidentApplyStdoutSha256": "bacf8478426de12983553575f6f5330e86cec28b03198182f4d33bf4e491d0b2",
+  "privateRecoveryOutputDirectory": "/private/owner-readable/bootstrap-post-apply-state-recovery-output-attempt-01",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "awsIdentityAndS3Read": true,
+    "terraformStatePullListAndShow": true,
+    "postApplyEvidenceCompletion": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

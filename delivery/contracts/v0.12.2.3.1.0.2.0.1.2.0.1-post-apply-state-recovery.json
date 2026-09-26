@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery-v1",
+  "version": "v0.12.2.3.1.0.2.0.1.2.0.1",
+  "status": "delivered-awaiting-fresh-request-and-separate-read-only-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "b4f9f7dfee8ffecb42edf9f67d2ced55f431e0e8",
+  "incident": {
+    "dualFormRequestSha256": "e2b13a02d47b5a7fa45fa723b17e99ea9b01048e8234e1949d6241d10d9f7262",
+    "savedRefreshOnlyPlanAppliedOnce": true,
+    "remoteResourceChanges": 0,
+    "priorSerial": 1,
+    "reconciledSerial": 2,
+    "lineageUnchanged": true,
+    "postApplyStateSha256": "5b97b9ab595c7d072f420edf029435948135711a31b9251b7799ab3a0034b156",
+    "postApplyStateShowSha256": "9c8dfccbe046aa41a2e88e60253d5ca58b46f0044558f19a2d5b921f0593c8bd"
+  },
+  "reviewedStateTransition": {
+    "managedRefreshCount": 7,
+    "managedAfterValuesMatchReviewedDrift": true,
+    "callerIdentitySessionRefreshCount": 1,
+    "callerIdentityChangedFields": [
+      "arn",
+      "user_id"
+    ],
+    "callerIdentityAccountUnchanged": true,
+    "allOtherInstancesUnchanged": true
+  },
+  "recoveryBoundary": {
+    "awsAndS3ReadOnly": true,
+    "terraformStatePullListShowOnly": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "statePush": false,
+    "remoteResourceMutation": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "grantsLiveAuthority": false
+  }
+}

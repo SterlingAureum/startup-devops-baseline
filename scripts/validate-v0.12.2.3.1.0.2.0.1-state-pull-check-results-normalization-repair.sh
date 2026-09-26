@@ -43,7 +43,7 @@ def validate(value):
     normalization = value.get("normalizationGate")
     require(normalization.get("onlyChangedTopLevelKey") == "check_results", "normalization scope drift")
     require(normalization.get("observedCheckResultsSha256") == "5edcc426d374ea432c4c8509b9a7e3060908f8b2bdaf754255934e05792134a8", "check_results drift")
-    require(normalization.get("semanticProjectionSha256") == "14715b5d56f06089cdb81056dbce3a05b0475608a65d96a51541854f9efc8822", "semantic projection drift")
+    require(normalization.get("semanticProjectionSha256") == "1d21a9edbfe82d1d1496b312c8a31996c20f9f4bf8505604a277cbdede2f8d15", "semantic projection drift")
     require(normalization.get("formatVersion") == 4 and normalization.get("terraformVersion") == "1.14.5", "state format drift")
     require(all(normalization.get(key) is True for key in ("serialUnchanged", "lineageUnchanged", "resourcesUnchanged", "outputsUnchanged", "addressesUnchanged")), "semantic equality drift")
     require(normalization.get("managedAddressCount") == 13 and normalization.get("dataAddressCount") == 9, "address count drift")

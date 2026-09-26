@@ -84,6 +84,12 @@ class RequestTests(unittest.TestCase):
 
 
 class NormalizationTests(unittest.TestCase):
+    def test_production_projection_digest_uses_all_non_check_results_keys(self):
+        self.assertEqual(
+            EXECUTOR.SEMANTIC_PROJECTION_SHA256,
+            "1d21a9edbfe82d1d1496b312c8a31996c20f9f4bf8505604a277cbdede2f8d15",
+        )
+
     def states(self):
         reviewed = {
             "version": 4,

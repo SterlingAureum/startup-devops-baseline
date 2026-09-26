@@ -830,8 +830,14 @@ Incremental scope:
   S3 state-object version and zero delete markers; record that init/migration
   were not repeated and publish no private resource identity
 - v0.12.2.3 - lock-contention, zero-change, controlled object-version recovery
-  and redacted terminal evidence - planned; recovery uses its own approval and
-  execution window
+  and redacted terminal evidence - in progress; recovery uses its own approval
+  and execution window
+- v0.12.2.3.0 - remote-state proof and recovery design - delivered offline;
+  adopt the validated remote identity, replace the obsolete local-lineage
+  equality assumption, use a real `terraform console` lock holder for
+  contention, require a human-reviewed zero-change saved plan, and isolate the
+  byte-identical version-bound recovery drill and terminal evidence into
+  v0.12.2.3.1 through v0.12.2.3.4
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and

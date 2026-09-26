@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.2.3.0
+
+- Adopt the exact validated remote lineage and serial as canonical while retaining immutable-backup, address, resource, output and semantic-equality requirements.
+- Design real S3-native lock contention with a live `terraform console` lock holder and a concurrent `terraform plan -lock-timeout=0s` contender; prohibit synthetic lock writes and force unlock.
+- Require a separately saved, machine-gated and human-reviewed zero-change plan after clean lock release.
+- Define a separate object-version recovery window that creates a byte-identical drill version and restores the reviewed pre-drill version under a canonical Terraform lock.
+- Require explicit source version ID, ETag precondition, expected bucket owner, SSE-KMS and Bucket Key while preserving every state version and prohibiting state push or automatic rollback.
+- Split implementation into v0.12.2.3.1 through v0.12.2.3.4 and keep this design package fully offline.
+
 ## v0.12.2.2.1
 
 - Record the terminal redacted evidence for the successful read-only bootstrap-state identity-rebase recovery completed at `2026-09-26T03:22:59Z`.

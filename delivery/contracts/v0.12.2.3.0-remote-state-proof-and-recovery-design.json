@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "v0.12.2.3.0-remote-state-proof-and-recovery-design-v1",
+  "version": "v0.12.2.3.0",
+  "status": "delivered-offline-remote-state-proof-and-recovery-design",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "2e0b6a9050cb9338dea4770111b2f9b002f5e115",
+  "predecessor": {
+    "version": "v0.12.2.2.1",
+    "contract": "delivery/contracts/v0.12.2.2.1-bootstrap-state-migration-recovery-evidence.json",
+    "requiredStatus": "completed-redacted-bootstrap-state-migration-recovery-evidence"
+  },
+  "canonicalRemoteIdentity": {
+    "stateSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+    "lineageSha256": "4f42afe2b009593773f37059419ca3ea4e87ca89d4ef1a7ff1278d60f2ed2fab",
+    "serial": 1,
+    "managedAddressCount": 13,
+    "dataAddressCount": 9,
+    "semanticProjectionSha256": "46a2fda8b522437194aab7a03b41170ff6a02f1affaa067ec76ce8a0ebada48d",
+    "currentStateObjectVersionCount": 1,
+    "stateObjectDeleteMarkerCount": 0,
+    "adoptedFromValidatedIdentityRebase": true
+  },
+  "supersededV01220Postconditions": {
+    "backupLineageMustEqualRemoteLineage": false,
+    "remoteSerialMustBeAtLeastBackupSerial": false,
+    "replacement": "the exact validated remote lineage and serial become canonical while addresses, resources, outputs and semantic projection remain bound",
+    "immutableBackupStillRequired": true,
+    "addressAndSemanticEqualityStillRequired": true
+  },
+  "lockContentionProof": {
+    "holderCommand": "terraform console",
+    "holderMustUseCanonicalBackendMetadata": true,
+    "holderMustRemainOpen": true,
+    "lockObjectMustBeObservedWhileHolderRuns": true,
+    "contenderCommand": "terraform plan -lock-timeout=0s",
+    "contenderMustFailOnStateLock": true,
+    "contenderNonLockFailureAccepted": false,
+    "holderExitMustBeClean": true,
+    "lockObjectMustBeAbsentAfterHolderExit": true,
+    "lockObjectVersionHistoryStoredPrivately": true,
+    "forceUnlockAllowed": false,
+    "directLockObjectWriteAllowed": false,
+    "automaticRetryAllowed": false
+  },
+  "zeroChangePlanProof": {
+    "runsOnlyAfterLockRelease": true,
+    "savedBinaryPlanRequired": true,
+    "detailedExitCodeRequired": true,
+    "expectedExitCode": 0,
+    "machineReadablePlanRequired": true,
+    "humanReadablePlanRequired": true,
+    "managedChangesExpected": 0,
+    "resourceDriftExpected": 0,
+    "importsExpected": 0,
+    "sourceManifestBound": true,
+    "remoteStateIdentityBound": true,
+    "humanReviewRequired": true,
+    "terraformApplyAllowed": false
+  },
+  "controlledObjectVersionRecovery": {
+    "separateRequestApprovalAndWindowRequired": true,
+    "reviewedPreDrillVersionIdRequired": true,
+    "freshPrivateStatePullBackupRequired": true,
+    "canonicalTerraformConsoleLockRequired": true,
+    "stateLockObservedBeforeCopy": true,
+    "firstCopyCreatesByteIdenticalDrillVersion": true,
+    "recoveryCopiesReviewedPreDrillVersionToCurrent": true,
+    "explicitCopySourceVersionIdRequired": true,
+    "copySourceEtagPreconditionRequired": true,
+    "expectedBucketOwnerRequired": true,
+    "sseKmsAndBucketKeyRequired": true,
+    "existingStateVersionsDeleted": false,
+    "statePushAllowed": false,
+    "forceUnlockAllowed": false,
+    "automaticRollbackAllowed": false,
+    "postRecoveryStatePullAndListRequired": true,
+    "postRecoveryZeroChangePlanRequired": true
+  },
+  "failureBoundary": {
+    "holderExitsBeforeContentionMeansFailure": true,
+    "lockNotObservedMeansFailure": true,
+    "contenderSuccessMeansFailure": true,
+    "nonZeroZeroChangePlanMeansFailure": true,
+    "copyAmbiguityMeansStop": true,
+    "lockCleanupAmbiguityMeansStop": true,
+    "automaticRetry": false,
+    "preserveAllPrivateEvidence": true,
+    "preserveEveryStateObjectVersion": true
+  },
+  "privacyBoundary": {
+    "publishesAwsAccount": false,
+    "publishesBucket": false,
+    "publishesKmsArn": false,
+    "publishesRawLineage": false,
+    "publishesStateBytes": false,
+    "publishesPlanContents": false,
+    "publishesStateObjectVersionIds": false,
+    "publishesLockInfo": false,
+    "publishesPrivatePaths": false,
+    "allowsPublicDigestsCountsAndBooleans": true
+  },
+  "implementationSequence": [
+    {
+      "version": "v0.12.2.3.1",
+      "scope": "guarded-terraform-console-lock-contention-and-zero-change-saved-plan-proof",
+      "liveStateContentMutation": false,
+      "transientLockMutation": true
+    },
+    {
+      "version": "v0.12.2.3.2",
+      "scope": "reviewed-lock-and-plan-evidence-plus-object-version-recovery-request",
+      "liveStateContentMutation": false,
+      "transientLockMutation": false
+    },
+    {
+      "version": "v0.12.2.3.3",
+      "scope": "separately-approved-byte-identical-object-version-recovery-drill",
+      "liveStateContentMutation": true,
+      "transientLockMutation": true
+    },
+    {
+      "version": "v0.12.2.3.4",
+      "scope": "redacted-terminal-evidence-and-bootstrap-migration-runbook-closure",
+      "liveStateContentMutation": false,
+      "transientLockMutation": false
+    }
+  ],
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "writesRemoteState": false,
+    "writesLockObject": false,
+    "grantsLiveAuthority": false
+  }
+}

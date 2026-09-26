@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.3.0-remote-state-proof-and-recovery-design` adopts the validated
+remote state identity and splits real lock contention, zero-change review,
+controlled object-version recovery and terminal evidence into separately
+bounded successors. It is fully offline. See
+[v0.12.2.3.0 remote-state proof and recovery design](docs/V0.12.2.3.0_REMOTE_STATE_PROOF_AND_RECOVERY_DESIGN.md).
+
+Predecessor development checkpoint:
 `v0.12.2.2.1-bootstrap-state-migration-recovery-evidence` records the terminal
 redacted evidence for the successful read-only identity-rebase recovery. The
 remote state has one current object version and no delete marker; no migration
@@ -1051,9 +1058,16 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.2.2.1-bootstrap-state-migration-recovery-evidence
+v0.12.2.3.0-remote-state-proof-and-recovery-design
 ```
-v0.12.2.2.1 records protected-main and private-result digest bindings for the
+v0.12.2.3.0 defines a real Terraform-console-held S3 lock contention proof, a
+human-reviewed zero-change saved plan and a separately approved byte-identical
+object-version recovery drill. It corrects the obsolete pre-migration lineage
+assumption without weakening address or semantic equality and adds no live
+authority. See
+`delivery/contracts/v0.12.2.3.0-remote-state-proof-and-recovery-design.json`.
+
+The predecessor v0.12.2.2.1 records protected-main and private-result digest bindings for the
 completed read-only identity-rebase recovery. It publishes only safe hashes,
 counts, timestamps and booleans, adds no live authority and hands remote-state
 proof to v0.12.2.3. See

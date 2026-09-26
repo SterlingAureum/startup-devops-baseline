@@ -941,3 +941,6 @@ echo "==> Validating v0.12.2.2.0.2 identity-rebase digest-encoding repair"
 
 echo "==> Validating v0.12.2.2.1 bootstrap state migration recovery evidence"
 "${ROOT_DIR}/scripts/validate-v0.12.2.2.1-bootstrap-state-migration-recovery-evidence.sh"
+
+echo "==> Validating v0.12.2.3.0 remote-state proof and recovery design"
+"${ROOT_DIR}/scripts/validate-v0.12.2.3.0-remote-state-proof-and-recovery-design.sh"

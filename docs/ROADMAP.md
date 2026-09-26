@@ -842,6 +842,9 @@ Incremental scope:
   proof - delivered awaiting a fresh protected-main-bound request, separate
   approval and live execution; no init, apply, state push or state-content
   mutation is authorized
+- v0.12.2.3.1.0.1 - guarded refresh-only recovery plan - delivered after the
+  proof correctly stopped on seven reviewed state-refresh entries; produces a
+  separate refresh-only saved plan while prohibiting apply and state mutation
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and

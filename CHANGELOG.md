@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.2.3.1.0.1
+
+- Bind the exact v0.12.2.3.1 stopping point after successful real lock contention, clean holder release and an ordinary plan with detailed exit code `0`.
+- Record seven exact provider-refresh drift entries while proving all 13 managed resource changes and every output change are `no-op` and contain no imports.
+- Preserve the original zero-drift gate and prohibit retrying the failed proof or treating an in-memory refresh as persisted state.
+- Add command-free verification and a separately approved saved `terraform plan -refresh-only` producer with expected detailed exit code `2`.
+- Require the new plan to reproduce the exact drift digest while canonical state bytes and state-object history remain unchanged; allow only one transient lock acquisition/release pair.
+- Defer every refresh apply and state-content mutation to separately reviewed v0.12.2.3.1.0.2.
+
 ## v0.12.2.3.1
 
 - Add command-free verification bound to protected main, the terminal identity-rebase recovery, canonical remote-state bytes, the staged source manifest, existing backend metadata and original private tfvars.

@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "v0.12.2.2.0.1-bootstrap-state-identity-rebase-recovery-v1",
+  "version": "v0.12.2.2.0.1",
+  "status": "delivered-awaiting-separate-read-only-identity-rebase-recovery-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "incidentControlPlaneCommit": "5e10d0edbca3be5e87fdc5446f03e6d5c4c374f5",
+  "predecessor": {
+    "version": "v0.12.2.2",
+    "contract": "delivery/contracts/v0.12.2.2-reviewed-bootstrap-state-migration.json",
+    "requiredStatus": "delivered-awaiting-separate-state-migration-approval",
+    "approvedMigrationExecutedOnce": true,
+    "automaticRetryPerformed": false
+  },
+  "incidentBindings": {
+    "privateMigrationRequestSha256": "dbf011baaf96661f4317da1edcbbca0b3f84596c15965d1edd9c038b1e5a6467",
+    "immutableBackupSha256": "83bca892fef5f5eefffba3de247c4694daccf7201309262ff8dd73b61bc1b995",
+    "remoteStateSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+    "awsIdentityStdoutSha256": "a4ae772e487ab1ff50e89e58de4b5b8d5de619abbdb9f0f7ae87e9189d570732",
+    "preMigrationLiveValidationSha256": "6f929213b687c44652c5f265f577767dcc422ab363f4cb598ed1c68395c1c091",
+    "terraformInitStdoutSha256": "74bc49dd83ef1bb9e141b35689c96099136294a6a7c89014d24569f1203b916e",
+    "emptyStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "terraformInitSucceeded": true,
+    "backendConfigured": true,
+    "migrationResultPresent": false,
+    "migrationValidationPresent": false
+  },
+  "reviewedIdentityRebase": {
+    "oldLineageSha256": "0bacf9c12fd5f2485d1b2acac980b6295a0f612335533b6abe7d1d03e3f7dc90",
+    "newLineageSha256": "4f42afe2b009593773f37059419ca3ea4e87ca89d4ef1a7ff1278d60f2ed2fab",
+    "lineageChanged": true,
+    "oldSerial": 20,
+    "newSerial": 1,
+    "managedAddressCount": 13,
+    "dataAddressCount": 9,
+    "addressesEqual": true,
+    "resourcesEqual": true,
+    "resourcesSha256": "9ae208cbf85c37a2b9820e41be80b852efcc3cbdade7d9caa7e425784be0556e",
+    "outputsEqual": true,
+    "outputsSha256": "695a5087bac5068c4a7ae30ac5d3edc5cb09e28bd8cfe591d11a0c2d0aca8b2b",
+    "backupCheckResultsSha256": "5edcc426d374ea432c4c8509b9a7e3060908f8b2bdaf754255934e05792134a8",
+    "remoteCheckResultsSha256": "9e28019a03a22863c8ed4d06f2c57a1cf26e7634b3f6a3735c9f680fc17277ec",
+    "semanticProjectionEqual": true,
+    "semanticProjectionSha256": "46a2fda8b522437194aab7a03b41170ff6a02f1affaa067ec76ce8a0ebada48d",
+    "postMigrationWorkingStateEmpty": true
+  },
+  "interpretation": {
+    "terraformCopiedResourcesAndOutputs": true,
+    "remoteBackendEstablishedNewStateIdentity": true,
+    "resourceMutationObserved": false,
+    "outputMutationObserved": false,
+    "addressMutationObserved": false,
+    "v01222FailClosedBehaviorWasCorrect": true,
+    "incidentMayBeAcceptedWithoutSecondMigration": true
+  },
+  "verifyBoundary": {
+    "awsCommands": false,
+    "terraformCommands": false,
+    "writesPrivateEvidence": false,
+    "requiresProtectedMain": true,
+    "requiresFreshWindow": true,
+    "revalidatesCompleteIncidentChain": true,
+    "revalidatesExactIdentityRebase": true,
+    "recoveryAuthorizedByVerify": false
+  },
+  "executeBoundary": {
+    "awsIdentityRead": true,
+    "terraformStatePull": true,
+    "terraformStateList": true,
+    "s3StateObjectHead": true,
+    "s3StateObjectVersionsRead": true,
+    "reusesExistingBackendMetadata": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "stateMigration": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  },
+  "successGate": {
+    "remoteStateBytesMustMatchIncidentPull": true,
+    "reviewedIdentityRebaseMustMatch": true,
+    "stateListMustMatchExactAddresses": true,
+    "sseKmsIdentityMustMatch": true,
+    "bucketKeyMustBeEnabled": true,
+    "exactlyOneCurrentStateObjectVersionRequired": true,
+    "stateObjectDeleteMarkerForbidden": true,
+    "preservedBackupsRemainUntouched": true
+  },
+  "privacyBoundary": {
+    "publishesAwsAccount": false,
+    "publishesBucket": false,
+    "publishesKmsArn": false,
+    "publishesRawLineage": false,
+    "publishesStateBytes": false,
+    "publishesPrivatePaths": false,
+    "publishesStateObjectVersionId": false,
+    "allowsPublicDigestsCountsAndBooleans": true
+  },
+  "successor": {
+    "version": "v0.12.2.3",
+    "purpose": "adopt the validated remote state identity and prove lock contention, zero change and controlled object-version recovery",
+    "requiresSeparateApproval": true
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "touchesPrivateEvidence": false,
+    "performsRecovery": false
+  }
+}

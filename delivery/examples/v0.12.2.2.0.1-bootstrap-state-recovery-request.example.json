@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "v0.12.2.2.0.1-bootstrap-state-recovery-request-v1",
+  "operation": "complete-read-only-bootstrap-state-identity-rebase-recovery",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedRecoveryMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "incidentControlPlaneCommit": "5e10d0edbca3be5e87fdc5446f03e6d5c4c374f5",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "privateMigrationRequestPath": "/private/owner-readable/bootstrap-state-migration-request-attempt-01.json",
+  "privateMigrationRequestSha256": "dbf011baaf96661f4317da1edcbbca0b3f84596c15965d1edd9c038b1e5a6467",
+  "privateMigrationOutputDirectory": "/private/owner-readable/bootstrap-state-migration-attempt-01",
+  "privateRecoveryOutputDirectory": "/private/owner-readable/bootstrap-state-identity-rebase-recovery-attempt-01",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "awsReadOnlyValidation": true,
+    "terraformStatePull": true,
+    "terraformStateList": true,
+    "s3ObjectRead": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "stateMigration": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

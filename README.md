@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.3.1.0.1-guarded-refresh-only-recovery-plan` binds the exact seven
+refresh-only drift entries found after the successful lock proof and produces
+a separately reviewed state-refresh plan without applying it or changing
+canonical state. See
+[v0.12.2.3.1.0.1 guarded refresh-only recovery plan](docs/V0.12.2.3.1.0.1_GUARDED_REFRESH_ONLY_RECOVERY_PLAN.md).
+
+Predecessor development checkpoint:
 `v0.12.2.3.1-guarded-remote-state-proof` adds command-free verification and a
 separately approved live executor for real S3 lock contention followed by a
 machine-gated zero-change saved plan. It never reinitializes, reapplies,
@@ -1065,9 +1072,17 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.2.3.1-guarded-remote-state-proof
+v0.12.2.3.1.0.1-guarded-refresh-only-recovery-plan
 ```
-v0.12.2.3.1 implements the real Terraform-console-held S3 lock proof and the
+v0.12.2.3.1.0.1 preserves the correctly stopped proof, accepts only the exact
+seven reviewed state-refresh entries and can produce a saved
+`terraform plan -refresh-only` under separate approval. It requires all 13
+managed resource changes and every output to remain no-op, leaves canonical
+state bytes and state-object history unchanged, and does not authorize apply.
+See
+`delivery/contracts/v0.12.2.3.1.0.1-guarded-refresh-only-recovery-plan.json`.
+
+The predecessor v0.12.2.3.1 implements the real Terraform-console-held S3 lock proof and the
 post-release zero-change saved plan. Verification executes no operational
 command; execution requires a fresh request, protected-main binding and
 separate confirmation. It preserves remote state bytes and versions, expects

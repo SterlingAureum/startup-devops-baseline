@@ -947,3 +947,6 @@ echo "==> Validating v0.12.2.3.0 remote-state proof and recovery design"
 
 echo "==> Validating v0.12.2.3.1 guarded remote-state proof"
 "${ROOT_DIR}/scripts/validate-v0.12.2.3.1-guarded-remote-state-proof.sh"
+
+echo "==> Validating v0.12.2.3.1.0.1 guarded refresh-only recovery plan"
+"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.1-guarded-refresh-only-recovery-plan.sh"

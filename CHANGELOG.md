@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.12.2.4.2
+
+- Replace 168 direct v0.11 root launches with 112 graph-derived maximal entrypoints while preserving reachability of all 168 historical validators.
+- Reduce calculated v0.11 executions from 866 to 176 and total validator executions from 951 to 245, with fail-closed manifest, cycle and coverage checks.
+- Restrict Terraform formatting to Git-tracked configuration files so ignored private tfvars cannot contaminate local CI parity.
+- Correct the v0.12.2.4.1 compatibility-branch accounting from 254/23 to 256/25 while retaining the same 231-execution reduction.
+- Preserve GitHub triggers and required-check names; defer path routing and cross-workflow deduplication to v0.12.3.1.
+
+## v0.12.2.4.1
+
+- Reduce root-level v0.12 validator launches from 23 to two and effective historical validator executions from 256 to 25 while preserving the compatibility branch and all 22 validators in the existing successor-to-predecessor chain.
+- Add a fail-closed static call-graph checker that rejects missing validators, cycles, multiple predecessors, reordered root entrypoints and incomplete chain coverage.
+- Report the unique chain count and elapsed chain time without changing GitHub workflow triggers, required-check names or historical validator files.
+- Keep change-impact routing and cross-workflow deduplication deferred to v0.12.3.1; add no AWS, Terraform or paused state-recovery authority.
+
 ## v0.12.2.3.1.0.2.0.1.2.0.1
 
 - Record the successful one-time reviewed refresh-only apply: zero remote resource changes, unchanged lineage and serial 1 to 2.

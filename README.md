@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.3.1.0.2-reviewed-refresh-only-state-reconciliation` binds the
+human-reviewed saved refresh-only plan and permits only its separately
+approved one-time application, followed by strict state and S3 history gates.
+See [v0.12.2.3.1.0.2 reviewed refresh-only state reconciliation](docs/V0.12.2.3.1.0.2_REVIEWED_REFRESH_ONLY_STATE_RECONCILIATION.md).
+
+Predecessor development checkpoint:
 `v0.12.2.3.1.0.1.0.1-refresh-only-plan-evidence-recovery` corrects the
 refresh-only JSON shape gate and completes read-only postchecks for the
 existing saved plan without rerunning it or changing state. See
@@ -1096,6 +1102,15 @@ requires zero resource changes, seven exact `resource_drift` entries and seven
 no-op outputs. A separately approved recovery performs only read-only state and
 S3 history checks; it cannot plan, apply, initialize, push or mutate state. See
 `delivery/contracts/v0.12.2.3.1.0.1.0.1-refresh-only-plan-evidence-recovery.json`.
+
+v0.12.2.3.1.0.2-reviewed-refresh-only-state-reconciliation
+
+The exact saved refresh-only plan may be applied once only after command-free
+verification and a separate approval. No new plan is generated and no remote
+resource action is allowed. Success requires planned values to match the
+persisted state, a one-step serial advance, unchanged lineage and addresses,
+one new state version, one lock acquisition/release pair and a clean lock. See
+`delivery/contracts/v0.12.2.3.1.0.2-reviewed-refresh-only-state-reconciliation.json`.
 
 The predecessor v0.12.2.3.1 implements the real Terraform-console-held S3 lock proof and the
 post-release zero-change saved plan. Verification executes no operational

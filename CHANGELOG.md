@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.2.3.1.0.2
+
+- Bind the successfully recovered and human-reviewed refresh-only binary, JSON, text and drift evidence to a new protected-main request.
+- Add command-free verification and a separately approved executor that applies only the exact saved plan once without generating another plan.
+- Require zero remote resource actions, unchanged lineage and addresses, serial advancement by one and exact equality between persisted state values and reviewed `planned_values`.
+- Require one new state-object version, no state delete marker, and one clean Terraform lock acquisition/release pair.
+- Fail closed after any ambiguous apply or post-apply result, preserving all private evidence and prohibiting automatic retry or rollback.
+
 ## v0.12.2.3.1.0.1.0.1
 
 - Correct the refresh-only plan gate: the exact seven reviewed state updates are represented by `resource_drift`, while `resource_changes` must be empty and all seven outputs remain `no-op`.

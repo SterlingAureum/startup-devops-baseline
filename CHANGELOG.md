@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.2.3.1
+
+- Add command-free verification bound to protected main, the terminal identity-rebase recovery, canonical remote-state bytes, the staged source manifest, existing backend metadata and original private tfvars.
+- Add a separately approved `terraform console` lock holder and require S3 observation of the real native lock before running one `terraform plan -lock-timeout=0s` contender.
+- Accept the contender only with exit code 1 and Terraform's state-lock acquisition error; prohibit synthetic lock writes, direct deletes, force unlock and automatic retry.
+- Release the holder cleanly, prove lock absence, then produce a saved plan with detailed exit code 0 and reject all drift, imports, output changes, creates, updates, deletes and replacements.
+- Revalidate exact state bytes, all 22 addresses and the unchanged state-object history; require exactly two new lock versions and two delete markers from the holder and final plan.
+- Keep raw state, plans, lock data, resource identities, AWS identifiers and object version IDs private, pending human review in v0.12.2.3.2.
+
 ## v0.12.2.3.0
 
 - Adopt the exact validated remote lineage and serial as canonical while retaining immutable-backup, address, resource, output and semantic-equality requirements.

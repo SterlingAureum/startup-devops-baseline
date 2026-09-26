@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.2.2.0.2
+
+- Repair the identity-rebase recovery digest encoder to append the single LF byte used when the reviewed incident digests were recorded.
+- Record that the failed command-free verification executed no AWS or Terraform command, created no recovery output and observed no state drift.
+- Add a fixed-byte regression test that distinguishes `{"a":1}\n` from the former no-LF encoding.
+- Preserve all state, evidence and recovery authority boundaries; require a new request, protected-main binding and approval window after merge.
+
 ## v0.12.2.2.0.1
 
 - Record that the approved v0.12.2.2 init migration succeeded but established a new remote lineage, reset serial to `1` and reserialized `check_results`, causing the original strict identity gate to stop correctly.

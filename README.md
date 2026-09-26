@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.2.0.2-identity-rebase-digest-encoding-repair` restores the single LF
+byte used by the reviewed identity-rebase evidence digest format. It changes no
+digest, state, evidence or live authority and requires a new recovery request
+after merge. See
+[v0.12.2.2.0.2 identity-rebase digest repair](docs/V0.12.2.2.0.2_IDENTITY_REBASE_DIGEST_ENCODING_REPAIR.md).
+
+Predecessor development checkpoint:
 `v0.12.2.2.0.1-bootstrap-state-identity-rebase-recovery` binds the exact
 post-migration identity-rebase incident and adds command-free verification plus
 a separately approved read-only continuation. It never repeats init or state
@@ -1037,9 +1044,15 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.2.2.0.1-bootstrap-state-identity-rebase-recovery
+v0.12.2.2.0.2-identity-rebase-digest-encoding-repair
 ```
-v0.12.2.2.0.1 binds the exact successful-init/identity-rebase incident and
+v0.12.2.2.0.2 corrects the recovery digest encoder to hash sorted compact JSON
+with the same single trailing LF used by all reviewed incident digests. The
+failed verification ran no operational command and found no state drift. This
+repair adds no live authority and requires a new request and window. See
+`delivery/contracts/v0.12.2.2.0.2-identity-rebase-digest-encoding-repair.json`.
+
+The predecessor v0.12.2.2.0.1 binds the exact successful-init/identity-rebase incident and
 accepts only the observed remote identity change when addresses, resources,
 outputs and the semantic state projection remain exact. Its separately
 approved executor resumes only state pull/list and S3 object-version reads by

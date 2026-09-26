@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "v0.12.2.2.0.2-identity-rebase-digest-encoding-repair-v1",
+  "version": "v0.12.2.2.0.2",
+  "status": "delivered-offline-digest-encoding-repair",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "7b0b4e8de1f4626021d62dbf922d145dc7d3a811",
+  "predecessor": {
+    "version": "v0.12.2.2.0.1",
+    "contract": "delivery/contracts/v0.12.2.2.0.1-bootstrap-state-identity-rebase-recovery.json",
+    "requiredStatus": "delivered-awaiting-separate-read-only-identity-rebase-recovery-approval"
+  },
+  "failedVerification": {
+    "privateRecoveryRequestSha256": "a10b3c4a9376745e25366a0f67d6ca9840f4637296da6671498b9fcc7b315ada",
+    "failure": "State resources digest changed",
+    "awsCommandsExecuted": false,
+    "terraformCommandsExecuted": false,
+    "recoveryOutputCreated": false,
+    "stateDriftObserved": false,
+    "requestReusable": false
+  },
+  "rootCause": {
+    "recordedDigestEncoding": "sorted compact JSON followed by exactly one LF byte",
+    "executorDigestEncoding": "sorted compact JSON without trailing LF",
+    "missingByteHex": "0a",
+    "contentComparisonWasEqual": true
+  },
+  "repair": {
+    "sortedKeys": true,
+    "compactSeparators": true,
+    "trailingLfByteCount": 1,
+    "changesBoundDigestValues": false,
+    "changesPrivateEvidence": false,
+    "changesRecoveryAuthority": false,
+    "addsFixedLfRegressionTest": true
+  },
+  "reviewedDigestBindings": {
+    "resourcesSha256": "9ae208cbf85c37a2b9820e41be80b852efcc3cbdade7d9caa7e425784be0556e",
+    "outputsSha256": "695a5087bac5068c4a7ae30ac5d3edc5cb09e28bd8cfe591d11a0c2d0aca8b2b",
+    "backupCheckResultsSha256": "5edcc426d374ea432c4c8509b9a7e3060908f8b2bdaf754255934e05792134a8",
+    "remoteCheckResultsSha256": "9e28019a03a22863c8ed4d06f2c57a1cf26e7634b3f6a3735c9f680fc17277ec",
+    "semanticProjectionSha256": "46a2fda8b522437194aab7a03b41170ff6a02f1affaa067ec76ce8a0ebada48d"
+  },
+  "evidence": {
+    "backupAndRemoteResourcesEqual": true,
+    "backupAndRemoteOutputsEqual": true,
+    "backupAndRemoteSemanticProjectionEqual": true,
+    "allFiveRecordedDigestsMatchLfEncoding": true
+  },
+  "executionBoundary": {
+    "packageApplyRunsAws": false,
+    "packageApplyRunsTerraform": false,
+    "packageValidationRunsAws": false,
+    "packageValidationRunsTerraform": false,
+    "terraformInit": false,
+    "stateMigration": false,
+    "statePush": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "destroy": false,
+    "automaticRetry": false
+  },
+  "nextAttempt": {
+    "requiresNewPrivateRequest": true,
+    "requiresNewApprovalWindow": true,
+    "requiresNewProtectedMainCommit": true,
+    "verifyBeforeSeparateExecuteApproval": true
+  }
+}

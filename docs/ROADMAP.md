@@ -824,6 +824,11 @@ Incremental scope:
   recorded, add fixed-byte regression coverage, record that the failed verify
   ran no operational command and require a new protected-main-bound request and
   approval window without changing state, evidence or recovery authority
+- v0.12.2.2.1 - redacted bootstrap-state migration recovery evidence -
+  completed; bind the successful read-only recovery result, exact remote state,
+  validated identity rebase, 13 managed and nine data addresses, one current
+  S3 state-object version and zero delete markers; record that init/migration
+  were not repeated and publish no private resource identity
 - v0.12.2.3 - lock-contention, zero-change, controlled object-version recovery
   and redacted terminal evidence - planned; recovery uses its own approval and
   execution window

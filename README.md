@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.2.1-bootstrap-state-migration-recovery-evidence` records the terminal
+redacted evidence for the successful read-only identity-rebase recovery. The
+remote state has one current object version and no delete marker; no migration
+or Terraform mutation was repeated. See
+[v0.12.2.2.1 migration recovery evidence](docs/V0.12.2.2.1_BOOTSTRAP_STATE_MIGRATION_RECOVERY_EVIDENCE.md).
+
+Predecessor development checkpoint:
 `v0.12.2.2.0.2-identity-rebase-digest-encoding-repair` restores the single LF
 byte used by the reviewed identity-rebase evidence digest format. It changes no
 digest, state, evidence or live authority and requires a new recovery request
@@ -1044,9 +1051,15 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.2.2.0.2-identity-rebase-digest-encoding-repair
+v0.12.2.2.1-bootstrap-state-migration-recovery-evidence
 ```
-v0.12.2.2.0.2 corrects the recovery digest encoder to hash sorted compact JSON
+v0.12.2.2.1 records protected-main and private-result digest bindings for the
+completed read-only identity-rebase recovery. It publishes only safe hashes,
+counts, timestamps and booleans, adds no live authority and hands remote-state
+proof to v0.12.2.3. See
+`delivery/contracts/v0.12.2.2.1-bootstrap-state-migration-recovery-evidence.json`.
+
+The predecessor v0.12.2.2.0.2 corrects the recovery digest encoder to hash sorted compact JSON
 with the same single trailing LF used by all reviewed incident digests. The
 failed verification ran no operational command and found no state drift. This
 repair adds no live authority and requires a new request and window. See

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.2.2.1
+
+- Record the terminal redacted evidence for the successful read-only bootstrap-state identity-rebase recovery completed at `2026-09-26T03:22:59Z`.
+- Bind the exact incident/recovery protected-main commits, migration/recovery request digests, immutable backup, remote state, validation and result digests.
+- Record 13 managed and nine data addresses, preserved semantic state content, one current S3 state-object version and zero delete markers.
+- Prove that init and migration were not repeated and that no plan, apply, state push, destroy, IAM attachment, retry or rollback occurred.
+- Keep AWS account, bucket, KMS ARN, raw lineage, state, object version ID, private paths and raw command output private.
+- Hand canonical remote-identity adoption, lock contention, zero-change proof and controlled object-version recovery to v0.12.2.3.
+
 ## v0.12.2.2.0.2
 
 - Repair the identity-rebase recovery digest encoder to append the single LF byte used when the reviewed incident digests were recorded.

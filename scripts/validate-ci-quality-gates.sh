@@ -938,3 +938,6 @@ echo "==> Validating v0.12.2.2.0.1 bootstrap state identity-rebase recovery"
 
 echo "==> Validating v0.12.2.2.0.2 identity-rebase digest-encoding repair"
 "${ROOT_DIR}/scripts/validate-v0.12.2.2.0.2-identity-rebase-digest-encoding-repair.sh"
+
+echo "==> Validating v0.12.2.2.1 bootstrap state migration recovery evidence"
+"${ROOT_DIR}/scripts/validate-v0.12.2.2.1-bootstrap-state-migration-recovery-evidence.sh"

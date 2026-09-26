@@ -97,6 +97,12 @@
 /delivery/contracts/v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair.json @SterlingAureum
 /docs/V0.12.2.3.1.0.2.0.1.1_SEMANTIC_PROJECTION_DIGEST_REPAIR.md @SterlingAureum
 /scripts/validate-v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair.sh @SterlingAureum
+/delivery/contracts/v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.json @SterlingAureum
+/delivery/examples/v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state-request.example.json @SterlingAureum
+/docs/V0.12.2.3.1.0.2.0.1.2_DUAL_FORM_PRE_APPLY_STATE.md @SterlingAureum
+/scripts/execute-v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.py @SterlingAureum
+/scripts/test-v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.py @SterlingAureum
+/scripts/validate-v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.sh @SterlingAureum
 
 /scripts/check-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum

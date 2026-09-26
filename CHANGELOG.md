@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.2.3.1.0.2.0.1.2
+
+- Record that attempt-02 stopped before apply after returning the original reviewed canonical state byte-for-byte.
+- Replace the single-observation state-pull byte gate with a finite allowlist of the exact canonical and exact reviewed `check_results`-normalized forms.
+- Reject every third digest and retain identical lineage, serial, resources, outputs, addresses and semantic-projection requirements.
+- Preserve the existing saved-plan, state-history, lock-history and no-retry boundaries.
+
 ## v0.12.2.3.1.0.2.0.1.1
 
 - Correct the normalization gate's semantic-projection SHA-256 to the six-key sorted compact JSON plus one-LF encoding actually implemented by the executor.

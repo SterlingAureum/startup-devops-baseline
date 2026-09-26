@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state-v1",
+  "version": "v0.12.2.3.1.0.2.0.1.2",
+  "status": "delivered-awaiting-fresh-request-and-separate-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "ff6c2ca6deefa3bc5e3ef4a76e19d4404d219c3c",
+  "incident": {
+    "failedNormalizationRequestSha256": "e52450132124cd97be2a234f2a360936c0f0c9cf1d884c2ffdcd1f706ca6c741",
+    "applyExecuted": false,
+    "observedStateSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+    "observedStateWasReviewedCanonical": true
+  },
+  "acceptedPreApplyForms": {
+    "reviewedCanonicalSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+    "reviewedNormalizedSha256": "5ff0cb562fa7bf6d99cd2068c373646fca50f06cbaa08f3f5a3e3392bf2c55e1",
+    "onlyDifference": "check_results",
+    "semanticProjectionSha256": "1d21a9edbfe82d1d1496b312c8a31996c20f9f4bf8505604a277cbdede2f8d15",
+    "finiteSetSize": 2,
+    "unknownFormRejected": true
+  },
+  "executeBoundary": {
+    "exactSavedRefreshPlanApply": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "unsavedApply": false,
+    "statePush": false,
+    "remoteResourceActions": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  },
+  "successGate": {
+    "stateSerialIncrement": 1,
+    "stateLineageUnchanged": true,
+    "plannedValuesExactlyPersisted": true,
+    "stateObjectVersionDelta": 1,
+    "lockObjectVersionDelta": 1,
+    "lockDeleteMarkerDelta": 1,
+    "lockObjectAbsent": true
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "grantsLiveAuthority": false
+  }
+}

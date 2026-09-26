@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state-request-v1",
+  "operation": "apply-reviewed-refresh-plan-with-exact-dual-form-pre-apply-state",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "privateFailedNormalizationRequestPath": "/private/owner-readable/bootstrap-state-pull-normalization-reconciliation-request-attempt-02.json",
+  "privateFailedNormalizationRequestSha256": "e52450132124cd97be2a234f2a360936c0f0c9cf1d884c2ffdcd1f706ca6c741",
+  "privateFailedNormalizationOutputDirectory": "/private/owner-readable/bootstrap-state-pull-normalization-reconciliation-output-attempt-02",
+  "failedIdentityStdoutSha256": "4737b15d134eaa1c52f79925a21eb36c0f9b288434de42dfb30a1a03ec488496",
+  "canonicalStateSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+  "normalizedStateSha256": "5ff0cb562fa7bf6d99cd2068c373646fca50f06cbaa08f3f5a3e3392bf2c55e1",
+  "canonicalCheckResultsSha256": "9e28019a03a22863c8ed4d06f2c57a1cf26e7634b3f6a3735c9f680fc17277ec",
+  "normalizedCheckResultsSha256": "5edcc426d374ea432c4c8509b9a7e3060908f8b2bdaf754255934e05792134a8",
+  "semanticProjectionSha256": "1d21a9edbfe82d1d1496b312c8a31996c20f9f4bf8505604a277cbdede2f8d15",
+  "privateApplyOutputDirectory": "/private/owner-readable/bootstrap-dual-form-state-reconciliation-output-attempt-01",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "awsIdentityAndS3Read": true,
+    "terraformStatePullAndList": true,
+    "exactSavedRefreshPlanApply": true,
+    "acceptReviewedCanonicalState": true,
+    "acceptReviewedCheckResultsNormalizedState": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "unsavedApply": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

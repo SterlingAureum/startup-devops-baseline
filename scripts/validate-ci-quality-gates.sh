@@ -962,3 +962,6 @@ echo "==> Validating v0.12.2.3.1.0.2.0.1 state-pull check_results normalization 
 
 echo "==> Validating v0.12.2.3.1.0.2.0.1.1 semantic-projection digest repair"
 "${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair.sh"
+
+echo "==> Validating v0.12.2.3.1.0.2.0.1.2 dual-form pre-apply state gate"
+"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.sh"

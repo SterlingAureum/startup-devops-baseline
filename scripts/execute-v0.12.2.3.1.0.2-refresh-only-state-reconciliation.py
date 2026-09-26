@@ -105,6 +105,42 @@ def validate_check_results_normalization(
     return observed_state
 
 
+def validate_pre_apply_state(context: dict[str, Any], state_bytes: bytes) -> tuple[dict[str, Any], str | None, str]:
+    state_sha256 = hashlib.sha256(state_bytes).hexdigest()
+    accepted_forms = context.get("accepted_pre_apply_state_forms")
+    if accepted_forms is not None:
+        require(state_sha256 in accepted_forms, "Pre-apply state is outside the exact accepted forms")
+        accepted_form = accepted_forms[state_sha256]
+        require(accepted_form in {"reviewed-canonical", "reviewed-check-results-normalized"}, "Pre-apply state form changed")
+        if accepted_form == "reviewed-canonical":
+            state = json.loads(state_bytes)
+            require(state == context["reviewed_before_state"], "Reviewed canonical pre-apply state changed")
+        else:
+            normalization = context["check_results_normalization"]
+            state = validate_check_results_normalization(
+                context["reviewed_before_state"],
+                state_bytes,
+                observed_state_sha256=state_sha256,
+                observed_check_results_sha256=normalization["check_results_sha256"],
+                semantic_projection_sha256=normalization["semantic_projection_sha256"],
+            )
+            require(state == context["normalized_before_state"], "Normalized pre-apply state changed")
+        return state, accepted_form, state_sha256
+    expected = context.get("pre_apply_state_sha256", REMOTE_STATE_SHA256)
+    require(state_sha256 == expected, "Canonical state bytes changed before apply")
+    if context.get("check_results_normalization") is not None:
+        normalization = context["check_results_normalization"]
+        observed = validate_check_results_normalization(
+            context["reviewed_before_state"],
+            state_bytes,
+            observed_state_sha256=expected,
+            observed_check_results_sha256=normalization["check_results_sha256"],
+            semantic_projection_sha256=normalization["semantic_projection_sha256"],
+        )
+        require(observed == context["before_state"], "Normalized pre-apply state changed")
+    return context["before_state"], None, state_sha256
+
+
 def load_json(path: Path, label: str) -> Any:
     try:
         return json.loads(path.read_text())
@@ -356,18 +392,9 @@ def execute_verified(
     require(identity.get("Account") == context["request"]["expectedAwsAccountId"], "AWS account changed")
     prefix = ["terraform", f"-chdir={context['working']}"]
     pull_before = record(output, "terraform-state-pull-before", [*prefix, "state", "pull"], environment, 180, runner, repository_root)
-    expected_pre_apply_sha256 = context.get("pre_apply_state_sha256", REMOTE_STATE_SHA256)
-    require(pull_before.returncode == 0 and hashlib.sha256(pull_before.stdout).hexdigest() == expected_pre_apply_sha256, "Canonical state bytes changed before apply")
-    if context.get("check_results_normalization") is not None:
-        normalization = context["check_results_normalization"]
-        observed_before = validate_check_results_normalization(
-            context["reviewed_before_state"],
-            pull_before.stdout,
-            observed_state_sha256=expected_pre_apply_sha256,
-            observed_check_results_sha256=normalization["check_results_sha256"],
-            semantic_projection_sha256=normalization["semantic_projection_sha256"],
-        )
-        require(observed_before == context["before_state"], "Normalized pre-apply state changed")
+    require(pull_before.returncode == 0, "State pull failed before apply")
+    accepted_forms = context.get("accepted_pre_apply_state_forms")
+    pre_apply_state, accepted_form, pulled_pre_apply_sha256 = validate_pre_apply_state(context, pull_before.stdout)
     list_before = record(output, "terraform-state-list-before", [*prefix, "state", "list"], environment, 180, runner, repository_root)
     require(list_before.returncode == 0 and MIGRATION_EXECUTOR.parse_state_list(list_before.stdout) == context["managed"] | context["data"], "State address inventory changed before apply")
     bucket = context["identities"]["bucket"]
@@ -393,7 +420,7 @@ def execute_verified(
     pull_after = record(output, "terraform-state-pull-after", [*prefix, "state", "pull"], environment, 180, runner, repository_root)
     require(pull_after.returncode == 0, "State pull failed after apply")
     after_state = json.loads(pull_after.stdout)
-    before_state = context["before_state"]
+    before_state = pre_apply_state
     require(after_state.get("version") == before_state.get("version") == 4 and after_state.get("terraform_version") == "1.14.5", "State format changed")
     require(after_state.get("lineage") == before_state.get("lineage"), "State lineage changed")
     require(after_state.get("serial") == before_state.get("serial") + 1, "State serial did not advance exactly once")
@@ -422,7 +449,7 @@ def execute_verified(
     after_sha = hashlib.sha256(pull_after.stdout).hexdigest()
     evidence = {
         "schemaVersion": context.get("evidence_schema", "v0.12.2.3.1.0.2-refresh-only-state-reconciliation-evidence-v1"),
-        "priorStateSha256": expected_pre_apply_sha256, "reconciledStateSha256": after_sha,
+        "priorStateSha256": pulled_pre_apply_sha256, "reconciledStateSha256": after_sha,
         "binaryRefreshPlanSha256": BINARY_PLAN_SHA256, "refreshPlanJsonSha256": PLAN_JSON_SHA256,
         "resourceDriftSha256": RESOURCE_DRIFT_SHA256, "priorSerial": before_state["serial"],
         "reconciledSerial": after_state["serial"], "lineageUnchanged": True,
@@ -437,6 +464,8 @@ def execute_verified(
     if context.get("check_results_normalization") is not None:
         evidence["reviewedCanonicalStateSha256"] = REMOTE_STATE_SHA256
         evidence["checkResultsNormalizationAccepted"] = True
+    if accepted_forms is not None:
+        evidence["acceptedPreApplyStateForm"] = accepted_form
     evidence_path = output / context.get("evidence_filename", "refresh-only-state-reconciliation-evidence.json")
     APPLY_EXECUTOR.write_private(evidence_path, canonical_json(evidence))
     result = {
@@ -449,7 +478,7 @@ def execute_verified(
         "binary_refresh_plan_sha256": BINARY_PLAN_SHA256,
         "refresh_plan_json_sha256": PLAN_JSON_SHA256,
         "resource_drift_sha256": RESOURCE_DRIFT_SHA256,
-        "prior_state_sha256": expected_pre_apply_sha256, "reconciled_state_sha256": after_sha,
+        "prior_state_sha256": pulled_pre_apply_sha256, "reconciled_state_sha256": after_sha,
         "reconciliation_evidence_sha256": file_sha256(evidence_path),
         "prior_serial": before_state["serial"], "reconciled_serial": after_state["serial"],
         "state_lineage_unchanged": True, "planned_values_exactly_persisted": True,
@@ -470,6 +499,8 @@ def execute_verified(
     if context.get("check_results_normalization") is not None:
         result["reviewed_canonical_state_sha256"] = REMOTE_STATE_SHA256
         result["check_results_normalization_accepted"] = True
+    if accepted_forms is not None:
+        result["accepted_pre_apply_state_form"] = accepted_form
     result_path = output / context.get("result_filename", "refresh-only-state-reconciliation-result.json")
     APPLY_EXECUTOR.write_private(result_path, canonical_json(result))
     result["reconciliation_result_sha256"] = file_sha256(result_path)

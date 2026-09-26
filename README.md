@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.3.1.0.1.0.1-refresh-only-plan-evidence-recovery` corrects the
+refresh-only JSON shape gate and completes read-only postchecks for the
+existing saved plan without rerunning it or changing state. See
+[v0.12.2.3.1.0.1.0.1 refresh-only plan evidence recovery](docs/V0.12.2.3.1.0.1.0.1_REFRESH_ONLY_PLAN_EVIDENCE_RECOVERY.md).
+
+Predecessor development checkpoint:
 `v0.12.2.3.1.0.1-guarded-refresh-only-recovery-plan` binds the exact seven
 refresh-only drift entries found after the successful lock proof and produces
 a separately reviewed state-refresh plan without applying it or changing
@@ -1081,6 +1087,15 @@ managed resource changes and every output to remain no-op, leaves canonical
 state bytes and state-object history unchanged, and does not authorize apply.
 See
 `delivery/contracts/v0.12.2.3.1.0.1-guarded-refresh-only-recovery-plan.json`.
+
+v0.12.2.3.1.0.1.0.1-refresh-only-plan-evidence-recovery
+
+The existing refresh-only plan is retained after the original executor
+incorrectly expected ordinary-plan `resource_changes`. The corrected gate
+requires zero resource changes, seven exact `resource_drift` entries and seven
+no-op outputs. A separately approved recovery performs only read-only state and
+S3 history checks; it cannot plan, apply, initialize, push or mutate state. See
+`delivery/contracts/v0.12.2.3.1.0.1.0.1-refresh-only-plan-evidence-recovery.json`.
 
 The predecessor v0.12.2.3.1 implements the real Terraform-console-held S3 lock proof and the
 post-release zero-change saved plan. Verification executes no operational

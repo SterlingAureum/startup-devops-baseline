@@ -61,7 +61,7 @@
     "refreshOnlyDetailedExitCode": 2,
     "exactSevenResourceDrifts": true,
     "exactDriftDigestRequired": true,
-    "allManagedResourceChangesNoOp": true,
+    "emptyResourceChangesRequired": true,
     "allOutputChangesNoOp": true,
     "importsAllowed": false,
     "canonicalStateBytesUnchanged": true,

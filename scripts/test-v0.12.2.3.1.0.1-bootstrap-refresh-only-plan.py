@@ -81,6 +81,17 @@ def reviewed_plan() -> tuple[dict, set[str], dict[str, tuple[str, ...]]]:
     return plan, managed, paths
 
 
+def refresh_only_plan(plan: dict) -> dict:
+    result = dict(plan)
+    result["resource_changes"] = []
+    result["output_changes"] = {
+        name: {"actions": ["no-op"], "before": "x", "after": "x"}
+        for name in EXECUTOR.EXPECTED_REFRESH_OUTPUTS
+    }
+    result["applyable"] = True
+    return result
+
+
 def drift_context(plan, managed, paths):
     stack = ExitStack()
     stack.enter_context(patch.object(EXECUTOR, "EXPECTED_DRIFT_PATHS", paths))
@@ -155,6 +166,20 @@ class DriftGateTests(unittest.TestCase):
         with drift_context(plan, managed, paths), self.assertRaisesRegex(ValueError, "not all no-op"):
             EXECUTOR.validate_reviewed_drift(plan)
 
+    def test_refresh_only_shape_is_accepted(self):
+        plan, managed, paths = reviewed_plan()
+        plan = refresh_only_plan(plan)
+        with drift_context(plan, managed, paths):
+            result = EXECUTOR.validate_reviewed_drift(plan, refresh_only=True)
+        self.assertEqual(result["changes"], {})
+
+    def test_refresh_only_resource_change_is_rejected(self):
+        plan, managed, paths = reviewed_plan()
+        refresh = refresh_only_plan(plan)
+        refresh["resource_changes"] = [plan["resource_changes"][0]]
+        with drift_context(refresh, managed, paths), self.assertRaisesRegex(ValueError, "unexpectedly contains"):
+            EXECUTOR.validate_reviewed_drift(refresh, refresh_only=True)
+
 
 class ExecutionTests(unittest.TestCase):
     def test_verify_result_is_command_free_and_unauthorized(self):
@@ -170,6 +195,7 @@ class ExecutionTests(unittest.TestCase):
 
     def test_execute_produces_only_refresh_plan_and_preserves_state(self):
         plan, managed, paths = reviewed_plan()
+        plan = refresh_only_plan(plan)
         data = {f"data.aws_test.item_{index}" for index in range(9)}
         state_bytes = b'{"canonical":"state"}\n'
         state_sha = hashlib.sha256(state_bytes).hexdigest()

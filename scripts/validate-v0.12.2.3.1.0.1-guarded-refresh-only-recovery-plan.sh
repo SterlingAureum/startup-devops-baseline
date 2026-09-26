@@ -56,7 +56,7 @@ def validate(value):
     require(all(execute.get(key) is False for key in ("stateContentMutation", "terraformInit", "terraformApply", "ordinaryTerraformPlan", "statePush", "destroy", "iamPolicyAttachment", "directLockWrite", "forceUnlock", "automaticRetry")), "mutation authority drift")
     success = value.get("successGate")
     require(success.get("refreshOnlyDetailedExitCode") == 2 and success.get("lockVersionDelta") == 1 and success.get("lockDeleteMarkerDelta") == 1, "success count drift")
-    require(all(success.get(key) is True for key in ("exactSevenResourceDrifts", "exactDriftDigestRequired", "allManagedResourceChangesNoOp", "allOutputChangesNoOp", "canonicalStateBytesUnchanged", "stateObjectHistoryUnchanged", "savedBinaryPlanRequired", "humanReviewRequired")), "success gate drift")
+    require(all(success.get(key) is True for key in ("exactSevenResourceDrifts", "exactDriftDigestRequired", "emptyResourceChangesRequired", "allOutputChangesNoOp", "canonicalStateBytesUnchanged", "stateObjectHistoryUnchanged", "savedBinaryPlanRequired", "humanReviewRequired")), "success gate drift")
     require(success.get("importsAllowed") is False, "import boundary drift")
     privacy = value.get("privacyBoundary")
     require(all(privacy.get(key) is False for key in ("publishesAwsAccount", "publishesBucket", "publishesKmsArn", "publishesStateBytes", "publishesDriftValues", "publishesPlanContents", "publishesObjectVersionIds", "publishesPrivatePaths")), "privacy drift")

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "v0.12.2.3.1.0.1.0.1-refresh-plan-evidence-recovery-request-v1",
+  "operation": "complete-read-only-refresh-plan-evidence-recovery",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedRecoveryMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "privateFailedRefreshPlanRequestPath": "/private/owner-readable/bootstrap-refresh-only-plan-request-attempt-01.json",
+  "privateFailedRefreshPlanRequestSha256": "d856dd8a88485a3a816e79c411e6551e2335bd435ffa61d05adc41e2622c6f3a",
+  "privateFailedRefreshPlanOutputDirectory": "/private/owner-readable/bootstrap-refresh-only-plan-output-attempt-01",
+  "binaryRefreshPlanSha256": "25e0d13ea279af093fc138c9f6d946694e3e399df5c5c6c2648e401ce789f74c",
+  "refreshPlanJsonSha256": "b89d89f3590f8cf7aab5bab15fa5d0dc2e522cb8d9c56098bcb6ea02a11887ad",
+  "refreshPlanTextSha256": "746ef94f5ddb6bd3630006011745bf2f67d8ce7a43eff54642d7d54193e67d98",
+  "resourceDriftSha256": "cda2f5fefc620e11747c88e38db673e906fb7c4a29a5a5c886a5f7ec0140ab7a",
+  "canonicalRemoteStateSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+  "privateRecoveryOutputDirectory": "/private/owner-readable/bootstrap-refresh-plan-evidence-recovery-attempt-01",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "awsIdentityRead": true,
+    "terraformStatePull": true,
+    "terraformStateList": true,
+    "s3StateAndLockRead": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "directLockWrite": false,
+    "forceUnlock": false,
+    "automaticRetry": false
+  }
+}

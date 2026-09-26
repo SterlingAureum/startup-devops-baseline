@@ -33,13 +33,21 @@ def validate(value):
     require(scope.get("postChangeDirectV012ValidatorCount") == 2, "post-change count drift")
     require(scope.get("uniqueChainedValidatorCount") == 22, "chain count drift")
     require(scope.get("rootDirectInvocationReduction") == 21, "reduction drift")
-    require(scope.get("preChangeEffectiveHistoricalValidatorExecutions") == 254, "pre-change effective count drift")
-    require(scope.get("postChangeEffectiveHistoricalValidatorExecutions") == 23, "post-change effective count drift")
+    require(scope.get("preChangeEffectiveHistoricalValidatorExecutions") == 256, "pre-change effective count drift")
+    require(scope.get("postChangeEffectiveHistoricalValidatorExecutions") == 25, "post-change effective count drift")
     require(scope.get("duplicateHistoricalValidatorExecutionReduction") == 231, "effective reduction drift")
     require(scope.get("rootDirectV012Validators") == [
         "validate-v0.12.1.0.1-ci-compatibility-repair.sh",
         "validate-v0.12.2.4.1-validator-orchestration-dedup.sh",
     ], "root entrypoint drift")
+    require(scope.get("successorRootDirectV012ValidatorCount") == 1, "successor root count drift")
+    require(scope.get("successorRootDirectV012Validators") == [
+        "validate-v0.12.2.4.2-quality-gate-history-dedup.sh",
+    ], "successor root drift")
+    require(scope.get("successorDelegatedV012Validators") == [
+        "validate-v0.12.1.0.1-ci-compatibility-repair.sh",
+        "validate-v0.12.2.4.1-validator-orchestration-dedup.sh",
+    ], "successor delegation drift")
     require(scope.get("chainedValidatorEntryPoint") == "validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh", "chain entrypoint drift")
     invariants = value.get("invariants")
     for key in (
@@ -85,6 +93,7 @@ mutate(["scope", "postChangeDirectV012ValidatorCount"], 23)
 mutate(["scope", "uniqueChainedValidatorCount"], 21)
 mutate(["scope", "rootDirectInvocationReduction"], 0)
 mutate(["scope", "duplicateHistoricalValidatorExecutionReduction"], 230)
+mutate(["scope", "successorRootDirectV012ValidatorCount"], 2)
 mutate(["invariants", "allExistingV012ValidatorsRemainReachable"], False)
 mutate(["invariants", "historicalValidatorFilesModified"], True)
 mutate(["invariants", "requiredCheckNamesChanged"], True)

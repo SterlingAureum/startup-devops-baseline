@@ -874,6 +874,11 @@ Incremental scope:
   offline; reduce root v0.12 launches from 23 to two, statically prove all 22
   chained validators remain reachable exactly once, preserve the independent
   compatibility repair, and leave triggers and required-check names unchanged
+- v0.12.2.4.2 - quality-gate history deduplication and tracked Terraform
+  formatting - delivered offline awaiting target runtime validation; replace
+  168 direct v0.11 launches with 112 graph-derived entrypoints that cover all
+  168 validators, exclude ignored private tfvars from formatting gates, and
+  retain unchanged workflow triggers and required-check names
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and

@@ -13,6 +13,7 @@ from typing import Iterable
 ROOT_GATE = "validate-ci-quality-gates.sh"
 STANDALONE = "validate-v0.12.1.0.1-ci-compatibility-repair.sh"
 ORCHESTRATOR = "validate-v0.12.2.4.1-validator-orchestration-dedup.sh"
+SUCCESSOR = "validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
 ENTRYPOINT = "validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh"
 EXPECTED_CHAIN_COUNT = 22
 
@@ -78,8 +79,14 @@ def validate_repository(root: Path) -> dict[str, object]:
     scripts = root / "scripts"
     root_calls = extract_v012_calls((scripts / ROOT_GATE).read_text())
     require(
-        root_calls == [STANDALONE, ORCHESTRATOR],
+        root_calls == [SUCCESSOR],
         f"root v0.12 calls changed: {root_calls}",
+    )
+
+    successor_calls = extract_v012_calls((scripts / SUCCESSOR).read_text())
+    require(
+        successor_calls == [STANDALONE, ORCHESTRATOR],
+        f"successor v0.12 delegation changed: {successor_calls}",
     )
 
     orchestrator_calls = extract_v012_calls((scripts / ORCHESTRATOR).read_text())
@@ -89,9 +96,10 @@ def validate_repository(root: Path) -> dict[str, object]:
     )
 
     validators = sorted(path.name for path in scripts.glob("validate-v0.12*.sh"))
-    expected_chain = set(validators) - {STANDALONE, ORCHESTRATOR}
+    expected_chain = set(validators) - {STANDALONE, ORCHESTRATOR, SUCCESSOR}
     require(STANDALONE in validators, "standalone compatibility validator missing")
     require(ORCHESTRATOR in validators, "orchestration validator missing")
+    require(SUCCESSOR in validators, "successor orchestration validator missing")
     require(
         len(expected_chain) == EXPECTED_CHAIN_COUNT,
         f"unexpected chained validator inventory: {len(expected_chain)}",
@@ -110,17 +118,23 @@ def validate_repository(root: Path) -> dict[str, object]:
         f"unexpected={sorted(set(chain) - expected_chain)}",
     )
 
-    old_effective_executions = 1 + sum(range(1, len(chain) + 1))
-    new_effective_executions = 1 + len(chain)
+    compatibility_branch_executions = 3
+    old_effective_executions = compatibility_branch_executions + sum(
+        range(1, len(chain) + 1)
+    )
+    new_effective_executions = compatibility_branch_executions + len(chain)
 
     return {
         "status": "v0.12-validator-orchestration-deduplicated",
         "root_direct_v0_12_validator_count": len(root_calls),
         "root_direct_v0_12_validators": root_calls,
+        "successor_delegated_v0_12_validators": successor_calls,
         "unique_chained_validator_count": len(chain),
         "chained_entrypoint": ENTRYPOINT,
         "old_root_direct_v0_12_validator_count": 23,
-        "root_direct_invocation_reduction": 21,
+        "v0_12_2_4_1_root_direct_v0_12_validator_count": 2,
+        "successor_root_direct_v0_12_validator_count": 1,
+        "v0_12_2_4_1_root_direct_invocation_reduction": 21,
         "old_effective_historical_validator_executions": old_effective_executions,
         "new_effective_historical_validator_executions": new_effective_executions,
         "duplicate_historical_validator_execution_reduction": (

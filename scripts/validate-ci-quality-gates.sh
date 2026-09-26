@@ -3,6 +3,7 @@ set -Eeuo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 WORK_DIR="$(mktemp -d)"
+quality_gate_started_at=${SECONDS}
 
 cleanup() {
   rm -rf -- "${WORK_DIR}"
@@ -39,6 +40,10 @@ echo "==> Validating trusted runtime qualification executor"
 echo "==> Validating v0.10 final clean-room acceptance contracts"
 "${ROOT_DIR}/scripts/validate-v0.10-final-acceptance.sh"
 
+echo "==> Validating deduplicated v0.11/v0.12 historical orchestration"
+"${ROOT_DIR}/scripts/validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
+
+: <<'V012242_PRE_CORE_LEGACY_REGISTRATION'
 echo "==> Validating v0.11 Observability and SRE design foundation"
 "${ROOT_DIR}/scripts/validate-v0.11-observability-sre-foundation.sh"
 
@@ -447,6 +452,7 @@ echo "==> Validating v0.11.9.3.6.7.6.3 remaining configuration and staged cleanu
 
 echo "==> Validating v0.11.9.3.6.7.6.4 exact EKS dependency plan repair"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6.4-eks-dependency-plan-repair.sh"
+V012242_PRE_CORE_LEGACY_REGISTRATION
 
 echo "==> Validating security supply-chain contracts"
 "${ROOT_DIR}/scripts/validate-demo-api-security-supply-chain.sh"
@@ -817,8 +823,9 @@ echo "==> Validating demo-api workload security"
 IMAGE_NAME="demo-api-ci-test:runtime" \
   "${ROOT_DIR}/scripts/validate-demo-api-workload-security.sh"
 
-echo "CI quality gates passed."
+echo "Core CI quality gates passed."
 
+: <<'V012242_POST_CORE_LEGACY_REGISTRATION'
 echo "==> Validating v0.11.9.3.6.7.6.5 aws-test teardown execution evidence"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6.5-teardown-execution-evidence.sh"
 
@@ -905,3 +912,6 @@ echo "==> Validating v0.12.1.0.1 CI compatibility repair"
 
 echo "==> Validating v0.12.2.4.1 deduplicated validator orchestration"
 "${ROOT_DIR}/scripts/validate-v0.12.2.4.1-validator-orchestration-dedup.sh"
+V012242_POST_CORE_LEGACY_REGISTRATION
+
+echo "CI quality gates passed; total_elapsed_seconds=$((SECONDS - quality_gate_started_at))."

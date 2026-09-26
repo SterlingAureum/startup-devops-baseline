@@ -61,11 +61,14 @@ class ChainTests(unittest.TestCase):
 class RepositoryTopologyTests(unittest.TestCase):
     def test_repository_has_exact_deduplicated_topology(self) -> None:
         report = MODULE.validate_repository(SCRIPT.parents[1])
-        self.assertEqual(report["root_direct_v0_12_validator_count"], 2)
+        self.assertEqual(report["root_direct_v0_12_validator_count"], 1)
+        self.assertEqual(report["successor_root_direct_v0_12_validator_count"], 1)
         self.assertEqual(report["unique_chained_validator_count"], 22)
-        self.assertEqual(report["root_direct_invocation_reduction"], 21)
-        self.assertEqual(report["old_effective_historical_validator_executions"], 254)
-        self.assertEqual(report["new_effective_historical_validator_executions"], 23)
+        self.assertEqual(
+            report["v0_12_2_4_1_root_direct_invocation_reduction"], 21
+        )
+        self.assertEqual(report["old_effective_historical_validator_executions"], 256)
+        self.assertEqual(report["new_effective_historical_validator_executions"], 25)
         self.assertEqual(
             report["duplicate_historical_validator_execution_reduction"], 231
         )

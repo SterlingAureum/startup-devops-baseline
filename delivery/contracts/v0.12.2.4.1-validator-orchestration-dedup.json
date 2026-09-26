@@ -15,9 +15,17 @@
     "chainedValidatorEntryPoint": "validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh",
     "uniqueChainedValidatorCount": 22,
     "rootDirectInvocationReduction": 21,
-    "preChangeEffectiveHistoricalValidatorExecutions": 254,
-    "postChangeEffectiveHistoricalValidatorExecutions": 23,
-    "duplicateHistoricalValidatorExecutionReduction": 231
+    "preChangeEffectiveHistoricalValidatorExecutions": 256,
+    "postChangeEffectiveHistoricalValidatorExecutions": 25,
+    "duplicateHistoricalValidatorExecutionReduction": 231,
+    "successorRootDirectV012ValidatorCount": 1,
+    "successorRootDirectV012Validators": [
+      "validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
+    ],
+    "successorDelegatedV012Validators": [
+      "validate-v0.12.1.0.1-ci-compatibility-repair.sh",
+      "validate-v0.12.2.4.1-validator-orchestration-dedup.sh"
+    ]
   },
   "invariants": {
     "historicalValidatorFilesModified": false,

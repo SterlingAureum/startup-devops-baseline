@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.4.2-quality-gate-history-dedup` removes redundant v0.11 historical
+execution, excludes ignored private tfvars from repository formatting gates,
+and adds stage timing while preserving complete validator reachability. See
+[v0.12.2.4.2 quality-gate history deduplication](docs/V0.12.2.4.2_QUALITY_GATE_HISTORY_DEDUP.md).
+
+Predecessor development checkpoint:
 `v0.12.2.4.1-validator-orchestration-dedup` removes triangular v0.12 validator
 replay from the repository-wide quality gate while preserving the full chain,
 the independent compatibility validator, workflow triggers and required-check

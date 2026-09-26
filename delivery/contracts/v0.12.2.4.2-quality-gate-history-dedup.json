@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "v0.12.2.4.2-quality-gate-history-dedup-v1",
+  "version": "v0.12.2.4.2",
+  "status": "delivered-offline-awaiting-target-runtime-validation",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "13bea2e73a229c0b0795f9d25178e766ebde56ed",
+  "observedBaseline": {
+    "localQualityGateElapsedSeconds": "818.612",
+    "localQualityGateCompleted": false,
+    "stoppedBeforeV012241Orchestrator": true,
+    "stopPath": "infra/terraform/aws/environments/test/terraform.tfvars",
+    "stopPathTracked": false,
+    "validationLogSha256": "51eaadf3403bbdaf7b58b7bac25708c5665cea40bebaabf65c27cbafffbd9ad6"
+  },
+  "callGraph": {
+    "preChangeRootDirectValidatorCount": 198,
+    "preChangeV011RootDirectValidatorCount": 168,
+    "preChangeEffectiveValidatorExecutionCount": 951,
+    "preChangeEffectiveV011ExecutionCount": 866,
+    "postChangeRootDirectValidatorCount": 29,
+    "postChangeV011RootDirectValidatorCount": 0,
+    "delegatedV011EntrypointCount": 112,
+    "uniqueReachableV011ValidatorCount": 168,
+    "postChangeEffectiveValidatorExecutionCount": 245,
+    "postChangeEffectiveV011ExecutionCount": 176,
+    "postChangeEffectiveHistoricalV012ExecutionCount": 25,
+    "postChangeV012OrchestrationExecutionCount": 2,
+    "entrypointManifest": "delivery/contracts/v0.12.2.4.2-v0.11-entrypoints.txt",
+    "entrypointManifestSha256": "8e4a46a04ea88bcbd20750692cf4327ed900cd08aba0fd0156a8bf438e747fcd"
+  },
+  "terraformFormatBoundary": {
+    "trackedFilesOnly": true,
+    "ignoredPrivateTfvarsInspected": false,
+    "helper": "scripts/check-tracked-terraform-format.sh",
+    "repositoryValidatorUsesHelper": true,
+    "compatibilityValidatorUsesOptionalHelper": true
+  },
+  "invariants": {
+    "allExistingV011ValidatorsRemainReachable": true,
+    "allExistingV012ValidatorsRemainReachable": true,
+    "legacyRootRegistrationTextPreserved": true,
+    "historicalV011ValidatorFilesModified": false,
+    "compatibilityValidatorFormatScopeChanged": true,
+    "requiredCheckNamesChanged": false,
+    "workflowTriggersChanged": false,
+    "pathRoutingIntroduced": false,
+    "unknownChangeFailsToFullSuite": true
+  },
+  "deferred": {
+    "changeImpactRouting": "v0.12.3.1",
+    "pullRequestAndMainPushDeduplication": "v0.12.3.1",
+    "imagePublishQualityGateDeduplication": "v0.12.3.1"
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "grantsLiveAuthority": false
+  }
+}

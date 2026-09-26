@@ -11,7 +11,7 @@ if ! command -v terraform >/dev/null 2>&1; then
 fi
 
 echo "==> Checking Terraform formatting"
-terraform fmt -check -recursive "${TF_ROOT}"
+"${ROOT_DIR}/scripts/check-tracked-terraform-format.sh"
 
 for root in "${ROOTS[@]}"; do
   tf_dir="${TF_ROOT}/${root}"

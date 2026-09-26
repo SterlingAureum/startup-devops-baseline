@@ -208,10 +208,6 @@ PYTHON
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.6-guarded-aws-test-teardown.sh"
 "${ROOT_DIR}/scripts/validate-v0.12.1-remote-state-foundation.sh"
 
-if command -v terraform >/dev/null 2>&1; then
-  terraform fmt -check -recursive "${ROOT_DIR}/infra/terraform/aws"
-else
-  echo "SKIP: terraform unavailable; terraform-validate CI must run the exact fmt check."
-fi
+"${ROOT_DIR}/scripts/check-tracked-terraform-format.sh" --optional
 
 echo "v0.12.1.0.1 CI compatibility repair passed; no live operation was executed."

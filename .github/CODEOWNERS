@@ -61,6 +61,9 @@
 /delivery/contracts/v0.12.2.2.1-bootstrap-state-migration-recovery-evidence.json @SterlingAureum
 /docs/V0.12.2.2.1_BOOTSTRAP_STATE_MIGRATION_RECOVERY_EVIDENCE.md @SterlingAureum
 /scripts/validate-v0.12.2.2.1-bootstrap-state-migration-recovery-evidence.sh @SterlingAureum
+/delivery/contracts/v0.12.2.3.0-remote-state-proof-and-recovery-design.json @SterlingAureum
+/docs/V0.12.2.3.0_REMOTE_STATE_PROOF_AND_RECOVERY_DESIGN.md @SterlingAureum
+/scripts/validate-v0.12.2.3.0-remote-state-proof-and-recovery-design.sh @SterlingAureum
 
 /scripts/check-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum

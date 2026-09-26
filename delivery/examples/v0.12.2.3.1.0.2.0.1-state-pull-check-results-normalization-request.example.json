@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "v0.12.2.3.1.0.2.0.1-state-pull-check-results-normalization-request-v1",
+  "operation": "apply-exact-reviewed-refresh-only-plan-after-validated-check-results-normalization",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "privateFailedApplyRequestPath": "/private/owner-readable/bootstrap-refresh-only-state-reconciliation-request-attempt-01.json",
+  "privateFailedApplyRequestSha256": "a58ea364097505b798771eae726c147e906cd365fa7d9c6c4525c30bec31274f",
+  "privateFailedApplyOutputDirectory": "/private/owner-readable/bootstrap-refresh-only-state-reconciliation-output-attempt-01",
+  "failedIdentityStdoutSha256": "972b1b4b008369972374b6a8bdeded41cf2df5347e0b0cea93e5c8777518d6be",
+  "failedStatePullSha256": "5ff0cb562fa7bf6d99cd2068c373646fca50f06cbaa08f3f5a3e3392bf2c55e1",
+  "failedStatePullSize": 69929,
+  "normalizedCheckResultsSha256": "5edcc426d374ea432c4c8509b9a7e3060908f8b2bdaf754255934e05792134a8",
+  "semanticProjectionSha256": "14715b5d56f06089cdb81056dbce3a05b0475608a65d96a51541854f9efc8822",
+  "privateApplyOutputDirectory": "/private/owner-readable/bootstrap-refresh-only-state-reconciliation-normalization-output-attempt-01",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "awsIdentityAndS3Read": true,
+    "terraformStatePullAndList": true,
+    "exactSavedRefreshPlanApply": true,
+    "acceptExactCheckResultsNormalization": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "unsavedApply": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

@@ -956,3 +956,6 @@ echo "==> Validating v0.12.2.3.1.0.1.0.1 refresh-only plan-evidence recovery"
 
 echo "==> Validating v0.12.2.3.1.0.2 reviewed refresh-only state reconciliation"
 "${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2-reviewed-refresh-only-state-reconciliation.sh"
+
+echo "==> Validating v0.12.2.3.1.0.2.0.1 state-pull check_results normalization repair"
+"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2.0.1-state-pull-check-results-normalization-repair.sh"

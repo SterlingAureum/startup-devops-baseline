@@ -853,6 +853,10 @@ Incremental scope:
   binds the recovered and human-reviewed saved plan, permits only its
   separately approved one-time apply, and requires exact state, serial,
   lineage, address, planned-value and S3 state/lock history evidence
+- v0.12.2.3.1.0.2.0.1 - exact state-pull `check_results` normalization repair
+  - delivered after the first reconciliation stopped before apply; binds the
+  exact normalized state bytes, accepts no change outside `check_results`, and
+  reuses the same reviewed saved plan only under a fresh request and approval
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and

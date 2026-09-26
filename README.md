@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.3.1.0.2.0.1-state-pull-check-results-normalization-repair`
+recovers the stopped pre-apply reconciliation by accepting only the exact
+observed `check_results` normalization while keeping every semantic state
+field, reviewed-plan binding and apply safety boundary fail closed. See
+[v0.12.2.3.1.0.2.0.1 state-pull normalization repair](docs/V0.12.2.3.1.0.2.0.1_STATE_PULL_CHECK_RESULTS_NORMALIZATION_REPAIR.md).
+
+Predecessor development checkpoint:
 `v0.12.2.3.1.0.2-reviewed-refresh-only-state-reconciliation` binds the
 human-reviewed saved refresh-only plan and permits only its separately
 approved one-time application, followed by strict state and S3 history gates.
@@ -1111,6 +1118,16 @@ resource action is allowed. Success requires planned values to match the
 persisted state, a one-step serial advance, unchanged lineage and addresses,
 one new state version, one lock acquisition/release pair and a clean lock. See
 `delivery/contracts/v0.12.2.3.1.0.2-reviewed-refresh-only-state-reconciliation.json`.
+
+v0.12.2.3.1.0.2.0.1-state-pull-check-results-normalization-repair
+
+The first reconciliation attempt stopped before apply when `terraform state
+pull` returned a byte-different state whose only changed top-level value was
+`check_results`. The repair binds that exact failed attempt and state digest,
+requires every other state value and all 22 addresses to remain equal, and
+continues to allow only the previously reviewed saved plan under a new request
+and separate approval. See
+`delivery/contracts/v0.12.2.3.1.0.2.0.1-state-pull-check-results-normalization-repair.json`.
 
 The predecessor v0.12.2.3.1 implements the real Terraform-console-held S3 lock proof and the
 post-release zero-change saved plan. Verification executes no operational

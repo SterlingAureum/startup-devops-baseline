@@ -70,6 +70,41 @@ def canonical_json(value: Any) -> bytes:
     return (json.dumps(value, indent=2, sort_keys=True) + "\n").encode()
 
 
+def compact_json(value: Any) -> bytes:
+    return (json.dumps(value, separators=(",", ":"), sort_keys=True) + "\n").encode()
+
+
+def validate_check_results_normalization(
+    reviewed_state: dict[str, Any],
+    observed_state_bytes: bytes,
+    *,
+    observed_state_sha256: str,
+    observed_check_results_sha256: str,
+    semantic_projection_sha256: str,
+) -> dict[str, Any]:
+    require(hashlib.sha256(observed_state_bytes).hexdigest() == observed_state_sha256, "Normalized state digest changed")
+    try:
+        observed_state = json.loads(observed_state_bytes)
+    except (json.JSONDecodeError, UnicodeDecodeError) as error:
+        raise ValueError("Normalized state is invalid") from error
+    require(isinstance(reviewed_state, dict) and isinstance(observed_state, dict), "State root must be an object")
+    require(set(observed_state) == set(reviewed_state), "State top-level keys changed")
+    changed = {key for key in reviewed_state if reviewed_state[key] != observed_state[key]}
+    require(changed == {"check_results"}, "Only check_results normalization is accepted")
+    require(
+        hashlib.sha256(compact_json(observed_state["check_results"])).hexdigest() == observed_check_results_sha256,
+        "Normalized check_results digest changed",
+    )
+    reviewed_projection = {key: value for key, value in reviewed_state.items() if key != "check_results"}
+    observed_projection = {key: value for key, value in observed_state.items() if key != "check_results"}
+    require(reviewed_projection == observed_projection, "State semantic projection changed")
+    require(
+        hashlib.sha256(compact_json(observed_projection)).hexdigest() == semantic_projection_sha256,
+        "State semantic projection digest changed",
+    )
+    return observed_state
+
+
 def load_json(path: Path, label: str) -> Any:
     try:
         return json.loads(path.read_text())
@@ -191,7 +226,14 @@ def run_command(arguments: list[str], environment: dict[str, str], timeout: int,
     return subprocess.run(arguments, cwd=cwd, env=environment, capture_output=True, check=False, timeout=timeout)
 
 
-def verify_inputs(request_path: Path, *, repository_root: Path = ROOT, git_runner: GitRunner = run_git, now: datetime | None = None) -> dict[str, Any]:
+def verify_inputs(
+    request_path: Path,
+    *,
+    repository_root: Path = ROOT,
+    git_runner: GitRunner = run_git,
+    now: datetime | None = None,
+    allow_existing_output: bool = False,
+) -> dict[str, Any]:
     repository_root = repository_root.resolve(strict=True)
     private_request = require_private_file(request_path, "Private reconciliation request")
     require(not is_within(private_request, repository_root), "Reconciliation request must remain outside repository")
@@ -278,7 +320,12 @@ def verify_inputs(request_path: Path, *, repository_root: Path = ROOT, git_runne
     state_versions, state_markers = PROOF_EXECUTOR.exact_history(history, state_key)
     lock_versions, lock_markers = PROOF_EXECUTOR.exact_history(history, lock_key)
     require(len(state_versions) == 1 and state_versions[0].get("VersionId") == state_version_id and state_versions[0].get("IsLatest") is True and state_markers == [], "Recovered state history changed")
-    output = require_new_private_directory(Path(request["privateApplyOutputDirectory"]), "Private reconciliation output")
+    output_path = Path(request["privateApplyOutputDirectory"])
+    output = (
+        require_private_directory(output_path, "Private reconciliation output")
+        if allow_existing_output
+        else require_new_private_directory(output_path, "Private reconciliation output")
+    )
     require(not is_within(output, repository_root), "Reconciliation output must remain outside repository")
     return {
         "request": request, "request_path": private_request, "output": output,
@@ -292,19 +339,13 @@ def verify_inputs(request_path: Path, *, repository_root: Path = ROOT, git_runne
     }
 
 
-def execute(request_path: Path, *, repository_root: Path = ROOT, git_runner: GitRunner = run_git, runner: CommandRunner = run_command, now: datetime | None = None) -> dict[str, Any]:
-    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
-    context = verify_inputs(request_path, repository_root=repository_root, git_runner=git_runner, now=current)
-    require(os.environ.get("CONFIRM_REFRESH_ONLY_STATE_RECONCILIATION") == CONFIRMATION, f"Set CONFIRM_REFRESH_ONLY_STATE_RECONCILIATION={CONFIRMATION}")
-    forbidden = (
-        "CONFIRM_REFRESH_PLAN_EVIDENCE_RECOVERY", "CONFIRM_BOOTSTRAP_REFRESH_ONLY_PLAN",
-        "CONFIRM_BOOTSTRAP_REMOTE_STATE_PROOF", "CONFIRM_STATE_BOOTSTRAP_PLAN",
-        "CONFIRM_STATE_BOOTSTRAP_APPLY", "CONFIRM_STATE_BOOTSTRAP_RECOVERY",
-        "CONFIRM_STATE_BOOTSTRAP_MIGRATION_PREFLIGHT", "CONFIRM_STATE_BOOTSTRAP_MIGRATION",
-        "CONFIRM_STATE_BOOTSTRAP_IDENTITY_REBASE_RECOVERY", "CONFIRM_TERRAFORM_APPLY",
-        "CONFIRM_TERRAFORM_DESTROY", "CONFIRM_STATE_PUSH",
-    )
-    require(all(not os.environ.get(name) for name in forbidden), "All prior, unsaved apply, destroy and state-push confirmations must be unset")
+def execute_verified(
+    context: dict[str, Any],
+    *,
+    repository_root: Path,
+    runner: CommandRunner,
+    current: datetime,
+) -> dict[str, Any]:
     output = context["output"]
     output.mkdir(mode=0o700)
     output.chmod(0o700)
@@ -315,7 +356,18 @@ def execute(request_path: Path, *, repository_root: Path = ROOT, git_runner: Git
     require(identity.get("Account") == context["request"]["expectedAwsAccountId"], "AWS account changed")
     prefix = ["terraform", f"-chdir={context['working']}"]
     pull_before = record(output, "terraform-state-pull-before", [*prefix, "state", "pull"], environment, 180, runner, repository_root)
-    require(pull_before.returncode == 0 and hashlib.sha256(pull_before.stdout).hexdigest() == REMOTE_STATE_SHA256, "Canonical state bytes changed before apply")
+    expected_pre_apply_sha256 = context.get("pre_apply_state_sha256", REMOTE_STATE_SHA256)
+    require(pull_before.returncode == 0 and hashlib.sha256(pull_before.stdout).hexdigest() == expected_pre_apply_sha256, "Canonical state bytes changed before apply")
+    if context.get("check_results_normalization") is not None:
+        normalization = context["check_results_normalization"]
+        observed_before = validate_check_results_normalization(
+            context["reviewed_before_state"],
+            pull_before.stdout,
+            observed_state_sha256=expected_pre_apply_sha256,
+            observed_check_results_sha256=normalization["check_results_sha256"],
+            semantic_projection_sha256=normalization["semantic_projection_sha256"],
+        )
+        require(observed_before == context["before_state"], "Normalized pre-apply state changed")
     list_before = record(output, "terraform-state-list-before", [*prefix, "state", "list"], environment, 180, runner, repository_root)
     require(list_before.returncode == 0 and MIGRATION_EXECUTOR.parse_state_list(list_before.stdout) == context["managed"] | context["data"], "State address inventory changed before apply")
     bucket = context["identities"]["bucket"]
@@ -369,8 +421,8 @@ def execute(request_path: Path, *, repository_root: Path = ROOT, git_runner: Git
 
     after_sha = hashlib.sha256(pull_after.stdout).hexdigest()
     evidence = {
-        "schemaVersion": "v0.12.2.3.1.0.2-refresh-only-state-reconciliation-evidence-v1",
-        "priorStateSha256": REMOTE_STATE_SHA256, "reconciledStateSha256": after_sha,
+        "schemaVersion": context.get("evidence_schema", "v0.12.2.3.1.0.2-refresh-only-state-reconciliation-evidence-v1"),
+        "priorStateSha256": expected_pre_apply_sha256, "reconciledStateSha256": after_sha,
         "binaryRefreshPlanSha256": BINARY_PLAN_SHA256, "refreshPlanJsonSha256": PLAN_JSON_SHA256,
         "resourceDriftSha256": RESOURCE_DRIFT_SHA256, "priorSerial": before_state["serial"],
         "reconciledSerial": after_state["serial"], "lineageUnchanged": True,
@@ -382,11 +434,14 @@ def execute(request_path: Path, *, repository_root: Path = ROOT, git_runner: Git
         "lockObjectVersionIds": [item.get("VersionId") for item in lock_versions_after],
         "lockObjectDeleteMarkerIds": [item.get("VersionId") for item in lock_markers_after],
     }
-    evidence_path = output / "refresh-only-state-reconciliation-evidence.json"
+    if context.get("check_results_normalization") is not None:
+        evidence["reviewedCanonicalStateSha256"] = REMOTE_STATE_SHA256
+        evidence["checkResultsNormalizationAccepted"] = True
+    evidence_path = output / context.get("evidence_filename", "refresh-only-state-reconciliation-evidence.json")
     APPLY_EXECUTOR.write_private(evidence_path, canonical_json(evidence))
     result = {
-        "schemaVersion": "v0.12.2.3.1.0.2-refresh-only-state-reconciliation-result-v1",
-        "status": "bootstrap-refresh-only-state-reconciled-awaiting-post-reconciliation-review",
+        "schemaVersion": context.get("result_schema", "v0.12.2.3.1.0.2-refresh-only-state-reconciliation-result-v1"),
+        "status": context.get("result_status", "bootstrap-refresh-only-state-reconciled-awaiting-post-reconciliation-review"),
         "control_plane_commit": context["request"]["expectedMainCommit"],
         "private_apply_request_sha256": file_sha256(context["request_path"]),
         "evidence_recovery_request_sha256": EVIDENCE_REQUEST_SHA256,
@@ -394,7 +449,7 @@ def execute(request_path: Path, *, repository_root: Path = ROOT, git_runner: Git
         "binary_refresh_plan_sha256": BINARY_PLAN_SHA256,
         "refresh_plan_json_sha256": PLAN_JSON_SHA256,
         "resource_drift_sha256": RESOURCE_DRIFT_SHA256,
-        "prior_state_sha256": REMOTE_STATE_SHA256, "reconciled_state_sha256": after_sha,
+        "prior_state_sha256": expected_pre_apply_sha256, "reconciled_state_sha256": after_sha,
         "reconciliation_evidence_sha256": file_sha256(evidence_path),
         "prior_serial": before_state["serial"], "reconciled_serial": after_state["serial"],
         "state_lineage_unchanged": True, "planned_values_exactly_persisted": True,
@@ -409,13 +464,32 @@ def execute(request_path: Path, *, repository_root: Path = ROOT, git_runner: Git
         "force_unlock_executed": False, "automatic_retry_performed": False,
         "automatic_rollback_performed": False, "private_resource_identity_emitted": False,
         "private_object_version_id_emitted": False,
-        "next_action": "human-review-state-reconciliation-before-new-zero-change-proof",
+        "next_action": context.get("next_action", "human-review-state-reconciliation-before-new-zero-change-proof"),
         "completed_at_utc": utc_text(current),
     }
-    result_path = output / "refresh-only-state-reconciliation-result.json"
+    if context.get("check_results_normalization") is not None:
+        result["reviewed_canonical_state_sha256"] = REMOTE_STATE_SHA256
+        result["check_results_normalization_accepted"] = True
+    result_path = output / context.get("result_filename", "refresh-only-state-reconciliation-result.json")
     APPLY_EXECUTOR.write_private(result_path, canonical_json(result))
     result["reconciliation_result_sha256"] = file_sha256(result_path)
     return result
+
+
+def execute(request_path: Path, *, repository_root: Path = ROOT, git_runner: GitRunner = run_git, runner: CommandRunner = run_command, now: datetime | None = None) -> dict[str, Any]:
+    current = (now or datetime.now(timezone.utc)).astimezone(timezone.utc)
+    context = verify_inputs(request_path, repository_root=repository_root, git_runner=git_runner, now=current)
+    require(os.environ.get("CONFIRM_REFRESH_ONLY_STATE_RECONCILIATION") == CONFIRMATION, f"Set CONFIRM_REFRESH_ONLY_STATE_RECONCILIATION={CONFIRMATION}")
+    forbidden = (
+        "CONFIRM_REFRESH_PLAN_EVIDENCE_RECOVERY", "CONFIRM_BOOTSTRAP_REFRESH_ONLY_PLAN",
+        "CONFIRM_BOOTSTRAP_REMOTE_STATE_PROOF", "CONFIRM_STATE_BOOTSTRAP_PLAN",
+        "CONFIRM_STATE_BOOTSTRAP_APPLY", "CONFIRM_STATE_BOOTSTRAP_RECOVERY",
+        "CONFIRM_STATE_BOOTSTRAP_MIGRATION_PREFLIGHT", "CONFIRM_STATE_BOOTSTRAP_MIGRATION",
+        "CONFIRM_STATE_BOOTSTRAP_IDENTITY_REBASE_RECOVERY", "CONFIRM_TERRAFORM_APPLY",
+        "CONFIRM_TERRAFORM_DESTROY", "CONFIRM_STATE_PUSH",
+    )
+    require(all(not os.environ.get(name) for name in forbidden), "All prior, unsaved apply, destroy and state-push confirmations must be unset")
+    return execute_verified(context, repository_root=repository_root, runner=runner, current=current)
 
 
 def redacted_verification(context: dict[str, Any]) -> dict[str, Any]:

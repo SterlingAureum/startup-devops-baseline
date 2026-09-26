@@ -117,6 +117,7 @@ def verify_inputs(
     repository_root: Path = ROOT,
     git_runner: GitRunner = run_git,
     now: datetime | None = None,
+    allow_existing_output: bool = False,
 ) -> dict[str, Any]:
     repository_root = repository_root.resolve(strict=True)
     private_request = BASE.require_private_file(request_path, "Private normalization-repair request")
@@ -170,7 +171,12 @@ def verify_inputs(
     )
     managed, data = BASE.RECOVERY_EXECUTOR.RECOVERY_EXECUTOR.state_addresses(normalized_state)
     require(managed == context["managed"] and data == context["data"], "Normalized state address inventory changed")
-    new_output = BASE.require_new_private_directory(Path(request["privateApplyOutputDirectory"]), "Private normalization-repair output")
+    output_path = Path(request["privateApplyOutputDirectory"])
+    new_output = (
+        BASE.require_private_directory(output_path, "Private normalization-repair output")
+        if allow_existing_output
+        else BASE.require_new_private_directory(output_path, "Private normalization-repair output")
+    )
     require(not BASE.is_within(new_output, repository_root), "Normalization-repair output must remain outside repository")
     context.update({
         "request": request,

@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state` replaces the unstable
+single-observation state-pull byte gate with an exact two-digest allowlist for
+the reviewed canonical and reviewed `check_results`-normalized forms. See
+[v0.12.2.3.1.0.2.0.1.2 dual-form pre-apply state](docs/V0.12.2.3.1.0.2.0.1.2_DUAL_FORM_PRE_APPLY_STATE.md).
+
+Predecessor development checkpoint:
 `v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair` corrects the
 offline projection digest used by the state-pull normalization gate. It adds
 no live authority and requires a fresh post-merge request and approval. See
@@ -1142,6 +1148,13 @@ The first command-free normalization verification proved that only
 The repair binds the six-key, sorted compact JSON plus LF encoding to the
 observed state without widening accepted state or live authority. See
 `delivery/contracts/v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair.json`.
+
+v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state
+
+Two stopped pre-apply pulls produced the exact reviewed canonical and exact
+reviewed `check_results`-normalized forms. The new finite gate accepts only
+those two SHA-256 values and rejects every third representation or semantic
+change. See `delivery/contracts/v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.json`.
 
 The predecessor v0.12.2.3.1 implements the real Terraform-console-held S3 lock proof and the
 post-release zero-change saved plan. Verification executes no operational

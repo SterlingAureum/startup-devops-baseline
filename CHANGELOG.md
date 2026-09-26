@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.2.3.1.0.2.0.1
+
+- Record that the first reconciliation attempt stopped before apply after only AWS identity and Terraform state-pull reads.
+- Bind the exact observed state bytes and accept only the known top-level `check_results` normalization.
+- Require unchanged format, Terraform version, lineage, serial, resources, outputs, semantic projection and all 22 state addresses.
+- Reuse the exact human-reviewed saved refresh-only plan under a fresh protected-main request and separate approval; do not generate another plan.
+- Preserve every existing post-apply state and S3 history gate while continuing to prohibit retry, rollback, unsaved apply, state push and remote resource mutation.
+
 ## v0.12.2.3.1.0.2
 
 - Bind the successfully recovered and human-reviewed refresh-only binary, JSON, text and drift evidence to a new protected-main request.

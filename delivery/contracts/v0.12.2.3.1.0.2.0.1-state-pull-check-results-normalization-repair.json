@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "v0.12.2.3.1.0.2.0.1-state-pull-check-results-normalization-repair-v1",
+  "version": "v0.12.2.3.1.0.2.0.1",
+  "status": "delivered-awaiting-fresh-request-and-separate-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "ab126f6bf7bff021b8821c0e0951d739c635aa49",
+  "incident": {
+    "failedApplyRequestSha256": "a58ea364097505b798771eae726c147e906cd365fa7d9c6c4525c30bec31274f",
+    "applyExecuted": false,
+    "completedOperationalCommands": [
+      "aws-identity-read",
+      "terraform-state-pull-before"
+    ],
+    "failedIdentityStdoutSha256": "972b1b4b008369972374b6a8bdeded41cf2df5347e0b0cea93e5c8777518d6be",
+    "observedStateSha256": "5ff0cb562fa7bf6d99cd2068c373646fca50f06cbaa08f3f5a3e3392bf2c55e1",
+    "observedStateSize": 69929
+  },
+  "normalizationGate": {
+    "onlyChangedTopLevelKey": "check_results",
+    "observedCheckResultsSha256": "5edcc426d374ea432c4c8509b9a7e3060908f8b2bdaf754255934e05792134a8",
+    "semanticProjectionSha256": "14715b5d56f06089cdb81056dbce3a05b0475608a65d96a51541854f9efc8822",
+    "formatVersion": 4,
+    "terraformVersion": "1.14.5",
+    "serialUnchanged": true,
+    "lineageUnchanged": true,
+    "resourcesUnchanged": true,
+    "outputsUnchanged": true,
+    "managedAddressCount": 13,
+    "dataAddressCount": 9,
+    "addressesUnchanged": true
+  },
+  "verifyBoundary": {
+    "awsCommands": false,
+    "terraformCommands": false,
+    "writesPrivateEvidence": false,
+    "reconstructsFailedRequestAndReviewedPlanChain": true,
+    "revalidatesExactNormalization": true,
+    "applyAuthorizedByVerify": false
+  },
+  "executeBoundary": {
+    "awsIdentityAndS3Read": true,
+    "terraformStatePullAndList": true,
+    "exactSavedRefreshPlanApply": true,
+    "acceptExactCheckResultsNormalization": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "unsavedApply": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  },
+  "successGate": {
+    "applyExitCode": 0,
+    "remoteResourceActions": 0,
+    "stateSerialIncrement": 1,
+    "stateLineageUnchanged": true,
+    "plannedValuesExactlyPersisted": true,
+    "managedAddressCount": 13,
+    "dataAddressCount": 9,
+    "stateObjectVersionDelta": 1,
+    "stateDeleteMarkerDelta": 0,
+    "lockObjectVersionDelta": 1,
+    "lockDeleteMarkerDelta": 1,
+    "lockObjectAbsent": true,
+    "humanReviewRequiredAfterExecution": true
+  },
+  "failurePolicy": {
+    "preservePrivateEvidence": true,
+    "preserveAnyWrittenState": true,
+    "automaticRetry": false,
+    "automaticRollback": false,
+    "manualRecoveryRequired": true
+  },
+  "privacyBoundary": {
+    "publishesAwsAccount": false,
+    "publishesResourceIdentity": false,
+    "publishesStateBytes": false,
+    "publishesPlanContents": false,
+    "publishesObjectVersionIds": false,
+    "publishesPrivatePaths": false,
+    "allowsPublicDigestsCountsAndBooleans": true
+  },
+  "successor": {
+    "scope": "separately-reviewed-post-reconciliation-zero-change-proof",
+    "ordinaryPlanAuthorizedByThisIncrement": false
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "grantsLiveAuthority": false
+  }
+}

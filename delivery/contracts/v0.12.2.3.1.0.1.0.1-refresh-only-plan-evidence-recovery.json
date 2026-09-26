@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "v0.12.2.3.1.0.1.0.1-refresh-only-plan-evidence-recovery-v1",
+  "version": "v0.12.2.3.1.0.1.0.1",
+  "status": "delivered-awaiting-separate-read-only-plan-evidence-recovery-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "be27ef4aa9a6825473084bd48ff9a29cbd8f9909",
+  "incident": {
+    "version": "v0.12.2.3.1.0.1",
+    "contract": "delivery/contracts/v0.12.2.3.1.0.1-guarded-refresh-only-recovery-plan.json",
+    "controlPlaneCommit": "be27ef4aa9a6825473084bd48ff9a29cbd8f9909",
+    "privateRefreshPlanRequestSha256": "d856dd8a88485a3a816e79c411e6551e2335bd435ffa61d05adc41e2622c6f3a",
+    "canonicalRemoteStateSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+    "binaryRefreshPlanSha256": "25e0d13ea279af093fc138c9f6d946694e3e399df5c5c6c2648e401ce789f74c",
+    "refreshPlanJsonSha256": "b89d89f3590f8cf7aab5bab15fa5d0dc2e522cb8d9c56098bcb6ea02a11887ad",
+    "refreshPlanTextSha256": "746ef94f5ddb6bd3630006011745bf2f67d8ce7a43eff54642d7d54193e67d98",
+    "resourceDriftSha256": "cda2f5fefc620e11747c88e38db673e906fb7c4a29a5a5c886a5f7ec0140ab7a",
+    "resourceDriftCount": 7,
+    "resourceChangeCount": 0,
+    "outputChangeCount": 7,
+    "allOutputChangesNoOp": true,
+    "planApplyable": true,
+    "stateContentMutated": false,
+    "recoveryResultPresent": false,
+    "automaticRetryPerformed": false
+  },
+  "correctedInterpretation": {
+    "refreshOnlyPlanUsesResourceDriftForStateUpdates": true,
+    "emptyResourceChangesIsExpected": true,
+    "ordinaryPlanThirteenNoOpGateDoesNotApply": true,
+    "exactDriftDigestStillRequired": true,
+    "existingPlanMustBeRecoveredWithoutReplanning": true
+  },
+  "verifyBoundary": {
+    "awsCommands": false,
+    "terraformCommands": false,
+    "writesPrivateEvidence": false,
+    "revalidatesExactExistingPlan": true,
+    "recoveryAuthorizedByVerify": false
+  },
+  "executeBoundary": {
+    "awsIdentityRead": true,
+    "terraformStatePull": true,
+    "terraformStateList": true,
+    "s3StateAndLockRead": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "directLockWrite": false,
+    "forceUnlock": false,
+    "automaticRetry": false
+  },
+  "successGate": {
+    "canonicalStateBytesUnchanged": true,
+    "managedAddressCount": 13,
+    "dataAddressCount": 9,
+    "stateObjectHistoryUnchanged": true,
+    "refreshPlanLockVersionDelta": 1,
+    "refreshPlanLockDeleteMarkerDelta": 1,
+    "lockObjectAbsent": true,
+    "existingPlanPreserved": true,
+    "humanReviewRequired": true
+  },
+  "privacyBoundary": {
+    "publishesAwsAccount": false,
+    "publishesBucket": false,
+    "publishesKmsArn": false,
+    "publishesStateBytes": false,
+    "publishesPlanContents": false,
+    "publishesObjectVersionIds": false,
+    "publishesPrivatePaths": false,
+    "allowsPublicDigestsCountsAndBooleans": true
+  },
+  "successor": {
+    "version": "v0.12.2.3.1.0.2",
+    "scope": "separately-reviewed-refresh-only-state-reconciliation",
+    "refreshApplyAuthorizedByThisRecovery": false
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "grantsLiveAuthority": false
+  }
+}

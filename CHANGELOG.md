@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.2.3.1.0.1.0.1
+
+- Correct the refresh-only plan gate: the exact seven reviewed state updates are represented by `resource_drift`, while `resource_changes` must be empty and all seven outputs remain `no-op`.
+- Bind the already-created binary, JSON and text plan artifacts and prohibit replanning or retrying the stopped execution.
+- Add command-free verification and a separately approved read-only recovery for current state bytes, all 22 addresses, S3 state history and clean lock release.
+- Require exactly one refresh-plan lock version and one delete marker while keeping state-object history unchanged.
+- Defer every state-content mutation and refresh-only apply to separately reviewed v0.12.2.3.1.0.2.
+
 ## v0.12.2.3.1.0.1
 
 - Bind the exact v0.12.2.3.1 stopping point after successful real lock contention, clean holder release and an ordinary plan with detailed exit code `0`.

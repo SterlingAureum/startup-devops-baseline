@@ -47,6 +47,15 @@ EXPECTED_DRIFT_PATHS = {
         "versioning.[0].enabled",
     ),
 }
+EXPECTED_REFRESH_OUTPUTS = {
+    "backend_configuration",
+    "root_state_access_policy_arns",
+    "state_bucket_arn",
+    "state_bucket_name",
+    "state_keys",
+    "state_kms_alias",
+    "state_kms_key_arn",
+}
 
 
 def load_module(path: Path, name: str) -> Any:
@@ -209,7 +218,7 @@ def changed_paths(before: Any, after: Any, prefix: tuple[str, ...] = ()) -> list
     return [] if before == after else [".".join(prefix) or "<root>"]
 
 
-def validate_reviewed_drift(plan: Any) -> dict[str, Any]:
+def validate_reviewed_drift(plan: Any, *, refresh_only: bool = False) -> dict[str, Any]:
     require(isinstance(plan, dict), "Terraform plan JSON must be an object")
     require(plan.get("terraform_version") == "1.14.5", "Terraform version changed")
     require(plan.get("errored", False) is False and plan.get("complete", True) is True, "Terraform plan is not complete")
@@ -217,18 +226,23 @@ def validate_reviewed_drift(plan: Any) -> dict[str, Any]:
     require(isinstance(drift, list) and len(drift) == 7, "Resource drift count changed")
     require(compact_digest(drift) == RESOURCE_DRIFT_SHA256, "Resource drift values changed")
     changes = {item.get("address"): item for item in plan.get("resource_changes", []) if isinstance(item, dict)}
-    require(len(changes) == 13 and set(changes) == PLAN_GATE.EXPECTED_MANAGED_ADDRESSES, "Managed resource-change inventory changed")
-    require(all(item.get("change", {}).get("actions") == ["no-op"] and "importing" not in item.get("change", {}) for item in changes.values()), "Managed resource changes are not all no-op")
     outputs = plan.get("output_changes", {})
     require(isinstance(outputs, dict) and all(item.get("actions") == ["no-op"] for item in outputs.values()), "Output changes are not all no-op")
+    if refresh_only:
+        require(changes == {}, "Refresh-only plan unexpectedly contains resource changes")
+        require(set(outputs) == EXPECTED_REFRESH_OUTPUTS, "Refresh-only output inventory changed")
+    else:
+        require(len(changes) == 13 and set(changes) == PLAN_GATE.EXPECTED_MANAGED_ADDRESSES, "Managed resource-change inventory changed")
+        require(all(item.get("change", {}).get("actions") == ["no-op"] and "importing" not in item.get("change", {}) for item in changes.values()), "Managed resource changes are not all no-op")
     observed: dict[str, tuple[str, ...]] = {}
     for item in drift:
         address = item.get("address")
         require(address in EXPECTED_DRIFT_PATHS, "Unreviewed drift address found")
         change = item.get("change", {})
         require(change.get("actions") == ["update"] and "importing" not in change, "Drift action changed")
-        expected_change = changes[address].get("change", {})
-        require(change.get("after") == expected_change.get("before") == expected_change.get("after"), "Refresh result does not equal no-op planned state")
+        if not refresh_only:
+            expected_change = changes[address].get("change", {})
+            require(change.get("after") == expected_change.get("before") == expected_change.get("after"), "Refresh result does not equal no-op planned state")
         paths = tuple(changed_paths(change.get("before"), change.get("after")))
         require(paths == EXPECTED_DRIFT_PATHS[address], f"Drift paths changed: {address}")
         observed[address] = paths
@@ -395,7 +409,7 @@ def execute(
     show_json = record(output, "terraform-show-refresh-only-json", [*prefix, "show", "-json", str(binary)], environment, 180, runner, repository_root)
     show_text = record(output, "terraform-show-refresh-only-text", [*prefix, "show", "-no-color", str(binary)], environment, 180, runner, repository_root)
     plan_json = PROOF_EXECUTOR.parse_json_result(show_json, "Refresh-only plan JSON")
-    validate_reviewed_drift(plan_json)
+    validate_reviewed_drift(plan_json, refresh_only=True)
     require(show_text.returncode == 0, "Refresh-only plan text rendering failed")
 
     pull_after = record(output, "terraform-state-pull-after", [*prefix, "state", "pull"], environment, 180, runner, repository_root)
@@ -418,7 +432,7 @@ def execute(
         "canonicalStateSha256Before": REMOTE_STATE_SHA256, "canonicalStateSha256After": hashlib.sha256(pull_after.stdout).hexdigest(),
         "refreshBinaryPlanSha256": file_sha256(binary), "refreshPlanJsonSha256": hashlib.sha256(show_json.stdout).hexdigest(),
         "refreshPlanTextSha256": hashlib.sha256(show_text.stdout).hexdigest(), "refreshResourceDriftSha256": compact_digest(plan_json["resource_drift"]),
-        "resourceDriftCount": 7, "resourceChangeCount": 13,
+        "resourceDriftCount": 7, "resourceChangeCount": 0, "outputChangeCount": 7,
         "managedAddressCount": len(context["managed"]), "dataAddressCount": len(context["data"]),
         "stateObjectVersionIds": [item.get("VersionId") for item in state_versions_after],
         "lockObjectVersionIds": [item.get("VersionId") for item in lock_versions_after],
@@ -442,7 +456,8 @@ def execute(
         "refresh_plan_text_sha256": evidence["refreshPlanTextSha256"],
         "refresh_resource_drift_sha256": evidence["refreshResourceDriftSha256"],
         "refresh_plan_evidence_sha256": file_sha256(evidence_path),
-        "resource_drift_count": 7, "managed_resource_change_count": 13,
+        "resource_drift_count": 7, "managed_resource_change_count": 0,
+        "output_change_count": 7,
         "managed_non_noop_change_count": 0, "output_non_noop_change_count": 0,
         "import_count": 0, "managed_state_address_count": len(context["managed"]),
         "data_state_address_count": len(context["data"]), "refresh_plan_exit_code": 2,
@@ -473,7 +488,8 @@ def redacted_verification(context: dict[str, Any]) -> dict[str, Any]:
         "canonical_remote_state_sha256": REMOTE_STATE_SHA256,
         "incident_plan_json_sha256": PLAN_JSON_SHA256,
         "incident_resource_drift_sha256": RESOURCE_DRIFT_SHA256,
-        "resource_drift_count": 7, "managed_resource_change_count": 13,
+        "resource_drift_count": 7, "managed_resource_change_count": 0,
+        "output_change_count": 7,
         "managed_non_noop_change_count": 0, "output_non_noop_change_count": 0,
         "managed_state_address_count": len(context["managed"]), "data_state_address_count": len(context["data"]),
         "remaining_refresh_plan_approval_seconds": context["remaining"],

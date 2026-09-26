@@ -863,6 +863,10 @@ Incremental scope:
 - v0.12.2.3.1.0.2.0.1.2 - exact dual-form pre-apply state gate - delivered;
   accepts only the reviewed canonical and reviewed `check_results`-normalized
   digests while rejecting every third form and all semantic changes
+- v0.12.2.3.1.0.2.0.1.2.0.1 - post-apply refresh-state recovery - delivered;
+  records the successful one-time saved-plan apply, reconstructs the seven
+  reviewed managed refreshes and same-account caller-session projection, and
+  permits only separately approved read-only state/S3/lock evidence completion
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and

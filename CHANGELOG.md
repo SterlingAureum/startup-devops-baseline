@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.2.3.1.0.2.0.1.2.0.1
+
+- Record the successful one-time reviewed refresh-only apply: zero remote resource changes, unchanged lineage and serial 1 to 2.
+- Replace the invalid empty `planned_values.root_module` equality assumption with exact reconstruction of seven reviewed managed refreshes and one same-account caller-session data refresh.
+- Add a separately approved read-only recovery for current state, S3 state-version history and Terraform lock cleanup evidence.
+- Continue to prohibit init, plan, apply, state push, destroy, direct S3 mutation, retry and rollback.
+
 ## v0.12.2.3.1.0.2.0.1.2
 
 - Record that attempt-02 stopped before apply after returning the original reviewed canonical state byte-for-byte.

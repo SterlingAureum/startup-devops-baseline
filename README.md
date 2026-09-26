@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery` records that the
+reviewed refresh-only plan applied successfully and provides a separately
+approved read-only recovery for the remaining state/S3/lock evidence. See
+[v0.12.2.3.1.0.2.0.1.2.0.1 post-apply state recovery](docs/V0.12.2.3.1.0.2.0.1.2.0.1_POST_APPLY_STATE_RECOVERY.md).
+
+Predecessor development checkpoint:
 `v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state` replaces the unstable
 single-observation state-pull byte gate with an exact two-digest allowlist for
 the reviewed canonical and reviewed `check_results`-normalized forms. See
@@ -1155,6 +1161,14 @@ Two stopped pre-apply pulls produced the exact reviewed canonical and exact
 reviewed `check_results`-normalized forms. The new finite gate accepts only
 those two SHA-256 values and rejects every third representation or semantic
 change. See `delivery/contracts/v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.json`.
+
+v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery
+
+The saved refresh-only plan applied once with zero remote resource changes and
+advanced state serial 1 to 2. The recovery proves the seven reviewed managed
+refreshes plus the same-account caller-session projection, then completes only
+read-only state, S3 history and lock cleanup evidence. See
+`delivery/contracts/v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.json`.
 
 The predecessor v0.12.2.3.1 implements the real Terraform-console-held S3 lock proof and the
 post-release zero-change saved plan. Verification executes no operational

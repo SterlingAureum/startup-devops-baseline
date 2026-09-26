@@ -103,6 +103,12 @@
 /scripts/execute-v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.py @SterlingAureum
 /scripts/test-v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.py @SterlingAureum
 /scripts/validate-v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.sh @SterlingAureum
+/delivery/contracts/v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.json @SterlingAureum
+/delivery/examples/v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery-request.example.json @SterlingAureum
+/docs/V0.12.2.3.1.0.2.0.1.2.0.1_POST_APPLY_STATE_RECOVERY.md @SterlingAureum
+/scripts/execute-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.py @SterlingAureum
+/scripts/test-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.py @SterlingAureum
+/scripts/validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh @SterlingAureum
 
 /scripts/check-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum
 /scripts/test-v0.11.9.3.6.7.5-aws-test-recovery-root-plan.py @SterlingAureum

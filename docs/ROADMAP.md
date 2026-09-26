@@ -819,6 +819,11 @@ Incremental scope:
   remain exact; resume only state pull/list and S3 object-version reads without
   reinitializing, remigrating, planning, applying, pushing, retrying or rolling
   back state
+- v0.12.2.2.0.2 - identity-rebase digest-encoding repair - delivered offline;
+  restore the single trailing LF used when the reviewed incident digests were
+  recorded, add fixed-byte regression coverage, record that the failed verify
+  ran no operational command and require a new protected-main-bound request and
+  approval window without changing state, evidence or recovery authority
 - v0.12.2.3 - lock-contention, zero-change, controlled object-version recovery
   and redacted terminal evidence - planned; recovery uses its own approval and
   execution window

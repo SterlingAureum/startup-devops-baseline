@@ -69,7 +69,7 @@ def file_sha256(path: Path) -> str:
 
 
 def compact_digest(value: Any) -> str:
-    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    encoded = (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
     return hashlib.sha256(encoded).hexdigest()
 
 

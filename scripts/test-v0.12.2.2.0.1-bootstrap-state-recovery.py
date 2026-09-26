@@ -114,6 +114,12 @@ class RequestTests(unittest.TestCase):
             EXECUTOR.validate_request(value)
 
 
+class DigestTests(unittest.TestCase):
+    def test_compact_digest_includes_one_trailing_lf(self):
+        expected = hashlib.sha256(b'{"a":1}\n').hexdigest()
+        self.assertEqual(EXECUTOR.compact_digest({"a": 1}), expected)
+
+
 class TransitionTests(unittest.TestCase):
     def test_exact_identity_rebase_is_accepted(self):
         backup, remote, managed, data = states()

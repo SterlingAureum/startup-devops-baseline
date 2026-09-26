@@ -900,71 +900,8 @@ echo "==> Validating v0.11.9.3.6.7.7.20 final v0.11 scope and evidence closure"
 echo "==> Validating v0.11.9.3.6.7.7.20.1 roadmap status successor repair"
 "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair.sh"
 
-echo "==> Validating v0.12.0 production-readiness foundation"
-"${ROOT_DIR}/scripts/validate-v0.12.0-production-readiness-foundation.sh"
-
-echo "==> Validating v0.12.1 remote-state foundation"
-"${ROOT_DIR}/scripts/validate-v0.12.1-remote-state-foundation.sh"
-
 echo "==> Validating v0.12.1.0.1 CI compatibility repair"
 "${ROOT_DIR}/scripts/validate-v0.12.1.0.1-ci-compatibility-repair.sh"
 
-echo "==> Validating v0.12.1.1 guarded state-bootstrap plan"
-"${ROOT_DIR}/scripts/validate-v0.12.1.1-guarded-state-bootstrap-plan.sh"
-
-echo "==> Validating v0.12.1.2 reviewed state-bootstrap apply"
-"${ROOT_DIR}/scripts/validate-v0.12.1.2-reviewed-state-bootstrap-apply.sh"
-
-echo "==> Validating v0.12.1.2.0.1 state-bootstrap post-apply recovery"
-"${ROOT_DIR}/scripts/validate-v0.12.1.2.0.1-state-bootstrap-recovery.sh"
-
-echo "==> Validating v0.12.1.2.1 state-bootstrap execution evidence"
-"${ROOT_DIR}/scripts/validate-v0.12.1.2.1-state-bootstrap-execution-evidence.sh"
-
-echo "==> Validating v0.12.2.0 state-migration design foundation"
-"${ROOT_DIR}/scripts/validate-v0.12.2.0-state-migration-design-foundation.sh"
-
-echo "==> Validating v0.12.2.0.1 private bootstrap-state location repair"
-"${ROOT_DIR}/scripts/validate-v0.12.2.0.1-private-bootstrap-state-location-repair.sh"
-
-echo "==> Validating v0.12.2.1 private bootstrap migration preflight"
-"${ROOT_DIR}/scripts/validate-v0.12.2.1-private-bootstrap-migration-preflight.sh"
-
-echo "==> Validating v0.12.2.2 reviewed bootstrap state migration"
-"${ROOT_DIR}/scripts/validate-v0.12.2.2-reviewed-bootstrap-state-migration.sh"
-
-echo "==> Validating v0.12.2.2.0.1 bootstrap state identity-rebase recovery"
-"${ROOT_DIR}/scripts/validate-v0.12.2.2.0.1-bootstrap-state-identity-rebase-recovery.sh"
-
-echo "==> Validating v0.12.2.2.0.2 identity-rebase digest-encoding repair"
-"${ROOT_DIR}/scripts/validate-v0.12.2.2.0.2-identity-rebase-digest-encoding-repair.sh"
-
-echo "==> Validating v0.12.2.2.1 bootstrap state migration recovery evidence"
-"${ROOT_DIR}/scripts/validate-v0.12.2.2.1-bootstrap-state-migration-recovery-evidence.sh"
-
-echo "==> Validating v0.12.2.3.0 remote-state proof and recovery design"
-"${ROOT_DIR}/scripts/validate-v0.12.2.3.0-remote-state-proof-and-recovery-design.sh"
-
-echo "==> Validating v0.12.2.3.1 guarded remote-state proof"
-"${ROOT_DIR}/scripts/validate-v0.12.2.3.1-guarded-remote-state-proof.sh"
-
-echo "==> Validating v0.12.2.3.1.0.1 guarded refresh-only recovery plan"
-"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.1-guarded-refresh-only-recovery-plan.sh"
-
-echo "==> Validating v0.12.2.3.1.0.1.0.1 refresh-only plan-evidence recovery"
-"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.1.0.1-refresh-only-plan-evidence-recovery.sh"
-
-echo "==> Validating v0.12.2.3.1.0.2 reviewed refresh-only state reconciliation"
-"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2-reviewed-refresh-only-state-reconciliation.sh"
-
-echo "==> Validating v0.12.2.3.1.0.2.0.1 state-pull check_results normalization repair"
-"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2.0.1-state-pull-check-results-normalization-repair.sh"
-
-echo "==> Validating v0.12.2.3.1.0.2.0.1.1 semantic-projection digest repair"
-"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair.sh"
-
-echo "==> Validating v0.12.2.3.1.0.2.0.1.2 dual-form pre-apply state gate"
-"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state.sh"
-
-echo "==> Validating v0.12.2.3.1.0.2.0.1.2.0.1 post-apply state recovery"
-"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh"
+echo "==> Validating v0.12.2.4.1 deduplicated validator orchestration"
+"${ROOT_DIR}/scripts/validate-v0.12.2.4.1-validator-orchestration-dedup.sh"

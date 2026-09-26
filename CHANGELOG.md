@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.2.4.1
+
+- Reduce root-level v0.12 validator launches from 23 to two and effective historical validator executions from 254 to 23 while preserving the independent compatibility repair and all 22 validators in the existing successor-to-predecessor chain.
+- Add a fail-closed static call-graph checker that rejects missing validators, cycles, multiple predecessors, reordered root entrypoints and incomplete chain coverage.
+- Report the unique chain count and elapsed chain time without changing GitHub workflow triggers, required-check names or historical validator files.
+- Keep change-impact routing and cross-workflow deduplication deferred to v0.12.3.1; add no AWS, Terraform or paused state-recovery authority.
+
 ## v0.12.2.3.1.0.2.0.1.2.0.1
 
 - Record the successful one-time reviewed refresh-only apply: zero remote resource changes, unchanged lineage and serial 1 to 2.

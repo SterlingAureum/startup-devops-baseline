@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "v0.12.2.4.1-validator-orchestration-dedup-v1",
+  "version": "v0.12.2.4.1",
+  "status": "delivered-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "1153c48c70a4f2873014800280cfbd25eed2e3ef",
+  "scope": {
+    "rootQualityGate": "scripts/validate-ci-quality-gates.sh",
+    "preChangeDirectV012ValidatorCount": 23,
+    "postChangeDirectV012ValidatorCount": 2,
+    "rootDirectV012Validators": [
+      "validate-v0.12.1.0.1-ci-compatibility-repair.sh",
+      "validate-v0.12.2.4.1-validator-orchestration-dedup.sh"
+    ],
+    "chainedValidatorEntryPoint": "validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh",
+    "uniqueChainedValidatorCount": 22,
+    "rootDirectInvocationReduction": 21,
+    "preChangeEffectiveHistoricalValidatorExecutions": 254,
+    "postChangeEffectiveHistoricalValidatorExecutions": 23,
+    "duplicateHistoricalValidatorExecutionReduction": 231
+  },
+  "invariants": {
+    "historicalValidatorFilesModified": false,
+    "standaloneCompatibilityValidatorPreserved": true,
+    "allExistingV012ValidatorsRemainReachable": true,
+    "successorPredecessorOrderPreserved": true,
+    "requiredCheckNamesChanged": false,
+    "workflowTriggersChanged": false,
+    "pathRoutingIntroduced": false,
+    "unknownChangeFailsToFullSuite": true
+  },
+  "observability": {
+    "staticCallGraphValidated": true,
+    "uniqueChainedValidatorCountReported": true,
+    "chainedElapsedSecondsReported": true
+  },
+  "deferred": {
+    "changeImpactRouting": "v0.12.3.1",
+    "pullRequestAndMainPushDeduplication": "v0.12.3.1",
+    "imagePublishQualityGateDeduplication": "v0.12.3.1"
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "grantsLiveAuthority": false
+  }
+}

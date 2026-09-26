@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.4.1-validator-orchestration-dedup` removes triangular v0.12 validator
+replay from the repository-wide quality gate while preserving the full chain,
+the independent compatibility validator, workflow triggers and required-check
+names. See [v0.12.2.4.1 validator orchestration deduplication](docs/V0.12.2.4.1_VALIDATOR_ORCHESTRATION_DEDUP.md).
+
+Paused operational checkpoint:
 `v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery` records that the
 reviewed refresh-only plan applied successfully and provides a separately
 approved read-only recovery for the remaining state/S3/lock evidence. See

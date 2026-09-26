@@ -953,3 +953,6 @@ echo "==> Validating v0.12.2.3.1.0.1 guarded refresh-only recovery plan"
 
 echo "==> Validating v0.12.2.3.1.0.1.0.1 refresh-only plan-evidence recovery"
 "${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.1.0.1-refresh-only-plan-evidence-recovery.sh"
+
+echo "==> Validating v0.12.2.3.1.0.2 reviewed refresh-only state reconciliation"
+"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2-reviewed-refresh-only-state-reconciliation.sh"

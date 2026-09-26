@@ -849,6 +849,10 @@ Incremental scope:
   the saved refresh-only plan correctly contained seven `resource_drift`
   entries, zero `resource_changes` and seven no-op outputs; preserves that
   exact plan and completes only read-only state and lock postchecks
+- v0.12.2.3.1.0.2 - reviewed refresh-only state reconciliation - delivered;
+  binds the recovered and human-reviewed saved plan, permits only its
+  separately approved one-time apply, and requires exact state, serial,
+  lineage, address, planned-value and S3 state/lock history evidence
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and

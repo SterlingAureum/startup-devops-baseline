@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.3.1-guarded-remote-state-proof` adds command-free verification and a
+separately approved live executor for real S3 lock contention followed by a
+machine-gated zero-change saved plan. It never reinitializes, reapplies,
+pushes state, force-unlocks or mutates state content. See
+[v0.12.2.3.1 guarded remote-state proof](docs/V0.12.2.3.1_GUARDED_REMOTE_STATE_PROOF.md).
+
+Predecessor development checkpoint:
 `v0.12.2.3.0-remote-state-proof-and-recovery-design` adopts the validated
 remote state identity and splits real lock contention, zero-change review,
 controlled object-version recovery and terminal evidence into separately
@@ -1058,9 +1065,17 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.2.3.0-remote-state-proof-and-recovery-design
+v0.12.2.3.1-guarded-remote-state-proof
 ```
-v0.12.2.3.0 defines a real Terraform-console-held S3 lock contention proof, a
+v0.12.2.3.1 implements the real Terraform-console-held S3 lock proof and the
+post-release zero-change saved plan. Verification executes no operational
+command; execution requires a fresh request, protected-main binding and
+separate confirmation. It preserves remote state bytes and versions, expects
+exactly two lock acquisition/deletion pairs, and keeps all raw plan, lock and
+resource identity data private. See
+`delivery/contracts/v0.12.2.3.1-guarded-remote-state-proof.json`.
+
+The predecessor v0.12.2.3.0 defines a real Terraform-console-held S3 lock contention proof, a
 human-reviewed zero-change saved plan and a separately approved byte-identical
 object-version recovery drill. It corrects the obsolete pre-migration lineage
 assumption without weakening address or semantic equality and adds no live

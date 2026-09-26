@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "v0.12.2.3.1-bootstrap-remote-state-proof-request-v1",
+  "operation": "prove-bootstrap-remote-state-lock-and-zero-change",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "privateRecoveryRequestPath": "/private/owner-readable/bootstrap-state-identity-rebase-recovery-request-attempt-02.json",
+  "privateRecoveryRequestSha256": "e4c3f713fb00387dfbeb82e81d528b7eb0b262afe8d45fa9010fbb0b84d68612",
+  "privateRecoveryOutputDirectory": "/private/owner-readable/bootstrap-state-identity-rebase-recovery-attempt-02",
+  "recoveryResultSha256": "adeb7145db9751f3eabd47b8379173acffff666590079edc189eb75db56e66f2",
+  "identityValidationSha256": "c6a560147ee4cd7c5fd787e9a895ebb90efd29cf2cbb23dae6a7943dd03d93b5",
+  "remoteStateSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+  "semanticProjectionSha256": "46a2fda8b522437194aab7a03b41170ff6a02f1affaa067ec76ce8a0ebada48d",
+  "privateProofOutputDirectory": "/private/owner-readable/bootstrap-remote-state-proof-attempt-01",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "awsReadOnlyValidation": true,
+    "terraformConsoleLockHolder": true,
+    "terraformPlanLockContender": true,
+    "terraformZeroChangeSavedPlan": true,
+    "transientLockMutation": true,
+    "stateContentMutation": false,
+    "terraformInit": false,
+    "terraformApply": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "directLockWrite": false,
+    "forceUnlock": false,
+    "objectVersionRecovery": false,
+    "automaticRetry": false
+  }
+}

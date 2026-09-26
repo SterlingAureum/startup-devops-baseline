@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "v0.12.2.3.1-guarded-remote-state-proof-v1",
+  "version": "v0.12.2.3.1",
+  "status": "delivered-awaiting-separate-remote-state-proof-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "297a82b526ea9a137704ce4ba81fdfa35e16860f",
+  "predecessor": {
+    "version": "v0.12.2.3.0",
+    "contract": "delivery/contracts/v0.12.2.3.0-remote-state-proof-and-recovery-design.json",
+    "requiredStatus": "delivered-offline-remote-state-proof-and-recovery-design"
+  },
+  "recoveryBindings": {
+    "privateRecoveryRequestSha256": "e4c3f713fb00387dfbeb82e81d528b7eb0b262afe8d45fa9010fbb0b84d68612",
+    "recoveryResultSha256": "adeb7145db9751f3eabd47b8379173acffff666590079edc189eb75db56e66f2",
+    "identityValidationSha256": "c6a560147ee4cd7c5fd787e9a895ebb90efd29cf2cbb23dae6a7943dd03d93b5",
+    "remoteStateSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+    "semanticProjectionSha256": "46a2fda8b522437194aab7a03b41170ff6a02f1affaa067ec76ce8a0ebada48d",
+    "managedAddressCount": 13,
+    "dataAddressCount": 9,
+    "stateObjectVersionCount": 1,
+    "stateObjectDeleteMarkerCount": 0
+  },
+  "verifyBoundary": {
+    "awsCommands": false,
+    "terraformCommands": false,
+    "writesPrivateEvidence": false,
+    "requiresProtectedMain": true,
+    "requiresFreshWindow": true,
+    "revalidatesRecoveryChain": true,
+    "revalidatesPrivateTfvars": true,
+    "proofAuthorizedByVerify": false
+  },
+  "executeBoundary": {
+    "awsReadOnlyValidation": true,
+    "terraformStatePull": true,
+    "terraformStateList": true,
+    "terraformConsoleLockHolder": true,
+    "terraformPlanLockContender": true,
+    "terraformZeroChangeSavedPlan": true,
+    "transientLockMutation": true,
+    "stateContentMutation": false,
+    "terraformInit": false,
+    "terraformApply": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "directLockWrite": false,
+    "forceUnlock": false,
+    "objectVersionRecovery": false,
+    "automaticRetry": false
+  },
+  "successGate": {
+    "canonicalRemoteStateBytesUnchanged": true,
+    "exactAddressInventoryRequired": true,
+    "lockObjectObservedDuringHolder": true,
+    "contenderMustFailOnlyOnLockAcquisition": true,
+    "holderMustExitCleanly": true,
+    "lockObjectAbsentAfterRelease": true,
+    "zeroChangePlanExitCode": 0,
+    "savedBinaryPlanRequired": true,
+    "resourceDriftAllowed": false,
+    "createUpdateDeleteReplaceImportAllowed": false,
+    "stateObjectVersionCountUnchanged": true,
+    "lockVersionDelta": 2,
+    "lockDeleteMarkerDelta": 2
+  },
+  "failureBoundary": {
+    "nonLockContenderFailureAccepted": false,
+    "ambiguousLockCleanupMeansStop": true,
+    "automaticRetry": false,
+    "automaticRollback": false,
+    "preserveAllPrivateEvidence": true
+  },
+  "privacyBoundary": {
+    "publishesAwsAccount": false,
+    "publishesBucket": false,
+    "publishesKmsArn": false,
+    "publishesRawLineage": false,
+    "publishesStateBytes": false,
+    "publishesPlanContents": false,
+    "publishesStateObjectVersionIds": false,
+    "publishesLockInfo": false,
+    "publishesPrivatePaths": false,
+    "allowsPublicDigestsCountsAndBooleans": true
+  },
+  "successor": {
+    "version": "v0.12.2.3.2",
+    "scope": "reviewed-lock-and-plan-evidence-plus-object-version-recovery-request",
+    "requiresSeparateReview": true
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "grantsLiveAuthority": false
+  }
+}

@@ -838,6 +838,10 @@ Incremental scope:
   contention, require a human-reviewed zero-change saved plan, and isolate the
   byte-identical version-bound recovery drill and terminal evidence into
   v0.12.2.3.1 through v0.12.2.3.4
+- v0.12.2.3.1 - guarded real S3 lock contention and zero-change saved-plan
+  proof - delivered awaiting a fresh protected-main-bound request, separate
+  approval and live execution; no init, apply, state push or state-content
+  mutation is authorized
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and

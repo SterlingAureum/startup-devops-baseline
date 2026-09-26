@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "v0.12.2.2.1-bootstrap-state-migration-recovery-evidence-v1",
+  "version": "v0.12.2.2.1",
+  "status": "completed-redacted-bootstrap-state-migration-recovery-evidence",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "recordedAfterProtectedMainCommit": "04eeaf6685b56c645267605de4b28541ca45b3c4",
+  "predecessors": [
+    {
+      "version": "v0.12.2.2.0.1",
+      "contract": "delivery/contracts/v0.12.2.2.0.1-bootstrap-state-identity-rebase-recovery.json",
+      "requiredStatus": "delivered-awaiting-separate-read-only-identity-rebase-recovery-approval"
+    },
+    {
+      "version": "v0.12.2.2.0.2",
+      "contract": "delivery/contracts/v0.12.2.2.0.2-identity-rebase-digest-encoding-repair.json",
+      "requiredStatus": "delivered-offline-digest-encoding-repair"
+    }
+  ],
+  "executionIdentity": {
+    "incidentControlPlaneCommit": "5e10d0edbca3be5e87fdc5446f03e6d5c4c374f5",
+    "recoveryControlPlaneCommit": "04eeaf6685b56c645267605de4b28541ca45b3c4",
+    "privateMigrationRequestSha256": "dbf011baaf96661f4317da1edcbbca0b3f84596c15965d1edd9c038b1e5a6467",
+    "privateRecoveryRequestSha256": "e4c3f713fb00387dfbeb82e81d528b7eb0b262afe8d45fa9010fbb0b84d68612",
+    "completedAtUtc": "2026-09-26T03:22:59Z"
+  },
+  "stateEvidence": {
+    "immutableBackupSha256": "83bca892fef5f5eefffba3de247c4694daccf7201309262ff8dd73b61bc1b995",
+    "remoteStateSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+    "revalidatedRemoteStateSha256": "7c85df95076c480eaa0a618b78ad946be64ff2288c918d529395ff4346bcd139",
+    "oldLineageSha256": "0bacf9c12fd5f2485d1b2acac980b6295a0f612335533b6abe7d1d03e3f7dc90",
+    "newLineageSha256": "4f42afe2b009593773f37059419ca3ea4e87ca89d4ef1a7ff1278d60f2ed2fab",
+    "oldSerial": 20,
+    "newSerial": 1,
+    "managedAddressCount": 13,
+    "dataAddressCount": 9,
+    "semanticProjectionSha256": "46a2fda8b522437194aab7a03b41170ff6a02f1affaa067ec76ce8a0ebada48d",
+    "identityRebaseValidated": true,
+    "resourceAndOutputContentPreserved": true
+  },
+  "privateResultBindings": {
+    "identityRebaseValidationSha256": "c6a560147ee4cd7c5fd787e9a895ebb90efd29cf2cbb23dae6a7943dd03d93b5",
+    "recoveryResultSha256": "adeb7145db9751f3eabd47b8379173acffff666590079edc189eb75db56e66f2",
+    "allReadOnlyCommandStderrEmpty": true
+  },
+  "remoteObjectEvidence": {
+    "currentStateObjectVersionCount": 1,
+    "stateObjectDeleteMarkerCount": 0,
+    "sseKmsValidated": true,
+    "bucketKeyValidated": true,
+    "stateObjectVersionIdPublished": false
+  },
+  "authorityEvidence": {
+    "priorTerraformInitSucceeded": true,
+    "terraformInitReexecuted": false,
+    "stateMigrationReexecuted": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "statePushExecuted": false,
+    "destroyExecuted": false,
+    "iamPolicyAttachmentExecuted": false,
+    "automaticRetryPerformed": false,
+    "automaticRollbackPerformed": false
+  },
+  "privacyBoundary": {
+    "publishesAwsAccount": false,
+    "publishesBucket": false,
+    "publishesKmsArn": false,
+    "publishesRawLineage": false,
+    "publishesStateBytes": false,
+    "publishesPrivatePaths": false,
+    "publishesStateObjectVersionId": false,
+    "publishesRawCommandOutput": false,
+    "allowsPublicDigestsCountsTimestampsAndBooleans": true
+  },
+  "packageBoundary": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "modifiesRemoteState": false,
+    "addsLiveAuthority": false
+  },
+  "successor": {
+    "version": "v0.12.2.3",
+    "purpose": "adopt the validated remote identity and separately prove lock contention, zero change and controlled object-version recovery",
+    "requiresFreshRequestAndApproval": true
+  }
+}

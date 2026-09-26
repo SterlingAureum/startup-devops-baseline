@@ -3,13 +3,17 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.2.2-reviewed-bootstrap-state-migration` adds command-free verification
-and a separately approved executor for the exact v0.12.2.1 reviewed
-`terraform init -migrate-state -force-copy` command. It validates remote state
-identity and the first S3 object version without plan, apply, state push,
-destroy, retry or automatic rollback. Applying the increment performs no live
-operation. See
-[v0.12.2.2 reviewed bootstrap state migration](docs/V0.12.2.2_REVIEWED_BOOTSTRAP_STATE_MIGRATION.md).
+`v0.12.2.2.0.1-bootstrap-state-identity-rebase-recovery` binds the exact
+post-migration identity-rebase incident and adds command-free verification plus
+a separately approved read-only continuation. It never repeats init or state
+migration. Applying the increment performs no live operation. See
+[v0.12.2.2.0.1 bootstrap state identity-rebase recovery](docs/V0.12.2.2.0.1_BOOTSTRAP_STATE_IDENTITY_REBASE_RECOVERY.md).
+
+Predecessor development checkpoint:
+`v0.12.2.2-reviewed-bootstrap-state-migration` added the one-shot reviewed
+local-to-S3 migration executor. Its approved init migration configured the
+backend and copied exact state content before the strict lineage gate stopped.
+See [v0.12.2.2 reviewed bootstrap state migration](docs/V0.12.2.2_REVIEWED_BOOTSTRAP_STATE_MIGRATION.md).
 
 Predecessor development checkpoint:
 `v0.12.2.1-private-bootstrap-migration-preflight` declares the empty partial
@@ -1033,14 +1037,21 @@ remains v0.11.6.2 scope.
 ## Current Version
 
 ```text
-v0.12.2.2-reviewed-bootstrap-state-migration
+v0.12.2.2.0.1-bootstrap-state-identity-rebase-recovery
 ```
-v0.12.2.2 binds a new command-free verification and separately approved
-single execution to the human-reviewed v0.12.2.1 private artifacts. It may run
-only the exact init migration command, then validates pulled state identity and
-the current SSE-KMS S3 state-object version. It cannot plan, apply, state-push,
-destroy, retry, roll back or delete the immutable backup. Applying the package
-does not migrate state. See
+v0.12.2.2.0.1 binds the exact successful-init/identity-rebase incident and
+accepts only the observed remote identity change when addresses, resources,
+outputs and the semantic state projection remain exact. Its separately
+approved executor resumes only state pull/list and S3 object-version reads by
+using the existing backend metadata. It cannot reinitialize or remigrate state,
+plan, apply, state-push, destroy, retry or roll back. Applying the package runs
+no live command. See
+`delivery/contracts/v0.12.2.2.0.1-bootstrap-state-identity-rebase-recovery.json`.
+
+The predecessor v0.12.2.2 binds a command-free verification and separately
+approved single execution to the human-reviewed v0.12.2.1 private artifacts.
+Its migration executor remains historical incident evidence and must not be
+retried. See
 `delivery/contracts/v0.12.2.2-reviewed-bootstrap-state-migration.json`.
 
 The predecessor v0.12.2.1 binds command-free verification and the separately approved

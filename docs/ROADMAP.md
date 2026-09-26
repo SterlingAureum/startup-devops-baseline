@@ -807,11 +807,18 @@ Incremental scope:
   the third immutable backup, revalidates the empty live foundation and writes
   the private command plan without initializing a backend or migrating state
 - v0.12.2.2 - separately approved bootstrap local-to-S3 state migration -
-  delivered awaiting separate execution approval; command-free verification
-  binds every human-reviewed v0.12.2.1 artifact, while the one-shot executor
-  may run only the exact reviewed init migration and post-migration state/S3
-  identity reads with no plan, apply, refactor, upgrade, retry, rollback or
-  local-backup deletion
+  executed once; command-free verification bound every human-reviewed
+  v0.12.2.1 artifact and the approved init migration configured the backend and
+  copied exact resources and outputs, then stopped fail-closed because the
+  remote backend established a new lineage and serial rather than preserving
+  the local state identity
+- v0.12.2.2.0.1 - bootstrap state identity-rebase recovery - delivered offline
+  awaiting separate read-only execution approval; bind the exact successful
+  init incident and accept only its reviewed identity rebase while resources,
+  outputs, 13 managed addresses, nine data addresses and semantic projection
+  remain exact; resume only state pull/list and S3 object-version reads without
+  reinitializing, remigrating, planning, applying, pushing, retrying or rolling
+  back state
 - v0.12.2.3 - lock-contention, zero-change, controlled object-version recovery
   and redacted terminal evidence - planned; recovery uses its own approval and
   execution window

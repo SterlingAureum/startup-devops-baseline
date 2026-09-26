@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.2.2.0.1
+
+- Record that the approved v0.12.2.2 init migration succeeded but established a new remote lineage, reset serial to `1` and reserialized `check_results`, causing the original strict identity gate to stop correctly.
+- Bind the exact incident request, logs, three preserved local state copies, empty post-migration working state and first remote pull without publishing private resource identity.
+- Accept only the reviewed identity rebase: 13 managed and nine data addresses, resources, outputs and the semantic projection must remain exact.
+- Add command-free verification plus a separately approved read-only continuation for state pull/list and S3 SSE-KMS object-version validation using the already configured backend metadata.
+- Prohibit a second init or migration, plan, apply, state push, destroy, IAM attachment, automatic retry and automatic rollback.
+- Hand remote identity adoption, lock contention, zero-change proof and controlled object-version recovery to v0.12.2.3.
+
 ## v0.12.2.2
 
 - Bind a new migration request to the exact human-reviewed v0.12.2.1 request, result, state inventory, source manifest, command plan, immutable backup, resource identity and live-validation digests.

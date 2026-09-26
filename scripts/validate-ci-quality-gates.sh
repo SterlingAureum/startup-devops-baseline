@@ -932,3 +932,6 @@ echo "==> Validating v0.12.2.1 private bootstrap migration preflight"
 
 echo "==> Validating v0.12.2.2 reviewed bootstrap state migration"
 "${ROOT_DIR}/scripts/validate-v0.12.2.2-reviewed-bootstrap-state-migration.sh"
+
+echo "==> Validating v0.12.2.2.0.1 bootstrap state identity-rebase recovery"
+"${ROOT_DIR}/scripts/validate-v0.12.2.2.0.1-bootstrap-state-identity-rebase-recovery.sh"

@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair-v1",
+  "version": "v0.12.2.3.1.0.2.0.1.1",
+  "status": "delivered-offline-superseding-incorrect-projection-digest",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "0f5edb811def20a5b004a67026d3b259079f1953",
+  "incident": {
+    "phase": "command-free-verify",
+    "awsCommandsExecuted": 0,
+    "terraformCommandsExecuted": 0,
+    "applyExecuted": false,
+    "stateContentMutated": false,
+    "failure": "state-semantic-projection-digest-mismatch"
+  },
+  "correction": {
+    "projectionKeys": [
+      "lineage",
+      "outputs",
+      "resources",
+      "serial",
+      "terraform_version",
+      "version"
+    ],
+    "excludedKey": "check_results",
+    "encoding": "json-sort-keys-compact-with-one-trailing-lf",
+    "incorrectSha256": "14715b5d56f06089cdb81056dbce3a05b0475608a65d96a51541854f9efc8822",
+    "correctedSha256": "1d21a9edbfe82d1d1496b312c8a31996c20f9f4bf8505604a277cbdede2f8d15",
+    "observedStateSha256": "5ff0cb562fa7bf6d99cd2068c373646fca50f06cbaa08f3f5a3e3392bf2c55e1",
+    "onlyChangedTopLevelKey": "check_results",
+    "semanticProjectionEqual": true
+  },
+  "authority": {
+    "addsAwsAuthority": false,
+    "addsTerraformAuthority": false,
+    "addsApplyAuthority": false,
+    "addsStateMutationAuthority": false,
+    "widensAcceptedStateShape": false,
+    "widensAcceptedStateDigest": false,
+    "requiresFreshPostMergeRequest": true,
+    "requiresSeparateExecutionApproval": true
+  },
+  "failurePolicy": {
+    "preservePrivateEvidence": true,
+    "reuseExpiredRequest": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  },
+  "privacyBoundary": {
+    "publishesAwsAccount": false,
+    "publishesResourceIdentity": false,
+    "publishesStateBytes": false,
+    "publishesPrivatePaths": false,
+    "allowsPublicDigestsAndBooleans": true
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "grantsLiveAuthority": false
+  }
+}

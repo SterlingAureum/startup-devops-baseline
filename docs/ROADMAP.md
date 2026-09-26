@@ -857,6 +857,9 @@ Incremental scope:
   - delivered after the first reconciliation stopped before apply; binds the
   exact normalized state bytes, accepts no change outside `check_results`, and
   reuses the same reviewed saved plan only under a fresh request and approval
+- v0.12.2.3.1.0.2.0.1.1 - semantic-projection digest-encoding repair -
+  delivered offline after command-free verification exposed an incorrect
+  published digest; retains the exact state and authority boundaries
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and

@@ -959,3 +959,6 @@ echo "==> Validating v0.12.2.3.1.0.2 reviewed refresh-only state reconciliation"
 
 echo "==> Validating v0.12.2.3.1.0.2.0.1 state-pull check_results normalization repair"
 "${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2.0.1-state-pull-check-results-normalization-repair.sh"
+
+echo "==> Validating v0.12.2.3.1.0.2.0.1.1 semantic-projection digest repair"
+"${ROOT_DIR}/scripts/validate-v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair.sh"

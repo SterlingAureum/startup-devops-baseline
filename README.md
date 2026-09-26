@@ -3,6 +3,12 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair` corrects the
+offline projection digest used by the state-pull normalization gate. It adds
+no live authority and requires a fresh post-merge request and approval. See
+[v0.12.2.3.1.0.2.0.1.1 semantic-projection digest repair](docs/V0.12.2.3.1.0.2.0.1.1_SEMANTIC_PROJECTION_DIGEST_REPAIR.md).
+
+Predecessor development checkpoint:
 `v0.12.2.3.1.0.2.0.1-state-pull-check-results-normalization-repair`
 recovers the stopped pre-apply reconciliation by accepting only the exact
 observed `check_results` normalization while keeping every semantic state
@@ -1128,6 +1134,14 @@ requires every other state value and all 22 addresses to remain equal, and
 continues to allow only the previously reviewed saved plan under a new request
 and separate approval. See
 `delivery/contracts/v0.12.2.3.1.0.2.0.1-state-pull-check-results-normalization-repair.json`.
+
+v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair
+
+The first command-free normalization verification proved that only
+`check_results` changed but exposed an incorrect published projection digest.
+The repair binds the six-key, sorted compact JSON plus LF encoding to the
+observed state without widening accepted state or live authority. See
+`delivery/contracts/v0.12.2.3.1.0.2.0.1.1-semantic-projection-digest-repair.json`.
 
 The predecessor v0.12.2.3.1 implements the real Terraform-console-held S3 lock proof and the
 post-release zero-change saved plan. Verification executes no operational

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.2.3.1.0.2.0.1.1
+
+- Correct the normalization gate's semantic-projection SHA-256 to the six-key sorted compact JSON plus one-LF encoding actually implemented by the executor.
+- Record that the mismatch occurred during command-free verification before any AWS, Terraform, apply or state mutation operation.
+- Preserve the exact observed state digest and the requirement that only `check_results` differs.
+- Require a fresh post-merge private request and separate approval; do not reuse the failed window.
+
 ## v0.12.2.3.1.0.2.0.1
 
 - Record that the first reconciliation attempt stopped before apply after only AWS identity and Terraform state-pull reads.

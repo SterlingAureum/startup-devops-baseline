@@ -31,6 +31,9 @@ def validate_repository(root: Path) -> dict[str, object]:
     tests = (root / "scripts/test-ci-change-impact.py").read_text()
     release_gate = (root / "scripts/validate-demo-api-release-quality-gates.sh").read_text()
     root_gate = (root / "scripts/validate-ci-quality-gates.sh").read_text()
+    validator_topology = (
+        root / "scripts/check-v0.12.2.4.1-validator-orchestration.py"
+    ).read_text()
     topology = (root / "scripts/check-v0.12.2.4.2-quality-gate-orchestration.py").read_text()
 
     require(
@@ -108,6 +111,11 @@ def validate_repository(root: Path) -> dict[str, object]:
         '"validate-v0.12.3.1.1-release-change-routing-repair.sh": LATEST_ORCHESTRATOR'
         in topology,
         "historical topology checker is not successor-aware",
+    )
+    require(
+        '"validate-v0.12.3.1.1-release-change-routing-repair.sh": LATEST'
+        in validator_topology,
+        "historical validator topology checker is not successor-aware",
     )
 
     return {

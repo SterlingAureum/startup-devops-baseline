@@ -33,6 +33,7 @@
     "promotionGovernanceValidated": true,
     "allEnvironmentHelmRendersValidated": true,
     "predecessorStructureValidatorSuccessorAware": true,
+    "predecessorValidatorTopologySuccessorAware": true,
     "secretScanPreserved": true,
     "trivyConfigScanPreserved": true
   },

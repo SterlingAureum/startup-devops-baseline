@@ -60,6 +60,7 @@ def validate(value):
         "releaseSchemaValidated", "imageIdentityConsistencyValidated",
         "promotionGovernanceValidated", "allEnvironmentHelmRendersValidated",
         "predecessorStructureValidatorSuccessorAware",
+        "predecessorValidatorTopologySuccessorAware",
         "secretScanPreserved", "trivyConfigScanPreserved",
     ):
         require(gate.get(key) is True, f"release gate boundary disabled: {key}")
@@ -97,6 +98,7 @@ mutate(["releaseGate", "historicalRepositoryValidatorsReplayed"], True)
 mutate(["releaseGate", "releaseSchemaValidated"], False)
 mutate(["releaseGate", "promotionGovernanceValidated"], False)
 mutate(["releaseGate", "predecessorStructureValidatorSuccessorAware"], False)
+mutate(["releaseGate", "predecessorValidatorTopologySuccessorAware"], False)
 mutate(["releaseGate", "secretScanPreserved"], False)
 mutate(["releaseGate", "trivyConfigScanPreserved"], False)
 mutate(["safety", "v011ContractRewritten"], True)

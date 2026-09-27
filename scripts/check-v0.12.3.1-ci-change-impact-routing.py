@@ -94,6 +94,7 @@ def validate_repository(root: Path) -> dict[str, object]:
         '"${ROOT_DIR}/scripts/validate-v0.12.3.1-ci-change-impact-routing.sh"',
         '"${ROOT_DIR}/scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh"',
         '"${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"',
+        '"${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh"',
     )
     require(
         any(entrypoint in root_gate for entrypoint in routing_entrypoints),

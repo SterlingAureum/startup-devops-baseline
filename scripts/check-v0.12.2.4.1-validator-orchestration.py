@@ -19,6 +19,7 @@ PREDECESSOR = "validate-v0.12.3.1.1-release-change-routing-repair.sh"
 REVIEWED_ROOT_SUCCESSORS = {
     PREDECESSOR: LATEST,
     "validate-v0.12.3.2-post-promotion-historical-snapshot.sh": PREDECESSOR,
+    "validate-v0.12.3.3-ci-feedback-efficiency-closure.sh": "validate-v0.12.3.2-post-promotion-historical-snapshot.sh",
 }
 ENTRYPOINT = "validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh"
 EXPECTED_CHAIN_COUNT = 22
@@ -92,11 +93,18 @@ def validate_repository(root: Path) -> dict[str, object]:
             predecessor is not None,
             f"unreviewed root v0.12 successor: {successor}",
         )
-        # This historical parser also recognizes the successor's bash -n entry;
-        # accept only that exact self marker followed by its real predecessor.
-        successor_calls = extract_v012_calls((scripts / successor).read_text())
+        # This historical parser may recognize a bash -n operand while ignoring
+        # the real predecessor call when that call has an explicit mode. Bind
+        # the delegation text exactly and allow only self/predecessor artifacts.
+        successor_text = (scripts / successor).read_text()
+        successor_calls = extract_v012_calls(successor_text)
         require(
-            successor_calls == [successor, predecessor],
+            f'bash "${{ROOT_DIR}}/scripts/{predecessor}"' in successor_text,
+            f"reviewed root successor delegation missing: {successor}",
+        )
+        require(
+            successor_calls
+            in ([successor], [predecessor], [predecessor, predecessor], [successor, predecessor]),
             f"reviewed root successor delegation changed: {successor_calls}",
         )
         root_calls = [predecessor]

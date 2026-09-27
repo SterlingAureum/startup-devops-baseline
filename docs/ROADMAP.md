@@ -867,9 +867,9 @@ Incremental scope:
   records the successful one-time saved-plan apply, reconstructs the seven
   reviewed managed refreshes and same-account caller-session projection, and
   permits only separately approved read-only state/S3/lock evidence completion
-- v0.12.2.4 - CI feedback-efficiency repair track - in progress while the
-  Terraform state exercise is paused; reduce redundant local and hosted work
-  in measured, reviewable increments before changing workflow routing
+- v0.12.2.4 - CI feedback-efficiency repair track - closed by v0.12.3.3 while
+  the Terraform state exercise remains paused; redundant local and hosted work
+  was reduced in measured, reviewable increments with fail-closed routing
 - v0.12.2.4.1 - v0.12 validator orchestration deduplication - delivered
   offline; reduce root v0.12 launches from 23 to two, statically prove all 22
   chained validators remain reachable exactly once, preserve the independent
@@ -882,9 +882,9 @@ Incremental scope:
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and
-  `waiting_environment` without automatic EKS creation - planned
+  `waiting_environment` without automatic EKS creation - in progress
 - v0.12.3.1 - CI change-impact routing and stable required-check aggregation -
-  delivered offline awaiting GitHub runtime validation; preserve the existing
+  delivered and integrated; preserve the existing
   required check, add a documentation-only fast route, replace image-publish
   historical replay with targeted application gates, and fail safe to the
   full suite for scripts, contracts, infrastructure, shared, mixed, workflow
@@ -895,10 +895,16 @@ Incremental scope:
   promotion gates, keep mixed changes full, and retain the stable required
   check after promotion PR #169 exposed historical tree coupling
 - v0.12.3.2 - post-promotion historical snapshot isolation - delivered
-  offline awaiting GitHub runtime validation; keep current v0.12 checks on the
-  current tree, replay the 112 deduplicated v0.11 entrypoints from the exact
-  clean last-green pre-promotion commit, and prevent approved mutable release
-  state from invalidating later full core gates without rewriting history
+  and integrated as static historical attestation; keep current v0.12
+  structure checks on the current tree, prove the 112 deduplicated v0.11
+  entrypoints from the exact last-green pre-promotion Git tree with runtime
+  replay disabled, and prevent approved mutable release state from invalidating
+  later full core gates without rewriting history
+- v0.12.3.3 - CI feedback-efficiency closure - delivered offline after
+  protected-main integration; bind the reviewed 29-second local full-gate
+  result as environment-specific evidence, preserve stable fail-closed routing,
+  correct superseded runtime-replay descriptions, and keep the already-applied
+  Terraform refresh reconciliation paused pending a read-only recovery design
 - v0.12.4 - EKS and platform dependency upgrade lifecycle, compatibility
   matrix, deprecated-API preflight, one-minor sequencing, data-plane/add-on/
   controller convergence, rollback/rebuild decision and dev/test evidence - planned

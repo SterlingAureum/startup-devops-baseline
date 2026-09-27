@@ -1,9 +1,17 @@
 # Changelog
 
+## v0.12.3.3
+
+- Close the v0.12 CI feedback-efficiency repair after the reviewed local full gate fell from 302 reported seconds to 29 reported seconds; retain the measurement as environment-specific evidence rather than a performance SLA.
+- Preserve the stable required quality gate, documentation and exact-release routes, targeted image-publication gates, and fail-closed full routing for core, mixed, unknown or ambiguous changes.
+- Keep current v0.12 structure validation and replace historical runtime replay with static Git tree, manifest, executable-mode and release-digest attestation for the 112 frozen v0.11 entrypoints.
+- Correct current README, changelog and roadmap descriptions that still described the superseded detached-worktree design.
+- Keep the Terraform exercise paused, prohibit repeating the already successful refresh-only apply, and limit the next design to separately approved read-only post-apply recovery.
+
 ## v0.12.3.2
 
-- Isolate the 112 deduplicated v0.11 historical entrypoints in an exact clean detached worktree at the last green pre-promotion main commit while keeping current v0.12 validators on the current tree.
-- Require the reviewed snapshot to be an ancestor of current HEAD, retain an identical entrypoint manifest, expose exactly 112 unique executable v0.11 validators and use full checkout history.
+- Replace routine execution of the 112 deduplicated v0.11 historical entrypoints with static Git attestation at the last green pre-promotion main commit while keeping current v0.12 structure validators on the current tree.
+- Require the reviewed snapshot to be an ancestor of current HEAD, retain an identical entrypoint manifest, expose exactly 112 unique Git-executable v0.11 validators and bind the historical release digest.
 - Close the PR #169 post-promotion `repository-tree-drift` boundary without changing any v0.11 contract, digest, workflow trigger, required-check name or current release desired state.
 - Preserve release-only routing and fail closed to the full gate for mixed, core, script, workflow, Terraform, GitOps, unknown or ambiguous changes.
 - Keep Terraform state recovery paused and add no AWS, Kubernetes, Terraform, migration, state or automatic retry authority.

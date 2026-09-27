@@ -101,6 +101,7 @@ def validate_repository(root: Path) -> dict[str, object]:
     reviewed_root_entrypoints = (
         '"${ROOT_DIR}/scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh"',
         '"${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"',
+        '"${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh"',
     )
     require(
         sum(entrypoint in active_root for entrypoint in reviewed_root_entrypoints) == 1,
@@ -130,6 +131,16 @@ def validate_repository(root: Path) -> dict[str, object]:
         '"validate-v0.12.3.2-post-promotion-historical-snapshot.sh": PREDECESSOR_ORCHESTRATOR'
         in topology,
         "historical topology checker does not recognize v0.12.3.2",
+    )
+    require(
+        '"validate-v0.12.3.3-ci-feedback-efficiency-closure.sh": "validate-v0.12.3.2-post-promotion-historical-snapshot.sh"'
+        in validator_topology,
+        "historical validator topology checker does not recognize v0.12.3.3",
+    )
+    require(
+        '"validate-v0.12.3.3-ci-feedback-efficiency-closure.sh": "validate-v0.12.3.2-post-promotion-historical-snapshot.sh"'
+        in topology,
+        "historical topology checker does not recognize v0.12.3.3",
     )
 
     return {

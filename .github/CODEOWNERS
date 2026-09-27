@@ -965,3 +965,10 @@
 /scripts/validate-ci-documentation-change.sh @SterlingAureum
 /scripts/validate-demo-api-image-quality-gates.sh @SterlingAureum
 /scripts/validate-v0.12.3.1-ci-change-impact-routing.sh @SterlingAureum
+
+# v0.12.3.1.1 release-change routing repair
+/delivery/contracts/v0.12.3.1.1-release-change-routing-repair.json @SterlingAureum
+/docs/V0.12.3.1.1_RELEASE_CHANGE_ROUTING_REPAIR.md @SterlingAureum
+/scripts/check-v0.12.3.1.1-release-change-routing-repair.py @SterlingAureum
+/scripts/validate-demo-api-release-quality-gates.sh @SterlingAureum
+/scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh @SterlingAureum

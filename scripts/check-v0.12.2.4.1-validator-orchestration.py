@@ -15,6 +15,9 @@ STANDALONE = "validate-v0.12.1.0.1-ci-compatibility-repair.sh"
 ORCHESTRATOR = "validate-v0.12.2.4.1-validator-orchestration-dedup.sh"
 SUCCESSOR = "validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
 LATEST = "validate-v0.12.3.1-ci-change-impact-routing.sh"
+REVIEWED_ROOT_SUCCESSORS = {
+    "validate-v0.12.3.1.1-release-change-routing-repair.sh": LATEST,
+}
 ENTRYPOINT = "validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh"
 EXPECTED_CHAIN_COUNT = 22
 
@@ -79,10 +82,21 @@ def walk_single_predecessor_chain(
 def validate_repository(root: Path) -> dict[str, object]:
     scripts = root / "scripts"
     root_calls = extract_v012_calls((scripts / ROOT_GATE).read_text())
-    require(
-        root_calls == [LATEST],
-        f"root v0.12 calls changed: {root_calls}",
-    )
+    if root_calls != [LATEST]:
+        require(len(root_calls) == 1, f"root v0.12 calls changed: {root_calls}")
+        successor = root_calls[0]
+        require(
+            REVIEWED_ROOT_SUCCESSORS.get(successor) == LATEST,
+            f"unreviewed root v0.12 successor: {successor}",
+        )
+        # This historical parser also recognizes the successor's bash -n entry;
+        # accept only that exact self marker followed by its real predecessor.
+        successor_calls = extract_v012_calls((scripts / successor).read_text())
+        require(
+            successor_calls == [successor, LATEST],
+            f"reviewed root successor delegation changed: {successor_calls}",
+        )
+        root_calls = [LATEST]
 
     latest_calls = extract_v012_calls((scripts / LATEST).read_text())
     require(
@@ -103,7 +117,13 @@ def validate_repository(root: Path) -> dict[str, object]:
     )
 
     validators = sorted(path.name for path in scripts.glob("validate-v0.12*.sh"))
-    expected_chain = set(validators) - {STANDALONE, ORCHESTRATOR, SUCCESSOR, LATEST}
+    expected_chain = set(validators) - {
+        STANDALONE,
+        ORCHESTRATOR,
+        SUCCESSOR,
+        LATEST,
+        *REVIEWED_ROOT_SUCCESSORS,
+    }
     require(STANDALONE in validators, "standalone compatibility validator missing")
     require(ORCHESTRATOR in validators, "orchestration validator missing")
     require(SUCCESSOR in validators, "successor orchestration validator missing")

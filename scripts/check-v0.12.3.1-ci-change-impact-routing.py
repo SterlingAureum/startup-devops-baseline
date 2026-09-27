@@ -90,10 +90,13 @@ def validate_repository(root: Path) -> dict[str, object]:
         reusable_text.count("run: ./scripts/validate-ci-quality-gates.sh") == 1,
         "full gate invocation count changed",
     )
+    routing_entrypoints = (
+        '"${ROOT_DIR}/scripts/validate-v0.12.3.1-ci-change-impact-routing.sh"',
+        '"${ROOT_DIR}/scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh"',
+    )
     require(
-        '"${ROOT_DIR}/scripts/validate-v0.12.3.1-ci-change-impact-routing.sh"'
-        in root_gate,
-        "root routing validator missing",
+        any(entrypoint in root_gate for entrypoint in routing_entrypoints),
+        "root routing validator or reviewed successor missing",
     )
     require(
         '"${ROOT_DIR}/scripts/validate-v0.12.2.4.2-quality-gate-history-dedup.sh"'

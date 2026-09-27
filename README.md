@@ -3,12 +3,18 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.3.2-post-promotion-historical-snapshot` keeps current v0.12 validation
-on the checked-out tree while replaying the deduplicated v0.11 entrypoints from
-the exact last-green pre-promotion commit. This lets reviewed release desired
-state advance without rewriting historical contracts or weakening the full
-gate for later core changes. See
-[v0.12.3.2 post-promotion historical snapshot isolation](docs/V0.12.3.2_POST_PROMOTION_HISTORICAL_SNAPSHOT.md).
+`v0.12.3.3-ci-feedback-efficiency-closure` records the converged local full
+quality gate, preserves fail-closed change routing and keeps the paused
+Terraform exercise outside the CI repair. See
+[v0.12.3.3 CI feedback-efficiency closure](docs/V0.12.3.3_CI_FEEDBACK_EFFICIENCY_CLOSURE.md).
+
+Predecessor development checkpoint:
+`v0.12.3.2-post-promotion-historical-snapshot` keeps current v0.12 structure
+validation on the checked-out tree and proves the frozen v0.11 entrypoints by
+static Git attestation without runtime replay. This lets reviewed release
+desired state advance without rewriting historical contracts or weakening the
+full gate for later core changes. See [v0.12.3.2 post-promotion static
+historical attestation](docs/V0.12.3.2_POST_PROMOTION_HISTORICAL_SNAPSHOT.md).
 
 Predecessor development checkpoint:
 `v0.12.3.1.1-release-change-routing-repair` routes an exact single demo-api

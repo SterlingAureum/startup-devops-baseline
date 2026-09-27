@@ -16,6 +16,7 @@ SNAPSHOT_RELEASE = "apps/demo-api/helm/values/releases/aws-dev.yaml"
 SNAPSHOT_RELEASE_SHA256 = "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46"
 MANIFEST = "delivery/contracts/v0.12.2.4.2-v0.11-entrypoints.txt"
 LATEST = "validate-v0.12.3.2-post-promotion-historical-snapshot.sh"
+SUCCESSOR = "validate-v0.12.3.3-ci-feedback-efficiency-closure.sh"
 PREDECESSOR = "validate-v0.12.3.1.1-release-change-routing-repair.sh"
 ENTRYPOINT_RE = re.compile(r"validate-v0\.11[0-9A-Za-z._-]*\.sh")
 COMMIT_RE = re.compile(r"[0-9a-f]{40}")
@@ -108,6 +109,7 @@ def validate_repository(root: Path) -> dict[str, object]:
     root = root.resolve()
     root_gate = (root / "scripts/validate-ci-quality-gates.sh").read_text()
     validator = (root / "scripts" / LATEST).read_text()
+    successor = (root / "scripts" / SUCCESSOR).read_text()
     history = (root / "scripts/validate-v0.12.2.4.2-quality-gate-history-dedup.sh").read_text()
     topology_241 = (root / "scripts/check-v0.12.2.4.1-validator-orchestration.py").read_text()
     topology_242 = (root / "scripts/check-v0.12.2.4.2-quality-gate-orchestration.py").read_text()
@@ -116,8 +118,10 @@ def validate_repository(root: Path) -> dict[str, object]:
 
     active_root = root_gate.split(": <<'V012242_PRE_CORE_LEGACY_REGISTRATION'", 1)[0]
     require("change-impact routing and static historical attestation" in active_root, "root gate label drift")
-    require(f'"${{ROOT_DIR}}/scripts/{LATEST}"' in active_root, "latest attestation validator is not root")
+    require(f'"${{ROOT_DIR}}/scripts/{SUCCESSOR}"' in active_root, "reviewed attestation successor is not root")
+    require(f'"${{ROOT_DIR}}/scripts/{LATEST}"' not in active_root, "attestation predecessor remains root")
     require(f'"${{ROOT_DIR}}/scripts/{PREDECESSOR}"' not in active_root, "predecessor remains root")
+    require(f'bash "${{ROOT_DIR}}/scripts/{LATEST}"' in successor, "reviewed successor does not delegate to attestation")
     for marker in (
         f'SNAPSHOT_COMMIT="{SNAPSHOT_COMMIT}"',
         "--verify-static-attestation",
@@ -135,7 +139,9 @@ def validate_repository(root: Path) -> dict[str, object]:
     require("V011_HISTORICAL_SNAPSHOT_ROOT" not in history, "dormant snapshot root adapter retained")
     require("V011_HISTORICAL_SNAPSHOT_COMMIT" not in history, "dormant snapshot commit adapter retained")
     require(f'"{LATEST}": PREDECESSOR' in topology_241, "v0.12.2.4.1 is not successor-aware")
+    require(f'"{SUCCESSOR}": "{LATEST}"' in topology_241, "v0.12.2.4.1 does not recognize closure successor")
     require(f'"{LATEST}": PREDECESSOR_ORCHESTRATOR' in topology_242, "v0.12.2.4.2 is not successor-aware")
+    require(f'"{SUCCESSOR}": "{LATEST}"' in topology_242, "v0.12.2.4.2 does not recognize closure successor")
     require(LATEST in predecessor, "release repair checker is not successor-aware")
     require("fetch-depth: 0" in workflow, "full Git history checkout removed")
     return {

@@ -17,6 +17,7 @@ PREDECESSOR_ORCHESTRATOR = "validate-v0.12.3.1.1-release-change-routing-repair.s
 REVIEWED_ROOT_SUCCESSORS = {
     PREDECESSOR_ORCHESTRATOR: LATEST_ORCHESTRATOR,
     "validate-v0.12.3.2-post-promotion-historical-snapshot.sh": PREDECESSOR_ORCHESTRATOR,
+    "validate-v0.12.3.3-ci-feedback-efficiency-closure.sh": "validate-v0.12.3.2-post-promotion-historical-snapshot.sh",
 }
 GLOBAL_ORCHESTRATOR = "validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
 V012_ORCHESTRATOR = "validate-v0.12.2.4.1-validator-orchestration-dedup.sh"

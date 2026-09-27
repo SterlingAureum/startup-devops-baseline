@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "v0.12.3.3-ci-feedback-efficiency-closure-v1",
+  "version": "v0.12.3.3",
+  "status": "delivered-offline-after-protected-main-integration",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "protectedMainBaselineCommit": "c872bc9ab8f1237aa432430a4e7a7d2cb63a4756",
+  "measurements": {
+    "preRoutingFullGateElapsedSeconds": 302,
+    "convergedFullGateReportedElapsedSeconds": 29,
+    "convergedFullGateWallSeconds": 29.486,
+    "convergedFullGateUserSeconds": 13.783,
+    "convergedFullGateSystemSeconds": 13.263,
+    "convergedValidationLogSha256": "3352a9b113eda2c73cd50bfb505887753f49787017cbcdc01ece75a39c9aabed",
+    "environmentSpecificBenchmark": true,
+    "performanceSlaClaimed": false
+  },
+  "convergence": {
+    "stableRequiredQualityGatePreserved": true,
+    "documentationFastRoutePreserved": true,
+    "exactReleaseRoutePreserved": true,
+    "coreAndAmbiguousChangesRemainFull": true,
+    "imagePublishDuplicateFullReplayRemoved": true,
+    "historicalEntrypointCount": 112,
+    "historicalRuntimeReplayExecuted": false,
+    "detachedHistoricalWorktreeCreated": false,
+    "staticGitAttestationRequired": true,
+    "currentV012StructureValidationRequired": true
+  },
+  "evidenceBoundary": {
+    "localFullGatePassed": true,
+    "protectedMainContainsStaticAttestationConvergence": true,
+    "postMergeGithubRunRecordedInRepository": false,
+    "futureTimingIsEnvironmentDependent": true
+  },
+  "terraformRecoveryBoundary": {
+    "stateExercisePausedDuringCiRepair": true,
+    "reviewedRefreshOnlyApplyAlreadyExecuted": true,
+    "expectedPersistedStateSerial": 2,
+    "refreshOnlyApplyMayBeRetried": false,
+    "nextAllowedDesign": "read-only-post-apply-state-recovery",
+    "stateRecoveryResumedByThisIncrement": false
+  },
+  "executionBoundary": {
+    "awsOperationAuthorized": false,
+    "terraformInitAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "terraformStatePushAuthorized": false,
+    "terraformDestroyAuthorized": false,
+    "kubernetesOperationAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false
+  },
+  "deferred": {
+    "exactMergeTreeAttestedCoreGateReuse": "v1.0",
+    "historicalValidatorArchival": "v1.0",
+    "repositoryPhysicalRestructure": "v1.0",
+    "repositoryWideHumanReview": "v1.0"
+  }
+}

@@ -113,6 +113,7 @@ class RepositoryTests(unittest.TestCase):
     def test_repository_has_exact_snapshot_orchestration(self) -> None:
         report = MODULE.validate_repository(SCRIPT.parents[1])
         self.assertEqual(report["snapshotCommit"], MODULE.SNAPSHOT_COMMIT)
+        self.assertEqual(report["transitiveV011BridgeCount"], 2)
         self.assertEqual(report["v011EntrypointCount"], 112)
         self.assertTrue(report["currentV012ValidationPreserved"])
 

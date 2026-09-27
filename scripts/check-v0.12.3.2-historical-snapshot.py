@@ -17,6 +17,22 @@ LATEST = "validate-v0.12.3.2-post-promotion-historical-snapshot.sh"
 PREDECESSOR = "validate-v0.12.3.1.1-release-change-routing-repair.sh"
 ENTRYPOINT_RE = re.compile(r"validate-v0\.11[0-9A-Za-z._-]*\.sh")
 COMMIT_RE = re.compile(r"[0-9a-f]{40}")
+CURRENT_V011_CALL_RE = re.compile(
+    r'^\s*(?:bash\s+)?["\']?\$\{ROOT_DIR\}/scripts/'
+    r'(validate-v0\.11[0-9A-Za-z._-]*\.sh)["\']?\s*$',
+    re.MULTILINE,
+)
+SNAPSHOT_V011_CALL_RE = re.compile(
+    r'^\s*(?:bash\s+)?["\']?\$\{V011_HISTORICAL_SNAPSHOT_ROOT\}/scripts/'
+    r'(validate-v0\.11[0-9A-Za-z._-]*\.sh)["\']?\s*$',
+    re.MULTILINE,
+)
+TRANSITIVE_V011_BRIDGES = {
+    "validate-v0.12.0-production-readiness-foundation.sh":
+        "validate-v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair.sh",
+    "validate-v0.12.1.0.1-ci-compatibility-repair.sh":
+        "validate-v0.11.9.3.6.7.6-guarded-aws-test-teardown.sh",
+}
 
 
 class SnapshotError(ValueError):
@@ -119,9 +135,35 @@ def validate_repository(root: Path) -> dict[str, object]:
     require(f'"{LATEST}": PREDECESSOR_ORCHESTRATOR' in topology_242, "v0.12.2.4.2 is not successor-aware")
     require(LATEST in predecessor, "release repair checker is not successor-aware")
     require("fetch-depth: 0" in workflow, "full Git history checkout removed")
+
+    observed_bridges: dict[str, str] = {}
+    for path in sorted((root / "scripts").glob("validate-v0.12*.sh")):
+        text = path.read_text()
+        current_calls = CURRENT_V011_CALL_RE.findall(text)
+        snapshot_calls = SNAPSHOT_V011_CALL_RE.findall(text)
+        if not current_calls and not snapshot_calls:
+            continue
+        require(len(current_calls) == 1, f"ambiguous current v0.11 bridge: {path.name}")
+        require(len(snapshot_calls) == 1, f"ambiguous snapshot v0.11 bridge: {path.name}")
+        require(current_calls == snapshot_calls, f"v0.11 bridge target drift: {path.name}")
+        require(
+            'if [[ -n "${V011_HISTORICAL_SNAPSHOT_ROOT:-}" ]]' in text,
+            f"snapshot branch missing: {path.name}",
+        )
+        for marker in (
+            '"${V011_HISTORICAL_SNAPSHOT_ROOT}" != "${ROOT_DIR}"',
+            f'"${{V011_HISTORICAL_SNAPSHOT_COMMIT:-}}" == "{SNAPSHOT_COMMIT}"',
+            'git -C "${V011_HISTORICAL_SNAPSHOT_ROOT}" rev-parse HEAD',
+            'git -C "${V011_HISTORICAL_SNAPSHOT_ROOT}" status --porcelain',
+            'Historical v0.11 snapshot commit was supplied without an isolated root.',
+        ):
+            require(marker in text, f"transitive snapshot boundary missing: {path.name}: {marker}")
+        observed_bridges[path.name] = current_calls[0]
+    require(observed_bridges == TRANSITIVE_V011_BRIDGES, "transitive v0.11 bridge inventory drift")
     return {
         "status": "post-promotion-historical-snapshot-validated",
         "snapshotCommit": SNAPSHOT_COMMIT,
+        "transitiveV011BridgeCount": len(observed_bridges),
         "v011EntrypointCount": 112,
         "currentV012ValidationPreserved": True,
         "requiredCheckPreserved": True,

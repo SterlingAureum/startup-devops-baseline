@@ -58,6 +58,14 @@ class SnapshotTests(unittest.TestCase):
             self.assertEqual(report["entrypointCount"], 112)
             self.assertTrue(report["snapshotAncestor"])
 
+    def test_group_writable_executable_checkout_is_accepted(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            current, snapshot, commit = self.make_fixture(Path(temp))
+            for path in (snapshot / "scripts").glob("validate-v0.11*.sh"):
+                path.chmod(0o775)
+            report = MODULE.verify_snapshot(current, snapshot, commit)
+            self.assertEqual(report["entrypointCount"], 112)
+
     def test_snapshot_head_change_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             current, snapshot, commit = self.make_fixture(Path(temp))

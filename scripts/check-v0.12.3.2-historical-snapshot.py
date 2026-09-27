@@ -5,9 +5,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 import re
-import stat
 import subprocess
 
 
@@ -66,10 +66,18 @@ def verify_snapshot(current_root: Path, snapshot_root: Path, expected_commit: st
     require(current_manifest.is_file() and not current_manifest.is_symlink(), "current manifest missing")
     require(current_manifest.read_bytes() == snapshot_manifest.read_bytes(), "snapshot manifest drift")
     entries = manifest_entries(snapshot_root)
+    indexed_modes: dict[str, str] = {}
+    for line in git(snapshot_root, "ls-files", "-s", "--", "scripts").splitlines():
+        metadata, indexed_path = line.split("\t", 1)
+        mode, _object_id, stage = metadata.split()
+        require(stage == "0" and indexed_path not in indexed_modes, "snapshot index drift")
+        indexed_modes[indexed_path] = mode
     for name in entries:
         path = snapshot_root / "scripts" / name
+        relative = f"scripts/{name}"
         require(path.is_file() and not path.is_symlink(), f"snapshot validator missing: {name}")
-        require(stat.S_IMODE(path.stat().st_mode) == 0o755, f"snapshot validator mode drift: {name}")
+        require(indexed_modes.get(relative) == "100755", f"snapshot validator mode drift: {name}")
+        require(os.access(path, os.X_OK), f"snapshot validator is not executable: {name}")
     return {
         "status": "historical-snapshot-verified",
         "snapshotCommit": expected_commit,

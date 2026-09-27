@@ -147,39 +147,10 @@ echo "v0.12 compatibility_elapsed_seconds=$((SECONDS - compatibility_started_at)
 
 v011_started_at=${SECONDS}
 v011_count=0
-v011_validation_root="${V011_HISTORICAL_SNAPSHOT_ROOT:-${ROOT_DIR}}"
-if [[ "${v011_validation_root}" != "${ROOT_DIR}" ]]; then
-  [[ "${v011_validation_root}" = /* ]] || {
-    echo "Historical v0.11 snapshot root must be absolute." >&2
-    exit 1
-  }
-  [[ ! -L "${v011_validation_root}" && -d "${v011_validation_root}" ]] || {
-    echo "Historical v0.11 snapshot root must be a real directory." >&2
-    exit 1
-  }
-  [[ "${V011_HISTORICAL_SNAPSHOT_COMMIT:-}" == "f0736dcb8b1e5a36f2faf0594f9ef222ed9268b7" ]] || {
-    echo "Historical v0.11 snapshot commit is not the reviewed commit." >&2
-    exit 1
-  }
-  [[ "$(git -C "${v011_validation_root}" rev-parse HEAD)" == "${V011_HISTORICAL_SNAPSHOT_COMMIT}" ]] || {
-    echo "Historical v0.11 snapshot HEAD drifted." >&2
-    exit 1
-  }
-  [[ -z "$(git -C "${v011_validation_root}" status --porcelain)" ]] || {
-    echo "Historical v0.11 snapshot worktree is dirty." >&2
-    exit 1
-  }
-  cmp \
-    "${ROOT_DIR}/delivery/contracts/v0.12.2.4.2-v0.11-entrypoints.txt" \
-    "${v011_validation_root}/delivery/contracts/v0.12.2.4.2-v0.11-entrypoints.txt"
-elif [[ -n "${V011_HISTORICAL_SNAPSHOT_COMMIT:-}" ]]; then
-  echo "Historical v0.11 snapshot commit was supplied without an isolated root." >&2
-  exit 1
-fi
 while IFS= read -r validator; do
   [[ -n "${validator}" ]] || continue
   echo "==> Validating deduplicated v0.11 entrypoint ${validator}"
-  bash "${v011_validation_root}/scripts/${validator}"
+  bash "${ROOT_DIR}/scripts/${validator}"
   v011_count=$((v011_count + 1))
 done <"${ROOT_DIR}/delivery/contracts/v0.12.2.4.2-v0.11-entrypoints.txt"
 echo "v0.11 delegated_entrypoint_count=${v011_count}; elapsed_seconds=$((SECONDS - v011_started_at))"

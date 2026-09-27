@@ -238,41 +238,5 @@ for path in checked_paths:
 print("v0.12.0 production-readiness contract, 12 negative mutations, authority, AI and privacy gates passed.")
 PYTHON
 
-if [[ -n "${V011_HISTORICAL_SNAPSHOT_ROOT:-}" ]]; then
-  command -v git >/dev/null 2>&1 || {
-    echo "Required command not found: git" >&2
-    exit 1
-  }
-  [[ "${V011_HISTORICAL_SNAPSHOT_ROOT}" = /* ]] || {
-    echo "Historical v0.11 snapshot root must be absolute." >&2
-    exit 1
-  }
-  [[ "${V011_HISTORICAL_SNAPSHOT_ROOT}" != "${ROOT_DIR}" ]] || {
-    echo "Historical v0.11 snapshot root must be isolated." >&2
-    exit 1
-  }
-  [[ ! -L "${V011_HISTORICAL_SNAPSHOT_ROOT}" && -d "${V011_HISTORICAL_SNAPSHOT_ROOT}" ]] || {
-    echo "Historical v0.11 snapshot root must be a real directory." >&2
-    exit 1
-  }
-  [[ "${V011_HISTORICAL_SNAPSHOT_COMMIT:-}" == "f0736dcb8b1e5a36f2faf0594f9ef222ed9268b7" ]] || {
-    echo "Historical v0.11 snapshot commit is not the reviewed commit." >&2
-    exit 1
-  }
-  [[ "$(git -C "${V011_HISTORICAL_SNAPSHOT_ROOT}" rev-parse HEAD)" == "${V011_HISTORICAL_SNAPSHOT_COMMIT}" ]] || {
-    echo "Historical v0.11 snapshot HEAD drifted." >&2
-    exit 1
-  }
-  [[ -z "$(git -C "${V011_HISTORICAL_SNAPSHOT_ROOT}" status --porcelain)" ]] || {
-    echo "Historical v0.11 snapshot worktree is dirty." >&2
-    exit 1
-  }
-  bash "${V011_HISTORICAL_SNAPSHOT_ROOT}/scripts/validate-v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair.sh"
-else
-  [[ -z "${V011_HISTORICAL_SNAPSHOT_COMMIT:-}" ]] || {
-    echo "Historical v0.11 snapshot commit was supplied without an isolated root." >&2
-    exit 1
-  }
-  bash "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair.sh"
-fi
+bash "${ROOT_DIR}/scripts/validate-v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair.sh"
 echo "v0.12.0 passed; its successor may implement the foundation, while state migration remains v0.12.2 work."

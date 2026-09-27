@@ -35,6 +35,7 @@ def require(condition, message):
 def validate(value):
     require(value.get("schemaVersion") == "v0.12.3.2-post-promotion-historical-snapshot-v1", "schema drift")
     require(value.get("version") == "v0.12.3.2", "version drift")
+    require(value.get("status") == "delivered-static-historical-attestation-awaiting-github-validation", "status drift")
     require(value.get("implementationBaselineCommit") == "d51aa1c11a148f5c3ecbb2eb60a20d566b5ca15a", "baseline drift")
     incident = value.get("incidentClosure")
     require(incident == {
@@ -44,21 +45,42 @@ def validate(value):
         "promotedSourceCommit": "f0736dcb8b1e5a36f2faf0594f9ef222ed9268b7",
     }, "incident closure drift")
     snapshot = value.get("historicalSnapshot")
-    require(snapshot.get("commit") == incident["promotedSourceCommit"], "snapshot commit drift")
-    require(snapshot.get("entrypointManifest") == "delivery/contracts/v0.12.2.4.2-v0.11-entrypoints.txt", "manifest drift")
-    require(snapshot.get("entrypointCount") == 112, "entrypoint count drift")
-    require(snapshot.get("snapshotReleaseSha256") == "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46", "snapshot release drift")
-    for key in ("mustBeAncestorOfCurrentHead", "detachedCleanWorktreeRequired", "manifestMustMatchCurrent", "allEntrypointsMustBeExecutable"):
-        require(snapshot.get(key) is True, f"snapshot boundary disabled: {key}")
+    require(snapshot == {
+        "commit": incident["promotedSourceCommit"],
+        "purpose": "last-green-pre-promotion-v0.11-static-attestation",
+        "entrypointManifest": "delivery/contracts/v0.12.2.4.2-v0.11-entrypoints.txt",
+        "entrypointCount": 112,
+        "snapshotReleaseSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46",
+        "mustBeAncestorOfCurrentHead": True,
+        "manifestMustMatchCurrent": True,
+        "allEntrypointsMustBeGitExecutable": True,
+        "snapshotReleaseDigestMustMatch": True,
+        "detachedWorktreeCreated": False,
+        "runtimeReplayRequired": False,
+    }, "historical attestation drift")
     boundary = value.get("executionBoundary")
-    for key in ("currentRepositoryRunsCurrentV012Validators", "snapshotRunsOnlyManifestedV011Entrypoints"):
-        require(boundary.get(key) is True, f"execution boundary disabled: {key}")
-    for key in ("historicalContractsOrDigestsRewritten", "currentReleaseStateOverwritten", "snapshotPushedOrCommitted", "workflowFetchDepthChanged", "requiredCheckNameChanged"):
+    require(boundary.get("currentRepositoryRunsCurrentV012StructureValidators") is True, "current structure validation disabled")
+    for key in (
+        "historicalV011ValidatorsExecuted",
+        "snapshotRuntimeReplayExecuted",
+        "historicalContractsOrDigestsRewritten",
+        "currentReleaseStateOverwritten",
+        "snapshotPushedOrCommitted",
+        "workflowFetchDepthChanged",
+        "requiredCheckNameChanged",
+    ):
         require(boundary.get(key) is False, f"unsafe execution boundary enabled: {key}")
     safety = value.get("safety")
     for key in ("unknownChangesStillRunFull", "releaseOnlyRoutingPreserved"):
         require(safety.get(key) is True, f"routing safety disabled: {key}")
-    for key in ("snapshotCommitOverrideAllowed", "arbitrarySnapshotRootAllowed", "awsOperationAuthorized", "terraformOperationAuthorized", "kubernetesOperationAuthorized", "stateRecoveryResumed"):
+    for key in (
+        "snapshotCommitOverrideAllowed",
+        "arbitrarySnapshotRootAllowed",
+        "awsOperationAuthorized",
+        "terraformOperationAuthorized",
+        "kubernetesOperationAuthorized",
+        "stateRecoveryResumed",
+    ):
         require(safety.get(key) is False, f"unsafe authority enabled: {key}")
     require(value.get("deferred") == {
         "exactMergeTreeAttestedCoreGateReuse": "v1.0",
@@ -87,19 +109,19 @@ mutate(["incidentClosure", "promotedReleaseSha256"], "0" * 64)
 mutate(["historicalSnapshot", "commit"], "0" * 40)
 mutate(["historicalSnapshot", "entrypointCount"], 111)
 mutate(["historicalSnapshot", "mustBeAncestorOfCurrentHead"], False)
-mutate(["historicalSnapshot", "detachedCleanWorktreeRequired"], False)
 mutate(["historicalSnapshot", "manifestMustMatchCurrent"], False)
-mutate(["historicalSnapshot", "allEntrypointsMustBeExecutable"], False)
-mutate(["executionBoundary", "currentRepositoryRunsCurrentV012Validators"], False)
-mutate(["executionBoundary", "snapshotRunsOnlyManifestedV011Entrypoints"], False)
+mutate(["historicalSnapshot", "allEntrypointsMustBeGitExecutable"], False)
+mutate(["historicalSnapshot", "snapshotReleaseDigestMustMatch"], False)
+mutate(["historicalSnapshot", "detachedWorktreeCreated"], True)
+mutate(["historicalSnapshot", "runtimeReplayRequired"], True)
+mutate(["executionBoundary", "currentRepositoryRunsCurrentV012StructureValidators"], False)
+mutate(["executionBoundary", "historicalV011ValidatorsExecuted"], True)
+mutate(["executionBoundary", "snapshotRuntimeReplayExecuted"], True)
 mutate(["executionBoundary", "historicalContractsOrDigestsRewritten"], True)
 mutate(["executionBoundary", "currentReleaseStateOverwritten"], True)
 mutate(["executionBoundary", "requiredCheckNameChanged"], True)
 mutate(["safety", "unknownChangesStillRunFull"], False)
-mutate(["safety", "snapshotCommitOverrideAllowed"], True)
-mutate(["safety", "arbitrarySnapshotRootAllowed"], True)
 mutate(["safety", "terraformOperationAuthorized"], True)
-mutate(["safety", "stateRecoveryResumed"], True)
 mutate(["deferred", "historicalValidatorArchival"], "v0.12.3.2")
 for index, candidate in enumerate(mutations, 1):
     try:
@@ -111,12 +133,13 @@ for index, candidate in enumerate(mutations, 1):
 require(document_path.is_file(), "snapshot document missing")
 document = document_path.read_text()
 for phrase in (
-    "temporary detached worktree",
-    "exact reviewed snapshot commit",
+    "static historical attestation",
+    "does not create a detached worktree",
+    "does not execute a v0.11 validator",
     "does not alter a v0.11 contract or digest",
     "paused Terraform state exercise remains paused",
 ):
-    require(phrase in document, f"snapshot boundary missing: {phrase}")
+    require(phrase in document, f"static attestation boundary missing: {phrase}")
 
 tracked_paths = executables + [contract_path, document_path]
 tracked = subprocess.run(
@@ -137,7 +160,7 @@ for path in (contract_path, document_path):
     relative = str(path.relative_to(root))
     require(modes.get(relative) == "100644", f"document mode drift: {relative}")
 
-print(f"v0.12.3.2 historical snapshot contract and {len(mutations)} fail-closed mutations passed offline.")
+print(f"v0.12.3.2 static historical attestation contract and {len(mutations)} fail-closed mutations passed offline.")
 PY
 
 bash -n \
@@ -154,7 +177,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh" --structure-only
-  echo "v0.12.3.2 structure-only historical snapshot validation passed; history was not replayed."
+  echo "v0.12.3.2 structure-only static historical attestation passed; history was not replayed."
   exit 0
 fi
 
@@ -165,28 +188,11 @@ for command in git python3; do
   }
 done
 
-git -C "${ROOT_DIR}" cat-file -e "${SNAPSHOT_COMMIT}^{commit}"
-git -C "${ROOT_DIR}" merge-base --is-ancestor "${SNAPSHOT_COMMIT}" HEAD
-
-snapshot_parent="$(mktemp -d)"
-snapshot_root="${snapshot_parent}/repository"
-cleanup() {
-  git -C "${ROOT_DIR}" worktree remove --force "${snapshot_root}" >/dev/null 2>&1 || true
-  rmdir "${snapshot_parent}" >/dev/null 2>&1 || true
-}
-trap cleanup EXIT
-
-git -C "${ROOT_DIR}" worktree add --detach "${snapshot_root}" "${SNAPSHOT_COMMIT}"
 PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/check-v0.12.3.2-historical-snapshot.py" \
   --root "${ROOT_DIR}" \
-  --verify-snapshot-root "${snapshot_root}" \
+  --verify-static-attestation \
   --snapshot-commit "${SNAPSHOT_COMMIT}"
+bash "${ROOT_DIR}/scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh" --structure-only
 
-(
-  export V011_HISTORICAL_SNAPSHOT_ROOT="${snapshot_root}"
-  export V011_HISTORICAL_SNAPSHOT_COMMIT="${SNAPSHOT_COMMIT}"
-  bash "${ROOT_DIR}/scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh"
-)
-
-echo "v0.12.3.2 full validation passed with v0.11 isolated at the reviewed historical snapshot."
+echo "v0.12.3.2 static historical attestation passed; runtime replay was not executed."

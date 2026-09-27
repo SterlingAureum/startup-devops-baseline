@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.12.3.2
+
+- Isolate the 112 deduplicated v0.11 historical entrypoints in an exact clean detached worktree at the last green pre-promotion main commit while keeping current v0.12 validators on the current tree.
+- Require the reviewed snapshot to be an ancestor of current HEAD, retain an identical entrypoint manifest, expose exactly 112 unique executable v0.11 validators and use full checkout history.
+- Close the PR #169 post-promotion `repository-tree-drift` boundary without changing any v0.11 contract, digest, workflow trigger, required-check name or current release desired state.
+- Preserve release-only routing and fail closed to the full gate for mixed, core, script, workflow, Terraform, GitOps, unknown or ambiguous changes.
+- Keep Terraform state recovery paused and add no AWS, Kubernetes, Terraform, migration, state or automatic retry authority.
+
+## v0.12.3.1.1
+
+- Route an exact single aws-dev, aws-test or aws-prod demo-api release-file change to a bounded release gate on pull requests and main pushes.
+- Preserve secret scanning, Trivy configuration scanning, release schema and identity checks, promotion governance and Helm rendering for all three environments.
+- Keep mixed, adjacent, renamed, unknown and ambiguous changes on the full gate and expose no caller-selectable release bypass.
+- Repair the reviewed v0.12 topology successor chain without rewriting historical v0.11 contracts or digests.
+
 ## v0.12.3.1
 
 - Preserve the existing required quality-gate job and PR/main/manual triggers while selecting a fail-closed execution mode inside the reusable workflow.

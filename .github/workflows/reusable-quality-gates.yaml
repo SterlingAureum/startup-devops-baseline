@@ -2,6 +2,12 @@ name: reusable quality gates
 
 on:
   workflow_call:
+    inputs:
+      gate_mode:
+        description: full, auto change-impact routing, or reviewed demo-api image scope
+        required: false
+        default: full
+        type: string
 
 jobs:
   quality-gates:
@@ -15,6 +21,21 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Classify quality-gate impact
+        id: impact
+        env:
+          REQUESTED_GATE_MODE: ${{ inputs.gate_mode }}
+          CHANGE_EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 ./scripts/classify-ci-change-impact.py \
+            --requested-mode "${REQUESTED_GATE_MODE}" \
+            --event "${CHANGE_EVENT}" \
+            --base "${BASE_SHA}" \
+            --head "${HEAD_SHA}" \
+            --github-output "${GITHUB_OUTPUT}"
+
       - name: Scan repository for committed secrets
         uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3
         env:
@@ -23,12 +44,27 @@ jobs:
           GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
 
       - name: Setup Helm
+        if: steps.impact.outputs.mode != 'documentation'
         uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
 
-      - name: Run CI quality gates
+      - name: Run full CI quality gates
+        if: steps.impact.outputs.mode == 'full'
         run: ./scripts/validate-ci-quality-gates.sh
 
+      - name: Run documentation-only quality gates
+        if: steps.impact.outputs.mode == 'documentation'
+        env:
+          CI_CHANGE_EVENT: ${{ github.event_name }}
+          CI_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
+          CI_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: ./scripts/validate-ci-documentation-change.sh
+
+      - name: Run demo-api image quality gates
+        if: steps.impact.outputs.mode == 'image'
+        run: ./scripts/validate-demo-api-image-quality-gates.sh
+
       - name: Scan demo-api configuration
+        if: steps.impact.outputs.mode != 'documentation'
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: config

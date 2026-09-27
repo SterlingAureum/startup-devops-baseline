@@ -35,6 +35,16 @@
     "repositoryValidatorUsesHelper": true,
     "compatibilityValidatorUsesOptionalHelper": true
   },
+  "successor": {
+    "rootDirectV012Validators": [
+      "validate-v0.12.3.1-ci-change-impact-routing.sh"
+    ],
+    "delegatedV012Validators": [
+      "validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
+    ],
+    "effectiveValidatorExecutionCount": 246,
+    "effectiveV012OrchestrationExecutionCount": 3
+  },
   "invariants": {
     "allExistingV011ValidatorsRemainReachable": true,
     "allExistingV012ValidatorsRemainReachable": true,
@@ -47,9 +57,9 @@
     "unknownChangeFailsToFullSuite": true
   },
   "deferred": {
-    "changeImpactRouting": "v0.12.3.1",
-    "pullRequestAndMainPushDeduplication": "v0.12.3.1",
-    "imagePublishQualityGateDeduplication": "v0.12.3.1"
+    "changeImpactRouting": "delivered-v0.12.3.1",
+    "pullRequestAndMainPushDeduplication": "v0.12.3.2-or-v1.0",
+    "imagePublishQualityGateDeduplication": "delivered-v0.12.3.1"
   },
   "packageProducer": {
     "runsAws": false,

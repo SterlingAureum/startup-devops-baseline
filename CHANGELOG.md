@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.3.1
+
+- Preserve the existing required quality-gate job and PR/main/manual triggers while selecting a fail-closed execution mode inside the reusable workflow.
+- Route unbound documentation-only changes through secret scanning, an independent path-classification recheck, whitespace validation and routing structure contracts instead of the 302-second full gate; documentation referenced by a historical validator remains full-suite.
+- Replace the demo-api image-publish workflow's duplicate full historical replay with targeted supply-chain, unit, Helm and hardened runtime gates before build and publication.
+- Treat scripts, contracts, workflow definitions, Terraform, GitOps, mixed changes, missing history, invalid SHAs and every classifier ambiguity as full-suite changes.
+- Keep core PR and main-push validation both full until an exact merge-tree proof or merge queue makes result reuse fail closed.
+
 ## v0.12.2.4.2
 
 - Replace 168 direct v0.11 root launches with 112 graph-derived maximal entrypoints while preserving reachability of all 168 historical validators.

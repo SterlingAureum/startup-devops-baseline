@@ -25,6 +25,12 @@
     "successorDelegatedV012Validators": [
       "validate-v0.12.1.0.1-ci-compatibility-repair.sh",
       "validate-v0.12.2.4.1-validator-orchestration-dedup.sh"
+    ],
+    "latestRootDirectV012Validators": [
+      "validate-v0.12.3.1-ci-change-impact-routing.sh"
+    ],
+    "latestDelegatedV012Validators": [
+      "validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
     ]
   },
   "invariants": {

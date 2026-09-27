@@ -61,6 +61,13 @@ print or load a real database credential.
 `.github/workflows/reusable-quality-gates.yaml` owns the GitHub Actions
 implementation.
 
+As of v0.12.3.1, the reusable job preserves one stable required-check identity
+and selects one of three fail-closed modes after checkout. Documentation-only
+changes retain secret scanning and bounded repository checks; core or ambiguous
+changes run the complete repository gate; the image-publish caller selects a
+reviewed demo-api mode that runs supply-chain, Helm, unit and hardened runtime
+checks without replaying the complete historical validator suite.
+
 It is called by:
 
 - `.github/workflows/validate.yaml` for pull requests, pushes to `main`, and
@@ -76,8 +83,9 @@ quality-gates
   -> promote-aws-dev
 ```
 
-If any shell, Helm, test, or runtime-image build check fails, the GHCR publish
-job does not start.
+If any targeted supply-chain, Helm, test, runtime-image or configuration check
+fails, the GHCR publish job does not start. The normal `validate` workflow still
+runs the full gate for the corresponding core pull request and main push.
 
 The automatic publish trigger is restricted to application, Dockerfile,
 dependency, and delivery-tool changes pushed to `main`. Repository tags never

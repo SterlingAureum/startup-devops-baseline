@@ -955,3 +955,13 @@
 /docs/V0.11.9.3.6.7.7.20.1_ROADMAP_STATUS_SUCCESSOR_REPAIR.md @SterlingAureum
 /scripts/validate-v0.11-observability-sre-foundation.sh @SterlingAureum
 /scripts/validate-v0.11.9.3.6.7.7.20.1-roadmap-status-successor-repair.sh @SterlingAureum
+
+# v0.12.3.1 CI change-impact routing
+/delivery/contracts/v0.12.3.1-ci-change-impact-routing.json @SterlingAureum
+/docs/V0.12.3.1_CI_CHANGE_IMPACT_ROUTING.md @SterlingAureum
+/scripts/classify-ci-change-impact.py @SterlingAureum
+/scripts/test-ci-change-impact.py @SterlingAureum
+/scripts/check-v0.12.3.1-ci-change-impact-routing.py @SterlingAureum
+/scripts/validate-ci-documentation-change.sh @SterlingAureum
+/scripts/validate-demo-api-image-quality-gates.sh @SterlingAureum
+/scripts/validate-v0.12.3.1-ci-change-impact-routing.sh @SterlingAureum

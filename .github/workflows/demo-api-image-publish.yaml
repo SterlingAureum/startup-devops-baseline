@@ -74,6 +74,8 @@ env:
 jobs:
   quality-gates:
     uses: ./.github/workflows/reusable-quality-gates.yaml
+    with:
+      gate_mode: image
 
   build-and-push:
     needs:

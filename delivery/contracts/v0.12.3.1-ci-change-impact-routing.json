@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "v0.12.3.1-ci-change-impact-routing-v1",
+  "version": "v0.12.3.1",
+  "status": "delivered-offline-awaiting-github-runtime-validation",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "9f78dbfa894079fce272d219f44e498d21a5243f",
+  "observedFullGate": {
+    "completed": true,
+    "totalElapsedSeconds": 302,
+    "compatibilityElapsedSeconds": 4,
+    "v011ElapsedSeconds": 267,
+    "v012ElapsedSeconds": 3,
+    "validationLogSha256": "35d33c633c0a34480a58cac4dc8dd8c6fcb169a4184ba701c7b804ed5db54e1b"
+  },
+  "routing": {
+    "defaultMode": "full",
+    "manualDispatchMode": "full",
+    "unknownOrAmbiguousChangeMode": "full",
+    "documentationMode": "documentation",
+    "documentationPaths": [
+      "docs/**",
+      "README.md",
+      "CHANGELOG.md",
+      "CONTRIBUTING.md",
+      "SECURITY.md",
+      "CODE_OF_CONDUCT.md"
+    ],
+    "scriptsAreDocumentationOnly": false,
+    "contractsAreDocumentationOnly": false,
+    "workflowChangesAreDocumentationOnly": false,
+    "validatorBoundDocumentationMode": "full",
+    "renameDetectionDisablesCoreToDocsBypass": true
+  },
+  "workflowBoundary": {
+    "validateWorkflowTriggersChanged": false,
+    "requiredQualityGateJobIdChanged": false,
+    "secretScanRunsInEveryMode": true,
+    "documentationModeRunsHelm": false,
+    "documentationModeRunsTrivy": false,
+    "imagePublishUsesTargetedGate": true,
+    "imagePublicationDependsOnTargetedGate": true,
+    "corePullRequestAndMainPushBothRemainFull": true
+  },
+  "safety": {
+    "classifierFailureFallsBackToFull": true,
+    "validatorReferenceReadFailureFallsBackToFull": true,
+    "emptyDiffFallsBackToFull": true,
+    "zeroOrMissingBaseFallsBackToFull": true,
+    "directPushFallsBackToFullUnlessDocumentationOnly": true,
+    "terraformStateOperationAuthorized": false,
+    "awsOperationAuthorized": false
+  },
+  "deferred": {
+    "exactMergeTreeAttestedCoreGateReuse": "v0.12.3.2-or-v1.0",
+    "historicalValidatorArchival": "v1.0",
+    "repositoryPhysicalRestructure": "v1.0"
+  }
+}

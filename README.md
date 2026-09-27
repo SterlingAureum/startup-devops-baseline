@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.3.1-ci-change-impact-routing` keeps the stable quality-gate check while
+routing unbound documentation-only changes to a bounded fast path and demo-api image
+publishing to targeted application gates. Core and ambiguous changes remain
+fail-closed on the full suite. See
+[v0.12.3.1 CI change-impact routing](docs/V0.12.3.1_CI_CHANGE_IMPACT_ROUTING.md).
+
+Predecessor development checkpoint:
 `v0.12.2.4.2-quality-gate-history-dedup` removes redundant v0.11 historical
 execution, excludes ignored private tfvars from repository formatting gates,
 and adds stage timing while preserving complete validator reachability. See

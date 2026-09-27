@@ -19,10 +19,17 @@ DOCUMENTATION_ROOT_FILES = {
     "README.md",
     "SECURITY.md",
 }
+RELEASE_PATH_RE = re.compile(
+    r"apps/demo-api/helm/values/releases/aws-(dev|test|prod)\.yaml"
+)
 
 
 def is_documentation_path(path: str) -> bool:
     return path.startswith("docs/") or path in DOCUMENTATION_ROOT_FILES
+
+
+def is_release_path(path: str) -> bool:
+    return RELEASE_PATH_RE.fullmatch(path) is not None
 
 
 def is_validator_bound_documentation(root: Path, path: str) -> bool:
@@ -116,11 +123,20 @@ def classify(
         is_validator_bound_documentation(root, path) for path in paths
     )
     documentation_only = documentation_candidate and not contract_bound
+    release_only = len(paths) == 1 and is_release_path(paths[0])
     return {
-        "mode": "documentation" if documentation_only else "full",
+        "mode": (
+            "documentation"
+            if documentation_only
+            else "release"
+            if release_only
+            else "full"
+        ),
         "reason": (
             "documentation-only"
             if documentation_only
+            else "exact-demo-api-release-change"
+            if release_only
             else "validator-bound-documentation"
             if contract_bound
             else "core-or-unknown-change"
@@ -128,6 +144,7 @@ def classify(
         "changedPathCount": len(paths),
         "documentationOnly": documentation_only,
         "contractBoundDocumentation": contract_bound,
+        "releaseOnly": release_only,
     }
 
 
@@ -139,7 +156,9 @@ def main() -> int:
     parser.add_argument("--base", default="")
     parser.add_argument("--head", default="")
     parser.add_argument("--github-output", type=Path)
-    parser.add_argument("--require-mode", choices=("full", "documentation", "image"))
+    parser.add_argument(
+        "--require-mode", choices=("full", "documentation", "image", "release")
+    )
     args = parser.parse_args()
 
     report = classify(

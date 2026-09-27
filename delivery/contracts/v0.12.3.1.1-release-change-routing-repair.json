@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "v0.12.3.1.1-release-change-routing-repair-v1",
+  "version": "v0.12.3.1.1",
+  "status": "delivered-offline-awaiting-promotion-pr-rerun",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "f0736dcb8b1e5a36f2faf0594f9ef222ed9268b7",
+  "incident": {
+    "pullRequest": 169,
+    "featureHead": "4833b8a5282e24bb0f2ee75ac0c8c82330090235",
+    "mainCommit": "f0736dcb8b1e5a36f2faf0594f9ef222ed9268b7",
+    "changedPath": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+    "failure": "repository-tree-drift",
+    "cause": "exact-release-change-misrouted-to-full-history"
+  },
+  "routing": {
+    "automaticReleaseMode": "release",
+    "allowedReleasePaths": [
+      "apps/demo-api/helm/values/releases/aws-dev.yaml",
+      "apps/demo-api/helm/values/releases/aws-test.yaml",
+      "apps/demo-api/helm/values/releases/aws-prod.yaml"
+    ],
+    "exactlyOneChangedPathRequired": true,
+    "pullRequestSupported": true,
+    "mainPushSupported": true,
+    "mixedChangeMode": "full",
+    "unknownOrAmbiguousChangeMode": "full",
+    "explicitReleaseModeExposedToCallers": false
+  },
+  "releaseGate": {
+    "historicalRepositoryValidatorsReplayed": false,
+    "releaseSchemaValidated": true,
+    "imageIdentityConsistencyValidated": true,
+    "promotionGovernanceValidated": true,
+    "allEnvironmentHelmRendersValidated": true,
+    "predecessorStructureValidatorSuccessorAware": true,
+    "predecessorValidatorTopologySuccessorAware": true,
+    "secretScanPreserved": true,
+    "trivyConfigScanPreserved": true
+  },
+  "safety": {
+    "v011ContractRewritten": false,
+    "historicalDigestRegenerated": false,
+    "terraformStateOperationAuthorized": false,
+    "awsOperationAuthorized": false,
+    "automaticMergeAuthorized": false
+  },
+  "deferred": {
+    "postPromotionHistoricalSnapshotIsolation": "v0.12.3.2",
+    "historicalValidatorArchival": "v1.0"
+  }
+}

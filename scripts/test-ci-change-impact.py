@@ -55,6 +55,60 @@ class ClassificationTests(unittest.TestCase):
             report = MODULE.classify(repository.root, "auto", "push", base, head)
             self.assertEqual(report["mode"], "full")
 
+    def test_exact_release_change_is_targeted_for_pull_request_and_push(self):
+        for environment in ("aws-dev", "aws-test", "aws-prod"):
+            for event in ("pull_request", "push"):
+                with self.subTest(environment=environment, event=event):
+                    with Repository() as repository:
+                        path = f"apps/demo-api/helm/values/releases/{environment}.yaml"
+                        base = repository.commit(path, "image: old\n")
+                        head = repository.commit(path, "image: new\n")
+                        report = MODULE.classify(
+                            repository.root, "auto", event, base, head
+                        )
+                        self.assertEqual(report["mode"], "release")
+                        self.assertEqual(
+                            report["reason"], "exact-demo-api-release-change"
+                        )
+                        self.assertTrue(report["releaseOnly"])
+
+    def test_release_change_mixed_with_any_other_path_is_full(self):
+        with Repository() as repository:
+            release = "apps/demo-api/helm/values/releases/aws-dev.yaml"
+            base = repository.commit(release, "image: old\n")
+            (repository.root / release).write_text("image: new\n")
+            script = repository.root / "scripts/example.sh"
+            script.parent.mkdir(parents=True)
+            script.write_text("#!/bin/sh\n")
+            subprocess.run(
+                ["git", "-C", str(repository.root), "add", "-A"], check=True
+            )
+            subprocess.run(
+                ["git", "-C", str(repository.root), "commit", "-q", "-m", "mixed"],
+                check=True,
+            )
+            head = subprocess.check_output(
+                ["git", "-C", str(repository.root), "rev-parse", "HEAD"], text=True
+            ).strip()
+            report = MODULE.classify(repository.root, "auto", "push", base, head)
+            self.assertEqual(report["mode"], "full")
+            self.assertFalse(report["releaseOnly"])
+
+    def test_release_adjacent_paths_are_full(self):
+        for path in (
+            "apps/demo-api/helm/values/releases/aws-stage.yaml",
+            "apps/demo-api/helm/values/environments/aws-dev.yaml",
+            "apps/demo-api/helm/values/releases/aws-dev.yaml.bak",
+        ):
+            with self.subTest(path=path):
+                with Repository() as repository:
+                    base = repository.commit("README.md", "one\n")
+                    head = repository.commit(path, "value\n")
+                    report = MODULE.classify(
+                        repository.root, "auto", "push", base, head
+                    )
+                    self.assertEqual(report["mode"], "full")
+
     def test_validator_bound_documentation_is_full(self):
         with Repository() as repository:
             repository.commit("docs/guide.md", "one\n")
@@ -97,6 +151,12 @@ class ClassificationTests(unittest.TestCase):
         root = Path(tempfile.mkdtemp())
         self.assertEqual(MODULE.classify(root, "full", "", "", "")["mode"], "full")
         self.assertEqual(MODULE.classify(root, "image", "", "", "")["mode"], "image")
+
+    def test_explicit_release_request_is_not_exposed(self):
+        root = Path(tempfile.mkdtemp())
+        report = MODULE.classify(root, "release", "", "", "")
+        self.assertEqual(report["mode"], "full")
+        self.assertEqual(report["reason"], "unknown-requested-mode")
 
 
 if __name__ == "__main__":

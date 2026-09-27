@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       gate_mode:
-        description: full, auto change-impact routing, or reviewed demo-api image scope
+        description: full, auto change-impact routing, or reviewed demo-api image scope; auto may select release
         required: false
         default: full
         type: string
@@ -62,6 +62,10 @@ jobs:
       - name: Run demo-api image quality gates
         if: steps.impact.outputs.mode == 'image'
         run: ./scripts/validate-demo-api-image-quality-gates.sh
+
+      - name: Run demo-api release quality gates
+        if: steps.impact.outputs.mode == 'release'
+        run: ./scripts/validate-demo-api-release-quality-gates.sh
 
       - name: Scan demo-api configuration
         if: steps.impact.outputs.mode != 'documentation'

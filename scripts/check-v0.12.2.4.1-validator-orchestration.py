@@ -14,6 +14,7 @@ ROOT_GATE = "validate-ci-quality-gates.sh"
 STANDALONE = "validate-v0.12.1.0.1-ci-compatibility-repair.sh"
 ORCHESTRATOR = "validate-v0.12.2.4.1-validator-orchestration-dedup.sh"
 SUCCESSOR = "validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
+LATEST = "validate-v0.12.3.1-ci-change-impact-routing.sh"
 ENTRYPOINT = "validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh"
 EXPECTED_CHAIN_COUNT = 22
 
@@ -79,8 +80,14 @@ def validate_repository(root: Path) -> dict[str, object]:
     scripts = root / "scripts"
     root_calls = extract_v012_calls((scripts / ROOT_GATE).read_text())
     require(
-        root_calls == [SUCCESSOR],
+        root_calls == [LATEST],
         f"root v0.12 calls changed: {root_calls}",
+    )
+
+    latest_calls = extract_v012_calls((scripts / LATEST).read_text())
+    require(
+        latest_calls == [SUCCESSOR],
+        f"latest v0.12 delegation changed: {latest_calls}",
     )
 
     successor_calls = extract_v012_calls((scripts / SUCCESSOR).read_text())
@@ -96,10 +103,11 @@ def validate_repository(root: Path) -> dict[str, object]:
     )
 
     validators = sorted(path.name for path in scripts.glob("validate-v0.12*.sh"))
-    expected_chain = set(validators) - {STANDALONE, ORCHESTRATOR, SUCCESSOR}
+    expected_chain = set(validators) - {STANDALONE, ORCHESTRATOR, SUCCESSOR, LATEST}
     require(STANDALONE in validators, "standalone compatibility validator missing")
     require(ORCHESTRATOR in validators, "orchestration validator missing")
     require(SUCCESSOR in validators, "successor orchestration validator missing")
+    require(LATEST in validators, "latest orchestration validator missing")
     require(
         len(expected_chain) == EXPECTED_CHAIN_COUNT,
         f"unexpected chained validator inventory: {len(expected_chain)}",
@@ -128,6 +136,7 @@ def validate_repository(root: Path) -> dict[str, object]:
         "status": "v0.12-validator-orchestration-deduplicated",
         "root_direct_v0_12_validator_count": len(root_calls),
         "root_direct_v0_12_validators": root_calls,
+        "latest_delegated_v0_12_validators": latest_calls,
         "successor_delegated_v0_12_validators": successor_calls,
         "unique_chained_validator_count": len(chain),
         "chained_entrypoint": ENTRYPOINT,

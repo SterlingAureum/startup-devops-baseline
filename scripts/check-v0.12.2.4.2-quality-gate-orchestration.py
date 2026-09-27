@@ -12,6 +12,7 @@ from typing import Iterable
 
 
 ROOT_GATE = "validate-ci-quality-gates.sh"
+LATEST_ORCHESTRATOR = "validate-v0.12.3.1-ci-change-impact-routing.sh"
 GLOBAL_ORCHESTRATOR = "validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
 V012_ORCHESTRATOR = "validate-v0.12.2.4.1-validator-orchestration-dedup.sh"
 V012_COMPATIBILITY = "validate-v0.12.1.0.1-ci-compatibility-repair.sh"
@@ -138,6 +139,12 @@ def validate_repository(root: Path) -> dict[str, object]:
         f"global v0.12 delegation drift: {literal_global_calls}",
     )
     graph[GLOBAL_ORCHESTRATOR] = [V012_COMPATIBILITY, *manifest, V012_ORCHESTRATOR]
+    literal_latest_calls = graph[LATEST_ORCHESTRATOR]
+    require(
+        literal_latest_calls == [GLOBAL_ORCHESTRATOR, GLOBAL_ORCHESTRATOR],
+        f"latest conditional orchestration drift: {literal_latest_calls}",
+    )
+    graph[LATEST_ORCHESTRATOR] = [GLOBAL_ORCHESTRATOR]
 
     v011 = {name for name in files if name.startswith("validate-v0.11")}
     require(len(v011) == EXPECTED_V011_INVENTORY, "v0.11 validator inventory drift")
@@ -168,7 +175,7 @@ def validate_repository(root: Path) -> dict[str, object]:
     require(not any(name.startswith("validate-v0.11") for name in root_calls), "root directly executes v0.11")
     require(
         [name for name in root_calls if name.startswith("validate-v0.12")]
-        == [GLOBAL_ORCHESTRATOR],
+        == [LATEST_ORCHESTRATOR],
         "root v0.12 orchestration drift",
     )
 
@@ -180,16 +187,20 @@ def validate_repository(root: Path) -> dict[str, object]:
         name
         for name in files
         if name.startswith("validate-v0.12")
-        and name not in {V012_ORCHESTRATOR, GLOBAL_ORCHESTRATOR}
+        and name not in {V012_ORCHESTRATOR, GLOBAL_ORCHESTRATOR, LATEST_ORCHESTRATOR}
     }
     effective_historical_v012 = sum(counts[name] for name in historical_v012)
-    effective_v012_orchestration = counts[V012_ORCHESTRATOR] + counts[GLOBAL_ORCHESTRATOR]
+    effective_v012_orchestration = (
+        counts[V012_ORCHESTRATOR]
+        + counts[GLOBAL_ORCHESTRATOR]
+        + counts[LATEST_ORCHESTRATOR]
+    )
 
     require(len(root_calls) == 29, f"root direct validator count drift: {len(root_calls)}")
     require(effective_v011 == 176, f"v0.11 effective count drift: {effective_v011}")
     require(effective_historical_v012 == 25, "historical v0.12 effective count drift")
-    require(effective_v012_orchestration == 2, "v0.12 orchestration count drift")
-    require(sum(counts.values()) == 245, f"effective validator count drift: {sum(counts.values())}")
+    require(effective_v012_orchestration == 3, "v0.12 orchestration count drift")
+    require(sum(counts.values()) == 246, f"effective validator count drift: {sum(counts.values())}")
 
     return {
         "status": "quality-gate-history-orchestration-deduplicated",

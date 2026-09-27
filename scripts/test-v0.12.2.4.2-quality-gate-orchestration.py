@@ -101,7 +101,8 @@ class RepositoryTests(unittest.TestCase):
         self.assertEqual(report["delegated_v0_11_entrypoint_count"], 112)
         self.assertEqual(report["unique_reachable_v0_11_validator_count"], 168)
         self.assertEqual(report["effective_v0_11_validator_execution_count"], 176)
-        self.assertEqual(report["effective_validator_execution_count"], 245)
+        self.assertEqual(report["effective_v0_12_orchestration_execution_count"], 3)
+        self.assertEqual(report["effective_validator_execution_count"], 246)
 
 
 if __name__ == "__main__":

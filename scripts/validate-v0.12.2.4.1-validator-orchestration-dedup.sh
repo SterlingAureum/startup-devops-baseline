@@ -48,6 +48,12 @@ def validate(value):
         "validate-v0.12.1.0.1-ci-compatibility-repair.sh",
         "validate-v0.12.2.4.1-validator-orchestration-dedup.sh",
     ], "successor delegation drift")
+    require(scope.get("latestRootDirectV012Validators") == [
+        "validate-v0.12.3.1-ci-change-impact-routing.sh",
+    ], "latest root drift")
+    require(scope.get("latestDelegatedV012Validators") == [
+        "validate-v0.12.2.4.2-quality-gate-history-dedup.sh",
+    ], "latest delegation drift")
     require(scope.get("chainedValidatorEntryPoint") == "validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh", "chain entrypoint drift")
     invariants = value.get("invariants")
     for key in (
@@ -93,6 +99,7 @@ mutate(["scope", "postChangeDirectV012ValidatorCount"], 23)
 mutate(["scope", "uniqueChainedValidatorCount"], 21)
 mutate(["scope", "rootDirectInvocationReduction"], 0)
 mutate(["scope", "duplicateHistoricalValidatorExecutionReduction"], 230)
+mutate(["scope", "latestDelegatedV012Validators"], [])
 mutate(["scope", "successorRootDirectV012ValidatorCount"], 2)
 mutate(["invariants", "allExistingV012ValidatorsRemainReachable"], False)
 mutate(["invariants", "historicalValidatorFilesModified"], True)

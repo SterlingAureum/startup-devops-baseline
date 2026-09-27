@@ -62,6 +62,14 @@ class RepositoryTopologyTests(unittest.TestCase):
     def test_repository_has_exact_deduplicated_topology(self) -> None:
         report = MODULE.validate_repository(SCRIPT.parents[1])
         self.assertEqual(report["root_direct_v0_12_validator_count"], 1)
+        self.assertEqual(
+            report["root_direct_v0_12_validators"],
+            ["validate-v0.12.3.1-ci-change-impact-routing.sh"],
+        )
+        self.assertEqual(
+            report["latest_delegated_v0_12_validators"],
+            ["validate-v0.12.2.4.2-quality-gate-history-dedup.sh"],
+        )
         self.assertEqual(report["successor_root_direct_v0_12_validator_count"], 1)
         self.assertEqual(report["unique_chained_validator_count"], 22)
         self.assertEqual(

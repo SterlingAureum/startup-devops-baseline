@@ -875,7 +875,7 @@ Incremental scope:
   chained validators remain reachable exactly once, preserve the independent
   compatibility repair, and leave triggers and required-check names unchanged
 - v0.12.2.4.2 - quality-gate history deduplication and tracked Terraform
-  formatting - delivered offline awaiting target runtime validation; replace
+  formatting - delivered and target-runtime validated in 302 seconds; replace
   168 direct v0.11 launches with 112 graph-derived entrypoints that cover all
   168 validators, exclude ignored private tfvars from formatting gates, and
   retain unchanged workflow triggers and required-check names
@@ -884,10 +884,12 @@ Incremental scope:
   production Environment approval, immutable digest identity and
   `waiting_environment` without automatic EKS creation - planned
 - v0.12.3.1 - CI change-impact routing and stable required-check aggregation -
-  planned; keep a lightweight mandatory classifier/result gate, run domain
-  jobs only for affected application, Terraform, GitOps, workflow or current-
-  documentation surfaces, and fail safe to the full suite for shared,
-  workflow-definition or unknown changes
+  delivered offline awaiting GitHub runtime validation; preserve the existing
+  required check, add a documentation-only fast route, replace image-publish
+  historical replay with targeted application gates, and fail safe to the
+  full suite for scripts, contracts, infrastructure, shared, mixed, workflow
+  or unknown changes. Exact core PR/main result reuse remains deferred until a
+  merge queue or prospective merge-tree proof exists
 - v0.12.4 - EKS and platform dependency upgrade lifecycle, compatibility
   matrix, deprecated-API preflight, one-minor sequencing, data-plane/add-on/
   controller convergence, rollback/rebuild decision and dev/test evidence - planned

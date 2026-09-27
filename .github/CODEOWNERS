@@ -972,3 +972,10 @@
 /scripts/check-v0.12.3.1.1-release-change-routing-repair.py @SterlingAureum
 /scripts/validate-demo-api-release-quality-gates.sh @SterlingAureum
 /scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh @SterlingAureum
+
+# v0.12.3.2 post-promotion historical snapshot isolation
+/delivery/contracts/v0.12.3.2-post-promotion-historical-snapshot.json @SterlingAureum
+/docs/V0.12.3.2_POST_PROMOTION_HISTORICAL_SNAPSHOT.md @SterlingAureum
+/scripts/check-v0.12.3.2-historical-snapshot.py @SterlingAureum
+/scripts/test-v0.12.3.2-historical-snapshot.py @SterlingAureum
+/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh @SterlingAureum

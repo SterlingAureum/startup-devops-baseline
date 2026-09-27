@@ -40,8 +40,8 @@ echo "==> Validating trusted runtime qualification executor"
 echo "==> Validating v0.10 final clean-room acceptance contracts"
 "${ROOT_DIR}/scripts/validate-v0.10-final-acceptance.sh"
 
-echo "==> Validating change-impact routing and deduplicated history"
-"${ROOT_DIR}/scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh"
+echo "==> Validating change-impact routing and static historical attestation"
+"${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"
 
 : <<'V012242_PRE_CORE_LEGACY_REGISTRATION'
 echo "==> Validating v0.11 Observability and SRE design foundation"

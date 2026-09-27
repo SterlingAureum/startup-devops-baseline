@@ -3,10 +3,24 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.3.2-post-promotion-historical-snapshot` keeps current v0.12 validation
+on the checked-out tree while replaying the deduplicated v0.11 entrypoints from
+the exact last-green pre-promotion commit. This lets reviewed release desired
+state advance without rewriting historical contracts or weakening the full
+gate for later core changes. See
+[v0.12.3.2 post-promotion historical snapshot isolation](docs/V0.12.3.2_POST_PROMOTION_HISTORICAL_SNAPSHOT.md).
+
+Predecessor development checkpoint:
+`v0.12.3.1.1-release-change-routing-repair` routes an exact single demo-api
+environment release-file change to a bounded release gate, while mixed or
+ambiguous changes remain full-suite. See
+[v0.12.3.1.1 release-change routing repair](docs/V0.12.3.1.1_RELEASE_CHANGE_ROUTING_REPAIR.md).
+
+Predecessor development checkpoint:
 `v0.12.3.1-ci-change-impact-routing` keeps the stable quality-gate check while
-routing unbound documentation-only changes to a bounded fast path and demo-api image
-publishing to targeted application gates. Core and ambiguous changes remain
-fail-closed on the full suite. See
+routing unbound documentation-only changes to a bounded fast path and demo-api
+image publishing to targeted application gates. Core and ambiguous changes
+remain fail-closed on the full suite. See
 [v0.12.3.1 CI change-impact routing](docs/V0.12.3.1_CI_CHANGE_IMPACT_ROUTING.md).
 
 Predecessor development checkpoint:

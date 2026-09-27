@@ -890,6 +890,15 @@ Incremental scope:
   full suite for scripts, contracts, infrastructure, shared, mixed, workflow
   or unknown changes. Exact core PR/main result reuse remains deferred until a
   merge queue or prospective merge-tree proof exists
+- v0.12.3.1.1 - exact release-change routing repair - delivered and GitHub
+  validated; route only one reviewed environment release file through targeted
+  promotion gates, keep mixed changes full, and retain the stable required
+  check after promotion PR #169 exposed historical tree coupling
+- v0.12.3.2 - post-promotion historical snapshot isolation - delivered
+  offline awaiting GitHub runtime validation; keep current v0.12 checks on the
+  current tree, replay the 112 deduplicated v0.11 entrypoints from the exact
+  clean last-green pre-promotion commit, and prevent approved mutable release
+  state from invalidating later full core gates without rewriting history
 - v0.12.4 - EKS and platform dependency upgrade lifecycle, compatibility
   matrix, deprecated-API preflight, one-minor sequencing, data-plane/add-on/
   controller convergence, rollback/rebuild decision and dev/test evidence - planned

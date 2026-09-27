@@ -97,10 +97,14 @@ def validate_repository(root: Path) -> dict[str, object]:
         and "quality-gate-history" not in release_gate,
         "release gate replays historical repository validators",
     )
+    active_root = root_gate.split(": <<'V012242_PRE_CORE_LEGACY_REGISTRATION'", 1)[0]
+    reviewed_root_entrypoints = (
+        '"${ROOT_DIR}/scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh"',
+        '"${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"',
+    )
     require(
-        '"${ROOT_DIR}/scripts/validate-v0.12.3.1.1-release-change-routing-repair.sh"'
-        in root_gate,
-        "root gate does not use the repair successor",
+        sum(entrypoint in active_root for entrypoint in reviewed_root_entrypoints) == 1,
+        "root gate does not use exactly one reviewed repair successor",
     )
     require(
         '"${ROOT_DIR}/scripts/validate-v0.12.3.1-ci-change-impact-routing.sh"'
@@ -108,14 +112,24 @@ def validate_repository(root: Path) -> dict[str, object]:
         "root gate still directly invokes the predecessor",
     )
     require(
-        '"validate-v0.12.3.1.1-release-change-routing-repair.sh": LATEST_ORCHESTRATOR'
+        "PREDECESSOR_ORCHESTRATOR: LATEST_ORCHESTRATOR"
         in topology,
         "historical topology checker is not successor-aware",
     )
     require(
-        '"validate-v0.12.3.1.1-release-change-routing-repair.sh": LATEST'
+        "PREDECESSOR: LATEST"
         in validator_topology,
         "historical validator topology checker is not successor-aware",
+    )
+    require(
+        '"validate-v0.12.3.2-post-promotion-historical-snapshot.sh": PREDECESSOR'
+        in validator_topology,
+        "historical validator topology checker does not recognize v0.12.3.2",
+    )
+    require(
+        '"validate-v0.12.3.2-post-promotion-historical-snapshot.sh": PREDECESSOR_ORCHESTRATOR'
+        in topology,
+        "historical topology checker does not recognize v0.12.3.2",
     )
 
     return {

@@ -13,8 +13,10 @@ from typing import Iterable
 
 ROOT_GATE = "validate-ci-quality-gates.sh"
 LATEST_ORCHESTRATOR = "validate-v0.12.3.1-ci-change-impact-routing.sh"
+PREDECESSOR_ORCHESTRATOR = "validate-v0.12.3.1.1-release-change-routing-repair.sh"
 REVIEWED_ROOT_SUCCESSORS = {
-    "validate-v0.12.3.1.1-release-change-routing-repair.sh": LATEST_ORCHESTRATOR,
+    PREDECESSOR_ORCHESTRATOR: LATEST_ORCHESTRATOR,
+    "validate-v0.12.3.2-post-promotion-historical-snapshot.sh": PREDECESSOR_ORCHESTRATOR,
 }
 GLOBAL_ORCHESTRATOR = "validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
 V012_ORCHESTRATOR = "validate-v0.12.2.4.1-validator-orchestration-dedup.sh"
@@ -177,20 +179,24 @@ def validate_repository(root: Path) -> dict[str, object]:
     root_calls = extract_validator_calls(root_text)
     require(not any(name.startswith("validate-v0.11") for name in root_calls), "root directly executes v0.11")
     root_v012_calls = [name for name in root_calls if name.startswith("validate-v0.12")]
-    if root_v012_calls != [LATEST_ORCHESTRATOR]:
+    while root_v012_calls != [LATEST_ORCHESTRATOR]:
         require(len(root_v012_calls) == 1, "root v0.12 orchestration drift")
         successor = root_v012_calls[0]
+        predecessor = REVIEWED_ROOT_SUCCESSORS.get(successor)
         require(
-            REVIEWED_ROOT_SUCCESSORS.get(successor) == LATEST_ORCHESTRATOR,
+            predecessor is not None,
             "unreviewed root v0.12 successor",
         )
         require(
-            graph.get(successor) == [LATEST_ORCHESTRATOR, LATEST_ORCHESTRATOR],
+            graph.get(successor) == [predecessor, predecessor],
             "reviewed root successor conditional delegation drift",
         )
-        graph[successor] = [LATEST_ORCHESTRATOR]
+        graph[successor] = [predecessor]
         root_calls = [
-            LATEST_ORCHESTRATOR if name == successor else name for name in root_calls
+            predecessor if name == successor else name for name in root_calls
+        ]
+        root_v012_calls = [
+            name for name in root_calls if name.startswith("validate-v0.12")
         ]
 
     counts = expansion_counts(graph, root_calls)

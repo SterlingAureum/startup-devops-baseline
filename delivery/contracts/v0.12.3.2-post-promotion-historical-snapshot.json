@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "v0.12.3.2-post-promotion-historical-snapshot-v1",
+  "version": "v0.12.3.2",
+  "status": "delivered-static-historical-attestation-awaiting-github-validation",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "d51aa1c11a148f5c3ecbb2eb60a20d566b5ca15a",
+  "incidentClosure": {
+    "promotionPullRequest": 169,
+    "promotedReleasePath": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+    "promotedReleaseSha256": "c650fec1aa027a411b786c30f8f7b81e26ff1c5597ba679d0086b1e801d4d143",
+    "promotedSourceCommit": "f0736dcb8b1e5a36f2faf0594f9ef222ed9268b7"
+  },
+  "historicalSnapshot": {
+    "commit": "f0736dcb8b1e5a36f2faf0594f9ef222ed9268b7",
+    "purpose": "last-green-pre-promotion-v0.11-static-attestation",
+    "entrypointManifest": "delivery/contracts/v0.12.2.4.2-v0.11-entrypoints.txt",
+    "entrypointCount": 112,
+    "snapshotReleaseSha256": "5238e8bcdfb23afb882eaabda6b3f732f5a2f461cc38bd9f09d26c8fff7a5d46",
+    "mustBeAncestorOfCurrentHead": true,
+    "manifestMustMatchCurrent": true,
+    "allEntrypointsMustBeGitExecutable": true,
+    "snapshotReleaseDigestMustMatch": true,
+    "detachedWorktreeCreated": false,
+    "runtimeReplayRequired": false
+  },
+  "executionBoundary": {
+    "currentRepositoryRunsCurrentV012StructureValidators": true,
+    "historicalV011ValidatorsExecuted": false,
+    "snapshotRuntimeReplayExecuted": false,
+    "historicalContractsOrDigestsRewritten": false,
+    "currentReleaseStateOverwritten": false,
+    "snapshotPushedOrCommitted": false,
+    "workflowFetchDepthChanged": false,
+    "requiredCheckNameChanged": false
+  },
+  "safety": {
+    "unknownChangesStillRunFull": true,
+    "releaseOnlyRoutingPreserved": true,
+    "snapshotCommitOverrideAllowed": false,
+    "arbitrarySnapshotRootAllowed": false,
+    "awsOperationAuthorized": false,
+    "terraformOperationAuthorized": false,
+    "kubernetesOperationAuthorized": false,
+    "stateRecoveryResumed": false
+  },
+  "deferred": {
+    "exactMergeTreeAttestedCoreGateReuse": "v1.0",
+    "historicalValidatorArchival": "v1.0",
+    "repositoryPhysicalRestructure": "v1.0"
+  }
+}

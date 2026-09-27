@@ -15,8 +15,10 @@ STANDALONE = "validate-v0.12.1.0.1-ci-compatibility-repair.sh"
 ORCHESTRATOR = "validate-v0.12.2.4.1-validator-orchestration-dedup.sh"
 SUCCESSOR = "validate-v0.12.2.4.2-quality-gate-history-dedup.sh"
 LATEST = "validate-v0.12.3.1-ci-change-impact-routing.sh"
+PREDECESSOR = "validate-v0.12.3.1.1-release-change-routing-repair.sh"
 REVIEWED_ROOT_SUCCESSORS = {
-    "validate-v0.12.3.1.1-release-change-routing-repair.sh": LATEST,
+    PREDECESSOR: LATEST,
+    "validate-v0.12.3.2-post-promotion-historical-snapshot.sh": PREDECESSOR,
 }
 ENTRYPOINT = "validate-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.sh"
 EXPECTED_CHAIN_COUNT = 22
@@ -82,21 +84,22 @@ def walk_single_predecessor_chain(
 def validate_repository(root: Path) -> dict[str, object]:
     scripts = root / "scripts"
     root_calls = extract_v012_calls((scripts / ROOT_GATE).read_text())
-    if root_calls != [LATEST]:
+    while root_calls != [LATEST]:
         require(len(root_calls) == 1, f"root v0.12 calls changed: {root_calls}")
         successor = root_calls[0]
+        predecessor = REVIEWED_ROOT_SUCCESSORS.get(successor)
         require(
-            REVIEWED_ROOT_SUCCESSORS.get(successor) == LATEST,
+            predecessor is not None,
             f"unreviewed root v0.12 successor: {successor}",
         )
         # This historical parser also recognizes the successor's bash -n entry;
         # accept only that exact self marker followed by its real predecessor.
         successor_calls = extract_v012_calls((scripts / successor).read_text())
         require(
-            successor_calls == [successor, LATEST],
+            successor_calls == [successor, predecessor],
             f"reviewed root successor delegation changed: {successor_calls}",
         )
-        root_calls = [LATEST]
+        root_calls = [predecessor]
 
     latest_calls = extract_v012_calls((scripts / LATEST).read_text())
     require(

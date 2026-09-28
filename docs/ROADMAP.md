@@ -829,9 +829,10 @@ Incremental scope:
   validated identity rebase, 13 managed and nine data addresses, one current
   S3 state-object version and zero delete markers; record that init/migration
   were not repeated and publish no private resource identity
-- v0.12.2.3 - lock-contention, zero-change, controlled object-version recovery
-  and redacted terminal evidence - in progress; recovery uses its own approval
-  and execution window
+- v0.12.2.3 - lock-contention, state reconciliation and redacted terminal
+  evidence - completed; the reviewed refresh-only apply and separately
+  approved read-only recovery established the serial-2 remote state and clean
+  lock history without requiring another immediate proof plan
 - v0.12.2.3.0 - remote-state proof and recovery design - delivered offline;
   adopt the validated remote identity, replace the obsolete local-lineage
   equality assumption, use a real `terraform console` lock holder for
@@ -871,6 +872,10 @@ Incremental scope:
   accepts omitted and explicit-empty `resource_changes` as the two exact
   zero-change encodings, rejects all non-empty forms, and requires a fresh
   protected-main request without repeating the successful apply
+- v0.12.2.3.1.0.2.0.1.2.0.1.2 - terminal recovery evidence - completed;
+  binds the successful serial-2 read-only recovery, exact state and lock
+  history deltas, closes the v0.12.2 migration rehearsal, and returns future
+  infrastructure work to the normal reviewed remote-backend plan flow
 - v0.12.2.4 - CI feedback-efficiency repair track - closed by v0.12.3.3 while
   the Terraform state exercise remains paused; redundant local and hosted work
   was reduced in measured, reviewable increments with fail-closed routing

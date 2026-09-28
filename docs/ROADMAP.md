@@ -867,6 +867,10 @@ Incremental scope:
   records the successful one-time saved-plan apply, reconstructs the seven
   reviewed managed refreshes and same-account caller-session projection, and
   permits only separately approved read-only state/S3/lock evidence completion
+- v0.12.2.3.1.0.2.0.1.2.0.1.1 - refresh-plan JSON shape repair - delivered;
+  accepts omitted and explicit-empty `resource_changes` as the two exact
+  zero-change encodings, rejects all non-empty forms, and requires a fresh
+  protected-main request without repeating the successful apply
 - v0.12.2.4 - CI feedback-efficiency repair track - closed by v0.12.3.3 while
   the Terraform state exercise remains paused; redundant local and hosted work
   was reduced in measured, reviewable increments with fail-closed routing

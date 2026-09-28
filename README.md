@@ -46,6 +46,9 @@ Paused operational checkpoint:
 reviewed refresh-only plan applied successfully and provides a separately
 approved read-only recovery for the remaining state/S3/lock evidence. See
 [v0.12.2.3.1.0.2.0.1.2.0.1 post-apply state recovery](docs/V0.12.2.3.1.0.2.0.1.2.0.1_POST_APPLY_STATE_RECOVERY.md).
+Its `.0.1.1` shape repair treats an omitted `resource_changes` member as the
+same reviewed zero-change form as an explicit empty array while continuing to
+reject every non-empty resource-change collection.
 
 Predecessor development checkpoint:
 `v0.12.2.3.1.0.2.0.1.2-dual-form-pre-apply-state` replaces the unstable
@@ -1208,6 +1211,8 @@ advanced state serial 1 to 2. The recovery proves the seven reviewed managed
 refreshes plus the same-account caller-session projection, then completes only
 read-only state, S3 history and lock cleanup evidence. See
 `delivery/contracts/v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.json`.
+The follow-up shape repair is recorded in
+`delivery/contracts/v0.12.2.3.1.0.2.0.1.2.0.1.1-refresh-plan-shape-repair.json`.
 
 The predecessor v0.12.2.3.1 implements the real Terraform-console-held S3 lock proof and the
 post-release zero-change saved plan. Verification executes no operational

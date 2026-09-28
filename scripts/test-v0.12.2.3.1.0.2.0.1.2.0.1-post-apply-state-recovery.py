@@ -98,6 +98,18 @@ class IncidentValidationTests(unittest.TestCase):
         self.assertEqual(len(result["drift"]), 7)
         self.assertEqual(result["after"]["serial"], 2)
 
+    def test_omitted_zero_resource_changes_is_accepted(self):
+        context, before, after, state_show = fixture()
+        del context["plan"]["resource_changes"]
+        result = self.validate(context, before, after, state_show)
+        self.assertEqual(len(result["drift"]), 7)
+
+    def test_nonempty_resource_changes_is_rejected(self):
+        context, before, after, state_show = fixture()
+        context["plan"]["resource_changes"] = [{"address": "test_managed.unreviewed"}]
+        with self.assertRaisesRegex(ValueError, "plan shape changed"):
+            self.validate(context, before, after, state_show)
+
     def test_unreviewed_managed_change_is_rejected(self):
         context, before, after, state_show = fixture()
         after["resources"][8]["instances"][0]["attributes"]["value"] = 999

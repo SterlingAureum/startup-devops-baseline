@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "v0.12.2.3.1.0.2.0.1.2.0.1.1-refresh-plan-shape-repair-v1",
+  "version": "v0.12.2.3.1.0.2.0.1.2.0.1.1",
+  "status": "delivered-awaiting-fresh-request-and-separate-read-only-approval",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "d46b947adac45646b39edf65a64e9ad52754ad9f",
+  "failedVerification": {
+    "privateRequestSha256": "995d38ad01aff1ebd47dda93e39b43ab22d3cc84e2336aeafe486f544d91a47f",
+    "operationalCommandsExecuted": [],
+    "savedPlanApplyReexecuted": false,
+    "failure": "reviewed-refresh-only-plan-resource-changes-key-omitted"
+  },
+  "repair": {
+    "acceptMissingResourceChangesAsZero": true,
+    "acceptExplicitEmptyResourceChanges": true,
+    "rejectNonEmptyResourceChanges": true,
+    "reviewedResourceDriftCount": 7,
+    "liveAuthorityAdded": false
+  },
+  "executionBoundary": {
+    "awsAndS3ReadOnly": true,
+    "terraformStatePullListShowOnly": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "statePush": false,
+    "destroy": false,
+    "directS3Mutation": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "readsPrivateEvidence": false,
+    "grantsLiveAuthority": false
+  }
+}

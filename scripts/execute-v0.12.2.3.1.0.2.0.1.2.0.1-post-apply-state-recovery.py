@@ -176,7 +176,14 @@ def validate_incident(context: dict[str, Any], incident_output: Path) -> dict[st
     require(len(managed_after) == 13 and len(data_after) == 9, "Incident state address counts changed")
 
     drift = {item["address"]: item for item in plan.get("resource_drift", [])}
-    require(len(drift) == 7 and plan.get("resource_changes") == [], "Reviewed refresh-only plan shape changed")
+    # Terraform may omit resource_changes entirely when a refresh-only plan has
+    # no proposed resource operations.  Missing and an explicit empty array are
+    # the same zero-change representation; any non-empty value remains fatal.
+    resource_changes = plan.get("resource_changes", [])
+    require(
+        len(drift) == 7 and isinstance(resource_changes, list) and resource_changes == [],
+        "Reviewed refresh-only plan shape changed",
+    )
     require(all(item.get("change", {}).get("actions") == ["update"] for item in drift.values()), "Reviewed drift actions changed")
     require(all(change.get("actions") == ["no-op"] for change in plan.get("output_changes", {}).values()), "Reviewed output actions changed")
 

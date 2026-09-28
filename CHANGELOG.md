@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.4.1
+
+- Review the v0.12.4.0 repository declarations against official compatibility and support sources without performing runtime network or cloud operations.
+- Keep EKS 1.37 provisional and unselected because it is not listed on the reviewed Amazon EKS standard-support page; upstream Kubernetes availability is insufficient authority.
+- Confirm the current Argo CD, cert-manager, CloudNativePG and Karpenter declarations for Kubernetes 1.36, including the CloudNativePG chart 0.29.0 to application 1.30.0 mapping.
+- Block upgrade readiness because managed add-on versions remain live-resolved, External Secrets 2.8 is end-of-life, and several chart/application mappings remain unresolved.
+- Record External Secrets 2.8 to 2.11 sequential maintenance as a separate future change and recognize bounded, separately approved EKS rollback as conditional rather than automatic or primary recovery.
+- Add no AWS, Terraform, Kubernetes, GitHub, EKS, add-on, controller or version mutation authority.
+
 ## v0.12.4.0
 
 - Start the upgrade lifecycle with an offline repository-declared EKS, managed-node, managed-add-on, GitOps and platform-controller inventory.

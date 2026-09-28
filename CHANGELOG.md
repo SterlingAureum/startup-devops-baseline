@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.12.4.1.0.1
+
+- Keep the compatibility-matrix checker tracked as Git mode `100755` while accepting normal owner-executable worktree modes produced by different POSIX umasks.
+- Accept `0755` and collaborative-umask `0775`; continue to reject non-executable `0644` and `0664`.
+- Change no compatibility result, target selection, version declaration or live execution authority.
+
 ## v0.12.4.1
 
 - Review the v0.12.4.0 repository declarations against official compatibility and support sources without performing runtime network or cloud operations.

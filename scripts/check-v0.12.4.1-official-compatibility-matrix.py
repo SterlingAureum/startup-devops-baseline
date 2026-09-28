@@ -28,6 +28,12 @@ def load(path: Path) -> dict[str, Any]:
     return value
 
 
+def require_checker_worktree_mode(mode: int) -> None:
+    """Require a regular owner-executable file without pinning umask bits."""
+    require(stat.S_ISREG(mode), "checker worktree file type drift")
+    require(bool(mode & stat.S_IXUSR), "checker owner-executable bit missing")
+
+
 EXPECTED_REASONS = [
     "provisional-eks-1.37-not-listed-on-reviewed-amazon-eks-standard-support-page",
     "managed-addon-exact-versions-and-target-compatibility-unresolved",
@@ -244,8 +250,21 @@ def validate_repository(root: Path) -> None:
     require(modes[str(contract_path.relative_to(root))] == "100644", "contract mode drift")
     require(modes[str(document_path.relative_to(root))] == "100644", "document mode drift")
     require(modes[str(checker_path.relative_to(root))] == "100755", "checker mode drift")
-    require(stat.S_IMODE(checker_path.stat().st_mode) == 0o755, "checker worktree mode drift")
-    print(f"v0.12.4.1 official compatibility matrix and {len(mutation_specs)} fail-closed mutations passed offline.")
+    require_checker_worktree_mode(checker_path.stat().st_mode)
+
+    for accepted_mode in (0o755, 0o775):
+        require_checker_worktree_mode(stat.S_IFREG | accepted_mode)
+    for rejected_mode in (0o644, 0o664):
+        try:
+            require_checker_worktree_mode(stat.S_IFREG | rejected_mode)
+        except CompatibilityMatrixError:
+            continue
+        raise CompatibilityMatrixError(f"non-executable worktree mode accepted: {oct(rejected_mode)}")
+
+    print(
+        f"v0.12.4.1 official compatibility matrix and {len(mutation_specs)} "
+        "fail-closed mutations passed offline; 0755/0775 executable modes accepted."
+    )
 
 
 def main() -> int:

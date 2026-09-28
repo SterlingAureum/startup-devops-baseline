@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.4.0
+
+- Start the upgrade lifecycle with an offline repository-declared EKS, managed-node, managed-add-on, GitOps and platform-controller inventory.
+- Leave the target EKS minor and every candidate add-on/controller version unselected until a separate official-source compatibility review.
+- Freeze dev-before-test, one-minor-at-a-time sequencing: control plane, managed nodes, managed add-ons, cluster/platform controllers, then data-plane and service qualification.
+- Require repository, rendered Helm and live API deprecated/removal preflight; unresolved APIs block execution.
+- Exclude PostgreSQL major upgrades, production live upgrades, automatic retry/rollback and every AWS, Terraform or Kubernetes operation from this increment.
+
 ## v0.12.3.4
 
 - Close promotion and environment-lifecycle convergence around build-once immutable identity, ordered dev/test/prod Promotion PR preparation, human review/merge and production Environment approval.

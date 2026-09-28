@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "v0.12.4.0-upgrade-lifecycle-design-foundation-v1",
+  "version": "v0.12.4.0",
+  "status": "upgrade-lifecycle-design-foundation-delivered-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "protectedMainBaselineCommit": "e236f4a867a0064c950cf223fae33a113c5d7140",
+  "inventoryBoundary": {
+    "source": "repository-declarations-not-live-observation",
+    "eksMinor": "1.36",
+    "managedNodeAmiType": "AL2023_x86_64_STANDARD",
+    "terraformVersionConstraint": ">= 1.8.0, < 2.0.0",
+    "awsProviderConstraint": "~> 6.0",
+    "tlsProviderConstraint": "~> 4.0",
+    "managedAddons": [
+      "aws-ebs-csi-driver",
+      "coredns",
+      "kube-proxy",
+      "vpc-cni"
+    ],
+    "managedAddonVersionsPinned": false,
+    "argocd": "v3.5.2",
+    "platformCharts": {
+      "argo-rollouts": "2.41.1",
+      "aws-load-balancer-controller": "1.14.0",
+      "cert-manager": "v1.21.0",
+      "cloudnative-pg": "0.29.0",
+      "external-secrets": "2.8.0",
+      "karpenter": "1.14.0",
+      "karpenter-crd": "1.14.0",
+      "kube-prometheus-stack": "88.5.0",
+      "plugin-barman-cloud": "0.7.0"
+    },
+    "postgresqlImageMajor": 17
+  },
+  "candidateSelection": {
+    "status": "not-selected",
+    "targetEksMinor": null,
+    "managedAddonVersions": {},
+    "platformVersions": {},
+    "officialCompatibilityEvidenceReviewed": false,
+    "selectionRequiresSeparateIncrement": true
+  },
+  "upgradeInvariants": {
+    "oneEksMinorAtATime": true,
+    "environmentOrder": [
+      "aws-dev",
+      "aws-test"
+    ],
+    "awsProdLiveUpgradeInV0124": false,
+    "controlPlaneBeforeManagedNodes": true,
+    "managedNodesBeforeManagedAddonsAndClients": true,
+    "databaseMajorUpgradeCombinedWithEksUpgrade": false,
+    "maximumConcurrentDisposableEksEnvironments": 1,
+    "freshApprovalRequiredPerLivePhase": true,
+    "automaticRetry": false,
+    "automaticRollback": false
+  },
+  "orderedPhases": [
+    "freeze-current-live-inventory",
+    "review-official-compatibility-matrix",
+    "scan-deprecated-and-removed-apis",
+    "prove-backup-and-rebuild-readiness",
+    "upgrade-eks-control-plane-one-minor",
+    "converge-managed-node-groups",
+    "converge-eks-managed-addons",
+    "converge-karpenter-and-cluster-controllers",
+    "converge-platform-controllers",
+    "qualify-data-plane-and-services",
+    "record-rollback-or-rebuild-decision"
+  ],
+  "deprecatedApiPreflight": {
+    "repositoryManifestScanRequired": true,
+    "helmRenderedManifestScanRequired": true,
+    "liveApiUsageObservationRequiredBeforeExecution": true,
+    "targetMinorRemovalCheckRequired": true,
+    "unknownOrUnresolvedApiBlocksUpgrade": true
+  },
+  "recoveryModel": {
+    "eksControlPlaneDowngradeIsPrimaryRecovery": false,
+    "gitopsRollbackAllowedOnlyWhenTargetApiCompatible": true,
+    "forwardFixPreferredAfterControlPlaneUpgrade": true,
+    "cleanRoomRebuildDecisionRequired": true,
+    "remoteStateRequiredForRebuild": true,
+    "stateRestoreOrPushAutomaticallyAuthorized": false
+  },
+  "requiredFutureEvidence": [
+    "current-live-version-inventory",
+    "official-compatibility-matrix",
+    "deprecated-api-report",
+    "pre-upgrade-zero-change-plan",
+    "control-plane-convergence",
+    "managed-node-and-addon-convergence",
+    "controller-and-data-plane-convergence",
+    "service-and-observability-qualification",
+    "rollback-or-rebuild-decision"
+  ],
+  "executionBoundary": {
+    "awsReadAuthorized": false,
+    "awsMutationAuthorized": false,
+    "terraformInitAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "terraformStateMutationAuthorized": false,
+    "kubernetesReadAuthorized": false,
+    "kubernetesMutationAuthorized": false,
+    "eksUpgradeAuthorized": false,
+    "nodeUpgradeAuthorized": false,
+    "addonUpgradeAuthorized": false,
+    "controllerUpgradeAuthorized": false,
+    "databaseUpgradeAuthorized": false,
+    "environmentCreationAuthorized": false,
+    "environmentDestroyAuthorized": false
+  },
+  "nextCheckpoint": "v0.12.4.1-version-inventory-and-candidate-matrix",
+  "deferred": {
+    "cleanRoomInfrastructureAndGitopsRebuild": "v0.12.5",
+    "databaseRecoveryAndMeasuredRtoRpo": "v0.12.5",
+    "productionLiveUpgrade": "separate-future-approval-not-v0.12.4",
+    "integratedDevTestProdCommercialRehearsal": "v1.0-rc.3",
+    "repositoryPhysicalRestructure": "v1.0",
+    "repositoryWideHumanReview": "v1.0"
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "runsKubernetes": false,
+    "mutatesGithub": false
+  }
+}

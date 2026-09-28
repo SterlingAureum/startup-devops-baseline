@@ -206,15 +206,19 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/check-v0.12.3.4-promotion-lifecycle-closure.py" \
   --root "${ROOT_DIR}"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.0-upgrade-lifecycle-design-foundation.py" \
+  --root "${ROOT_DIR}"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only
-  echo "v0.12.3.4 structure-only promotion/lifecycle convergence closure passed; no live action was executed."
+  echo "v0.12.4.0 structure-only upgrade-lifecycle design foundation passed; no live action was executed."
   exit 0
 fi
 
 bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"
-echo "v0.12.3.4 promotion/lifecycle convergence closure passed; no live action was executed."
+echo "v0.12.4.0 upgrade-lifecycle design foundation passed; no live action was executed."

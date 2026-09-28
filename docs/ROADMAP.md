@@ -921,7 +921,13 @@ Incremental scope:
   integrated dev/test/prod commercial rehearsal for v1.0 RC
 - v0.12.4 - EKS and platform dependency upgrade lifecycle, compatibility
   matrix, deprecated-API preflight, one-minor sequencing, data-plane/add-on/
-  controller convergence, rollback/rebuild decision and dev/test evidence - planned
+  controller convergence, rollback/rebuild decision and dev/test evidence - in progress
+- v0.12.4.0 - upgrade-lifecycle design foundation - delivered offline; freeze
+  the repository-declared current inventory, leave every target candidate
+  unselected, require official-source compatibility review plus repository,
+  rendered and live deprecated-API preflight, and order one-minor aws-dev then
+  aws-test convergence without granting any AWS, Terraform, Kubernetes or
+  upgrade authority
 - v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
   database recovery, measured RTO/RPO, scoped disaster-recovery review and
   terminal cleanup/cost evidence - planned

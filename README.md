@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.4.0-upgrade-lifecycle-design-foundation` freezes the repository-declared
+EKS/platform inventory, one-minor dev-before-test sequence, deprecated-API gate
+and rollback-versus-rebuild boundary without selecting a target version or
+authorizing live infrastructure work. See [v0.12.4.0 upgrade-lifecycle design
+foundation](docs/V0.12.4.0_UPGRADE_LIFECYCLE_DESIGN_FOUNDATION.md).
+
+Predecessor development checkpoint:
 `v0.12.3.4-promotion-lifecycle-convergence-closure` closes the application
 release/lifecycle model without live infrastructure work: build once, promote
 the same digest through reviewed PRs, require production Environment approval,

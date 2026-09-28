@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.2.3.1.0.2.0.1.2.0.1.2
+
+- Record the successful protected-main-bound read-only post-apply recovery completed at `2026-09-28T09:13:27.586977Z` without publishing private resource identity, object version IDs or private paths.
+- Bind the exact serial-2 remote state, 13 managed and nine data addresses, seven reviewed managed refreshes, same-account caller-session refresh and clean S3 state/lock object-history deltas.
+- Close the v0.12.2 state-migration rehearsal without repeating init, plan, apply, state push, migration, destroy, direct S3 mutation, retry or rollback.
+- Do not require an immediate renewed zero-change proof; future infrastructure changes resume through the normal reviewed remote-backend plan flow.
+
 ## v0.12.2.3.1.0.2.0.1.2.0.1.1
 
 - Accept Terraform's omitted `resource_changes` member as the exact zero-resource-change equivalent of an explicit empty array during command-free post-apply recovery verification.

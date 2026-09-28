@@ -208,9 +208,9 @@ bash -n \
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only
-  echo "v0.12.3.3 structure-only CI feedback-efficiency closure passed; Terraform recovery remains paused."
+  echo "v0.12.3.3 structure-only CI feedback-efficiency closure passed; its historical Terraform pause boundary remains preserved."
   exit 0
 fi
 
 bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"
-echo "v0.12.3.3 CI feedback-efficiency closure passed; Terraform recovery remains paused."
+echo "v0.12.3.3 CI feedback-efficiency closure passed; its historical Terraform pause boundary remains preserved."

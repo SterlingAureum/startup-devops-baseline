@@ -15,6 +15,7 @@ import subprocess
 root = Path(os.environ["ROOT_DIR"])
 contract_path = root / "delivery/contracts/v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.json"
 repair_contract_path = root / "delivery/contracts/v0.12.2.3.1.0.2.0.1.2.0.1.1-refresh-plan-shape-repair.json"
+terminal_contract_path = root / "delivery/contracts/v0.12.2.3.1.0.2.0.1.2.0.1.2-terminal-recovery-evidence.json"
 example_path = root / "delivery/examples/v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery-request.example.json"
 executor_path = root / "scripts/execute-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.py"
 test_path = root / "scripts/test-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.py"
@@ -41,6 +42,43 @@ def validate(value):
     require(boundary.get("awsAndS3ReadOnly") is True and boundary.get("terraformStatePullListShowOnly") is True, "read boundary drift")
     require(all(boundary.get(key) is False for key in ("terraformInit", "terraformPlan", "terraformApply", "statePush", "remoteResourceMutation", "automaticRetry", "automaticRollback")), "mutation authority drift")
     require(value.get("packageProducer") == {"runsAws": False, "runsTerraform": False, "readsPrivateEvidence": False, "grantsLiveAuthority": False}, "producer drift")
+
+def validate_terminal(value):
+    require(value.get("schemaVersion") == "v0.12.2.3.1.0.2.0.1.2.0.1.2-terminal-recovery-evidence-v1", "terminal schema drift")
+    require(value.get("version") == "v0.12.2.3.1.0.2.0.1.2.0.1.2", "terminal version drift")
+    require(value.get("status") == "state-migration-rehearsal-complete", "terminal status drift")
+    require(value.get("implementationBaselineCommit") == "25578fdeb70fa9c56ac0a3441e3bb1993bcfeebe", "terminal baseline drift")
+    execution = value.get("recoveryExecution")
+    require(execution.get("completedAtUtc") == "2026-09-28T09:13:27.586977Z", "terminal completion drift")
+    require(execution.get("controlPlaneCommit") == "25578fdeb70fa9c56ac0a3441e3bb1993bcfeebe", "terminal control-plane drift")
+    require(execution.get("privateRecoveryRequestSha256") == "5844c024460c01d21e3eabfad5374d4b711fca34955bf32fb57966a61cdb1dbc", "terminal request drift")
+    require(execution.get("recoveryEvidenceSha256") == "c8759d845677261225a08193800421a8b5c904eda9867555e10977aa1ae85b98", "terminal evidence drift")
+    require(execution.get("recoveryResultSha256") == "e2d456ee5a753849d3172862f26cc9e9670942067ca961cc25d61c0b522e2b9c", "terminal result drift")
+    state = value.get("validatedState")
+    require(state == {
+        "sha256": "5b97b9ab595c7d072f420edf029435948135711a31b9251b7799ab3a0034b156",
+        "priorSerial": 1, "reconciledSerial": 2, "lineageUnchanged": True,
+        "managedAddressCount": 13, "dataAddressCount": 9,
+        "reviewedManagedRefreshCount": 7, "callerIdentitySessionRefreshCount": 1,
+    }, "terminal state drift")
+    history = value.get("validatedObjectHistory")
+    require(history == {
+        "stateObjectVersionDelta": 1, "stateDeleteMarkerDelta": 0,
+        "lockObjectVersionDelta": 1, "lockDeleteMarkerDelta": 1,
+        "lockObjectAbsent": True,
+    }, "terminal object-history drift")
+    prohibited = value.get("prohibitedOperations")
+    require(prohibited and all(item is False for item in prohibited.values()), "terminal mutation authority enabled")
+    closure = value.get("closureDecision")
+    require(closure == {
+        "stateMigrationRehearsalComplete": True,
+        "renewedZeroChangeProofRequired": False,
+        "futureInfrastructureChangesUseNormalReviewedPlanFlow": True,
+        "privateLocalStateCopiesAreEvidenceOnly": True,
+        "remoteS3StateIsOperationalSourceOfTruth": True,
+    }, "terminal closure drift")
+    require(value.get("privacy") == {"resourceIdentityEmitted": False, "objectVersionIdEmitted": False, "privatePathsCommitted": False}, "terminal privacy drift")
+    require(value.get("packageProducer") == {"runsAws": False, "runsTerraform": False, "readsPrivateEvidence": False, "grantsLiveAuthority": False}, "terminal producer drift")
 
 contract = json.loads(contract_path.read_text())
 validate(contract)
@@ -83,6 +121,26 @@ require(repair == {
         "grantsLiveAuthority": False
     }
 }, "shape-repair contract drift")
+terminal = json.loads(terminal_contract_path.read_text())
+validate_terminal(terminal)
+terminal_mutations = []
+def mutate_terminal(path, replacement):
+    item = deepcopy(terminal); cursor = item
+    for key in path[:-1]: cursor = cursor[key]
+    cursor[path[-1]] = replacement; terminal_mutations.append(item)
+mutate_terminal(["implementationBaselineCommit"], "0" * 40)
+mutate_terminal(["recoveryExecution", "recoveryResultSha256"], "0" * 64)
+mutate_terminal(["validatedState", "reconciledSerial"], 3)
+mutate_terminal(["validatedState", "managedAddressCount"], 12)
+mutate_terminal(["validatedObjectHistory", "lockObjectAbsent"], False)
+mutate_terminal(["prohibitedOperations", "terraformApplyReexecuted"], True)
+mutate_terminal(["closureDecision", "renewedZeroChangeProofRequired"], True)
+mutate_terminal(["closureDecision", "remoteS3StateIsOperationalSourceOfTruth"], False)
+mutate_terminal(["privacy", "objectVersionIdEmitted"], True)
+for index, item in enumerate(terminal_mutations, 1):
+    try: validate_terminal(item)
+    except (AttributeError, KeyError, TypeError, ValueError): continue
+    raise ValueError(f"terminal fail-open mutation {index}")
 mutations = []
 def mutate(path, replacement):
     item = deepcopy(contract); cursor = item
@@ -117,7 +175,7 @@ for marker in ("prior_saved_plan_apply_succeeded", "caller_identity_session_refr
     require(marker in source, f"executor marker missing: {marker}")
 tracked = subprocess.run(["git", "-C", str(root), "ls-files", "-s", "--", str(executor_path.relative_to(root)), str(test_path.relative_to(root)), str(validator_path.relative_to(root))], capture_output=True, text=True, check=True).stdout.splitlines()
 require(len(tracked) == 3 and all(line.startswith("100755 ") for line in tracked), "executable mode drift")
-print(f"v0.12.2.3.1.0.2.0.1.2.0.1 recovery contract and {len(mutations)} fail-closed mutations passed offline.")
+print(f"v0.12.2.3.1.0.2.0.1.2.0.1 recovery contracts and {len(mutations) + len(terminal_mutations)} fail-closed mutations passed offline.")
 PY
 
 python3 -m py_compile \

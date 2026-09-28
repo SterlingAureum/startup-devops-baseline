@@ -934,6 +934,12 @@ Incremental scope:
   baseline, identify External Secrets 2.8 as end-of-life, require exact managed
   add-on inventory plus unresolved chart/application mappings, and defer all
   version changes to a separate supportedness-repair design
+- v0.12.4.1.1 - platform supportedness repair design - delivered offline;
+  resolve the Load Balancer Controller, Argo Rollouts, Prometheus Operator and
+  Barman Cloud chart/application identities, define External Secrets
+  `2.8 -> 2.9 -> 2.10 -> 2.11` as the first one-minor-at-a-time repair track,
+  require one controller per reviewed window and retain all current version
+  pins and live-operation prohibitions pending exact candidate selection
 - v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
   database recovery, measured RTO/RPO, scoped disaster-recovery review and
   terminal cleanup/cost evidence - planned

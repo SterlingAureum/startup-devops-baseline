@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.4.1.1-platform-supportedness-repair-design` resolves the four remaining
+chart-to-application identities, makes External Secrets 2.8-to-2.11 the first
+sequential repair track, and defines controller-specific qualification without
+changing a version pin or authorizing live work. See the [v0.12.4.1.1 platform
+supportedness repair design](docs/V0.12.4.1.1_PLATFORM_SUPPORTEDNESS_REPAIR_DESIGN.md).
+
+Predecessor development checkpoint:
 `v0.12.4.1-official-compatibility-matrix` records the official-source review
 of the current Kubernetes 1.36 platform, keeps EKS 1.37 unselected until AWS
 lists it, identifies External Secrets 2.8 as end-of-life, and blocks live

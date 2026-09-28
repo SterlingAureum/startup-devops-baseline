@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "v0.12.4.1.1-platform-supportedness-repair-design-v1",
+  "version": "v0.12.4.1.1",
+  "status": "platform-supportedness-repair-designed-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "protectedMainBaselineCommit": "f9d90c05410c881023000650361b58023fa26d93",
+  "reviewBoundary": {
+    "reviewedAtDate": "2026-09-28",
+    "repositoryDeclarationsAreNotLiveObservation": true,
+    "runtimeNetworkLookupRequired": false,
+    "chartMetadataResolutionIsNotUpgradeAuthorization": true,
+    "compatibilityAndMaintainerSupportAreSeparateDecisions": true
+  },
+  "resolvedChartMappings": {
+    "awsLoadBalancerController": {
+      "repositoryChartVersion": "1.14.0",
+      "resolvedApplicationVersion": "v2.14.0",
+      "mappingStatus": "resolved",
+      "kubernetes136Decision": "requires-render-and-runtime-qualification",
+      "versionCandidateSelected": false
+    },
+    "argoRollouts": {
+      "repositoryChartVersion": "2.41.1",
+      "resolvedApplicationVersion": "v1.9.1",
+      "mappingStatus": "resolved",
+      "kubernetes136Decision": "requires-render-and-runtime-qualification",
+      "maintainerSupportPolicy": "latest-upstream-release-only",
+      "versionCandidateSelected": false
+    },
+    "kubePrometheusStack": {
+      "repositoryChartVersion": "88.5.0",
+      "resolvedPrometheusOperatorVersion": "v0.93.0",
+      "declaredKubernetesFloor": ">=1.25.0-0",
+      "mappingStatus": "resolved",
+      "kubernetes136Decision": "chart-metadata-compatible-crd-proof-required",
+      "versionCandidateSelected": false
+    },
+    "barmanCloudPlugin": {
+      "repositoryChartVersion": "0.7.0",
+      "resolvedApplicationVersion": "v0.13.0",
+      "mappingStatus": "resolved",
+      "kubernetes136Decision": "requires-cnpg-backup-restore-qualification",
+      "versionCandidateSelected": false
+    }
+  },
+  "externalSecretsRepair": {
+    "currentRepositoryVersion": "2.8.0",
+    "currentSupportStatus": "end-of-life",
+    "reviewedDestinationLine": "2.11",
+    "exactDestinationPatchSelected": false,
+    "orderedMinorPath": [
+      "2.8",
+      "2.9",
+      "2.10",
+      "2.11"
+    ],
+    "oneMinorPerReviewedChange": true,
+    "combineWithEksControlPlaneUpgrade": false,
+    "combineWithAnotherControllerUpgrade": false,
+    "requiredPerHopEvidence": [
+      "signed-chart-metadata-and-digest",
+      "release-notes-and-breaking-change-review",
+      "repository-api-and-custom-resource-inventory",
+      "helm-render-and-crd-diff",
+      "server-side-dry-run-in-disposable-environment",
+      "secret-refresh-and-rotation-qualification",
+      "argocd-sync-health-and-observability-qualification",
+      "rollback-or-forward-fix-decision"
+    ],
+    "versionDeclarationMutationAuthorized": false
+  },
+  "controllerQualificationDesign": {
+    "sharedRules": {
+      "oneControllerPerChangeWindow": true,
+      "exactCandidateAndDigestRequired": true,
+      "renderedManifestDiffRequired": true,
+      "crdDiffRequiredWhenPresent": true,
+      "liveQualificationRequiresFreshApproval": true,
+      "combineWithEksControlPlaneUpgrade": false,
+      "automaticRetry": false,
+      "automaticRollback": false
+    },
+    "awsLoadBalancerController": [
+      "iam-policy-diff",
+      "crd-and-targetgroupbinding-diff",
+      "ingress-alb-and-service-nlb-qualification"
+    ],
+    "argoRollouts": [
+      "no-active-rollout-or-promotion-at-upgrade",
+      "rollout-crd-and-analysis-template-diff",
+      "canary-pause-promote-abort-qualification"
+    ],
+    "kubePrometheusStack": [
+      "explicit-prometheus-operator-crd-handling",
+      "prometheus-rule-and-servicemonitor-render-diff",
+      "alerts-dashboards-and-target-health-qualification"
+    ],
+    "barmanCloudPlugin": [
+      "cloudnativepg-plugin-compatibility-review",
+      "objectstore-and-cluster-reference-diff",
+      "successful-backup-and-restore-rehearsal"
+    ]
+  },
+  "candidateSelectionPolicy": {
+    "blindLatestUpgradeAllowed": false,
+    "exactPatchSelectionRequiresSeparateCheckpoint": true,
+    "signedOrPublisherControlledMetadataRequired": true,
+    "releaseNotesRequired": true,
+    "repositoryPinChangesInThisIncrement": false,
+    "currentPinsRemainFrozen": true
+  },
+  "remainingUpgradeBlocks": [
+    "external-secrets-2.8-remains-end-of-life-in-repository",
+    "exact-platform-repair-candidates-and-digests-not-selected",
+    "managed-addon-installed-and-target-versions-not-live-resolved",
+    "provisional-eks-1.37-not-selected"
+  ],
+  "executionBoundary": {
+    "awsReadAuthorized": false,
+    "awsMutationAuthorized": false,
+    "terraformInitAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "terraformStateMutationAuthorized": false,
+    "kubernetesReadAuthorized": false,
+    "kubernetesMutationAuthorized": false,
+    "eksUpgradeAuthorized": false,
+    "addonUpgradeAuthorized": false,
+    "controllerUpgradeAuthorized": false,
+    "versionDeclarationMutationAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false
+  },
+  "nextCheckpoint": "v0.12.4.1.2-external-secrets-supportedness-repair-plan",
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "runsKubernetes": false,
+    "mutatesGithub": false
+  }
+}

@@ -891,7 +891,7 @@ Incremental scope:
 - v0.12.3 - release-promotion and environment-lifecycle convergence, retaining
   automatic test/prod Promotion PR preparation, human review and merge,
   production Environment approval, immutable digest identity and
-  `waiting_environment` without automatic EKS creation - in progress
+  `waiting_environment` without automatic EKS creation - completed
 - v0.12.3.1 - CI change-impact routing and stable required-check aggregation -
   delivered and integrated; preserve the existing
   required check, add a documentation-only fast route, replace image-publish
@@ -914,6 +914,11 @@ Incremental scope:
   result as environment-specific evidence, preserve stable fail-closed routing,
   correct superseded runtime-replay descriptions, and keep the already-applied
   Terraform refresh reconciliation paused pending a read-only recovery design
+- v0.12.3.4 - promotion/lifecycle convergence closure - delivered offline;
+  bind build-once immutable promotion, automatic test/prod PR preparation,
+  human merge, production Environment approval and `waiting_environment`,
+  prohibit application-owned infrastructure lifecycle, and retain the final
+  integrated dev/test/prod commercial rehearsal for v1.0 RC
 - v0.12.4 - EKS and platform dependency upgrade lifecycle, compatibility
   matrix, deprecated-API preflight, one-minor sequencing, data-plane/add-on/
   controller convergence, rollback/rebuild decision and dev/test evidence - planned

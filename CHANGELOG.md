@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.3.4
+
+- Close promotion and environment-lifecycle convergence around build-once immutable identity, ordered dev/test/prod Promotion PR preparation, human review/merge and production Environment approval.
+- Preserve `waiting_environment` when a disposable environment is absent and prohibit application workflows from creating, destroying or owning Terraform infrastructure.
+- Bind the GitHub-validated exact-release route from Promotion PR #169 without claiming live aws-prod promotion or a three-environment commercial rehearsal.
+- Add no AWS, Terraform, Kubernetes or GitHub mutation authority; advance the roadmap to v0.12.4 upgrade lifecycle work.
+
 ## v0.12.2.3.1.0.2.0.1.2.0.1.2
 
 - Record the successful protected-main-bound read-only post-apply recovery completed at `2026-09-28T09:13:27.586977Z` without publishing private resource identity, object version IDs or private paths.

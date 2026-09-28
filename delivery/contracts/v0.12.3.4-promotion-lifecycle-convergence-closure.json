@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "v0.12.3.4-promotion-lifecycle-convergence-closure-v1",
+  "version": "v0.12.3.4",
+  "status": "promotion-and-lifecycle-convergence-complete",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "protectedMainBaselineCommit": "14c972040ce22b4b8468d3f319d9ca750b073bfb",
+  "releaseModel": {
+    "buildOnce": true,
+    "sameDigestAcrossEnvironments": true,
+    "orderedEnvironments": ["aws-dev", "aws-test", "aws-prod"],
+    "testPromotionPrPreparedAutomatically": true,
+    "prodPromotionPrPreparedAutomatically": true,
+    "pullRequestReviewAndMergeHumanOwned": true,
+    "productionEnvironmentApprovalRequired": true,
+    "absentEnvironmentStatus": "waiting_environment"
+  },
+  "lifecycleBoundary": {
+    "applicationWorkflowOwnsTerraform": false,
+    "automaticEnvironmentCreation": false,
+    "automaticEnvironmentDestroy": false,
+    "automaticProductionMerge": false,
+    "automaticProductionRollback": false,
+    "maximumConcurrentDisposableEksEnvironments": 1
+  },
+  "evidence": {
+    "promotionPullRequest": 169,
+    "promotionPullRequestMerged": true,
+    "exactReleasePathRoutingGithubValidated": true,
+    "postPromotionStaticHistoricalAttestationIntegrated": true,
+    "awsProdLivePromotionExecuted": false,
+    "integratedThreeEnvironmentRehearsalExecuted": false
+  },
+  "executionBoundary": {
+    "awsOperationAuthorized": false,
+    "terraformOperationAuthorized": false,
+    "kubernetesOperationAuthorized": false,
+    "githubMutationAuthorized": false,
+    "environmentCreationAuthorized": false,
+    "environmentDestroyAuthorized": false,
+    "productionPromotionAuthorized": false,
+    "automaticRetryAuthorized": false
+  },
+  "nextCheckpoint": "v0.12.4-upgrade-lifecycle",
+  "deferred": {
+    "finalIntegratedDevTestProdCommercialRehearsal": "v1.0-rc.3",
+    "repositoryPhysicalRestructure": "v1.0",
+    "repositoryWideHumanReview": "v1.0"
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "runsKubernetes": false,
+    "mutatesGithub": false
+  }
+}

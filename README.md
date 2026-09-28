@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.3.4-promotion-lifecycle-convergence-closure` closes the application
+release/lifecycle model without live infrastructure work: build once, promote
+the same digest through reviewed PRs, require production Environment approval,
+and return `waiting_environment` instead of creating missing EKS environments.
+See [v0.12.3.4 promotion/lifecycle convergence closure](docs/V0.12.3.4_PROMOTION_LIFECYCLE_CONVERGENCE_CLOSURE.md).
+
+Predecessor development checkpoint:
 `v0.12.3.3-ci-feedback-efficiency-closure` records the converged local full
 quality gate, preserves fail-closed change routing and keeps the paused
 Terraform exercise outside the CI repair. See

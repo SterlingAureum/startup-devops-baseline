@@ -202,15 +202,19 @@ require(modes[str(validator_path.relative_to(root))] == "100755", "validator mod
 print(f"v0.12.3.3 CI feedback-efficiency closure and {len(mutations)} fail-closed mutations passed offline.")
 PYTHON
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.3.4-promotion-lifecycle-closure.py" \
+  --root "${ROOT_DIR}"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only
-  echo "v0.12.3.3 structure-only CI feedback-efficiency closure passed; its historical Terraform pause boundary remains preserved."
+  echo "v0.12.3.4 structure-only promotion/lifecycle convergence closure passed; no live action was executed."
   exit 0
 fi
 
 bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"
-echo "v0.12.3.3 CI feedback-efficiency closure passed; its historical Terraform pause boundary remains preserved."
+echo "v0.12.3.4 promotion/lifecycle convergence closure passed; no live action was executed."

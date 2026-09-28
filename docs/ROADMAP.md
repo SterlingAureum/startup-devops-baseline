@@ -928,6 +928,12 @@ Incremental scope:
   rendered and live deprecated-API preflight, and order one-minor aws-dev then
   aws-test convergence without granting any AWS, Terraform, Kubernetes or
   upgrade authority
+- v0.12.4.1 - official compatibility matrix - delivered offline with the
+  upgrade gate blocked; keep EKS 1.37 unselected until Amazon EKS lists it,
+  confirm the current Argo CD, cert-manager, CloudNativePG and Karpenter 1.36
+  baseline, identify External Secrets 2.8 as end-of-life, require exact managed
+  add-on inventory plus unresolved chart/application mappings, and defer all
+  version changes to a separate supportedness-repair design
 - v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
   database recovery, measured RTO/RPO, scoped disaster-recovery review and
   terminal cleanup/cost evidence - planned

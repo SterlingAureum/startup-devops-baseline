@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.4.1-official-compatibility-matrix` records the official-source review
+of the current Kubernetes 1.36 platform, keeps EKS 1.37 unselected until AWS
+lists it, identifies External Secrets 2.8 as end-of-life, and blocks live
+upgrade work pending managed-add-on and platform supportedness closure. See the
+[v0.12.4.1 official compatibility matrix](docs/V0.12.4.1_OFFICIAL_COMPATIBILITY_MATRIX.md).
+
+Predecessor development checkpoint:
 `v0.12.4.0-upgrade-lifecycle-design-foundation` freezes the repository-declared
 EKS/platform inventory, one-minor dev-before-test sequence, deprecated-API gate
 and rollback-versus-rebuild boundary without selecting a target version or

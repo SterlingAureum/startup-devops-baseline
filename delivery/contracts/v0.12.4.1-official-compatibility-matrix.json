@@ -1,0 +1,162 @@
+{
+  "schemaVersion": "v0.12.4.1-official-compatibility-matrix-v1",
+  "version": "v0.12.4.1",
+  "status": "official-compatibility-matrix-reviewed-upgrade-blocked",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "protectedMainBaselineCommit": "397e079433942e222c09f34c7e0b83e28b179f8f",
+  "reviewBoundary": {
+    "reviewedAtDate": "2026-09-28",
+    "officialSourcesOnly": true,
+    "runtimeNetworkLookupRequired": false,
+    "repositoryDeclarationsAreNotLiveObservation": true,
+    "upstreamKubernetesAvailabilityDoesNotAuthorizeEksSelection": true
+  },
+  "officialSources": {
+    "eksStandardSupport": "https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions-standard.html",
+    "eksUpgrade": "https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html",
+    "eksAddonCompatibility": "https://docs.aws.amazon.com/eks/latest/userguide/addon-compat.html",
+    "eksRollback": "https://docs.aws.amazon.com/eks/latest/userguide/rollback-cluster.html",
+    "karpenterCompatibility": "https://karpenter.sh/docs/upgrading/compatibility/",
+    "argoCdInstallation": "https://argo-cd.readthedocs.io/en/stable/operator-manual/installation/",
+    "certManagerReleases": "https://cert-manager.io/docs/releases/",
+    "cloudNativePgChart": "https://github.com/cloudnative-pg/charts/blob/main/charts/cloudnative-pg/README.md",
+    "cloudNativePgRelease": "https://cloudnative-pg.io/docs/1.30/release_notes/v1.30/",
+    "externalSecretsSupport": "https://external-secrets.io/latest/introduction/stability-support/",
+    "barmanCloudReleases": "https://github.com/cloudnative-pg/plugin-barman-cloud/releases"
+  },
+  "eksCandidateGate": {
+    "currentRepositoryMinor": "1.36",
+    "provisionalNextMinor": "1.37",
+    "provisionalNextMinorListedOnReviewedEksStandardSupportPage": false,
+    "targetEksMinorSelected": false,
+    "selectionStatus": "blocked-awaiting-amazon-eks-availability",
+    "oneMinorAtATime": true,
+    "upstreamReleaseIsInsufficientEvidence": true
+  },
+  "currentCompatibilityMatrix": {
+    "argocd": {
+      "repositoryVersion": "v3.5.2",
+      "resolvedApplicationVersion": "3.5.2",
+      "kubernetes136Status": "officially-tested",
+      "supportStatus": "current-compatible"
+    },
+    "certManager": {
+      "repositoryVersion": "v1.21.0",
+      "resolvedApplicationVersion": "1.21.0",
+      "kubernetes136Status": "officially-tested",
+      "supportStatus": "current-compatible"
+    },
+    "cloudNativePg": {
+      "repositoryChartVersion": "0.29.0",
+      "resolvedApplicationVersion": "1.30.0",
+      "kubernetes136Status": "officially-supported",
+      "supportStatus": "current-compatible"
+    },
+    "karpenter": {
+      "repositoryVersion": "1.14.0",
+      "minimumVersionForKubernetes136": "1.13.0",
+      "kubernetes136Status": "officially-compatible",
+      "supportStatus": "current-compatible"
+    },
+    "externalSecrets": {
+      "repositoryVersion": "2.8.0",
+      "kubernetes136Status": "compatible",
+      "supportStatus": "end-of-life",
+      "supportEndedAtDate": "2026-08-07"
+    },
+    "awsLoadBalancerController": {
+      "repositoryChartVersion": "1.14.0",
+      "kubernetes136Status": "unresolved",
+      "supportStatus": "chart-to-application-version-mapping-required"
+    },
+    "argoRollouts": {
+      "repositoryChartVersion": "2.41.1",
+      "kubernetes136Status": "unresolved",
+      "supportStatus": "official-matrix-evidence-required"
+    },
+    "kubePrometheusStack": {
+      "repositoryChartVersion": "88.5.0",
+      "kubernetes136Status": "unresolved",
+      "supportStatus": "chart-to-application-version-mapping-required"
+    },
+    "barmanCloudPlugin": {
+      "repositoryChartVersion": "0.7.0",
+      "latestObservedRelease": "0.15.0",
+      "kubernetes136Status": "unresolved",
+      "supportStatus": "official-supportedness-evidence-required"
+    }
+  },
+  "managedAddonGate": {
+    "addons": [
+      "aws-ebs-csi-driver",
+      "coredns",
+      "kube-proxy",
+      "vpc-cni"
+    ],
+    "repositoryVersionsPinned": false,
+    "exactInstalledVersionsKnown": false,
+    "candidateVersionsSelected": false,
+    "liveResolutionRequiredBeforeUpgrade": true,
+    "officialResolutionCommandTemplate": "aws eks describe-addon-versions --addon-name <addon> --kubernetes-version <target-minor>",
+    "automaticAddonUpgradeExpected": false
+  },
+  "platformSupportednessRepair": {
+    "externalSecretsCurrentLine": "2.8",
+    "externalSecretsReviewedCandidateLine": "2.11",
+    "sequentialMinorPath": [
+      "2.8",
+      "2.9",
+      "2.10",
+      "2.11"
+    ],
+    "exactTargetPatchSelected": false,
+    "separateFromEksControlPlaneUpgrade": true,
+    "versionMutationAuthorized": false,
+    "unresolvedChartMappingsMustClose": true
+  },
+  "conditionalEksRollback": {
+    "availableWhenAwsEligibilityChecksPass": true,
+    "primaryRecovery": false,
+    "automatic": false,
+    "freshApprovalRequired": true,
+    "maximumMinorDistance": 1,
+    "eligibilityWindowDays": 7,
+    "previousVersionMustRemainSupported": true,
+    "managedNodesAndAddonsHandledSeparately": true,
+    "applicationAndStateRollbackIncluded": false
+  },
+  "overallGate": {
+    "status": "blocked",
+    "reasons": [
+      "provisional-eks-1.37-not-listed-on-reviewed-amazon-eks-standard-support-page",
+      "managed-addon-exact-versions-and-target-compatibility-unresolved",
+      "external-secrets-2.8-end-of-life",
+      "platform-chart-application-mappings-and-official-supportedness-unresolved"
+    ],
+    "eksUpgradeAuthorized": false,
+    "platformVersionChangeAuthorized": false
+  },
+  "executionBoundary": {
+    "awsReadAuthorized": false,
+    "awsMutationAuthorized": false,
+    "terraformInitAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "terraformStateMutationAuthorized": false,
+    "kubernetesReadAuthorized": false,
+    "kubernetesMutationAuthorized": false,
+    "eksUpgradeAuthorized": false,
+    "addonUpgradeAuthorized": false,
+    "controllerUpgradeAuthorized": false,
+    "versionDeclarationMutationAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false
+  },
+  "nextCheckpoint": "v0.12.4.1.1-platform-supportedness-repair-design",
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "runsKubernetes": false,
+    "mutatesGithub": false
+  }
+}

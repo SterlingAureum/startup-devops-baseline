@@ -14,6 +14,7 @@ import subprocess
 
 root = Path(os.environ["ROOT_DIR"])
 contract_path = root / "delivery/contracts/v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.json"
+repair_contract_path = root / "delivery/contracts/v0.12.2.3.1.0.2.0.1.2.0.1.1-refresh-plan-shape-repair.json"
 example_path = root / "delivery/examples/v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery-request.example.json"
 executor_path = root / "scripts/execute-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.py"
 test_path = root / "scripts/test-v0.12.2.3.1.0.2.0.1.2.0.1-post-apply-state-recovery.py"
@@ -43,6 +44,45 @@ def validate(value):
 
 contract = json.loads(contract_path.read_text())
 validate(contract)
+repair = json.loads(repair_contract_path.read_text())
+require(repair == {
+    "schemaVersion": "v0.12.2.3.1.0.2.0.1.2.0.1.1-refresh-plan-shape-repair-v1",
+    "version": "v0.12.2.3.1.0.2.0.1.2.0.1.1",
+    "status": "delivered-awaiting-fresh-request-and-separate-read-only-approval",
+    "repository": "SterlingAureum/startup-devops-baseline",
+    "implementationBaselineCommit": "d46b947adac45646b39edf65a64e9ad52754ad9f",
+    "failedVerification": {
+        "privateRequestSha256": "995d38ad01aff1ebd47dda93e39b43ab22d3cc84e2336aeafe486f544d91a47f",
+        "operationalCommandsExecuted": [],
+        "savedPlanApplyReexecuted": False,
+        "failure": "reviewed-refresh-only-plan-resource-changes-key-omitted"
+    },
+    "repair": {
+        "acceptMissingResourceChangesAsZero": True,
+        "acceptExplicitEmptyResourceChanges": True,
+        "rejectNonEmptyResourceChanges": True,
+        "reviewedResourceDriftCount": 7,
+        "liveAuthorityAdded": False
+    },
+    "executionBoundary": {
+        "awsAndS3ReadOnly": True,
+        "terraformStatePullListShowOnly": True,
+        "terraformInit": False,
+        "terraformPlan": False,
+        "terraformApply": False,
+        "statePush": False,
+        "destroy": False,
+        "directS3Mutation": False,
+        "automaticRetry": False,
+        "automaticRollback": False
+    },
+    "packageProducer": {
+        "runsAws": False,
+        "runsTerraform": False,
+        "readsPrivateEvidence": False,
+        "grantsLiveAuthority": False
+    }
+}, "shape-repair contract drift")
 mutations = []
 def mutate(path, replacement):
     item = deepcopy(contract); cursor = item
@@ -73,7 +113,7 @@ example["expectedAwsAccountId"] = "1" * 12
 example["approval"] = {"notBeforeUtc": "2026-09-26T00:00:00Z", "expiresAtUtc": "2026-09-26T01:00:00Z"}
 executor.validate_request(example)
 source = executor_path.read_text()
-for marker in ("prior_saved_plan_apply_succeeded", "caller_identity_session_refresh_count", "terraform_apply_reexecuted", "Current state semantic projection changed"):
+for marker in ("prior_saved_plan_apply_succeeded", "caller_identity_session_refresh_count", "terraform_apply_reexecuted", "Current state semantic projection changed", 'plan.get("resource_changes", [])'):
     require(marker in source, f"executor marker missing: {marker}")
 tracked = subprocess.run(["git", "-C", str(root), "ls-files", "-s", "--", str(executor_path.relative_to(root)), str(test_path.relative_to(root)), str(validator_path.relative_to(root))], capture_output=True, text=True, check=True).stdout.splitlines()
 require(len(tracked) == 3 and all(line.startswith("100755 ") for line in tracked), "executable mode drift")

@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.2.3.1.0.2.0.1.2.0.1.1
+
+- Accept Terraform's omitted `resource_changes` member as the exact zero-resource-change equivalent of an explicit empty array during command-free post-apply recovery verification.
+- Continue to require the seven reviewed `resource_drift` entries and reject every non-empty or non-list resource-change representation.
+- Record that the failed verification executed no AWS or Terraform command, did not repeat the already successful saved-plan apply, and requires a fresh protected-main request and approval window.
+- Preserve the read-only recovery boundary and add no init, plan, apply, state-push, destroy, direct-S3-mutation, retry or rollback authority.
+
 ## v0.12.3.3
 
 - Close the v0.12 CI feedback-efficiency repair after the reviewed local full gate fell from 302 reported seconds to 29 reported seconds; retain the measurement as environment-specific evidence rather than a performance SLA.

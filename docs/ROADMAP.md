@@ -940,6 +940,11 @@ Incremental scope:
   `2.8 -> 2.9 -> 2.10 -> 2.11` as the first one-minor-at-a-time repair track,
   require one controller per reviewed window and retain all current version
   pins and live-operation prohibitions pending exact candidate selection
+- v0.12.4.1.2 - External Secrets supportedness repair plan - delivered
+  offline; select exact `2.9.0`, `2.10.0` and `2.11.0` candidates, treat the
+  first two as mandatory EOL bridges, freeze the namespace-scoped v1/IRSA
+  contract, and require publisher chart digests plus deterministic render and
+  CRD/RBAC evidence before any GitOps version mutation or live approval
 - v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
   database recovery, measured RTO/RPO, scoped disaster-recovery review and
   terminal cleanup/cost evidence - planned

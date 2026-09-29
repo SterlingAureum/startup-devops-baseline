@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.4.1.2-external-secrets-supportedness-repair-plan` selects the exact
+`2.8.0 -> 2.9.0 -> 2.10.0 -> 2.11.0` repair path, freezes the current
+namespace-scoped AWS/IRSA shape and requires chart digest, render and CRD proof
+before any pin can change. See the [v0.12.4.1.2 External Secrets supportedness
+repair plan](docs/V0.12.4.1.2_EXTERNAL_SECRETS_SUPPORTEDNESS_REPAIR_PLAN.md).
+
+Predecessor development checkpoint:
 `v0.12.4.1.1-platform-supportedness-repair-design` resolves the four remaining
 chart-to-application identities, makes External Secrets 2.8-to-2.11 the first
 sequential repair track, and defines controller-specific qualification without

@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.4.1.2
+
+- Select exact External Secrets candidates `2.9.0`, `2.10.0` and `2.11.0` while preserving the publisher-required one-minor sequence from the current `2.8.0` pin.
+- Treat `2.9.0` and `2.10.0` as required EOL bridges rather than supported steady states; retain `2.11.0` as the reviewed Kubernetes 1.36 destination.
+- Freeze the current two-resource, namespace-scoped `external-secrets.io/v1` and IRSA shape and prohibit cluster-scoped resources, PushSecret expansion, static AWS credentials and secret-value evidence.
+- Require publisher chart SHA-256, chart/application identity, exact repository-values render, CRD/RBAC/webhook/deployment diff and values compatibility before any GitOps pin changes.
+- Authorize no artifact download, version mutation, AWS, Kubernetes, Terraform, Argo CD, retry or rollback operation.
+
 ## v0.12.4.1.1
 
 - Resolve AWS Load Balancer Controller chart `1.14.0` to application `v2.14.0`, Argo Rollouts chart `2.41.1` to `v1.9.1`, kube-prometheus-stack `88.5.0` to Prometheus Operator `v0.93.0`, and plugin-barman-cloud `0.7.0` to `v0.13.0`.

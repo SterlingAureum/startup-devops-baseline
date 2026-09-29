@@ -226,6 +226,10 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/check-v0.12.4.1.3-external-secrets-artifact-render-proof.py" \
   --root "${ROOT_DIR}"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.1.4-external-secrets-2.9.0-hop-plan.py" \
+  --root "${ROOT_DIR}"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"

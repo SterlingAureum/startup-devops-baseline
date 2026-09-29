@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.4.1.4-external-secrets-2.9.0-hop-plan` binds the first bridge release's
+official change review to a four-stage aws-dev approval chain, treating the
+future GitOps pin merge as a live operation while automated Argo sync is
+enabled. It changes no pin and authorizes no live command. See the
+[v0.12.4.1.4 External Secrets 2.9.0 first-hop
+plan](docs/V0.12.4.1.4_EXTERNAL_SECRETS_2.9.0_HOP_PLAN.md).
+
+Predecessor development checkpoint:
 `v0.12.4.1.3-external-secrets-artifact-and-render-proof` binds the official
 chart bytes and deterministic exact-values renders for `2.8.0` through
 `2.11.0`, proves stable object/RBAC topology and records the reviewed CRD

@@ -954,6 +954,11 @@ Incremental scope:
   bind the upstream change review to separate aws-dev preflight/dry-run, pin
   merge/automatic Argo sync, post-sync proof and conditional Git-revert
   approvals while keeping `2.8.0` pinned and all live authority disabled
+- v0.12.4.1.5 - External Secrets live preflight contract - delivered offline;
+  add command-free private request verification and a separately approved
+  aws-dev read/server-dry-run executor, preserve the `2.8.0` live and repository
+  pin, exclude Secret reads and persistent mutations, and require private
+  evidence review before any later GitOps pin change
 - v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
   database recovery, measured RTO/RPO, scoped disaster-recovery review and
   terminal cleanup/cost evidence - planned

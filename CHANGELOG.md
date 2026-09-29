@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.4.1.1
+
+- Resolve AWS Load Balancer Controller chart `1.14.0` to application `v2.14.0`, Argo Rollouts chart `2.41.1` to `v1.9.1`, kube-prometheus-stack `88.5.0` to Prometheus Operator `v0.93.0`, and plugin-barman-cloud `0.7.0` to `v0.13.0`.
+- Separate chart identity, Kubernetes compatibility qualification and maintainer support instead of treating a resolved mapping or a floating latest release as upgrade authority.
+- Make External Secrets `2.8 -> 2.9 -> 2.10 -> 2.11` the first supportedness-repair track, one reviewed minor and one controller per change window.
+- Define component-specific render, CRD, IAM, rollout, observability and backup/restore evidence while leaving exact target patches and immutable digests for a separate plan.
+- Change no Helm, GitOps or Terraform pin and grant no AWS, Kubernetes, Terraform, EKS, add-on, controller, retry or rollback authority.
+
 ## v0.12.4.1.0.1
 
 - Keep the compatibility-matrix checker tracked as Git mode `100755` while accepting normal owner-executable worktree modes produced by different POSIX umasks.

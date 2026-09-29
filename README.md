@@ -3,6 +3,13 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.4.1.5-external-secrets-live-preflight-contract` provides a command-free
+request verification phase and a separately approved aws-dev read/server-dry-run
+executor. It keeps the operator pinned to `2.8.0`, reads no Secret value and
+grants no GitOps upgrade authority. See the [v0.12.4.1.5 External Secrets live
+preflight contract](docs/V0.12.4.1.5_EXTERNAL_SECRETS_LIVE_PREFLIGHT_CONTRACT.md).
+
+Predecessor development checkpoint:
 `v0.12.4.1.4-external-secrets-2.9.0-hop-plan` binds the first bridge release's
 official change review to a four-stage aws-dev approval chain, treating the
 future GitOps pin merge as a live operation while automated Argo sync is

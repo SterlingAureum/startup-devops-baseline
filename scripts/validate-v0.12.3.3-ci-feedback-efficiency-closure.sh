@@ -230,9 +230,17 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/check-v0.12.4.1.4-external-secrets-2.9.0-hop-plan.py" \
   --root "${ROOT_DIR}"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.1.5-external-secrets-live-preflight-contract.py" \
+  --root "${ROOT_DIR}"
+
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/test-v0.12.4.1.5-external-secrets-live-preflight.py"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
-  "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh"
+  "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" \
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5-external-secrets-live-preflight.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only

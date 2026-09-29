@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.4.1.5
+
+- Add a private, one-hour-maximum request contract whose `verify` phase binds exact protected main, chart/render SHA-256 values and a new private output directory without running AWS, Kubernetes or Helm commands.
+- Add a separately approved aws-dev executor limited to AWS identity/EKS reads, Kubernetes resource reads and exactly one 37-object name-only server-side dry-run of the reviewed External Secrets `2.9.0` render.
+- Require the live operator to remain `2.8.0`, both Argo CD Applications to be Synced/Healthy/idle, three Deployments to be available, IRSA/RBAC and repository-used v1 CRDs to remain exact, and SecretStore/ExternalSecret to remain Ready on AWSCURRENT.
+- Compare canonical protected projections before and after dry-run, retain raw evidence privately at mode `0600`, and emit only redacted booleans, counts, versions and digests.
+- Prohibit Secret reads, persistent Kubernetes mutation, Git pin changes, Argo CD or Helm operations, automatic retry and automatic rollback; successful preflight still requires human evidence review and a later approval.
+
 ## v0.12.4.1.4
 
 - Bind the official External Secrets v2.9.0 release-note review and exact chart/application identities to the already verified chart and render digests.

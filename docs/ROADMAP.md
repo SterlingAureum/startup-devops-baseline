@@ -945,6 +945,11 @@ Incremental scope:
   first two as mandatory EOL bridges, freeze the namespace-scoped v1/IRSA
   contract, and require publisher chart digests plus deterministic render and
   CRD/RBAC evidence before any GitOps version mutation or live approval
+- v0.12.4.1.3 - External Secrets artifact and render proof - delivered
+  offline; bind official `2.8.0` through `2.11.0` chart bytes and application
+  identities, record deterministic exact-values renders, prove stable
+  object/RBAC/webhook/ServiceAccount topology and review all CRD changes while
+  retaining the `2.8.0` pin pending a separate first-hop plan and live gate
 - v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
   database recovery, measured RTO/RPO, scoped disaster-recovery review and
   terminal cleanup/cost evidence - planned

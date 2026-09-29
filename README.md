@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.4.1.3-external-secrets-artifact-and-render-proof` binds the official
+chart bytes and deterministic exact-values renders for `2.8.0` through
+`2.11.0`, proves stable object/RBAC topology and records the reviewed CRD
+changes without changing the GitOps pin or authorizing live work. See the
+[v0.12.4.1.3 External Secrets artifact and render
+proof](docs/V0.12.4.1.3_EXTERNAL_SECRETS_ARTIFACT_RENDER_PROOF.md).
+
+Predecessor development checkpoint:
 `v0.12.4.1.2-external-secrets-supportedness-repair-plan` selects the exact
 `2.8.0 -> 2.9.0 -> 2.10.0 -> 2.11.0` repair path, freezes the current
 namespace-scoped AWS/IRSA shape and requires chart digest, render and CRD proof

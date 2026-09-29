@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.4.1.3
+
+- Bind the official External Secrets chart `2.8.0`, `2.9.0`, `2.10.0` and `2.11.0` release assets to their GitHub API SHA-256 values, release commits and chart/application metadata.
+- Render the exact repository values twice with pinned Helm `v3.18.6` and Kubernetes `1.36.0`; record byte-identical manifests, lint success and deterministic render digests.
+- Prove stable 37-object topology, 20 namespaced CRDs, unchanged RBAC/webhook/ServiceAccount semantics and no cluster-resource or PushSecret CRD expansion.
+- Review every changed CRD against the repository's exact namespaced v1 ExternalSecret and AWS Secrets Manager SecretStore shape; retain v1 served/storage compatibility across all hops.
+- Keep `targetRevision: 2.8.0`, commit no chart archive or rendered secret, and grant no AWS, Kubernetes, Argo CD, version mutation, retry or rollback authority.
+
 ## v0.12.4.1.2
 
 - Select exact External Secrets candidates `2.9.0`, `2.10.0` and `2.11.0` while preserving the publisher-required one-minor sequence from the current `2.8.0` pin.

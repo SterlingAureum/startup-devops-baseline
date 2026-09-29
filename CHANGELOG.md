@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.4.1.4
+
+- Bind the official External Secrets v2.9.0 release-note review and exact chart/application identities to the already verified chart and render digests.
+- Confirm that explicit repository strategy values avoid the v1 default-removal risk and that the new Secret template-target restriction is not exercised.
+- Separate live preflight/server dry-run, reviewed pin merge/automatic Argo sync, post-sync qualification and conditional Git revert into fresh approval stages.
+- Require name-only full-render server-side dry-run, exact aws-dev/IRSA/RBAC/topology checks and Ready/AWSCURRENT reconciliation without reading or emitting secret values.
+- Keep `targetRevision: 2.8.0`; authorize no network, AWS, Kubernetes, GitHub, Argo CD, secret read, retry or rollback operation.
+
 ## v0.12.4.1.3
 
 - Bind the official External Secrets chart `2.8.0`, `2.9.0`, `2.10.0` and `2.11.0` release assets to their GitHub API SHA-256 values, release commits and chart/application metadata.

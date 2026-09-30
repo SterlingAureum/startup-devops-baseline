@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.5.0.1-aws-dev-create-plan-management-cidr-recovery-v1",
+  "version": "v0.12.4.1.5.0.5.0.1",
+  "status": "aws-dev-create-plan-management-cidr-recovery-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "4d4d3db2fe6e6e194e979131799ddfff5b1b7487",
+  "designedAtDate": "2026-09-30",
+  "incident": {
+    "controlPlaneCommit": "4d4d3db2fe6e6e194e979131799ddfff5b1b7487",
+    "privateFailedPlanRequestSha256": "5d915fac07cbcc4ea0bfd763b1a78230ac66bc969c623498d1a4056868d0c151",
+    "failedBinaryPlanSha256": "bc99d8d8d1c2a5b8f163f983e953b1fd64d3f03ed44fd86c90bf120b08e2d781",
+    "failedProviderLockfileSha256": "a824bda667aac25533101eb99e1b5c6ec5415cc5f2e773793f7b1699b453fd6f",
+    "failureClass": "eks-public-endpoint-missing-restricted-cidr",
+    "terraformInitSucceeded": true,
+    "terraformPlanSucceeded": false,
+    "terraformShowExecuted": false,
+    "terraformApplyExecuted": false,
+    "failedBinaryPlanApplyEligible": false,
+    "preserveAllFailedEvidence": true
+  },
+  "privateRequest": {
+    "schemaVersion": "v0.12.4.1.5.0.5.0.1-aws-dev-create-plan-recovery-request-v1",
+    "operation": "recover-aws-dev-create-plan-with-reviewed-management-cidr",
+    "maximumApprovalWindowSeconds": 7200,
+    "minimumRemainingApprovalSeconds": 900,
+    "maximumPlanReviewLifetimeSeconds": 28800,
+    "managementCidrMustBeOneGloballyRoutableIpv4Slash32": true,
+    "managementCidrMustRemainPrivate": true,
+    "requestAndInputsMustRemainOutsideRepository": true,
+    "privateFileMode": "0600",
+    "privateDirectoryMode": "0700",
+    "recoveryOutputAndSourceMustBeNew": true
+  },
+  "verifyPhase": {
+    "protectedMainMustBeExactAndClean": true,
+    "failedRequestAndArtifactDigestsMustMatch": true,
+    "failedPlanErrorMustBeExactCidrPrecondition": true,
+    "failedProviderLockfileMustMatch": true,
+    "preflightChainAndTerraformSourceMustMatch": true,
+    "managementCidrMustPassPrivateValidation": true,
+    "awsCommandsAllowed": false,
+    "terraformCommandsAllowed": false,
+    "operationalCommandsExecuted": []
+  },
+  "executePhase": {
+    "requiredConfirmationVariable": "CONFIRM_AWS_DEV_CREATE_PLAN_RECOVERY",
+    "requiredConfirmationValue": "recover-aws-dev-create-plan-with-reviewed-management-cidr",
+    "readOnlyAwsValidationBeforePlanning": true,
+    "requiredIncidentLockObjectVersionCount": 1,
+    "requiredIncidentLockDeleteMarkerCount": 1,
+    "remoteStateVersionCountMustRemain": 0,
+    "remoteStateDeleteMarkerCountMustRemain": 0,
+    "providerLockfileCopiedFromFailedAttempt": true,
+    "terraformInitArguments": [
+      "init",
+      "-input=false",
+      "-reconfigure",
+      "-lockfile=readonly",
+      "-backend-config=PRIVATE_COPY"
+    ],
+    "terraformPlanManagementCidrArgument": "-var=eks_public_access_cidrs=[PRIVATE_IPV4/32]",
+    "terraformPlanMode": "saved-create-plan",
+    "terraformPlanLockTimeout": "0s",
+    "expectedPlanManagedActions": [
+      "create"
+    ],
+    "expectedPlanDataActions": [
+      "read",
+      "no-op"
+    ],
+    "resourceDriftCountMustBe": 0,
+    "importCountMustBe": 0,
+    "planMustBeCompleteAndApplyable": true,
+    "terraformApplyAllowed": false,
+    "automaticRetry": false
+  },
+  "lockHistoryBoundary": {
+    "failedAttemptLockMustBeAbsentBeforeRecovery": true,
+    "onePriorFailedLockCycleRequired": true,
+    "oneRecoveryLockObjectVersionAllowed": true,
+    "oneRecoveryLockDeleteMarkerAllowed": true,
+    "stateObjectWriteAllowed": false,
+    "directS3MutationAllowed": false,
+    "forceUnlockAllowed": false
+  },
+  "privacyBoundary": {
+    "publicResultContainsManagementCidr": false,
+    "publicResultContainsRawResourceIdentity": false,
+    "publicResultContainsObjectVersionId": false,
+    "privateRequestSha256BindsManagementCidr": true
+  },
+  "forbiddenOperations": [
+    "terraform-apply",
+    "terraform-destroy",
+    "terraform-state-migration",
+    "terraform-state-push",
+    "terraform-force-unlock",
+    "direct-s3-state-mutation",
+    "direct-s3-lock-mutation",
+    "iam-policy-attachment",
+    "kubernetes-command",
+    "secret-value-read",
+    "failed-plan-apply",
+    "failed-evidence-delete",
+    "automatic-retry",
+    "automatic-rollback"
+  ],
+  "overallGate": {
+    "status": "blocked-awaiting-private-recovery-request-verification-and-separate-plan-approval",
+    "recoveryPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "environmentCreated": false,
+    "stateWritten": false,
+    "failedEvidenceDeleted": false
+  },
+  "successor": {
+    "version": "v0.12.4.1.5.0.6",
+    "scope": "reviewed-aws-dev-exact-recovery-saved-create-plan-apply",
+    "requiresHumanReviewOfPrivatePlan": true,
+    "maximumApplyApprovalWindowSeconds": 10800,
+    "authorizedByThisCheckpoint": false
+  }
+}

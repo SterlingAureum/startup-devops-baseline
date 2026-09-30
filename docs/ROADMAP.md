@@ -970,6 +970,10 @@ Incremental scope:
   owner-readable backend configuration, keep verify command-free, and restrict
   separately approved execution to EKS absence plus S3/KMS/IAM read-only proof
   and private tracked-source staging without Terraform init, plan or apply
+- v0.12.4.1.5.0.5.0.1 - AWS dev create-plan management CIDR recovery -
+  preserve the exact failed plan attempt, privately bind one globally routable
+  management `/32`, reuse the reviewed provider lockfile read-only, verify the
+  failed lock lifecycle and produce one new saved plan without apply.
 - v0.12.4.1.5.0.5 - guarded AWS dev remote-state saved create plan -
   delivered offline; consume the human-reviewed clean-room preflight and permit
   a separately approved `terraform init -reconfigure` plus one saved create-only

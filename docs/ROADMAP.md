@@ -965,6 +965,11 @@ Incremental scope:
   the minimum v0.12.5 remote-state rebuild prerequisite, and require isolated
   read-only preflight, saved plan, human review, exact apply, GitOps convergence,
   upgrade qualification, teardown and residual-cost approval stages
+- v0.12.4.1.5.0.4 - guarded AWS dev remote-state clean-room preflight -
+  delivered offline; activate only the dev partial S3 backend, require an exact
+  owner-readable backend configuration, keep verify command-free, and restrict
+  separately approved execution to EKS absence plus S3/KMS/IAM read-only proof
+  and private tracked-source staging without Terraform init, plan or apply
 - v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
   database recovery, measured RTO/RPO, scoped disaster-recovery review and
   terminal cleanup/cost evidence - planned; the minimum aws-dev remote-state

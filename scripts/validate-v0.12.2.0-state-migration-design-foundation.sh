@@ -259,13 +259,23 @@ if successor_path.exists():
 else:
     require('backend "s3"' not in bootstrap_backend_path.read_text(), "backend activated early")
 
+dev_clean_room_successor_path = root / "delivery/contracts/v0.12.4.1.5.0.4-guarded-aws-dev-remote-state-clean-room-preflight.json"
 for relative in (
     "infra/terraform/aws/runtime-identities/backend.tf",
     "infra/terraform/aws/environments/dev/backend.tf",
     "infra/terraform/aws/environments/test/backend.tf",
     "infra/terraform/aws/environments/prod/backend.tf",
 ):
-    require('backend "s3"' not in (root / relative).read_text(), f"backend activated early: {relative}")
+    backend = (root / relative).read_text()
+    if relative == "infra/terraform/aws/environments/dev/backend.tf" and dev_clean_room_successor_path.exists():
+        dev_successor = load(dev_clean_room_successor_path)
+        require(dev_successor.get("version") == "v0.12.4.1.5.0.4", "unknown dev backend successor")
+        require(dev_successor.get("status") == "aws-dev-remote-state-clean-room-preflight-ready-offline", "unsafe dev backend successor")
+        require(backend.count('backend "s3" {}') == 1, "dev partial backend declaration drift")
+        for forbidden in ("bucket =", "key =", "kms_key_id", "allowed_account_ids", "access_key", "secret_key"):
+            require(forbidden not in backend, f"tracked dev backend value found: {forbidden}")
+    else:
+        require('backend "s3"' not in backend, f"backend activated before reviewed successor: {relative}")
 
 backend_example = (root / contract["firstMigration"]["backendConfigExample"]).read_text()
 for marker in (

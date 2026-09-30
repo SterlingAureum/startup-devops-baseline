@@ -987,6 +987,11 @@ Incremental scope:
   offline; bind the stopped read-only attempt, prove that raw state differs only
   by `check_results` ordering, require exact normalized semantic equality and
   resume state/EKS/S3 reads without any Terraform mutation path
+- v0.12.4.1.5.0.7 - AWS dev post-create qualification - delivered offline;
+  record the successful semantic recovery, add a separately approved read-only
+  EKS/node-group/add-on/Kubernetes qualification with an isolated private
+  kubeconfig, and retain separate GitOps bootstrap, root convergence and
+  External Secrets preflight approval boundaries
 - v0.12.4.1.5.0.5 - guarded AWS dev remote-state saved create plan -
   delivered offline; consume the human-reviewed clean-room preflight and permit
   a separately approved `terraform init -reconfigure` plus one saved create-only

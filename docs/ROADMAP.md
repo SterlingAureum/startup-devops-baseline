@@ -970,6 +970,11 @@ Incremental scope:
   owner-readable backend configuration, keep verify command-free, and restrict
   separately approved execution to EKS absence plus S3/KMS/IAM read-only proof
   and private tracked-source staging without Terraform init, plan or apply
+- v0.12.4.1.5.0.5 - guarded AWS dev remote-state saved create plan -
+  delivered offline; consume the human-reviewed clean-room preflight and permit
+  a separately approved `terraform init -reconfigure` plus one saved create-only
+  plan. Allow up to two hours for plan execution, eight hours for review and a
+  separate future apply window of up to three hours; apply remains blocked
 - v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
   database recovery, measured RTO/RPO, scoped disaster-recovery review and
   terminal cleanup/cost evidence - planned; the minimum aws-dev remote-state

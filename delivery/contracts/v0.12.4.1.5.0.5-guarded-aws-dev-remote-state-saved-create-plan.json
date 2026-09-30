@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.5-guarded-aws-dev-remote-state-saved-create-plan-v1",
+  "version": "v0.12.4.1.5.0.5",
+  "status": "aws-dev-remote-state-saved-create-plan-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "37a5c9c90b6cfcfedefe2e5804c9e45744e7f0ec",
+  "designedAtDate": "2026-09-30",
+  "predecessor": {
+    "path": "delivery/contracts/v0.12.4.1.5.0.4-guarded-aws-dev-remote-state-clean-room-preflight.json",
+    "requiredStatus": "aws-dev-remote-state-clean-room-preflight-ready-offline",
+    "requiredLiveStatus": "aws-dev-remote-state-clean-room-preflight-complete-awaiting-separate-plan-review",
+    "requiresHumanReview": true
+  },
+  "privateRequest": {
+    "schemaVersion": "v0.12.4.1.5.0.5-aws-dev-clean-room-create-plan-request-v1",
+    "operation": "produce-reviewed-aws-dev-clean-room-create-plan",
+    "maximumApprovalWindowSeconds": 7200,
+    "minimumRemainingApprovalSeconds": 900,
+    "maximumPlanReviewLifetimeSeconds": 28800,
+    "requestAndInputsMustRemainOutsideRepository": true,
+    "privateFileMode": "0600",
+    "privateDirectoryMode": "0700",
+    "outputAndPlanSourceDirectoriesMustBeNew": true
+  },
+  "verifyPhase": {
+    "protectedMainMustBeExactAndClean": true,
+    "preflightRequestResultAndEvidenceDigestsMustMatch": true,
+    "preflightMustBeHumanReviewed": true,
+    "backendConfigAndTfvarsDigestsMustMatch": true,
+    "stagedSourceManifestMustMatch": true,
+    "remoteStateAndLockMustHaveBeenAbsent": true,
+    "awsCommandsAllowed": false,
+    "terraformCommandsAllowed": false,
+    "operationalCommandsExecuted": []
+  },
+  "executePhase": {
+    "requiredConfirmationVariable": "CONFIRM_AWS_DEV_CLEAN_ROOM_CREATE_PLAN",
+    "requiredConfirmationValue": "produce-reviewed-aws-dev-clean-room-create-plan",
+    "terraformInitArguments": ["init", "-input=false", "-reconfigure", "-backend-config=PRIVATE_COPY"],
+    "terraformPlanMode": "saved-create-plan",
+    "terraformPlanLockTimeout": "0s",
+    "terraformApplyAllowed": false,
+    "awsReadOnlyRevalidation": true,
+    "expectedEksResult": "ResourceNotFoundException",
+    "remoteStateVersionCountMustRemain": 0,
+    "remoteStateDeleteMarkerCountMustRemain": 0,
+    "expectedPlanManagedActions": ["create"],
+    "expectedPlanDataActions": ["read", "no-op"],
+    "resourceDriftCountMustBe": 0,
+    "importCountMustBe": 0,
+    "planMustBeCompleteAndApplyable": true,
+    "planReviewRequiresHumanApproval": true,
+    "automaticRetry": false
+  },
+  "lockHistoryBoundary": {
+    "nativeS3LockfileRequired": true,
+    "lockMustBeAbsentBeforeAndAfter": true,
+    "temporaryLockObjectVersionAllowed": true,
+    "temporaryLockDeleteMarkerAllowed": true,
+    "stateObjectWriteAllowed": false,
+    "directS3MutationAllowed": false,
+    "forceUnlockAllowed": false
+  },
+  "timeBoundary": {
+    "planExecutionWindowMaximumHours": 2,
+    "savedPlanReviewLifetimeMaximumHours": 8,
+    "futureApplyWindowMaximumHours": 3,
+    "planAndApplyUseSeparateApprovals": true,
+    "validationAfterApplyUsesSeparateApproval": true
+  },
+  "forbiddenOperations": [
+    "terraform-apply",
+    "terraform-destroy",
+    "terraform-state-push",
+    "terraform-state-migration",
+    "terraform-force-unlock",
+    "unsaved-terraform-plan",
+    "direct-s3-state-or-lock-mutation",
+    "iam-policy-attachment",
+    "kubernetes-command",
+    "argocd-operation",
+    "helm-operation",
+    "secret-value-read",
+    "external-secrets-preflight-retry",
+    "automatic-retry",
+    "automatic-rollback"
+  ],
+  "privateEvidence": {
+    "binaryPlanRequired": true,
+    "machineReadablePlanRequired": true,
+    "humanReadablePlanRequired": true,
+    "exactAddressInventoryRequired": true,
+    "inputAndObjectHistoryDigestsRequired": true,
+    "rawResourceIdentityRemainsPrivate": true,
+    "publicResultContainsResourceIdentity": false,
+    "publicResultContainsObjectVersionId": false,
+    "failurePreservesEvidence": true
+  },
+  "overallGate": {
+    "status": "blocked-awaiting-private-request-verification-and-separate-plan-approval",
+    "terraformInitExecuted": false,
+    "terraformPlanExecuted": false,
+    "terraformApplyExecuted": false,
+    "stateMigrationExecuted": false,
+    "environmentCreated": false,
+    "externalSecretsPreflightRetried": false
+  },
+  "successor": {
+    "version": "v0.12.4.1.5.0.6",
+    "scope": "reviewed-aws-dev-exact-saved-create-plan-apply",
+    "requiresHumanReviewOfPrivatePlan": true,
+    "maximumApplyApprovalWindowSeconds": 10800,
+    "authorizedByThisCheckpoint": false
+  }
+}

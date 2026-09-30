@@ -3,18 +3,25 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7-aws-dev-post-create-qualification`
+`v0.12.4.1.5.0.7.1-guarded-aws-dev-teardown`
 
-The current checkpoint records the successful semantic-state recovery and adds
-a separately approved, read-only qualification of the EKS control plane,
-four-node system node group, managed add-ons and Kubernetes API. It writes only
-an isolated private kubeconfig and evidence. Terraform, AWS/Kubernetes
-mutation, GitOps bootstrap and the External Secrets preflight remain blocked.
-See
+The current checkpoint provides a fast, two-approval teardown of the recovered
+aws-dev environment. It first creates and binds an exact saved destroy plan,
+then permits only that reviewed binary plan to be applied. Terraform init,
+replacement planning during destroy, unsaved destroy, retry and rollback remain
+blocked. Success requires zero managed state addresses plus EKS and VPC absence.
+See [v0.12.4.1.5.0.7.1 guarded AWS dev
+teardown](docs/V0.12.4.1.5.0.7.1_GUARDED_AWS_DEV_TEARDOWN.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7-aws-dev-post-create-qualification`. It adds an optional,
+separately approved read-only qualification of the EKS control plane, node
+group, add-ons and Kubernetes API. The teardown checkpoint does not require
+that qualification to execute or roll back. See
 [v0.12.4.1.5.0.7 AWS dev post-create
 qualification](docs/V0.12.4.1.5.0.7_AWS_DEV_POST_CREATE_QUALIFICATION.md).
 
-The predecessor checkpoint is
+The earlier predecessor checkpoint is
 `v0.12.4.1.5.0.6.0.1.1-aws-dev-semantic-state-recovery`. It binds the stopped
 read-only recovery and proves that two raw state documents differ only by
 non-deterministic `check_results` ordering. It requires exact semantic state

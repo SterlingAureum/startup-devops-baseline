@@ -237,10 +237,15 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
 PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/test-v0.12.4.1.5-external-secrets-live-preflight.py"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.1.5.0.3-aws-dev-remote-state-clean-room-reconstruction-design.py" \
+  --root "${ROOT_DIR}"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" \
-  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5-external-secrets-live-preflight.sh"
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5-external-secrets-live-preflight.sh" \
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.3-aws-dev-remote-state-clean-room-reconstruction-design.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only

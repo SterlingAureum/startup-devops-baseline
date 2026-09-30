@@ -974,6 +974,11 @@ Incremental scope:
   preserve the exact failed plan attempt, privately bind one globally routable
   management `/32`, reuse the reviewed provider lockfile read-only, verify the
   failed lock lifecycle and produce one new saved plan without apply.
+- v0.12.4.1.5.0.6 - reviewed AWS dev recovery saved-plan apply - delivered
+  offline; bind the human-reviewed attempt-02 plan and its exact 90 managed
+  creates plus six data reads, permit only one separately approved saved-plan
+  apply before review expiry, and require private state/EKS/S3 proof without
+  init, replanning, retry, rollback, state push or direct S3 mutation
 - v0.12.4.1.5.0.5 - guarded AWS dev remote-state saved create plan -
   delivered offline; consume the human-reviewed clean-room preflight and permit
   a separately approved `terraform init -reconfigure` plus one saved create-only

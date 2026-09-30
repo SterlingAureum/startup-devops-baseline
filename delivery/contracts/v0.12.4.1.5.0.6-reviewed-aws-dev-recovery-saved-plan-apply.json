@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.6-reviewed-aws-dev-recovery-saved-plan-apply-v1",
+  "version": "v0.12.4.1.5.0.6",
+  "status": "reviewed-aws-dev-recovery-saved-plan-apply-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "a20fba2eac0b4642b239193730ed72402065c1b5",
+  "reviewedPlan": {
+    "privateRecoveryRequestSha256": "d77abf17613dd5b9d311292a3404a1799efe4f0468d920f95f3ead586193895d",
+    "binaryPlanSha256": "4e69241462430992203d79674a2eefa70c309eb756b33a6874a8b8b38ee71a1b",
+    "planJsonSha256": "5f2de857159c042e8588b743ca66364015496dc16f78e215bee5c3da525ed3de",
+    "planTextSha256": "cc96ec46c0b8184bd47eff6dae5f968f83d2502bef1df8e2b782e8643c0ff02e",
+    "addressInventorySha256": "8ee52b515704cf5e6e4a3824c06da83c7b639b52f6320c852f20d53ca99ead81",
+    "planRecordSha256": "b0ac35c31977cc87f88ee3c568b6e76878bf21765ffe6be507ad9ae1401c57df",
+    "providerLockfileSha256": "a824bda667aac25533101eb99e1b5c6ec5415cc5f2e773793f7b1699b453fd6f",
+    "managedCreateCount": 90,
+    "dataReadOrNoopCount": 6,
+    "resourceDriftCount": 0,
+    "importCount": 0,
+    "planReviewExpiresAtUtc": "2026-09-30T20:31:00Z",
+    "humanReviewRequired": true
+  },
+  "privateRequest": {
+    "schemaVersion": "v0.12.4.1.5.0.6-aws-dev-recovery-saved-plan-apply-request-v1",
+    "operation": "apply-reviewed-aws-dev-recovery-saved-create-plan",
+    "maximumApprovalWindowSeconds": 10800,
+    "minimumRemainingApprovalSeconds": 900,
+    "approvalMustEndByPlanReviewExpiry": true,
+    "requestAndEvidenceMustRemainOutsideRepository": true,
+    "privateFileMode": "0600",
+    "privateDirectoryMode": "0700",
+    "applyOutputMustBeNew": true
+  },
+  "verifyPhase": {
+    "protectedMainMustBeExactAndClean": true,
+    "recoveryRequestAndAllReviewedDigestsMustMatch": true,
+    "recoverySourceMustMatchImmutableTerraformSource": true,
+    "planMustRemainCompleteAndApplyable": true,
+    "managedActionsMustRemainCreateOnly": true,
+    "dataActionsMustRemainReadOrNoop": true,
+    "resourceDriftCountMustBe": 0,
+    "importCountMustBe": 0,
+    "awsCommandsAllowed": false,
+    "terraformCommandsAllowed": false,
+    "operationalCommandsExecuted": []
+  },
+  "executePhase": {
+    "requiredConfirmationVariable": "CONFIRM_AWS_DEV_RECOVERY_SAVED_PLAN_APPLY",
+    "requiredConfirmationValue": "apply-reviewed-aws-dev-recovery-saved-create-plan",
+    "terraformInitAllowed": false,
+    "terraformPlanAllowed": false,
+    "terraformApplyArguments": [
+      "apply",
+      "-input=false",
+      "-auto-approve",
+      "EXACT_REVIEWED_BINARY_PLAN"
+    ],
+    "exactSavedPlanApplyCount": 1,
+    "unsavedApplyAllowed": false,
+    "preApplyAwsAndPlanEvidenceReadsAllowed": true,
+    "postApplyTerraformStateAndAwsReadsAllowed": true,
+    "expectedManagedStateAddressCount": 90,
+    "expectedDataStateAddressCount": 6,
+    "expectedTotalStateAddressCount": 96,
+    "eksClusterMustBeActiveAfterApply": true,
+    "automaticRetry": false,
+    "automaticRollback": false
+  },
+  "stateAndLockBoundary": {
+    "remoteStateMustBeAbsentBeforeApply": true,
+    "remoteStateVersionDeltaMustBePositive": true,
+    "remoteStateDeleteMarkerDeltaMustBe": 0,
+    "nativeLockObjectVersionDeltaMustBe": 1,
+    "nativeLockDeleteMarkerDeltaMustBe": 1,
+    "nativeLockMustBeAbsentAfterApply": true,
+    "directS3MutationAllowed": false,
+    "statePushAllowed": false,
+    "stateMigrationAllowed": false,
+    "forceUnlockAllowed": false
+  },
+  "failureBoundary": {
+    "failedApplyMustStop": true,
+    "postApplyValidationFailureMustPreserveWrittenState": true,
+    "automaticRetryAllowed": false,
+    "automaticRollbackAllowed": false,
+    "automaticDestroyAllowed": false
+  },
+  "privacyBoundary": {
+    "publicResultContainsManagementCidr": false,
+    "publicResultContainsRawResourceIdentity": false,
+    "publicResultContainsObjectVersionId": false,
+    "rawStateAndTerraformShowRemainPrivate": true
+  },
+  "forbiddenOperations": [
+    "terraform-init",
+    "terraform-plan",
+    "terraform-destroy",
+    "terraform-state-push",
+    "terraform-state-migration",
+    "terraform-force-unlock",
+    "unsaved-terraform-apply",
+    "direct-s3-state-mutation",
+    "direct-s3-lock-mutation",
+    "iam-policy-attachment",
+    "kubernetes-command",
+    "secret-value-read",
+    "automatic-retry",
+    "automatic-rollback"
+  ],
+  "overallGate": {
+    "status": "blocked-awaiting-private-apply-request-verification-and-separate-apply-approval",
+    "terraformApplyExecuted": false,
+    "environmentCreated": false,
+    "stateWritten": false
+  },
+  "successor": {
+    "version": "v0.12.4.1.5.0.7",
+    "scope": "aws-dev-post-create-qualification-and-external-secrets-preflight-resume",
+    "requiresSeparateApproval": true,
+    "authorizedByThisCheckpoint": false
+  }
+}

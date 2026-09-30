@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.12.4.1.5.0.6
+
+- Bind the human-reviewed attempt-02 recovery plan to exact binary, JSON, text,
+  address-inventory, record and provider-lockfile SHA-256 values.
+- Require command-free verification on clean protected main and a fresh,
+  separately approved apply window of at most three hours that ends before the
+  reviewed plan expires.
+- Permit one exact saved-plan apply without Terraform init, a new plan or an
+  unsaved apply; require 90 managed creates, six data entries, zero drift and
+  zero import to remain unchanged immediately before execution.
+- After success, retain raw state privately and require the exact 96-address
+  inventory, an ACTIVE EKS cluster, a positive bounded state-version delta and
+  one clean native lock lifecycle.
+- Stop without retry or rollback on every failure; prohibit state push,
+  migration, force-unlock, direct S3 mutation, destroy, IAM attachment,
+  Kubernetes commands and secret-value reads.
+
 ## v0.12.4.1.5.0.5.0.1
 
 - Preserve the failed `v0.12.4.1.5.0.5` attempt as immutable evidence and mark

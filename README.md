@@ -3,16 +3,25 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.5.0.1-aws-dev-create-plan-management-cidr-recovery`
+`v0.12.4.1.5.0.6-reviewed-aws-dev-recovery-saved-plan-apply`
 
-The current checkpoint preserves the failed first aws-dev saved-plan attempt,
-binds its exact evidence and provider lockfile, and permits one separately
-approved attempt-02 plan with a private globally routable management `/32`.
-It does not apply Terraform or create the environment. See
+The current checkpoint binds the human-reviewed attempt-02 binary, JSON, text,
+address inventory and record, and permits only one separately approved exact
+saved-plan apply followed by read-only state, EKS and S3 validation. It does not
+rerun init or plan, and it never retries or rolls back automatically. See
+[v0.12.4.1.5.0.6 reviewed AWS dev recovery saved-plan
+apply](docs/V0.12.4.1.5.0.6_REVIEWED_AWS_DEV_RECOVERY_SAVED_PLAN_APPLY.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.5.0.1-aws-dev-create-plan-management-cidr-recovery`.
+It preserves the failed first aws-dev saved-plan attempt, binds its exact
+evidence and provider lockfile, and permits one separately approved attempt-02
+plan with a private globally routable management `/32`. It does not apply
+Terraform or create the environment. See
 [v0.12.4.1.5.0.5.0.1 AWS dev create-plan management CIDR
 recovery](docs/V0.12.4.1.5.0.5.0.1_AWS_DEV_CREATE_PLAN_MANAGEMENT_CIDR_RECOVERY.md).
 
-The predecessor checkpoint is
+The earlier predecessor checkpoint is
 `v0.12.4.1.5.0.5-guarded-aws-dev-remote-state-saved-create-plan`. It
 binds the reviewed clean-room preflight, private backend/tfvars and exact staged
 source, then permits one separately approved remote-state saved create plan.

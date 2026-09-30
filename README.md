@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.4.1.5.0.5-guarded-aws-dev-remote-state-saved-create-plan`
+binds the reviewed clean-room preflight, private backend/tfvars and exact staged
+source, then permits one separately approved remote-state saved create plan.
+It does not apply the plan or create the environment. See the
+[v0.12.4.1.5.0.5 guarded AWS dev remote-state saved create
+plan](docs/V0.12.4.1.5.0.5_GUARDED_AWS_DEV_REMOTE_STATE_SAVED_CREATE_PLAN.md).
+
+Predecessor development checkpoint:
 `v0.12.4.1.5.0.4-guarded-aws-dev-remote-state-clean-room-preflight`
 activates only the dev root's partial S3 backend and adds command-free request
 verification plus a separately approved AWS read-only absence/foundation

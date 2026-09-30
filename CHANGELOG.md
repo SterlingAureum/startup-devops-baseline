@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.4.1.5.0.5
+
+- Add command-free verification binding protected main, the human-reviewed `.0.4` private evidence chain, exact staged source, private backend config and quarantined tfvars.
+- Permit a separately approved two-hour-maximum execution window for one `terraform init -reconfigure` and one saved remote-state create plan; do not apply or create the environment.
+- Require managed actions to be create-only, data actions to be read/no-op, zero resource drift, zero import and an exact EKS cluster create before producing private review evidence.
+- Preserve the remote state key as empty, require one clean native lockfile version/delete-marker cycle and prohibit direct S3 mutation or force-unlock.
+- Produce private binary, JSON, text, address-inventory and plan-record evidence with an eight-hour-maximum review lifetime.
+- Reserve a separate future apply approval of up to three hours and a separate post-apply validation window; authorize no apply, migration, state push, destroy, Kubernetes, GitOps, secret read, retry or rollback.
+
 ## v0.12.4.1.5.0.4
 
 - Replace the dev root's obsolete local-backend placeholder with an empty partial S3 backend while keeping every backend value, account identity and credential outside Git.

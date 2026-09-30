@@ -3,17 +3,24 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.6.0.1-aws-dev-post-apply-read-only-recovery`
+`v0.12.4.1.5.0.6.0.1.1-aws-dev-semantic-state-recovery`
 
-The current checkpoint recovers only the post-apply validation that stopped
-after the exact saved plan successfully created 90 managed resources. It binds
-the final state to 90 reviewed managed, six reviewed data and seven exact
-prior-state data addresses, then permits separately approved read-only state,
-EKS and S3 validation. It cannot execute init, plan or apply. See
+The current checkpoint binds the stopped read-only recovery and proves that two
+raw state documents differ only by non-deterministic `check_results` ordering.
+It requires exact semantic state equality, 56 passing check statuses and the
+same 103-address inventory before resuming separately approved state, EKS and
+S3 reads. It cannot execute init, plan or apply. See
+[v0.12.4.1.5.0.6.0.1.1 AWS dev semantic-state
+recovery](docs/V0.12.4.1.5.0.6.0.1.1_AWS_DEV_SEMANTIC_STATE_RECOVERY.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.6.0.1-aws-dev-post-apply-read-only-recovery`. It binds the final
+state to 90 reviewed managed, six reviewed data and seven exact prior-state
+data addresses, then permits only read-only state, EKS and S3 validation. See
 [v0.12.4.1.5.0.6.0.1 AWS dev post-apply read-only
 recovery](docs/V0.12.4.1.5.0.6.0.1_AWS_DEV_POST_APPLY_READ_ONLY_RECOVERY.md).
 
-The predecessor checkpoint is
+The earlier predecessor checkpoint is
 `v0.12.4.1.5.0.6-reviewed-aws-dev-recovery-saved-plan-apply`. It binds the
 human-reviewed attempt-02 binary plan and permits only one separately approved
 exact saved-plan apply followed by read-only validation. See

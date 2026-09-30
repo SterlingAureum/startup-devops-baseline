@@ -983,6 +983,10 @@ Incremental scope:
   offline; preserve the successful 90-create apply, correct the state model to
   the exact 103-address union including seven prior-state data sources, and
   resume only state/EKS/S3 read-only validation without init, plan or apply
+- v0.12.4.1.5.0.6.0.1.1 - AWS dev semantic-state recovery - delivered
+  offline; bind the stopped read-only attempt, prove that raw state differs only
+  by `check_results` ordering, require exact normalized semantic equality and
+  resume state/EKS/S3 reads without any Terraform mutation path
 - v0.12.4.1.5.0.5 - guarded AWS dev remote-state saved create plan -
   delivered offline; consume the human-reviewed clean-room preflight and permit
   a separately approved `terraform init -reconfigure` plus one saved create-only

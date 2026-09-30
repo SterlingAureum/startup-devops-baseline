@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.6.0.1.1-aws-dev-semantic-state-recovery-request-v1",
+  "operation": "recover-aws-dev-post-apply-with-semantic-state-equality",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_PROTECTED_MAIN_COMMIT",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "expectedTerraformVersion": "REPLACE_WITH_TERRAFORM_VERSION",
+  "privatePriorRecoveryRequestPath": "/absolute/private/path/aws-dev-post-apply-read-only-recovery-request-attempt-01.json",
+  "privatePriorRecoveryOutputDirectory": "/absolute/private/path/aws-dev-post-apply-read-only-recovery-output-attempt-01",
+  "privateRecoveryOutputDirectory": "/absolute/private/path/aws-dev-semantic-state-recovery-output-attempt-02",
+  "evidenceBoundary": {
+    "priorRecoveryControlPlaneCommit": "e7c218b9d11f64f2af419786fd3c45c51ea289b0",
+    "privatePriorRecoveryRequestSha256": "66935f15b045fa641334b4ffa4c47abcc6c0b16a5b3fcb7e7d0aee8f3aa65fe9",
+    "privateApplyRequestSha256": "c8a3e0a33019246ef5a34f9f17024e1f2c4fd095047dc5f38aa6eef616ceca4b",
+    "preservedStateSha256": "d3960815889c8d192ffc09b19a98a11f965ed660670ce87d07701944bce3e205",
+    "priorPulledStateSha256": "5e227aeae2e3c0f27afb688319252f91f7f56653d4f05535bf6e1b17908bfdee",
+    "stateLineageSha256": "e7607c625b0ce10f80d09715b8bfb43b6e0a251a82aeabe08f52fb4296ed0391",
+    "stateSerial": 9,
+    "managedStateAddressCount": 90,
+    "reviewedDataStateAddressCount": 6,
+    "priorStateDataAddressCount": 7,
+    "totalStateAddressCount": 103,
+    "stateAddressInventorySha256": "0bf45e067a30633472416fcef468381e11c90d13cfabe96eeb50f6bc2e602691",
+    "normalizedCheckResultsSha256": "cce879cf1dc7519f44b5a75d6802b9ef517712c1483688c0fc98184266ce11a1",
+    "checkResultCount": 28,
+    "checkStatusHistogram": {
+      "pass": 56
+    },
+    "checkObjectKindHistogram": {
+      "resource": 4,
+      "var": 24
+    },
+    "semanticStateEqual": true,
+    "unexplainedAddressCount": 0
+  },
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_CURRENT_UTC_Z",
+    "expiresAtUtc": "REPLACE_WITH_MAXIMUM_THREE_HOURS_LATER_UTC_Z"
+  },
+  "executionBoundary": {
+    "awsIdentityRead": true,
+    "eksDescribeCluster": true,
+    "s3ObjectHistoryRead": true,
+    "terraformVersionRead": true,
+    "terraformStatePull": true,
+    "terraformStateList": true,
+    "terraformShowState": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "terraformDestroy": false,
+    "statePush": false,
+    "stateMigration": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "iamPolicyAttachment": false,
+    "kubernetesCommand": false,
+    "secretValueRead": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

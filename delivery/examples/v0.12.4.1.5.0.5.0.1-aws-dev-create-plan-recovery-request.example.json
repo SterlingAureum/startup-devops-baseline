@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.5.0.1-aws-dev-create-plan-recovery-request-v1",
+  "operation": "recover-aws-dev-create-plan-with-reviewed-management-cidr",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "incidentControlPlaneCommit": "4d4d3db2fe6e6e194e979131799ddfff5b1b7487",
+  "expectedMainCommit": "REPLACE_WITH_PROTECTED_MAIN_COMMIT",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "expectedAwsRegion": "us-east-1",
+  "expectedClusterName": "startup-devops-baseline-dev",
+  "expectedTerraformVersion": "1.14.5",
+  "privateFailedPlanRequestPath": "/absolute/private/path/aws-dev-clean-room-create-plan-request-attempt-01.json",
+  "privateFailedPlanRequestSha256": "5d915fac07cbcc4ea0bfd763b1a78230ac66bc969c623498d1a4056868d0c151",
+  "privateFailedPlanSourceDirectory": "/absolute/private/path/aws-dev-clean-room-create-plan-source-attempt-01",
+  "privateFailedPlanOutputDirectory": "/absolute/private/path/aws-dev-clean-room-create-plan-output-attempt-01",
+  "failedArtifactSha256s": {
+    "aws-dev-create.tfplan": "bc99d8d8d1c2a5b8f163f983e953b1fd64d3f03ed44fd86c90bf120b08e2d781",
+    "aws-identity.stdout": "b2e7ee5c1961bbb26b31ed08586888d7c98cb39da6001812dec7ddfe9a9e99fa",
+    "s3-object-history-before-plan.stdout": "ccbdb79421b226d279de576d0e370de8d2de02f98a5e14652e846174459c0ac6",
+    "terraform-init-reconfigure.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "terraform-init-reconfigure.stdout": "9ed3c5c1a292c0dd899dd126752b183692bdfd23841f6bdff071498dbad2c88b",
+    "terraform-plan-create.stderr": "df1e2e6084fc655c5528258fa9ec9460a648eb2e68b7b0286011b56e22e948a0",
+    "terraform-plan-create.stdout": "7816eeb8d982b4e96c0bdea007a6212a61258ca7f80d32588b47a08c5fc01507",
+    "terraform-version.stdout": "de6e7b4887d277af1b8349359a892133db8d2c5954dc8d7d69cdbbff6c492aeb"
+  },
+  "failedProviderLockfileSha256": "a824bda667aac25533101eb99e1b5c6ec5415cc5f2e773793f7b1699b453fd6f",
+  "privateManagementCidr": "REPLACE_WITH_CURRENT_PUBLIC_IPV4/32",
+  "privateRecoveryPlanSourceDirectory": "/absolute/private/path/aws-dev-clean-room-create-plan-source-attempt-02",
+  "privateRecoveryPlanOutputDirectory": "/absolute/private/path/aws-dev-clean-room-create-plan-output-attempt-02",
+  "humanReview": {
+    "failedAttemptReviewed": true,
+    "failureCause": "eks-public-endpoint-missing-restricted-cidr",
+    "managementCidrPrivatelyValidated": true,
+    "reviewedMaximumBudgetUsd": 50
+  },
+  "approval": {
+    "notBeforeUtc": "2026-09-30T05:00:00Z",
+    "expiresAtUtc": "2026-09-30T07:00:00Z",
+    "planReviewExpiresAtUtc": "2026-09-30T13:00:00Z"
+  },
+  "executionBoundary": {
+    "awsReadOnlyValidation": true,
+    "localPrivateSourceCopy": true,
+    "terraformInitReconfigureReadonlyLockfile": true,
+    "terraformSavedPlan": true,
+    "terraformShow": true,
+    "terraformApply": false,
+    "stateMigration": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "kubernetesCommand": false,
+    "secretValueRead": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

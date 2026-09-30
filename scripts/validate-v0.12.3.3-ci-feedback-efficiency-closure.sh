@@ -255,6 +255,13 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
 PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.5-aws-dev-saved-create-plan.py"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.1.5.0.5.0.1-aws-dev-create-plan-recovery.py" \
+  --root "${ROOT_DIR}"
+
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.5.0.1-aws-dev-create-plan-recovery.py"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" \
@@ -262,6 +269,9 @@ bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.3-aws-dev-remote-state-clean-room-reconstruction-design.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.4-guarded-aws-dev-clean-room-preflight.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.5-guarded-aws-dev-saved-create-plan.sh"
+
+bash -n \
+  "${ROOT_DIR}/scripts/validate-aws-dev-create-plan-management-cidr-recovery.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only

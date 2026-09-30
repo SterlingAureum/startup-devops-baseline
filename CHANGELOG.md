@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.12.4.1.5.0.5.0.1
+
+- Preserve the failed `v0.12.4.1.5.0.5` attempt as immutable evidence and mark
+  its incomplete binary plan ineligible for apply.
+- Require a privately validated, globally routable IPv4 `/32` for the EKS public
+  endpoint and keep that CIDR out of redacted verification and result output.
+- Reuse the exact reviewed provider lockfile under `-lockfile=readonly`, require
+  an empty remote state plus one clean prior lock lifecycle, and permit one new
+  separately approved saved create plan in fresh attempt-02 directories.
+- Keep Terraform apply, state mutation, direct S3 mutation, force-unlock,
+  automatic retry and automatic rollback blocked.
+
 ## v0.12.4.1.5.0.5
 
 - Add command-free verification binding protected main, the human-reviewed `.0.4` private evidence chain, exact staged source, private backend config and quarantined tfvars.

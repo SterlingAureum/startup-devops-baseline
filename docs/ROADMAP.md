@@ -959,9 +959,17 @@ Incremental scope:
   aws-dev read/server-dry-run executor, preserve the `2.8.0` live and repository
   pin, exclude Secret reads and persistent mutations, and require private
   evidence review before any later GitOps pin change
+- v0.12.4.1.5.0.3 - AWS dev remote-state clean-room reconstruction design -
+  delivered offline after the live preflight proved the disposable EKS baseline
+  absent; prohibit the historical local-state create path, bring forward only
+  the minimum v0.12.5 remote-state rebuild prerequisite, and require isolated
+  read-only preflight, saved plan, human review, exact apply, GitOps convergence,
+  upgrade qualification, teardown and residual-cost approval stages
 - v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
   database recovery, measured RTO/RPO, scoped disaster-recovery review and
-  terminal cleanup/cost evidence - planned
+  terminal cleanup/cost evidence - planned; the minimum aws-dev remote-state
+  reconstruction prerequisite moved into v0.12.4.1.5.0.3, while the broader
+  recovery scope remains here
 - v0.12.6 - production least privilege, approval-protected read-only
   observation, break-glass, capacity, availability, cost and destructive-action
   controls - planned

@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.4.1.5.0.3-aws-dev-remote-state-clean-room-reconstruction-design`
+records that the External Secrets live preflight correctly stopped because the
+disposable aws-dev EKS baseline is absent. It designs a remote-state clean-room
+rebuild before retrying the upgrade while authorizing no live command. See the
+[v0.12.4.1.5.0.3 AWS dev remote-state clean-room reconstruction
+design](docs/V0.12.4.1.5.0.3_AWS_DEV_REMOTE_STATE_CLEAN_ROOM_RECONSTRUCTION_DESIGN.md).
+
+Predecessor development checkpoint:
 `v0.12.4.1.5-external-secrets-live-preflight-contract` provides a command-free
 request verification phase and a separately approved aws-dev read/server-dry-run
 executor. It keeps the operator pinned to `2.8.0`, reads no Secret value and

@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.4.1.5.0.3
+
+- Record the failed External Secrets live preflight as an expected missing-environment result: AWS identity succeeded, EKS returned `ResourceNotFoundException`, and no Kubernetes command, dry-run or persistent mutation started.
+- Design a clean-room aws-dev rebuild on the existing S3/KMS backend foundation and exact `environments/dev/terraform.tfstate` key before retrying the upgrade preflight.
+- Prohibit the historical local-state create path, local-state migration, state push, unsaved apply, automatic retry/rollback and direct state/lock object mutation.
+- Require private full-tree staging, remote state/lock absence proof, `terraform init -reconfigure`, one saved create plan, human review and one exact apply under separate approvals.
+- Bring forward only the minimum v0.12.5 remote-state reconstruction prerequisite; retain database recovery, measured RTO/RPO and broad disaster-recovery work in v0.12.5.
+- Authorize no AWS, Terraform, Kubernetes, Argo CD, Helm, Git pin, environment creation, retry or teardown operation.
+
 ## v0.12.4.1.5
 
 - Add a private, one-hour-maximum request contract whose `verify` phase binds exact protected main, chart/render SHA-256 values and a new private output directory without running AWS, Kubernetes or Helm commands.

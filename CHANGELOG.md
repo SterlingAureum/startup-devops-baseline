@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.12.4.1.5.0.6.0.1.1
+
+- Bind the stopped read-only recovery request and its private output as incident
+  evidence; preserve all earlier plan, apply and recovery evidence.
+- Prove both raw state documents have identical serial, lineage, resources,
+  instances, metadata, outputs and 103-address inventory.
+- Treat only the `check_results` collections as order-insensitive and bind the
+  normalized SHA-256, 28 entries and all 56 passing statuses.
+- Resume only separately approved Terraform state, EKS and S3 reads; keep init,
+  plan, apply, destroy, state mutation, retry and rollback impossible.
+
 ## v0.12.4.1.5.0.6.0.1
 
 - Record that the reviewed saved-plan apply completed successfully with 90

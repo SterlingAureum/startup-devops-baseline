@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.12.4.1.5.0.6.0.1
+
+- Record that the reviewed saved-plan apply completed successfully with 90
+  added, zero changed and zero destroyed before post-apply validation stopped.
+- Correct the final-state model from 96 plan-change addresses to the exact
+  103-address union: 90 reviewed managed, six reviewed data and seven
+  prior-state data addresses, with zero unexplained addresses.
+- Add command-free incident verification binding the original apply request,
+  apply success, empty stderr, state SHA/lineage/serial, prior-state inventory
+  and the preserved pre-apply S3 history.
+- Permit only separately approved state, EKS and S3 read-only recovery; prohibit
+  Terraform init, plan, apply and destroy plus every state/S3 mutation, retry,
+  rollback and automatic cleanup path.
+
 ## v0.12.4.1.5.0.6
 
 - Bind the human-reviewed attempt-02 recovery plan to exact binary, JSON, text,

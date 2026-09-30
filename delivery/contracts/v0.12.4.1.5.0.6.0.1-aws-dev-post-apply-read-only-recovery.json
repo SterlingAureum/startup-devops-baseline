@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.6.0.1-aws-dev-post-apply-read-only-recovery-v1",
+  "version": "v0.12.4.1.5.0.6.0.1",
+  "status": "aws-dev-post-apply-read-only-recovery-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "d5faf42112066831e53fbd761c603f815d06884a",
+  "incidentEvidence": {
+    "privateApplyRequestSha256": "c8a3e0a33019246ef5a34f9f17024e1f2c4fd095047dc5f38aa6eef616ceca4b",
+    "applySummary": "90 added, 0 changed, 0 destroyed.",
+    "applyStderrEmpty": true,
+    "stateSha256": "d3960815889c8d192ffc09b19a98a11f965ed660670ce87d07701944bce3e205",
+    "stateLineageSha256": "e7607c625b0ce10f80d09715b8bfb43b6e0a251a82aeabe08f52fb4296ed0391",
+    "stateSerial": 9,
+    "reviewedManagedAddressCount": 90,
+    "reviewedDataAddressCount": 6,
+    "priorStateDataAddressCount": 7,
+    "priorStateDataAddressSha256": "3d28dc57ff69f6763bd6aafe3ef78930ee177cc3d1dddc59f49d58f6a4336cb6",
+    "totalStateAddressCount": 103,
+    "totalStateAddressSha256": "0bf45e067a30633472416fcef468381e11c90d13cfabe96eeb50f6bc2e602691",
+    "unexplainedAddressCount": 0
+  },
+  "verifyPhase": {
+    "operationalCommandsAllowed": false,
+    "protectedMainMustBeExactAndClean": true,
+    "originalApplyRequestMustMatch": true,
+    "successfulApplyEvidenceMustMatch": true,
+    "preservedStateMustMatch": true,
+    "reviewedPlusPriorStateInventoryMustMatch": true,
+    "recoveryOutputMustBeNew": true
+  },
+  "executePhase": {
+    "requiredConfirmationVariable": "CONFIRM_AWS_DEV_POST_APPLY_READ_ONLY_RECOVERY",
+    "requiredConfirmationValue": "recover-aws-dev-post-apply-validation-read-only",
+    "awsIdentityReadAllowed": true,
+    "eksDescribeClusterAllowed": true,
+    "s3ObjectHistoryReadAllowed": true,
+    "terraformStateReadAllowed": true,
+    "terraformInitAllowed": false,
+    "terraformPlanAllowed": false,
+    "terraformApplyAllowed": false,
+    "terraformDestroyAllowed": false,
+    "expectedManagedStateAddressCount": 90,
+    "expectedReviewedDataStateAddressCount": 6,
+    "expectedPriorStateDataAddressCount": 7,
+    "expectedTotalStateAddressCount": 103,
+    "eksClusterMustBeActive": true
+  },
+  "stateAndLockBoundary": {
+    "stateMustEqualPreservedPostApplyState": true,
+    "stateObjectVersionDeltaFromPreApplyMustBePositive": true,
+    "stateDeleteMarkerDeltaMustBe": 0,
+    "nativeLockObjectVersionDeltaFromPreApplyMustBe": 1,
+    "nativeLockDeleteMarkerDeltaFromPreApplyMustBe": 1,
+    "nativeLockMustBeAbsent": true,
+    "statePushAllowed": false,
+    "stateMigrationAllowed": false,
+    "directS3MutationAllowed": false,
+    "forceUnlockAllowed": false
+  },
+  "failureBoundary": {
+    "automaticRetryAllowed": false,
+    "automaticRollbackAllowed": false,
+    "automaticDestroyAllowed": false,
+    "allPrivateEvidenceMustBePreserved": true
+  },
+  "privacyBoundary": {
+    "publicResultContainsRawResourceIdentity": false,
+    "publicResultContainsManagementCidr": false,
+    "publicResultContainsObjectVersionId": false,
+    "rawStateAndTerraformShowRemainPrivate": true
+  },
+  "successor": {
+    "version": "v0.12.4.1.5.0.7",
+    "scope": "aws-dev-post-create-qualification-and-external-secrets-preflight-resume",
+    "requiresSeparateApproval": true,
+    "authorizedByThisCheckpoint": false
+  }
+}

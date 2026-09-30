@@ -3,16 +3,24 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.6-reviewed-aws-dev-recovery-saved-plan-apply`
+`v0.12.4.1.5.0.6.0.1-aws-dev-post-apply-read-only-recovery`
 
-The current checkpoint binds the human-reviewed attempt-02 binary, JSON, text,
-address inventory and record, and permits only one separately approved exact
-saved-plan apply followed by read-only state, EKS and S3 validation. It does not
-rerun init or plan, and it never retries or rolls back automatically. See
+The current checkpoint recovers only the post-apply validation that stopped
+after the exact saved plan successfully created 90 managed resources. It binds
+the final state to 90 reviewed managed, six reviewed data and seven exact
+prior-state data addresses, then permits separately approved read-only state,
+EKS and S3 validation. It cannot execute init, plan or apply. See
+[v0.12.4.1.5.0.6.0.1 AWS dev post-apply read-only
+recovery](docs/V0.12.4.1.5.0.6.0.1_AWS_DEV_POST_APPLY_READ_ONLY_RECOVERY.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.6-reviewed-aws-dev-recovery-saved-plan-apply`. It binds the
+human-reviewed attempt-02 binary plan and permits only one separately approved
+exact saved-plan apply followed by read-only validation. See
 [v0.12.4.1.5.0.6 reviewed AWS dev recovery saved-plan
 apply](docs/V0.12.4.1.5.0.6_REVIEWED_AWS_DEV_RECOVERY_SAVED_PLAN_APPLY.md).
 
-The predecessor checkpoint is
+The earlier predecessor checkpoint is
 `v0.12.4.1.5.0.5.0.1-aws-dev-create-plan-management-cidr-recovery`.
 It preserves the failed first aws-dev saved-plan attempt, binds its exact
 evidence and provider lockfile, and permits one separately approved attempt-02

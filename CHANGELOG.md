@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.1
+
+- Preserve the stopped attempt-01 destroy plan as immutable incident evidence;
+  it contained zero resource drift and did not apply or destroy infrastructure.
+- Accept Terraform's documented-equivalent zero-drift JSON shapes: an omitted
+  `resource_drift` field or an explicit empty list.
+- Continue rejecting a non-list field and every non-empty drift collection.
+- Require a new private request and attempt-02 output; do not reuse the stopped
+  saved plan or retry automatically.
+
 ## v0.12.4.1.5.0.7.1
 
 - Add command-free verification and a separately confirmed, exact saved

@@ -370,7 +370,8 @@ def state_list(value: bytes) -> set[str]:
 
 def destroy_plan_gate(document: dict[str, Any], expected_managed: set[str]) -> dict[str, Any]:
     require(document.get("complete") is True and document.get("errored") is False and document.get("applyable") is True, "Saved destroy plan is not complete and applyable")
-    require(document.get("resource_drift") == [], "Saved destroy plan contains resource drift")
+    drift = document.get("resource_drift", [])
+    require(isinstance(drift, list) and not drift, "Saved destroy plan contains resource drift")
     changes = document.get("resource_changes")
     require(isinstance(changes, list) and changes, "Saved destroy plan has no resource changes")
     managed: set[str] = set()

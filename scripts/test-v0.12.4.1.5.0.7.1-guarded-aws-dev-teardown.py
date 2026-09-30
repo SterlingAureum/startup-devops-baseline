@@ -133,6 +133,12 @@ class PlanGateTests(unittest.TestCase):
         self.assertEqual(inventory["managedDeleteCount"], 90)
         self.assertEqual(inventory["dataChangeCount"], 1)
 
+    def test_omitted_empty_drift_collection_is_accepted(self):
+        document, addresses = self.fixture()
+        document.pop("resource_drift")
+        inventory = EXECUTOR.destroy_plan_gate(document, addresses)
+        self.assertEqual(inventory["resourceDriftCount"], 0)
+
     def test_create_action_is_rejected(self):
         document, addresses = self.fixture()
         document["resource_changes"][0]["change"]["actions"] = ["create"]

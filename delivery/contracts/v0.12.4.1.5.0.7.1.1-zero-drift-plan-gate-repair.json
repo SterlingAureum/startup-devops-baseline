@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.1-zero-drift-plan-gate-repair-v1",
+  "version": "v0.12.4.1.5.0.7.1.1",
+  "status": "zero-drift-plan-gate-repaired-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "26ec4bbe7ff846846ce4944d7dcc0eda50908ba5",
+  "stoppedAttempt": {
+    "privatePlanRequestSha256": "d0cde1633201e3f0c70f181aeee8d54d8330bf5370d078564fa8569ac5450654",
+    "planJsonSha256": "7413b40be49d5b359b829f44a76e855246bbafe8128bc9859ed6d50721f68871",
+    "complete": true,
+    "errored": false,
+    "applyable": true,
+    "resourceDriftFieldPresent": false,
+    "resourceDriftCount": 0,
+    "resourceDriftAddressSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "terraformApplyExecuted": false,
+    "infrastructureDestroyed": false
+  },
+  "repairBoundary": {
+    "omittedResourceDriftAccepted": true,
+    "explicitEmptyResourceDriftAccepted": true,
+    "nonListResourceDriftAccepted": false,
+    "nonEmptyResourceDriftAccepted": false,
+    "stoppedSavedPlanReusable": false,
+    "automaticRetryAllowed": false,
+    "freshPlanRequestRequired": true,
+    "freshPlanOutputRequired": true
+  }
+}

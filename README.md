@@ -3,9 +3,17 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1-guarded-aws-dev-teardown`
+`v0.12.4.1.5.0.7.1.1-zero-drift-plan-gate-repair`
 
-The current checkpoint provides a fast, two-approval teardown of the recovered
+The current checkpoint repairs the teardown plan gate after Terraform omitted
+the empty `resource_drift` field from an otherwise complete and applyable
+attempt-01 saved plan. It accepts only an omitted field or an explicit empty
+list, continues to reject real drift, and requires a fresh attempt-02 request
+and output. See [v0.12.4.1.5.0.7.1.1 zero-drift plan gate
+repair](docs/V0.12.4.1.5.0.7.1.1_ZERO_DRIFT_PLAN_GATE_REPAIR.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1-guarded-aws-dev-teardown`. It provides a fast, two-approval teardown of the recovered
 aws-dev environment. It first creates and binds an exact saved destroy plan,
 then permits only that reviewed binary plan to be applied. Terraform init,
 replacement planning during destroy, unsaved destroy, retry and rollback remain
@@ -13,7 +21,7 @@ blocked. Success requires zero managed state addresses plus EKS and VPC absence.
 See [v0.12.4.1.5.0.7.1 guarded AWS dev
 teardown](docs/V0.12.4.1.5.0.7.1_GUARDED_AWS_DEV_TEARDOWN.md).
 
-The predecessor checkpoint is
+The earlier predecessor checkpoint is
 `v0.12.4.1.5.0.7-aws-dev-post-create-qualification`. It adds an optional,
 separately approved read-only qualification of the EKS control plane, node
 group, add-ons and Kubernetes API. The teardown checkpoint does not require

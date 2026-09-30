@@ -183,8 +183,17 @@ def validate_repository(root: Path) -> dict:
         require(phrase in document, f"design boundary missing: {phrase}")
 
     dev_backend = (root / "infra/terraform/aws/environments/dev/backend.tf").read_text()
-    require('backend "s3"' not in dev_backend, "design checkpoint changed dev backend")
-    require("local backend" in dev_backend, "current dev backend posture changed")
+    successor_path = root / "delivery/contracts/v0.12.4.1.5.0.4-guarded-aws-dev-remote-state-clean-room-preflight.json"
+    if successor_path.exists():
+        successor = load_object(successor_path)
+        require(successor.get("version") == "v0.12.4.1.5.0.4", "unknown dev backend successor")
+        require(successor.get("status") == "aws-dev-remote-state-clean-room-preflight-ready-offline", "unsafe dev backend successor")
+        require(dev_backend.count('backend "s3" {}') == 1, "dev successor partial backend drift")
+        for forbidden in ("bucket =", "key =", "kms_key_id", "allowed_account_ids", "access_key", "secret_key"):
+            require(forbidden not in dev_backend, f"tracked dev backend value found: {forbidden}")
+    else:
+        require('backend "s3"' not in dev_backend, "design checkpoint changed dev backend")
+        require("local backend" in dev_backend, "current dev backend posture changed")
     bootstrap_backend = (root / "infra/terraform/aws/state-bootstrap/backend.tf").read_text()
     require('backend "s3" {}' in bootstrap_backend, "bootstrap partial backend missing")
     example = (root / "infra/terraform/aws/backend-config/dev.s3.tfbackend.example").read_text()

@@ -241,11 +241,19 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/check-v0.12.4.1.5.0.3-aws-dev-remote-state-clean-room-reconstruction-design.py" \
   --root "${ROOT_DIR}"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.1.5.0.4-guarded-aws-dev-clean-room-preflight.py" \
+  --root "${ROOT_DIR}"
+
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.4-aws-dev-clean-room-preflight.py"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5-external-secrets-live-preflight.sh" \
-  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.3-aws-dev-remote-state-clean-room-reconstruction-design.sh"
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.3-aws-dev-remote-state-clean-room-reconstruction-design.sh" \
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.4-guarded-aws-dev-clean-room-preflight.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only

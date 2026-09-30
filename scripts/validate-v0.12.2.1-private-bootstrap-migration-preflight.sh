@@ -172,13 +172,23 @@ backend_text = (root / "infra/terraform/aws/state-bootstrap/backend.tf").read_te
 require(backend_text.count('backend "s3" {}') == 1, "partial backend declaration drift")
 for secret in ("access_key", "secret_key", "session_token"):
     require(secret not in backend_text, f"backend declaration contains credential field: {secret}")
+dev_clean_room_successor_path = root / "delivery/contracts/v0.12.4.1.5.0.4-guarded-aws-dev-remote-state-clean-room-preflight.json"
 for relative in (
     "infra/terraform/aws/runtime-identities/backend.tf",
     "infra/terraform/aws/environments/dev/backend.tf",
     "infra/terraform/aws/environments/test/backend.tf",
     "infra/terraform/aws/environments/prod/backend.tf",
 ):
-    require('backend "s3"' not in (root / relative).read_text(), f"later root backend activated early: {relative}")
+    backend = (root / relative).read_text()
+    if relative == "infra/terraform/aws/environments/dev/backend.tf" and dev_clean_room_successor_path.exists():
+        dev_successor = load(dev_clean_room_successor_path)
+        require(dev_successor.get("version") == "v0.12.4.1.5.0.4", "unknown dev backend successor")
+        require(dev_successor.get("status") == "aws-dev-remote-state-clean-room-preflight-ready-offline", "unsafe dev backend successor")
+        require(backend.count('backend "s3" {}') == 1, "dev partial backend declaration drift")
+        for forbidden in ("bucket =", "key =", "kms_key_id", "allowed_account_ids", "access_key", "secret_key"):
+            require(forbidden not in backend, f"tracked dev backend value found: {forbidden}")
+    else:
+        require('backend "s3"' not in backend, f"later root backend activated before reviewed successor: {relative}")
 
 example = load(example_path)
 require(example.get("schemaVersion") == "v0.12.2.1-bootstrap-migration-preflight-request-v1", "example schema drift")

@@ -985,3 +985,13 @@
 /docs/V0.12.4.1.5.0.3_AWS_DEV_REMOTE_STATE_CLEAN_ROOM_RECONSTRUCTION_DESIGN.md @SterlingAureum
 /scripts/check-v0.12.4.1.5.0.3-aws-dev-remote-state-clean-room-reconstruction-design.py @SterlingAureum
 /scripts/validate-v0.12.4.1.5.0.3-aws-dev-remote-state-clean-room-reconstruction-design.sh @SterlingAureum
+
+# v0.12.4.1.5.0.4 guarded aws-dev remote-state clean-room preflight
+/infra/terraform/aws/environments/dev/backend.tf @SterlingAureum
+/delivery/contracts/v0.12.4.1.5.0.4-guarded-aws-dev-remote-state-clean-room-preflight.json @SterlingAureum
+/delivery/examples/v0.12.4.1.5.0.4-aws-dev-clean-room-preflight-request.example.json @SterlingAureum
+/docs/V0.12.4.1.5.0.4_GUARDED_AWS_DEV_REMOTE_STATE_CLEAN_ROOM_PREFLIGHT.md @SterlingAureum
+/scripts/check-v0.12.4.1.5.0.4-guarded-aws-dev-clean-room-preflight.py @SterlingAureum
+/scripts/execute-v0.12.4.1.5.0.4-aws-dev-clean-room-preflight.py @SterlingAureum
+/scripts/test-v0.12.4.1.5.0.4-aws-dev-clean-room-preflight.py @SterlingAureum
+/scripts/validate-v0.12.4.1.5.0.4-guarded-aws-dev-clean-room-preflight.sh @SterlingAureum

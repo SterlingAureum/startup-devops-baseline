@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.12.4.1.5.0.4
+
+- Replace the dev root's obsolete local-backend placeholder with an empty partial S3 backend while keeping every backend value, account identity and credential outside Git.
+- Add a command-free verifier that binds protected main, an owner-readable private request/backend config, exact remote key and a manifest of tracked AWS Terraform source.
+- Add a separately approved executor limited to AWS identity, expected EKS absence, S3 versioning/public-block/KMS encryption and empty state/lock history, KMS status/rotation and exact unattached dev state-policy reads.
+- Stage only Git-tracked `infra/terraform/aws` source privately and require repository/staged manifest identity before a later saved-plan checkpoint.
+- Make the v0.12.1/v0.12.2 historical backend validators accept only this exact reviewed dev successor while runtime-identities, test and prod remain local.
+- Prohibit Terraform init/plan/apply/state operations, AWS or Kubernetes mutation, policy attachment, secret reads, automatic retry/rollback and External Secrets preflight retry.
+
 ## v0.12.4.1.5.0.3
 
 - Record the failed External Secrets live preflight as an expected missing-environment result: AWS identity succeeded, EKS returned `ResourceNotFoundException`, and no Kubernetes command, dry-run or persistent mutation started.

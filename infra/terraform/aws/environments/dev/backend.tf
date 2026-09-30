@@ -1,7 +1,8 @@
 terraform {
-  # The development environment intentionally uses Terraform's local backend
-  # during the initial v0.4 skeleton phase.
-  #
-  # An encrypted S3 backend with state locking will be introduced before the
-  # environment is used by multiple operators or automated apply workflows.
+  backend "s3" {}
+
+  # Backend values are materialized only in an owner-readable private file
+  # generated from state-bootstrap output. This root is initialized only from
+  # a reviewed private staged source after remote state and lock absence proof.
+  # Clean-room creation uses terraform init -reconfigure, never -migrate-state.
 }

@@ -294,9 +294,18 @@ require("aws_iam_user_policy_attachment" not in all_bootstrap_tf, "IAM user atta
 for key in expected_keys.values():
     require(f'"{key}"' in main_tf, f"bootstrap missing key: {key}")
 
+dev_clean_room_successor_path = root / "delivery/contracts/v0.12.4.1.5.0.4-guarded-aws-dev-remote-state-clean-room-preflight.json"
 for name, path in expected_roots.items():
     current_backend = (root / path / "backend.tf").read_text()
-    require('backend "s3"' not in current_backend, f"{name} migrated before v0.12.2")
+    if name == "dev" and dev_clean_room_successor_path.exists():
+        dev_successor = load(dev_clean_room_successor_path)
+        require(dev_successor.get("version") == "v0.12.4.1.5.0.4", "unknown dev backend successor")
+        require(dev_successor.get("status") == "aws-dev-remote-state-clean-room-preflight-ready-offline", "unsafe dev backend successor")
+        require(current_backend.count('backend "s3" {}') == 1, "dev partial backend declaration drift")
+        for forbidden in ("bucket =", "key =", "kms_key_id", "allowed_account_ids", "access_key", "secret_key"):
+            require(forbidden not in current_backend, f"tracked dev backend value found: {forbidden}")
+    else:
+        require('backend "s3"' not in current_backend, f"{name} migrated before reviewed successor")
 
 for name, key in expected_keys.items():
     path = root / expected_examples[name]

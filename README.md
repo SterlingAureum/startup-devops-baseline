@@ -3,6 +3,14 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
+`v0.12.4.1.5.0.4-guarded-aws-dev-remote-state-clean-room-preflight`
+activates only the dev root's partial S3 backend and adds command-free request
+verification plus a separately approved AWS read-only absence/foundation
+preflight. It does not initialize Terraform or create the environment. See the
+[v0.12.4.1.5.0.4 guarded AWS dev remote-state clean-room
+preflight](docs/V0.12.4.1.5.0.4_GUARDED_AWS_DEV_REMOTE_STATE_CLEAN_ROOM_PREFLIGHT.md).
+
+Predecessor development checkpoint:
 `v0.12.4.1.5.0.3-aws-dev-remote-state-clean-room-reconstruction-design`
 records that the External Secrets live preflight correctly stopped because the
 disposable aws-dev EKS baseline is absent. It designs a remote-state clean-room

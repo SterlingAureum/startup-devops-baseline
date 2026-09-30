@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.4-aws-dev-clean-room-preflight-request-v1",
+  "operation": "inspect-empty-aws-dev-remote-state-clean-room",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_40_CHARACTER_PROTECTED_MAIN_SHA",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "expectedAwsRegion": "us-east-1",
+  "expectedClusterName": "startup-devops-baseline-dev",
+  "expectedStateBucketName": "REPLACE_WITH_PRIVATE_STATE_BUCKET_NAME",
+  "expectedStateBucketArn": "REPLACE_WITH_PRIVATE_STATE_BUCKET_ARN",
+  "expectedStateKmsKeyArn": "REPLACE_WITH_PRIVATE_STATE_KMS_KEY_ARN",
+  "expectedDevStateAccessPolicyArn": "REPLACE_WITH_PRIVATE_DEV_STATE_ACCESS_POLICY_ARN",
+  "privateBackendConfigPath": "/private/owner-readable/dev.s3.tfbackend",
+  "privateBackendConfigSha256": "REPLACE_WITH_64_CHARACTER_SHA256",
+  "privatePreflightOutputDirectory": "/private/owner-readable/aws-dev-clean-room-preflight-ATTEMPT_ID",
+  "privateStagedSourceDirectory": "/private/owner-readable/aws-dev-clean-room-source-ATTEMPT_ID",
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_UTC_TIMESTAMP",
+    "expiresAtUtc": "REPLACE_WITH_UTC_TIMESTAMP_WITHIN_ONE_HOUR"
+  },
+  "executionBoundary": {
+    "awsReadOnlyValidation": true,
+    "localPrivateSourceStaging": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "stateMigration": false,
+    "statePush": false,
+    "destroy": false,
+    "iamPolicyAttachment": false,
+    "kubernetesCommand": false,
+    "secretValueRead": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

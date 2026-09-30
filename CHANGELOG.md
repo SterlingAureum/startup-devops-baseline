@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.12.4.1.5.0.7
+
+- Record the successful semantic-state recovery through exact private request,
+  evidence, result, live-state and normalized-check SHA-256 values.
+- Add command-free request verification on clean protected main and a separate
+  one-hour-maximum qualification approval.
+- Qualify EKS 1.36, the exact four-node On-Demand system node group, four
+  healthy managed add-ons and four Ready Kubernetes nodes using read-only
+  observations plus one isolated private kubeconfig write.
+- Keep Terraform, state/AWS/Kubernetes mutation, Argo CD bootstrap, Root
+  deployment, External Secrets preflight, retry, rollback and teardown blocked.
+
 ## v0.12.4.1.5.0.6.0.1.1
 
 - Bind the stopped read-only recovery request and its private output as incident

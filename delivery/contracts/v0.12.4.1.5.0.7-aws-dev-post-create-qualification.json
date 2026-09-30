@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7-aws-dev-post-create-qualification-v1",
+  "version": "v0.12.4.1.5.0.7",
+  "status": "aws-dev-post-create-qualification-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "5d56911e2cd3510e313c2835e11667e092628482",
+  "recordedRecovery": {
+    "privateRecoveryRequestSha256": "d20b549187fb360ac4b9ad45d0233bc1657b43b84cb0b2915e29d3ec7d552d4e",
+    "privateRecoveryEvidenceSha256": "e064b6ce9460e3f9e0a0d87bfc5b1622f3a18b828c9b27fb93dffac8b492d0d1",
+    "privateRecoveryResultSha256": "9006818a0806e5c9693c9766a2ec73c814e7038bdfa0707e2531d0a13bec18c6",
+    "liveStateSha256": "0de88b8e306055c714fdd92c2192b575055bde56e0dc7b96c2de6a0c164b7bf9",
+    "stateAddressInventorySha256": "0bf45e067a30633472416fcef468381e11c90d13cfabe96eeb50f6bc2e602691",
+    "normalizedCheckResultsSha256": "cce879cf1dc7519f44b5a75d6802b9ef517712c1483688c0fc98184266ce11a1",
+    "stateSerial": 9,
+    "managedStateAddressCount": 90,
+    "reviewedDataStateAddressCount": 6,
+    "priorStateDataAddressCount": 7,
+    "totalStateAddressCount": 103,
+    "checkResultCount": 28,
+    "checkPassStatusCount": 56,
+    "semanticStateEqual": true,
+    "environmentCreated": true,
+    "eksClusterActive": true,
+    "unexplainedAddressCount": 0
+  },
+  "verifyPhase": {
+    "operationalCommandsAllowed": false,
+    "protectedMainMustBeExactAndClean": true,
+    "privateRecoveryEvidenceMustMatch": true,
+    "privateQualificationOutputMustBeNew": true,
+    "maximumApprovalWindowMinutes": 60,
+    "minimumRemainingMinutes": 15
+  },
+  "executePhase": {
+    "requiredConfirmationVariable": "CONFIRM_AWS_DEV_POST_CREATE_QUALIFICATION",
+    "requiredConfirmationValue": "qualify-recovered-aws-dev-for-gitops-resume",
+    "awsIdentityReadAllowed": true,
+    "eksClusterReadAllowed": true,
+    "eksNodegroupReadAllowed": true,
+    "eksAddonReadAllowed": true,
+    "privateKubeconfigWriteAllowed": true,
+    "kubernetesApiReadAllowed": true,
+    "expectedKubernetesMinor": "1.36",
+    "expectedNodegroup": "startup-devops-baseline-dev-general",
+    "expectedNodeCount": 4,
+    "expectedManagedAddonCount": 4,
+    "argocdNamespaceMustBeAbsent": true
+  },
+  "prohibitedOperations": {
+    "terraformCommandAllowed": false,
+    "stateMutationAllowed": false,
+    "awsMutationAllowed": false,
+    "kubernetesPersistentMutationAllowed": false,
+    "argocdOperationAllowed": false,
+    "helmOperationAllowed": false,
+    "externalSecretsPreflightAllowed": false,
+    "secretValueReadAllowed": false,
+    "automaticRetryAllowed": false,
+    "automaticRollbackAllowed": false,
+    "automaticTeardownAllowed": false
+  },
+  "successBoundary": {
+    "status": "aws-dev-post-create-qualified-for-gitops-bootstrap",
+    "gitopsBootstrapExecuted": false,
+    "externalSecretsPreflightExecuted": false,
+    "nextAction": "obtain-separate-aws-dev-gitops-bootstrap-approval-before-external-secrets-preflight-resume"
+  },
+  "successor": {
+    "scope": "guarded-aws-dev-gitops-bootstrap-and-root-convergence",
+    "requiresSeparateApproval": true,
+    "authorizedByThisCheckpoint": false
+  }
+}

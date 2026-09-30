@@ -979,6 +979,10 @@ Incremental scope:
   creates plus six data reads, permit only one separately approved saved-plan
   apply before review expiry, and require private state/EKS/S3 proof without
   init, replanning, retry, rollback, state push or direct S3 mutation
+- v0.12.4.1.5.0.6.0.1 - AWS dev post-apply read-only recovery - delivered
+  offline; preserve the successful 90-create apply, correct the state model to
+  the exact 103-address union including seven prior-state data sources, and
+  resume only state/EKS/S3 read-only validation without init, plan or apply
 - v0.12.4.1.5.0.5 - guarded AWS dev remote-state saved create plan -
   delivered offline; consume the human-reviewed clean-room preflight and permit
   a separately approved `terraform init -reconfigure` plus one saved create-only

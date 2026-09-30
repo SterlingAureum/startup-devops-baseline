@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.6.0.1-aws-dev-post-apply-read-only-recovery-request-v1",
+  "operation": "recover-aws-dev-post-apply-validation-read-only",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "REPLACE_WITH_PROTECTED_MAIN_COMMIT",
+  "expectedAwsAccountId": "REPLACE_WITH_12_DIGIT_ACCOUNT_ID",
+  "expectedTerraformVersion": "REPLACE_WITH_TERRAFORM_VERSION",
+  "privateApplyRequestPath": "/absolute/private/path/aws-dev-recovery-saved-plan-apply-request-attempt-01.json",
+  "privateRecoveryPlanOutputDirectory": "/absolute/private/path/aws-dev-clean-room-create-plan-output-attempt-02",
+  "privateApplyOutputDirectory": "/absolute/private/path/aws-dev-recovery-saved-plan-apply-output-attempt-01",
+  "privatePostApplyRecoveryOutputDirectory": "/absolute/private/path/aws-dev-post-apply-read-only-recovery-output-attempt-01",
+  "expectedIncidentArtifactSha256s": {
+    "terraform-apply-reviewed-recovery-plan.stdout": "REPLACE_WITH_SHA256",
+    "s3-object-history-before-apply.stdout": "REPLACE_WITH_SHA256",
+    "terraform-state-list-after-apply.stdout": "REPLACE_WITH_SHA256"
+  },
+  "evidenceBoundary": {
+    "applyControlPlaneCommit": "d5faf42112066831e53fbd761c603f815d06884a",
+    "privateApplyRequestSha256": "c8a3e0a33019246ef5a34f9f17024e1f2c4fd095047dc5f38aa6eef616ceca4b",
+    "applySucceeded": true,
+    "applySummary": "90 added, 0 changed, 0 destroyed.",
+    "applyStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "stateSha256": "d3960815889c8d192ffc09b19a98a11f965ed660670ce87d07701944bce3e205",
+    "stateLineageSha256": "e7607c625b0ce10f80d09715b8bfb43b6e0a251a82aeabe08f52fb4296ed0391",
+    "stateSerial": 9,
+    "reviewedManagedAddressCount": 90,
+    "reviewedDataAddressCount": 6,
+    "priorStateDataAddressCount": 7,
+    "priorStateDataAddressSha256": "3d28dc57ff69f6763bd6aafe3ef78930ee177cc3d1dddc59f49d58f6a4336cb6",
+    "totalStateAddressCount": 103,
+    "totalStateAddressSha256": "0bf45e067a30633472416fcef468381e11c90d13cfabe96eeb50f6bc2e602691",
+    "unexplainedAddressCount": 0
+  },
+  "approval": {
+    "notBeforeUtc": "REPLACE_WITH_CURRENT_UTC_Z",
+    "expiresAtUtc": "REPLACE_WITH_MAXIMUM_THREE_HOURS_LATER_UTC_Z"
+  },
+  "executionBoundary": {
+    "awsIdentityRead": true,
+    "eksDescribeCluster": true,
+    "s3ObjectHistoryRead": true,
+    "terraformVersionRead": true,
+    "terraformStatePull": true,
+    "terraformStateList": true,
+    "terraformShowState": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformApply": false,
+    "terraformDestroy": false,
+    "statePush": false,
+    "stateMigration": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "iamPolicyAttachment": false,
+    "kubernetesCommand": false,
+    "secretValueRead": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

@@ -290,6 +290,13 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
 PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.7-aws-dev-post-create-qualification.py"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.1.5.0.7.1-guarded-aws-dev-teardown.py" \
+  --root "${ROOT_DIR}"
+
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.7.1-guarded-aws-dev-teardown.py"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" \
@@ -303,7 +310,8 @@ bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.6-reviewed-aws-dev-recovery-saved-plan-apply.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.6.0.1-aws-dev-post-apply-read-only-recovery.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.6.0.1.1-aws-dev-semantic-state-recovery.sh" \
-  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7-aws-dev-post-create-qualification.sh"
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7-aws-dev-post-create-qualification.sh" \
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1-guarded-aws-dev-teardown.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only

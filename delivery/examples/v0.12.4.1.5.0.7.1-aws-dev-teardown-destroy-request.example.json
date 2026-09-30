@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1-aws-dev-teardown-destroy-request-v1",
+  "operation": "destroy-reviewed-aws-dev-with-exact-saved-plan",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "0000000000000000000000000000000000000000",
+  "expectedAwsAccountId": "000000000000",
+  "expectedTerraformVersion": "1.14.3",
+  "privateTeardownPlanRequestPath": "/private/aws-dev-guarded-teardown-plan-request-attempt-01.json",
+  "privateTeardownPlanOutputDirectory": "/private/aws-dev-guarded-teardown-plan-output-attempt-01",
+  "privateDestroyOutputDirectory": "/private/aws-dev-guarded-teardown-destroy-output-attempt-01",
+  "planBoundary": {
+    "privatePlanRequestSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "binaryPlanSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "planJsonSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "planTextSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "addressInventorySha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "planRecordSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "managedDeleteCount": 90,
+    "dataChangeCount": 0,
+    "resourceDriftCount": 0,
+    "importCount": 0,
+    "humanReviewed": true,
+    "planReviewExpiresAtUtc": "2026-10-01T05:00:00Z"
+  },
+  "approval": {
+    "notBeforeUtc": "2026-10-01T02:00:00Z",
+    "expiresAtUtc": "2026-10-01T05:00:00Z"
+  },
+  "executionBoundary": {
+    "awsIdentityRead": true,
+    "eksAbsenceRead": true,
+    "vpcAbsenceRead": true,
+    "s3ObjectHistoryRead": true,
+    "terraformVersionRead": true,
+    "terraformStateRead": true,
+    "terraformExactSavedPlanApply": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformUnsavedDestroy": false,
+    "statePush": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "kubernetesCommand": false,
+    "secretValueRead": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

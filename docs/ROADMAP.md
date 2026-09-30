@@ -3,6 +3,21 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1 - Guarded AWS dev teardown
+
+Status: Ready offline
+
+Delivered:
+
+- direct transition from the recovered environment without executing or
+  reverting the optional `.7` qualification
+- command-free plan and destroy-request verification
+- exact 90-managed-address saved destroy plan with no init or apply authority
+- separate human review and destroy approval bound to every plan artifact
+- exact saved-plan apply plus zero-managed-state, EKS-absence and VPC-absence
+  evidence
+- fail-closed stop with no automatic retry or rollback
+
 ## v0.1 - Local GitOps Baseline
 
 Status: Completed

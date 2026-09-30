@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1
+
+- Add command-free verification and a separately confirmed, exact saved
+  `terraform plan -destroy` for the recovered 90-managed-address aws-dev state.
+- Require human review of the private text/JSON plan and a second request that
+  binds every artifact digest before any destroy authority exists.
+- Apply only the reviewed binary plan without Terraform init, replacement
+  planning or an unsaved destroy; prohibit retry, rollback, state push,
+  force-unlock and direct S3 mutation.
+- Require exactly 90 destroyed, zero managed state instances, no canonical
+  state delete marker, one clean lock lifecycle, and EKS/VPC absence.
+
 ## v0.12.4.1.5.0.7
 
 - Record the successful semantic-state recovery through exact private request,

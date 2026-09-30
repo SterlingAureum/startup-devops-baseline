@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1-guarded-aws-dev-teardown-v1",
+  "version": "v0.12.4.1.5.0.7.1",
+  "status": "guarded-aws-dev-teardown-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "dcd1c05c74e2ae8afc0d75e8482eb475c1dec112",
+  "recordedRecovery": {
+    "privateRecoveryRequestSha256": "d20b549187fb360ac4b9ad45d0233bc1657b43b84cb0b2915e29d3ec7d552d4e",
+    "privateRecoveryEvidenceSha256": "e064b6ce9460e3f9e0a0d87bfc5b1622f3a18b828c9b27fb93dffac8b492d0d1",
+    "privateRecoveryResultSha256": "9006818a0806e5c9693c9766a2ec73c814e7038bdfa0707e2531d0a13bec18c6",
+    "liveStateSha256": "0de88b8e306055c714fdd92c2192b575055bde56e0dc7b96c2de6a0c164b7bf9",
+    "stateAddressInventorySha256": "0bf45e067a30633472416fcef468381e11c90d13cfabe96eeb50f6bc2e602691",
+    "normalizedCheckResultsSha256": "cce879cf1dc7519f44b5a75d6802b9ef517712c1483688c0fc98184266ce11a1",
+    "stateSerial": 9,
+    "managedStateAddressCount": 90,
+    "dataStateAddressCount": 13,
+    "totalStateAddressCount": 103,
+    "semanticStateEqual": true,
+    "environmentCreated": true,
+    "unexplainedAddressCount": 0
+  },
+  "planPhase": {
+    "verifyIsCommandFree": true,
+    "maximumApprovalWindowMinutes": 60,
+    "maximumPlanReviewLifetimeMinutes": 240,
+    "requiredConfirmationVariable": "CONFIRM_AWS_DEV_TEARDOWN_PLAN",
+    "requiredConfirmationValue": "plan-reviewed-aws-dev-remote-state-teardown",
+    "terraformInitAllowed": false,
+    "destroySavedPlanAllowed": true,
+    "managedDeleteCount": 90,
+    "terraformApplyAllowed": false
+  },
+  "destroyPhase": {
+    "verifyIsCommandFree": true,
+    "humanReviewRequired": true,
+    "separateApprovalRequired": true,
+    "maximumApprovalWindowMinutes": 180,
+    "requiredConfirmationVariable": "CONFIRM_AWS_DEV_TEARDOWN_DESTROY",
+    "requiredConfirmationValue": "destroy-reviewed-aws-dev-with-exact-saved-plan",
+    "exactSavedPlanApplyOnly": true,
+    "terraformInitAllowed": false,
+    "terraformPlanAllowed": false,
+    "unsavedDestroyAllowed": false
+  },
+  "successBoundary": {
+    "status": "aws-dev-guarded-teardown-completed",
+    "managedStateAddressCount": 0,
+    "remainingDataAddressesMustBePriorSubset": true,
+    "canonicalStateDeleteMarkerAllowed": false,
+    "eksClusterMustBeAbsent": true,
+    "vpcMustBeAbsent": true,
+    "automaticRetryAllowed": false,
+    "automaticRollbackAllowed": false
+  }
+}

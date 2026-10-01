@@ -3,6 +3,18 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.2 - AWS dev partial teardown recovery
+
+Status: Ready offline
+
+Delivered:
+
+- immutable evidence for the 88-completed, two-pending partial destroy
+- command-free recovery request verification
+- separately approved remote-state and target-network read-only inspection
+- explicit ENI, instance, NAT gateway and route-table dependency classification
+- no saved-plan reuse, cleanup mutation, retry, rollback or state manipulation
+
 ## v0.12.4.1.5.0.7.1 - Guarded AWS dev teardown
 
 Status: Ready offline

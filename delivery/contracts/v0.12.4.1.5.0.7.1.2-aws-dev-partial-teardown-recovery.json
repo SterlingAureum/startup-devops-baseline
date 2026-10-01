@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.2-aws-dev-partial-teardown-recovery-v1",
+  "version": "v0.12.4.1.5.0.7.1.2",
+  "status": "aws-dev-partial-teardown-recovery-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "8bdb9289a8b612d987dc5a2e555bd16ca4a542b9",
+  "incident": {
+    "privateDestroyRequestSha256": "a41c67a956cd36fabe4730a05c6f67c1e12bfe7ecb788f63e946fd573f4f2d2e",
+    "binaryPlanSha256": "401a1ca3911cc9c48df6e7d05ef7230ac7ed859432fb139e4773876ab0f20b5d",
+    "applyStdoutSha256": "533d6d9c1be7f4b816e4cf0eff28b918c8c737eda71290d066b38e6523868168",
+    "applyStderrSha256": "b087c323c60808448c8d3a888034f125690676a2375ed26366248b96c761a324",
+    "plannedManagedDeleteCount": 90,
+    "destroyStartedAddressCount": 89,
+    "destroyCompletedAddressCount": 88,
+    "pendingManagedAddressCount": 2,
+    "failedAddress": "module.vpc.aws_subnet.private[\"us-east-1b\"]",
+    "neverStartedAddress": "module.vpc.aws_vpc.this",
+    "failureCode": "DependencyViolation",
+    "applyCompleteMarkerPresent": false,
+    "teardownResultPresent": false
+  },
+  "verifyPhase": {
+    "operationalCommandsAllowed": false,
+    "protectedMainMustBeExactAndClean": true,
+    "incidentEvidenceMustMatch": true,
+    "privateRecoveryOutputMustBeNew": true,
+    "maximumApprovalWindowMinutes": 180,
+    "minimumRemainingMinutes": 15
+  },
+  "executePhase": {
+    "requiredConfirmationVariable": "CONFIRM_AWS_DEV_PARTIAL_TEARDOWN_RECOVERY",
+    "requiredConfirmationValue": "inspect-partial-aws-dev-teardown-read-only",
+    "terraformStateReadAllowed": true,
+    "s3HistoryReadAllowed": true,
+    "eksAbsenceReadAllowed": true,
+    "targetVpcSubnetDependencyReadsAllowed": true,
+    "terraformMutationAllowed": false,
+    "awsMutationAllowed": false,
+    "automaticRetryAllowed": false,
+    "automaticRollbackAllowed": false
+  },
+  "successBoundary": {
+    "status": "aws-dev-partial-teardown-read-only-recovery-completed",
+    "managedStateAddressCount": 2,
+    "pendingAddressesMustMatchIncident": true,
+    "eksClusterMustBeAbsent": true,
+    "vpcMustBePresent": true,
+    "subnetMustBePresent": true,
+    "dependencyMustBeClassified": true,
+    "finalCleanupAuthorized": false
+  }
+}

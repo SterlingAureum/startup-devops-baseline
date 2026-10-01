@@ -3,16 +3,25 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.1-zero-drift-plan-gate-repair`
+`v0.12.4.1.5.0.7.1.2-aws-dev-partial-teardown-recovery`
 
-The current checkpoint repairs the teardown plan gate after Terraform omitted
+The current checkpoint preserves the partial destroy incident: 88 of 90
+managed resources completed, one private subnet failed with EC2
+`DependencyViolation`, and its parent VPC never started. It adds command-free
+verification and separately approved read-only state, S3, EKS and target
+VPC/subnet dependency recovery. It grants no cleanup authority. See
+[v0.12.4.1.5.0.7.1.2 AWS dev partial teardown
+recovery](docs/V0.12.4.1.5.0.7.1.2_AWS_DEV_PARTIAL_TEARDOWN_RECOVERY.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.1-zero-drift-plan-gate-repair`. It repairs the teardown plan gate after Terraform omitted
 the empty `resource_drift` field from an otherwise complete and applyable
 attempt-01 saved plan. It accepts only an omitted field or an explicit empty
 list, continues to reject real drift, and requires a fresh attempt-02 request
 and output. See [v0.12.4.1.5.0.7.1.1 zero-drift plan gate
 repair](docs/V0.12.4.1.5.0.7.1.1_ZERO_DRIFT_PLAN_GATE_REPAIR.md).
 
-The predecessor checkpoint is
+The earlier predecessor checkpoint is
 `v0.12.4.1.5.0.7.1-guarded-aws-dev-teardown`. It provides a fast, two-approval teardown of the recovered
 aws-dev environment. It first creates and binds an exact saved destroy plan,
 then permits only that reviewed binary plan to be applied. Terraform init,

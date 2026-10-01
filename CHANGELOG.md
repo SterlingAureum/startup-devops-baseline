@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.2
+
+- Preserve the exact reviewed plan, destroy request and failed apply logs after
+  88 of 90 managed addresses completed.
+- Bind the pending private subnet and parent VPC plus the subnet
+  `DependencyViolation`; prohibit reuse of the failed saved plan.
+- Add command-free recovery verification and separately approved read-only
+  Terraform state, S3 history, EKS absence and target-network dependency reads.
+- Classify remaining ENI, instance, NAT gateway or route-table dependencies
+  without emitting private resource identities or authorizing final cleanup.
+
 ## v0.12.4.1.5.0.7.1.1
 
 - Preserve the stopped attempt-01 destroy plan as immutable incident evidence;

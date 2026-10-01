@@ -3,6 +3,19 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.3 - AWS dev final cleanup
+
+Status: Ready offline
+
+Delivered:
+
+- immutable binding to the partial recovery and exact orphan ENI evidence
+- command-free verification for both separately approved mutation phases
+- exact ENI deletion followed by a two-resource saved destroy plan only
+- human review and digest-bound exact saved-plan apply
+- empty-state plus subnet/VPC absence and clean object-history evidence
+- no init, unsaved destroy, state push, unrelated AWS mutation, retry or rollback
+
 ## v0.12.4.1.5.0.7.1.2 - AWS dev partial teardown recovery
 
 Status: Ready offline

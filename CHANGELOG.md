@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.3
+
+- Bind the exact partial-teardown recovery and the single available,
+  unattached, non-service-managed ENI dependency without publishing its ID.
+- Add command-free verification and a separately approved prepare phase that
+  deletes only that ENI, proves absence, and produces an exact two-resource
+  saved destroy plan without applying it.
+- Require human review and a second approval bound to every plan artifact
+  before applying only the reviewed binary plan.
+- Require two destroyed resources, empty Terraform state, absent subnet and
+  VPC, and clean state/lock history; prohibit init, unsaved destroy, state
+  mutation, unrelated AWS mutation, retry and rollback.
+
 ## v0.12.4.1.5.0.7.1.2
 
 - Preserve the exact reviewed plan, destroy request and failed apply logs after

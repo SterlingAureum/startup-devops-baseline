@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.3-aws-dev-final-cleanup-v1",
+  "version": "v0.12.4.1.5.0.7.1.3",
+  "status": "aws-dev-final-cleanup-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "3e648db871489bd4e01a0552e75f4751ff1c126c",
+  "recovery": {
+    "privateRecoveryRequestSha256": "c8c079dec7908a881ec4a8e204ae3eae454404c738a805b3e989603c052d9fe8",
+    "privateRecoveryEvidenceSha256": "5e2f556aaeaf1d5b11f33216aee7a86275b80019f60427877c5a804080e0de75",
+    "privateRecoveryResultSha256": "e9fa4bfe1a8383549ffb1001fce7306fd8a42efb2686c6b9de8f518e3c973b55",
+    "partialStateSha256": "9b8819191a47a7523e0625f0d1d7bf1cde2e93cd884f2989d40e0247e22a4159",
+    "managedStateAddressCount": 2,
+    "networkInterfaceEvidenceSha256": "abc75c7377f39957ae4a4c3d0a889a91e39b6757e86fe0e93d1147b8d311e162",
+    "networkInterfaceIdSha256": "991fa1fa031b0d05c4b58c529f777dce62e2adbc26d9a7c184b9b9144ba421cd",
+    "networkInterfaceAvailable": true,
+    "networkInterfaceAttached": false,
+    "networkInterfaceRequesterManaged": false,
+    "networkInterfaceOperatorManaged": false,
+    "networkInterfaceOwnerMatchesAccount": true
+  },
+  "preparePhase": {
+    "verifyIsCommandFree": true,
+    "separateApprovalRequired": true,
+    "exactOrphanNetworkInterfaceDeleteAllowed": true,
+    "otherAwsMutationAllowed": false,
+    "twoResourceSavedPlanAllowed": true,
+    "terraformInitAllowed": false,
+    "terraformApplyAllowed": false,
+    "maximumApprovalWindowMinutes": 60,
+    "maximumReviewLifetimeMinutes": 240
+  },
+  "finalPhase": {
+    "verifyIsCommandFree": true,
+    "humanReviewRequired": true,
+    "separateApprovalRequired": true,
+    "exactSavedPlanApplyOnly": true,
+    "managedDeleteCount": 2,
+    "terraformInitAllowed": false,
+    "terraformPlanAllowed": false,
+    "automaticRetryAllowed": false,
+    "automaticRollbackAllowed": false
+  },
+  "successBoundary": {
+    "status": "aws-dev-final-cleanup-completed",
+    "managedStateAddressCount": 0,
+    "dataStateAddressCount": 0,
+    "subnetMustBeAbsent": true,
+    "vpcMustBeAbsent": true,
+    "canonicalStateDeleteMarkerAllowed": false
+  }
+}

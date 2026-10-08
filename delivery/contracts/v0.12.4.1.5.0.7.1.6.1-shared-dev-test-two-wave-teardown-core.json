@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.1-shared-dev-test-two-wave-teardown-core-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.1",
+  "status": "shared-dev-test-two-wave-teardown-core-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "f42fe1d14bdb0b9152c6abab4b0c1039f86e43da",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6-generalized-multi-environment-teardown-hardening-design.json",
+  "core": {
+    "path": "scripts/aws_two_wave_teardown_core.py",
+    "commandFree": true,
+    "supportedLiveProfiles": [
+      "aws-dev",
+      "aws-test"
+    ],
+    "rejectedLiveProfiles": [
+      "aws-prod"
+    ],
+    "networkAddressPrefix": "module.vpc.",
+    "requiresNetworkShellInWaveOneInput": true,
+    "requiresNonNetworkAddressesInWaveOneInput": true,
+    "waveOneDeletesAllAndOnlyNonNetworkAddresses": true,
+    "postWaveOneStateEqualsPriorNetworkAddresses": true,
+    "waveTwoDeletesAllAndOnlyRemainingNetworkAddresses": true,
+    "finalManagedStateMustBeEmpty": true
+  },
+  "gates": [
+    "environment-profile",
+    "state-address-partition",
+    "wave-one-saved-plan",
+    "post-wave-one-state",
+    "post-cluster-dependency-inventory",
+    "wave-two-saved-plan",
+    "remote-state-and-lock-history",
+    "final-empty-state"
+  ],
+  "dependencyBoundary": {
+    "requiredInventoryFamilyCount": 12,
+    "eksMustBeAbsent": true,
+    "controllerOwnedDependencyCount": 0,
+    "unknownDependencyCount": 0,
+    "safeResidueCategories": [
+      "detached-dynamic-pvc-volume",
+      "orphan-kubernetes-eni",
+      "orphan-eks-cluster-security-group"
+    ],
+    "safeResidueIdentityIsSha256Only": true,
+    "safeResidueDeletionAuthorizedByInventory": false,
+    "waveTwoRequiresZeroSafeResidues": true,
+    "stateBackendMustRemainPreserved": true,
+    "runtimeIdentitiesMustRemainPreserved": true
+  },
+  "historyBoundary": {
+    "planStateObjectVersionDelta": 0,
+    "applyStateObjectVersionDelta": 1,
+    "stateDeleteMarkerDelta": 0,
+    "lockObjectVersionDelta": 1,
+    "lockDeleteMarkerDelta": 1,
+    "lockLatestVersionCount": 0,
+    "lockLatestDeleteMarkerCount": 1
+  },
+  "fixtures": {
+    "path": "delivery/examples/v0.12.4.1.5.0.7.1.6.1-shared-dev-test-two-wave-teardown-core-fixtures.json",
+    "environmentCount": 2,
+    "containsPrivateResourceIdentity": false,
+    "containsAwsAccountId": false,
+    "containsBackendIdentity": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "runsKubernetes": false,
+    "modifiesState": false,
+    "destroysResources": false
+  },
+  "authority": {
+    "liveReadAuthorized": false,
+    "livePlanAuthorized": false,
+    "liveApplyAuthorized": false,
+    "liveDestroyAuthorized": false,
+    "safeResidueDeleteAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "implement-command-free-dev-test-two-wave-teardown-request-and-preflight"
+}

@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6
+
+- Record that shared Terraform modules and independent state keys provide a
+  reusable base but the completed aws-dev run is not three-environment proof.
+- Define a shared dev/test two-wave teardown with controller cleanup,
+  post-cluster dependency inventory, fresh network-only plan and exact-plan
+  approvals; retain a fail-closed static prod boundary.
+- Exclude the protected state backend, history and runtime identities from
+  ordinary environment teardown and residual-cost deletion.
+- Distinguish declared state keys from activation evidence: dev is recorded,
+  test requires separate migration before live acceptance, and prod remains
+  static in v0.12.
+- Require one clean dev lifecycle plus one dev-to-test promotion/test teardown
+  before v0.12 closure, with no incident recovery or manual state editing.
+- Keep historical evidence validation on demand and add no executor or live
+  authority in this design checkpoint.
+
 ## v0.12.4.1.5.0.7.1.5.2
 
 - Record the exact reviewed VPC-only plan and successful one-resource destroy

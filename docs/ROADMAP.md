@@ -3,6 +3,26 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6 - Generalized multi-environment teardown hardening design
+
+Status: Ready offline
+
+Delivered:
+
+- exact backend-versus-environment ownership and state-retention boundary
+- explicit dev/test/prod remote-state activation status and prerequisites
+- dev/test/prod policy and acceptance matrix
+- fail-closed dependency classification and complete VPC inventory families
+- two-wave saved-plan model with a fresh network-only second plan
+- clean dev and dev-to-test/test-teardown acceptance requirements
+- standalone offline validation with no executor or live authority
+
+Next:
+
+- implement the shared dev/test two-wave teardown core offline
+- add environment-isolation fixtures and plan-shape tests
+- perform live acceptance only after implementation and separate approval
+
 ## v0.12.4.1.5.0.7.1.5.2 - AWS dev final cleanup execution evidence
 
 Status: Complete

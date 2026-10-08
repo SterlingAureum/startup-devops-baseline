@@ -3,6 +3,26 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.2 - Shared dev/test teardown request preflight
+
+Status: Ready offline
+
+Delivered:
+
+- command-free request verification for eight ordered teardown phases
+- exact environment, state-key, commit, evidence and predecessor bindings
+- one-phase, one-attempt and bounded whole-second UTC request windows
+- remote-state readiness and phase-specific managed-state count shapes
+- exact human-reviewed saved-plan bindings for both apply phases
+- SHA-only optional safe-residue binding without deletion authority
+- redacted non-authorizing results and active-source structure validation
+
+Next:
+
+- add guarded phase-specific readers for private preflight evidence
+- retain separate human approval before every live phase
+- add no live mutation until the reader and receipt boundaries are reviewed
+
 ## v0.12.4.1.5.0.7.1.6.1 - Shared dev/test two-wave teardown core
 
 Status: Ready offline
@@ -19,8 +39,8 @@ Delivered:
 
 Next:
 
-- implement command-free dev/test request verification and preflight adapter
-- bind future private evidence to this shared core without exposing identities
+- consume the command-free request preflight implemented by v0.12.4.1.5.0.7.1.6.2
+- bind future private evidence to the shared core without exposing identities
 - retain all live command paths behind later, separately reviewed approvals
 
 ## v0.12.4.1.5.0.7.1.6 - Generalized multi-environment teardown hardening design

@@ -3,9 +3,22 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.1-shared-dev-test-two-wave-teardown-core`
+`v0.12.4.1.5.0.7.1.6.2-shared-dev-test-two-wave-teardown-request-preflight`
 
-The current checkpoint implements the command-free shared dev/test decision
+The current checkpoint adds a command-free dev/test request-verification and
+preflight adapter around the two-wave teardown core. It binds one environment,
+phase, attempt, state key, protected-main commit, evidence hash, predecessor
+receipt and bounded UTC window. Apply phases additionally bind an exact
+human-reviewed saved plan; optional residue cleanup accepts only an allowlisted
+SHA-bound identity. It rejects aws-prod, emits no private resource identity,
+exposes no executor and grants no live authority. See
+[v0.12.4.1.5.0.7.1.6.2 shared dev/test two-wave teardown request
+preflight](docs/V0.12.4.1.5.0.7.1.6.2_SHARED_DEV_TEST_TWO_WAVE_TEARDOWN_REQUEST_PREFLIGHT.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.1-shared-dev-test-two-wave-teardown-core`.
+
+It implements the command-free shared dev/test decision
 core for the two-wave teardown. It validates environment profiles, partitions
 managed state at the `module.vpc.*` boundary, gates both saved plans, requires
 an exact post-wave-one network state, classifies post-cluster dependencies,

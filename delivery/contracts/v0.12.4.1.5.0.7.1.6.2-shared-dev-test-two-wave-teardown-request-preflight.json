@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.2-shared-dev-test-two-wave-teardown-request-preflight-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.2",
+  "status": "shared-dev-test-two-wave-teardown-request-preflight-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "684015fb2c8988f42420cdd5852016a191ca9a49",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.1-shared-dev-test-two-wave-teardown-core.json",
+  "adapter": {
+    "path": "scripts/aws_two_wave_teardown_preflight.py",
+    "commandFree": true,
+    "supportedLiveProfiles": [
+      "aws-dev",
+      "aws-test"
+    ],
+    "rejectedLiveProfiles": [
+      "aws-prod"
+    ],
+    "phaseCount": 8,
+    "oneEnvironmentPerRequest": true,
+    "onePhasePerRequest": true,
+    "oneAttemptPerRequest": true,
+    "exactStateKeyBinding": true,
+    "exactControlPlaneCommitBinding": true,
+    "exactInputEvidenceBinding": true,
+    "exactPredecessorReceiptBinding": true,
+    "remoteStateReadyRequired": true,
+    "redactedResultOnly": true
+  },
+  "phases": [
+    "controller-cleanup",
+    "wave-one-plan",
+    "wave-one-apply",
+    "post-wave-one-inventory",
+    "safe-residue-delete",
+    "wave-two-plan",
+    "wave-two-apply",
+    "final-read-only-audit"
+  ],
+  "timeBoundary": {
+    "planInventoryAndCleanupMaximumSeconds": 3600,
+    "savedPlanApplyMaximumSeconds": 10800,
+    "wholeSecondUtcRequired": true,
+    "notBeforeEnforced": true,
+    "expiryEnforced": true,
+    "applyCannotOutlivePlanReview": true
+  },
+  "stateBoundary": {
+    "earlyPhasesRequireNetworkAndNonNetworkState": true,
+    "postWaveOnePhasesRequireNetworkOnlyState": true,
+    "finalAuditRequiresEmptyState": true,
+    "stateCountsMustReconcile": true,
+    "inventoryIdentityIsSha256Only": true
+  },
+  "applyBoundary": {
+    "humanReviewedPlanRequired": true,
+    "binaryPlanSha256Required": true,
+    "planRecordSha256Required": true,
+    "waveOnePlanDeletesNonNetworkCount": true,
+    "waveTwoPlanDeletesNetworkCount": true,
+    "freshPlanReviewLifetimeRequired": true
+  },
+  "residueBoundary": {
+    "acceptedOnlyInSafeResidueDeletePhase": true,
+    "allowlistedCategoryRequired": true,
+    "identityIsSha256Only": true,
+    "exactBindingRequired": true,
+    "preflightDeletionAuthorized": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "runsKubernetes": false,
+    "readsPrivateEvidence": false,
+    "modifiesState": false,
+    "destroysResources": false
+  },
+  "authority": {
+    "liveReadAuthorized": false,
+    "controllerMutationAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "directAwsMutationAuthorized": false,
+    "statePushAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "implement-guarded-phase-specific-preflight-evidence-readers-without-live-mutation"
+}

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.2-shared-dev-test-two-wave-teardown-request-preflight-fixtures-v1",
+  "verificationClockUtc": "2026-10-09T00:10:00Z",
+  "devWaveOnePlanRequest": {
+    "schemaVersion": "v0.12.4.1.5.0.7.1.6.2-shared-dev-test-two-wave-teardown-request-v1",
+    "environment": "aws-dev",
+    "stateKey": "environments/dev/terraform.tfstate",
+    "phase": "wave-one-plan",
+    "attemptNumber": 1,
+    "controlPlaneCommit": "684015fb2c8988f42420cdd5852016a191ca9a49",
+    "createdAtUtc": "2026-10-09T00:00:00Z",
+    "notBeforeUtc": "2026-10-09T00:05:00Z",
+    "expiresAtUtc": "2026-10-09T01:05:00Z",
+    "inputEvidenceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "predecessorReceiptSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "state": {
+      "managedAddressInventorySha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "managedAddressCount": 4,
+      "networkAddressCount": 2,
+      "nonNetworkAddressCount": 2,
+      "remoteStateReady": true
+    },
+    "reviewedPlan": null,
+    "safeResidue": null,
+    "authority": {
+      "liveReadAuthorized": false,
+      "controllerMutationAuthorized": false,
+      "terraformPlanAuthorized": false,
+      "terraformApplyAuthorized": false,
+      "directAwsMutationAuthorized": false,
+      "statePushAuthorized": false,
+      "automaticRetryAuthorized": false,
+      "automaticRollbackAuthorized": false,
+      "backendRetirementAuthorized": false
+    }
+  },
+  "testWaveTwoApplyRequest": {
+    "schemaVersion": "v0.12.4.1.5.0.7.1.6.2-shared-dev-test-two-wave-teardown-request-v1",
+    "environment": "aws-test",
+    "stateKey": "environments/test/terraform.tfstate",
+    "phase": "wave-two-apply",
+    "attemptNumber": 2,
+    "controlPlaneCommit": "684015fb2c8988f42420cdd5852016a191ca9a49",
+    "createdAtUtc": "2026-10-09T00:00:00Z",
+    "notBeforeUtc": "2026-10-09T00:05:00Z",
+    "expiresAtUtc": "2026-10-09T03:05:00Z",
+    "inputEvidenceSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "predecessorReceiptSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+    "state": {
+      "managedAddressInventorySha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "managedAddressCount": 2,
+      "networkAddressCount": 2,
+      "nonNetworkAddressCount": 0,
+      "remoteStateReady": true
+    },
+    "reviewedPlan": {
+      "wave": "network",
+      "binaryPlanSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "planRecordSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+      "humanReviewed": true,
+      "managedDeleteCount": 2,
+      "planReviewExpiresAtUtc": "2026-10-09T04:00:00Z"
+    },
+    "safeResidue": null,
+    "authority": {
+      "liveReadAuthorized": false,
+      "controllerMutationAuthorized": false,
+      "terraformPlanAuthorized": false,
+      "terraformApplyAuthorized": false,
+      "directAwsMutationAuthorized": false,
+      "statePushAuthorized": false,
+      "automaticRetryAuthorized": false,
+      "automaticRollbackAuthorized": false,
+      "backendRetirementAuthorized": false
+    }
+  }
+}

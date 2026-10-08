@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.5
+
+- Bind the exact VPC-only recovery and private security-group inventory proving
+  one EKS-created cluster security group is the sole non-default dependency.
+- Add command-free verification and a separately approved prepare phase that
+  deletes only that bound group, proves absence and creates a VPC-only saved
+  destroy plan without applying it.
+- Require human review and a second approval bound to every plan artifact
+  before applying only the reviewed binary plan.
+- Require one destroyed VPC, empty Terraform state and clean state/lock history;
+  prohibit init, unsaved destroy, state mutation, unrelated AWS mutation, retry
+  and rollback.
+
 ## v0.12.4.1.5.0.7.1.4
 
 - Preserve the partially applied final cleanup: the private subnet completed,

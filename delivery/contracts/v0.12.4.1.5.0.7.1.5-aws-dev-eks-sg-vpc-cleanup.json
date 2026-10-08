@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.5-aws-dev-eks-sg-vpc-cleanup-v1",
+  "version": "v0.12.4.1.5.0.7.1.5",
+  "status": "aws-dev-eks-sg-vpc-cleanup-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "b48b745ef5acfac6f29bc54acfed8208b7601463",
+  "recovery": {
+    "privateRecoveryRequestSha256": "466af32b41e85b3e9d1934c2a83ced4bcc8c94a9485d37a88cc4b2c705c81893",
+    "privateRecoveryEvidenceSha256": "74e9e23c0c2e721b39f96bd8add061b49f475bf19fe48ed7f991b9ebfc37bb65",
+    "privateRecoveryResultSha256": "ae13d7213582e1ce7ee40f13d3d6a4015d3ebe44f59b6cfc7bfd57905f80a7c3",
+    "vpcOnlyStateSha256": "016a94e6fa7c7a5c98b40183134333ee0b5ea034faaa5f6468f4501054f7cb87",
+    "managedStateAddressCount": 1,
+    "securityGroupEvidenceSha256": "dfba0b9e0aec18ce6bb82fa808fc2938069e33a8aef286bf22910aba1cb79918",
+    "targetSecurityGroupIdSha256": "e8a820dca7c3ab7408210f6779341938441519de137870e67278175c10f4d637",
+    "targetIsEksClusterSecurityGroup": true,
+    "targetMatchesFormerEniSecurityGroup": true,
+    "targetHasCrossGroupReference": false
+  },
+  "preparePhase": {
+    "verifyIsCommandFree": true,
+    "separateApprovalRequired": true,
+    "exactOrphanSecurityGroupDeleteAllowed": true,
+    "otherAwsMutationAllowed": false,
+    "vpcOnlySavedPlanAllowed": true,
+    "terraformInitAllowed": false,
+    "terraformApplyAllowed": false,
+    "maximumApprovalWindowMinutes": 60,
+    "maximumReviewLifetimeMinutes": 240
+  },
+  "finalPhase": {
+    "verifyIsCommandFree": true,
+    "humanReviewRequired": true,
+    "separateApprovalRequired": true,
+    "exactSavedPlanApplyOnly": true,
+    "managedDeleteCount": 1,
+    "terraformInitAllowed": false,
+    "terraformPlanAllowed": false,
+    "automaticRetryAllowed": false,
+    "automaticRollbackAllowed": false
+  },
+  "successBoundary": {
+    "status": "aws-dev-eks-sg-vpc-cleanup-completed",
+    "managedStateAddressCount": 0,
+    "dataStateAddressCount": 0,
+    "orphanSecurityGroupMustBeAbsent": true,
+    "vpcMustBeAbsent": true,
+    "canonicalStateDeleteMarkerAllowed": false
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.5-aws-dev-eks-sg-vpc-cleanup-apply-request-v1",
+  "operation": "apply-reviewed-vpc-only-final-cleanup",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "0000000000000000000000000000000000000000",
+  "expectedAwsAccountId": "000000000000",
+  "expectedTerraformVersion": "1.14.3",
+  "privatePrepareRequestPath": "/private/aws-dev-eks-sg-vpc-cleanup-prepare-request-attempt-01.json",
+  "privatePrepareOutputDirectory": "/private/aws-dev-eks-sg-vpc-cleanup-prepare-output-attempt-01",
+  "privateFinalOutputDirectory": "/private/aws-dev-eks-sg-vpc-cleanup-apply-output-attempt-01",
+  "planBoundary": {
+    "privatePrepareRequestSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "binaryPlanSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "planJsonSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "planTextSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "addressInventorySha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "planRecordSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "managedDeleteCount": 1,
+    "dataChangeCount": 0,
+    "resourceDriftCount": 0,
+    "importCount": 0,
+    "humanReviewed": true,
+    "orphanSecurityGroupDeleted": true,
+    "planReviewExpiresAtUtc": "2026-10-08T13:00:00Z"
+  },
+  "approval": {
+    "notBeforeUtc": "2026-10-08T10:00:00Z",
+    "expiresAtUtc": "2026-10-08T13:00:00Z"
+  },
+  "executionBoundary": {
+    "awsIdentityRead": true,
+    "securityGroupAbsenceRead": true,
+    "vpcAbsenceRead": true,
+    "s3ObjectHistoryRead": true,
+    "terraformVersionRead": true,
+    "terraformStateRead": true,
+    "terraformExactSavedPlanApply": true,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformUnsavedDestroy": false,
+    "statePush": false,
+    "directAwsMutation": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

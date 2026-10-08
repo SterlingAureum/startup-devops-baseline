@@ -1,5 +1,16 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.4
+
+- Preserve the partially applied final cleanup: the private subnet completed,
+  while the parent VPC failed with EC2 `DeleteVpc DependencyViolation`.
+- Bind the exact final request, reviewed plan and failed apply logs; prohibit
+  reuse of the partially consumed saved plan.
+- Add command-free verification plus separately approved read-only state, S3
+  history and comprehensive VPC dependency inspection.
+- Keep all resource identities private and prohibit Terraform/AWS/S3 mutation,
+  retry, rollback and final VPC cleanup.
+
 ## v0.12.4.1.5.0.7.1.3
 
 - Bind the exact partial-teardown recovery and the single available,

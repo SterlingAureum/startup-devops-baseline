@@ -3,9 +3,17 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.3-aws-dev-final-cleanup`
+`v0.12.4.1.5.0.7.1.4-aws-dev-vpc-only-recovery`
 
-The current checkpoint binds the read-only recovery evidence for one available,
+The current checkpoint preserves the partially applied final cleanup: the last
+subnet completed, while EC2 rejected the parent VPC deletion with
+`DependencyViolation`. It requires separate approval for read-only live-state,
+S3 history and comprehensive VPC dependency inspection, and grants no cleanup
+authority. See [v0.12.4.1.5.0.7.1.4 AWS dev VPC-only
+recovery](docs/V0.12.4.1.5.0.7.1.4_AWS_DEV_VPC_ONLY_RECOVERY.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.3-aws-dev-final-cleanup`. It binds the read-only recovery evidence for one available,
 unattached, account-owned orphan ENI and exactly two remaining Terraform
 resources. It separately approves deletion of only that ENI plus creation of a
 two-resource saved destroy plan, then requires human review and another
@@ -13,7 +21,7 @@ approval before applying that exact plan. See
 [v0.12.4.1.5.0.7.1.3 AWS dev final
 cleanup](docs/V0.12.4.1.5.0.7.1.3_AWS_DEV_FINAL_CLEANUP.md).
 
-The predecessor checkpoint is
+The earlier predecessor checkpoint is
 `v0.12.4.1.5.0.7.1.2-aws-dev-partial-teardown-recovery`. It preserves the
 partial destroy incident: 88 of 90 managed resources completed, one private
 subnet failed with EC2 `DependencyViolation`, and its parent VPC never started.

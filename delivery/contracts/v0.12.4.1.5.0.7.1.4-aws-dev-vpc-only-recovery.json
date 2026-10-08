@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.4-aws-dev-vpc-only-recovery-v1",
+  "version": "v0.12.4.1.5.0.7.1.4",
+  "status": "aws-dev-vpc-only-recovery-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "184a892f990c62f61b37ae4266465ff23950f003",
+  "incident": {
+    "privateFinalRequestSha256": "aba7cb60002dbc6a09b38caa3b6633c356df9ee5401e030634bb712ad09c8bf6",
+    "binaryPlanSha256": "9e7f4aaab0c4625b88ad588300e7105b65ce58a2939ff079cf24c987f060d321",
+    "applyStdoutSha256": "48aab2cedc8a3249cd03863cd8739f2364bd467355864dceb55e69aad66cec7a",
+    "applyStderrSha256": "686a2fc7f80bd7c99551340afc7c64ff1e45be88ce760972acc90ccf8f4db0e7",
+    "plannedManagedDeleteCount": 2,
+    "completedManagedDeleteCount": 1,
+    "subnetDestroyed": true,
+    "vpcPending": true,
+    "failureOperation": "DeleteVpc",
+    "failureCode": "DependencyViolation",
+    "applyCompleteMarkerPresent": false
+  },
+  "verifyPhase": {
+    "operationalCommandsAllowed": false,
+    "separateApprovalRequired": true,
+    "privateResourceIdentityEmitted": false
+  },
+  "executePhase": {
+    "terraformStateReadAllowed": true,
+    "s3ObjectHistoryReadAllowed": true,
+    "ec2VpcDependencyReadsAllowed": true,
+    "elasticLoadBalancingReadsAllowed": true,
+    "terraformMutationAllowed": false,
+    "awsMutationAllowed": false,
+    "stateMutationAllowed": false,
+    "automaticRetryAllowed": false,
+    "automaticRollbackAllowed": false
+  },
+  "successBoundary": {
+    "managedStateAddressCount": 1,
+    "dataStateAddressCount": 0,
+    "onlyManagedAddress": "module.vpc.aws_vpc.this",
+    "subnetMustAlreadyBeDestroyed": true,
+    "vpcMustRemainPresent": true,
+    "dependencyInventoryRequired": true,
+    "cleanupAuthorized": false
+  }
+}

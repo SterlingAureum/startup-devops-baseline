@@ -3,6 +3,18 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.4 - AWS dev VPC-only recovery
+
+Status: Ready offline
+
+Delivered:
+
+- immutable binding to the partially applied two-resource final cleanup
+- exact proof that the subnet completed and only the VPC delete failed
+- command-free verification and separately approved read-only recovery
+- live VPC-only state plus comprehensive EC2 and ELB dependency inventory
+- no plan reuse, cleanup mutation, retry, rollback or state manipulation
+
 ## v0.12.4.1.5.0.7.1.3 - AWS dev final cleanup
 
 Status: Ready offline

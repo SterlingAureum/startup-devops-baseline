@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.2
+
+- Add command-free request verification for eight ordered dev/test teardown
+  phases while rejecting aws-prod.
+- Bind one environment, phase, attempt, state key, protected-main commit,
+  input-evidence hash, predecessor receipt and bounded UTC window per request.
+- Require remote-state readiness, exact state-count shapes and human-reviewed
+  saved-plan bindings for apply phases.
+- Restrict optional residue cleanup to an allowlisted SHA-bound identity while
+  retaining every authority flag as false pending separate approval.
+- Add redacted dev/test fixtures, mutation tests and active-source structure
+  validation without reading private evidence or exposing an executor.
+
 ## v0.12.4.1.5.0.7.1.6.1
 
 - Implement a command-free dev/test environment policy and state-address

@@ -3,6 +3,19 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.5 - AWS dev EKS-SG/VPC cleanup
+
+Status: Ready offline
+
+Delivered:
+
+- immutable binding to the VPC-only recovery and exact orphan EKS security group
+- command-free verification for both separately approved mutation phases
+- exact security-group deletion followed by a VPC-only saved destroy plan
+- human review and digest-bound exact saved-plan apply
+- empty-state plus VPC absence and clean object-history evidence
+- no init, unsaved destroy, state push, unrelated AWS mutation, retry or rollback
+
 ## v0.12.4.1.5.0.7.1.4 - AWS dev VPC-only recovery
 
 Status: Ready offline

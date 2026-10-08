@@ -1,5 +1,20 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.3
+
+- Add a guarded local reader for exactly two owned canonical private files in
+  an owned `0700` bundle directory.
+- Bind caller-supplied request/evidence digests, request-to-evidence identity,
+  exact environment/phase/state/commit fields and fifteen-minute evidence
+  freshness.
+- Validate dedicated evidence facts for all eight teardown phases, including
+  exact reviewed plans, safe residues, zero second-wave dependencies and final
+  empty state.
+- Emit only a redacted receipt plus SHA-256 for future predecessor binding;
+  perform no receipt persistence or infrastructure command.
+- Add permission, digest, mutation and CLI tests plus active-source structure
+  validation while keeping historical private evidence outside required CI.
+
 ## v0.12.4.1.5.0.7.1.6.2
 
 - Add command-free request verification for eight ordered dev/test teardown

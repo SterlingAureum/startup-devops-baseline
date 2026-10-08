@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.3-shared-dev-test-two-wave-teardown-private-preflight-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.3",
+  "status": "shared-dev-test-two-wave-teardown-private-preflight-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "b662cd830f21ab3a6fc45f1527a24efb5817acad",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.2-shared-dev-test-two-wave-teardown-request-preflight.json",
+  "privateBundle": {
+    "directoryMode": "0700",
+    "fileMode": "0600",
+    "exactFiles": [
+      "request.json",
+      "evidence.json"
+    ],
+    "maximumFileBytes": 1048576,
+    "ownerRequired": true,
+    "regularFileRequired": true,
+    "singleHardLinkRequired": true,
+    "symlinkRejected": true,
+    "canonicalJsonRequired": true,
+    "callerDigestRequired": true,
+    "requestBindsEvidenceDigest": true
+  },
+  "phaseEvidence": {
+    "phaseCount": 8,
+    "maximumEvidenceAgeSeconds": 900,
+    "environmentBindingRequired": true,
+    "stateKeyBindingRequired": true,
+    "phaseBindingRequired": true,
+    "controlPlaneCommitBindingRequired": true,
+    "stateInventoryBindingRequired": true,
+    "applyPlanBindingRequired": true,
+    "safeResidueBindingRequired": true,
+    "waveTwoZeroDependencyEvidenceRequired": true,
+    "finalEmptyStateEvidenceRequired": true
+  },
+  "receipt": {
+    "redactedOnly": true,
+    "sha256Returned": true,
+    "futurePredecessorBindingSupported": true,
+    "persistedByPreflight": false,
+    "privatePathEmitted": false,
+    "privateResourceIdentityEmitted": false,
+    "executionAuthorized": false
+  },
+  "entrypoint": {
+    "path": "scripts/preflight-v0.12.4.1.5.0.7.1.6.3-shared-dev-test-two-wave-teardown.py",
+    "command": "verify",
+    "confirmation": "observe-reviewed-shared-two-wave-private-preflight",
+    "readsHostUtcOnce": true,
+    "readsOnlyPrivateLocalFiles": true,
+    "writesReceipt": false,
+    "invokesSubprocess": false,
+    "liveCommandExecuted": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "authority": {
+    "liveReadAuthorized": false,
+    "controllerMutationAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "directAwsMutationAuthorized": false,
+    "statePushAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "implement-reviewable-receipt-persistence-and-phase-approval-adapter-without-live-infrastructure-commands"
+}

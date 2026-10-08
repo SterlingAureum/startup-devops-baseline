@@ -3,9 +3,21 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.2-shared-dev-test-two-wave-teardown-request-preflight`
+`v0.12.4.1.5.0.7.1.6.3-shared-dev-test-two-wave-teardown-private-preflight`
 
-The current checkpoint adds a command-free dev/test request-verification and
+The current checkpoint adds a guarded local reader for phase-specific private
+teardown evidence. It requires one owned `0700` directory containing exactly
+canonical `0600` request and evidence files, verifies their caller-supplied
+digests and cross-bindings, then returns only a redacted receipt and its
+SHA-256. The receipt is not persisted and grants no execution authority. No
+AWS, Terraform, Kubernetes or S3 command is available. See
+[v0.12.4.1.5.0.7.1.6.3 shared dev/test two-wave teardown private
+preflight](docs/V0.12.4.1.5.0.7.1.6.3_SHARED_DEV_TEST_TWO_WAVE_TEARDOWN_PRIVATE_PREFLIGHT.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.2-shared-dev-test-two-wave-teardown-request-preflight`.
+
+It adds a command-free dev/test request-verification and
 preflight adapter around the two-wave teardown core. It binds one environment,
 phase, attempt, state key, protected-main commit, evidence hash, predecessor
 receipt and bounded UTC window. Apply phases additionally bind an exact

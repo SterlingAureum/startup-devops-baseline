@@ -3,6 +3,26 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.3 - Shared dev/test private teardown preflight
+
+Status: Ready offline
+
+Delivered:
+
+- owned `0700` private bundle with exactly two canonical `0600` files
+- caller digest plus request-to-evidence SHA-256 binding
+- exact environment, phase, state-key, commit and state-inventory binding
+- phase-specific evidence gates across all eight teardown stages
+- fifteen-minute evidence freshness and single host UTC observation
+- redacted receipt SHA for later predecessor chaining
+- no receipt persistence, subprocess, live command or execution authority
+
+Next:
+
+- implement reviewable private receipt persistence without cloud commands
+- add a phase-specific approval adapter bound to that immutable receipt
+- keep every infrastructure mutation in a later separately reviewed checkpoint
+
 ## v0.12.4.1.5.0.7.1.6.2 - Shared dev/test teardown request preflight
 
 Status: Ready offline
@@ -19,7 +39,7 @@ Delivered:
 
 Next:
 
-- add guarded phase-specific readers for private preflight evidence
+- consume the guarded private evidence reader implemented by v0.12.4.1.5.0.7.1.6.3
 - retain separate human approval before every live phase
 - add no live mutation until the reader and receipt boundaries are reviewed
 

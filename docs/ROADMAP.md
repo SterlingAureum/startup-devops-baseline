@@ -3,6 +3,20 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.5.2 - AWS dev final cleanup execution evidence
+
+Status: Complete
+
+Delivered:
+
+- immutable bindings to the reviewed VPC-only plan and successful exact apply
+- normalized proof that only the expected VPC destroy started and completed
+- empty Terraform state plus independent orphan-SG and VPC absence proof
+- expected canonical-state and lock-object history deltas
+- explicit separation from account-wide residual-cost claims
+- standalone offline evidence validation, outside CI/workflows, with no
+  executor or further AWS authority
+
 ## v0.12.4.1.5.0.7.1.5.1 - AWS dev EKS-SG delete-response recovery
 
 Status: Ready offline

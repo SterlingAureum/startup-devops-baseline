@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.5.2
+
+- Record the exact reviewed VPC-only plan and successful one-resource destroy
+  using only redacted SHA-256 bindings, counts and booleans.
+- Record empty Terraform state, independent orphan-SG and VPC absence, and the
+  expected state/lock object-version lifecycle.
+- Preserve the no-repeat-delete result and distinguish cleanup completion from
+  an account-wide residual-cost claim.
+- Add only offline checks and tests: no executor, live command path, state
+  mutation or authority for further AWS-dev work.
+- Keep the validator as a standalone on-demand audit tool, outside required CI
+  checks, workflows and the root CI orchestration path.
+
 ## v0.12.4.1.5.0.7.1.5.1
 
 - Preserve the stopped EKS-SG cleanup after EC2 returned `Return=true` and the

@@ -3,9 +3,21 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.5.1-aws-dev-eks-sg-delete-response-recovery`
+`v0.12.4.1.5.0.7.1.5.2-aws-dev-final-cleanup-execution-evidence`
 
-The current checkpoint preserves the stopped EKS-SG cleanup after EC2 returned
+The current checkpoint records the completed AWS-dev cleanup as an immutable,
+privacy-preserving evidence contract. The exact reviewed VPC-only plan applied,
+the expected VPC destroy completed, Terraform state is empty, the orphan EKS
+security group and VPC are absent, and the state/lock object history matches
+the successful apply lifecycle. It adds no executor and grants no further AWS
+authority. See
+[v0.12.4.1.5.0.7.1.5.2 AWS dev final cleanup execution
+evidence](docs/V0.12.4.1.5.0.7.1.5.2_AWS_DEV_FINAL_CLEANUP_EXECUTION_EVIDENCE.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.5.1-aws-dev-eks-sg-delete-response-recovery`.
+
+It preserves the stopped EKS-SG cleanup after EC2 returned
 a bound JSON success response that the executor incorrectly rejected as
 non-empty stdout. It repairs the reusable response parser and provides a
 separately approved recovery that does not retry the deletion: it verifies SG

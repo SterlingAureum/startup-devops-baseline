@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.5.2-aws-dev-final-cleanup-execution-evidence-v1",
+  "version": "v0.12.4.1.5.0.7.1.5.2",
+  "status": "aws-dev-final-cleanup-execution-recorded",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "691b3d4ba3b5dfa387c7001b71f4571a84b9ff3e",
+  "completedAtUtc": "2026-10-08T09:59:49Z",
+  "predecessors": [
+    "delivery/contracts/v0.12.4.1.5.0.7.1.5-aws-dev-eks-sg-vpc-cleanup.json",
+    "delivery/contracts/v0.12.4.1.5.0.7.1.5.1-aws-dev-eks-sg-delete-response-recovery.json"
+  ],
+  "artifactBindings": {
+    "privateIncidentPrepareRequestSha256": "15e178bf565b80c50e441829955291bedcf430035c01b8e94d843731e729b625",
+    "privateRecoveryRequestSha256": "25be3670ea1a75f6503827bfd53a0e643ea8d3056d3a83e6c2e7b269e324303c",
+    "privateFinalRequestSha256": "45daf9637dd58acf77dc2126f66fc82ae3b7b96bfa86643b1233a2d275a17f65",
+    "deleteSecurityGroupStdoutSha256": "fe1cb2564af4e2ea11993e6a2608d1bbcda6c1006bf5d4a15fb9809a25fe03f3",
+    "targetSecurityGroupIdSha256": "e8a820dca7c3ab7408210f6779341938441519de137870e67278175c10f4d637",
+    "recoveryResultSha256": "d555b99158ef0a05f6a4ba2cd4948b88d9583d902bc7dae6687f59973eacfffa",
+    "binaryPlanSha256": "0e5cb1cfc9d780fbcff7e66c3fc91eefc3e70484e6817860cc3f7774c5f6c591",
+    "planJsonSha256": "514994647727b84480fe90ac84233de85de83970d5b93188f160d6b65bbf3dac",
+    "planTextSha256": "eca5c43b66cec89770a7c340a1f3cdbf5f17534b113ca1b2c1320b910b4fd820",
+    "addressInventorySha256": "0ac013163aecf46232dbaeae9758e91e648f9f66cb2f662c040ff8e8ec432a99",
+    "planRecordSha256": "353514cca8cea8bd44afaa4a77080d7952c4aa34b88eaf6edb03a3f16b6a8978",
+    "applyStdoutSha256": "cbfaba955e3636196ef57241d78a6c82226fa30f63b77a40c3d1324dbb9bdb2d",
+    "applyStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "finalStateSha256": "4e3668eaf7debd9cb732cd4339b86284af13f361d38f4536865ae9457c6b4d43",
+    "finalCleanupEvidenceSha256": "680d1c418365756f4d74ed1fd3a85ab66cf6d9557d1fce2b34aff1491d7bf233",
+    "finalCleanupResultSha256": "0b1a48b038014f1cdb215bfef504bf23d1f58bbcb97bdb6491e7cb7de67ea04a",
+    "finalStateListSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "securityGroupAbsenceStderrSha256": "c1d017e97d8c4f8499e8253738a3add76ec77e547b35922618f7234251a454f6",
+    "vpcAbsenceStderrSha256": "f66d94619ab352cbf2214426f4027b7602f853e3b1ee2cf41dcebaf037f6150d",
+    "s3HistoryBeforeSha256": "590ea77bae7e881fe7ead049548c91391ecd28e161ba62ef84b0a5d6077a7df6",
+    "s3HistoryAfterSha256": "833acce4e6f3b2d1c611da07572cbc5d91081c3c161e3a6eaa62055a453016d9"
+  },
+  "reviewedPlan": {
+    "humanReviewPassed": true,
+    "complete": true,
+    "errored": false,
+    "applyable": true,
+    "managedDeleteCount": 1,
+    "dataChangeCount": 0,
+    "resourceDriftCount": 0,
+    "importCount": 0,
+    "exactManagedAddresses": [
+      "module.vpc.aws_vpc.this"
+    ],
+    "exactManagedActions": [
+      "delete"
+    ]
+  },
+  "incidentAndRecovery": {
+    "deleteReturnVerified": true,
+    "deleteResponseGroupIdBound": true,
+    "originalRunStoppedBeforeAbsenceProof": true,
+    "securityGroupDeleteRetried": false,
+    "orphanSecurityGroupAbsenceVerified": true
+  },
+  "validatedOutcome": {
+    "exactSavedPlanApplied": true,
+    "normalizedDestroyStarted": [
+      "module.vpc.aws_vpc.this"
+    ],
+    "normalizedDestroyCompleted": [
+      "module.vpc.aws_vpc.this"
+    ],
+    "applyAddCount": 0,
+    "applyChangeCount": 0,
+    "applyDestroyCount": 1,
+    "managedDestroyedCount": 1,
+    "managedStateAddressCount": 0,
+    "dataStateAddressCount": 0,
+    "totalStateAddressCount": 0,
+    "finalStateListEmpty": true,
+    "securityGroupAbsent": true,
+    "vpcAbsent": true,
+    "stateObjectVersionDelta": 1,
+    "stateDeleteMarkerDelta": 0,
+    "lockObjectVersionDelta": 1,
+    "lockDeleteMarkerDelta": 1,
+    "lockLatestVersionCount": 0,
+    "lockLatestDeleteMarkerCount": 1,
+    "lockObjectAbsent": true
+  },
+  "negativeExecutionEvidence": {
+    "terraformInitExecuted": false,
+    "terraformPlanExecutedByFinalApply": false,
+    "automaticRetryPerformed": false,
+    "automaticRollbackPerformed": false,
+    "statePushExecuted": false,
+    "directVpcDeleteExecuted": false,
+    "repeatSecurityGroupDeleteExecuted": false
+  },
+  "privacyBoundary": {
+    "privateResourceIdentityEmitted": false,
+    "privateObjectVersionIdEmitted": false,
+    "privateFilesystemPathRecorded": false,
+    "rawAwsAccountIdRecorded": false
+  },
+  "scopeBoundary": {
+    "awsDevLiveWorkClosed": true,
+    "residualCostAuditExecuted": false,
+    "accountWideCostFreeClaimed": false,
+    "nextCheckpoint": "offline-generalized-teardown-hardening-design"
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "runsKubernetes": false,
+    "modifiesState": false,
+    "destroysResources": false
+  },
+  "auditIntegration": {
+    "standaloneOnDemandValidation": true,
+    "requiredCiCheck": false,
+    "workflowBound": false,
+    "rootCiOrchestratorBound": false
+  },
+  "authority": {
+    "executionAuthorized": false,
+    "furtherAwsWorkAuthorized": false
+  }
+}

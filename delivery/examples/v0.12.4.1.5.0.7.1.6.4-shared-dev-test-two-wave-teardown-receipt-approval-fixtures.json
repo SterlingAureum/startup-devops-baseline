@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown-receipt-approval-fixtures-v1",
+  "sourcePreflightFixture": "delivery/examples/v0.12.4.1.5.0.7.1.6.3-shared-dev-test-two-wave-teardown-private-preflight-fixtures.json",
+  "sourceCase": "devWaveOnePlan",
+  "persistenceClockUtc": "2026-10-09T00:11:00Z",
+  "approvalClockUtc": "2026-10-09T00:12:00Z",
+  "approvalTiming": {
+    "createdAtUtc": "2026-10-09T00:11:30Z",
+    "notBeforeUtc": "2026-10-09T00:12:00Z",
+    "expiresAtUtc": "2026-10-09T00:27:00Z"
+  },
+  "expectedEnvironment": "aws-dev",
+  "expectedPhase": "wave-one-plan",
+  "expectedRequestedAuthority": "terraform-plan",
+  "expectedStoreDirectories": [
+    "receipts",
+    "approvals"
+  ],
+  "containsPrivateResourceIdentity": false,
+  "containsAwsAccountId": false,
+  "containsBackendIdentity": false
+}

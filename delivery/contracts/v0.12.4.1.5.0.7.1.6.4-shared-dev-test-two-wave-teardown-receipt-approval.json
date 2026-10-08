@@ -1,0 +1,79 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown-receipt-approval-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.4",
+  "status": "shared-dev-test-two-wave-teardown-receipt-approval-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "4511ddfe067b202e693a7d4f928c969bc8bdfd48",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.3-shared-dev-test-two-wave-teardown-private-preflight.json",
+  "store": {
+    "rootMode": "0700",
+    "childDirectoryMode": "0700",
+    "recordMode": "0600",
+    "exactRootDirectories": [
+      "receipts",
+      "approvals"
+    ],
+    "receiptFilenameBoundToReceiptSha256": true,
+    "approvalFilenameBoundToReceiptSha256": true,
+    "exclusiveCreateRequired": true,
+    "overwriteRejected": true,
+    "fileFsyncRequired": true,
+    "directoryFsyncRequired": true,
+    "partialWritePreservedForReview": true,
+    "automaticRepair": false
+  },
+  "receiptPersistence": {
+    "callerResultSha256Required": true,
+    "receiptContentSha256Required": true,
+    "activeReceiptRequired": true,
+    "redactedReceiptRequired": true,
+    "onePersistentCopyPerReceipt": true,
+    "approvalCreatedByPersistence": false
+  },
+  "approval": {
+    "maximumWindowSeconds": 900,
+    "exactReceiptBindingRequired": true,
+    "exactEnvironmentBindingRequired": true,
+    "exactStateKeyBindingRequired": true,
+    "exactPhaseBindingRequired": true,
+    "exactAttemptBindingRequired": true,
+    "exactControlPlaneCommitBindingRequired": true,
+    "exactRequestedAuthorityBindingRequired": true,
+    "canonicalApprovalStatementRequired": true,
+    "humanApprovedRequired": true,
+    "oneAttemptOnlyRequired": true,
+    "cannotOutliveReceipt": true,
+    "oneApprovalPerReceipt": true,
+    "receiptConsumedByApproval": true,
+    "approvalConsumedByExecutor": false
+  },
+  "entrypoint": {
+    "path": "scripts/approval-v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown.py",
+    "commands": [
+      "persist-receipt",
+      "record-approval"
+    ],
+    "readsHostUtcOncePerCommand": true,
+    "readsOnlyPrivateLocalFiles": true,
+    "writesOnlyPrivateLocalRecords": true,
+    "invokesSubprocess": false,
+    "liveCommandExecuted": false,
+    "executionPerformed": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "authority": {
+    "approvalMayBeRecorded": true,
+    "executionAuthorizedByAdapter": false,
+    "liveCommandAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "statePushAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "design-phase-executor-bound-to-one-unconsumed-approval-record-with-no-automatic-retry"
+}

@@ -3,6 +3,26 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.4 - Shared dev/test teardown receipt approval
+
+Status: Ready offline
+
+Delivered:
+
+- exact owned `0700` store with `receipts` and `approvals` directories
+- content-addressed canonical `0600` records with exclusive creation
+- file and directory durability barriers without overwrite or auto-repair
+- one explicit, fifteen-minute, single-attempt approval per active receipt
+- exact environment, state, phase, attempt, commit and authority bindings
+- unconsumed approval record for a later separately reviewed executor
+- local-only validation with no subprocess, live command or phase execution
+
+Next:
+
+- design a phase executor bound to exactly one unconsumed approval record
+- require executor-side consume-before-command semantics and failure evidence
+- preserve the no-automatic-retry boundary for every live phase attempt
+
 ## v0.12.4.1.5.0.7.1.6.3 - Shared dev/test private teardown preflight
 
 Status: Ready offline

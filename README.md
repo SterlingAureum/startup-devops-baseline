@@ -3,9 +3,20 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.3-shared-dev-test-two-wave-teardown-private-preflight`
+`v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown-receipt-approval`
 
-The current checkpoint adds a guarded local reader for phase-specific private
+The current checkpoint adds append-only local persistence for redacted
+preflight receipts and a separate, single-attempt human approval record. Both
+records use content-addressed exclusive creation inside an owned private store;
+they cannot be overwritten or automatically retried. Approval remains
+unconsumed and no executor or infrastructure command is present. See
+[v0.12.4.1.5.0.7.1.6.4 shared dev/test two-wave teardown receipt
+approval](docs/V0.12.4.1.5.0.7.1.6.4_SHARED_DEV_TEST_TWO_WAVE_TEARDOWN_RECEIPT_APPROVAL.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.3-shared-dev-test-two-wave-teardown-private-preflight`.
+
+It adds a guarded local reader for phase-specific private
 teardown evidence. It requires one owned `0700` directory containing exactly
 canonical `0600` request and evidence files, verifies their caller-supplied
 digests and cross-bindings, then returns only a redacted receipt and its

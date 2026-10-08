@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.5.1-aws-dev-vpc-final-apply-request-v1",
+  "operation": "apply-reviewed-vpc-only-recovery-plan",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "0000000000000000000000000000000000000000",
+  "expectedAwsAccountId": "000000000000",
+  "expectedTerraformVersion": "1.14.3",
+  "privateRecoveryRequestPath": "/private/aws-dev-eks-sg-delete-response-recovery-request-attempt-01.json",
+  "privateRecoveryOutputDirectory": "/private/aws-dev-eks-sg-delete-response-recovery-output-attempt-01",
+  "privateFinalOutputDirectory": "/private/aws-dev-recovered-vpc-final-apply-output-attempt-01",
+  "planBoundary": {
+    "privateRecoveryRequestSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "binaryPlanSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "planJsonSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "planTextSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "addressInventorySha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "planRecordSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "recoveryResultSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+    "managedDeleteCount": 1,
+    "dataChangeCount": 0,
+    "resourceDriftCount": 0,
+    "importCount": 0,
+    "humanReviewed": true,
+    "orphanSecurityGroupAbsenceVerified": true,
+    "planReviewExpiresAtUtc": "2026-10-08T14:00:00Z"
+  },
+  "approval": {
+    "notBeforeUtc": "2026-10-08T11:00:00Z",
+    "expiresAtUtc": "2026-10-08T14:00:00Z"
+  },
+  "executionBoundary": {
+    "awsIdentityRead": true,
+    "securityGroupAbsenceRead": true,
+    "vpcAbsenceRead": true,
+    "s3ObjectHistoryRead": true,
+    "terraformVersionRead": true,
+    "terraformStateRead": true,
+    "terraformExactSavedPlanApply": true,
+    "securityGroupDelete": false,
+    "otherAwsMutation": false,
+    "terraformInit": false,
+    "terraformPlan": false,
+    "terraformUnsavedDestroy": false,
+    "statePush": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

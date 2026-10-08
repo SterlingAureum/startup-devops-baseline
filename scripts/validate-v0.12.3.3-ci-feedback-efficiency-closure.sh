@@ -329,6 +329,13 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
 PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.7.1.5-aws-dev-eks-sg-vpc-cleanup.py"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.1.5.0.7.1.5.1-aws-dev-eks-sg-delete-response-recovery.py" \
+  --root "${ROOT_DIR}"
+
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.7.1.5.1-aws-dev-eks-sg-delete-response-recovery.py"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" \
@@ -348,7 +355,8 @@ bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.2-aws-dev-partial-teardown-recovery.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.3-aws-dev-final-cleanup.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.4-aws-dev-vpc-only-recovery.sh" \
-  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.5-aws-dev-eks-sg-vpc-cleanup.sh"
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.5-aws-dev-eks-sg-vpc-cleanup.sh" \
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.5.1-aws-dev-eks-sg-delete-response-recovery.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only

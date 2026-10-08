@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.5.1-aws-dev-eks-sg-delete-response-recovery-request-v1",
+  "operation": "verify-deleted-eks-security-group-and-plan-vpc-destroy",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "trustedRef": "refs/heads/main",
+  "expectedMainCommit": "0000000000000000000000000000000000000000",
+  "expectedAwsAccountId": "000000000000",
+  "expectedTerraformVersion": "1.14.3",
+  "privateIncidentPrepareRequestPath": "/private/aws-dev-eks-sg-vpc-cleanup-prepare-request-attempt-01.json",
+  "privateIncidentPrepareOutputDirectory": "/private/aws-dev-eks-sg-vpc-cleanup-prepare-output-attempt-01",
+  "privateRecoveryOutputDirectory": "/private/aws-dev-eks-sg-delete-response-recovery-output-attempt-01",
+  "incidentBoundary": {
+    "incidentControlPlaneCommit": "2366976f4a40fc397bf45e0d71f7be0a9ce72d5f",
+    "privateIncidentPrepareRequestSha256": "15e178bf565b80c50e441829955291bedcf430035c01b8e94d843731e729b625",
+    "awsIdentityStdoutSha256": "96f07df216dfe7b89b6bf4194d7939fffe813df5d6ad18e0bc04cee4458a7c77",
+    "terraformVersionStdoutSha256": "b8b71532b158676046596265d7f7b92de62474f9307086aee6a97c0f46089026",
+    "statePullStdoutSha256": "0b6c70b0df67dfaab60c6e15cab920b9dabbae032287e8f2258e6116cf1cfa43",
+    "stateListStdoutSha256": "1be0314b76ccf644267ad1c6b18b06d9b42b815b1c3f0d1b3e54aa8ee4be297f",
+    "securityGroupBeforeDeleteStdoutSha256": "5016252e638c4da2f696eed09c8db8adc753ab4adcfc3596bc5cb693956c1c83",
+    "s3HistoryBeforePlanStdoutSha256": "72771d6b8cdc8abaee8600010148b64589907d4a3651e7ec6e43a4a476125086",
+    "deleteSecurityGroupStdoutSha256": "fe1cb2564af4e2ea11993e6a2608d1bbcda6c1006bf5d4a15fb9809a25fe03f3",
+    "deleteSecurityGroupStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "targetSecurityGroupIdSha256": "e8a820dca7c3ab7408210f6779341938441519de137870e67278175c10f4d637",
+    "deleteReturn": true,
+    "deleteResponseGroupIdBound": true,
+    "postDeleteAbsenceEvidenceCreated": false,
+    "vpcSavedPlanCreated": false
+  },
+  "approval": {
+    "notBeforeUtc": "2026-10-08T10:00:00Z",
+    "expiresAtUtc": "2026-10-08T11:00:00Z",
+    "planReviewExpiresAtUtc": "2026-10-08T14:00:00Z"
+  },
+  "executionBoundary": {
+    "awsIdentityRead": true,
+    "securityGroupAbsenceRead": true,
+    "s3ObjectHistoryRead": true,
+    "terraformVersionRead": true,
+    "terraformStateRead": true,
+    "terraformSavedDestroyPlan": true,
+    "securityGroupDelete": false,
+    "otherAwsMutation": false,
+    "terraformInit": false,
+    "terraformApply": false,
+    "terraformUnsavedDestroy": false,
+    "statePush": false,
+    "directS3Mutation": false,
+    "forceUnlock": false,
+    "automaticRetry": false,
+    "automaticRollback": false
+  }
+}

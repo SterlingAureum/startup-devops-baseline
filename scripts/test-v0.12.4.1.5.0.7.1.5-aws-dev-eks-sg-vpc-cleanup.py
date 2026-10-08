@@ -72,6 +72,24 @@ class RequestTests(unittest.TestCase):
         self.assertEqual(EXECUTOR.validate_final_request(json.loads(path.read_text()))["executionBoundary"], EXECUTOR.final_execution_boundary())
 
 
+class DeleteResponseTests(unittest.TestCase):
+    def test_empty_success_response_is_accepted(self):
+        self.assertEqual(EXECUTOR.validate_delete_security_group_response(b"")["responseShape"], "empty")
+
+    def test_bound_json_success_response_is_accepted(self):
+        original = EXECUTOR.SG_ID_SHA256
+        try:
+            EXECUTOR.SG_ID_SHA256 = EXECUTOR.text_sha256("sg-fixture")
+            value = json.dumps({"GroupId": "sg-fixture", "Return": True}).encode()
+            self.assertEqual(EXECUTOR.validate_delete_security_group_response(value)["responseShape"], "json")
+        finally:
+            EXECUTOR.SG_ID_SHA256 = original
+
+    def test_unbound_json_response_is_rejected(self):
+        with self.assertRaises(EXECUTOR.CleanupError):
+            EXECUTOR.validate_delete_security_group_response(json.dumps({"GroupId": "sg-other", "Return": True}).encode())
+
+
 class SecurityGroupTests(unittest.TestCase):
     def fixture(self):
         return {

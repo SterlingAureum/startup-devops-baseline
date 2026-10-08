@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.5.1
+
+- Preserve the stopped EKS-SG cleanup after EC2 returned `Return=true` and the
+  exact bound group identity in JSON stdout, with no absence proof or VPC plan.
+- Repair the reusable delete-response parser to accept empty success output or
+  an exact bound JSON success response.
+- Add command-free incident verification plus a separately approved recovery
+  that never retries the SG deletion, proves absence and produces a VPC-only
+  saved destroy plan.
+- Require human review and a second approval before applying only that recovered
+  plan; retain all init, state/S3 mutation, retry and rollback prohibitions.
+
 ## v0.12.4.1.5.0.7.1.5
 
 - Bind the exact VPC-only recovery and private security-group inventory proving

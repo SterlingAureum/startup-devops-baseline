@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6-generalized-multi-environment-teardown-hardening-design-v1",
+  "version": "v0.12.4.1.5.0.7.1.6",
+  "status": "generalized-multi-environment-teardown-hardening-design-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "db1ff0c46ea8b0fe900f57679f56bdc34ba6c7aa",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.5.2-aws-dev-final-cleanup-execution-evidence.json",
+  "currentAssessment": {
+    "sharedTerraformModulesPresent": true,
+    "independentEnvironmentRootsPresent": true,
+    "independentRemoteStateKeysPresent": true,
+    "legacyDevTestDependencyConvergencePresent": true,
+    "v012GuardedTeardownIsDevSpecific": true,
+    "generalizedExecutorImplemented": false,
+    "postHardeningLiveValidationCompleted": false
+  },
+  "backendBoundary": {
+    "foundationRoot": "infra/terraform/aws/state-bootstrap",
+    "stateKeys": {
+      "dev": "environments/dev/terraform.tfstate",
+      "test": "environments/test/terraform.tfstate",
+      "prod": "environments/prod/terraform.tfstate"
+    },
+    "s3NativeLockfileRequired": true,
+    "stateBucketForceDestroy": false,
+    "stateBucketPreventDestroy": true,
+    "stateKmsKeyPreventDestroy": true,
+    "ordinaryEnvironmentTeardownMayDestroyBackend": false,
+    "ordinaryEnvironmentTeardownMayDeleteStateObject": false,
+    "ordinaryEnvironmentTeardownMayDeleteStateHistory": false,
+    "ordinaryEnvironmentTeardownMayDestroyRuntimeIdentities": false,
+    "successfulEnvironmentTeardownWritesEmptyState": true,
+    "backendRetirementRequiresSeparateDesignAndApproval": true
+  },
+  "remoteStateActivation": {
+    "aws-dev": "live-s3-state-evidence-recorded",
+    "aws-test": "separate-activation-and-migration-required-before-live-acceptance",
+    "aws-prod": "static-key-declared-with-no-v0.12-live-activation-requirement"
+  },
+  "environmentProfiles": {
+    "aws-dev": {
+      "terraformRoot": "infra/terraform/aws/environments/dev",
+      "liveCreateAllowedAfterSeparateApproval": true,
+      "liveTeardownAllowedAfterImplementationAndSeparateApproval": true,
+      "applicationBackupDeletionAllowed": true,
+      "secretRecoveryWindowDays": 0,
+      "requiredLiveAcceptance": "one-clean-create-qualify-teardown-cycle"
+    },
+    "aws-test": {
+      "terraformRoot": "infra/terraform/aws/environments/test",
+      "remoteStateActivationRequiredBeforeLiveCreate": true,
+      "liveCreateAllowedAfterSeparateApproval": true,
+      "liveTeardownAllowedAfterImplementationAndSeparateApproval": true,
+      "applicationBackupDeletionAllowed": true,
+      "secretRecoveryWindowDays": 7,
+      "requiredLiveAcceptance": "one-dev-to-test-promotion-and-test-teardown-cycle"
+    },
+    "aws-prod": {
+      "terraformRoot": "infra/terraform/aws/environments/prod",
+      "remoteStateActivationRequiredBeforeLiveCreate": true,
+      "liveCreateAllowedAfterSeparateApproval": false,
+      "liveTeardownAllowedAfterImplementationAndSeparateApproval": false,
+      "applicationBackupDeletionAllowed": false,
+      "secretRecoveryWindowDays": 30,
+      "requiredLiveAcceptance": "static-render-governance-and-command-free-refusal-only"
+    }
+  },
+  "dependencyClasses": {
+    "terraformManaged": "remain-owned-by-the-reviewed-saved-plan",
+    "controllerOwned": "remove-through-the-owning-controller-before-terraform",
+    "safeCloudResidue": "exact-identity-read-only-inventory-then-separate-delete-approval",
+    "protectedFoundation": "exclude-from-environment-teardown-and-residual-cost-failure",
+    "unknown": "fail-closed-with-no-delete-or-retry"
+  },
+  "requiredDependencyInventory": [
+    "eks-cluster",
+    "instances-and-karpenter-fleets",
+    "load-balancers-and-target-groups",
+    "nat-and-internet-gateways",
+    "vpc-endpoints-and-peering",
+    "transit-and-vpn-attachments",
+    "network-interfaces",
+    "security-groups-and-references",
+    "ebs-volumes",
+    "subnets-route-tables-and-network-acls",
+    "application-backup-bucket",
+    "terraform-state-and-lock-history"
+  ],
+  "futurePhaseOrder": [
+    "command-free-request-verification",
+    "approved-controller-owned-cleanup",
+    "read-only-state-and-cloud-inventory",
+    "reviewed-non-network-saved-destroy-plan",
+    "separately-approved-exact-non-network-plan-apply",
+    "post-cluster-read-only-vpc-dependency-inventory",
+    "optional-separately-approved-exact-safe-residue-cleanup",
+    "fresh-reviewed-network-only-saved-destroy-plan",
+    "separately-approved-exact-network-plan-apply",
+    "empty-state-absence-and-residual-cost-evidence"
+  ],
+  "planAndRecoveryBoundary": {
+    "twoWaveTeardownRequired": true,
+    "firstWaveRetainsNetworkShell": true,
+    "secondWaveRequiresFreshPlan": true,
+    "partiallyAppliedPlanReusable": false,
+    "humanReviewRequiredForEverySavedPlan": true,
+    "exactSavedPlanApplyOnly": true,
+    "automaticRetryAllowed": false,
+    "automaticRollbackAllowed": false,
+    "unknownDependencyDeleteAllowed": false,
+    "terraformStateMutationAllowed": false,
+    "forceUnlockAllowed": false
+  },
+  "releaseAcceptance": {
+    "offlineMatrixRequiredFor": [
+      "aws-dev",
+      "aws-test",
+      "aws-prod"
+    ],
+    "devCleanCycleRequired": true,
+    "testPromotionAndTeardownRequired": true,
+    "prodLiveApplyRequired": false,
+    "prodLiveDestroyRequired": false,
+    "incidentRecoveryDuringAcceptanceAllowed": false,
+    "manualStateEditingAllowed": false,
+    "accountWideCostFreeClaimRequiresSeparateResidualAudit": true
+  },
+  "auditAndCiBoundary": {
+    "historicalExecutionEvidenceRemainsOnDemand": true,
+    "historicalExecutionEvidenceRequiredCi": false,
+    "privateEvidenceAllowedInCi": false,
+    "activeOperationalSourceValidatorsMayJoinCiAfterImplementation": true,
+    "thisDesignValidatorRequiredCi": false,
+    "thisDesignValidatorWorkflowBound": false
+  },
+  "packageProducer": {
+    "runsAws": false,
+    "runsTerraform": false,
+    "runsKubernetes": false,
+    "modifiesState": false,
+    "destroysResources": false
+  },
+  "authority": {
+    "liveReadAuthorized": false,
+    "liveCreateAuthorized": false,
+    "livePlanAuthorized": false,
+    "liveApplyAuthorized": false,
+    "liveDestroyAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "implement-offline-shared-dev-test-two-wave-teardown-core"
+}

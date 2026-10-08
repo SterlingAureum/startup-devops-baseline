@@ -3,9 +3,21 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.5.2-aws-dev-final-cleanup-execution-evidence`
+`v0.12.4.1.5.0.7.1.6-generalized-multi-environment-teardown-hardening-design`
 
-The current checkpoint records the completed AWS-dev cleanup as an immutable,
+The current checkpoint converts the completed aws-dev rehearsal into an
+offline design for a shared dev/test teardown lifecycle while retaining a
+static, fail-closed prod boundary. It defines protected backend ownership,
+environment policy profiles, dependency classification, a two-wave saved-plan
+model and the clean live acceptance required before v0.12 closes. It adds no
+executor or live authority. See
+[v0.12.4.1.5.0.7.1.6 generalized multi-environment teardown hardening
+design](docs/V0.12.4.1.5.0.7.1.6_GENERALIZED_MULTI_ENVIRONMENT_TEARDOWN_HARDENING_DESIGN.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.5.2-aws-dev-final-cleanup-execution-evidence`.
+
+It records the completed AWS-dev cleanup as an immutable,
 privacy-preserving evidence contract. The exact reviewed VPC-only plan applied,
 the expected VPC destroy completed, Terraform state is empty, the orphan EKS
 security group and VPC are absent, and the state/lock object history matches

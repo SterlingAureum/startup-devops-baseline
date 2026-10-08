@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.4
+
+- Persist reviewed redacted preflight receipts as content-addressed canonical
+  `0600` records in an exact owned `0700` private store.
+- Use no-follow exclusive creation plus file and directory `fsync`; never
+  overwrite, automatically repair or automatically retry a partial record.
+- Add a separate human phase approval bound to the exact receipt, environment,
+  state key, phase, attempt, commit, authority and fifteen-minute window.
+- Allow only one approval record per receipt while leaving that approval
+  unconsumed for a later separately reviewed executor checkpoint.
+- Add local CLI, mutation and replay coverage with no subprocess,
+  infrastructure command, state mutation or execution authority.
+
 ## v0.12.4.1.5.0.7.1.6.3
 
 - Add a guarded local reader for exactly two owned canonical private files in

@@ -3,6 +3,19 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.5.1 - AWS dev EKS-SG delete-response recovery
+
+Status: Ready offline
+
+Delivered:
+
+- immutable binding to the successful JSON SG-delete response and stopped output
+- reusable acceptance of empty or exact bound JSON delete success responses
+- no-repeat-delete recovery with live SG absence proof
+- recovered VPC-only saved plan plus separate human review and apply approval
+- empty-state, VPC-absence and clean object-history success evidence
+- no init, unsaved destroy, state push, unrelated mutation, retry or rollback
+
 ## v0.12.4.1.5.0.7.1.5 - AWS dev EKS-SG/VPC cleanup
 
 Status: Ready offline

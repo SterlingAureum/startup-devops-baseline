@@ -458,6 +458,16 @@ def run_expected_missing(output: Path, label: str, arguments: list[str], code: b
     require(result.returncode != 0 and result.stdout == b"" and code in result.stderr, f"{label} is not conclusively absent")
 
 
+def validate_delete_security_group_response(value: bytes) -> dict[str, Any]:
+    if value == b"":
+        return {"responseShape": "empty", "return": True, "groupIdBound": True}
+    document = parse_json_bytes(value, "Security-group delete response")
+    require(set(document) == {"GroupId", "Return"}, "Security-group delete response fields changed")
+    require(document.get("Return") is True, "Security-group delete did not return success")
+    require(text_sha256(document.get("GroupId")) == SG_ID_SHA256, "Security-group delete response identity changed")
+    return {"responseShape": "json", "return": True, "groupIdBound": True}
+
+
 def vpc_plan_gate(document: dict[str, Any]) -> dict[str, Any]:
     require(document.get("complete") is True and document.get("errored") is False and document.get("applyable") is True, "VPC saved plan is not complete and applyable")
     drift = document.get("resource_drift", [])
@@ -519,7 +529,7 @@ def execute_prepare(request_path: Path, *, repository_root: Path = ROOT, git_run
     before_history = TEARDOWN.history_counts(parse_json_bytes(run_logged(output, "s3-object-history-before-vpc-plan", ["aws", "s3api", "list-object-versions", "--bucket", backend["bucket"], "--prefix", TEARDOWN.STATE_KEY, "--output", "json"], environment, COMMAND_TIMEOUT_SECONDS, repository_root, runner).stdout, "S3 history before VPC plan"))
     TEARDOWN.require_clean_lock(before_history)
     deleted = run_logged(output, "delete-bound-orphan-eks-security-group", ["aws", "ec2", "delete-security-group", "--region", TEARDOWN.AWS_REGION, "--group-id", group_id], environment, COMMAND_TIMEOUT_SECONDS, repository_root, runner)
-    require(deleted.stdout == b"", "Security-group delete returned unexpected stdout")
+    validate_delete_security_group_response(deleted.stdout)
     run_expected_missing(output, "security-group-after-delete", ["aws", "ec2", "describe-security-groups", "--region", TEARDOWN.AWS_REGION, "--group-ids", group_id, "--output", "json"], b"InvalidGroup.NotFound", environment, repository_root, runner)
 
     binary = output / "aws-dev-vpc-final-cleanup.tfplan"

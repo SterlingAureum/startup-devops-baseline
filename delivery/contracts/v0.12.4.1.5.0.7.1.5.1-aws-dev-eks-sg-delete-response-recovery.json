@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.5.1-aws-dev-eks-sg-delete-response-recovery-v1",
+  "version": "v0.12.4.1.5.0.7.1.5.1",
+  "status": "aws-dev-eks-sg-delete-response-recovery-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "2366976f4a40fc397bf45e0d71f7be0a9ce72d5f",
+  "incident": {
+    "privatePrepareRequestSha256": "15e178bf565b80c50e441829955291bedcf430035c01b8e94d843731e729b625",
+    "deleteSecurityGroupStdoutSha256": "fe1cb2564af4e2ea11993e6a2608d1bbcda6c1006bf5d4a15fb9809a25fe03f3",
+    "deleteSecurityGroupStderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "deleteReturn": true,
+    "deleteResponseGroupIdBound": true,
+    "postDeleteAbsenceEvidenceCreated": false,
+    "vpcSavedPlanCreated": false
+  },
+  "repair": {
+    "acceptEmptyDeleteSuccessResponse": true,
+    "acceptBoundJsonDeleteSuccessResponse": true,
+    "retrySecurityGroupDelete": false
+  },
+  "recoveryPhase": {
+    "verifyIsCommandFree": true,
+    "separateApprovalRequired": true,
+    "securityGroupAbsenceReadAllowed": true,
+    "vpcOnlySavedPlanAllowed": true,
+    "directAwsMutationAllowed": false,
+    "terraformInitAllowed": false,
+    "terraformApplyAllowed": false,
+    "maximumApprovalWindowMinutes": 60,
+    "maximumReviewLifetimeMinutes": 240
+  },
+  "finalPhase": {
+    "verifyIsCommandFree": true,
+    "humanReviewRequired": true,
+    "separateApprovalRequired": true,
+    "exactSavedPlanApplyOnly": true,
+    "managedDeleteCount": 1,
+    "terraformInitAllowed": false,
+    "terraformPlanAllowed": false,
+    "automaticRetryAllowed": false,
+    "automaticRollbackAllowed": false
+  },
+  "successBoundary": {
+    "status": "aws-dev-recovered-vpc-final-cleanup-completed",
+    "managedStateAddressCount": 0,
+    "dataStateAddressCount": 0,
+    "securityGroupDeleteRetried": false,
+    "vpcMustBeAbsent": true,
+    "canonicalStateDeleteMarkerAllowed": false
+  }
+}

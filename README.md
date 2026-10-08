@@ -3,17 +3,27 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.5-aws-dev-eks-sg-vpc-cleanup`
+`v0.12.4.1.5.0.7.1.5.1-aws-dev-eks-sg-delete-response-recovery`
 
-The current checkpoint binds the read-only recovery proof that the only
-non-default dependency of the state-managed VPC is one orphan EKS cluster
-security group. It separately approves deletion of only that group plus
-creation of a VPC-only saved destroy plan, then requires human review and a
-second approval before applying that exact plan. See
+The current checkpoint preserves the stopped EKS-SG cleanup after EC2 returned
+a bound JSON success response that the executor incorrectly rejected as
+non-empty stdout. It repairs the reusable response parser and provides a
+separately approved recovery that does not retry the deletion: it verifies SG
+absence and creates a VPC-only saved plan, followed by human review and a
+separate exact-plan apply approval. See
+[v0.12.4.1.5.0.7.1.5.1 AWS dev EKS-SG delete-response
+recovery](docs/V0.12.4.1.5.0.7.1.5.1_AWS_DEV_EKS_SG_DELETE_RESPONSE_RECOVERY.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.5-aws-dev-eks-sg-vpc-cleanup`. It binds the read-only
+recovery proof that the only non-default dependency of the state-managed VPC is
+one orphan EKS cluster security group. It separately approves deletion of only
+that group plus creation of a VPC-only saved destroy plan, then requires human
+review and a second approval before applying that exact plan. See
 [v0.12.4.1.5.0.7.1.5 AWS dev EKS-SG/VPC
 cleanup](docs/V0.12.4.1.5.0.7.1.5_AWS_DEV_EKS_SG_VPC_CLEANUP.md).
 
-The predecessor checkpoint is
+The earlier predecessor checkpoint is
 `v0.12.4.1.5.0.7.1.4-aws-dev-vpc-only-recovery`. It preserves the partially
 applied final cleanup: the last subnet completed, while EC2 rejected the parent
 VPC deletion with `DependencyViolation`. It requires separate approval for

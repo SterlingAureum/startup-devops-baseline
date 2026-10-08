@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.5",
+  "status": "shared-dev-test-phase-execution-lease-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "fea06699cbe355e85e96074d97d4f601bebcbda0",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown-receipt-approval.json",
+  "approvalInput": {
+    "immutableApprovalRecordRequired": true,
+    "approvalRecordSha256Required": true,
+    "activeApprovalRequired": true,
+    "exactReceiptBindingRequired": true,
+    "exactEnvironmentBindingRequired": true,
+    "exactStateKeyBindingRequired": true,
+    "exactPhaseBindingRequired": true,
+    "exactAttemptBindingRequired": true,
+    "exactControlPlaneCommitBindingRequired": true,
+    "exactRequestedAuthorityBindingRequired": true
+  },
+  "executionRequest": {
+    "maximumWindowSeconds": 900,
+    "callerDigestRequired": true,
+    "executionSpecSha256Required": true,
+    "humanReviewedRequired": true,
+    "oneAttemptOnlyRequired": true,
+    "cannotOutliveApproval": true,
+    "simulationOnly": true,
+    "liveExecutionAuthorized": false
+  },
+  "executionStore": {
+    "rootMode": "0700",
+    "childDirectoryMode": "0700",
+    "recordMode": "0600",
+    "exactRootDirectories": [
+      "claims",
+      "outcomes"
+    ],
+    "claimFilenameBoundToApprovalRecordSha256": true,
+    "outcomeFilenameBoundToApprovalRecordSha256": true,
+    "exclusiveCreateRequired": true,
+    "claimFsyncBeforeDriverCall": true,
+    "fileFsyncRequired": true,
+    "directoryFsyncRequired": true,
+    "overwriteRejected": true,
+    "partialWritePreservedForReview": true,
+    "automaticRepair": false
+  },
+  "singleUseBoundary": {
+    "approvalRecordRemainsImmutable": true,
+    "claimRepresentsExecutorConsumption": true,
+    "oneClaimPerApprovalRecord": true,
+    "claimExistsBeforeDriverCall": true,
+    "claimWithoutOutcomeBlocksRetry": true,
+    "failureOutcomeBlocksRetry": true,
+    "successOutcomeBlocksRetry": true,
+    "automaticRetry": false,
+    "automaticRollback": false
+  },
+  "driver": {
+    "fixedFakeOnly": true,
+    "exactTypeRequired": true,
+    "callCount": 1,
+    "subprocessAvailable": false,
+    "sdkAvailable": false,
+    "credentialReadAvailable": false,
+    "liveBackendAvailable": false,
+    "liveCommandExecuted": false,
+    "executionPerformed": false
+  },
+  "entrypoint": {
+    "path": "scripts/exercise-v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease.py",
+    "command": "fixed-fake-exercise-only",
+    "confirmation": "consume-one-reviewed-approval-with-fixed-fake-only",
+    "readsHostUtcOnce": true,
+    "readsOnlyPrivateLocalFiles": true,
+    "writesOnlyPrivateLocalRecords": true,
+    "invokesSubprocess": false,
+    "liveCommandExecuted": false,
+    "executionPerformed": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "authority": {
+    "fixedFakeExerciseAuthorized": true,
+    "livePhaseExecutionAuthorized": false,
+    "controllerMutationAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "directAwsMutationAuthorized": false,
+    "statePushAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "implement-separately-reviewed-phase-drivers-bound-to-a-single-use-claim-without-changing-lease-semantics"
+}

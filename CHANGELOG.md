@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.5
+
+- Add a separate owned append-only execution store with content-bound claim
+  and outcome records while leaving the reviewed approval immutable.
+- Require the exclusive claim and its file/directory durability barriers to
+  complete before a phase driver can be called.
+- Treat claim-only, failure-outcome and success-outcome states as permanently
+  consumed so no approval can be retried or automatically repaired.
+- Bind the execution request to the exact receipt, approval, environment,
+  state key, phase, attempt, commit, authority and execution-spec SHA-256.
+- Exercise only one exact fixed-fake call with no subprocess, SDK, credential,
+  live backend, infrastructure command or execution authority.
+
 ## v0.12.4.1.5.0.7.1.6.4
 
 - Persist reviewed redacted preflight receipts as content-addressed canonical

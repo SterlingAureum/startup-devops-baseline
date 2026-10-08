@@ -3,9 +3,21 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6-generalized-multi-environment-teardown-hardening-design`
+`v0.12.4.1.5.0.7.1.6.1-shared-dev-test-two-wave-teardown-core`
 
-The current checkpoint converts the completed aws-dev rehearsal into an
+The current checkpoint implements the command-free shared dev/test decision
+core for the two-wave teardown. It validates environment profiles, partitions
+managed state at the `module.vpc.*` boundary, gates both saved plans, requires
+an exact post-wave-one network state, classifies post-cluster dependencies,
+checks remote-state/lock history and requires empty final managed state. It
+rejects aws-prod and exposes no operational executor. See
+[v0.12.4.1.5.0.7.1.6.1 shared dev/test two-wave teardown
+core](docs/V0.12.4.1.5.0.7.1.6.1_SHARED_DEV_TEST_TWO_WAVE_TEARDOWN_CORE.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6-generalized-multi-environment-teardown-hardening-design`.
+
+It converts the completed aws-dev rehearsal into an
 offline design for a shared dev/test teardown lifecycle while retaining a
 static, fail-closed prod boundary. It defines protected backend ownership,
 environment policy profiles, dependency classification, a two-wave saved-plan

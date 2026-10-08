@@ -3,6 +3,26 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.1 - Shared dev/test two-wave teardown core
+
+Status: Ready offline
+
+Delivered:
+
+- command-free shared aws-dev/aws-test profile policy with aws-prod refusal
+- exact managed-address split at the reviewed VPC module boundary
+- delete-only, drift-free and import-free gates for both saved-plan waves
+- exact post-wave-one network-shell and final empty-state gates
+- SHA-only safe-residue classification without deletion authority
+- plan/apply remote-state and native-lock history gates
+- redacted fixtures plus active-source structure-validation coverage
+
+Next:
+
+- implement command-free dev/test request verification and preflight adapter
+- bind future private evidence to this shared core without exposing identities
+- retain all live command paths behind later, separately reviewed approvals
+
 ## v0.12.4.1.5.0.7.1.6 - Generalized multi-environment teardown hardening design
 
 Status: Ready offline

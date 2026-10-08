@@ -1,0 +1,153 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.1-shared-dev-test-two-wave-teardown-core-fixtures-v1",
+  "environments": [
+    "aws-dev",
+    "aws-test"
+  ],
+  "initialManagedAddresses": [
+    "module.cnpg_backup.aws_s3_bucket.this",
+    "module.eks.aws_eks_cluster.this",
+    "module.vpc.aws_subnet.private[\"us-east-1a\"]",
+    "module.vpc.aws_vpc.this"
+  ],
+  "waveOnePlan": {
+    "complete": true,
+    "errored": false,
+    "applyable": true,
+    "resource_drift": [],
+    "resource_changes": [
+      {
+        "address": "module.cnpg_backup.aws_s3_bucket.this",
+        "mode": "managed",
+        "change": {
+          "actions": [
+            "delete"
+          ],
+          "importing": null
+        }
+      },
+      {
+        "address": "module.eks.aws_eks_cluster.this",
+        "mode": "managed",
+        "change": {
+          "actions": [
+            "delete"
+          ],
+          "importing": null
+        }
+      },
+      {
+        "address": "data.aws_caller_identity.current",
+        "mode": "data",
+        "change": {
+          "actions": [
+            "read"
+          ],
+          "importing": null
+        }
+      }
+    ],
+    "output_changes": {
+      "cluster_name": {
+        "actions": [
+          "delete"
+        ]
+      },
+      "vpc_id": {
+        "actions": [
+          "no-op"
+        ]
+      }
+    }
+  },
+  "postWaveOneManagedAddresses": [
+    "module.vpc.aws_subnet.private[\"us-east-1a\"]",
+    "module.vpc.aws_vpc.this"
+  ],
+  "dependencyInventory": {
+    "environment": "aws-dev",
+    "eksAbsent": true,
+    "managedNetworkAddressCount": 2,
+    "controllerOwnedDependencyCount": 0,
+    "unknownDependencyCount": 0,
+    "inventoryFamilies": [
+      "eks-cluster",
+      "instances-and-karpenter-fleets",
+      "load-balancers-and-target-groups",
+      "nat-and-internet-gateways",
+      "vpc-endpoints-and-peering",
+      "transit-and-vpn-attachments",
+      "network-interfaces",
+      "security-groups-and-references",
+      "ebs-volumes",
+      "subnets-route-tables-and-network-acls",
+      "application-backup-bucket",
+      "terraform-state-and-lock-history"
+    ],
+    "safeResidues": [],
+    "protectedFoundation": {
+      "stateBackendPreserved": true,
+      "runtimeIdentitiesPreserved": true
+    }
+  },
+  "waveTwoPlan": {
+    "complete": true,
+    "errored": false,
+    "applyable": true,
+    "resource_drift": [],
+    "resource_changes": [
+      {
+        "address": "module.vpc.aws_subnet.private[\"us-east-1a\"]",
+        "mode": "managed",
+        "change": {
+          "actions": [
+            "delete"
+          ],
+          "importing": null
+        }
+      },
+      {
+        "address": "module.vpc.aws_vpc.this",
+        "mode": "managed",
+        "change": {
+          "actions": [
+            "delete"
+          ],
+          "importing": null
+        }
+      }
+    ],
+    "output_changes": {
+      "vpc_id": {
+        "actions": [
+          "delete"
+        ]
+      }
+    }
+  },
+  "planHistoryBefore": {
+    "stateVersions": 8,
+    "stateDeleteMarkers": 0,
+    "lockVersions": 7,
+    "lockDeleteMarkers": 7,
+    "lockLatestVersions": 0,
+    "lockLatestDeleteMarkers": 1
+  },
+  "planHistoryAfter": {
+    "stateVersions": 8,
+    "stateDeleteMarkers": 0,
+    "lockVersions": 8,
+    "lockDeleteMarkers": 8,
+    "lockLatestVersions": 0,
+    "lockLatestDeleteMarkers": 1
+  },
+  "applyHistoryAfter": {
+    "stateVersions": 9,
+    "stateDeleteMarkers": 0,
+    "lockVersions": 9,
+    "lockDeleteMarkers": 9,
+    "lockLatestVersions": 0,
+    "lockLatestDeleteMarkers": 1
+  },
+  "finalManagedAddresses": []
+}

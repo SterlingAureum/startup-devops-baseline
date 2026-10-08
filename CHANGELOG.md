@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.1
+
+- Implement a command-free dev/test environment policy and state-address
+  partition core while rejecting aws-prod live teardown.
+- Gate wave one to all-and-only non-network deletes, require exact retained
+  network state, and gate a fresh wave two to all-and-only network deletes.
+- Require complete post-cluster dependency inventory, zero unknown/controller
+  dependencies and separate approval for SHA-bound safe residues.
+- Validate plan/apply S3 state and lock history without deleting canonical
+  state, versions or protected foundation resources.
+- Add redacted dev/test fixtures and active-source CI coverage while exposing
+  no operational executor or live authority.
+
 ## v0.12.4.1.5.0.7.1.6
 
 - Record that shared Terraform modules and independent state keys provide a

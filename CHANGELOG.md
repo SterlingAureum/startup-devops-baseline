@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.6
+
+- Define exact SHA-bound driver specifications for all eight shared dev/test
+  teardown phases and all 49 ordered operation IDs.
+- Keep dev/test state keys, Terraform roots and backend declarations isolated
+  while rejecting aws-prod and all cross-environment spec substitutions.
+- Revalidate the approval and execution request, then make the single-use
+  claim durable before dispatching the first operation.
+- Stop at the first failed or malformed response and permanently block retry
+  after claim-only, failure, success or outcome-write uncertainty.
+- Exercise only the exact fixed fake with no raw command, subprocess, SDK,
+  credential input, live backend or infrastructure authority.
+
 ## v0.12.4.1.5.0.7.1.6.5
 
 - Add a separate owned append-only execution store with content-bound claim

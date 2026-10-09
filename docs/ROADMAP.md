@@ -3,6 +3,25 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.7 - Shared dev/test command-adapter registry
+
+Status: Ready offline
+
+Delivered:
+
+- exact coverage of 37 unique reviewed IDs across 49 phase operation calls
+- one immutable transport, effect, timeout and output policy per operation
+- exact allowed-phase and required-private-binding names per adapter entry
+- dev/test manifests bound to driver, registry and adapter-entry SHA-256s
+- rejection of unknown, reordered, cross-phase and cross-environment requests
+- no raw command, template, credential, endpoint, subprocess or live backend
+
+Next:
+
+- implement the exact registry-backed command runner
+- retain durable claim-before-command and stop-at-first-failure semantics
+- keep free-form command input, automatic retry and prod execution unavailable
+
 ## v0.12.4.1.5.0.7.1.6.6 - Shared dev/test phase drivers
 
 Status: Ready offline

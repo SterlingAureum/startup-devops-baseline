@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.7-shared-dev-test-command-adapter-registry-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.7",
+  "status": "shared-dev-test-command-adapter-registry-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "3922c626f53aa966005aa72ae8a2fbe9a13b3f03",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers.json",
+  "coverage": {
+    "supportedEnvironments": [
+      "aws-dev",
+      "aws-test"
+    ],
+    "rejectedEnvironments": [
+      "aws-prod"
+    ],
+    "phaseCount": 8,
+    "uniqueOperationIdCount": 37,
+    "phaseOperationCallCount": 49,
+    "exactReviewedOperationCoverage": true,
+    "unknownOperationRejected": true,
+    "crossPhaseOperationRejected": true,
+    "operationOrderBound": true
+  },
+  "adapterEntry": {
+    "exactAdapterIdRequired": true,
+    "transportKindRequired": true,
+    "effectClassRequired": true,
+    "timeoutRequired": true,
+    "outputPolicyRequired": true,
+    "requiredPrivateBindingNamesBound": true,
+    "rawCommandAccepted": false,
+    "dynamicCommandTemplateAccepted": false,
+    "credentialOrEndpointOverrideAccepted": false,
+    "environmentFallbackAccepted": false,
+    "automaticRetryAuthorized": false,
+    "automaticRepairAuthorized": false
+  },
+  "phaseManifest": {
+    "phaseDriverSpecSha256Required": true,
+    "commandRegistrySha256Required": true,
+    "adapterEntrySha256sRequired": true,
+    "environmentStateKeyBound": true,
+    "terraformRootBound": true,
+    "backendConfigDeclarationBound": true,
+    "claimBeforeFirstCommandRequired": true,
+    "oneCallPerOperationId": true,
+    "orderedDispatchRequired": true,
+    "stopAtFirstFailure": true,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "statePushAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "implementationBoundary": {
+    "registryImplemented": true,
+    "operationRequestSelectionImplemented": true,
+    "subprocessAvailable": false,
+    "sdkAvailable": false,
+    "credentialReadAvailable": false,
+    "liveBackendAvailable": false,
+    "liveCommandExecuted": false,
+    "executionPerformed": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "authority": {
+    "registryValidationAuthorized": true,
+    "livePhaseExecutionAuthorized": false,
+    "controllerMutationAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "directAwsMutationAuthorized": false,
+    "statePushAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "implement-the-exact-registry-backed-runner-without-free-form-command-or-automatic-retry"
+}

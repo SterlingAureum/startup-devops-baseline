@@ -3,6 +3,26 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.10 - Shared dev/test lease registry command
+
+Status: Ready offline
+
+Delivered:
+
+- strict local command around the lease-owned fixed-fake composition
+- separate owned canonical private request and binding files
+- exact caller-supplied SHA-256s and confirmation before private reads
+- one host UTC read reused for claim and completion validation
+- durable claim, outcome and replay controls inherited without bypass
+- generic redacted failure output with no private paths or payloads
+- no raw command, failure selector, endpoint, live, retry or prod switch
+
+Next:
+
+- exercise the complete dev/test chain through fresh offline command processes
+- retain per-phase single-use stores and redacted process summaries
+- keep live transport and aws-prod execution unavailable
+
 ## v0.12.4.1.5.0.7.1.6.9 - Shared dev/test lease registry composition
 
 Status: Ready offline

@@ -3,9 +3,20 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition`
+`v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command`
 
-The current checkpoint composes the registry runner inside the durable
+The current checkpoint adds a strict local command around the lease-owned
+fixed-fake registry composition. It reads two distinct canonical private files,
+binds their caller-supplied digests, requires an exact confirmation and reads
+UTC once before consuming one durable approval attempt. It exposes no raw
+command, endpoint, live or retry switch. See
+[v0.12.4.1.5.0.7.1.6.10 shared dev/test lease registry
+command](docs/V0.12.4.1.5.0.7.1.6.10_SHARED_DEV_TEST_LEASE_REGISTRY_COMMAND.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition`.
+
+It composes the registry runner inside the durable
 single-use lease. All caller-controlled inputs are checked before consumption;
 the exclusive claim and its durability barriers complete before the first
 fixed-fake backend call. Success, failure and write uncertainty permanently

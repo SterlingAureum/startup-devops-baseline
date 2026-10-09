@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.7
+
+- Map all 49 phase calls to exactly 37 reviewed command-adapter operation IDs.
+- Bind every operation to one transport kind, effect class, timeout, output
+  policy, allowed phase set and required private digest names.
+- Bind each dev/test phase manifest to its driver-spec SHA, the complete
+  registry SHA, environment paths and ordered adapter-entry digests.
+- Reject unknown, reordered, cross-phase or cross-environment operation
+  requests and all raw commands, templates, endpoint or credential overrides.
+- Keep the registry command-free and offline: no subprocess, SDK, live backend,
+  execution authority, retry, repair, state push or backend retirement.
+
 ## v0.12.4.1.5.0.7.1.6.6
 
 - Define exact SHA-bound driver specifications for all eight shared dev/test

@@ -3,14 +3,25 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers`
+`v0.12.4.1.5.0.7.1.6.7-shared-dev-test-command-adapter-registry`
 
-The current checkpoint adds closed, SHA-bound driver specifications for all
-eight shared dev/test teardown phases. It dispatches 49 exact ordered operation
-IDs only through a fixed fake after the single-use claim is durable; failures
-stop immediately and consume the attempt. It exposes no live backend, raw
-command or credential override. See [v0.12.4.1.5.0.7.1.6.6 shared dev/test
-phase drivers](docs/V0.12.4.1.5.0.7.1.6.6_SHARED_DEV_TEST_PHASE_DRIVERS.md).
+The current checkpoint closes the command-adapter registry beneath all eight
+shared dev/test teardown phases. The 49 phase calls resolve to exactly 37
+reviewed operation IDs with fixed transport, effect, timeout, output and
+private-binding policies. Unknown, reordered and cross-phase operations are
+rejected; no subprocess or live backend is present. See
+[v0.12.4.1.5.0.7.1.6.7 shared dev/test command-adapter
+registry](docs/V0.12.4.1.5.0.7.1.6.7_SHARED_DEV_TEST_COMMAND_ADAPTER_REGISTRY.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers`.
+
+It adds closed, SHA-bound driver specifications for all eight shared dev/test
+teardown phases. It dispatches 49 exact ordered operation IDs only through a
+fixed fake after the single-use claim is durable; failures stop immediately
+and consume the attempt. It exposes no live backend, raw command or credential
+override. See [v0.12.4.1.5.0.7.1.6.6 shared dev/test phase
+drivers](docs/V0.12.4.1.5.0.7.1.6.6_SHARED_DEV_TEST_PHASE_DRIVERS.md).
 
 The predecessor checkpoint is
 `v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease`.

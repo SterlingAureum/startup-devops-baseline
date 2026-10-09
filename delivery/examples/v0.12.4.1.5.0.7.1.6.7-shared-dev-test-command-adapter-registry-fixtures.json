@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.7-shared-dev-test-command-adapter-registry-fixtures-v1",
+  "sourcePhaseDriverFixture": "delivery/examples/v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers-fixtures.json",
+  "expectedCommandRegistrySha256": "8d8ecac7bd5bf8dfb834dd38dfc8bd867978aa68ecf4dba5eb5ae9db8a504337",
+  "expectedEnvironment": "aws-dev",
+  "expectedPhase": "wave-one-plan",
+  "expectedPhaseManifestSha256": "d74c7891c3b90ac6825b667b971d88144171d599feecf1ce906a6bfd1f54febe",
+  "uniqueOperationIdCount": 37,
+  "phaseOperationCallCount": 49,
+  "transportKindCounts": {
+    "aws-exact-delete": 1,
+    "aws-read": 2,
+    "composite-read": 3,
+    "git-read": 1,
+    "identity-read": 1,
+    "kubernetes-mutation": 2,
+    "kubernetes-read": 2,
+    "local-gate": 12,
+    "s3-history-read": 3,
+    "terraform-apply": 2,
+    "terraform-plan": 2,
+    "terraform-read": 6
+  },
+  "effectClassCounts": {
+    "local-artifact-write": 2,
+    "local-validation": 12,
+    "mutation": 5,
+    "read-only": 18
+  },
+  "containsPrivateResourceIdentity": false,
+  "containsAwsAccountId": false,
+  "containsBackendIdentity": false
+}

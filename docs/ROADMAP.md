@@ -3,6 +3,26 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.5 - Shared dev/test phase execution lease
+
+Status: Ready offline
+
+Delivered:
+
+- immutable approval plus separate content-bound executor-consumption claim
+- exclusive `0600` claim and outcome records in an exact owned `0700` store
+- claim file and directory durability before the fixed-fake driver call
+- permanent no-retry semantics for claim-only, failure and success states
+- exact execution-request identity, authority and execution-spec bindings
+- one exact fixed-fake call with no subprocess, SDK or live backend
+- redacted failure evidence without private paths or resource identities
+
+Next:
+
+- add separately reviewed phase-specific dev/test drivers
+- bind each driver to the exact execution-spec SHA consumed by this lease
+- retain claim-before-command and no-automatic-retry semantics unchanged
+
 ## v0.12.4.1.5.0.7.1.6.4 - Shared dev/test teardown receipt approval
 
 Status: Ready offline

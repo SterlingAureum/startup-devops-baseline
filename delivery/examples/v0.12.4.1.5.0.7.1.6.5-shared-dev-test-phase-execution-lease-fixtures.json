@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease-fixtures-v1",
+  "sourceApprovalFixture": "delivery/examples/v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown-receipt-approval-fixtures.json",
+  "executionClockUtc": "2026-10-09T00:13:00Z",
+  "completionClockUtc": "2026-10-09T00:13:05Z",
+  "executionTiming": {
+    "createdAtUtc": "2026-10-09T00:12:30Z",
+    "notBeforeUtc": "2026-10-09T00:13:00Z",
+    "expiresAtUtc": "2026-10-09T00:22:00Z"
+  },
+  "executionSpecSha256": "5f3f395d257d0a62727a4c60c2fc8a85a28cfdcdbebd8a51f77893242b79185f",
+  "expectedEnvironment": "aws-dev",
+  "expectedPhase": "wave-one-plan",
+  "expectedRequestedAuthority": "terraform-plan",
+  "expectedExecutionStoreDirectories": [
+    "claims",
+    "outcomes"
+  ],
+  "containsPrivateResourceIdentity": false,
+  "containsAwsAccountId": false,
+  "containsBackendIdentity": false
+}

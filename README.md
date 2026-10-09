@@ -3,9 +3,19 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown-receipt-approval`
+`v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease`
 
-The current checkpoint adds append-only local persistence for redacted
+The current checkpoint adds an immutable single-use execution lease between a
+reviewed approval and a future phase driver. A content-bound exclusive claim
+is made durable before exactly one closed fixed-fake call; success, failure or
+an uncertain claim all prohibit retry. It exposes no live backend or
+infrastructure command. See [v0.12.4.1.5.0.7.1.6.5 shared dev/test phase
+execution lease](docs/V0.12.4.1.5.0.7.1.6.5_SHARED_DEV_TEST_PHASE_EXECUTION_LEASE.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown-receipt-approval`.
+
+It adds append-only local persistence for redacted
 preflight receipts and a separate, single-attempt human approval record. Both
 records use content-addressed exclusive creation inside an owned private store;
 they cannot be overwritten or automatically retried. Approval remains

@@ -371,6 +371,13 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
 PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease.py"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers.py" \
+  --root "${ROOT_DIR}"
+
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers.py"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" \
@@ -396,7 +403,8 @@ bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.2-shared-dev-test-two-wave-teardown-request-preflight.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.3-shared-dev-test-two-wave-teardown-private-preflight.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown-receipt-approval.sh" \
-  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease.sh"
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease.sh" \
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only

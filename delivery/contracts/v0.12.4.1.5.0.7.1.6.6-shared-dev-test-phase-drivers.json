@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.6",
+  "status": "shared-dev-test-phase-drivers-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "3d6dfda64d2992a5caa488ba1c640ffa13a63678",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease.json",
+  "profiles": {
+    "supported": [
+      "aws-dev",
+      "aws-test"
+    ],
+    "rejected": [
+      "aws-prod"
+    ],
+    "exactStateKeyRequired": true,
+    "exactTerraformRootRequired": true,
+    "exactBackendConfigDeclarationRequired": true,
+    "crossEnvironmentSpecRejected": true
+  },
+  "phaseSpecs": {
+    "phaseCount": 8,
+    "totalOperationCount": 49,
+    "orderedClosedOperationIds": true,
+    "executionSpecSha256Required": true,
+    "requestedAuthorityBindingRequired": true,
+    "effectClassBindingRequired": true,
+    "requiredPrivateDigestNamesBound": true,
+    "rawCommandAllowed": false,
+    "dynamicCommandTemplateAllowed": false,
+    "credentialOrEndpointOverrideAllowed": false
+  },
+  "leaseIntegration": {
+    "immutableApprovalRevalidated": true,
+    "executionRequestRevalidated": true,
+    "exactExecutionSpecSha256Required": true,
+    "durableExclusiveClaimBeforeFirstOperation": true,
+    "oneApprovalAttemptOnly": true,
+    "claimOnlyBlocksRetry": true,
+    "failureOutcomeBlocksRetry": true,
+    "successOutcomeBlocksRetry": true,
+    "outcomeUncertaintyBlocksRetry": true,
+    "automaticRetry": false,
+    "automaticRepair": false,
+    "automaticRollback": false
+  },
+  "transport": {
+    "fixedFakeOnly": true,
+    "exactTypeRequired": true,
+    "oneCallPerOperationId": true,
+    "orderedDispatchRequired": true,
+    "stopAtFirstFailure": true,
+    "subprocessAvailable": false,
+    "sdkAvailable": false,
+    "credentialReadAvailable": false,
+    "liveBackendAvailable": false,
+    "liveCommandExecuted": false,
+    "executionPerformed": false
+  },
+  "entrypoint": {
+    "path": "scripts/exercise-v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers.py",
+    "confirmation": "consume-one-approval-for-reviewed-fixed-fake-phase-driver",
+    "readsHostUtcOnce": true,
+    "readsOnlyPrivateLocalFiles": true,
+    "writesOnlyPrivateLocalRecords": true,
+    "invokesSubprocess": false,
+    "liveCommandExecuted": false,
+    "executionPerformed": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "authority": {
+    "fixedFakeDriverExerciseAuthorized": true,
+    "livePhaseExecutionAuthorized": false,
+    "controllerMutationAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "directAwsMutationAuthorized": false,
+    "statePushAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "implement-one-live-command-adapter-that-maps-only-reviewed-operation-ids-and-retains-lease-semantics"
+}

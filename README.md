@@ -3,14 +3,24 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease`
+`v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers`
 
-The current checkpoint adds an immutable single-use execution lease between a
-reviewed approval and a future phase driver. A content-bound exclusive claim
-is made durable before exactly one closed fixed-fake call; success, failure or
-an uncertain claim all prohibit retry. It exposes no live backend or
-infrastructure command. See [v0.12.4.1.5.0.7.1.6.5 shared dev/test phase
-execution lease](docs/V0.12.4.1.5.0.7.1.6.5_SHARED_DEV_TEST_PHASE_EXECUTION_LEASE.md).
+The current checkpoint adds closed, SHA-bound driver specifications for all
+eight shared dev/test teardown phases. It dispatches 49 exact ordered operation
+IDs only through a fixed fake after the single-use claim is durable; failures
+stop immediately and consume the attempt. It exposes no live backend, raw
+command or credential override. See [v0.12.4.1.5.0.7.1.6.6 shared dev/test
+phase drivers](docs/V0.12.4.1.5.0.7.1.6.6_SHARED_DEV_TEST_PHASE_DRIVERS.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.5-shared-dev-test-phase-execution-lease`.
+
+It adds an immutable single-use execution lease between a reviewed approval
+and a future phase driver. A content-bound exclusive claim is made durable
+before exactly one closed fixed-fake call; success, failure or an uncertain
+claim all prohibit retry. It exposes no live backend or infrastructure
+command. See [v0.12.4.1.5.0.7.1.6.5 shared dev/test phase execution
+lease](docs/V0.12.4.1.5.0.7.1.6.5_SHARED_DEV_TEST_PHASE_EXECUTION_LEASE.md).
 
 The predecessor checkpoint is
 `v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown-receipt-approval`.

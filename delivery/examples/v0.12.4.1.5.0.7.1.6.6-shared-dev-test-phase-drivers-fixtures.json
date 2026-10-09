@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers-fixtures-v1",
+  "sourceApprovalFixture": "delivery/examples/v0.12.4.1.5.0.7.1.6.4-shared-dev-test-two-wave-teardown-receipt-approval-fixtures.json",
+  "executionClockUtc": "2026-10-09T00:13:00Z",
+  "completionClockUtc": "2026-10-09T00:13:05Z",
+  "executionTiming": {
+    "createdAtUtc": "2026-10-09T00:12:30Z",
+    "notBeforeUtc": "2026-10-09T00:13:00Z",
+    "expiresAtUtc": "2026-10-09T00:22:00Z"
+  },
+  "expectedEnvironment": "aws-dev",
+  "expectedPhase": "wave-one-plan",
+  "expectedRequestedAuthority": "terraform-plan",
+  "expectedExecutionSpecSha256": "ba1cafecc8353755ad57e41735e7da1ec594c312c0e82da0181b2fa1188c2dc1",
+  "phaseOperationCounts": {
+    "controller-cleanup": 5,
+    "wave-one-plan": 7,
+    "wave-one-apply": 7,
+    "post-wave-one-inventory": 6,
+    "safe-residue-delete": 4,
+    "wave-two-plan": 7,
+    "wave-two-apply": 7,
+    "final-read-only-audit": 6
+  },
+  "totalOperationCount": 49,
+  "containsPrivateResourceIdentity": false,
+  "containsAwsAccountId": false,
+  "containsBackendIdentity": false
+}

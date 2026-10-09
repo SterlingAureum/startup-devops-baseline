@@ -3,6 +3,26 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.6 - Shared dev/test phase drivers
+
+Status: Ready offline
+
+Delivered:
+
+- eight closed dev/test phase specifications with 49 ordered operation IDs
+- exact state-key, Terraform-root, backend, authority and effect bindings
+- complete-spec SHA binding in the separately reviewed execution request
+- durable single-use claim before the first operation dispatch
+- stop-at-first-failure and permanent no-retry semantics after consumption
+- exact fixed-fake transport with no raw command, SDK or live backend
+- production refusal and redacted result/stop evidence
+
+Next:
+
+- add one separately reviewed live adapter for only these operation IDs
+- retain exact-order dispatch, claim-before-command and stop-on-failure
+- add no free-form command, credential, endpoint or automatic retry input
+
 ## v0.12.4.1.5.0.7.1.6.5 - Shared dev/test phase execution lease
 
 Status: Ready offline

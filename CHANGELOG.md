@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.12
+
+- Freeze 18 active artifacts that implement and verify the shared dev/test
+  offline teardown chain.
+- Preserve the proven 8-phase, 16-process and 98 fixed-fake-call boundary
+  without promoting synthetic evidence to live authority.
+- Record seven explicit gaps that block any live-readiness claim while allowing
+  the scoped offline design to close.
+- Keep application teardown unable to delete the remote-state backend; require
+  separate retention policy, plan review and approval for retirement.
+- Add no runtime source, command entrypoint, subprocess, SDK, credential reader
+  or live backend.
+
 ## v0.12.4.1.5.0.7.1.6.11
 
 - Exercise all eight shared teardown phases for both dev and test through 16

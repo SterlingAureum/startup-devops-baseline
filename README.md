@@ -3,9 +3,21 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.7-shared-dev-test-command-adapter-registry`
+`v0.12.4.1.5.0.7.1.6.8-shared-dev-test-claimed-registry-runner`
 
-The current checkpoint closes the command-adapter registry beneath all eight
+The current checkpoint adds a claim-bound offline registry runner for all 16
+dev/test environment-phase combinations. It validates the durable claim,
+manifest, complete ordered request set and exact private SHA bindings before
+the first fixed-fake call, then stops on the first failed or malformed
+response. The durable lease remains the replay authority; no standalone live
+entrypoint, subprocess or live backend exists. See
+[v0.12.4.1.5.0.7.1.6.8 shared dev/test claimed registry
+runner](docs/V0.12.4.1.5.0.7.1.6.8_SHARED_DEV_TEST_CLAIMED_REGISTRY_RUNNER.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.7-shared-dev-test-command-adapter-registry`.
+
+It closes the command-adapter registry beneath all eight
 shared dev/test teardown phases. The 49 phase calls resolve to exactly 37
 reviewed operation IDs with fixed transport, effect, timeout, output and
 private-binding policies. Unknown, reordered and cross-phase operations are

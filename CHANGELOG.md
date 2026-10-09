@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.8
+
+- Add a lower-level runner bound to an already durable phase claim, exact
+  registry manifest and complete ordered operation-request set.
+- Validate every phase private SHA-256 binding before dispatch and pass each
+  adapter only its registered binding subset.
+- Exercise all 16 dev/test environment-phase combinations and 98 ordered calls
+  through one exact single-use fixed-fake backend.
+- Stop at the first failed or malformed response without retry, repair or
+  rollback, while keeping all result and stop evidence redacted.
+- Keep durable replay ownership in the existing lease and expose no standalone
+  executor, filesystem writer, subprocess, SDK, credential reader or live
+  backend.
+
 ## v0.12.4.1.5.0.7.1.6.7
 
 - Map all 49 phase calls to exactly 37 reviewed command-adapter operation IDs.

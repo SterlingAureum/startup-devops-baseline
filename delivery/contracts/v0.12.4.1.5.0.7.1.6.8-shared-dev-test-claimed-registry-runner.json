@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.8-shared-dev-test-claimed-registry-runner-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.8",
+  "status": "shared-dev-test-claimed-registry-runner-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "d759cb6232638c36ebbea6c91f43969d4ad6042b",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.7-shared-dev-test-command-adapter-registry.json",
+  "coverage": {
+    "supportedEnvironments": ["aws-dev", "aws-test"],
+    "rejectedEnvironments": ["aws-prod"],
+    "phaseCount": 8,
+    "environmentPhaseRunCount": 16,
+    "phaseOperationCallCountAcrossEnvironments": 98,
+    "durableClaimDigestBound": true,
+    "manifestDigestBound": true,
+    "operationOrderBoundBeforeFirstCall": true,
+    "privateBindingNamesAndDigestsBoundBeforeFirstCall": true,
+    "claimCommonBindingsMatched": true,
+    "stopAtFirstFailure": true,
+    "malformedResponseRejected": true
+  },
+  "backend": {
+    "exactFixedFakeTypeRequired": true,
+    "singleBackendInstanceUse": true,
+    "oneCallPerOperationId": true,
+    "perOperationBindingSubsetRequired": true,
+    "rawCommandAccepted": false,
+    "dynamicCommandTemplateAccepted": false,
+    "credentialOrEndpointOverrideAccepted": false,
+    "automaticRetryAuthorized": false,
+    "automaticRepairAuthorized": false
+  },
+  "replayBoundary": {
+    "durableClaimMustAlreadyExist": true,
+    "runnerCreatesClaim": false,
+    "runnerOwnsDurableReplayPrevention": false,
+    "leaseStoreRemainsReplayAuthority": true,
+    "standaloneLiveEntrypointAvailable": false
+  },
+  "implementationBoundary": {
+    "claimedRegistryRunnerImplemented": true,
+    "fixedFakeBackendImplemented": true,
+    "subprocessAvailable": false,
+    "sdkAvailable": false,
+    "credentialReadAvailable": false,
+    "filesystemWriteAvailable": false,
+    "liveBackendAvailable": false,
+    "liveCommandExecuted": false,
+    "executionPerformed": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "authority": {
+    "offlineRunnerValidationAuthorized": true,
+    "livePhaseExecutionAuthorized": false,
+    "controllerMutationAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "directAwsMutationAuthorized": false,
+    "statePushAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "compose-the-registry-runner-inside-the-durable-single-use-lease-before-any-live-backend"
+}

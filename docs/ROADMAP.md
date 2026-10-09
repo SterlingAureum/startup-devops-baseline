@@ -3,6 +3,19 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.14 - README homepage consolidation
+
+Status: Delivered offline
+
+- replace the cumulative README checkpoint narrative with a concise project,
+  release, architecture, lifecycle, safety and documentation entry point
+- keep all existing evidence, version history and operational material in
+  their current repository paths without migration or semantic change
+- retain only a collapsed legacy marker index required by unchanged historical
+  validators; do not change workflows, CI routing or required checks
+- preserve v0.12.4.1.5.0.7.1.6.13 as the accepted v0.12 scope-and-evidence
+  closure and add no live execution authority
+
 ## v0.12.4.1.5.0.7.1.6.13 - v0.12 scope and evidence closure
 
 Status: Complete with explicit deferrals

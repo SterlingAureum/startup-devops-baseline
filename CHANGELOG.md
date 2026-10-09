@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.14
+
+- Replace the cumulative 2,081-line checkpoint narrative in the repository
+  homepage with a concise current-release, architecture, lifecycle, safety and
+  documentation entry point.
+- Keep historical descriptions authoritative in the existing Changelog,
+  Roadmap, documents, contracts and evidence records without moving or
+  rewriting any evidence.
+- Retain a collapsed marker-only compatibility index for unchanged historical
+  validators while changing no workflow, CI route, infrastructure declaration,
+  runtime executor or live authority.
+- Preserve v0.12.4.1.5.0.7.1.6.13 as the accepted v0.12 scope and evidence
+  closure checkpoint; this increment is presentation-only release polish.
+
 ## v0.12.4.1.5.0.7.1.6.13
 
 - Close the accepted v0.12 scope with a final manifest bound to eight redacted

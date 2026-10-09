@@ -3,13 +3,24 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.12-shared-dev-test-offline-closure`
+`v0.12.4.1.5.0.7.1.6.13-v0.12-scope-and-evidence-closure`
 
-The current checkpoint freezes 18 artifacts that define and verify the shared
-dev/test offline teardown chain. It records seven explicit live-readiness gaps,
-including command adapters, cloud identity, real output behavior, partial
-failure recovery, test/prod qualification and separate state-backend
-retirement. Offline design closure is ready; live execution is not. See
+The current checkpoint closes the accepted v0.12 scope with eight redacted
+evidence roots and explicit live/review deferrals. Remote state, CI routing,
+promotion lifecycle and the aws-dev lifecycle are recorded as completed within
+their exact boundaries; live upgrades, a fresh integrated test/prod rehearsal,
+live shared teardown adapters and repository-wide review are not claimed. See
+[v0.12.4.1.5.0.7.1.6.13 v0.12 scope and evidence
+closure](docs/V0.12.4.1.5.0.7.1.6.13_V0.12_SCOPE_AND_EVIDENCE_CLOSURE.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.12-shared-dev-test-offline-closure`.
+
+It freezes 18 artifacts that define and verify the shared dev/test offline
+teardown chain. It records seven explicit live-readiness gaps, including
+command adapters, cloud identity, real output behavior, partial failure
+recovery, test/prod qualification and separate state-backend retirement.
+Offline design closure is ready; live execution is not. See
 [v0.12.4.1.5.0.7.1.6.12 shared dev/test offline
 closure](docs/V0.12.4.1.5.0.7.1.6.12_SHARED_DEV_TEST_OFFLINE_CLOSURE.md).
 

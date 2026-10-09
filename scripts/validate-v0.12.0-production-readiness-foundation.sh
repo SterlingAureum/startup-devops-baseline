@@ -201,7 +201,30 @@ roadmap = (root / "docs/ROADMAP.md").read_text()
 start = roadmap.index("## v0.12 - Production Readiness Capstone")
 end = roadmap.index("## v1.0 - Production-ready Commercial Baseline", start)
 section = roadmap[start:end]
-require("Status: In Progress" in section, "v0.12 roadmap status drift")
+status_match = re.search(r"^Status: (.+)$", section, re.MULTILINE)
+require(status_match is not None, "v0.12 roadmap status missing")
+status = status_match.group(1)
+require(status in {
+    "In Progress",
+    "Completed with explicit live and review deferrals",
+}, f"unexpected v0.12 roadmap status: {status}")
+if status == "Completed with explicit live and review deferrals":
+    closure_manifest = load(root / "delivery/contracts/v0.12-final-evidence-manifest.json")
+    require(closure_manifest.get("version") == "v0.12", "v0.12 closure manifest version changed")
+    require(
+        closure_manifest.get("closureCheckpoint") == "v0.12.4.1.5.0.7.1.6.13",
+        "v0.12 closure checkpoint changed",
+    )
+    require(
+        closure_manifest.get("status") == "completed-with-explicit-live-and-review-deferrals",
+        "v0.12 closure manifest status changed",
+    )
+    require(closure_manifest.get("newLiveExecutionAuthorized") is False, "v0.12 closure grants live authority")
+    require(closure_manifest.get("productionReadinessClaimed") is False, "v0.12 closure overclaims production readiness")
+    forbidden = closure_manifest.get("forbiddenClaims")
+    require(isinstance(forbidden, list), "v0.12 closure forbidden claims missing")
+    require("aws-prod-live-acceptance-passed" in forbidden, "v0.12 closure lost prod guard")
+    require("v0.12-proves-full-commercial-production-readiness" in forbidden, "v0.12 closure lost readiness guard")
 for version in expected_increments:
     require(version in section, f"roadmap missing {version}")
 require("final integrated dev/test/prod commercial rehearsal remains v1.0 RC work" in section, "v1.0 rehearsal boundary missing")

@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.13
+
+- Close the accepted v0.12 scope with a final manifest bound to eight redacted
+  workstream evidence roots.
+- Record completed state-bootstrap, state-migration, CI, promotion and aws-dev
+  lifecycle outcomes without converting them into broader production claims.
+- Retain explicit guards for the unexecuted live upgrade, fresh aws-test/prod
+  rehearsal, shared live teardown adapters and state-backend retirement.
+- Reschedule the broader original v0.12.5-v0.12.7 work to post-v0.12 review or
+  v1.0 instead of marking it implicitly complete.
+- Change the Roadmap lifecycle to completed-with-deferrals while preserving
+  legacy In Progress validation and adding no live execution capability.
+
 ## v0.12.4.1.5.0.7.1.6.12
 
 - Freeze 18 active artifacts that implement and verify the shared dev/test

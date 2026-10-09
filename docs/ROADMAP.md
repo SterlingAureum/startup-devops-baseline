@@ -3,6 +3,25 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.13 - v0.12 scope and evidence closure
+
+Status: Complete with explicit deferrals
+
+Delivered:
+
+- final v0.12 manifest bound to eight redacted workstream evidence roots
+- accepted-scope closure without full-production-readiness overclaim
+- exact environment, state-backend, live-upgrade and teardown boundaries
+- explicit rescheduling of broader original v0.12.5-v0.12.7 work
+- post-v0.12 repository and architecture review handoff
+- no new executor, live adapter, credential read or infrastructure action
+
+Next:
+
+- begin the repository and architecture review before more live expansion
+- separate audit-only material from normal CI/CD where the review approves it
+- re-scope future live test/prod, upgrade and DR work after that review
+
 ## v0.12.4.1.5.0.7.1.6.12 - Shared dev/test offline closure
 
 Status: Offline scope ready for closure; live execution unavailable
@@ -1091,7 +1110,7 @@ readiness remain v0.12 work.
 
 ## v0.12 - Production Readiness Capstone
 
-Status: In Progress
+Status: Completed with explicit live and review deferrals
 
 Goal:
 
@@ -1347,17 +1366,18 @@ Incremental scope:
   a separately approved `terraform init -reconfigure` plus one saved create-only
   plan. Allow up to two hours for plan execution, eight hours for review and a
   separate future apply window of up to three hours; apply remains blocked
-- v0.12.5 - remote-state clean-room infrastructure and GitOps rebuild,
-  database recovery, measured RTO/RPO, scoped disaster-recovery review and
-  terminal cleanup/cost evidence - planned; the minimum aws-dev remote-state
-  reconstruction prerequisite moved into v0.12.4.1.5.0.3, while the broader
-  recovery scope remains here
-- v0.12.6 - production least privilege, approval-protected read-only
-  observation, break-glass, capacity, availability, cost and destructive-action
-  controls - planned
-- v0.12.7 - repository-wide technical production-readiness matrix, evidence
-  manifest, permitted/forbidden claims and feature-scope freeze before v1.0 RC
-  convergence - planned
+- v0.12.5 - broader remote-state clean-room rebuild, database recovery and
+  measured RTO/RPO scope - rescheduled to post-v0.12 review or v1.0; the minimum
+  aws-dev remote-state reconstruction prerequisite was completed in
+  v0.12.4.1.5.0.3 through v0.12.4.1.5.0.7.1.5.2
+- v0.12.6 - production least privilege, break-glass, capacity, availability,
+  account-wide cost and destructive-action controls - rescheduled to v1.0
+- v0.12.7 - repository-wide technical matrix - superseded only for the lean
+  evidence-closure portion by v0.12.4.1.5.0.7.1.6.13; full repository review
+  remains post-v0.12 work
+- v0.12.4.1.5.0.7.1.6.13 - v0.12 scope and evidence closure -
+  completed offline with eight redacted evidence roots, exact forbidden claims,
+  explicit live/review deferrals and no new execution authority
 
 The v0.12 line keeps application promotion separate from infrastructure
 lifecycle and permits at most one disposable EKS rehearsal environment at a

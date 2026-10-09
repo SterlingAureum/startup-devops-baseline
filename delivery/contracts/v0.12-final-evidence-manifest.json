@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "v0.12-final-evidence-manifest-v1",
+  "version": "v0.12",
+  "closureCheckpoint": "v0.12.4.1.5.0.7.1.6.13",
+  "implementationBaselineCommit": "e9e5abe4c993d8835b2f3b39125632eb3f29039d",
+  "status": "completed-with-explicit-live-and-review-deferrals",
+  "workstreamOutcomes": {
+    "productionReadinessScope": "accepted-scope-closed-with-forbidden-overclaims",
+    "remoteStateBootstrap": "created-recovered-and-live-validated",
+    "nonemptyStateMigration": "rehearsal-complete-remote-s3-operational-source-of-truth",
+    "ciFeedbackEfficiency": "closed-with-static-historical-attestation",
+    "promotionLifecycle": "converged-with-human-merge-and-production-approval",
+    "platformUpgrade": "compatibility-and-preflight-only-live-upgrade-deferred",
+    "awsDevLifecycle": "created-qualified-and-destroyed-final-state-empty",
+    "sharedDevTestTeardown": "offline-fixed-fake-chain-closed-live-adapters-deferred"
+  },
+  "environmentEvidence": [
+    {
+      "environment": "aws-dev",
+      "acceptance": "live-clean-room-create-qualification-and-teardown-complete",
+      "currentApplicationState": "destroyed",
+      "residualCostAuditExecuted": false,
+      "accountWideZeroCostClaimed": false
+    },
+    {
+      "environment": "aws-test",
+      "acceptance": "shared-teardown-contract-qualified-offline-only",
+      "freshIntegratedLiveLifecycleExecutedInV012": false,
+      "productionEquivalentClaimed": false
+    },
+    {
+      "environment": "aws-prod",
+      "acceptance": "not-live-qualified",
+      "livePromotionExecuted": false,
+      "liveLifecycleExecuted": false
+    }
+  ],
+  "stateBackend": {
+    "remoteS3StateIsOperationalSourceOfTruth": true,
+    "applicationTeardownIncludesBackend": false,
+    "backendRetired": false,
+    "retirementRequiresSeparateRetentionPlanReviewAndApproval": true,
+    "zeroOngoingBackendCostClaimed": false
+  },
+  "forbiddenClaims": [
+    "v0.12-proves-full-commercial-production-readiness",
+    "aws-test-fresh-integrated-live-lifecycle-passed",
+    "aws-prod-live-acceptance-passed",
+    "external-secrets-live-upgrade-passed",
+    "shared-dev-test-teardown-has-live-command-adapters",
+    "application-teardown-removes-remote-state-backend",
+    "aws-account-wide-zero-cost-guaranteed",
+    "repository-wide-human-review-complete"
+  ],
+  "deferredWork": {
+    "repositoryAndArchitectureReview": "post-v0.12-review",
+    "auditMaterialPhysicalSeparation": "post-v0.12-review",
+    "sharedLiveTeardownAdapters": "separately-scoped-after-review",
+    "externalSecretsLiveUpgradeAndAcceptance": "separately-approved-future-version",
+    "freshIntegratedDevTestProdRehearsal": "v1.0-rc.3",
+    "remoteStateBackendRetirement": "separate-end-of-life-lifecycle",
+    "repositoryPhysicalRestructure": "v1.0",
+    "originalV0125BroaderDrAndMeasuredRtoRpo": "post-v0.12-review-or-v1.0",
+    "originalV0126ProductionControls": "v1.0",
+    "originalV0127RepositoryWideTechnicalMatrix": "post-v0.12-review"
+  },
+  "sourceEvidence": [
+    {
+      "role": "production-readiness-scope-and-guardrails",
+      "path": "delivery/contracts/v0.12.0-production-readiness-foundation.json",
+      "sha256": "271de6daff8009a4266e1a4f199fc1f33085ced03336548faae45f095fc02881"
+    },
+    {
+      "role": "remote-state-bootstrap-live-validation",
+      "path": "delivery/contracts/v0.12.1.2.1-state-bootstrap-execution-evidence.json",
+      "sha256": "e4e1cdb74b473c3588733ddd4f01b37291d2ec9705d90a5bf7d35818c2f4ffae"
+    },
+    {
+      "role": "nonempty-state-migration-terminal-recovery",
+      "path": "delivery/contracts/v0.12.2.3.1.0.2.0.1.2.0.1.2-terminal-recovery-evidence.json",
+      "sha256": "be9ed6753db05e82406b5d71c83623246632e7516c4978479f0170c67b1d0034"
+    },
+    {
+      "role": "ci-feedback-efficiency-closure",
+      "path": "delivery/contracts/v0.12.3.3-ci-feedback-efficiency-closure.json",
+      "sha256": "39f5a30e4c0c0a2fd7e543e87785e1aeaaa8f82ce3a34b639149222963982a36"
+    },
+    {
+      "role": "promotion-lifecycle-convergence",
+      "path": "delivery/contracts/v0.12.3.4-promotion-lifecycle-convergence-closure.json",
+      "sha256": "a0a1e92b539a7cb0d93c931782686c69dfa90c23c21dff3e618c3c81215821ec"
+    },
+    {
+      "role": "platform-upgrade-live-preflight-boundary",
+      "path": "delivery/contracts/v0.12.4.1.5-external-secrets-live-preflight.json",
+      "sha256": "db6e968edaa77660a1be61c1aea0dcf49a4293d07080eb01ca47142c40ef166f"
+    },
+    {
+      "role": "aws-dev-final-cleanup-execution-evidence",
+      "path": "delivery/contracts/v0.12.4.1.5.0.7.1.5.2-aws-dev-final-cleanup-execution-evidence.json",
+      "sha256": "9d50a498cc2ad6525b8a15b8ccaacd2a3de250dc4cf64949e38ff397618906a1"
+    },
+    {
+      "role": "shared-dev-test-offline-teardown-closure",
+      "path": "delivery/contracts/v0.12.4.1.5.0.7.1.6.12-shared-dev-test-offline-closure.json",
+      "sha256": "1ab8f2b66254d4881b40dfbc0ab02a32709fb40fd87c667ba3cac54e374bdf5c"
+    }
+  ],
+  "privacyBoundary": {
+    "rawPrivateEvidenceCommitted": false,
+    "awsAccountIdentifiersCommitted": false,
+    "resourceIdentifiersCommitted": false,
+    "stateOrPlanBytesCommitted": false,
+    "privatePathsCommitted": false,
+    "redactedRepositoryRecordsOnly": true
+  },
+  "newLiveExecutionAuthorized": false,
+  "productionReadinessClaimed": false
+}

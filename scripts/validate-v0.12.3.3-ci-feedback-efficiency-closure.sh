@@ -420,6 +420,13 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
 PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.7.1.6.12-shared-dev-test-offline-closure.py"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.1.5.0.7.1.6.13-v0.12-scope-and-evidence-closure.py" \
+  --root "${ROOT_DIR}"
+
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.7.1.6.13-v0.12-scope-and-evidence-closure.py"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" \
@@ -452,7 +459,8 @@ bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain.sh" \
-  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.12-shared-dev-test-offline-closure.sh"
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.12-shared-dev-test-offline-closure.sh" \
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.13-v0.12-scope-and-evidence-closure.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only

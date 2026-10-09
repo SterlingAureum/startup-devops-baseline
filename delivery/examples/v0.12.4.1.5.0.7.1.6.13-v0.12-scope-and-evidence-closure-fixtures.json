@@ -1,0 +1,11 @@
+{
+  "expectedSourceEvidenceCount": 8,
+  "expectedEnvironmentOrder": ["aws-dev", "aws-test", "aws-prod"],
+  "expectedForbiddenClaimCount": 8,
+  "expectedDeferredWorkCount": 10,
+  "expectedRoadmapStatus": "Completed with explicit live and review deferrals",
+  "expectedProductionReadinessClaim": false,
+  "expectedLiveExecutionAuthorization": false,
+  "expectedRemoteStateBackendRetired": false,
+  "expectedAwsProdLiveQualification": false
+}

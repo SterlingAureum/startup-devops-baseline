@@ -1,0 +1,20 @@
+{
+  "expectedFrozenArtifactCount": 18,
+  "expectedEnvironmentOrder": ["aws-dev", "aws-test"],
+  "expectedPhaseCountPerEnvironment": 8,
+  "expectedFreshProcessCount": 16,
+  "expectedFixedFakeBackendCallCount": 98,
+  "expectedLiveReadinessGapIds": [
+    "live-command-adapters",
+    "runtime-cloud-identity-binding",
+    "live-toolchain-and-backend-binding",
+    "live-output-and-eventual-consistency-contracts",
+    "live-partial-failure-recovery",
+    "fresh-aws-test-and-prod-qualification",
+    "remote-state-backend-retirement"
+  ],
+  "expectedLiveReadinessGapCount": 7,
+  "expectedRuntimeSourceAdded": false,
+  "expectedCommandEntrypointAdded": false,
+  "expectedLiveCommandExecution": false
+}

@@ -1,0 +1,118 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.12-shared-dev-test-offline-closure-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.12",
+  "status": "shared-dev-test-offline-chain-frozen-live-readiness-explicit",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "5c6b4d446d2fcf9be75cc0c82cf0edcb40909cd4",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain.json",
+  "frozenArtifacts": {
+    "scripts/aws_two_wave_teardown_core.py": "ebd188830fd571c00329ab40868178f4995219945b57208e0afabf62389bc01f",
+    "scripts/aws_two_wave_teardown_preflight.py": "83b296efdfeb494dfd76854efb8a18a5e1b24640bebcdfba2fa2ffa164c0d0ff",
+    "scripts/aws_two_wave_teardown_private_preflight.py": "195e5baa592a8ecf00aa93ee4ef73693dff35e60b2056fd614bb679ed078b098",
+    "scripts/aws_two_wave_teardown_receipt_approval.py": "ce7cacee3668ae5bde9c3a7f09b15159a15480b41f0af429541e954dfa1fc647",
+    "scripts/aws_two_wave_teardown_execution_lease.py": "2fbac7dcab2c6498e31de227b730b483375bbc3589518e49d7e02a15d7a0fb02",
+    "scripts/aws_two_wave_teardown_phase_drivers.py": "98d2fcd617fb54da47ad1e3a39ee1e16c858ffd5d5846a472ad3dddbc431844c",
+    "scripts/aws_two_wave_teardown_command_registry.py": "b7866795a7c1765d182755cc5a4eecb1a59948839798d1334fc618fd9f0edfae",
+    "scripts/aws_two_wave_teardown_registry_runner.py": "808b057472f6c357fcab8c9589d71dd9b66a6a0228a3dec965fad28ce0d74b00",
+    "scripts/aws_two_wave_teardown_lease_registry_composition.py": "5f2e403b172dbb389fbbb97261147b9369606a4b356873a83c320c5183577ca1",
+    "scripts/exercise-v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command.py": "cd2f73fd607c4beba7d426ac72b1b8c29f20b76525dfddcbe7d43bb1ee4a373c",
+    "scripts/aws_two_wave_teardown_offline_process_chain.py": "b3f27d87c135a1ce91e5af086f15aa497c3aef01aa5df1a40ec361ddd3a21317",
+    "scripts/exercise-v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain.py": "2b87b027058e8e9a3007fd2bb13bdddc45e39109f29b7886e5f09ffd1cb28c7f",
+    "delivery/contracts/v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain.json": "f4fcef135c7e88cd321282033e8e8bb9bc03fdfb95ffc4ceda637acbdd7c6ae6",
+    "delivery/examples/v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain-fixtures.json": "78a46f2917cf804b578fa80d497b9921963eaea2327ca3c8797f1506391808be",
+    "docs/V0.12.4.1.5.0.7.1.6.11_SHARED_DEV_TEST_OFFLINE_PROCESS_CHAIN.md": "1e91ad39536f05a084de4fa3387115f717119d70cfe10b006a0a1ebd208de2f8",
+    "scripts/check-v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain.py": "be5d09c54ca57a23311b2723506534505183879b2a7610085e04cdb6c56751a1",
+    "scripts/test-v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain.py": "e9f336fe651ac9403d65a99583b3a5a2be9f97122cbc4dec9820267cc95bdbac",
+    "scripts/validate-v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain.sh": "d332c5894344815e804a921e13e1980b7d78a5493a33a72674738aee27c4344c"
+  },
+  "offlineProof": {
+    "supportedEnvironments": ["aws-dev", "aws-test"],
+    "rejectedEnvironment": "aws-prod",
+    "phaseCountPerEnvironment": 8,
+    "freshProcessCount": 16,
+    "fixedFakeBackendCallCount": 98,
+    "durableSingleUseLeaseVerified": true,
+    "stopAtFirstFailureVerified": true,
+    "credentialEnvironmentForwarded": false,
+    "privateResourceIdentityEmitted": false,
+    "liveCommandExecuted": false
+  },
+  "liveReadinessGaps": [
+    {
+      "id": "live-command-adapters",
+      "status": "not-implemented",
+      "blocksOfflineClosure": false,
+      "blocksLiveExecutionClaim": true
+    },
+    {
+      "id": "runtime-cloud-identity-binding",
+      "status": "not-implemented",
+      "blocksOfflineClosure": false,
+      "blocksLiveExecutionClaim": true
+    },
+    {
+      "id": "live-toolchain-and-backend-binding",
+      "status": "not-implemented",
+      "blocksOfflineClosure": false,
+      "blocksLiveExecutionClaim": true
+    },
+    {
+      "id": "live-output-and-eventual-consistency-contracts",
+      "status": "not-implemented",
+      "blocksOfflineClosure": false,
+      "blocksLiveExecutionClaim": true
+    },
+    {
+      "id": "live-partial-failure-recovery",
+      "status": "not-implemented",
+      "blocksOfflineClosure": false,
+      "blocksLiveExecutionClaim": true
+    },
+    {
+      "id": "fresh-aws-test-and-prod-qualification",
+      "status": "not-implemented",
+      "blocksOfflineClosure": false,
+      "blocksLiveExecutionClaim": true
+    },
+    {
+      "id": "remote-state-backend-retirement",
+      "status": "not-implemented",
+      "blocksOfflineClosure": false,
+      "blocksLiveExecutionClaim": true
+    }
+  ],
+  "stateBackendBoundary": {
+    "applicationTeardownMayDeleteRemoteStateBackend": false,
+    "backendRetirementRequiresSeparatePlanReviewAndApproval": true,
+    "stateHistoryRetentionPolicyRequired": true,
+    "automaticBackendRetirementAuthorized": false
+  },
+  "implementationBoundary": {
+    "runtimeSourceAdded": false,
+    "commandEntrypointAdded": false,
+    "subprocessAdded": false,
+    "sdkAdded": false,
+    "credentialReadAdded": false,
+    "liveBackendAdded": false,
+    "liveCommandExecuted": false
+  },
+  "ciBoundary": {
+    "activeClosureContract": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "authority": {
+    "offlineClosureValidationAuthorized": true,
+    "livePhaseExecutionAuthorized": false,
+    "controllerMutationAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "directAwsMutationAuthorized": false,
+    "statePushAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "perform-v0.12-scope-closure-without-live-adapter-expansion"
+}

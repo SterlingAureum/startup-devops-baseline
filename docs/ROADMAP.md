@@ -3,6 +3,24 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.12 - Shared dev/test offline closure
+
+Status: Offline scope ready for closure; live execution unavailable
+
+Delivered:
+
+- SHA-256 freeze for 18 active teardown-chain artifacts
+- explicit separation of fixed-fake proof from live-readiness claims
+- seven named gaps retained as blockers for any future live adapter
+- application teardown kept separate from remote-state backend retirement
+- no new runtime source, executor, subprocess, SDK or credential surface
+
+Next:
+
+- perform the concise overall v0.12 scope and evidence closure
+- retain live adapter implementation for a separately planned version
+- defer full repository and architecture restructuring to the agreed review
+
 ## v0.12.4.1.5.0.7.1.6.11 - Shared dev/test offline process chain
 
 Status: Ready offline

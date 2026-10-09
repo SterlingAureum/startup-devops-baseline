@@ -3,13 +3,24 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain`
+`v0.12.4.1.5.0.7.1.6.12-shared-dev-test-offline-closure`
 
-The current checkpoint runs all eight teardown phases for both `aws-dev` and
-`aws-test` through 16 fresh processes and 98 fixed-fake backend calls. Every
-phase uses distinct disposable approval, lease, request and binding stores;
-child processes receive a minimal environment and any failure stops the chain
-without retry. It exposes no live backend or infrastructure authority. See
+The current checkpoint freezes 18 artifacts that define and verify the shared
+dev/test offline teardown chain. It records seven explicit live-readiness gaps,
+including command adapters, cloud identity, real output behavior, partial
+failure recovery, test/prod qualification and separate state-backend
+retirement. Offline design closure is ready; live execution is not. See
+[v0.12.4.1.5.0.7.1.6.12 shared dev/test offline
+closure](docs/V0.12.4.1.5.0.7.1.6.12_SHARED_DEV_TEST_OFFLINE_CLOSURE.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain`.
+
+It runs all eight teardown phases for both `aws-dev` and `aws-test` through 16
+fresh processes and 98 fixed-fake backend calls. Every phase uses distinct
+disposable approval, lease, request and binding stores; child processes receive
+a minimal environment and any failure stops the chain without retry. It
+exposes no live backend or infrastructure authority. See
 [v0.12.4.1.5.0.7.1.6.11 shared dev/test offline process
 chain](docs/V0.12.4.1.5.0.7.1.6.11_SHARED_DEV_TEST_OFFLINE_PROCESS_CHAIN.md).
 

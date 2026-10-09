@@ -1,0 +1,30 @@
+{
+  "expectedEnvironmentOrder": ["aws-dev", "aws-test"],
+  "expectedPhaseOrder": [
+    "controller-cleanup",
+    "wave-one-plan",
+    "wave-one-apply",
+    "post-wave-one-inventory",
+    "safe-residue-delete",
+    "wave-two-plan",
+    "wave-two-apply",
+    "final-read-only-audit"
+  ],
+  "expectedBackendCallsByPhase": {
+    "controller-cleanup": 5,
+    "wave-one-plan": 7,
+    "wave-one-apply": 7,
+    "post-wave-one-inventory": 6,
+    "safe-residue-delete": 4,
+    "wave-two-plan": 7,
+    "wave-two-apply": 7,
+    "final-read-only-audit": 6
+  },
+  "expectedEnvironmentCount": 2,
+  "expectedPhaseCountPerEnvironment": 8,
+  "expectedFreshProcessCount": 16,
+  "expectedFixedFakeBackendCallCount": 98,
+  "expectedPrivatePathEmission": false,
+  "expectedPrivateResourceIdentityEmission": false,
+  "expectedLiveCommandExecution": false
+}

@@ -3,6 +3,26 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.11 - Shared dev/test offline process chain
+
+Status: Ready offline
+
+Delivered:
+
+- all eight ordered phases for dev and test through 16 fresh processes
+- 98 exact fixed-fake backend calls with per-phase claim and outcome checks
+- distinct disposable approval, lease, request and binding stores per phase
+- minimal non-credential child environment, exact command and fixed timeout
+- stop-at-first-failure behavior with no retry, repair or rollback
+- redacted summaries and terminal removal of all synthetic private stores
+- no live backend, infrastructure authority or prod execution path
+
+Next:
+
+- freeze the validated offline chain and its explicit safety invariants
+- record the remaining live-adapter readiness gap without implementing it
+- keep live transport and aws-prod execution unavailable
+
 ## v0.12.4.1.5.0.7.1.6.10 - Shared dev/test lease registry command
 
 Status: Ready offline

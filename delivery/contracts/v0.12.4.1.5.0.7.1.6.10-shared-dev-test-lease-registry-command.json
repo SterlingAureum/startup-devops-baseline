@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.10",
+  "status": "shared-dev-test-lease-registry-command-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "281630a970695d6a902766812aa96938859fc54d",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition.json",
+  "profiles": {
+    "supported": ["aws-dev", "aws-test"],
+    "rejected": ["aws-prod"],
+    "phaseCount": 8,
+    "stateAndBackendIsolationInherited": true
+  },
+  "privateInputs": {
+    "fileCount": 2,
+    "distinctDirectoriesRequired": true,
+    "absolutePathsRequired": true,
+    "owned0700DirectoryRequired": true,
+    "exactSingleDirectoryEntryRequired": true,
+    "owned0600RegularFileRequired": true,
+    "noSymlinkRequired": true,
+    "canonicalJsonRequired": true,
+    "callerSuppliedSha256Required": true,
+    "executionRequestAndPrivateBindingsSeparate": true
+  },
+  "commandBoundary": {
+    "path": "scripts/exercise-v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command.py",
+    "confirmation": "consume-one-reviewed-approval-through-lease-owned-registry-fixed-fake",
+    "readsHostUtcOnce": true,
+    "invokesLeaseOwnedComposition": true,
+    "exactFixedFakeBackendOnly": true,
+    "rawCommandArgumentAvailable": false,
+    "failureInjectionArgumentAvailable": false,
+    "credentialOrEndpointArgumentAvailable": false,
+    "liveSwitchAvailable": false,
+    "retrySwitchAvailable": false,
+    "genericRedactedFailure": true
+  },
+  "leaseLifecycle": {
+    "durableClaimBeforeFirstBackendCall": true,
+    "writesOnlyPrivateClaimAndOutcomeRecords": true,
+    "successReplayRejected": true,
+    "failureReplayRejected": true,
+    "claimOrOutcomeUncertaintyConsumesAttempt": true,
+    "automaticRetryAuthorized": false,
+    "automaticRepairAuthorized": false,
+    "automaticRollbackAuthorized": false
+  },
+  "implementationBoundary": {
+    "subprocessAvailableInCommand": false,
+    "sdkAvailable": false,
+    "credentialReadAvailable": false,
+    "liveBackendAvailable": false,
+    "liveCommandExecuted": false,
+    "executionPerformed": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "authority": {
+    "fixedFakeCommandExerciseAuthorized": true,
+    "livePhaseExecutionAuthorized": false,
+    "controllerMutationAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "directAwsMutationAuthorized": false,
+    "statePushAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "exercise-the-complete-dev-test-chain-through-fresh-offline-command-processes"
+}

@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.10
+
+- Add one strict local command entrypoint around the lease-owned fixed-fake
+  registry composition.
+- Read the execution request and private SHA bindings from separate owned
+  single-file `0700` directories with canonical `0600` file enforcement.
+- Require caller-supplied request, binding, receipt and approval digests plus
+  one exact confirmation before private input consumption.
+- Read host UTC once and retain the durable claim, outcome and replay controls
+  from the composed single-use lease.
+- Expose no raw command, failure injection, credential, endpoint, live, retry,
+  subprocess, SDK or infrastructure execution path.
+
 ## v0.12.4.1.5.0.7.1.6.9
 
 - Compose the closed registry runner inside the existing append-only

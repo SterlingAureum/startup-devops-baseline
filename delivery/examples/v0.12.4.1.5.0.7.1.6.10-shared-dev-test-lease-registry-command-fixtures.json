@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command-fixtures-v1",
+  "sourceCompositionFixture": "delivery/examples/v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition-fixtures.json",
+  "expectedEnvironment": "aws-dev",
+  "expectedPhase": "wave-one-plan",
+  "expectedPrivateBindingsSha256": "5094d90e435ba53defd01dba90d95a8de70a44c7b968b58d7d02ae95b662df0e",
+  "expectedCommandResultSha256": "a904e5eadf4a06221dc0d51ad474cd88031454e64b789a3fabb1c513729d0cb1",
+  "expectedBackendCallCount": 7,
+  "privateInputFileCount": 2,
+  "hostClockReadCount": 1,
+  "containsPrivateResourceIdentity": false,
+  "containsAwsAccountId": false,
+  "containsBackendIdentity": false
+}

@@ -399,6 +399,13 @@ PYTHONDONTWRITEBYTECODE=1 python3 \
 PYTHONDONTWRITEBYTECODE=1 python3 \
   "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition.py"
 
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/check-v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command.py" \
+  --root "${ROOT_DIR}"
+
+PYTHONDONTWRITEBYTECODE=1 python3 \
+  "${ROOT_DIR}/scripts/test-v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command.py"
+
 bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.3.3-ci-feedback-efficiency-closure.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" \
@@ -428,7 +435,8 @@ bash -n \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.7-shared-dev-test-command-adapter-registry.sh" \
   "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.8-shared-dev-test-claimed-registry-runner.sh" \
-  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition.sh"
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition.sh" \
+  "${ROOT_DIR}/scripts/validate-v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command.sh"
 
 if [[ "${mode}" == "--structure-only" ]]; then
   bash "${ROOT_DIR}/scripts/validate-v0.12.3.2-post-promotion-historical-snapshot.sh" --structure-only

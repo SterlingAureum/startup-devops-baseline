@@ -3,9 +3,20 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.8-shared-dev-test-claimed-registry-runner`
+`v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition`
 
-The current checkpoint adds a claim-bound offline registry runner for all 16
+The current checkpoint composes the registry runner inside the durable
+single-use lease. All caller-controlled inputs are checked before consumption;
+the exclusive claim and its durability barriers complete before the first
+fixed-fake backend call. Success, failure and write uncertainty permanently
+block replay. No standalone CLI or live backend exists. See
+[v0.12.4.1.5.0.7.1.6.9 shared dev/test lease registry
+composition](docs/V0.12.4.1.5.0.7.1.6.9_SHARED_DEV_TEST_LEASE_REGISTRY_COMPOSITION.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.8-shared-dev-test-claimed-registry-runner`.
+
+It adds a claim-bound offline registry runner for all 16
 dev/test environment-phase combinations. It validates the durable claim,
 manifest, complete ordered request set and exact private SHA bindings before
 the first fixed-fake call, then stops on the first failed or malformed

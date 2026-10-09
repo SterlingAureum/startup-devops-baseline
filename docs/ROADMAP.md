@@ -3,6 +3,26 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.9 - Shared dev/test lease registry composition
+
+Status: Ready offline
+
+Delivered:
+
+- active approval, request, spec, time and private-binding validation pre-claim
+- exclusive durable claim before the first fixed-fake registry call
+- internally derived phase manifest and ordered operation requests
+- append-only success and terminal failure outcomes
+- replay refusal after success, failure, claim-only or write uncertainty
+- lower-level registry runner retained as a non-operational unit boundary
+- no standalone CLI, subprocess, SDK, credential reader or live backend
+
+Next:
+
+- add a strict local command boundary around this lease-owned composition
+- retain exact private-file scope and fixed-fake-only dispatch
+- keep live transport and aws-prod execution unavailable
+
 ## v0.12.4.1.5.0.7.1.6.8 - Shared dev/test claimed registry runner
 
 Status: Ready offline

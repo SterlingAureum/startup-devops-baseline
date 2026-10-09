@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.9
+
+- Compose the closed registry runner inside the existing append-only
+  single-use approval lease.
+- Validate approval, request, phase spec, execution window, private SHA
+  bindings and exact fixed-fake type before creating the claim.
+- Complete exclusive claim write plus file and directory durability barriers
+  before the first registry backend call.
+- Record success and failure outcomes while making claim or outcome uncertainty
+  permanently consume the attempt and block replay.
+- Keep the lower-level runner non-operational and expose no CLI, subprocess,
+  SDK, live backend, automatic retry, repair or rollback.
+
 ## v0.12.4.1.5.0.7.1.6.8
 
 - Add a lower-level runner bound to an already durable phase claim, exact

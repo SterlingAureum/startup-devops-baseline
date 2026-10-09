@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition-fixtures-v1",
+  "sourcePhaseDriverFixture": "delivery/examples/v0.12.4.1.5.0.7.1.6.6-shared-dev-test-phase-drivers-fixtures.json",
+  "expectedEnvironment": "aws-dev",
+  "expectedPhase": "wave-one-plan",
+  "expectedClaimSha256": "94e7b528b736493c2d23cd4da66e40c025d1619d292152c41854c3f568473978",
+  "expectedRunnerResultSha256": "26657d5e9a40678622ea261d3ab04f4f37cd0cb22629e338c376c5b945a23867",
+  "expectedOutcomeSha256": "a0ad891606733ca53447df7d71c0673b42e576cc5144bc0225ed720beff2d7fa",
+  "expectedResultSha256": "4bbb77a7d6a0b82849ea0642b63b23fcff20a2d9921d4c2aa31621d5f3506674",
+  "expectedBackendCallCount": 7,
+  "containsPrivateResourceIdentity": false,
+  "containsAwsAccountId": false,
+  "containsBackendIdentity": false
+}

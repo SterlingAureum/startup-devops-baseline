@@ -3,6 +3,27 @@
 This roadmap describes the intended evolution of the repository. It is
 not a fixed delivery schedule.
 
+## v0.12.4.1.5.0.7.1.6.8 - Shared dev/test claimed registry runner
+
+Status: Ready offline
+
+Delivered:
+
+- complete durable-claim digest and active-window validation before dispatch
+- exact phase manifest and ordered operation-request validation before dispatch
+- exact phase binding names, SHA-256 values and common claim bindings
+- per-operation projection of only the registry-required binding subset
+- all 16 dev/test environment-phase paths and 98 calls through the fixed fake
+- first-failure and malformed-response stops without retry, repair or rollback
+- explicit retention of durable replay ownership in the single-use lease
+- no standalone executor, filesystem write, subprocess, SDK or live backend
+
+Next:
+
+- compose the registry runner inside the durable single-use lease lifecycle
+- make the durable lease the only callable entrypoint before backend dispatch
+- keep live transport and aws-prod execution unavailable
+
 ## v0.12.4.1.5.0.7.1.6.7 - Shared dev/test command-adapter registry
 
 Status: Ready offline

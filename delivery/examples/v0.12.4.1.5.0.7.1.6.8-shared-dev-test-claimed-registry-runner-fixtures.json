@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.8-shared-dev-test-claimed-registry-runner-fixtures-v1",
+  "sourceRegistryFixture": "delivery/examples/v0.12.4.1.5.0.7.1.6.7-shared-dev-test-command-adapter-registry-fixtures.json",
+  "expectedEnvironment": "aws-dev",
+  "expectedPhase": "wave-one-plan",
+  "expectedClaimSha256": "7dc458ad97ea5befd4e816cd6f468aab16f59e1d6cea94ebea15eb880a3e4db0",
+  "expectedPhaseCommandManifestSha256": "d74c7891c3b90ac6825b667b971d88144171d599feecf1ce906a6bfd1f54febe",
+  "expectedOperationManifestSha256": "7524662a56cbe2c27e8a5afcee13f223ebda0e89a5e593822f00e55b988ba5c1",
+  "environmentPhaseRunCount": 16,
+  "phaseOperationCallCountAcrossEnvironments": 98,
+  "containsPrivateResourceIdentity": false,
+  "containsAwsAccountId": false,
+  "containsBackendIdentity": false
+}

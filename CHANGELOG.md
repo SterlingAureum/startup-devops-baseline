@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.12.4.1.5.0.7.1.6.11
+
+- Exercise all eight shared teardown phases for both dev and test through 16
+  fresh child processes and 98 fixed-fake backend calls.
+- Create distinct short-lived approval, execution, request and binding stores
+  for every phase and remove the whole private tree at terminal exit.
+- Bind synthetic predecessor receipts within each environment and verify every
+  durable claim and outcome before continuing.
+- Replace the child environment with four non-credential process settings and
+  invoke only the exact `.6.10` command without a shell.
+- Stop at the first timeout, process, output or durable-record failure without
+  retry, repair, rollback, private error emission or live authority.
+
 ## v0.12.4.1.5.0.7.1.6.10
 
 - Add one strict local command entrypoint around the lease-owned fixed-fake

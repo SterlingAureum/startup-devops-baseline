@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.11",
+  "status": "shared-dev-test-offline-process-chain-ready",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "80bc9ee7981018da332554a2fa1ff6cee4e2440e",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command.json",
+  "coverage": {
+    "environmentOrder": ["aws-dev", "aws-test"],
+    "phaseOrder": [
+      "controller-cleanup",
+      "wave-one-plan",
+      "wave-one-apply",
+      "post-wave-one-inventory",
+      "safe-residue-delete",
+      "wave-two-plan",
+      "wave-two-apply",
+      "final-read-only-audit"
+    ],
+    "environmentCount": 2,
+    "phaseCountPerEnvironment": 8,
+    "freshProcessCount": 16,
+    "fixedFakeBackendCallCount": 98
+  },
+  "processBoundary": {
+    "exactPredecessorCommandOnly": true,
+    "freshProcessPerPhase": true,
+    "shellAvailable": false,
+    "fixedThirtySecondTimeout": true,
+    "credentialEnvironmentForwarded": false,
+    "callerRepositoryRootAvailable": false,
+    "rawCommandArgumentAvailable": false,
+    "failureInjectionArgumentAvailable": false,
+    "liveSwitchAvailable": false,
+    "retrySwitchAvailable": false
+  },
+  "privateStoreBoundary": {
+    "distinctApprovalStorePerPhase": true,
+    "distinctExecutionStorePerPhase": true,
+    "distinctRequestDirectoryPerPhase": true,
+    "distinctBindingDirectoryPerPhase": true,
+    "owned0700Directories": true,
+    "owned0600CanonicalFiles": true,
+    "temporaryStoresRemovedAtTerminalExit": true,
+    "privatePathsEmitted": false,
+    "privateResourceIdentitiesEmitted": false
+  },
+  "lifecycle": {
+    "syntheticReceiptAndApprovalOnly": true,
+    "predecessorReceiptBoundPerEnvironment": true,
+    "durableClaimAndOutcomeVerifiedPerPhase": true,
+    "stopAtFirstFailure": true,
+    "automaticRetryAuthorized": false,
+    "automaticRepairAuthorized": false,
+    "automaticRollbackAuthorized": false
+  },
+  "implementationBoundary": {
+    "subprocessAvailableInOfflineHarness": true,
+    "sdkAvailable": false,
+    "credentialReadAvailable": false,
+    "liveBackendAvailable": false,
+    "liveCommandExecuted": false,
+    "executionPerformed": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "authority": {
+    "syntheticFixedFakeProcessExerciseAuthorized": true,
+    "livePhaseExecutionAuthorized": false,
+    "controllerMutationAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "directAwsMutationAuthorized": false,
+    "statePushAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "freeze-the-offline-chain-and-record-the-explicit-live-adapter-readiness-gap"
+}

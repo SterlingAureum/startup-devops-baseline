@@ -3,13 +3,24 @@
 A local-first DevOps, GitOps, progressive delivery, and AWS EKS infrastructure baseline for early-stage teams.
 
 Current development checkpoint:
-`v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command`
+`v0.12.4.1.5.0.7.1.6.11-shared-dev-test-offline-process-chain`
 
-The current checkpoint adds a strict local command around the lease-owned
-fixed-fake registry composition. It reads two distinct canonical private files,
-binds their caller-supplied digests, requires an exact confirmation and reads
-UTC once before consuming one durable approval attempt. It exposes no raw
-command, endpoint, live or retry switch. See
+The current checkpoint runs all eight teardown phases for both `aws-dev` and
+`aws-test` through 16 fresh processes and 98 fixed-fake backend calls. Every
+phase uses distinct disposable approval, lease, request and binding stores;
+child processes receive a minimal environment and any failure stops the chain
+without retry. It exposes no live backend or infrastructure authority. See
+[v0.12.4.1.5.0.7.1.6.11 shared dev/test offline process
+chain](docs/V0.12.4.1.5.0.7.1.6.11_SHARED_DEV_TEST_OFFLINE_PROCESS_CHAIN.md).
+
+The predecessor checkpoint is
+`v0.12.4.1.5.0.7.1.6.10-shared-dev-test-lease-registry-command`.
+
+It adds a strict local command around the lease-owned fixed-fake registry
+composition. It reads two distinct canonical private files, binds their
+caller-supplied digests, requires an exact confirmation and reads UTC once
+before consuming one durable approval attempt. It exposes no raw command,
+endpoint, live or retry switch. See
 [v0.12.4.1.5.0.7.1.6.10 shared dev/test lease registry
 command](docs/V0.12.4.1.5.0.7.1.6.10_SHARED_DEV_TEST_LEASE_REGISTRY_COMMAND.md).
 

@@ -148,7 +148,9 @@ def build_claimed_operation_requests(
     ]
 
 
-def _validate_private_bindings(claim: dict[str, Any], value: dict[str, Any]) -> dict[str, Any]:
+def validate_phase_private_bindings(claim: dict[str, Any], value: dict[str, Any]) -> dict[str, Any]:
+    """Validate the complete phase binding set before a lease is consumed."""
+
     spec = DRIVERS.phase_driver_spec(claim["environment"], claim["phase"])
     required = set(spec["requiredPrivateBindings"])
     require(isinstance(value, dict) and set(value) == required, "Phase private binding names changed")
@@ -267,7 +269,7 @@ def run_claimed_registry_once(
             environment=environment,
             phase=phase,
         )
-        bindings = _validate_private_bindings(validated_claim, private_bindings)
+        bindings = validate_phase_private_bindings(validated_claim, private_bindings)
         expected_requests = build_claimed_operation_requests(
             validated_claim,
             expected_claim_sha256=expected_claim_sha256,

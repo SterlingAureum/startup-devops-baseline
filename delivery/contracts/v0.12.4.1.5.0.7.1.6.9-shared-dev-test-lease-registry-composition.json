@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "v0.12.4.1.5.0.7.1.6.9-shared-dev-test-lease-registry-composition-v1",
+  "version": "v0.12.4.1.5.0.7.1.6.9",
+  "status": "shared-dev-test-lease-registry-composition-ready-offline",
+  "repository": "SterlingAureum/startup-devops-baseline",
+  "implementationBaselineCommit": "b94564d7a502ebb1bd89ccddc682a182bcf6c7dd",
+  "predecessor": "delivery/contracts/v0.12.4.1.5.0.7.1.6.8-shared-dev-test-claimed-registry-runner.json",
+  "coverage": {
+    "supportedEnvironments": ["aws-dev", "aws-test"],
+    "rejectedEnvironments": ["aws-prod"],
+    "phaseCount": 8,
+    "uniqueOperationIdCount": 37,
+    "phaseOperationCallCount": 49,
+    "allCallerControlledInputsValidatedBeforeClaim": true,
+    "durableClaimBeforeFirstBackendCall": true,
+    "exactRegistryOrderInherited": true,
+    "stopAtFirstFailureInherited": true
+  },
+  "leaseLifecycle": {
+    "approvalLoadedAndActiveBeforeClaim": true,
+    "executionRequestBoundBeforeClaim": true,
+    "phasePrivateBindingsBoundBeforeClaim": true,
+    "exclusiveClaimRequired": true,
+    "claimFileAndDirectoryFsyncRequired": true,
+    "successOutcomeRecorded": true,
+    "failureOutcomeRecorded": true,
+    "claimUncertaintyConsumesAttempt": true,
+    "outcomeUncertaintyConsumesAttempt": true,
+    "successReplayRejected": true,
+    "failureReplayRejected": true,
+    "claimOnlyReplayRejected": true
+  },
+  "compositionBoundary": {
+    "leaseOwnedEntryFunctionImplemented": true,
+    "lowerLevelRunnerOperationalEntrypoint": false,
+    "exactFixedFakeBackendOnly": true,
+    "standaloneCliAvailable": false,
+    "rawCommandAccepted": false,
+    "credentialOrEndpointOverrideAccepted": false,
+    "automaticRetryAuthorized": false,
+    "automaticRepairAuthorized": false,
+    "automaticRollbackAuthorized": false
+  },
+  "implementationBoundary": {
+    "privateLeaseStoreWriteAvailable": true,
+    "subprocessAvailable": false,
+    "sdkAvailable": false,
+    "credentialReadAvailable": false,
+    "liveBackendAvailable": false,
+    "liveCommandExecuted": false,
+    "executionPerformed": false
+  },
+  "ciBoundary": {
+    "activeOperationalSource": true,
+    "rootStructureValidationRequired": true,
+    "historicalPrivateEvidenceLoaded": false,
+    "liveCommandExecuted": false
+  },
+  "authority": {
+    "offlineCompositionValidationAuthorized": true,
+    "livePhaseExecutionAuthorized": false,
+    "controllerMutationAuthorized": false,
+    "terraformPlanAuthorized": false,
+    "terraformApplyAuthorized": false,
+    "directAwsMutationAuthorized": false,
+    "statePushAuthorized": false,
+    "automaticRetryAuthorized": false,
+    "automaticRollbackAuthorized": false,
+    "backendRetirementAuthorized": false
+  },
+  "nextCheckpoint": "add-a-strict-local-command-boundary-around-the-lease-owned-fixed-fake-composition"
+}

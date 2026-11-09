@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+readonly TF_ROOT="${ROOT_DIR}/infra/terraform/aws"
+readonly ROOTS=(state-bootstrap runtime-identities environments/dev environments/test environments/prod)
+
+if ! command -v terraform >/dev/null 2>&1; then
+  echo "terraform was not found in PATH" >&2
+  exit 1
+fi
+
+echo "==> Checking Terraform formatting"
+"${ROOT_DIR}/scripts/checks/terraform-format.sh"
+
+for root in "${ROOTS[@]}"; do
+  tf_dir="${TF_ROOT}/${root}"
+  echo "==> Initializing Terraform root ${root} without backend configuration"
+  terraform -chdir="${tf_dir}" init -backend=false -input=false
+
+  echo "==> Validating Terraform configuration for ${root}"
+  terraform -chdir="${tf_dir}" validate
+done
+
+echo "Terraform state-bootstrap/runtime-identities/dev/test/prod validation passed"

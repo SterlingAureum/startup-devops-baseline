@@ -9,8 +9,8 @@
     ],
     "iac": [
       "infra/terraform/",
-      "scripts/validate-terraform.sh",
-      "scripts/check-tracked-terraform-format.sh"
+      "scripts/checks/terraform.sh",
+      "scripts/checks/terraform-format.sh"
     ],
     "platform": [
       "platform/",
@@ -18,9 +18,15 @@
     ],
     "shared": [
       "scripts/delivery/",
-      "tests/delivery/",
+      "scripts/checks/",
+      "scripts/ops/",
+      "tests/",
       "delivery/standard/",
-      ".github/workflows/delivery-"
+      ".github/workflows/",
+      ".github/CODEOWNERS",
+      ".gitignore",
+      ".gitleaks.toml",
+      ".gitleaksignore"
     ],
     "app_config": [
       "apps/demo-api/helm/"

@@ -17,8 +17,8 @@ permissions:
 jobs:
   verify:
     if: >-
-      github.ref == 'refs/heads/main' &&
-      vars.DELIVERY_FLOW_ENABLED == 'true' && vars.DELIVERY_RUNTIME_ENABLED == 'true' &&
+      github.ref == 'refs/heads/main' && inputs.revision == github.sha &&
+      vars.DELIVERY_RUNTIME_ENABLED == 'true' &&
       (inputs.environment == 'aws-dev' || inputs.environment == 'aws-test' ||
        (inputs.environment == 'aws-prod' && vars.DELIVERY_PROD_ENABLED == 'true'))
     runs-on: [self-hosted, linux, x64, trusted-runtime, '${{ inputs.environment }}']
@@ -30,7 +30,7 @@ jobs:
       group: delivery-runtime-${{ inputs.environment }}
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.revision }}
           fetch-depth: 0
@@ -43,7 +43,7 @@ jobs:
           for command in aws kubectl python3; do command -v "${command}"; done
           python3 -c 'import yaml'
           test -n "${CLUSTER_NAME}" && test -n "${ROLE_ARN}"
-      - uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c
+      - uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
           role-to-assume: ${{ vars.AWS_RUNTIME_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
@@ -67,7 +67,7 @@ jobs:
         run: |
           python3 scripts/delivery/runtime.py --environment "${TARGET_ENVIRONMENT}" \
             --revision "${CONFIG_REVISION}" --output "${RUNNER_TEMP}/delivery-verified/verified.json"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: delivery-verified-${{ inputs.environment }}-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/delivery-verified/verified.json

@@ -45,6 +45,17 @@ class RoutingTests(unittest.TestCase):
         result = flow.classify(["README.md", "docs/guide.md"], CFG)
         self.assertFalse(any(result[key] for key in ("application", "iac", "platform", "render", "runtime_dev")))
 
+    def test_archived_scripts_do_not_reenter_current_checks(self):
+        result = flow.classify(["archive/v0.12/scripts/validate-ci-quality-gates.sh"], CFG)
+        self.assertFalse(any(result[key] for key in ("application", "tests", "iac", "platform", "render", "runtime_dev")))
+
+    def test_local_tools_and_unknown_code_run_current_checks(self):
+        for path in ("scripts/ops/local.py", "new-tool/entry.py"):
+            with self.subTest(path=path):
+                result = flow.classify([path], CFG)
+                self.assertTrue(result["tests"] and result["iac"] and result["platform"] and result["render"])
+                self.assertFalse(result["application"])
+
     def test_source_runs_tests_and_render_but_not_iac_or_runtime(self):
         result = flow.classify(["apps/demo-api/src/main.py"], CFG)
         self.assertTrue(result["application"] and result["tests"] and result["render"])

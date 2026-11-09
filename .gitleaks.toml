@@ -1,0 +1,14 @@
+[extend]
+useDefault = true
+
+# This immutable checkout Action SHA is the historical false positive already
+# documented in .gitleaksignore. Limit the exemption to this rule, these two
+# exact file paths and this exact non-secret value; archives remain scanned.
+[[rules]]
+id = "generic-api-key"
+[[rules.allowlists]]
+description = "Historical pinned checkout Action SHA"
+condition = "AND"
+paths = ['''^(archive/v0\.12/)?scripts/validate-demo-api-security-supply-chain\.sh$''']
+regexTarget = "secret"
+regexes = ['''^3d3c42e5aac5ba805825da76410c181273ba90b1$''']

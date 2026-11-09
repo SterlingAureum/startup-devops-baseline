@@ -21,10 +21,17 @@ spec:
           value: {{ .Values.demoApi.localImage.repository | quote }}
         - name: image.tag
           value: {{ .Values.demoApi.localImage.tag | quote }}
+        - name: image.digest
+          value: ""
+          forceString: true
         - name: image.pullPolicy
           value: {{ .Values.demoApi.localImage.pullPolicy | quote }}
         - name: release.applicationVersion
           value: {{ .Values.demoApi.localImage.applicationVersion | quote }}
+        - name: delivery.sourceCommit
+          value: {{ required "demoApi.localImage.sourceCommit is required for a local image" .Values.demoApi.localImage.sourceCommit | quote }}
+        - name: delivery.sourceRepository
+          value: {{ required "demoApi.localImage.sourceRepository is required for a local image" .Values.demoApi.localImage.sourceRepository | quote }}
         - name: rehearsalFault.mode
           value: {{ .Values.demoApi.rehearsalFault.mode | quote }}
 {{ if .Values.demoApi.rehearsalFault.tokenSha256 }}

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — operator lifecycle restructuring
+
+- Archive legacy CI, operator scripts, contracts and version material as historical reference.
+- Keep Terraform resource configuration and effective AWS/platform declarations unchanged.
+- Establish current CI entrypoints without historical validators or legacy fallback.
+- Add an explicit kind lifecycle CLI with isolated kubeconfig, commit-pinned GitOps and local image identity.
+- Clear the cloud digest for explicit local images and carry their source identity.
+- AWS operator lifecycle reconstruction and real kind/cloud rehearsals remain pending.
+
 ## v0.12.4.1.5.0.7.1.6.14
 
 - Replace the cumulative 2,081-line checkpoint narrative in the repository

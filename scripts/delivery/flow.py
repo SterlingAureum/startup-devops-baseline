@@ -19,7 +19,16 @@ def classify(paths, cfg):
     def affected(group):
         return any(any(path.startswith(prefix) if prefix.endswith(("/", "-")) else path == prefix
                        for prefix in cfg["paths"][group]) for path in paths)
-    shared = affected("shared")
+    # New code/config paths fail to the complete current checks. Historical
+    # material and ordinary documentation do not replay archived validators.
+    def known(path):
+        return any(any(path.startswith(prefix) if prefix.endswith(("/", "-")) else path == prefix
+                       for prefix in prefixes) for prefixes in cfg["paths"].values())
+    documentation = ("README.md", "CHANGELOG.md", "LICENSE")
+    shared = affected("shared") or any(
+        not known(path) and path not in documentation and not path.startswith(("docs/", "archive/"))
+        for path in paths
+    )
     app = affected("application")
     platform = affected("platform")
     app_config = affected("app_config")

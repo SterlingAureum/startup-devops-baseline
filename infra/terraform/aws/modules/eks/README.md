@@ -1,3 +1,5 @@
+> Operator tooling has changed. Commands linked into `archive/v0.12/` are historical references, not current procedures. Use the current repository README and local/AWS transition guides.
+
 # EKS module
 
 This module implements the EKS control-plane and stable managed-node baseline.
@@ -27,7 +29,7 @@ Do not provide an STS assumed-role session ARN.
 
 The development environment enables both public and private endpoint access.
 The public allowlist fails closed, rejects `0.0.0.0/0`, and must be supplied at
-runtime. `scripts/apply-eks-api-access-cidr.sh` discovers or accepts the
+runtime. `archive/v0.12/scripts/apply-eks-api-access-cidr.sh` discovers or accepts the
 operator's current public IPv4 address and passes its `/32` directly to
 Terraform without creating a repository file. Re-run it after an address
 change.
@@ -54,4 +56,4 @@ separately after enforcement is validated in an isolated namespace.
 
 The module creates a dedicated IRSA role and customer-managed policy for the `kube-system/aws-load-balancer-controller` ServiceAccount. The policy is based on the upstream AWS Load Balancer Controller v2.14.1 installation policy.
 
-The Kubernetes ServiceAccount is intentionally created and annotated by `scripts/bootstrap-eks-argocd.sh`, because its role ARN contains the AWS account ID and must not be hardcoded in Git.
+The Kubernetes ServiceAccount is intentionally created and annotated by `archive/v0.12/scripts/bootstrap-eks-argocd.sh`, because its role ARN contains the AWS account ID and must not be hardcoded in Git.

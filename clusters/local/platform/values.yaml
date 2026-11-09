@@ -9,6 +9,8 @@ demoApi:
     tag: ""
     pullPolicy: Never
     applicationVersion: ""
+    sourceCommit: ""
+    sourceRepository: ""
   rehearsalFault:
     mode: disabled
     tokenSha256: ""

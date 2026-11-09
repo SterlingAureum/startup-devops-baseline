@@ -1,0 +1,187 @@
+name: delivery checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: delivery-checks-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  route:
+    runs-on: ubuntu-latest
+    outputs:
+      application: ${{ steps.route.outputs.application }}
+      tests: ${{ steps.route.outputs.tests }}
+      iac: ${{ steps.route.outputs.iac }}
+      platform: ${{ steps.route.outputs.platform }}
+      render: ${{ steps.route.outputs.render }}
+      environments: ${{ steps.route.outputs.environments }}
+      base: ${{ steps.route.outputs.base }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: python3 -m pip install PyYAML==6.0.3
+      - id: route
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [[ -z "${BASE}" || "${BASE}" =~ ^0+$ ]]; then
+            BASE="$(git rev-parse HEAD^)"
+          fi
+          echo "base=${BASE}" >> "${GITHUB_OUTPUT}"
+          python3 scripts/delivery/flow.py classify --base "${BASE}" --head "$(git rev-parse HEAD)"
+          if [[ "${GITHUB_EVENT_NAME}" == workflow_dispatch ]]; then
+            echo 'tests=true' >> "${GITHUB_OUTPUT}"
+            echo 'iac=true' >> "${GITHUB_OUTPUT}"
+            echo 'platform=true' >> "${GITHUB_OUTPUT}"
+            echo 'render=true' >> "${GITHUB_OUTPUT}"
+            echo 'environments=["local","aws-dev","aws-test","aws-prod"]' >> "${GITHUB_OUTPUT}"
+          fi
+
+  repository:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: python3 -m pip install PyYAML==6.0.3
+      - run: python3 scripts/checks/repository.py
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITLEAKS_ENABLE_COMMENTS: false
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: false
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.18.6
+      - run: python3 -m pip install PyYAML==6.0.3
+      - run: python3 -m unittest discover -s tests -v
+
+  application:
+    needs: route
+    if: needs.route.outputs.tests == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run this application's build and test adapter
+        run: |
+          python3 -m pip install PyYAML==6.0.3
+          python3 scripts/delivery/flow.py test-app
+
+  render:
+    needs: route
+    if: needs.route.outputs.render == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment: ${{ fromJSON(needs.route.outputs.environments) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.18.6
+      - run: python3 -m pip install PyYAML==6.0.3
+      - name: Check target environment deployment and telemetry wiring
+        env:
+          TARGET_ENVIRONMENT: ${{ matrix.environment }}
+        run: python3 scripts/delivery/flow.py render --environment "${TARGET_ENVIRONMENT}"
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: apps/demo-api
+          scanners: misconfig
+          severity: HIGH,CRITICAL
+          exit-code: 1
+          version: v0.74.0
+
+  platform:
+    needs: route
+    if: needs.route.outputs.platform == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.18.6
+      - run: python3 -m pip install PyYAML==6.0.3
+      - name: Check tools and render platform declarations
+        run: |
+          command -v kubectl
+          python3 scripts/delivery/flow.py platform
+
+  iac:
+    needs: route
+    if: needs.route.outputs.iac == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.16.3
+          terraform_wrapper: false
+      - run: bash scripts/checks/terraform.sh
+
+  promotion:
+    needs: route
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: python3 -m pip install PyYAML==6.0.3
+      - name: Verify ordered release promotion and source acceptance
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ needs.route.outputs.base }}
+          DELIVERY_PROD_ENABLED: ${{ vars.DELIVERY_PROD_ENABLED }}
+        run: python3 scripts/delivery/promotion_check.py --base "${BASE}" --head "$(git rev-parse HEAD)"
+
+  quality-gates:
+    name: delivery quality-gates
+    if: always()
+    needs: [route, repository, unit, application, render, platform, iac, promotion]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require all applicable checks to pass
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: python3 scripts/checks/ci_result.py

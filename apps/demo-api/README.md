@@ -1,3 +1,5 @@
+> Operator tooling has changed. Commands linked into `archive/v0.12/` are historical references, not current procedures. Use the current repository README and local/AWS transition guides.
+
 # demo-api
 
 `demo-api` is a minimal FastAPI workload for the `startup-devops-baseline` repository.
@@ -125,7 +127,7 @@ enable it and reference `startup-apps/demo-api-postgresql`.
 The rehearsal fault gate is not a general chaos endpoint. Enabled mode is
 accepted only for `APP_ENV=local`; only an exact private `X-Rehearsal-Fault`
 token affects `/version`. See
-`docs/V0.11.9.2.1_LOCAL_FAILURE_RECOVERY_RUNNER.md` before any use.
+`archive/v0.12/docs/V0.11.9.2.1_LOCAL_FAILURE_RECOVERY_RUNNER.md` before any use.
 
 ## Internal Marker CLI
 

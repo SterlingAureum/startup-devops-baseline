@@ -73,6 +73,7 @@ env:
 
 jobs:
   quality-gates:
+    if: vars.DELIVERY_FLOW_ENABLED != 'true'
     uses: ./.github/workflows/reusable-quality-gates.yaml
     with:
       gate_mode: image

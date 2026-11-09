@@ -1,48 +1,19 @@
-# Terraform State Bootstrap
+# State bootstrap root
 
-This independent Terraform root declares the shared S3/KMS remote-state
-foundation without depending on an EKS environment. It creates:
+This independent root declares the shared S3/KMS state foundation and exact-key
+access policies. Existing Terraform declarations, lifecycle protections and
+backend examples remain unchanged by repository restructuring.
 
-- one versioned, bucket-owner-enforced S3 bucket;
-- complete S3 public-access blocking and a TLS-only bucket policy;
-- one rotation-enabled customer-managed KMS key and alias;
-- five exact state keys with S3-native `.tflock` companions; and
-- one unattached least-privilege IAM policy per Terraform root.
+The old staged bootstrap, migration and recovery procedures are historical
+material under `archive/v0.12/`. They do not establish the current location or
+identity of an operator's private state, and must not be run from relocated
+paths. Resolve actual state ownership and location before planning any change.
 
-The S3 bucket and KMS key use `prevent_destroy`; the bucket also uses
-`force_destroy = false`. Removing those controls is a separately reviewed
-decommission action, never a normal environment teardown.
-
-## Bootstrap state
-
-This root deliberately remains local because the backend did not exist before
-its first apply. The reviewed apply used a private staged source rather than a
-repository-root state file. Protect both its private
-`source/terraform.tfstate` and byte-identical preserved apply copy as sensitive,
-owner-readable artifacts. v0.12.2.0.1 binds those private artifacts as the
-future migration source and cross-check; it does not activate the backend or
-authorize migration.
-
-## Access boundary
-
-The root creates managed IAM policies but attaches none of them. Policy
-attachment is an explicit access-grant decision; application delivery and the
-existing GitHub runtime roles receive no Terraform state authority from this
-increment. S3 permissions are exact-key scoped. Only each key's `.tflock`
-object receives `s3:DeleteObject`; the corresponding state object does not.
-
-## Validation
-
-Offline validation performs no Terraform initialization or AWS call:
+Current backend-disabled static validation, from the repository root:
 
 ```bash
-bash scripts/validate-v0.12.1-remote-state-foundation.sh
+bash scripts/checks/terraform.sh
 ```
 
-The guarded plan-only entry point is documented in
-`docs/V0.12.1.1_GUARDED_STATE_BOOTSTRAP_PLAN.md`. It stages an exact private
-source copy and initializes only that copy with `-backend=false`. Plan
-execution still needs separate approval, and a successful plan cannot be
-applied until the v0.12.1.2 reviewed saved-plan checkpoint. Do not initialize
-or migrate the other four roots. v0.12.2.1 owns the first private bootstrap
-migration preflight.
+This does not migrate or recreate state. Shared state storage, KMS and retained
+backend policies are not part of routine dev/test teardown.

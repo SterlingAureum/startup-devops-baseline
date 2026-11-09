@@ -1,39 +1,17 @@
-# Local Platform App-of-Apps Chart
+# Local application composition
 
-This Helm Chart is the source path of `Application/startup-devops-root`. It
-renders the nine local child Applications and the Event-position claim.
+This parent chart composes Argo CD Applications for the local platform and demo.
+Its location and external chart pins are preserved; it is not exclusively a
+platform-component chart.
 
-`git.targetRevision` applies only to child Applications that read this Git
-repository: `namespace-guardrails`, `demo-api`, and `observability-views`. The
-Root source revision is rendered by `scripts/deploy-root-app.sh` from the same
-value during feature acceptance.
+The current operator is `python3 scripts/ops/local.py`, run from the repository
+root. See [the local workflow](../../../docs/operations/local.md).
 
-External Helm sources remain independently pinned in `values.yaml`:
+Deploy pins the root and same-repository child Applications to a pushed commit
+matching the clean checkout. Local image parameters include its tag, source
+commit and version and clear the demo chart's cloud digest. External controller
+charts retain their declared versions. The repository has not revalidated every
+external chart/controller combination live during this restructuring.
 
-- Argo Rollouts `2.41.1`;
-- ingress-nginx `4.11.3`;
-- kube-prometheus-stack `88.5.0`;
-- Loki `18.11.3`;
-- Alloy `1.11.0` for both the Pod-log and singleton Event collectors.
-
-The monitoring Application enables private single-replica Prometheus,
-Grafana, and Alertmanager runtimes for local functional acceptance. Alert rules
-remain repository-owned by `platform/observability/helm` and are intentionally
-absent until v0.11.5.1.
-
-The repository-owned `observability-views` Chart is not an external dependency;
-it inherits `git.targetRevision` from the Root and deploys recording rules,
-controller ServiceMonitors, and Dashboard ConfigMaps after the monitoring
-control plane. CloudNativePG PodMonitors remain disabled in the local profile.
-
-The logging sequence is Loki at sync wave `7`; the node-local Pod-log Alloy
-DaemonSet, the Root-owned 256Mi Event-position PVC, and the singleton
-Kubernetes Event Alloy Application share wave `8`; demo-api remains at wave
-`10`. Keeping the `WaitForFirstConsumer` claim and its first consumer in the
-same wave prevents an Argo CD health-gated sync deadlock. See
-`docs/V0.11.6.1.2.1_EVENTS_PVC_SYNC_WAVE_TROUBLESHOOTING.md`.
-
-Stable values use `HEAD` and render `demo-api` Helm parameters as an explicit
-empty list. Feature mode is supplied only through the Root Application and
-renders the exact four local-image parameters. Do not commit a feature branch
-or feature SHA into this Chart.
+Historical feature-revision, failure-recovery and log/trace rehearsal notes are
+under `archive/v0.12/`; they are not required for current CI or local commands.

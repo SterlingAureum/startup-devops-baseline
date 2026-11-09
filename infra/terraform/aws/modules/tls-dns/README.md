@@ -1,3 +1,5 @@
+> Operator tooling has changed. Commands linked into `archive/v0.12/` are historical references, not current procedures. Use the current repository README and local/AWS transition guides.
+
 # TLS and DNS module
 
 This module discovers an existing public Route 53 hosted zone and creates a
@@ -6,5 +8,5 @@ certificate and its validation records.
 
 The Kubernetes Ingress creates the ALB later in the deployment sequence, so
 the public Alias record is reconciled by
-`scripts/reconcile-demo-api-dns.sh` after the ALB hostname exists. That script
+`archive/v0.12/scripts/reconcile-demo-api-dns.sh` after the ALB hostname exists. That script
 is idempotent and never stores a workstation public IP in the repository.

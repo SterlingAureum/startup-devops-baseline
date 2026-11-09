@@ -91,7 +91,7 @@ crash.*.log
 *.tfbackend
 !*.tfbackend.example
 
-!delivery/profiles/aws-test-observability-qualification.tfvars
+!archive/v0.12/delivery/profiles/aws-test-observability-qualification.tfvars
 
 # Reviewed dev capacity only; contains no credentials or workstation addresses.
 !infra/terraform/aws/environments/dev/observability-capacity.auto.tfvars

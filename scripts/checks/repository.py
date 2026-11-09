@@ -9,6 +9,15 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def check_job_checkout(job, location):
+    checked_out = False
+    for step in job.get("steps", []):
+        if step.get("uses", "").startswith("actions/checkout@"):
+            checked_out = True
+        if re.search(r"scripts/[\w./-]+\.(?:py|sh)", step.get("run", "")) and not checked_out:
+            raise ValueError("Repository script used before checkout: " + location)
+
+
 def check():
     for folder in ("scripts", "tests", "apps/demo-api/src", "apps/demo-api/tests"):
         for path in (ROOT / folder).rglob("*"):
@@ -22,7 +31,8 @@ def check():
         doc = yaml.load(path.read_text(), Loader=yaml.BaseLoader)
         if not isinstance(doc, dict) or not isinstance(doc.get("on"), dict) or not isinstance(doc.get("jobs"), dict):
             raise ValueError("Invalid workflow document: " + str(path.relative_to(ROOT)))
-        for job in doc["jobs"].values():
+        for name, job in doc["jobs"].items():
+            check_job_checkout(job, str(path.relative_to(ROOT)) + ":" + name)
             for item in [job, *job.get("steps", [])]:
                 uses = item.get("uses", "")
                 if uses.startswith("./"):

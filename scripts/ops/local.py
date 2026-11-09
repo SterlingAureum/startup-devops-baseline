@@ -25,7 +25,7 @@ STEPS = {
     "build": ["require clean committed source", "build or reuse commit-tagged image", "load into named kind cluster"],
     "deploy": ["verify pushed source matches clean checkout", "verify local image source label", "apply pinned root Application"],
     "status": ["read named kind cluster nodes and Argo Applications"],
-    "verify": ["verify pushed source", "wait for root and expected child Applications", "check demo rollout and ready Pods", "check demo HTTP and metrics through Service proxy"],
+    "verify": ["resolve requested or already deployed source commit", "render configuration from that fetched commit", "wait for root and expected child Applications", "check demo rollout and ready Pods", "check demo HTTP and metrics through Service proxy"],
     "destroy": ["require exact cluster-name confirmation", "delete only named kind cluster"],
     "up": ["verify pushed source before creating resources", "create", "install-argocd", "build", "deploy", "verify"],
 }
@@ -38,6 +38,19 @@ class LocalError(ValueError):
 def require(condition, message):
     if not condition:
         raise LocalError(message)
+
+
+def integer_counter(value, field):
+    # CRDs can expose counters as JSON strings. Accept only nonnegative whole
+    # numbers; int(True) and int(1.5) must not turn invalid status into success.
+    if type(value) is int and value >= 0:
+        return value
+    if isinstance(value, str) and re.fullmatch(r"[0-9]+", value):
+        try:
+            return int(value)
+        except ValueError:
+            pass
+    raise LocalError(f"{field} must be a nonnegative integer or decimal integer string")
 
 
 def run(args, *, cwd=ROOT, input=None, check=True, timeout=900, env=None):
@@ -53,7 +66,7 @@ def validate_options(args):
         require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/-]*", args.revision) is not None and ".." not in args.revision, "Use a branch, tag or full commit SHA")
     url = urlsplit(args.repo_url)
     require(url.scheme == "https" and bool(url.hostname) and not url.username and not url.password and not url.query and not url.fragment, "Use a credential-free HTTPS Git URL")
-    if args.command in ("deploy", "verify", "up"):
+    if args.command in ("deploy", "up"):
         require(bool(args.revision), "Supply --revision for a pushed branch, tag or commit")
     if args.command == "destroy":
         require(args.confirm == args.cluster, "Destroy requires --confirm equal to --cluster")
@@ -78,16 +91,31 @@ def clean_commit():
     return run(["git", "rev-parse", "HEAD"]).stdout.strip()
 
 
+def fetch_source(args, directory):
+    run(["git", "init", "-q", str(directory)])
+    run(["git", "fetch", "--depth=1", "--no-tags", args.repo_url, args.revision], cwd=directory, timeout=args.timeout)
+    remote = run(["git", "rev-parse", "FETCH_HEAD^{commit}"], cwd=directory).stdout.strip()
+    for path in ("clusters/local/platform/Chart.yaml", "apps/demo-api/helm/Chart.yaml", "scripts/ops/local.py"):
+        run(["git", "cat-file", "-e", f"{remote}:{path}"], cwd=directory)
+    return remote
+
+
 def source_commit(args):
     local = clean_commit()
     with tempfile.TemporaryDirectory(prefix="baseline-source-") as directory:
-        run(["git", "init", "-q", directory])
-        run(["git", "fetch", "--depth=1", "--no-tags", args.repo_url, args.revision], cwd=directory, timeout=args.timeout)
-        remote = run(["git", "rev-parse", "FETCH_HEAD^{commit}"], cwd=directory).stdout.strip()
+        remote = fetch_source(args, directory)
         require(local == remote, "The pushed source revision must match this clean checkout; checkout and push the intended commit first")
-        for path in ("clusters/local/platform/Chart.yaml", "apps/demo-api/helm/Chart.yaml", "scripts/ops/local.py"):
-            run(["git", "cat-file", "-e", f"{remote}:{path}"], cwd=directory)
     return local
+
+
+@contextmanager
+def verification_source(args):
+    # Read-only acceptance can use a fixed verifier with an older deployed
+    # release. Render that release's checked-out chart, never the verifier's tree.
+    with tempfile.TemporaryDirectory(prefix="baseline-verify-source-") as directory:
+        commit = fetch_source(args, directory)
+        run(["git", "checkout", "--quiet", "--detach", commit], cwd=directory)
+        yield commit, Path(directory)
 
 
 def image_for(commit):
@@ -196,11 +224,20 @@ class Driver:
             print(self.kube("get", "nodes", "-o", "wide").stdout)
             print(self.kube("-n", "argocd", "get", "applications.argoproj.io").stdout)
 
-    def verify(self, commit):
+    def deployed_revision(self):
+        with self.kubernetes():
+            root = json.loads(self.kube("-n", "argocd", "get", "application", "startup-devops-root", "-o", "json").stdout)
+        source = root["spec"]["source"]
+        require(source.get("repoURL") == self.args.repo_url, "Deployed root repository differs; supply the original --repo-url")
+        commit = source.get("targetRevision", "")
+        require(isinstance(commit, str) and re.fullmatch(r"[0-9a-f]{40}", commit), "Deployed root must pin a full commit SHA; supply --revision explicitly for a floating root")
+        return commit
+
+    def verify(self, commit, source_root=ROOT):
         helm = ["helm", "template", "local-platform", "clusters/local/platform"]
         for name, value in local_parameters(self.args, commit).items():
             helm += ["--set" if name.endswith(".enabled") else "--set-string", name + "=" + value]
-        children = [item for item in yaml.safe_load_all(run(helm).stdout) if item and item.get("kind") == "Application"]
+        children = [item for item in yaml.safe_load_all(run(helm, cwd=source_root).stdout) if item and item.get("kind") == "Application"]
         require(bool(children), "Local platform did not render any child Applications")
         with self.kubernetes():
             deadline = time.monotonic() + self.args.timeout
@@ -252,9 +289,13 @@ def verify_state(apps, workload, pods, commit):
         status = app.get("status", {})
         require(status.get("sync", {}).get("status") == "Synced" and status.get("health", {}).get("status") == "Healthy", "An expected Argo Application is not Synced and Healthy")
     status = workload.get("status", {})
-    desired = workload["spec"].get("replicas", 1)
-    require(desired > 0 and status.get("observedGeneration", 0) >= workload["metadata"]["generation"], "Demo workload generation has not been observed")
-    require(status.get("phase") == "Healthy" and status.get("readyReplicas", 0) >= desired and status.get("updatedReplicas", 0) >= desired, "Demo rollout is incomplete or paused")
+    desired = integer_counter(workload["spec"].get("replicas", 1), "spec.replicas")
+    generation = integer_counter(workload["metadata"]["generation"], "metadata.generation")
+    observed = integer_counter(status.get("observedGeneration", 0), "status.observedGeneration")
+    ready = integer_counter(status.get("readyReplicas", 0), "status.readyReplicas")
+    updated = integer_counter(status.get("updatedReplicas", 0), "status.updatedReplicas")
+    require(desired > 0 and observed >= generation, "Demo workload generation has not been observed")
+    require(status.get("phase") == "Healthy" and ready >= desired and updated >= desired, "Demo rollout is incomplete or paused")
     active = [pod for pod in pods.get("items", []) if not pod.get("metadata", {}).get("deletionTimestamp")]
     require(len(active) >= desired, "Not enough active demo Pods")
     for pod in active:
@@ -271,7 +312,7 @@ def parser():
     value.add_argument("command", choices=COMMANDS)
     value.add_argument("--cluster", default="startup-devops-baseline")
     value.add_argument("--repo-url", default="https://github.com/SterlingAureum/startup-devops-baseline.git")
-    value.add_argument("--revision")
+    value.add_argument("--revision", help="Pushed branch/tag/SHA; verify defaults to the deployed root's pinned commit")
     value.add_argument("--confirm")
     value.add_argument("--timeout", type=int, default=900)
     value.add_argument("--http-port", type=int, default=8080)
@@ -294,7 +335,13 @@ def main(argv=None):
         require(not missing, "Missing tools: " + ", ".join(missing))
         driver = Driver(args)
         commit = None
-        if args.command in ("deploy", "verify", "up"):
+        if args.command == "verify":
+            if not args.revision:
+                args.revision = driver.deployed_revision()
+            with verification_source(args) as (commit, source_root):
+                driver.verify(commit, source_root=source_root)
+            return 0
+        if args.command in ("deploy", "up"):
             commit = source_commit(args)
         elif args.command == "build":
             commit = clean_commit()

@@ -1,5 +1,5 @@
 from copy import deepcopy
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import nullcontext, redirect_stdout, redirect_stderr
 import importlib.util
 import io
 import json
@@ -116,6 +116,39 @@ class LocalBoundaryTests(unittest.TestCase):
             value.repo_url = str(remote)
             with patch.object(local, "run", side_effect=actual_git):
                 self.assertEqual(local.source_commit(value), expected)
+                # A fixed local verifier can inspect an older deployed source
+                # without rebuilding it or rendering a dirty verifier checkout.
+                (checkout / "scripts/ops/local.py").write_text("uncommitted verifier fix\n")
+                with local.verification_source(value) as (commit, source_root):
+                    self.assertEqual(commit, expected)
+                    self.assertEqual((source_root / "scripts/ops/local.py").read_text(), "source fixture\n")
+                self.assertFalse(source_root.exists())
+
+    def test_verify_resumes_deployed_revision_without_build_or_checkout_equality(self):
+        source_root = Path("/fixture/deployed-source")
+        with patch.object(local.shutil, "which", return_value="/fake/tool"), patch.object(local, "Driver") as driver_class, patch.object(local, "clean_commit") as clean, patch.object(local, "verification_source", return_value=nullcontext((COMMIT, source_root))) as source:
+            driver = driver_class.return_value
+            driver.deployed_revision.return_value = COMMIT
+            self.assertEqual(local.main(["verify", "--cluster", "existing-local"]), 0)
+            self.assertEqual(source.call_args.args[0].revision, COMMIT)
+            driver.verify.assert_called_once_with(COMMIT, source_root=source_root)
+            clean.assert_not_called()
+            for method in ("create", "install", "build", "deploy", "destroy"):
+                getattr(driver, method).assert_not_called()
+
+    def test_deployed_revision_requires_matching_repo_and_fixed_commit(self):
+        value = args("verify")
+        local.validate_options(value)
+        driver = local.Driver(value)
+        root = {"spec": {"source": {"repoURL": value.repo_url, "targetRevision": COMMIT}}}
+        with patch.object(driver, "kubernetes", return_value=nullcontext()), patch.object(driver, "kube", return_value=subprocess.CompletedProcess([], 0, json.dumps(root), "")):
+            self.assertEqual(driver.deployed_revision(), COMMIT)
+        for field, bad in (("targetRevision", "main"), ("repoURL", "https://example.invalid/another/repo.git")):
+            other = deepcopy(root)
+            other["spec"]["source"][field] = bad
+            with self.subTest(field=field), patch.object(driver, "kubernetes", return_value=nullcontext()), patch.object(driver, "kube", return_value=subprocess.CompletedProcess([], 0, json.dumps(other), "")):
+                with self.assertRaises(local.LocalError):
+                    driver.deployed_revision()
 
     def test_dirty_source_is_not_built(self):
         with patch.object(local, "run", return_value=subprocess.CompletedProcess([], 0, " M apps/demo-api/src/main.py\n", "")):
@@ -158,6 +191,37 @@ class LocalBoundaryTests(unittest.TestCase):
 class LocalVerificationTests(unittest.TestCase):
     def test_current_ready_state_passes(self):
         local.verify_state(*fixture(), COMMIT)
+
+    def test_string_observed_generation_from_reported_failure_passes(self):
+        apps, workload, pods = fixture()
+        workload["status"]["observedGeneration"] = "3"
+        local.verify_state(apps, workload, pods, COMMIT)
+
+    def test_all_workload_counters_can_be_decimal_strings(self):
+        apps, workload, pods = fixture()
+        workload["metadata"]["generation"] = "3"
+        workload["spec"]["replicas"] = "1"
+        for field in ("observedGeneration", "readyReplicas", "updatedReplicas"):
+            workload["status"][field] = str(workload["status"][field])
+        local.verify_state(apps, workload, pods, COMMIT)
+
+    def test_stale_or_missing_status_still_rejected_after_conversion(self):
+        for field, value in (("observedGeneration", "2"), ("readyReplicas", "0"), ("updatedReplicas", "0")):
+            apps, workload, pods = fixture()
+            workload["status"][field] = value
+            with self.subTest(field=field), self.assertRaises(local.LocalError):
+                local.verify_state(apps, workload, pods, COMMIT)
+            del workload["status"][field]
+            with self.subTest(missing=field), self.assertRaises(local.LocalError):
+                local.verify_state(apps, workload, pods, COMMIT)
+
+    def test_invalid_counter_types_fail_with_clear_error(self):
+        for section, field in (("metadata", "generation"), ("spec", "replicas"), ("status", "observedGeneration"), ("status", "readyReplicas"), ("status", "updatedReplicas")):
+            for value in (None, True, False, -1, 1.5, "-1", "1.5", "", "unknown", {}, []):
+                apps, workload, pods = fixture()
+                workload[section][field] = value
+                with self.subTest(field=field, value=value), self.assertRaisesRegex(local.LocalError, section + r"\." + field):
+                    local.verify_state(apps, workload, pods, COMMIT)
 
     def test_paused_rollout_and_stale_generation_are_rejected(self):
         for key, value in (("phase", "Paused"), ("observedGeneration", 1), ("readyReplicas", 0), ("updatedReplicas", 0)):

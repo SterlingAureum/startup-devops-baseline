@@ -14,7 +14,7 @@ root. Do not use the archived Shell entrypoints.
 | `build` | Build or reuse the clean commit's local image and load it into kind |
 | `deploy` | Verify pushed source and apply the root Application at that commit |
 | `status` | Show nodes and Argo Applications in the named cluster |
-| `verify` | Wait for current Applications, workload, Pods and demo HTTP/metrics checks |
+| `verify` | Read-only verification of the deployed pinned revision, or an explicitly requested revision |
 | `destroy` | Delete only the named kind cluster after exact-name confirmation |
 | `up` | Run source preflight, create, install, build, deploy and verify in order |
 
@@ -37,7 +37,9 @@ python3 scripts/ops/local.py up --revision feature/restructure
 Substitute your actual pushed branch/tag/SHA. For a fork also pass
 `--repo-url https://github.com/OWNER/REPOSITORY.git`. The fetched commit must
 equal this clean checkout's HEAD, including the current local chart wiring.
-Uncommitted changes are deliberately rejected by build/deploy/up/verify.
+Uncommitted changes are deliberately rejected by build/deploy/up. Standalone
+read-only verify fetches and renders its target source separately, so a verifier
+fix does not require rebuilding the deployed release.
 
 Defaults preserve the existing `kindest/node:v1.30.0` baseline and use the
 `v3.5.2` Argo CD manifest already pinned by the prior EKS bootstrap. This is not
@@ -70,11 +72,33 @@ unchanged. Deploy loads the image again so a recreated kind cluster has it.
 
 ## What verify proves
 
+To resume verification after a verifier error, keep the cluster and run:
+
+```bash
+python3 scripts/ops/local.py verify --cluster startup-devops-baseline
+```
+
+Without `--revision`, verify reads the root Application's pinned commit from
+that named kind cluster. It requires the root repository to match `--repo-url`
+(pass the original fork URL if needed). It fetches and checks out the target
+source in a temporary directory and renders that commit's local chart, not the
+current verifier checkout. A root with a floating branch requires an explicit
+`--revision`. The verifier does not execute scripts from the fetched source.
+
+An explicit `verify --revision SHA_OR_REF` remains available to verify a chosen
+target. Verify never creates a cluster, installs controllers, builds/loads an
+image, deploys a root, promotes a Rollout or deletes resources. It does need
+Git/network access to the target source in addition to kind/kubectl/Helm.
+
 Verify checks the root and every rendered child Application for Synced/Healthy,
 same-repository reconciliation at the requested commit, expected child source
 settings, current demo rollout generation, ready Pods using the local image
 and source annotation, `/health`, `/ready`, `/version`, and an exposed request
 metric. It does not promote a paused Rollout.
+
+Generation and replica counters accept nonnegative JSON integers or decimal
+integer strings. Missing status counters remain zero/unconverged; nulls,
+booleans, fractions and invalid strings cannot be accepted as healthy status.
 
 The HTTP checks use the Kubernetes [Service proxy API](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster-services/)
 through the explicit local kubeconfig. This does not validate ingress routing,

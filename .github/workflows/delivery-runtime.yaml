@@ -1,0 +1,111 @@
+name: delivery runtime
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Environment to reverify on current main
+        required: true
+        type: choice
+        default: aws-dev
+        options: [aws-dev, aws-test, aws-prod]
+      create_test_pr:
+        description: Propose test after successful dev verification
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  route:
+    if: github.ref == 'refs/heads/main' && vars.DELIVERY_FLOW_ENABLED == 'true' && vars.DELIVERY_RUNTIME_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      runtime_dev: ${{ steps.route.outputs.runtime_dev }}
+      runtime_test: ${{ steps.route.outputs.runtime_test }}
+      runtime_prod: ${{ steps.route.outputs.runtime_prod }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: python3 -m pip install PyYAML==6.0.3
+      - id: route
+        env:
+          BEFORE: ${{ github.event.before }}
+          TARGET: ${{ inputs.environment }}
+          DELIVERY_PROD_ENABLED: ${{ vars.DELIVERY_PROD_ENABLED }}
+        run: |
+          if [[ "${GITHUB_EVENT_NAME}" == workflow_dispatch ]]; then
+            if [[ "${TARGET}" == aws-prod && "${DELIVERY_PROD_ENABLED}" != true ]]; then
+              echo 'Production runtime acceptance is disabled'
+              exit 1
+            fi
+            for environment in aws-dev aws-test aws-prod; do
+              KEY="runtime_${environment#aws-}"
+              if [[ "${TARGET}" == "${environment}" ]]; then
+                echo "${KEY}=true" >> "${GITHUB_OUTPUT}"
+              else
+                echo "${KEY}=false" >> "${GITHUB_OUTPUT}"
+              fi
+            done
+          else
+            if [[ -z "${BEFORE}" || "${BEFORE}" =~ ^0+$ ]]; then BEFORE="$(git rev-parse HEAD^)"; fi
+            python3 scripts/delivery/flow.py classify --base "${BEFORE}" --head "$(git rev-parse HEAD)"
+          fi
+
+  verify-dev:
+    needs: route
+    if: needs.route.outputs.runtime_dev == 'true'
+    uses: ./.github/workflows/delivery-verify.yaml
+    with:
+      environment: aws-dev
+      revision: ${{ github.sha }}
+
+  verify-test:
+    needs: route
+    if: needs.route.outputs.runtime_test == 'true'
+    uses: ./.github/workflows/delivery-verify.yaml
+    with:
+      environment: aws-test
+      revision: ${{ github.sha }}
+
+  verify-prod:
+    needs: route
+    if: needs.route.outputs.runtime_prod == 'true' && vars.DELIVERY_PROD_ENABLED == 'true'
+    uses: ./.github/workflows/delivery-verify.yaml
+    with:
+      environment: aws-prod
+      revision: ${{ github.sha }}
+
+  propose-test:
+    needs: verify-dev
+    if: needs.verify-dev.result == 'success' && (github.event_name == 'push' || inputs.create_test_pr)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.DELIVERY_PR_TOKEN }}
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: delivery-verified-aws-dev-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/delivery-candidate
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
+        with:
+          version: v3.18.6
+      - run: python3 -m pip install PyYAML==6.0.3
+      - name: Create test PR; never merge or replace an existing PR
+        env:
+          DELIVERY_PR_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
+          GH_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
+        run: python3 scripts/delivery/flow.py pr --target aws-test --candidate "${RUNNER_TEMP}/delivery-candidate/verified.json"

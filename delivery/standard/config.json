@@ -1,0 +1,86 @@
+{
+  "base_branch": "main",
+  "paths": {
+    "application": [
+      "apps/demo-api/src/",
+      "apps/demo-api/tests/",
+      "apps/demo-api/Dockerfile",
+      "apps/demo-api/requirements.txt"
+    ],
+    "iac": [
+      "infra/terraform/",
+      "scripts/validate-terraform.sh",
+      "scripts/check-tracked-terraform-format.sh"
+    ],
+    "platform": [
+      "platform/",
+      "clusters/"
+    ],
+    "shared": [
+      "scripts/delivery/",
+      "tests/delivery/",
+      "delivery/standard/",
+      ".github/workflows/delivery-"
+    ],
+    "app_config": [
+      "apps/demo-api/helm/"
+    ]
+  },
+  "application": {
+    "directory": "apps/demo-api",
+    "chart": "apps/demo-api/helm",
+    "release_name": "demo-api",
+    "namespace": "startup-apps",
+    "test_command": [
+      "docker",
+      "build",
+      "--target",
+      "test",
+      "--tag",
+      "delivery-app-test",
+      "."
+    ],
+    "container": "demo-api",
+    "environment_annotation": "platform.startup.dev/environment",
+    "metrics_required": true
+  },
+  "environments": {
+    "local": {
+      "values": [],
+      "release": null,
+      "application": "demo-api",
+      "url": "http://demo-api.local"
+    },
+    "aws-dev": {
+      "values": [
+        "apps/demo-api/helm/values/environments/aws-dev.yaml"
+      ],
+      "release": "apps/demo-api/helm/values/releases/aws-dev.yaml",
+      "application": "demo-api-aws-dev",
+      "url": "https://demo.dev.aureumstack.com"
+    },
+    "aws-test": {
+      "values": [
+        "apps/demo-api/helm/values/environments/aws-test.yaml"
+      ],
+      "release": "apps/demo-api/helm/values/releases/aws-test.yaml",
+      "application": "demo-api-aws-test",
+      "url": "https://demo.test.aureumstack.com"
+    },
+    "aws-prod": {
+      "values": [
+        "apps/demo-api/helm/values/environments/aws-prod.yaml"
+      ],
+      "release": "apps/demo-api/helm/values/releases/aws-prod.yaml",
+      "application": "demo-api-aws-prod",
+      "url": "https://demo.prod.aureumstack.com"
+    }
+  },
+  "runtime": {
+    "prometheus_namespace": "observability",
+    "prometheus_service": "observability-metrics-prometheus",
+    "prometheus_port": 9090,
+    "metrics_query": "count(demo_api_http_requests_total{deployment_environment_name=\"$environment\",service_version=\"$version\",container_image_digest=\"$digest\"} and on(instance) (up{deployment_environment_name=\"$environment\",service_version=\"$version\",container_image_digest=\"$digest\"} == 1) and on(instance) (time() - timestamp(up{deployment_environment_name=\"$environment\",service_version=\"$version\",container_image_digest=\"$digest\"}) < 60))",
+    "log_and_trace_live_acceptance": false
+  }
+}

@@ -1,0 +1,67 @@
+name: delivery promote selected release
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_environment:
+        description: Reverify the current source release, then propose the next environment
+        required: true
+        type: choice
+        default: aws-dev
+        options: [aws-dev, aws-test]
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  preflight:
+    if: github.ref == 'refs/heads/main' && vars.DELIVERY_FLOW_ENABLED == 'true' && vars.DELIVERY_RUNTIME_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require enabled destination and PR credentials
+        env:
+          SOURCE: ${{ inputs.source_environment }}
+          DELIVERY_PROD_ENABLED: ${{ vars.DELIVERY_PROD_ENABLED }}
+          DELIVERY_PR_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
+        run: |
+          test -n "${DELIVERY_PR_TOKEN}"
+          if [[ "${SOURCE}" == aws-test ]]; then test "${DELIVERY_PROD_ENABLED}" == true; fi
+
+  verify-source:
+    needs: preflight
+    uses: ./.github/workflows/delivery-verify.yaml
+    with:
+      environment: ${{ inputs.source_environment }}
+      revision: ${{ github.sha }}
+
+  propose:
+    needs: verify-source
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.DELIVERY_PR_TOKEN }}
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          name: delivery-verified-${{ inputs.source_environment }}-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/delivery-candidate
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310
+        with:
+          version: v3.18.6
+      - run: python3 -m pip install PyYAML==6.0.3
+      - name: Propose the next environment with the verified digest
+        env:
+          SOURCE: ${{ inputs.source_environment }}
+          DELIVERY_PROD_ENABLED: ${{ vars.DELIVERY_PROD_ENABLED }}
+          DELIVERY_PR_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
+          GH_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
+        run: |
+          if [[ "${SOURCE}" == aws-dev ]]; then TARGET=aws-test; else TARGET=aws-prod; fi
+          python3 scripts/delivery/flow.py pr --target "${TARGET}" --candidate "${RUNNER_TEMP}/delivery-candidate/verified.json"

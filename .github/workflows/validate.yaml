@@ -18,7 +18,7 @@ concurrency:
 jobs:
   demo-api-release-currentness:
     name: demo-api release currentness
-    if: github.event_name == 'pull_request'
+    if: vars.DELIVERY_FLOW_ENABLED != 'true' && github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -46,6 +46,7 @@ jobs:
             --pr-number "${PR_NUMBER}"
 
   quality-gates:
+    if: vars.DELIVERY_FLOW_ENABLED != 'true'
     uses: ./.github/workflows/reusable-quality-gates.yaml
     with:
       gate_mode: auto

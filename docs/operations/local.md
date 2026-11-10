@@ -1,129 +1,161 @@
-# Local kind workflow
+# Local lifecycle and GitOps handoff
 
-The single entrypoint is `python3 scripts/ops/local.py COMMAND`. Run it from any
-directory using its absolute path, or run the examples below from the repository
-root. Do not use the archived Shell entrypoints.
+Use `python3 scripts/ops/cli.py COMMAND --env local`. The previous path
+`python3 scripts/ops/local.py COMMAND` delegates to the same kind-only flow.
+Install Python 3.10+, PyYAML 6.0.3, Docker, kind, kubectl, Git and Helm.
 
-## Commands
+## Responsibilities and commands
+
+The tool creates kind, installs the pinned Argo CD bootstrap, applies a GitOps
+root and checks environment delivery. Argo manages the remaining components
+and applications. Workload configuration stays in GitOps, not the CLI inventory.
 
 | Command | Behavior |
 | --- | --- |
-| `doctor` | Check installed tools; runtime/network readiness is checked during actual commands |
-| `create` | Create the named kind cluster if absent and wait for nodes |
-| `install-argocd` | Install the pinned Argo CD manifest into that kind cluster |
-| `build` | Build or reuse the clean commit's local image and load it into kind |
-| `deploy` | Verify pushed source and apply the root Application at that commit |
-| `status` | Show nodes and Argo Applications in the named cluster |
-| `verify` | Read-only verification of the deployed pinned revision, or an explicitly requested revision |
-| `destroy` | Delete only the named kind cluster after exact-name confirmation |
-| `up` | Run source preflight, create, install, build, deploy and verify in order |
+| `show` | Validate and print selected environment configuration; no tools or writes |
+| `doctor` | Check installed tools; no live readiness claim |
+| `create` | Create named kind cluster if absent, export connection and wait for nodes |
+| `install-argocd` | Install the pinned Argo CD manifest and wait for controllers |
+| `deploy` | Fetch/pin GitOps source, render preflight, apply root Application |
+| `status` | Show nodes and Argo Applications |
+| `verify` | Check nodes, Argo and declared Application convergence; no deployment |
+| `connect` | Back up/merge selected shared kubeconfig and switch its context explicitly |
+| `destroy` | Delete confirmed kind cluster and its dedicated connection file |
+| `up` | Source/render preflight, create, install-argocd, deploy, verify |
 
-`--dry-run` validates arguments and prints targets/phases. It runs no commands,
-does not resolve Git refs, and is not proof that tools, network or a cluster work.
+`--dry-run` validates configuration/arguments and prints phases. It invokes no
+tools, writes no files and does not prove network or runtime readiness. AWS
+entries support `show` only; even AWS lifecycle dry-runs are explicitly rejected.
 
-## First rehearsal
+## Inspect before changing an existing cluster
 
-Install Python 3.10+, PyYAML 6.0.3, Docker, kind, kubectl, Git and Helm. Commit and
-push this increment before a real GitOps deployment. Argo must be able to read
-the chosen HTTPS repository; repository credentials for private forks must be
-configured separately in Argo. Do not put credentials in `--repo-url`.
-
-```bash
-python3 scripts/ops/local.py doctor
-python3 scripts/ops/local.py up --revision feature/restructure --dry-run
-python3 scripts/ops/local.py up --revision feature/restructure
-```
-
-Substitute your actual pushed branch/tag/SHA. For a fork also pass
-`--repo-url https://github.com/OWNER/REPOSITORY.git`. The fetched commit must
-equal this clean checkout's HEAD, including the current local chart wiring.
-Uncommitted changes are deliberately rejected by build/deploy/up. Standalone
-read-only verify fetches and renders its target source separately, so a verifier
-fix does not require rebuilding the deployed release.
-
-Defaults preserve the existing `kindest/node:v1.30.0` baseline and use the
-`v3.5.2` Argo CD manifest already pinned by the prior EKS bootstrap. This is not
-a platform upgrade. `--node-image` and `--argocd-manifest` allow an explicitly
-selected replacement; compatibility must be checked before using one. The
-real local rehearsal remains necessary for these component combinations.
-
-The cluster defaults to `startup-devops-baseline`. Every Kubernetes command
-uses a private temporary kubeconfig obtained from that named kind cluster and
-an explicit `kind-CLUSTER` context. Creation/deletion also get a private
-`KUBECONFIG`; no fallback to an AWS or workstation context is used.
-
-HTTP/HTTPS host ports default to **127.0.0.1:8080 / 8443**. For a newly created
-cluster, `--http-port` / `--https-port` change those mappings. Existing clusters
-keep their current port mappings; create does not recreate them. Images remain
-in the local Docker store after cluster deletion.
-
-## Image and source identity
-
-The image is `startup-devops-baseline/demo-api:local-COMMIT12`, with an OCI source
-commit label. An existing tag with another label is rejected; a matching tag
-is reused. Build another source commit or explicitly remove the local Docker
-image when deliberately rebuilding the same source. Local images use tags;
-cloud promotion continues to use registry digests.
-
-Local parent chart parameters explicitly clear the chart's cloud image digest,
-set `pullPolicy: Never`, and supply the local source commit and version. Only
-the local-image override path changes. AWS environment/release values remain
-unchanged. Deploy loads the image again so a recreated kind cluster has it.
-
-## What verify proves
-
-To resume verification after a verifier error, keep the cluster and run:
+For an already running rehearsal, no deletion or recreation is necessary:
 
 ```bash
-python3 scripts/ops/local.py verify --cluster startup-devops-baseline
+python3 scripts/ops/cli.py show --env local
+python3 scripts/ops/cli.py verify --env local --cluster startup-devops-baseline
+python3 scripts/ops/cli.py connect --env local --cluster startup-devops-baseline
+kubectl get nodes
 ```
 
-Without `--revision`, verify reads the root Application's pinned commit from
-that named kind cluster. It requires the root repository to match `--repo-url`
-(pass the original fork URL if needed). It fetches and checks out the target
-source in a temporary directory and renders that commit's local chart, not the
-current verifier checkout. A root with a floating branch requires an explicit
-`--revision`. The verifier does not execute scripts from the fetched source.
+Use the actual cluster name, and the original fork repository through configuration
+or `--repo-url` if different. Standalone verify defaults to the root's deployed
+full commit, even if inventory `gitops.revision` names a newer branch. An explicit
+`--revision` instead checks that requested target; it never upgrades the cluster.
+Verify fetches the target source separately, preserving the deployed root's Helm
+inputs so an existing local-image rehearsal need not be rebuilt or redeployed.
 
-An explicit `verify --revision SHA_OR_REF` remains available to verify a chosen
-target. Verify never creates a cluster, installs controllers, builds/loads an
-image, deploys a root, promotes a Rollout or deletes resources. It does need
-Git/network access to the target source in addition to kind/kubectl/Helm.
+## Configure and create
 
-Verify checks the root and every rendered child Application for Synced/Healthy,
-same-repository reconciliation at the requested commit, expected child source
-settings, current demo rollout generation, ready Pods using the local image
-and source annotation, `/health`, `/ready`, `/version`, and an exposed request
-metric. It does not promote a paused Rollout.
-
-Generation and replica counters accept nonnegative JSON integers or decimal
-integer strings. Missing status counters remain zero/unconverged; nulls,
-booleans, fractions and invalid strings cannot be accepted as healthy status.
-
-The HTTP checks use the Kubernetes [Service proxy API](https://kubernetes.io/docs/tasks/access-application-cluster/access-cluster-services/)
-through the explicit local kubeconfig. This does not validate ingress routing,
-Prometheus ingestion, Loki ingestion or Tempo ingestion. Those require their
-own acceptance adapters. It also does not assert production HA or durability.
-
-Manual ingress smoke check, after the local path is ready:
+The checked-in default is `config/environments.example.yaml`. For personal use:
 
 ```bash
-curl -H 'Host: demo-api.local' http://127.0.0.1:8080/version
+mkdir -p ~/.config/startup-devops-baseline
+cp config/environments.example.yaml ~/.config/startup-devops-baseline/environments.yaml
 ```
 
-Check the actual hostname and port if you changed the ingress or kind settings.
-Failures stop the sequence and leave resources for inspection; there is no
-automatic rollback, cleanup or retry of a failed lifecycle command. Verification
-polls read-only checks for the bounded `--timeout` (default 900 seconds).
-
-## Delete this local environment
+Edit the local environment's cluster/repository/revision as appropriate, then:
 
 ```bash
-python3 scripts/ops/local.py destroy --cluster startup-devops-baseline \
-  --confirm startup-devops-baseline --dry-run
-python3 scripts/ops/local.py destroy --cluster startup-devops-baseline \
-  --confirm startup-devops-baseline
+python3 scripts/ops/cli.py show --config ~/.config/startup-devops-baseline/environments.yaml --env local
+python3 scripts/ops/cli.py up --config ~/.config/startup-devops-baseline/environments.yaml --env local --revision YOUR_PUSHED_REF --dry-run
+python3 scripts/ops/cli.py up --config ~/.config/startup-devops-baseline/environments.yaml --env local --revision YOUR_PUSHED_REF
 ```
 
-This deletes that kind cluster, including its in-cluster data. It does not
-invoke Terraform, AWS, remote state retirement or a shared cloud teardown.
+Replace `YOUR_PUSHED_REF`; do not paste it literally. Commit/push GitOps changes
+before selecting them. Lifecycle deploy/up fetch the root from the selected Git
+commit and do not use uncommitted working-tree changes or build application code.
+Root and same-repository children must pin that commit; parent-chart Git wiring
+is specified in inventory, not hardcoded in the operator. The initial adapter
+supports the existing single-source Helm app-of-apps root and direct child Apps,
+not arbitrary recursive ApplicationSets, multi-source or Kustomize roots.
+
+For a fork, set `gitops.repository` or pass a credential-free `--repo-url`.
+Private source access for the operator and Argo must be provisioned separately;
+this increment does not configure repository secrets.
+
+Defaults retain kind node v1.30.0, Argo CD v3.5.2 and loopback host ports
+8080/8443. This is not a component upgrade. Existing clusters retain their port
+mappings; `create` does not recreate them. Lifecycle up/deploy use the images
+already declared in GitOps, including the default demo's registry image. They do
+not automatically replace it with a local build. Applying a new root to an old
+local-image rehearsal can therefore change the selected demo image; start with
+verify/connect when you only want to inspect that rehearsal.
+
+## Connection handoff
+
+Whenever connection export succeeds, the tool atomically saves a dedicated file:
+
+```text
+~/.kube/startup-devops-baseline/CLUSTER.yaml
+```
+
+This file has mode 0600, remains after success/failure, and is refreshed from kind.
+Execution still uses a temporary private copy and explicit `kind-CLUSTER` context.
+Create/delete receive an isolated KUBECONFIG as well. Only explicit connect writes
+the shared user configuration or switches its context.
+
+For debugging without changing the shared configuration:
+
+```bash
+kubectl --kubeconfig ~/.kube/startup-devops-baseline/startup-devops-baseline.yaml --context kind-startup-devops-baseline get nodes
+```
+
+`connect` targets the single `KUBECONFIG` file if configured, otherwise
+`~/.kube/config`. With multiple KUBECONFIG files, select the write target:
+
+```bash
+python3 scripts/ops/cli.py connect --cluster startup-devops-baseline --kubeconfig-file ~/.kube/config
+```
+
+An explicit target is not a shell environment change; when KUBECONFIG contains
+multiple files, use `kubectl --kubeconfig TARGET ...` if another file's
+current-context takes precedence.
+
+Connect preserves other named entries, preferences and extensions, makes a 0600
+backup, writes atomically, and selects the target kind context. Identical kind
+entries can be adopted. Exports recorded by this tool can be updated after a
+cluster rebuild. Unowned conflicting entries or manually changed owned entries
+are rejected before changing the target. Resolve the conflict or choose another
+cluster name/config file; there is no blanket force-overwrite option. Do not run
+concurrent writers against the same shared config. Symlink targets are rejected.
+
+## Verification scope and separate demo checks
+
+Lifecycle verify checks nodes, the pinned install's Argo controller workloads,
+root/declared child source and destination, requested commit reconciliation,
+Synced/Healthy and active Application errors. A paused or unhealthy application
+cannot be accepted merely because its resources exist. The tool does not promote
+Rollouts or change applications during verification. Direct child Applications
+come from the rendered pinned root, so a new application's name need not be added
+to Python. It does not probe Services, HTTP routes, application versions or metrics,
+and does not prove business correctness or telemetry ingestion.
+
+The previous demo-api source-image and runtime path is now an optional example:
+
+```bash
+python3 scripts/examples/demo_api.py up --revision YOUR_PUSHED_REF --dry-run
+python3 scripts/examples/demo_api.py verify --cluster startup-devops-baseline
+```
+
+Example up/build/deploy retain clean-source equality, source-labelled local
+images, kind image load and demo-specific overrides. Example verify retains the
+counter string fix and checks the demo Rollout, Pods, HTTP version and exposed
+metrics. It requires the local-image rehearsal it was designed for; it is not a
+generic application verifier. See [runtime check boundaries](runtime-checks.md).
+Old `local.py build` moves to `scripts/examples/demo_api.py build`; local.py
+up/deploy/verify now have lifecycle-only semantics. The optional example up is
+the deliberate replacement for the old combined demo rehearsal.
+
+## Destroy
+
+```bash
+python3 scripts/ops/cli.py destroy --cluster startup-devops-baseline --confirm startup-devops-baseline --dry-run
+python3 scripts/ops/cli.py destroy --cluster startup-devops-baseline --confirm startup-devops-baseline
+```
+
+This deletes in-cluster data and the dedicated connection file. Docker images,
+shared kubeconfig entries/backups and its current-context remain unchanged; switch
+away or remove stale shared entries deliberately. No AWS or Terraform command is
+invoked. Failures otherwise leave resources and exported connections for debugging;
+there is no automatic rollback or full lifecycle retry.

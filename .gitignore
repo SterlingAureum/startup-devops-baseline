@@ -40,6 +40,8 @@ temp/
 secrets/
 .local/
 .local.env
+# Optional workstation inventory; prefer ~/.config/startup-devops-baseline/.
+/config/environments.local.yaml
 
 # Kubernetes local files
 kubeconfig

@@ -2,6 +2,9 @@
 
 ## Unreleased — operator lifecycle restructuring
 
+- Split kind lifecycle/GitOps verification from the optional demo-api image/runtime helper.
+- Add schema-versioned environment inventory and AWS configuration inspection without AWS execution.
+- Retain dedicated debug kubeconfigs; add explicit backed-up merge/connect without automatic shared-context changes.
 - Archive legacy CI, operator scripts, contracts and version material as historical reference.
 - Keep Terraform resource configuration and effective AWS/platform declarations unchanged.
 - Establish current CI entrypoints without historical validators or legacy fallback.

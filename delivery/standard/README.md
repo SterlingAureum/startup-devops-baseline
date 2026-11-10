@@ -19,6 +19,11 @@ Ordinary documentation and `archive/` changes do not rebuild the app or replay
 historical validators. Repository syntax/entrypoint checks, tests and secret
 scanning still run. Archives are included in secret scanning.
 
+Operator inventory (`config/`) and optional example helpers (`scripts/examples/`)
+are shared tooling inputs. Repository checks validate the environment example
+schema without authenticating to AWS. Workflow names and required check names
+are unchanged by the lifecycle entrypoint split.
+
 Current tooling:
 
 ```bash

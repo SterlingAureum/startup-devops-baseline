@@ -1,0 +1,47 @@
+# Copy outside the repository for workstation-specific configuration.
+# No access keys, tokens, passwords, kubeconfig or Terraform state belong here.
+schema_version: 1
+environments:
+  local:
+    driver: kind
+    timeout: 900
+    kind:
+      cluster: startup-devops-baseline
+      node_image: kindest/node:v1.30.0
+      http_port: 8080
+      https_port: 8443
+    argocd:
+      namespace: argocd
+      manifest: https://raw.githubusercontent.com/argoproj/argo-cd/v3.5.2/manifests/install.yaml
+    gitops:
+      repository: https://github.com/SterlingAureum/startup-devops-baseline.git
+      # A real deploy/up needs --revision or a revision here.
+      revision: null
+      root_manifest: clusters/local/root-app.yaml
+      root_application: startup-devops-root
+      # Parent-chart wiring, not application parameters. These placeholders
+      # are expanded only after the Git ref has resolved to an immutable commit.
+      parameters:
+        git.repoURL: '${repository}'
+        git.targetRevision: '${revision}'
+  aws-dev:
+    # Inspection only. AWS plan/apply/bootstrap/destroy are not implemented yet.
+    driver: aws
+    aws:
+      expected_account_id: '123456789012'
+      region: us-east-1
+      profile: baseline-dev
+    terraform:
+      root: infra/terraform/aws/environments/dev
+      variables_file: ~/.config/startup-devops-baseline/aws-dev.tfvars
+      backend_file: ~/.config/startup-devops-baseline/aws-dev.tfbackend
+  aws-test:
+    driver: aws
+    aws:
+      expected_account_id: '123456789012'
+      region: us-east-1
+      profile: baseline-test
+    terraform:
+      root: infra/terraform/aws/environments/test
+      variables_file: ~/.config/startup-devops-baseline/aws-test.tfvars
+      backend_file: ~/.config/startup-devops-baseline/aws-test.tfbackend

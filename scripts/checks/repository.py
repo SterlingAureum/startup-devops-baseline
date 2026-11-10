@@ -3,6 +3,7 @@ import ast
 from pathlib import Path
 import re
 import subprocess
+import sys
 
 import yaml
 
@@ -19,6 +20,13 @@ def check_job_checkout(job, location):
 
 
 def check():
+    # Environment examples are inputs to the operator, never cloud execution.
+    sys.path.insert(0, str(ROOT / "scripts/ops"))
+    import configuration
+    inventory_path = ROOT / "config/environments.example.yaml"
+    inventory = configuration.load_yaml(inventory_path.read_text())
+    for name in inventory["environments"]:
+        configuration.environment(inventory_path, name)
     for folder in ("scripts", "tests", "apps/demo-api/src", "apps/demo-api/tests"):
         for path in (ROOT / folder).rglob("*"):
             if not path.is_file() or "__pycache__" in path.parts:

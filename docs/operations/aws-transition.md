@@ -12,6 +12,8 @@ python3 scripts/delivery/flow.py render --environment aws-dev
 python3 scripts/delivery/flow.py render --environment aws-test
 python3 scripts/delivery/flow.py render --environment aws-prod
 python3 scripts/delivery/flow.py platform
+python3 scripts/ops/cli.py show --env aws-dev
+python3 scripts/ops/cli.py show --env aws-test
 ```
 
 Terraform validation needs Terraform and provider download access; app rendering
@@ -29,6 +31,11 @@ account and target, plan/apply reviewed infrastructure, bootstrap GitOps,
 verify runtime behavior, prepare and execute destruction, and inspect residual
 resources. Retained state-backend resources and backup-data policy remain
 separate from disposable environment deletion.
+
+The shared CLI now reads a schema-versioned environment inventory. AWS entries
+are inspection-only placeholders; no AWS driver execution is available, including
+AWS lifecycle dry-runs. Future AWS implementation belongs behind the same CLI,
+separate from the kind backend. See [environment configuration](environment-config.md).
 
 Current cloud release/runtime workflows are optional adapters for already
 provisioned clusters and existing trusted runners. They do not create a

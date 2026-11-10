@@ -20,6 +20,8 @@
       "scripts/delivery/",
       "scripts/checks/",
       "scripts/ops/",
+      "scripts/examples/",
+      "config/",
       "tests/",
       "delivery/standard/",
       ".github/workflows/",

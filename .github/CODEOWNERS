@@ -10,4 +10,6 @@
 /scripts/checks/ @SterlingAureum
 /scripts/delivery/ @SterlingAureum
 /scripts/ops/ @SterlingAureum
+/scripts/examples/ @SterlingAureum
+/config/ @SterlingAureum
 /tests/ @SterlingAureum

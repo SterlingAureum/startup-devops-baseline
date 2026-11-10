@@ -1,6 +1,5 @@
-from copy import deepcopy
 from contextlib import nullcontext, redirect_stdout, redirect_stderr
-import importlib.util
+from copy import deepcopy
 import io
 import json
 import os
@@ -8,6 +7,7 @@ from pathlib import Path
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -15,229 +15,294 @@ from unittest.mock import patch
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-SPEC = importlib.util.spec_from_file_location("local_ops", ROOT / "scripts/ops/local.py")
-local = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(local)
+sys.path.insert(0, str(ROOT / "scripts/ops"))
+import cli
+import configuration
+import connections
+import local
+
 COMMIT = "a" * 40
 
 
-def args(command, *extra):
-    return local.parser().parse_args([command, *extra])
+def args(command="verify", *extra):
+    value = cli.parser().parse_args([command, *extra])
+    cli.configure(value)
+    return value
 
 
-def fixture():
-    apps = [{"status": {"sync": {"status": "Synced"}, "health": {"status": "Healthy"}}}]
-    workload = {"metadata": {"generation": 3}, "spec": {"replicas": 1},
-                "status": {"observedGeneration": 3, "phase": "Healthy", "readyReplicas": 1, "updatedReplicas": 1}}
-    pods = {"items": [{"metadata": {"annotations": {"platform.startup.dev/source-commit": COMMIT}},
-                       "spec": {"containers": [{"name": "demo-api", "image": local.image_for(COMMIT)}]},
-                       "status": {"phase": "Running", "conditions": [{"type": "Ready", "status": "True"}],
-                                  "containerStatuses": [{"name": "demo-api", "ready": True, "imageID": "containerd://example"}]}}]}
-    return apps, workload, pods
+def kubeconfig(cluster="startup-devops-baseline", server="https://127.0.0.1:12345"):
+    name = "kind-" + cluster
+    return {"apiVersion": "v1", "kind": "Config", "current-context": name,
+            "clusters": [{"name": name, "cluster": {"server": server, "certificate-authority-data": "fixture-ca"}}],
+            "users": [{"name": name, "user": {"client-certificate-data": "fixture-cert", "client-key-data": "fixture-key"}}],
+            "contexts": [{"name": name, "context": {"cluster": name, "user": name}}]}
 
 
-class LocalBoundaryTests(unittest.TestCase):
-    def test_dry_run_invokes_no_tools(self):
-        with patch.object(local, "run") as run, patch.object(local.shutil, "which") as which, redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(local.main(["up", "--revision", "feature/local", "--dry-run"]), 0)
-            self.assertFalse(json.loads(output.getvalue())["executed"])
-            run.assert_not_called()
-            which.assert_not_called()
+def application(name="custom-workload", commit=COMMIT):
+    return {"apiVersion": "argoproj.io/v1alpha1", "kind": "Application", "metadata": {"name": name, "namespace": "argocd"},
+            "spec": {"source": {"repoURL": "https://example.invalid/owner/config.git", "path": "apps/custom", "targetRevision": commit},
+                     "destination": {"server": "https://kubernetes.default.svc", "namespace": "custom-apps"}},
+            "status": {"sync": {"status": "Synced", "revision": commit}, "health": {"status": "Healthy"}}}
 
-    def test_invalid_targets_and_confirmation_stop_before_tools(self):
-        for argv in (["destroy"], ["destroy", "--confirm", "aws-dev"], ["create", "--cluster", "../prod"],
-                     ["up"], ["up", "--revision", "--bad"], ["create", "--repo-url", "https://user:token@example.invalid/repo.git"]):
-            with self.subTest(argv=argv), patch.object(local, "run") as run, redirect_stderr(io.StringIO()):
-                try:
-                    result = local.main(argv)
-                except SystemExit as error:
-                    result = error.code
-                self.assertNotEqual(result, 0)
+
+class ConfigurationTests(unittest.TestCase):
+    def test_dry_run_and_show_do_not_run_tools_or_write_files(self):
+        for command in (["show"], ["up", "--revision", "main", "--dry-run"], ["connect", "--dry-run"],
+                        ["destroy", "--confirm", "startup-devops-baseline", "--dry-run"], ["show", "--env", "aws-dev"]):
+            with self.subTest(command=command), patch.object(local, "run") as run, patch.object(cli.shutil, "which") as which, patch.object(connections, "atomic_write") as write, redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(cli.main(command), 0)
+                self.assertFalse(json.loads(output.getvalue())["executed"])
+                run.assert_not_called()
+                which.assert_not_called()
+                write.assert_not_called()
+
+    def test_aws_is_inspection_only_even_for_dry_run(self):
+        for command in ("up", "create", "destroy", "verify"):
+            with self.subTest(command=command), patch.object(local, "run") as run, redirect_stderr(io.StringIO()):
+                self.assertEqual(cli.main([command, "--env", "aws-dev", "--dry-run"]), 1)
                 run.assert_not_called()
 
-    def test_all_kubectl_commands_use_private_kind_config(self):
+    def test_invalid_targets_fail_before_tools(self):
+        for extra in (["create", "--cluster", "../prod"], ["destroy"], ["up"], ["show", "--env", "missing"],
+                      ["create", "--repo-url", "https://user:token@example.invalid/repo.git"],
+                      ["create", "--timeout", "0"], ["status", "--kubeconfig-file", "/tmp/not-used"]):
+            with self.subTest(extra=extra), patch.object(local, "run") as run, redirect_stderr(io.StringIO()):
+                self.assertEqual(cli.main(extra), 1)
+                run.assert_not_called()
+
+    def test_reject_duplicate_fields_and_embedded_credentials(self):
+        with self.assertRaises(configuration.OpsError):
+            configuration.load_yaml("schema_version: 1\nschema_version: 2\n")
+        env = configuration.environment(configuration.DEFAULT_CONFIG, "aws-dev")
+        for key in ("access_key", "secret_key", "session_token"):
+            other = deepcopy(env)
+            other["aws"][key] = "should-not-be-accepted"
+            with self.subTest(key=key), self.assertRaises(configuration.OpsError):
+                configuration.validate_environment(other)
+
+    def test_custom_inventory_selects_cluster_and_overrides(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "environments.yaml"
+            env = configuration.environment(configuration.DEFAULT_CONFIG, "local")
+            env["kind"]["cluster"] = "my-local"
+            env["gitops"]["repository"] = "https://example.invalid/team/gitops.git"
+            path.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"workstation": env}}))
+            value = args("status", "--config", str(path), "--env", "workstation", "--timeout", "20")
+            self.assertEqual((value.cluster, value.repo_url, value.timeout), ("my-local", env["gitops"]["repository"], 20))
+
+
+class ConnectionTests(unittest.TestCase):
+    def test_merge_preserves_unrelated_data_and_adopts_identical_kind_entries(self):
+        existing = kubeconfig("other")
+        existing["preferences"] = {"colors": True}
+        existing["extensions"] = [{"name": "other-tool", "extension": {"value": "retained"}}]
+        incoming = kubeconfig()
+        merged = connections.merge(existing, incoming, "startup-devops-baseline")
+        self.assertEqual(merged["clusters"][0], existing["clusters"][0])
+        self.assertEqual(merged["users"][0], existing["users"][0])
+        self.assertEqual(merged["preferences"], existing["preferences"])
+        self.assertEqual(merged["extensions"][0], existing["extensions"][0])
+        self.assertEqual(merged["current-context"], incoming["current-context"])
+        incoming["contexts"][0]["context"]["namespace"] = "my-namespace"
+        adopted = connections.merge(incoming, kubeconfig(), "startup-devops-baseline")
+        self.assertEqual(adopted["contexts"][0]["context"]["namespace"], "my-namespace")
+
+    def test_owned_recreated_cluster_updates_but_foreign_collisions_fail(self):
+        initial = connections.merge({}, kubeconfig(), "startup-devops-baseline")
+        updated = connections.merge(initial, kubeconfig(server="https://127.0.0.1:54321"), "startup-devops-baseline")
+        self.assertEqual(updated["clusters"][0]["cluster"]["server"], "https://127.0.0.1:54321")
+        with self.assertRaises(configuration.OpsError):
+            connections.merge(kubeconfig(server="https://foreign.invalid"), kubeconfig(), "startup-devops-baseline")
+        initial["users"][0]["user"]["client-key-data"] = "manually-changed"
+        with self.assertRaises(configuration.OpsError):
+            connections.merge(initial, kubeconfig(), "startup-devops-baseline")
+
+    def test_matching_names_and_certificates_do_not_adopt_extra_auth_or_proxy_settings(self):
+        for section, field, extra in (("users", "user", {"exec": {"command": "unexpected-program", "apiVersion": "client.authentication.k8s.io/v1"}}),
+                                      ("clusters", "cluster", {"proxy-url": "http://foreign.invalid"})):
+            existing = kubeconfig()
+            existing[section][0][field].update(extra)
+            with self.subTest(section=section), self.assertRaises(configuration.OpsError):
+                connections.merge(existing, kubeconfig(), "startup-devops-baseline")
+
+    def test_connect_backup_permissions_and_conflict_does_not_modify_target(self):
+        with tempfile.TemporaryDirectory() as directory, redirect_stdout(io.StringIO()):
+            target = Path(directory) / "config"
+            original = yaml.safe_dump(kubeconfig("other")).encode()
+            target.write_bytes(original)
+            connections.connect(kubeconfig(), "startup-devops-baseline", str(target))
+            backups = list(target.parent.glob("config.backup-*"))
+            self.assertEqual(len(backups), 1)
+            self.assertEqual(backups[0].read_bytes(), original)
+            for path in (target, backups[0]):
+                self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
+            foreign = yaml.safe_dump(kubeconfig(server="https://foreign.invalid"))
+            target.write_text(foreign)
+            with self.assertRaises(configuration.OpsError):
+                connections.connect(kubeconfig(), "startup-devops-baseline", str(target))
+            self.assertEqual(target.read_text(), foreign)
+
+    def test_multiple_kubeconfigs_need_explicit_target(self):
+        with patch.dict(os.environ, {"KUBECONFIG": "/a:/b"}):
+            with self.assertRaises(configuration.OpsError):
+                connections.target_path()
+            self.assertEqual(connections.target_path("/chosen"), Path("/chosen"))
+
+    def test_kind_output_cannot_introduce_other_named_entries(self):
+        value = kubeconfig()
+        value["contexts"].append(kubeconfig("foreign")["contexts"][0])
+        with self.assertRaises(configuration.OpsError):
+            connections.kind_config(yaml.safe_dump(value), "startup-devops-baseline")
+
+    def test_persistent_debug_config_survives_failure_but_private_execution_config_is_removed(self):
+        value = args()
+        driver = local.Driver(value)
         commands = []
         def fake(command, **kwargs):
             commands.append(command)
-            return subprocess.CompletedProcess(command, 0, "apiVersion: v1\nkind: Config\n", "")
-        driver = local.Driver(args("status"))
-        with patch.object(driver, "clusters", return_value=[driver.args.cluster]), patch.object(local, "run", side_effect=fake):
-            with driver.kubernetes():
-                path = Path(driver.kubeconfig)
-                self.assertEqual(stat.S_IMODE(path.stat().st_mode), 0o600)
-                driver.kube("get", "nodes")
-            self.assertFalse(path.exists())
-        command = commands[-1]
-        self.assertEqual(command[:3], ["kubectl", "--kubeconfig", str(path)])
-        self.assertIn("kind-startup-devops-baseline", command)
-        self.assertNotIn("use-context", command)
+            return subprocess.CompletedProcess(command, 0, yaml.safe_dump(kubeconfig()), "")
+        with tempfile.TemporaryDirectory() as home, patch.object(Path, "home", return_value=Path(home)), patch.object(driver, "clusters", return_value=[value.cluster]), patch.object(local, "run", side_effect=fake), redirect_stdout(io.StringIO()):
+            global_config = Path(home) / ".kube/config"
+            global_config.parent.mkdir()
+            global_config.write_text("user configuration remains unchanged")
+            with self.assertRaisesRegex(RuntimeError, "fixture failure"):
+                with driver.kubernetes():
+                    private = Path(driver.kubeconfig)
+                    driver.kube("get", "nodes")
+                    raise RuntimeError("fixture failure")
+            self.assertFalse(private.exists())
+            self.assertIsNone(driver.kubeconfig)
+            saved = connections.private_path(value.cluster)
+            self.assertTrue(saved.exists())
+            self.assertEqual(stat.S_IMODE(saved.stat().st_mode), 0o600)
+            self.assertEqual(global_config.read_text(), "user configuration remains unchanged")
+        self.assertEqual(commands[-1][:3], ["kubectl", "--kubeconfig", str(private)])
+        self.assertIn("kind-" + value.cluster, commands[-1])
 
-    def test_absent_kind_cluster_never_falls_back_to_user_context(self):
-        driver = local.Driver(args("status"))
+    def test_absent_cluster_never_uses_workstation_context(self):
+        driver = local.Driver(args())
         with patch.object(driver, "clusters", return_value=[]), patch.object(local, "run") as run:
-            with self.assertRaises(local.LocalError), driver.kubernetes():
+            with self.assertRaises(configuration.OpsError), driver.kubernetes():
                 pass
             run.assert_not_called()
 
-    def test_destroy_only_deletes_named_kind_cluster_with_private_config(self):
+    def test_destroy_is_named_and_does_not_touch_shared_config(self):
         value = args("destroy", "--cluster", "test-local", "--confirm", "test-local")
         driver = local.Driver(value)
-        before = os.environ.get("KUBECONFIG")
-        with patch.object(driver, "clusters", return_value=["test-local", "another"]), patch.object(local, "run") as run, redirect_stdout(io.StringIO()):
+        with tempfile.TemporaryDirectory() as home, patch.object(Path, "home", return_value=Path(home)), patch.object(driver, "clusters", return_value=["test-local", "other"]), patch.object(local, "run") as run, redirect_stdout(io.StringIO()):
+            shared = Path(home) / ".kube/config"
+            shared.parent.mkdir()
+            shared.write_text("unchanged")
+            connections.atomic_write(connections.private_path("test-local"), "dedicated")
             driver.destroy()
-        self.assertEqual(run.call_args.args[0], ["kind", "delete", "cluster", "--name", "test-local"])
-        self.assertNotEqual(run.call_args.kwargs["env"]["KUBECONFIG"], before)
-        self.assertEqual(os.environ.get("KUBECONFIG"), before)
+            self.assertEqual(run.call_args.args[0], ["kind", "delete", "cluster", "--name", "test-local"])
+            self.assertEqual(shared.read_text(), "unchanged")
+            self.assertFalse(connections.private_path("test-local").exists())
 
-    def test_source_mismatch_stops_up_before_cluster_creation(self):
-        with patch.object(local.shutil, "which", return_value="/fake/tool"), patch.object(local, "source_commit", side_effect=local.LocalError("mismatch")), patch.object(local.Driver, "create") as create, redirect_stderr(io.StringIO()):
-            self.assertEqual(local.main(["up", "--revision", "feature/local"]), 1)
-            create.assert_not_called()
 
-    def test_annotated_tag_is_resolved_to_its_commit_with_real_local_git(self):
-        with tempfile.TemporaryDirectory() as directory:
-            remote = Path(directory) / "source"
-            checkout = Path(directory) / "checkout"
-            remote.mkdir()
-            subprocess.run(["git", "init", "-q", str(remote)], check=True)
-            for name in ("clusters/local/platform/Chart.yaml", "apps/demo-api/helm/Chart.yaml", "scripts/ops/local.py"):
-                file = remote / name
-                file.parent.mkdir(parents=True, exist_ok=True)
-                file.write_text("source fixture\n")
-            subprocess.run(["git", "add", "."], cwd=remote, check=True)
-            identity = ["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid"]
-            subprocess.run([*identity, "commit", "-qm", "fixture"], cwd=remote, check=True)
-            subprocess.run([*identity, "tag", "-a", "local-test", "-m", "annotated source tag"], cwd=remote, check=True)
-            subprocess.run(["git", "clone", "-q", str(remote), str(checkout)], check=True)
-            expected = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=checkout, text=True).strip()
-            def actual_git(command, *, cwd=checkout, **kwargs):
-                return subprocess.run(command, cwd=cwd, text=True, capture_output=True, check=True)
-            value = args("deploy", "--revision", "local-test")
-            value.repo_url = str(remote)
-            with patch.object(local, "run", side_effect=actual_git):
-                self.assertEqual(local.source_commit(value), expected)
-                # A fixed local verifier can inspect an older deployed source
-                # without rebuilding it or rendering a dirty verifier checkout.
-                (checkout / "scripts/ops/local.py").write_text("uncommitted verifier fix\n")
-                with local.verification_source(value) as (commit, source_root):
-                    self.assertEqual(commit, expected)
-                    self.assertEqual((source_root / "scripts/ops/local.py").read_text(), "source fixture\n")
-                self.assertFalse(source_root.exists())
+class GitOpsTests(unittest.TestCase):
+    def test_application_health_is_independent_of_workload_kind_and_endpoints(self):
+        desired = application()
+        local.application_ready(deepcopy(desired), desired)
+        for mutation in ("revision", "source", "destination", "health", "sync", "error", "running"):
+            actual = deepcopy(desired)
+            if mutation == "revision": actual["status"]["sync"]["revision"] = "b" * 40
+            elif mutation == "source": actual["spec"]["source"]["path"] = "wrong"
+            elif mutation == "destination": actual["spec"]["destination"]["namespace"] = "wrong"
+            elif mutation == "health": actual["status"]["health"]["status"] = "Progressing"
+            elif mutation == "sync": actual["status"]["sync"]["status"] = "OutOfSync"
+            elif mutation == "error": actual["status"]["conditions"] = [{"type": "ComparisonError"}]
+            else: actual["status"]["operationState"] = {"phase": "Running"}
+            with self.subTest(mutation=mutation), self.assertRaises(configuration.OpsError):
+                local.application_ready(actual, desired)
 
-    def test_verify_resumes_deployed_revision_without_build_or_checkout_equality(self):
-        source_root = Path("/fixture/deployed-source")
-        with patch.object(local.shutil, "which", return_value="/fake/tool"), patch.object(local, "Driver") as driver_class, patch.object(local, "clean_commit") as clean, patch.object(local, "verification_source", return_value=nullcontext((COMMIT, source_root))) as source:
+    def test_verify_reads_only_nodes_argo_and_applications(self):
+        driver = local.Driver(args())
+        root = application("startup-devops-root")
+        child = application()
+        def kube(*command):
+            if "application" in command:
+                return subprocess.CompletedProcess([], 0, json.dumps(root if "startup-devops-root" in command else child), "")
+            return subprocess.CompletedProcess([], 0, "", "")
+        with patch.object(driver, "kubernetes", return_value=nullcontext()), patch.object(driver, "kube", side_effect=kube) as read, redirect_stdout(io.StringIO()):
+            driver.verify(root, [child])
+        commands = [call.args for call in read.call_args_list]
+        self.assertFalse(any("--raw" in command or "pods" in command or "demo-api" in command for command in commands))
+        self.assertTrue(any("node" in command for command in commands))
+
+    def test_verify_existing_deployment_ignores_configured_floating_revision_and_preserves_helm_inputs(self):
+        root = application("startup-devops-root")
+        root["spec"]["source"]["helm"] = {"parameters": [{"name": "an.existing.setting", "value": "preserved"}]}
+        with patch.object(cli.shutil, "which", return_value="/fixture/tool"), patch.object(local, "Driver") as driver_class, patch.object(local, "source", return_value=nullcontext((COMMIT, ROOT))) as source, patch.object(local, "root_application", return_value=deepcopy(root)), patch.object(cli, "children_for", return_value=[application()]):
             driver = driver_class.return_value
-            driver.deployed_revision.return_value = COMMIT
-            self.assertEqual(local.main(["verify", "--cluster", "existing-local"]), 0)
+            driver.deployed_root.return_value = root
+            self.assertEqual(cli.main(["verify"]), 0)
             self.assertEqual(source.call_args.args[0].revision, COMMIT)
-            driver.verify.assert_called_once_with(COMMIT, source_root=source_root)
-            clean.assert_not_called()
-            for method in ("create", "install", "build", "deploy", "destroy"):
-                getattr(driver, method).assert_not_called()
+            self.assertEqual(driver.verify.call_args.args[0]["spec"]["source"]["helm"], root["spec"]["source"]["helm"])
+            driver.deploy.assert_not_called()
+            driver.create.assert_not_called()
 
-    def test_deployed_revision_requires_matching_repo_and_fixed_commit(self):
-        value = args("verify")
-        local.validate_options(value)
-        driver = local.Driver(value)
-        root = {"spec": {"source": {"repoURL": value.repo_url, "targetRevision": COMMIT}}}
-        with patch.object(driver, "kubernetes", return_value=nullcontext()), patch.object(driver, "kube", return_value=subprocess.CompletedProcess([], 0, json.dumps(root), "")):
-            self.assertEqual(driver.deployed_revision(), COMMIT)
-        for field, bad in (("targetRevision", "main"), ("repoURL", "https://example.invalid/another/repo.git")):
-            other = deepcopy(root)
-            other["spec"]["source"][field] = bad
-            with self.subTest(field=field), patch.object(driver, "kubernetes", return_value=nullcontext()), patch.object(driver, "kube", return_value=subprocess.CompletedProcess([], 0, json.dumps(other), "")):
-                with self.assertRaises(local.LocalError):
-                    driver.deployed_revision()
+    def test_source_preflight_failure_does_not_create_cluster(self):
+        with patch.object(cli.shutil, "which", return_value="/fixture/tool"), patch.object(local, "source", side_effect=configuration.OpsError("missing source")), patch.object(local, "Driver") as driver, redirect_stderr(io.StringIO()):
+            self.assertEqual(cli.main(["up", "--revision", "main"]), 1)
+            driver.return_value.create.assert_not_called()
 
-    def test_dirty_source_is_not_built(self):
-        with patch.object(local, "run", return_value=subprocess.CompletedProcess([], 0, " M apps/demo-api/src/main.py\n", "")):
-            with self.assertRaises(local.LocalError):
-                local.clean_commit()
+    def test_up_only_bootstraps_and_hands_off_to_gitops(self):
+        root = application("startup-devops-root")
+        with patch.object(cli.shutil, "which", return_value="/fixture/tool"), patch.object(local, "source", return_value=nullcontext((COMMIT, ROOT))), patch.object(local, "root_application", return_value=root), patch.object(cli, "children_for", return_value=[application()]), patch.object(local, "Driver") as driver_class, redirect_stdout(io.StringIO()):
+            self.assertEqual(cli.main(["up", "--revision", "main"]), 0)
+            calls = [call[0] for call in driver_class.return_value.method_calls]
+            self.assertEqual(calls, ["create", "install", "deploy", "verify"])
 
-    def test_local_root_pins_parent_and_children_to_same_commit(self):
-        value = args("deploy", "--revision", "feature/local")
-        root = local.root_application(value, COMMIT)
-        self.assertEqual(root["spec"]["source"]["targetRevision"], COMMIT)
-        parameters = {item["name"]: item["value"] for item in root["spec"]["source"]["helm"]["parameters"]}
-        self.assertEqual(parameters["git.targetRevision"], COMMIT)
-        self.assertEqual(parameters["demoApi.localImage.sourceCommit"], COMMIT)
-        self.assertEqual(parameters["demoApi.rehearsalFault.mode"], "disabled")
+    @unittest.skipUnless(shutil.which("helm"), "Helm required for real render")
+    def test_default_root_renders_all_children_at_pinned_commit(self):
+        value = args("deploy", "--revision", "main")
+        root = local.root_application(value, COMMIT, ROOT)
+        children = cli.children_for(root, ROOT, value, COMMIT)
+        self.assertGreater(len(children), 1)
+        for child in children:
+            if child["spec"]["source"]["repoURL"] == value.repo_url:
+                self.assertEqual(child["spec"]["source"]["targetRevision"], COMMIT)
 
-    def test_existing_image_with_different_source_is_rejected(self):
-        driver = local.Driver(args("build"))
-        with patch.object(driver, "clusters", return_value=[driver.args.cluster]), patch.object(driver, "image_label", return_value=subprocess.CompletedProcess([], 0, "b" * 40, "")), patch.object(local, "run") as run:
-            with self.assertRaises(local.LocalError):
-                driver.build(COMMIT)
-            run.assert_not_called()
+    @unittest.skipUnless(shutil.which("helm"), "Helm required for real render")
+    def test_previous_demo_root_inputs_remain_renderable_for_readonly_verification(self):
+        from tests.ops import test_demo_api
+        # unittest discover can import the same test package as ops instead.
+        demo = test_demo_api.local
+        old_root = demo.root_application(demo.parser().parse_args(["deploy", "--revision", "main"]), COMMIT)
+        value = args()
+        children = cli.children_for(old_root, ROOT, value, COMMIT)
+        child = next(child for child in children if child["metadata"]["name"] == "demo-api")
+        params = {item["name"]: item["value"] for item in child["spec"]["source"]["helm"]["parameters"]}
+        self.assertEqual(params["image.tag"], "local-" + COMMIT[:12])
+        self.assertEqual(params["delivery.sourceCommit"], COMMIT)
 
-    @unittest.skipUnless(shutil.which("helm"), "Helm is required for actual local chart rendering")
-    def test_rendered_local_image_clears_cloud_digest_and_sets_source(self):
-        value = args("deploy", "--revision", "feature/local")
-        command = ["helm", "template", "local-platform", "clusters/local/platform"]
-        for name, item in local.local_parameters(value, COMMIT).items():
-            command += ["--set" if name.endswith(".enabled") else "--set-string", name + "=" + item]
-        output = subprocess.check_output(command, cwd=ROOT, text=True)
-        child = next(item for item in yaml.safe_load_all(output) if item and item.get("metadata", {}).get("name") == "demo-api")
-        command = ["helm", "template", "demo-api", "apps/demo-api/helm", "--namespace", "startup-apps"]
-        for item in child["spec"]["source"]["helm"]["parameters"]:
-            command += ["--set-string", item["name"] + "=" + item["value"]]
-        rendered = list(yaml.safe_load_all(subprocess.check_output(command, cwd=ROOT, text=True)))
-        workload = next(item for item in rendered if item and item.get("kind") == "Rollout")
-        self.assertEqual(workload["spec"]["template"]["spec"]["containers"][0]["image"], local.image_for(COMMIT))
-        self.assertEqual(workload["spec"]["template"]["metadata"]["annotations"]["platform.startup.dev/source-commit"], COMMIT)
+    @unittest.skipUnless(shutil.which("helm"), "Helm required for real render")
+    def test_custom_application_without_demo_or_http_contract_renders_and_fetches(self):
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            chart = repo / "gitops"
+            (chart / "templates").mkdir(parents=True)
+            (chart / "Chart.yaml").write_text("apiVersion: v2\nname: fixture\nversion: 0.1.0\n")
+            (chart / "templates/custom.yaml").write_text(yaml.safe_dump(application()))
+            root = application("startup-devops-root")
+            root["spec"]["source"]["path"] = "gitops"
+            (repo / "root.yaml").write_text(yaml.safe_dump(root))
+            subprocess.run(["git", "init", "-q", str(repo)], check=True)
+            subprocess.run(["git", "add", "."], cwd=repo, check=True)
+            subprocess.run(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "-qm", "custom GitOps only"], cwd=repo, check=True)
+            expected = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=repo, text=True).strip()
+            value = args("deploy", "--revision", "HEAD")
+            value.repo_url = str(repo)  # Local Git fixture, not a supported CLI URL.
+            value.root_manifest = "root.yaml"
+            value.parameters = {}
+            with local.source(value) as (commit, checkout):
+                self.assertEqual(commit, expected)
+                fetched = local.root_application(value, commit, checkout)
+                children = local.render_children(fetched, checkout)
+                self.assertEqual([child["metadata"]["name"] for child in children], ["custom-workload"])
+                self.assertFalse((checkout / "apps/demo-api").exists())
 
 
-class LocalVerificationTests(unittest.TestCase):
-    def test_current_ready_state_passes(self):
-        local.verify_state(*fixture(), COMMIT)
-
-    def test_string_observed_generation_from_reported_failure_passes(self):
-        apps, workload, pods = fixture()
-        workload["status"]["observedGeneration"] = "3"
-        local.verify_state(apps, workload, pods, COMMIT)
-
-    def test_all_workload_counters_can_be_decimal_strings(self):
-        apps, workload, pods = fixture()
-        workload["metadata"]["generation"] = "3"
-        workload["spec"]["replicas"] = "1"
-        for field in ("observedGeneration", "readyReplicas", "updatedReplicas"):
-            workload["status"][field] = str(workload["status"][field])
-        local.verify_state(apps, workload, pods, COMMIT)
-
-    def test_stale_or_missing_status_still_rejected_after_conversion(self):
-        for field, value in (("observedGeneration", "2"), ("readyReplicas", "0"), ("updatedReplicas", "0")):
-            apps, workload, pods = fixture()
-            workload["status"][field] = value
-            with self.subTest(field=field), self.assertRaises(local.LocalError):
-                local.verify_state(apps, workload, pods, COMMIT)
-            del workload["status"][field]
-            with self.subTest(missing=field), self.assertRaises(local.LocalError):
-                local.verify_state(apps, workload, pods, COMMIT)
-
-    def test_invalid_counter_types_fail_with_clear_error(self):
-        for section, field in (("metadata", "generation"), ("spec", "replicas"), ("status", "observedGeneration"), ("status", "readyReplicas"), ("status", "updatedReplicas")):
-            for value in (None, True, False, -1, 1.5, "-1", "1.5", "", "unknown", {}, []):
-                apps, workload, pods = fixture()
-                workload[section][field] = value
-                with self.subTest(field=field, value=value), self.assertRaisesRegex(local.LocalError, section + r"\." + field):
-                    local.verify_state(apps, workload, pods, COMMIT)
-
-    def test_paused_rollout_and_stale_generation_are_rejected(self):
-        for key, value in (("phase", "Paused"), ("observedGeneration", 1), ("readyReplicas", 0), ("updatedReplicas", 0)):
-            apps, workload, pods = fixture()
-            workload["status"][key] = value
-            with self.subTest(key=key), self.assertRaises(local.LocalError):
-                local.verify_state(apps, workload, pods, COMMIT)
-
-    def test_unhealthy_platform_and_stale_pods_are_rejected(self):
-        for mutation in ("platform", "image", "source", "ready", "empty"):
-            apps, workload, pods = fixture()
-            pod = pods["items"][0]
-            if mutation == "platform": apps[0]["status"]["health"]["status"] = "Progressing"
-            elif mutation == "image": pod["spec"]["containers"][0]["image"] = "other:latest"
-            elif mutation == "source": pod["metadata"]["annotations"]["platform.startup.dev/source-commit"] = "b" * 40
-            elif mutation == "ready": pod["status"]["containerStatuses"][0]["ready"] = False
-            else: pods["items"] = []
-            with self.subTest(mutation=mutation), self.assertRaises(local.LocalError):
-                local.verify_state(apps, workload, pods, COMMIT)
+if __name__ == "__main__":
+    unittest.main()

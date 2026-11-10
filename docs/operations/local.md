@@ -44,6 +44,9 @@ full commit, even if inventory `gitops.revision` names a newer branch. An explic
 `--revision` instead checks that requested target; it never upgrades the cluster.
 Verify fetches the target source separately, preserving the deployed root's Helm
 inputs so an existing local-image rehearsal need not be rebuilt or redeployed.
+Argo's API can omit empty Helm parameter values and false forceString fields.
+The verifier restores only those API defaults for rendering/comparison; explicit
+nulls or invalid types fail, and real parameter changes remain mismatches.
 
 ## Configure and create
 

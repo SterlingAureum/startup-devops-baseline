@@ -64,6 +64,31 @@ def root_application(args, commit, directory):
     return doc
 
 
+def helm_parameters(parameters):
+    """Restore only HelmParameter API defaults omitted by Go JSON serialization."""
+    require(isinstance(parameters, list), "Helm parameters must be a list")
+    result = []
+    for parameter in parameters:
+        require(isinstance(parameter, dict), "A Helm parameter must be a mapping")
+        name = parameter.get("name")
+        require(isinstance(name, str) and bool(name), "A Helm parameter must have a nonempty name")
+        value = parameter.get("value", "")
+        force_string = parameter.get("forceString", False)
+        require(isinstance(value, str), "Helm parameter " + name + " value must be a string")
+        require(type(force_string) is bool, "Helm parameter " + name + " forceString must be a boolean")
+        result.append({**parameter, "value": value, "forceString": force_string})
+    return result
+
+
+def comparable_helm(helm):
+    # Do not mutate the live or rendered source, drop parameters, sort duplicate
+    # names, or normalize actual value differences into a passing comparison.
+    require(helm is None or isinstance(helm, dict), "Helm source must be a mapping")
+    result = dict(helm or {})
+    result["parameters"] = helm_parameters(result.get("parameters", []))
+    return result
+
+
 def render_children(root, directory):
     src = root["spec"]["source"]
     chart = source_path(directory, src["path"])
@@ -81,8 +106,8 @@ def render_children(root, directory):
                 file = Path(temporary) / (key + ".yaml")
                 file.write_text(yaml.safe_dump(helm[key]) if key == "valuesObject" else helm[key])
                 command += ["-f", str(file)]
-        for parameter in helm.get("parameters", []):
-            command += ["--set-string" if parameter.get("forceString") else "--set", parameter["name"] + "=" + str(parameter["value"])]
+        for parameter in helm_parameters(helm.get("parameters", [])):
+            command += ["--set-string" if parameter["forceString"] else "--set", parameter["name"] + "=" + parameter["value"]]
         children = [item for item in yaml.safe_load_all(run(command, cwd=directory).stdout)
                     if isinstance(item, dict) and item.get("kind") == "Application"]
     require(bool(children), "GitOps root rendered no child Applications")
@@ -102,7 +127,10 @@ def application_ready(actual, desired):
     expected = desired["spec"]["source"]
     current = actual.get("spec", {}).get("source", {})
     for key, value in expected.items():
-        require(current.get(key) == value, "Application source differs: " + key)
+        observed = current.get(key)
+        if key == "helm":
+            observed, value = comparable_helm(observed), comparable_helm(value)
+        require(observed == value, "Application source differs: " + key)
     status = actual.get("status", {})
     require(status.get("sync", {}).get("status") == "Synced" and status.get("health", {}).get("status") == "Healthy", "Application is not Synced and Healthy")
     revision = expected.get("targetRevision", "")

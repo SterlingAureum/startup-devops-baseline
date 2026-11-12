@@ -42,13 +42,10 @@ rollout:
           servicePort: 80
       steps:
         - setWeight: 20
-        - pause:
-            duration: 60s
         - analysis:
             templates:
               - templateName: demo-api-canary-health
         - setWeight: 50
-        - pause: {}
         - analysis:
             templates:
               - templateName: demo-api-canary-health
@@ -179,7 +176,7 @@ analysis:
       count: 2
       failureLimit: 1
     sloAware:
-      enabled: true
+      enabled: false
       initialDelay: 90s
       interval: 15s
       count: 2

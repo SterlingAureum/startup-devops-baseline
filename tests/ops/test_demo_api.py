@@ -19,6 +19,7 @@ SPEC = importlib.util.spec_from_file_location("local_ops", ROOT / "scripts/examp
 local = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(local)
 COMMIT = "a" * 40
+STABLE_HASH = "stable-demo"
 
 
 def args(command, *extra):
@@ -28,7 +29,8 @@ def args(command, *extra):
 def fixture():
     apps = [{"status": {"sync": {"status": "Synced"}, "health": {"status": "Healthy"}}}]
     workload = {"metadata": {"generation": 3}, "spec": {"replicas": 1},
-                "status": {"observedGeneration": 3, "phase": "Healthy", "readyReplicas": 1, "updatedReplicas": 1}}
+                "status": {"observedGeneration": 3, "phase": "Healthy", "readyReplicas": 1, "updatedReplicas": 1,
+                           "currentPodHash": STABLE_HASH, "stableRS": STABLE_HASH}}
     pods = {"items": [{"metadata": {"annotations": {"platform.startup.dev/source-commit": COMMIT}},
                        "spec": {"containers": [{"name": "demo-api", "image": local.image_for(COMMIT)}]},
                        "status": {"phase": "Running", "conditions": [{"type": "Ready", "status": "True"}],
@@ -157,14 +159,20 @@ class LocalBoundaryTests(unittest.TestCase):
         self.assertEqual(workload["spec"]["template"]["metadata"]["annotations"]["platform.startup.dev/source-commit"], COMMIT)
 
 
+def verify_state(apps, workload, pods, commit):
+    local.wait_for_applications(apps)
+    _, desired = local.converged_rollout(workload)
+    local.verify_pod_identity(local.ready_demo_pods(pods, desired), commit)
+
+
 class LocalVerificationTests(unittest.TestCase):
     def test_current_ready_state_passes(self):
-        local.verify_state(*fixture(), COMMIT)
+        verify_state(*fixture(), COMMIT)
 
     def test_string_observed_generation_from_reported_failure_passes(self):
         apps, workload, pods = fixture()
         workload["status"]["observedGeneration"] = "3"
-        local.verify_state(apps, workload, pods, COMMIT)
+        verify_state(apps, workload, pods, COMMIT)
 
     def test_all_workload_counters_can_be_decimal_strings(self):
         apps, workload, pods = fixture()
@@ -172,17 +180,17 @@ class LocalVerificationTests(unittest.TestCase):
         workload["spec"]["replicas"] = "1"
         for field in ("observedGeneration", "readyReplicas", "updatedReplicas"):
             workload["status"][field] = str(workload["status"][field])
-        local.verify_state(apps, workload, pods, COMMIT)
+        verify_state(apps, workload, pods, COMMIT)
 
     def test_stale_or_missing_status_still_rejected_after_conversion(self):
         for field, value in (("observedGeneration", "2"), ("readyReplicas", "0"), ("updatedReplicas", "0")):
             apps, workload, pods = fixture()
             workload["status"][field] = value
             with self.subTest(field=field), self.assertRaises(local.LocalError):
-                local.verify_state(apps, workload, pods, COMMIT)
+                verify_state(apps, workload, pods, COMMIT)
             del workload["status"][field]
             with self.subTest(missing=field), self.assertRaises(local.LocalError):
-                local.verify_state(apps, workload, pods, COMMIT)
+                verify_state(apps, workload, pods, COMMIT)
 
     def test_invalid_counter_types_fail_with_clear_error(self):
         for section, field in (("metadata", "generation"), ("spec", "replicas"), ("status", "observedGeneration"), ("status", "readyReplicas"), ("status", "updatedReplicas")):
@@ -190,14 +198,14 @@ class LocalVerificationTests(unittest.TestCase):
                 apps, workload, pods = fixture()
                 workload[section][field] = value
                 with self.subTest(field=field, value=value), self.assertRaisesRegex(local.LocalError, section + r"\." + field):
-                    local.verify_state(apps, workload, pods, COMMIT)
+                    verify_state(apps, workload, pods, COMMIT)
 
     def test_paused_rollout_and_stale_generation_are_rejected(self):
         for key, value in (("phase", "Paused"), ("observedGeneration", 1), ("readyReplicas", 0), ("updatedReplicas", 0)):
             apps, workload, pods = fixture()
             workload["status"][key] = value
             with self.subTest(key=key), self.assertRaises(local.LocalError):
-                local.verify_state(apps, workload, pods, COMMIT)
+                verify_state(apps, workload, pods, COMMIT)
 
     def test_unhealthy_platform_and_stale_pods_are_rejected(self):
         for mutation in ("platform", "image", "source", "ready", "empty"):
@@ -209,4 +217,85 @@ class LocalVerificationTests(unittest.TestCase):
             elif mutation == "ready": pod["status"]["containerStatuses"][0]["ready"] = False
             else: pods["items"] = []
             with self.subTest(mutation=mutation), self.assertRaises(local.LocalError):
-                local.verify_state(apps, workload, pods, COMMIT)
+                verify_state(apps, workload, pods, COMMIT)
+
+
+class LocalVerificationFlowTests(unittest.TestCase):
+    def exercise_verify(self, *, mismatch=None, updating=None):
+        driver = local.Driver(args("verify"))
+        apps, workload, pods = fixture()
+        source = {"repoURL": driver.args.repo_url, "targetRevision": COMMIT}
+        child = {"kind": "Application", "metadata": {"name": "demo-api"}, "spec": {"source": source}}
+        app = deepcopy(apps[0])
+        app["spec"] = {"source": source}
+        app["status"]["sync"]["revision"] = COMMIT
+        workload["spec"]["selector"] = {"matchLabels": {"app": "demo-api"}}
+        pod = pods["items"][0]
+        pod["metadata"]["name"] = "stable-pod"
+        if mismatch == "source":
+            pod["metadata"]["annotations"]["platform.startup.dev/source-commit"] = "b" * 40
+        elif mismatch == "image":
+            pod["spec"]["containers"][0]["image"] = "registry.example/demo:published"
+        old_pod = deepcopy(pod)
+        old_pod["metadata"]["annotations"]["platform.startup.dev/source-commit"] = "c" * 40
+        calls = []
+
+        def kube(*command):
+            calls.append(command)
+            if "application" in command:
+                body = deepcopy(app)
+                if updating == "root" and len(calls) == 1:
+                    body["status"]["operationState"] = {"phase": "Running"}
+            elif "rollout" in command:
+                body = deepcopy(workload)
+                if updating == "rollout" and sum("rollout" in call for call in calls) == 1:
+                    body["status"]["currentPodHash"] = "candidate"
+            elif "pods" in command:
+                selector = command[command.index("-l") + 1]
+                body = pods if f"rollouts-pod-template-hash={STABLE_HASH}" in selector else {"items": [pod, old_pod]}
+            else:
+                endpoint = command[-1].rsplit("/", 1)[-1]
+                if endpoint == "metrics":
+                    return subprocess.CompletedProcess([], 0, 'demo_api_http_requests_total{route="/ready"} 1', "")
+                body = {"health": {"status": "ok"}, "ready": {"status": "ready"},
+                        "version": {"environment": "local", "version": f"local-{COMMIT[:12]}"}}[endpoint]
+                if endpoint == "version" and mismatch == "http":
+                    body["version"] = "registry-release"
+            return subprocess.CompletedProcess([], 0, json.dumps(body), "")
+
+        rendered = subprocess.CompletedProcess([], 0, yaml.safe_dump(child), "")
+        with patch.object(local, "run", return_value=rendered), patch.object(driver, "kubernetes", return_value=nullcontext()), patch.object(driver, "kube", side_effect=kube), patch.object(local.time, "sleep") as sleep, redirect_stdout(io.StringIO()):
+            if mismatch:
+                message = "does not match the local build" if mismatch in ("source", "image") else "HTTP version"
+                with self.assertRaisesRegex(local.LocalError, message):
+                    driver.verify(COMMIT)
+                sleep.assert_not_called()
+            else:
+                driver.verify(COMMIT)
+                self.assertEqual(sleep.call_count, int(bool(updating)))
+        pod_reads = [command for command in calls if "pods" in command]
+        self.assertEqual(len(pod_reads), 1)
+        self.assertIn(f"rollouts-pod-template-hash={STABLE_HASH}", pod_reads[0][pod_reads[0].index("-l") + 1])
+        if mismatch in ("source", "image"):
+            self.assertFalse(any("--raw" in command for command in calls))
+
+    def test_waits_for_active_root_operation_then_checks_only_stable_pods(self):
+        for updating in ("root", "rollout"):
+            with self.subTest(updating=updating):
+                self.exercise_verify(updating=updating)
+
+    def test_stable_identity_or_http_mismatch_does_not_retry(self):
+        for mismatch in ("source", "image", "http"):
+            with self.subTest(mismatch=mismatch):
+                self.exercise_verify(mismatch=mismatch)
+
+    def test_convergence_timeout_does_not_query_pods(self):
+        driver = local.Driver(args("verify", "--timeout", "1"))
+        child = {"kind": "Application"}
+        root = {"status": {"sync": {"revision": "b" * 40}}}
+        rendered = subprocess.CompletedProcess([], 0, yaml.safe_dump(child), "")
+        observed = subprocess.CompletedProcess([], 0, json.dumps(root), "")
+        with patch.object(local, "run", return_value=rendered), patch.object(driver, "kubernetes", return_value=nullcontext()), patch.object(driver, "kube", return_value=observed) as kube, patch.object(local.time, "monotonic", side_effect=(0, 2)):
+            with self.assertRaisesRegex(local.LocalError, "Local convergence timed out.*Root Application"):
+                driver.verify(COMMIT)
+            kube.assert_called_once()

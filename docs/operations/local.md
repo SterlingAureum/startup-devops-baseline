@@ -142,10 +142,13 @@ python3 scripts/examples/demo_api.py verify --cluster startup-devops-baseline
 ```
 
 Example up/build/deploy retain clean-source equality, source-labelled local
-images, kind image load and demo-specific overrides. Example verify retains the
-counter string fix and checks the demo Rollout, Pods, HTTP version and exposed
-metrics. It requires the local-image rehearsal it was designed for; it is not a
-generic application verifier. See [runtime check boundaries](runtime-checks.md).
+images, kind image load and demo-specific overrides. Example verify waits for the
+root and child Applications to reconcile, become Synced and Healthy, and finish
+their active sync operations. It then waits for the current Rollout generation
+and ready Pods in the stable ReplicaSet. After convergence, an image, source
+commit, HTTP or metrics check that fails ends verification immediately.
+Use lifecycle verify for registry images, whose source commit can differ from
+the GitOps revision. See [runtime check boundaries](runtime-checks.md).
 Old `local.py build` moves to `scripts/examples/demo_api.py build`; local.py
 up/deploy/verify now have lifecycle-only semantics. The optional example up is
 the deliberate replacement for the old combined demo rehearsal.

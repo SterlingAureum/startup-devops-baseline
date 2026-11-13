@@ -28,13 +28,22 @@ STEPS = {
     "build": ["require clean committed source", "build or reuse commit-tagged image", "load into named kind cluster"],
     "deploy": ["verify pushed source matches clean checkout", "verify local image source label", "apply pinned root Application"],
     "status": ["read named kind cluster nodes and Argo Applications"],
-    "verify": ["resolve requested or already deployed source commit", "render configuration from that fetched commit", "wait for root and expected child Applications", "check demo rollout and ready Pods", "check demo HTTP and metrics through Service proxy"],
+    "verify": ["resolve requested or already deployed source commit", "render configuration from that fetched commit", "wait for root and expected child Applications", "wait for the stable Rollout and its ready Pods", "verify local image identity, HTTP and metrics"],
     "destroy": ["require exact cluster-name confirmation", "delete only named kind cluster"],
     "up": ["verify pushed source before creating resources", "create", "install-argocd", "build", "deploy", "verify"],
 }
 
 
 LocalError = lifecycle.LocalError
+
+
+class ConvergencePending(LocalError):
+    """The target has not reached the state required for runtime acceptance."""
+
+
+def wait_for(condition, message):
+    if not condition:
+        raise ConvergencePending(message)
 
 
 def require(condition, message):
@@ -187,6 +196,11 @@ class Driver(lifecycle.Driver):
         require(isinstance(commit, str) and re.fullmatch(r"[0-9a-f]{40}", commit), "Deployed root must pin a full commit SHA; supply --revision explicitly for a floating root")
         return commit
 
+    def read_for_convergence(self, namespace, kind, name):
+        raw = self.kube("-n", namespace, "get", kind, name, "--ignore-not-found", "-o", "json").stdout
+        wait_for(raw.strip(), f"{kind} {name} has not been created")
+        return json.loads(raw)
+
     def verify(self, commit, source_root=ROOT):
         helm = ["helm", "template", "local-platform", "clusters/local/platform"]
         for name, value in local_parameters(self.args, commit).items():
@@ -197,61 +211,100 @@ class Driver(lifecycle.Driver):
             deadline = time.monotonic() + self.args.timeout
             while True:
                 try:
-                    root = json.loads(self.kube("-n", "argocd", "get", "application", "startup-devops-root", "-o", "json").stdout)
-                    require(root.get("status", {}).get("sync", {}).get("revision") == commit, "Root Application has not reconciled the requested commit")
+                    root = self.read_for_convergence("argocd", "application", "startup-devops-root")
+                    wait_for(root.get("status", {}).get("sync", {}).get("revision") == commit,
+                             "Root Application has not reconciled the requested commit")
                     apps = [root]
                     for child in children:
-                        actual = json.loads(self.kube("-n", "argocd", "get", "application", child["metadata"]["name"], "-o", "json").stdout)
+                        name = child["metadata"]["name"]
+                        actual = self.read_for_convergence("argocd", "application", name)
                         desired = child["spec"]["source"]
                         for key in ("repoURL", "targetRevision", "path", "chart"):
-                            require(actual.get("spec", {}).get("source", {}).get(key) == desired.get(key), "Child Application source differs from the requested configuration")
+                            wait_for(actual.get("spec", {}).get("source", {}).get(key) == desired.get(key),
+                                     f"Child Application {name} source differs from the requested configuration")
                         if desired.get("repoURL") == self.args.repo_url:
-                            require(actual.get("status", {}).get("sync", {}).get("revision") == commit, "Child Application has not reconciled the requested commit")
+                            wait_for(actual.get("status", {}).get("sync", {}).get("revision") == commit,
+                                     f"Child Application {name} has not reconciled the requested commit")
                         apps.append(actual)
-                    workload = json.loads(self.kube("-n", "startup-apps", "get", "rollout", "demo-api", "-o", "json").stdout)
-                    labels = workload["spec"]["selector"]["matchLabels"]
+                    wait_for_applications(apps)
+                    workload = self.read_for_convergence("startup-apps", "rollout", "demo-api")
+                    stable_hash, desired = converged_rollout(workload)
+                    labels = {**workload["spec"]["selector"]["matchLabels"],
+                              "rollouts-pod-template-hash": stable_hash}
                     selector = ",".join(f"{key}={value}" for key, value in sorted(labels.items()))
                     pods = json.loads(self.kube("-n", "startup-apps", "get", "pods", "-l", selector, "-o", "json").stdout)
-                    verify_state(apps, workload, pods, commit)
-                    prefix = "/api/v1/namespaces/startup-apps/services/demo-api-stable:http/proxy"
-                    for endpoint, status in (("health", "ok"), ("ready", "ready")):
-                        result = json.loads(self.kube("get", "--raw", prefix + "/" + endpoint).stdout)
-                        require(result.get("status") == status, "Demo HTTP readiness check failed")
-                    version = json.loads(self.kube("get", "--raw", prefix + "/version").stdout)
-                    require(version.get("environment") == "local" and version.get("version") == f"local-{commit[:12]}", "Demo HTTP version does not match the local source")
-                    metrics = self.kube("get", "--raw", prefix + "/metrics").stdout
-                    require("demo_api_http_requests_total{" in metrics, "Demo metrics endpoint has no request series")
-                    print("PASS: local Applications, rollout, Pods, HTTP version and demo metrics endpoint")
-                    return
-                except (LocalError, subprocess.CalledProcessError, KeyError, ValueError) as error:
+                    active = ready_demo_pods(pods, desired)
+                except ConvergencePending as error:
                     if time.monotonic() >= deadline:
-                        raise LocalError("Local verification timed out: " + str(error)) from error
+                        raise LocalError("Local convergence timed out: " + str(error)) from error
                     print("Waiting for local convergence: " + str(error), flush=True)
                     time.sleep(min(5, max(0, deadline - time.monotonic())))
+                else:
+                    break
+
+            verify_pod_identity(active, commit)
+            prefix = "/api/v1/namespaces/startup-apps/services/demo-api-stable:http/proxy"
+            for endpoint, status in (("health", "ok"), ("ready", "ready")):
+                result = json.loads(self.kube("get", "--raw", prefix + "/" + endpoint).stdout)
+                require(result.get("status") == status, f"Demo HTTP /{endpoint} check failed after convergence")
+            version = json.loads(self.kube("get", "--raw", prefix + "/version").stdout)
+            require(version.get("environment") == "local" and version.get("version") == f"local-{commit[:12]}",
+                    "Demo HTTP version does not match the local source")
+            metrics = self.kube("get", "--raw", prefix + "/metrics").stdout
+            require("demo_api_http_requests_total{" in metrics, "Demo metrics endpoint has no request series")
+            print("PASS: local Applications, rollout, Pods, HTTP version and demo metrics endpoint")
 
 
-
-def verify_state(apps, workload, pods, commit):
+def wait_for_applications(apps):
     for app in apps:
         status = app.get("status", {})
-        require(status.get("sync", {}).get("status") == "Synced" and status.get("health", {}).get("status") == "Healthy", "An expected Argo Application is not Synced and Healthy")
+        name = app.get("metadata", {}).get("name", "(unnamed)")
+        wait_for(status.get("sync", {}).get("status") == "Synced" and status.get("health", {}).get("status") == "Healthy",
+                 f"Application {name} is not Synced and Healthy")
+        wait_for(not app.get("operation") and status.get("operationState", {}).get("phase") not in ("Running", "Terminating"),
+                 f"Application {name} still has an active operation")
+
+
+def converged_rollout(workload):
     status = workload.get("status", {})
     desired = integer_counter(workload["spec"].get("replicas", 1), "spec.replicas")
     generation = integer_counter(workload["metadata"]["generation"], "metadata.generation")
     observed = integer_counter(status.get("observedGeneration", 0), "status.observedGeneration")
     ready = integer_counter(status.get("readyReplicas", 0), "status.readyReplicas")
     updated = integer_counter(status.get("updatedReplicas", 0), "status.updatedReplicas")
-    require(desired > 0 and observed >= generation, "Demo workload generation has not been observed")
-    require(status.get("phase") == "Healthy" and ready >= desired and updated >= desired, "Demo rollout is incomplete or paused")
+    wait_for(desired > 0 and observed >= generation, "Demo workload generation has not been observed")
+    stable_hash = status.get("stableRS")
+    wait_for(status.get("phase") == "Healthy" and not status.get("pauseConditions")
+             and ready >= desired and updated >= desired and stable_hash
+             and stable_hash == status.get("currentPodHash"), "Demo rollout is incomplete, paused or not stable")
+    return stable_hash, desired
+
+
+def ready_demo_pods(pods, desired):
     active = [pod for pod in pods.get("items", []) if not pod.get("metadata", {}).get("deletionTimestamp")]
-    require(len(active) >= desired, "Not enough active demo Pods")
+    wait_for(len(active) >= desired, "Not enough active Pods in the stable demo ReplicaSet")
     for pod in active:
-        require(pod.get("metadata", {}).get("annotations", {}).get("platform.startup.dev/source-commit") == commit, "A demo Pod belongs to another source commit")
-        containers = pod.get("spec", {}).get("containers", [])
-        require(any(item.get("name") == "demo-api" and item.get("image") == image_for(commit) for item in containers), "A demo Pod uses another image")
+        name = pod.get("metadata", {}).get("name", "(unnamed)")
         statuses = pod.get("status", {}).get("containerStatuses", [])
-        require(any(item.get("name") == "demo-api" and item.get("ready") is True and item.get("imageID") for item in statuses), "A demo container is not ready")
-        require(pod.get("status", {}).get("phase") == "Running" and any(item.get("type") == "Ready" and item.get("status") == "True" for item in pod.get("status", {}).get("conditions", [])), "A demo Pod is not ready")
+        wait_for(any(item.get("name") == "demo-api" and item.get("ready") is True and item.get("imageID") for item in statuses),
+                 f"Stable demo Pod {name} container is not ready")
+        wait_for(pod.get("status", {}).get("phase") == "Running" and any(
+            item.get("type") == "Ready" and item.get("status") == "True"
+            for item in pod.get("status", {}).get("conditions", [])), f"Stable demo Pod {name} is not ready")
+    return active
+
+
+def verify_pod_identity(pods, commit):
+    expected_image = image_for(commit)
+    for pod in pods:
+        name = pod.get("metadata", {}).get("name", "(unnamed)")
+        source = pod.get("metadata", {}).get("annotations", {}).get("platform.startup.dev/source-commit")
+        image = next((item.get("image") for item in pod["spec"]["containers"] if item.get("name") == "demo-api"), None)
+        require(source == commit and image == expected_image,
+                f"Stable demo Pod {name} does not match the local build. "
+                f"Expected source commit {commit} and image {expected_image}, "
+                f"found source commit {source or '(missing)'} and image {image or '(missing)'}. "
+                "For a registry deployment, use scripts/ops/cli.py verify.")
 
 
 def parser():

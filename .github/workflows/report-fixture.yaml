@@ -1,0 +1,35 @@
+name: report fixture producer
+
+on:
+  workflow_call:
+    outputs:
+      report_name:
+        description: Name from the attempt that uploaded the fixture
+        value: ${{ jobs.fixture.outputs.report_name }}
+
+permissions: {}
+
+jobs:
+  fixture:
+    name: verify (fixture)
+    runs-on: ubuntu-latest
+    outputs:
+      report_name: ${{ steps.fixture.outputs.report_name }}
+    steps:
+      - id: fixture
+        run: |
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          run, attempt = os.environ["GITHUB_RUN_ID"], os.environ["GITHUB_RUN_ATTEMPT"]
+          record = dict(kind="handoff-fixture", verified=False, run_id=run, run_attempt=attempt)
+          Path("fixture.json").write_text(json.dumps(record))
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              print(f"report_name=delivery-fixture-{run}-{attempt}", file=out)
+          PY
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.fixture.outputs.report_name }}
+          path: fixture.json
+          if-no-files-found: error
+          retention-days: 7

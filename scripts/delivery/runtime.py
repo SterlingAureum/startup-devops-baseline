@@ -17,6 +17,7 @@ from urllib.request import Request, urlopen
 
 from common import ROOT, Rejected, config, fingerprint, identity, release, repo_path, run
 from flow import input_fingerprint
+from verification import producer_job
 
 
 def kubectl(*args):
@@ -113,10 +114,13 @@ def prometheus_endpoint(cfg):
             process.wait()
 
 
-def verify_once(cfg, environment, revision, expected, prometheus):
+def verify_once(cfg, environment, revision, expected, prometheus, observed):
     app = cfg["application"]
     env = cfg["environments"][environment]
     application = kubectl("-n", "argocd", "get", "application", env["application"])
+    observed.clear()
+    observed.update(application=env["application"], namespace=app["namespace"],
+                    gitops_revision=application.get("status", {}).get("sync", {}).get("revision"))
     resources = application.get("status", {}).get("resources", [])
     matching = [item for item in resources if item["kind"] in ("Deployment", "Rollout")
                 and item.get("namespace") == app["namespace"]]
@@ -124,12 +128,22 @@ def verify_once(cfg, environment, revision, expected, prometheus):
         raise Rejected("Application must reconcile one supported workload")
     item = matching[0]
     workload = kubectl("-n", app["namespace"], "get", item["kind"], item["name"])
+    template = workload["spec"]["template"]
+    container = next((c for c in template["spec"]["containers"] if c["name"] == app["container"]), {})
+    observed.update(workload_kind=item["kind"], workload_name=item["name"],
+                    workload_uid=workload["metadata"]["uid"],
+                    pod_hash=workload.get("status", {}).get("currentPodHash"), image=container.get("image"),
+                    source_commit=template["metadata"].get("annotations", {}).get("platform.startup.dev/source-commit"))
     selector = workload["spec"]["selector"]
     if selector.get("matchExpressions") or not selector.get("matchLabels"):
         raise Rejected("Unsupported workload selector")
     labels = ",".join(f"{key}={value}" for key, value in sorted(selector["matchLabels"].items()))
     pods = kubectl("-n", app["namespace"], "get", "pods", "-l", labels)
     verify_cluster(application, workload, pods, expected, environment, revision, app["container"])
+    observed["pod_image_ids"] = sorted({c["imageID"] for pod in pods["items"]
+                                        if not pod["metadata"].get("deletionTimestamp")
+                                        for c in pod.get("status", {}).get("containerStatuses", [])
+                                        if c["name"] == app["container"]})
     url = os.getenv("DELIVERY_APP_URL") or env["url"]
     parsed = urlsplit(url)
     if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.query or parsed.fragment:
@@ -142,6 +156,22 @@ def verify_once(cfg, environment, revision, expected, prometheus):
     verify_metrics(fetch_json(prometheus + "/api/v1/query?" + urlencode({"query": query})))
 
 
+def analysis_references(observed):
+    if observed.get("workload_kind") != "Rollout" or not observed.get("pod_hash"):
+        return {"status": "not_applicable" if observed.get("workload_kind") == "Deployment" else "unknown"}
+    try:
+        runs = kubectl("-n", observed["namespace"], "get", "analysisruns", "-l",
+                       "rollouts-pod-template-hash=" + observed["pod_hash"])
+        owned = [item for item in runs["items"] if any(
+            ref.get("uid") == observed["workload_uid"] for ref in item["metadata"].get("ownerReferences", []))]
+        recent = sorted(owned, key=lambda item: item["metadata"].get("creationTimestamp", ""))[-8:]
+        return {"status": "observed", "count": len(owned), "recent": [
+            {"name": item["metadata"]["name"], "uid": item["metadata"]["uid"],
+             "phase": item.get("status", {}).get("phase")} for item in recent]}
+    except (KeyError, ValueError, OSError, subprocess.CalledProcessError):
+        return {"status": "unavailable"}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--environment", choices=["aws-dev", "aws-test", "aws-prod"], required=True)
@@ -150,8 +180,14 @@ def main():
     parser.add_argument("--timeout", type=int, default=900)
     args = parser.parse_args()
     args.output.unlink(missing_ok=True)
+    report = {"schema_version": 1, "result": "failed", "verified": False,
+              "repository": os.getenv("GITHUB_REPOSITORY", "local"), "environment": args.environment,
+              "config_revision": args.revision, "producer_job": producer_job(args.environment),
+              "run_id": os.getenv("GITHUB_RUN_ID", "local"), "run_attempt": os.getenv("GITHUB_RUN_ATTEMPT", "1"),
+              "observed": {}, "log_trace_live_checked": False}
     try:
         cfg = config()
+        report["application_id"] = cfg["application"]["release_name"]
         if args.environment == "aws-prod" and os.getenv("DELIVERY_PROD_ENABLED") != "true":
             raise Rejected("Production runtime acceptance is disabled")
         if run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True).stdout.strip() != args.revision:
@@ -160,32 +196,30 @@ def main():
             raise Rejected("This increment supports live metrics acceptance; log/trace backend adapters are not implemented")
         path = repo_path(cfg["environments"][args.environment]["release"])
         expected = release(path)
+        report.update(release=identity(expected), release_sha256=fingerprint(path),
+                      inputs_sha256=input_fingerprint(cfg, args.environment))
         deadline = time.monotonic() + max(1, args.timeout)
         with prometheus_endpoint(cfg) as prometheus:
             while True:
                 try:
-                    verify_once(cfg, args.environment, args.revision, expected, prometheus)
+                    verify_once(cfg, args.environment, args.revision, expected, prometheus, report["observed"])
                     break
                 except (Rejected, KeyError, OSError, ValueError, subprocess.CalledProcessError) as error:
                     if time.monotonic() >= deadline:
                         raise Rejected(f"Runtime acceptance timed out: {error}") from error
                     print(f"Waiting: {error}", flush=True)
                     time.sleep(10)
-        report = {"verified": True, "environment": args.environment, "config_revision": args.revision,
-                  "release": identity(expected), "release_sha256": fingerprint(path),
-                  "inputs_sha256": input_fingerprint(cfg, args.environment),
-                  "run_id": os.environ.get("GITHUB_RUN_ID", "local"),
-                  "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT", "1"),
-                  "completed_at": datetime.now(timezone.utc).isoformat(),
-                  "checks": ["argocd-revision", "workload-and-pod-image", "http-version", "application-metrics"],
-                  "log_trace_live_checked": False}
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(json.dumps(report, indent=2) + "\n")
-        print(f"PASS: {args.environment}; wrote {args.output.name}")
+        report.update(result="passed", verified=True,
+                      checks=["argocd-revision", "workload-and-pod-image", "http-version", "application-metrics"])
     except (Rejected, KeyError, ValueError, TypeError, OSError, subprocess.CalledProcessError) as error:
+        report["reason"] = str(error)[:500]
         print(f"REJECTED: {error}", file=sys.stderr)
-        return 1
-    return 0
+    report["analysis"] = analysis_references(report["observed"])
+    report["completed_at"] = datetime.now(timezone.utc).isoformat()
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    args.output.write_text(json.dumps(report, indent=2) + "\n")
+    print(f"{report['result']}: {args.environment}; wrote {args.output.name}")
+    return 0 if report["verified"] else 1
 
 
 if __name__ == "__main__":

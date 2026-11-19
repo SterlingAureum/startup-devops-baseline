@@ -1,7 +1,8 @@
 # Current delivery workflow
 
-Current CI is independent of the archived v0.12 validators. Five
-`delivery-*.yaml` workflows are the only active Actions entrypoints. The old
+Five workflows implement delivery checks, image publication, runtime verification
+and promotion. A separate manual report rehearsal calls a hosted fixture producer.
+The old
 `DELIVERY_FLOW_ENABLED` switch has no effect; disabling a current feature never
 restores an old workflow.
 
@@ -115,6 +116,48 @@ HTTP `/version` fields and the configured Prometheus query remain **demo
 adapters**. Live logs/traces acceptance is unimplemented and not reported as
 verified. Private ECR, cross-repository promotion and prod live acceptance are
 outside this increment.
+
+## Verification report and promotion
+
+Runtime report schema 1 records the application, environment, expected release
+(image repository and digest, source commit and build metadata), GitOps revision,
+repository, producer job, run ID and original attempt. Observations include the
+Argo Application, synced revision, workload identity, deployed image, Pod image
+IDs and source annotation. When a Rollout exposes a current hash, its matching
+owned AnalysisRun names, UIDs and phases can be attached (up to eight recent
+runs). Analysis references provide diagnostic context; absence alone proves
+nothing about an analysis result.
+
+The runtime script writes a passed or failed result. Successful verification
+uploads `delivery-verified-ENV-RUN-ATTEMPT`; a script failure uploads a separate
+`delivery-diagnostic-ENV-RUN-ATTEMPT` when the report was written. Preparation
+failures, timeouts imposed by the runner, and cancellations can leave only Actions
+logs and step outcomes. Artifacts are retained for 30 days.
+
+The reusable verifier exports the successful producer's artifact name. The caller
+uses it even when only the proposal job reruns. The PR gate checks the specific
+main workflow attempt, exact successful source job, artifact and source input
+hashes. A sibling environment may still be pending or have failed. Existing
+deployed release files remain valid. Pending PRs with pre-schema or expired
+evidence require fresh source verification.
+
+Proposal writers share a concurrency group per target. If GitHub replaces a pending
+proposal in that group, reverify the desired current candidate to request it again. A matching open proposal
+with valid evidence is reused. A stale matching PR is reported for review and
+closure before reproposal. A retry can reuse a pushed branch with the exact
+prepared tree. Candidate comparison includes the application, destination and
+immutable image. Separate newer images can have their own PR. Required checks
+and up-to-date branch protection still apply before human merge.
+
+### Hosted report handoff rehearsal
+
+On main, run **delivery report rehearsal** with **retry_consumer** checked. The
+fixture uploads one synthetic artifact. The consumer downloads it, checks the
+specific attempt and successful reusable job using the Actions API, then exits
+with the requested rehearsal failure on attempt 1. Select **Re-run failed jobs**.
+The consumer should pass with producer attempt 1 and consumer attempt 2 in the
+summary. Leaving the input unchecked performs a one-pass handoff. The fixture
+is outside the live promotion allowlist and contains no runtime acceptance.
 
 ## Repository settings handoff
 

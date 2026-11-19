@@ -12,7 +12,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   preflight:
@@ -30,6 +29,9 @@ jobs:
 
   verify-source:
     needs: preflight
+    permissions:
+      contents: read
+      id-token: write
     uses: ./.github/workflows/delivery-verify.yaml
     with:
       environment: ${{ inputs.source_environment }}
@@ -38,6 +40,9 @@ jobs:
   propose:
     needs: verify-source
     runs-on: ubuntu-latest
+    concurrency:
+      group: delivery-proposal-${{ inputs.source_environment == 'aws-dev' && 'aws-test' || 'aws-prod' }}
+      cancel-in-progress: false
     timeout-minutes: 10
     permissions:
       contents: read
@@ -50,7 +55,9 @@ jobs:
           token: ${{ secrets.DELIVERY_PR_TOKEN }}
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: delivery-verified-${{ inputs.source_environment }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ needs.verify-source.outputs.report_name || 'missing-source-report' }}
+          github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
           path: ${{ runner.temp }}/delivery-candidate
       - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
         with:
@@ -62,6 +69,7 @@ jobs:
           DELIVERY_PROD_ENABLED: ${{ vars.DELIVERY_PROD_ENABLED }}
           DELIVERY_PR_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
           GH_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
+          REPORT_READ_TOKEN: ${{ github.token }}
         run: |
           if [[ "${SOURCE}" == aws-dev ]]; then TARGET=aws-test; else TARGET=aws-prod; fi
           python3 scripts/delivery/flow.py pr --target "${TARGET}" --candidate "${RUNNER_TEMP}/delivery-candidate/verified.json"

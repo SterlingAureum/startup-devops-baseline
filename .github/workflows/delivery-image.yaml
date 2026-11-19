@@ -133,6 +133,9 @@ jobs:
           push-to-registry: true
 
   propose-dev:
+    concurrency:
+      group: delivery-proposal-aws-dev
+      cancel-in-progress: false
     needs: publish
     runs-on: ubuntu-latest
     timeout-minutes: 10

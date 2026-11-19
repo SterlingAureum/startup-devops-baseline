@@ -18,7 +18,6 @@ on:
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   route:
@@ -62,6 +61,9 @@ jobs:
   verify-dev:
     needs: route
     if: needs.route.outputs.runtime_dev == 'true'
+    permissions:
+      contents: read
+      id-token: write
     uses: ./.github/workflows/delivery-verify.yaml
     with:
       environment: aws-dev
@@ -70,6 +72,9 @@ jobs:
   verify-test:
     needs: route
     if: needs.route.outputs.runtime_test == 'true'
+    permissions:
+      contents: read
+      id-token: write
     uses: ./.github/workflows/delivery-verify.yaml
     with:
       environment: aws-test
@@ -78,6 +83,9 @@ jobs:
   verify-prod:
     needs: route
     if: needs.route.outputs.runtime_prod == 'true' && vars.DELIVERY_PROD_ENABLED == 'true'
+    permissions:
+      contents: read
+      id-token: write
     uses: ./.github/workflows/delivery-verify.yaml
     with:
       environment: aws-prod
@@ -90,6 +98,9 @@ jobs:
       ((github.event_name == 'push' && needs.route.outputs.dev_release_changed == 'true') ||
        (github.event_name == 'workflow_dispatch' && inputs.create_test_pr))
     runs-on: ubuntu-latest
+    concurrency:
+      group: delivery-proposal-aws-test
+      cancel-in-progress: false
     timeout-minutes: 10
     permissions:
       contents: read
@@ -102,7 +113,9 @@ jobs:
           token: ${{ secrets.DELIVERY_PR_TOKEN }}
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: delivery-verified-aws-dev-${{ github.run_id }}-${{ github.run_attempt }}
+          name: ${{ needs.verify-dev.outputs.report_name || 'missing-source-report' }}
+          github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
           path: ${{ runner.temp }}/delivery-candidate
       - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
         with:
@@ -112,4 +125,5 @@ jobs:
         env:
           DELIVERY_PR_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
           GH_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
+          REPORT_READ_TOKEN: ${{ github.token }}
         run: python3 scripts/delivery/flow.py pr --target aws-test --candidate "${RUNNER_TEMP}/delivery-candidate/verified.json"

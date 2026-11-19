@@ -25,7 +25,7 @@ environments:
         git.repoURL: '${repository}'
         git.targetRevision: '${revision}'
   aws-dev:
-    # Inspection only. AWS plan/apply/bootstrap/destroy are not implemented yet.
+    # Offline preflight can check repository examples or these private files.
     driver: aws
     aws:
       expected_account_id: '123456789012'

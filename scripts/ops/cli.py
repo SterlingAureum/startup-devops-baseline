@@ -16,6 +16,7 @@ import local
 
 STEPS = {
     "show": ["read and validate selected environment configuration"],
+    "preflight": ["check selected AWS file inputs", "render GitOps overlay and inspect bootstrap/runtime RBAC declarations"],
     "doctor": ["check installed tools"],
     "create": ["create named kind cluster if absent", "save dedicated kubeconfig", "wait for nodes"],
     "install-argocd": ["save dedicated kubeconfig", "install pinned Argo CD", "wait for controllers"],
@@ -43,18 +44,21 @@ def parser():
     value.add_argument("--argocd-manifest")
     value.add_argument("--confirm")
     value.add_argument("--kubeconfig-file", help="Explicit shared config target for connect only")
+    value.add_argument("--check-inputs", action="store_true", help="AWS preflight: read selected personal tfvars and backend file")
     value.add_argument("--dry-run", action="store_true", help="Read config and print phases; invoke no tools and write no files")
     return value
 
 
 def configure(args, local_only=False):
     env = environment(args.config, args.env)
+    require(not args.check_inputs or args.command == "preflight", "--check-inputs is only valid for AWS preflight")
     if local_only:
         require(env["driver"] == "kind", "local.py only accepts kind environments; use cli.py show to inspect AWS configuration")
     if env["driver"] == "aws":
-        require(args.command == "show", "AWS lifecycle execution is pending; this increment supports AWS configuration inspection only")
+        require(args.command in ("show", "preflight"), "AWS lifecycle execution is pending; use show or offline preflight")
         require(not any(getattr(args, key) is not None for key in ("cluster", "repo_url", "revision", "timeout", "http_port", "https_port", "node_image", "argocd_manifest", "confirm", "kubeconfig_file")), "AWS inspection does not accept kind command overrides")
         return env
+    require(args.command != "preflight", "preflight requires aws-dev or aws-test")
     for argument, section, key in (("cluster", "kind", "cluster"), ("node_image", "kind", "node_image"),
                                    ("http_port", "kind", "http_port"), ("https_port", "kind", "https_port"),
                                    ("repo_url", "gitops", "repository"), ("revision", "gitops", "revision"),
@@ -115,6 +119,10 @@ def main(argv=None, local_only=False):
         if args.command == "show" or args.dry_run:
             print(json.dumps({"environment": args.env, "configuration": env, "command": args.command,
                               "steps": STEPS[args.command], "executed": False}, indent=2))
+            return 0
+        if args.command == "preflight":
+            from aws_preflight import inspect
+            print(json.dumps(inspect(args.env, env, args.config, args.check_inputs), indent=2))
             return 0
         missing = [tool for tool in tools_for(args.command) if shutil.which(tool) is None]
         require(not missing, "Missing tools: " + ", ".join(missing))

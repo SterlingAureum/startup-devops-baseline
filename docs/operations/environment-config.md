@@ -36,14 +36,15 @@ If needed later, non-secret centralized parameters can use Parameter Store;
 application secrets use the existing secret-management/GitOps integration.
 
 The aws-dev/aws-test entries deliberately contain placeholder account IDs and
-workstation file references. They currently support only:
+workstation file references. Inspect the selected inventory or run offline preparation:
 
 ```bash
 python3 scripts/ops/cli.py show --env aws-dev
-python3 scripts/ops/cli.py show --env aws-test
+python3 scripts/ops/cli.py preflight --env aws-test
 ```
 
-AWS lifecycle actions, including their dry-runs, fail explicitly before tools.
+Install the preflight dependencies and follow [AWS preparation](aws-transition.md) for private inputs.
+AWS create, apply and destroy remain outside this CLI.
 The inventory does not create IAM profiles or permissions. Future AWS execution
 must resolve effective identities, compare the expected target account, separate
 backend and infrastructure identities where necessary, and use reviewed plan/apply

@@ -70,6 +70,7 @@ Current tooling:
 
 ```bash
 python3 scripts/checks/repository.py
+python3 -m pip install -r scripts/ops/requirements-preflight.txt
 python3 -m unittest discover -s tests -v
 bash scripts/checks/terraform.sh
 python3 scripts/delivery/flow.py render --environment local

@@ -272,12 +272,30 @@ class PromotionTests(unittest.TestCase):
         target = common.repo_path(self.cfg["environments"]["aws-test"]["release"])
         value = common.load_yaml(target)
         value["customTargetSetting"] = "preserved"
+        value["image"]["pullPolicy"] = "Never"
+        value["delivery"]["workflowRunAttempt"] = "2"
         target.write_text(yaml.safe_dump(value))
         flow.prepare_release(self.cfg, "aws-test", self.report)
         actual = common.release(target)
         self.assertEqual(common.identity(actual), self.value)
         self.assertEqual(actual["customTargetSetting"], "preserved")
+        self.assertEqual(actual["image"]["pullPolicy"], "Never")
+        self.assertNotIn("workflowRunAttempt", actual["delivery"])
         self.assertEqual(actual["promotion"]["sourceEnvironment"], "aws-dev")
+
+    def test_dev_write_records_publish_attempt_and_preserves_nested_settings(self):
+        path = common.repo_path(self.cfg["environments"]["aws-dev"]["release"])
+        value = common.release(path)
+        value["image"]["pullPolicy"] = "Always"
+        path.write_text(yaml.safe_dump(value))
+        image = "example.invalid/team/app@sha256:" + "c" * 64
+        with patch.dict(os.environ, {"PUBLISH_ATTEMPT": "2", "GITHUB_RUN_ATTEMPT": "3"}):
+            flow.prepare_release(self.cfg, "aws-dev", image=image, commit="c" * 40,
+                                 source_repository="team/app", run_id="456")
+        proposed = common.release(path)
+        self.assertEqual(proposed["image"]["pullPolicy"], "Always")
+        self.assertEqual(proposed["delivery"]["workflowRunAttempt"], "2")
+        self.assertEqual(proposed["image"]["digest"], "sha256:" + "c" * 64)
 
     def test_failed_skipped_or_wrong_source_verification_rejected(self):
         for field, value in (("verified", False), ("environment", "aws-test")):

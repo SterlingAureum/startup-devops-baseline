@@ -1,0 +1,80 @@
+name: delivery kind rehearsal
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  rehearse:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      CLUSTER: delivery-${{ github.run_id }}-${{ github.run_attempt }}
+      REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+      B: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+          persist-credentials: false
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+        with:
+          version: v3.18.6
+      - name: Prepare two clean main revisions and check hosted tools
+        run: |
+          python3 -m pip install PyYAML==6.0.3
+          kind version
+          kubectl version --client
+          docker info >/dev/null
+          A="$(git rev-parse HEAD^1)"
+          test "${A}" != "${B}"
+          git worktree add --detach "${RUNNER_TEMP}/source-a" "${A}"
+          echo "A=${A}" >> "${GITHUB_ENV}"
+          echo "kind rehearsal: ${A} → ${B}" >> "${GITHUB_STEP_SUMMARY}"
+          clusters="$(kind get clusters)"
+          if grep -Fxq "${CLUSTER}" <<< "${clusters}"; then exit 1; fi
+          touch "${RUNNER_TEMP}/kind-rehearsal-owned"
+      - name: Bootstrap and deploy A
+        run: |
+          python3 scripts/examples/demo_api.py create --cluster "${CLUSTER}"
+          python3 scripts/examples/demo_api.py install-argocd --cluster "${CLUSTER}"
+          cd "${RUNNER_TEMP}/source-a"
+          python3 scripts/examples/demo_api.py build --cluster "${CLUSTER}"
+          python3 scripts/examples/demo_api.py deploy --cluster "${CLUSTER}" --repo-url "${REPO_URL}" --revision "${A}"
+      - name: Verify the first stable release
+        run: |
+          python3 scripts/examples/kind_acceptance.py --cluster "${CLUSTER}" --repo-url "${REPO_URL}" \
+            --revision "${A}" --output "${RUNNER_TEMP}/kind-a.json"
+      - name: Build and deploy B to the same cluster
+        run: |
+          python3 scripts/examples/demo_api.py build --cluster "${CLUSTER}"
+          python3 scripts/examples/demo_api.py deploy --cluster "${CLUSTER}" --repo-url "${REPO_URL}" --revision "${B}"
+      - name: Verify B and reject the old image and root
+        run: |
+          python3 scripts/examples/kind_acceptance.py --cluster "${CLUSTER}" --repo-url "${REPO_URL}" \
+            --revision "${B}" --previous-report "${RUNNER_TEMP}/kind-a.json" --output "${RUNNER_TEMP}/kind-b.json"
+      - name: Inspect cluster on failure
+        if: failure()
+        run: |
+          if test -f "${RUNNER_TEMP}/kind-rehearsal-owned"; then
+            kind get kubeconfig --name "${CLUSTER}" > "${RUNNER_TEMP}/inspect-kind.yaml"
+            export KUBECONFIG="${RUNNER_TEMP}/inspect-kind.yaml"
+            kubectl -n argocd get applications
+            kubectl -n startup-apps get rollouts,analysisruns,pods
+          fi
+      - name: Destroy the run's kind cluster
+        if: always()
+        run: |
+          if test -f "${RUNNER_TEMP}/kind-rehearsal-owned"; then
+            python3 scripts/examples/demo_api.py destroy --cluster "${CLUSTER}" --confirm "${CLUSTER}"
+          fi
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: delivery-kind-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/kind-*.json
+          if-no-files-found: warn
+          retention-days: 14

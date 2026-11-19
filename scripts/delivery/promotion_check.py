@@ -7,7 +7,10 @@ import subprocess
 import sys
 import zipfile
 
-from common import Rejected, config, fingerprint, identity, release, repo_path
+import yaml
+
+from common import IDENTITY_FIELDS, UniqueLoader, git, Rejected, config, fingerprint, identity, release, repo_path
+from image_receipt import require_published
 from flow import changed_paths, input_fingerprint
 
 
@@ -25,6 +28,19 @@ def validate_report(report, cfg, source, target, run_id, attempt):
         raise Rejected("Verification does not match the current source release and deployment inputs")
 
 
+def configuration_fields(value):
+    # Keep unrecognised settings at every level so a release PR cannot smuggle
+    # chart configuration into an identity-only change.
+    fields = {**IDENTITY_FIELDS, "promotion": ("sourceEnvironment", "verificationRunId", "verificationRunAttempt")}
+    result = dict(value)
+    for group, keys in fields.items():
+        if group in result:
+            rest = {key: val for key, val in result.pop(group).items() if key not in keys}
+            if rest:
+                result[group] = rest
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--base", required=True)
@@ -40,7 +56,13 @@ def main():
             value = release(repo_path(path))
             if paths != [path]:
                 raise Rejected("A release PR must change only its target release file")
+            before = yaml.load(git("show", f"{args.base}:{path}"), Loader=UniqueLoader)
+            if configuration_fields(before) != configuration_fields(value):
+                raise Rejected("Change deployment settings in environment values via a separate configuration PR")
             if target == "aws-dev":
+                require_published(os.environ["GITHUB_REPOSITORY"], value)
+                if git("diff", "--name-only", value["delivery"]["sourceCommit"], args.base, "--", *cfg["paths"]["application"]):
+                    raise Rejected("Application source changed since publication; publish the current application")
                 continue
             source = {"aws-test": "aws-dev", "aws-prod": "aws-test"}[target]
             if target == "aws-prod" and os.getenv("DELIVERY_PROD_ENABLED") != "true":

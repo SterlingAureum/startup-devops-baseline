@@ -61,7 +61,8 @@
       "url": "http://demo-api.local",
       "cluster_paths": [
         "clusters/local/"
-      ]
+      ],
+      "root_manifest": "clusters/local/root-app.yaml"
     },
     "aws-dev": {
       "values": [
@@ -73,7 +74,8 @@
       "cluster_paths": [
         "clusters/aws/base/",
         "clusters/aws/overlays/dev/"
-      ]
+      ],
+      "root_manifest": "clusters/aws/overlays/dev/root-app.yaml"
     },
     "aws-test": {
       "values": [
@@ -85,7 +87,8 @@
       "cluster_paths": [
         "clusters/aws/base/",
         "clusters/aws/overlays/test/"
-      ]
+      ],
+      "root_manifest": "clusters/aws/overlays/test/root-app.yaml"
     },
     "aws-prod": {
       "values": [
@@ -97,7 +100,8 @@
       "cluster_paths": [
         "clusters/aws/base/",
         "clusters/aws/overlays/prod/"
-      ]
+      ],
+      "root_manifest": "clusters/aws/overlays/prod/root-app.yaml"
     }
   },
   "runtime": {

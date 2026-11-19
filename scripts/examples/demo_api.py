@@ -41,6 +41,14 @@ class ConvergencePending(LocalError):
     """The target has not reached the state required for runtime acceptance."""
 
 
+class ImageMismatch(LocalError):
+    """Ready stable Pods do not match the expected local build."""
+
+
+class DifferentRootRevision(LocalError):
+    """The live root explicitly targets a different immutable commit."""
+
+
 def wait_for(condition, message):
     if not condition:
         raise ConvergencePending(message)
@@ -201,7 +209,9 @@ class Driver(lifecycle.Driver):
         wait_for(raw.strip(), f"{kind} {name} has not been created")
         return json.loads(raw)
 
-    def verify(self, commit, source_root=ROOT):
+    def verify(self, commit, source_root=ROOT, expected_image_commit=None):
+        image_commit = expected_image_commit or commit
+        waits = 0
         helm = ["helm", "template", "local-platform", "clusters/local/platform"]
         for name, value in local_parameters(self.args, commit).items():
             helm += ["--set" if name.endswith(".enabled") else "--set-string", name + "=" + value]
@@ -212,6 +222,9 @@ class Driver(lifecycle.Driver):
             while True:
                 try:
                     root = self.read_for_convergence("argocd", "application", "startup-devops-root")
+                    pinned = root.get("spec", {}).get("source", {}).get("targetRevision", "")
+                    if re.fullmatch(r"[0-9a-f]{40}", pinned) and pinned != commit:
+                        raise DifferentRootRevision(f"Root pins {pinned}; requested {commit}")
                     wait_for(root.get("status", {}).get("sync", {}).get("revision") == commit,
                              "Root Application has not reconciled the requested commit")
                     apps = [root]
@@ -235,6 +248,7 @@ class Driver(lifecycle.Driver):
                     pods = json.loads(self.kube("-n", "startup-apps", "get", "pods", "-l", selector, "-o", "json").stdout)
                     active = ready_demo_pods(pods, desired)
                 except ConvergencePending as error:
+                    waits += 1
                     if time.monotonic() >= deadline:
                         raise LocalError("Local convergence timed out: " + str(error)) from error
                     print("Waiting for local convergence: " + str(error), flush=True)
@@ -242,17 +256,22 @@ class Driver(lifecycle.Driver):
                 else:
                     break
 
-            verify_pod_identity(active, commit)
+            verify_pod_identity(active, image_commit)
             prefix = "/api/v1/namespaces/startup-apps/services/demo-api-stable:http/proxy"
             for endpoint, status in (("health", "ok"), ("ready", "ready")):
                 result = json.loads(self.kube("get", "--raw", prefix + "/" + endpoint).stdout)
                 require(result.get("status") == status, f"Demo HTTP /{endpoint} check failed after convergence")
             version = json.loads(self.kube("get", "--raw", prefix + "/version").stdout)
-            require(version.get("environment") == "local" and version.get("version") == f"local-{commit[:12]}",
+            require(version.get("environment") == "local" and version.get("version") == f"local-{image_commit[:12]}",
                     "Demo HTTP version does not match the local source")
             metrics = self.kube("get", "--raw", prefix + "/metrics").stdout
             require("demo_api_http_requests_total{" in metrics, "Demo metrics endpoint has no request series")
             print("PASS: local Applications, rollout, Pods, HTTP version and demo metrics endpoint")
+            return {"gitops_revision": root["status"]["sync"]["revision"], "source_commit": image_commit,
+                    "image": image_for(image_commit), "stable_rs": stable_hash, "wait_polls": waits,
+                    "http_version": version["version"], "pod_image_ids": sorted({
+                        c["imageID"] for pod in active for c in pod["status"]["containerStatuses"]
+                        if c["name"] == "demo-api"})}
 
 
 def wait_for_applications(apps):
@@ -300,11 +319,11 @@ def verify_pod_identity(pods, commit):
         name = pod.get("metadata", {}).get("name", "(unnamed)")
         source = pod.get("metadata", {}).get("annotations", {}).get("platform.startup.dev/source-commit")
         image = next((item.get("image") for item in pod["spec"]["containers"] if item.get("name") == "demo-api"), None)
-        require(source == commit and image == expected_image,
-                f"Stable demo Pod {name} does not match the local build. "
-                f"Expected source commit {commit} and image {expected_image}, "
-                f"found source commit {source or '(missing)'} and image {image or '(missing)'}. "
-                "For a registry deployment, use scripts/ops/cli.py verify.")
+        if source != commit or image != expected_image:
+            raise ImageMismatch(f"Stable demo Pod {name} does not match the local build. "
+                                f"Expected source commit {commit} and image {expected_image}, "
+                                f"found source commit {source or '(missing)'} and image {image or '(missing)'}. "
+                                "For a registry deployment, use scripts/ops/cli.py verify.")
 
 
 def parser():

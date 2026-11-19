@@ -1,7 +1,7 @@
 # Current delivery workflow
 
 Five workflows implement delivery checks, image publication, runtime verification
-and promotion. A separate manual report rehearsal calls a hosted fixture producer.
+and promotion. Manual rehearsals exercise report handoff and a two-revision kind deployment.
 The old
 `DELIVERY_FLOW_ENABLED` switch has no effect; disabling a current feature never
 restores an old workflow.
@@ -128,7 +128,7 @@ owned AnalysisRun names, UIDs and phases can be attached (up to eight recent
 runs). Analysis references provide diagnostic context; absence alone proves
 nothing about an analysis result.
 
-The runtime script writes a passed or failed result. Successful verification
+The runtime script records passed, failed or superseded. An observed descendant of the requested revision ends the run with a diagnostic. Reverify current main to produce a new promotion report. Successful verification
 uploads `delivery-verified-ENV-RUN-ATTEMPT`; a script failure uploads a separate
 `delivery-diagnostic-ENV-RUN-ATTEMPT` when the report was written. Preparation
 failures, timeouts imposed by the runner, and cancellations can leave only Actions
@@ -148,6 +148,46 @@ closure before reproposal. A retry can reuse a pushed branch with the exact
 prepared tree. Candidate comparison includes the application, destination and
 immutable image. Separate newer images can have their own PR. Required checks
 and up-to-date branch protection still apply before human merge.
+
+### Effective GitOps inputs and dev admission
+
+The static gate renders the local root Helm chart or the AWS root Kustomize overlay
+and locates the configured child Application. It checks the child's repository,
+revision, chart, release name, destination and ordered value files. It renders
+the child with its own Helm inputs and compares the cloud workload's image and
+annotations to its release. AWS renders need both kubectl and Helm.
+
+A release PR changes one target release file. Put deployment settings such as
+replica counts and rollout steps in a separate configuration PR. New dev entries
+must match the successful main image publish job and its original
+`published.json` receipt, including digest, source commit, run ID and attempt.
+A newer application source requires a new publication. Existing deployed
+releases can be verified and promoted using current source-environment evidence.
+Expired dev receipts require a new publication to admit a pending dev candidate.
+
+The source fingerprint covers the selected environment configuration and values,
+its cluster paths (including AWS base), the shared chart, platform files and
+delivery logic. The source release has a separate file hash. Each environment's
+registered values and release files are excluded from other environments' hashes.
+After upgrading from the previous fingerprint, reverify the source before promotion.
+
+### Hosted kind runtime rehearsal
+
+Run **delivery kind rehearsal** manually from main. On one hosted runner, A is
+the first parent of the dispatch commit and B is the dispatch commit. Both
+revisions must support the current demo chart and image contract. Each image is
+built from its own clean checkout and loaded into the same run-specific cluster.
+The verifier waits for Argo, the stable Rollout and ready Pods, then checks the
+local image, HTTP endpoints and metrics. Once B passes, it checks that the live
+verifier rejects A's image identity on B, and separately rejects A's replaced
+root. Each negative check requires its specific error.
+
+The artifact `delivery-kind-RUN-ATTEMPT` contains `kind-a.json` and `kind-b.json`
+after both verification steps execute. Check `stable_rs`, `pod_image_ids`,
+`gitops_revision`, `http_version`, `wrong_image` and `replaced_root`. Wait counts
+depend on when the verifier first samples the cluster. Cleanup targets only the
+run's kind cluster. AWS credentials and publication switches are unnecessary.
+Kind observations use local image IDs and are outside the promotion report allowlist.
 
 ### Hosted report handoff rehearsal
 

@@ -5,25 +5,35 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      publish_image:
+        description: Also request image publication after successful main checks
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 concurrency:
-  group: delivery-checks-${{ github.ref }}
-  cancel-in-progress: true
+  group: delivery-checks-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   route:
     runs-on: ubuntu-latest
     outputs:
       application: ${{ steps.route.outputs.application }}
+      application_id: ${{ steps.route.outputs.application_id }}
       tests: ${{ steps.route.outputs.tests }}
       iac: ${{ steps.route.outputs.iac }}
       platform: ${{ steps.route.outputs.platform }}
       render: ${{ steps.route.outputs.render }}
       environments: ${{ steps.route.outputs.environments }}
       base: ${{ steps.route.outputs.base }}
+      runtime_dev: ${{ steps.route.outputs.runtime_dev }}
+      runtime_test: ${{ steps.route.outputs.runtime_test }}
+      runtime_prod: ${{ steps.route.outputs.runtime_prod }}
+      dev_release_changed: ${{ steps.route.outputs.dev_release_changed }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -35,7 +45,8 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           if [[ -z "${BASE}" || "${BASE}" =~ ^0+$ ]]; then
-            BASE="$(git rev-parse HEAD^)"
+            BASE="$(git hash-object -w -t tree /dev/null)"
+            if [[ "${GITHUB_EVENT_NAME}" == workflow_dispatch ]]; then BASE="$(git rev-parse HEAD)"; fi
           fi
           echo "base=${BASE}" >> "${GITHUB_OUTPUT}"
           python3 scripts/delivery/flow.py classify --base "${BASE}" --head "$(git rev-parse HEAD)"
@@ -184,4 +195,15 @@ jobs:
       - name: Require all applicable checks to pass
         env:
           RESULTS: ${{ toJSON(needs) }}
-        run: python3 scripts/checks/ci_result.py
+          REQUEST_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.publish_image }}
+        run: |
+          python3 scripts/checks/ci_result.py
+          python3 scripts/delivery/check_plan.py record "${RUNNER_TEMP}/checked-plan.json"
+      - name: Hand the successful main plan to the image workflow
+        if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: delivery-plan-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/checked-plan.json
+          if-no-files-found: error
+          retention-days: 30

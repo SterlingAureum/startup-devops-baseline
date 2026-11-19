@@ -75,7 +75,7 @@ class RoutingTests(unittest.TestCase):
         result = flow.classify(["apps/demo-api/helm/templates/service.yaml"], CFG)
         self.assertEqual(set(result["environments"]), set(CFG["environments"]))
         self.assertTrue(result["runtime_dev"] and result["runtime_test"])
-        self.assertFalse(result["runtime_prod"])
+        self.assertTrue(result["runtime_prod"])
 
     def test_similarly_named_path_is_not_application_code(self):
         self.assertFalse(flow.classify(["apps/demo-api/src-backup/main.py"], CFG)["application"])

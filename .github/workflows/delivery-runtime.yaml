@@ -14,7 +14,7 @@ on:
       create_test_pr:
         description: Propose test after successful dev verification
         type: boolean
-        default: true
+        default: false
 
 permissions:
   contents: read
@@ -25,6 +25,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && vars.DELIVERY_RUNTIME_ENABLED == 'true'
     runs-on: ubuntu-latest
     outputs:
+      dev_release_changed: ${{ steps.route.outputs.dev_release_changed }}
       runtime_dev: ${{ steps.route.outputs.runtime_dev }}
       runtime_test: ${{ steps.route.outputs.runtime_test }}
       runtime_prod: ${{ steps.route.outputs.runtime_prod }}
@@ -54,7 +55,7 @@ jobs:
               fi
             done
           else
-            if [[ -z "${BEFORE}" || "${BEFORE}" =~ ^0+$ ]]; then BEFORE="$(git rev-parse HEAD^)"; fi
+            if [[ -z "${BEFORE}" || "${BEFORE}" =~ ^0+$ ]]; then BEFORE="$(git hash-object -w -t tree /dev/null)"; fi
             python3 scripts/delivery/flow.py classify --base "${BEFORE}" --head "$(git rev-parse HEAD)"
           fi
 
@@ -83,8 +84,11 @@ jobs:
       revision: ${{ github.sha }}
 
   propose-test:
-    needs: verify-dev
-    if: needs.verify-dev.result == 'success' && (github.event_name == 'push' || inputs.create_test_pr)
+    needs: [route, verify-dev]
+    if: >-
+      needs.verify-dev.result == 'success' &&
+      ((github.event_name == 'push' && needs.route.outputs.dev_release_changed == 'true') ||
+       (github.event_name == 'workflow_dispatch' && inputs.create_test_pr))
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

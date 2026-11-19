@@ -5,6 +5,7 @@
       "apps/demo-api/src/",
       "apps/demo-api/tests/",
       "apps/demo-api/Dockerfile",
+      "apps/demo-api/.dockerignore",
       "apps/demo-api/requirements.txt"
     ],
     "iac": [
@@ -57,7 +58,10 @@
       "values": [],
       "release": null,
       "application": "demo-api",
-      "url": "http://demo-api.local"
+      "url": "http://demo-api.local",
+      "cluster_paths": [
+        "clusters/local/"
+      ]
     },
     "aws-dev": {
       "values": [
@@ -65,7 +69,11 @@
       ],
       "release": "apps/demo-api/helm/values/releases/aws-dev.yaml",
       "application": "demo-api-aws-dev",
-      "url": "https://demo.dev.aureumstack.com"
+      "url": "https://demo.dev.aureumstack.com",
+      "cluster_paths": [
+        "clusters/aws/base/",
+        "clusters/aws/overlays/dev/"
+      ]
     },
     "aws-test": {
       "values": [
@@ -73,7 +81,11 @@
       ],
       "release": "apps/demo-api/helm/values/releases/aws-test.yaml",
       "application": "demo-api-aws-test",
-      "url": "https://demo.test.aureumstack.com"
+      "url": "https://demo.test.aureumstack.com",
+      "cluster_paths": [
+        "clusters/aws/base/",
+        "clusters/aws/overlays/test/"
+      ]
     },
     "aws-prod": {
       "values": [
@@ -81,7 +93,11 @@
       ],
       "release": "apps/demo-api/helm/values/releases/aws-prod.yaml",
       "application": "demo-api-aws-prod",
-      "url": "https://demo.prod.aureumstack.com"
+      "url": "https://demo.prod.aureumstack.com",
+      "cluster_paths": [
+        "clusters/aws/base/",
+        "clusters/aws/overlays/prod/"
+      ]
     }
   },
   "runtime": {

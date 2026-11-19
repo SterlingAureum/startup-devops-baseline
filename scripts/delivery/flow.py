@@ -35,24 +35,24 @@ def classify(paths, cfg):
     selected = set()
     runtime = set()
     for path in paths:
-        specific = False
+        targets = set()
         for name, env in cfg["environments"].items():
-            if path in env["values"] + ([env["release"]] if env["release"] else []):
-                selected.add(name)
-                if name != "local":
-                    runtime.add(name)
-                specific = True
-        if not specific and any(path.startswith(prefix) for prefix in cfg["paths"]["app_config"]):
+            if (path == env["release"] or path in env["values"] or
+                    path.startswith(tuple(env["cluster_paths"]))):
+                targets.add(name)
+        if not targets and path.startswith((*cfg["paths"]["app_config"], "platform/")):
+            targets.update(cfg["environments"])
+        if not targets and path.startswith("clusters/"):
             selected.update(cfg["environments"])
-            runtime.update({"aws-dev", "aws-test"})
-    if app or shared or platform:
+        selected.update(targets)
+        runtime.update(targets - {"local"})
+    if app or shared:
         selected.update(cfg["environments"])
-    if platform:
-        runtime.update({"aws-dev", "aws-test"})
     return {"application": app, "tests": app or shared, "iac": affected("iac") or shared,
             "platform": platform or shared, "render": bool(app or app_config or shared or platform),
             "environments": sorted(selected), "runtime_dev": "aws-dev" in runtime,
-            "runtime_test": "aws-test" in runtime, "runtime_prod": "aws-prod" in runtime}
+            "runtime_test": "aws-test" in runtime, "runtime_prod": "aws-prod" in runtime,
+            "dev_release_changed": cfg["environments"]["aws-dev"]["release"] in paths}
 
 
 def changed_paths(base, head):
@@ -235,6 +235,7 @@ def main():
         cfg = config()
         if args.command == "classify":
             result = classify(changed_paths(args.base, args.head), cfg)
+            emit_output("application_id", cfg["application"]["release_name"])
             for name, value in result.items():
                 emit_output(name, json.dumps(value, separators=(",", ":")))
             print(json.dumps(result, indent=2))

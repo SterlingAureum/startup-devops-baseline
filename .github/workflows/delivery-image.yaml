@@ -9,40 +9,40 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: delivery-image-main
-  cancel-in-progress: false
-
 jobs:
   route:
     if: >-
-      vars.DELIVERY_PUBLISH_ENABLED == 'true' &&
+      (vars.DELIVERY_PUBLISH_ENABLED == 'true' || github.event.workflow_run.event == 'workflow_dispatch') &&
       github.event.workflow_run.conclusion == 'success' &&
       (github.event.workflow_run.event == 'push' || github.event.workflow_run.event == 'workflow_dispatch') &&
       github.event.workflow_run.head_branch == 'main' &&
       github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
     outputs:
       application: ${{ steps.route.outputs.application }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
-          fetch-depth: 0
           persist-credentials: false
-      - run: python3 -m pip install PyYAML==6.0.3
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+          name: delivery-plan-${{ github.event.workflow_run.id }}-${{ github.event.workflow_run.run_attempt }}
+          path: ${{ runner.temp }}/checked-delivery
       - id: route
-        env:
-          PARENT_EVENT: ${{ github.event.workflow_run.event }}
-        run: |
-          python3 scripts/delivery/flow.py classify --base "$(git rev-parse HEAD^)" --head "$(git rev-parse HEAD)"
-          if [[ "${PARENT_EVENT}" == workflow_dispatch ]]; then
-            echo 'application=true' >> "${GITHUB_OUTPUT}"
-          fi
+        run: python3 scripts/delivery/check_plan.py consume "${RUNNER_TEMP}/checked-delivery/checked-plan.json"
 
   publish:
+    concurrency:
+      group: delivery-image-${{ github.event.workflow_run.head_sha }}
+      cancel-in-progress: false
     needs: route
-    if: needs.route.outputs.application == 'true'
+    if: needs.route.outputs.application == 'true' && vars.DELIVERY_PUBLISH_ENABLED == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

@@ -1,1 +1,5 @@
 bb7cbedbe98e6f4019e33ef29cd3671abf8837e5:scripts/validate-demo-api-security-supply-chain.sh:generic-api-key:26
+ecd23c04b82587f1c584452b8609735133008fcf:scripts/execute-v0.12.4.1.5-external-secrets-live-preflight.py:generic-api-key:44
+ecd23c04b82587f1c584452b8609735133008fcf:scripts/execute-v0.12.4.1.5-external-secrets-live-preflight.py:generic-api-key:45
+ecd23c04b82587f1c584452b8609735133008fcf:scripts/execute-v0.12.4.1.5-external-secrets-live-preflight.py:generic-api-key:46
+ecd23c04b82587f1c584452b8609735133008fcf:scripts/execute-v0.12.4.1.5-external-secrets-live-preflight.py:generic-api-key:47

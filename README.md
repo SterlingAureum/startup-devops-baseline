@@ -52,9 +52,13 @@ matching the pushed source when building/deploying the demo.
 
 ```bash
 python3 scripts/checks/repository.py
+python3 -m pip install -r scripts/ops/requirements-preflight.txt
 python3 -m unittest discover -s tests -v
 python3 scripts/delivery/flow.py render --environment local
 ```
+
+For the personal AWS dev/test path, run the [offline AWS preflight](docs/operations/aws-transition.md)
+before preparing a live cluster.
 
 With Terraform installed, `bash scripts/checks/terraform.sh` performs formatting
 and backend-disabled validation of the five roots. It does not plan, apply,

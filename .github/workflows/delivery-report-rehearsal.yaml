@@ -1,0 +1,62 @@
+name: delivery report rehearsal
+
+on:
+  workflow_dispatch:
+    inputs:
+      retry_consumer:
+        description: Fail the first consumer attempt to practice Re-run failed jobs
+        type: boolean
+        default: false
+
+permissions: {}
+
+jobs:
+  producer:
+    uses: ./.github/workflows/report-fixture.yaml
+
+  consumer:
+    needs: producer
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: python3 -m pip install PyYAML==6.0.3
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: ${{ needs.producer.outputs.report_name || 'missing-producer-fixture' }}
+          github-token: ${{ github.token }}
+          run-id: ${{ github.run_id }}
+          path: fixture
+      - name: Verify the producing attempt
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPORT_NAME: ${{ needs.producer.outputs.report_name }}
+          RETRY_CONSUMER: ${{ inputs.retry_consumer }}
+        run: |
+          python3 - <<'PY'
+          import json, os, sys
+          from pathlib import Path
+          data = json.loads(Path("fixture/fixture.json").read_text())
+          run, attempt = data["run_id"], data["run_attempt"]
+          if (data["kind"] != "handoff-fixture" or data["verified"] is not False
+                  or run != os.environ["GITHUB_RUN_ID"]
+                  or os.environ["REPORT_NAME"] != f"delivery-fixture-{run}-{attempt}"):
+              raise SystemExit("Producer identity mismatch")
+          sys.path.insert(0, "scripts/delivery")
+          from verification import api, require_source_job
+          endpoint = f"repos/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{run}/attempts/{attempt}"
+          producer = api(endpoint)
+          if (str(producer["id"]) != run or str(producer["run_attempt"]) != attempt
+                  or producer["head_sha"] != os.environ["GITHUB_SHA"]):
+              raise SystemExit("Unexpected producer attempt")
+          require_source_job(endpoint, "producer / verify (fixture)", attempt, producer["head_sha"])
+          current = os.environ["GITHUB_RUN_ATTEMPT"]
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as out:
+              print(f"Run {run}: producer attempt {attempt}, consumer attempt {current}.", file=out)
+          if os.environ["RETRY_CONSUMER"] == "true" and current == "1":
+              raise SystemExit("Requested rehearsal failure. Select Re-run failed jobs.")
+          PY

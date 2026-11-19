@@ -1,4 +1,5 @@
 import argparse
+from contextlib import nullcontext
 from copy import deepcopy
 import io
 import json
@@ -19,6 +20,7 @@ import flow
 import offline
 import promotion_check
 import runtime
+import verification
 
 
 CFG = common.config()
@@ -176,6 +178,28 @@ class RuntimeTests(unittest.TestCase):
     def test_exact_current_deployment_passes(self):
         self.check()
 
+    def test_runtime_report_from_observations_is_accepted(self):
+        cfg = deepcopy(CFG)
+        cfg["application"]["container"] = "server"
+        self.workload["metadata"]["uid"] = "sample-uid"
+        self.app["status"]["resources"] = [{"kind": "Deployment", "namespace": cfg["application"]["namespace"],
+                                            "name": "sample"}]
+        http = {"environment": "aws-dev", "version": self.value["release"]["applicationVersion"]}
+        metrics = {"status": "success", "data": {"resultType": "vector", "result": [{"value": [1, "1"]}]}}
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "verified.json"
+            args = ["runtime", "--environment", "aws-dev", "--revision", "c" * 40, "--output", str(path)]
+            with patch.object(sys, "argv", args), patch.object(runtime, "config", return_value=cfg), \
+                    patch.object(runtime, "run", return_value=subprocess.CompletedProcess([], 0, stdout="c" * 40)), \
+                    patch.object(runtime, "prometheus_endpoint", return_value=nullcontext("http://localhost")), \
+                    patch.object(runtime, "kubectl", side_effect=[self.app, self.workload, self.pods]), \
+                    patch.object(runtime, "fetch_json", side_effect=[http, metrics]):
+                self.assertEqual(runtime.main(), 0)
+            report = json.loads(path.read_text())
+        verification.require_pass(report, cfg["application"]["release_name"], "aws-dev")
+        self.assertEqual(report["analysis"]["status"], "not_applicable")
+        self.assertEqual(report["observed"]["workload_uid"], "sample-uid")
+
     def test_old_argocd_revision_is_not_acceptance(self):
         self.app["status"]["sync"]["revision"] = "d" * 40
         with self.assertRaises(common.Rejected):
@@ -238,6 +262,12 @@ class PromotionTests(unittest.TestCase):
                        "inputs_sha256": flow.input_fingerprint(self.cfg, "aws-dev"),
                        "run_id": "123", "run_attempt": "1", "config_revision": "c" * 40}
 
+        self.report.update(schema_version=1, result="passed", application_id=self.cfg["application"]["release_name"],
+                           repository="team/app", producer_job="verify (aws-dev)",
+                           observed={"gitops_revision": "c" * 40, "image": "example.invalid/team/app@sha256:" + "a" * 64,
+                                     "pod_image_ids": ["runtime@sha256:" + "a" * 64],
+                                     "source_commit": "a" * 40})
+
     def test_promotion_copies_same_digest_and_preserves_target_settings(self):
         target = common.repo_path(self.cfg["environments"]["aws-test"]["release"])
         value = common.load_yaml(target)
@@ -262,6 +292,35 @@ class PromotionTests(unittest.TestCase):
             report[field] = "0" * 64
             with self.subTest(field=field), self.assertRaises(common.Rejected):
                 flow.prepare_release(self.cfg, "aws-test", report)
+
+    def test_rejects_wrong_app_observation_and_legacy_evidence(self):
+        for key, value in (("schema_version", 0), ("result", "failed"), ("application_id", "other"),
+                           ("observed", dict(self.report["observed"], pod_image_ids=[])),
+                           ("observed", dict(self.report["observed"], gitops_revision="f" * 40))):
+            with self.subTest(key=key), self.assertRaises(common.Rejected):
+                flow.prepare_release(self.cfg, "aws-test", dict(self.report, **{key: value}))
+
+    def test_runtime_writes_failed_diagnostic_and_exits_nonzero(self):
+        path = self.root / "verified.json"
+        path.write_text(json.dumps(self.report))
+        args = ["runtime", "--environment", "aws-dev", "--revision", "c" * 40, "--output", str(path)]
+        with patch.object(sys, "argv", args), patch.object(runtime, "config", return_value=self.cfg), \
+                patch.object(runtime, "run", return_value=subprocess.CompletedProcess([], 0, stdout="d" * 40)):
+            self.assertEqual(runtime.main(), 1)
+        diagnostic = json.loads(path.read_text())
+        self.assertFalse(diagnostic["verified"])
+        self.assertEqual(diagnostic["result"], "failed")
+        self.assertIn("checkout", diagnostic["reason"])
+        self.assertNotIn("checks", diagnostic)
+
+    def test_analysis_references_belong_to_the_observed_rollout(self):
+        observed = dict(workload_kind="Rollout", workload_uid="demo-uid", namespace="apps", pod_hash="hash")
+        runs = [{"metadata": {"ownerReferences": [{"uid": uid}], "name": uid, "uid": uid},
+                 "status": {"phase": "Successful"}} for uid in ("another-uid", "demo-uid")]
+        with patch.object(runtime, "kubectl", return_value={"items": runs}) as read:
+            result = runtime.analysis_references(observed)
+        read.assert_called_once_with("-n", "apps", "get", "analysisruns", "-l", "rollouts-pod-template-hash=hash")
+        self.assertEqual([r["name"] for r in result["recent"]], ["demo-uid"])
 
     def test_production_is_opt_in(self):
         report = deepcopy(self.report)
@@ -292,40 +351,89 @@ class PromotionTests(unittest.TestCase):
         args = argparse.Namespace(target="aws-test", candidate=str(candidate), image=None, commit=None)
         env = {"GITHUB_REF": "refs/heads/main", "GITHUB_REPOSITORY": "team/app", "GITHUB_RUN_ID": "123",
                "GITHUB_RUN_ATTEMPT": "1", "DELIVERY_PR_TOKEN": "test-only"}
+        created = []
+        pages = [[]]
+
+        def github(args, **kwargs):
+            if args[:2] == ["gh", "api"]:
+                return subprocess.CompletedProcess(args, 0, stdout=json.dumps(pages))
+            self.assertEqual(args[:3], ["gh", "pr", "create"])
+            branch = args[args.index("--head") + 1]
+            created.append(branch)
+            if len(created) == 1:
+                raise subprocess.CalledProcessError(1, args)
+            git("push", "origin", "HEAD:refs/pull/21/head")
+            pages[0].append({"head": {"repo": {"full_name": "team/app"}, "ref": branch},
+                             "number": 21, "html_url": "https://example.invalid/pr/21"})
+            return subprocess.CompletedProcess(args, 0, stdout="https://example.invalid/pr/21")
+
         with patch.dict(os.environ, env), patch.object(flow, "config", return_value=self.cfg), \
-                patch.object(flow, "render_environment", return_value=""), \
-                patch.object(flow, "run", return_value=subprocess.CompletedProcess([], 0, stdout="https://example.invalid/pr/1\n")) as gh:
-            flow.create_pr(args, self.cfg)
-        self.assertEqual(git("diff", "--name-only", "main", "HEAD"), self.cfg["environments"]["aws-test"]["release"])
-        self.assertEqual(git("rev-parse", "main"), git("rev-parse", "HEAD^"))
-        self.assertEqual(gh.call_args.args[0][:3], ["gh", "pr", "create"])
+                patch.object(flow, "render_environment", return_value=""), patch.object(flow, "run", side_effect=github):
+            with self.assertRaises(subprocess.CalledProcessError):
+                flow.create_pr(args, self.cfg)
+            with patch.dict(os.environ, {"GITHUB_RUN_ATTEMPT": "2"}):
+                flow.create_pr(args, self.cfg)
+            self.assertEqual(created[0], created[1])
+            self.assertEqual(git("diff", "--name-only", "main", "HEAD"), self.cfg["environments"]["aws-test"]["release"])
+            self.assertEqual(git("rev-parse", "main"), git("rev-parse", "HEAD^"))
+            with patch.object(flow, "verified_report", return_value=self.report) as inspect:
+                flow.create_pr(args, self.cfg)
+            inspect.assert_called_once_with("team/app", "123", "1", "aws-dev")
+            self.assertEqual(len(created), 2)
+            with patch.object(flow, "verified_report", side_effect=common.Rejected("expired")), \
+                    self.assertRaisesRegex(common.Rejected, "stale PR"):
+                flow.create_pr(args, self.cfg)
+            self.assertEqual(len(created), 2)
 
 
 class ReportProvenanceTests(unittest.TestCase):
-    def test_rejects_failed_foreign_or_pr_workflow(self):
-        base = {"status": "completed", "conclusion": "success", "head_branch": "main", "run_attempt": 1,
-                "head_repository": {"full_name": "team/app"}, "event": "push", "path": ".github/workflows/delivery-runtime.yaml"}
-        for field, value in (("conclusion", "failure"), ("event", "pull_request"), ("head_branch", "feature"),
-                             ("head_repository", {"full_name": "other/app"}), ("run_attempt", 2)):
-            data = deepcopy(base)
-            data[field] = value
-            with self.subTest(field=field), patch.object(promotion_check, "api", return_value=data), self.assertRaises(common.Rejected):
-                promotion_check.verified_report("team/app", "123", "1", "aws-dev")
-
-    def test_valid_report_download_and_expired_report_rejection(self):
-        workflow = {"status": "completed", "conclusion": "success", "head_branch": "main", "run_attempt": 1,
-                    "head_repository": {"full_name": "team/app"}, "event": "push", "head_sha": "c" * 40,
-                    "path": ".github/workflows/delivery-runtime.yaml"}
-        report = {"config_revision": "c" * 40}
+    def setUp(self):
+        self.workflow = {"id": 123, "status": "in_progress", "conclusion": None, "head_branch": "main",
+                         "run_attempt": 1, "head_repository": {"full_name": "team/app"}, "event": "push",
+                         "head_sha": "c" * 40, "path": ".github/workflows/delivery-runtime.yaml"}
+        self.job = {"name": "verify-dev / verify (aws-dev)", "head_sha": "c" * 40,
+                    "conclusion": "success", "run_attempt": 1}
+        self.report = {"config_revision": "c" * 40, "repository": "team/app", "environment": "aws-dev",
+                       "run_id": "123", "run_attempt": "1", "producer_job": "verify (aws-dev)"}
         buf = io.BytesIO()
         with zipfile.ZipFile(buf, "w") as zipped:
-            zipped.writestr("verified.json", json.dumps(report))
-        artifact = {"id": 5, "name": "delivery-verified-aws-dev-123-1", "expired": False, "size_in_bytes": len(buf.getvalue())}
-        with patch.object(promotion_check, "api", side_effect=[workflow, {"artifacts": [artifact]}, buf.getvalue()]):
-            self.assertEqual(promotion_check.verified_report("team/app", "123", "1", "aws-dev"), report)
-        artifact["expired"] = True
-        with patch.object(promotion_check, "api", side_effect=[workflow, {"artifacts": [artifact]}]), self.assertRaises(common.Rejected):
-            promotion_check.verified_report("team/app", "123", "1", "aws-dev")
+            zipped.writestr("verified.json", json.dumps(self.report))
+        self.archive = buf.getvalue()
+        self.artifact = {"id": 5, "name": "delivery-verified-aws-dev-123-1", "expired": False,
+                         "size_in_bytes": len(self.archive)}
+
+    def read(self):
+        responses = [self.workflow, {"jobs": [self.job]}, {"artifacts": [self.artifact]}, self.archive]
+        with patch.object(verification, "api", side_effect=responses) as remote:
+            report = verification.verified_report("team/app", "123", "1", "aws-dev")
+        self.assertIn("attempts/1/jobs?", remote.call_args_list[1].args[0])
+        return report
+
+    def test_source_succeeds_independently_of_other_environment(self):
+        for status, conclusion in [("in_progress", None), ("completed", "failure")]:
+            self.workflow.update(status=status, conclusion=conclusion)
+            self.assertEqual(self.read(), self.report)
+        self.workflow.update(path=".github/workflows/delivery-promote.yaml", event="workflow_dispatch")
+        self.job["name"] = "verify-source / verify (aws-dev)"
+        self.assertEqual(self.read(), self.report)
+
+    def test_rejects_failed_or_wrong_job(self):
+        for key, value in (("conclusion", "failure"), ("run_attempt", 2), ("name", "verify-test / verify (aws-test)"),
+                           ("head_sha", "f" * 40)):
+            with self.subTest(key=key), patch.dict(self.job, {key: value}), self.assertRaises(common.Rejected):
+                self.read()
+
+    def test_rejects_foreign_or_pr_workflow(self):
+        for key, value in (("event", "pull_request"), ("head_branch", "feature"), ("run_attempt", 2),
+                           ("head_repository", {"full_name": "other/app"}),
+                           ("path", ".github/workflows/delivery-report-rehearsal.yaml")):
+            with self.subTest(key=key), patch.dict(self.workflow, {key: value}), self.assertRaises(common.Rejected):
+                self.read()
+
+    def test_expired_or_wrong_artifact(self):
+        for key, value in (("expired", True), ("name", "delivery-diagnostic-aws-dev-123-1")):
+            with self.subTest(key=key), patch.dict(self.artifact, {key: value}), self.assertRaises(common.Rejected):
+                self.read()
 
 
 if __name__ == "__main__":

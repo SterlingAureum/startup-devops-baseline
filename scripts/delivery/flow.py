@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Path routing, Helm checks and small GitOps promotion PRs."""
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -13,6 +14,7 @@ import yaml
 from common import (COMMIT, DIGEST, ROOT, Rejected, UniqueLoader, config, emit_output,
                     fingerprint, git, identity, load_yaml, release, repo_path, run)
 from offline import validate
+from verification import require_pass, verified_report
 
 
 def classify(paths, cfg):
@@ -107,7 +109,6 @@ def platform_check():
 
 def input_fingerprint(cfg, environment):
     """Bind runtime acceptance to effective deployment inputs, not unrelated app edits."""
-    import hashlib
     env = cfg["environments"][environment]
     paths = {repo_path("delivery/standard/config.json"), *[repo_path(path) for path in env["values"]]}
     for folder in (cfg["application"]["chart"], "platform", "clusters", "scripts/delivery"):
@@ -129,6 +130,10 @@ def prepare_release(cfg, target, candidate=None, image=None, commit=None, source
         repository, digest = image.rsplit("@", 1)
         if not DIGEST.fullmatch(digest) or not COMMIT.fullmatch(commit):
             raise Rejected("Invalid built image or source commit")
+        if (value["image"].get("repository") == repository and value["image"].get("digest") == digest
+                and value["delivery"].get("sourceRepository") == source_repository
+                and value["delivery"].get("sourceCommit") == commit):
+            return False
         tag = f"sha-{commit[:7]}"
         value.update({"image": {"repository": repository, "tag": tag, "digest": digest},
                       "release": {"applicationVersion": tag},
@@ -139,6 +144,7 @@ def prepare_release(cfg, target, candidate=None, image=None, commit=None, source
         expected_source = {"aws-test": "aws-dev", "aws-prod": "aws-test"}.get(target)
         if not candidate or candidate.get("environment") != expected_source or candidate.get("verified") is not True:
             raise Rejected("Promotion requires a successful verification of the preceding environment")
+        require_pass(candidate, cfg["application"]["release_name"], expected_source)
         if target == "aws-prod" and os.getenv("DELIVERY_PROD_ENABLED") != "true":
             raise Rejected("Production promotion is disabled")
         source_path = repo_path(cfg["environments"][expected_source]["release"])
@@ -157,6 +163,45 @@ def prepare_release(cfg, target, candidate=None, image=None, commit=None, source
     target_path.write_text(yaml.safe_dump(value, sort_keys=False))
     release(target_path)
     return target_path.read_text() != original
+
+
+def pending_proposal(repository, target, path, prefix, value, candidate):
+    """Reuse a reviewed candidate only while its original source evidence is usable."""
+    result = run(["gh", "api", "--paginate", "--slurp",
+                  f"repos/{repository}/pulls?base=main&state=open&per_page=100"], capture_output=True)
+    legacy = f"delivery/{target}/{value['image']['digest'][7:19]}-"
+    for page in json.loads(result.stdout):
+        for pr in page:
+            head = pr["head"]
+            if ((head.get("repo") or {}).get("full_name") != repository
+                    or not head["ref"].startswith((prefix, legacy))):
+                continue
+            git("fetch", "--no-tags", "origin", f"refs/pull/{pr['number']}/head")
+            previous = yaml.load(git("show", f"FETCH_HEAD:{path}"), Loader=UniqueLoader)
+            if any(previous["image"][key] != value["image"][key] for key in ("repository", "digest")):
+                continue
+            if (previous["delivery"]["sourceRepository"] != value["delivery"]["sourceRepository"]
+                    or previous["delivery"]["sourceCommit"] != value["delivery"]["sourceCommit"]):
+                raise Rejected(f"Review conflicting source identity in existing PR: {pr['html_url']}")
+            if git("diff", "--name-only", "origin/main...FETCH_HEAD").splitlines() != [path]:
+                raise Rejected(f"Existing candidate PR has other changes: {pr['html_url']}")
+            if candidate:
+                if identity(previous) != candidate["release"]:
+                    raise Rejected(f"Existing candidate identity changed: {pr['html_url']}")
+                proof = previous.get("promotion", {})
+                try:
+                    source = candidate["environment"]
+                    report = verified_report(repository, str(proof["verificationRunId"]),
+                                             str(proof["verificationRunAttempt"]), source)
+                    require_pass(report, candidate["application_id"], source)
+                    if (proof.get("sourceEnvironment") != source or report["release"] != candidate["release"]
+                            or report["inputs_sha256"] != candidate["inputs_sha256"]
+                            or report["release_sha256"] != candidate["release_sha256"]):
+                        raise Rejected("Source inputs changed")
+                except (Rejected, KeyError) as error:
+                    raise Rejected(f"Review and close stale PR {pr['html_url']} before proposing again: {error}") from error
+            return pr["html_url"]
+    return None
 
 
 def create_pr(args, cfg):
@@ -188,10 +233,20 @@ def create_pr(args, cfg):
     render_environment(cfg, args.target)
     target = cfg["environments"][args.target]["release"]
     value = release(repo_path(target))
-    image_id = value["image"]["digest"].split(":")[1][:12]
-    # One PR per invocation; never force-push or mutate a PR awaiting review.
-    branch = f"delivery/{args.target}/{image_id}-{os.environ['GITHUB_RUN_ID']}-{os.environ.get('GITHUB_RUN_ATTEMPT', '1')}"
-    git("switch", "-c", branch)
+    repository = os.environ["GITHUB_REPOSITORY"]
+    app = cfg["application"]["release_name"]
+    image = value["image"]
+    key = hashlib.sha256(f"{app}/{image['repository']}@{image['digest']}".encode()).hexdigest()
+    prefix = f"delivery/{args.target}/{key}/"
+    existing = pending_proposal(repository, args.target, target, prefix, value, candidate)
+    if existing:
+        git("restore", "--", target)
+        print(f"Existing promotion PR: {existing}")
+        return
+    producer = value.get("promotion", {})
+    run_id = producer.get("verificationRunId", os.environ["GITHUB_RUN_ID"])
+    attempt = producer.get("verificationRunAttempt", "1")
+    branch = f"{prefix}{run_id}-{attempt}-{base}"
     git("config", "user.name", "github-actions[bot]")
     git("config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com")
     if git("diff", "--name-only").splitlines() != [target]:
@@ -201,7 +256,12 @@ def create_pr(args, cfg):
     git("fetch", "--no-tags", "origin", "+refs/heads/main:refs/remotes/origin/main")
     if git("rev-parse", "origin/main") != base:
         raise Rejected("main changed while preparing this PR; rerun")
-    git("push", "origin", f"HEAD:refs/heads/{branch}")
+    if git("ls-remote", "--heads", "origin", f"refs/heads/{branch}"):
+        git("fetch", "--no-tags", "origin", f"refs/heads/{branch}")
+        if git("rev-parse", "FETCH_HEAD^{tree}") != git("rev-parse", "HEAD^{tree}"):
+            raise Rejected("Existing proposal branch differs; inspect it before retrying")
+    else:
+        git("push", "origin", f"HEAD:refs/heads/{branch}")
     body = (f"Update **{args.target}** to `{value['image']['repository']}@{value['image']['digest']}`.\n\n"
             f"Source: `{value['delivery']['sourceRepository']}@{value['delivery']['sourceCommit']}`.\n\n"
             "Only the target release file changes. Environment parameters remain independent.\n"

@@ -24,6 +24,47 @@ are shared tooling inputs. Repository checks validate the environment example
 schema without authenticating to AWS. Workflow names and required check names
 are unchanged by the lifecycle entrypoint split.
 
+### Checked plan and operator intent
+
+After applicable jobs pass, the aggregate shows the version 1 plan in its job
+summary. For a main push or manual main check it also uploads
+`checked-plan.json` in `delivery-plan-<checks-run-id>-<attempt>` for 30 days.
+A PR gets the summary. The plan records the application, repository, checked
+Git range, producer, selected checks and environments, and publication intent.
+Its `head` identifies the checked checkout. Runtime targets describe the push
+route before feature switches. Actual deployment, image digest and runtime
+verdicts belong to their respective producers.
+
+The image workflow consumes the successful upstream run's named artifact. It
+checks the repository, workflow, event, branch, head, run and attempt before
+using the plan. A missing or mismatched plan fails the route. Each main checks
+run keeps its own concurrency group; superseded PR checks may still cancel.
+Publishing jobs for the same source SHA share a group. A failed or manually
+cancelled main check can be retried from that checks run.
+
+| Change | Static application render | Push runtime targets before switches | Automatic test PR after dev acceptance |
+| --- | --- | --- | --- |
+| Local cluster declaration | local | None | No |
+| Standard AWS overlay | Corresponding AWS environment | Same environment | No |
+| AWS base | All AWS environments | All AWS environments | No |
+| Shared platform or chart template | All environments | All AWS environments | No |
+| One environment's release file | That environment | That AWS environment | Only a dev release change |
+| App source | All environments | None | No |
+
+Mixed changes take the union of affected targets. Platform static checks still
+lint shared charts and render the three standard AWS overlays. Production
+runtime always requires its extra switch. An unmapped cluster path gets broad
+static coverage without selecting a live target by itself.
+
+For a no-cloud handoff rehearsal, dispatch **delivery checks** on main with
+**publish_image** unchecked. The **delivery image** route reads the plan and
+shows its producer in the job summary, even with publication disabled. Publish
+and propose-dev should skip. A manual check may explicitly request publication
+on main; the repository publication switch must also be enabled. A manual
+runtime verification defaults to verification only; opt in to a test PR when
+selecting dev. The push runtime workflow still classifies its own push range
+using the same routing function and can start alongside checks.
+
 Current tooling:
 
 ```bash
@@ -64,7 +105,7 @@ RBAC must be present. Runtime checkout is bound to the caller's current main
 SHA. No Terraform administrator identity is used.
 
 The source environment is reverified before proposing the next environment's
-same digest. Successful dev verification can propose test automatically;
+same digest. Successful dev verification after a dev release-file change can propose test automatically;
 manual promotion can also reverify the current source. The human merges the
 PR. Canary pauses require the normal explicit operator action; verifiers do
 not bypass pauses. A short-lived CI verification report binds the accepted

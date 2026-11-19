@@ -15,7 +15,7 @@ import time
 from urllib.parse import urlencode, urlsplit
 from urllib.request import Request, urlopen
 
-from common import ROOT, Rejected, config, fingerprint, identity, release, repo_path, run
+from common import COMMIT, ROOT, Rejected, config, fingerprint, identity, release, repo_path, run
 from flow import input_fingerprint
 from verification import producer_job
 
@@ -30,6 +30,32 @@ def fetch_json(url):
         return json.load(response)
 
 
+class Superseded(Rejected):
+    """A descendant of the requested Git revision was observed."""
+
+
+class IdentityMismatch(Rejected):
+    """A reconciled stable workload has the wrong declared identity."""
+
+
+def check_observed_revision(requested, observed):
+    if requested == observed:
+        return
+    if isinstance(observed, str) and COMMIT.fullmatch(observed) and COMMIT.fullmatch(requested):
+        # A newer main may arrive after checkout. Fetch only the observed SHA
+        # when missing. Unknown history is never evidence of supersession.
+        def git(*args):
+            try:
+                return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, timeout=30).returncode
+            except subprocess.TimeoutExpired:
+                return 1
+        if git("cat-file", "-e", observed + "^{commit}") != 0:
+            git("fetch", "--no-tags", "origin", observed)
+        if git("merge-base", "--is-ancestor", requested, observed) == 0:
+            raise Superseded(f"Argo reconciled {observed} after {requested}; reverify current main")
+    raise Rejected("Argo CD has not reconciled the requested configuration revision")
+
+
 def verify_cluster(application, workload, pods, expected, environment, revision, container_name):
     if application["status"].get("sync", {}).get("status") != "Synced":
         raise Rejected("Argo CD application is not Synced")
@@ -37,6 +63,8 @@ def verify_cluster(application, workload, pods, expected, environment, revision,
         raise Rejected("Argo CD has not reconciled the requested configuration revision")
     if application["status"].get("health", {}).get("status") != "Healthy":
         raise Rejected("Argo CD application is not Healthy; complete any manual Canary pause first")
+    if application.get("operation") or application["status"].get("operationState", {}).get("phase") in ("Running", "Terminating"):
+        raise Rejected("Argo CD still has an active operation")
     spec, status = workload["spec"], workload.get("status", {})
     desired = spec.get("replicas", 1)
     if desired < 1 or int(status.get("observedGeneration", 0)) < int(workload["metadata"]["generation"]):
@@ -51,12 +79,12 @@ def verify_cluster(application, workload, pods, expected, environment, revision,
     template = spec["template"]
     annotations = template["metadata"].get("annotations", {})
     if annotations.get("platform.startup.dev/environment") != environment:
-        raise Rejected("Live workload environment mismatch")
+        raise IdentityMismatch("Live workload environment mismatch")
     if annotations.get("platform.startup.dev/source-commit") != expected["delivery"]["sourceCommit"]:
-        raise Rejected("Live workload source commit mismatch")
+        raise IdentityMismatch("Live workload source commit mismatch")
     candidates = [item for item in template["spec"]["containers"] if item["name"] == container_name]
     if len(candidates) != 1 or candidates[0]["image"] != expected_image:
-        raise Rejected("Live workload image differs from the release")
+        raise IdentityMismatch("Live workload image differs from the release")
     active = [pod for pod in pods["items"] if not pod["metadata"].get("deletionTimestamp")]
     if len(active) < desired:
         raise Rejected("Not enough active application Pods")
@@ -121,6 +149,7 @@ def verify_once(cfg, environment, revision, expected, prometheus, observed):
     observed.clear()
     observed.update(application=env["application"], namespace=app["namespace"],
                     gitops_revision=application.get("status", {}).get("sync", {}).get("revision"))
+    check_observed_revision(revision, observed["gitops_revision"])
     resources = application.get("status", {}).get("resources", [])
     matching = [item for item in resources if item["kind"] in ("Deployment", "Rollout")
                 and item.get("namespace") == app["namespace"]]
@@ -204,6 +233,8 @@ def main():
                 try:
                     verify_once(cfg, args.environment, args.revision, expected, prometheus, report["observed"])
                     break
+                except (Superseded, IdentityMismatch):
+                    raise
                 except (Rejected, KeyError, OSError, ValueError, subprocess.CalledProcessError) as error:
                     if time.monotonic() >= deadline:
                         raise Rejected(f"Runtime acceptance timed out: {error}") from error
@@ -213,6 +244,8 @@ def main():
                       checks=["argocd-revision", "workload-and-pod-image", "http-version", "application-metrics"])
     except (Rejected, KeyError, ValueError, TypeError, OSError, subprocess.CalledProcessError) as error:
         report["reason"] = str(error)[:500]
+        if isinstance(error, Superseded):
+            report["result"] = "superseded"
         print(f"REJECTED: {error}", file=sys.stderr)
     report["analysis"] = analysis_references(report["observed"])
     report["completed_at"] = datetime.now(timezone.utc).isoformat()

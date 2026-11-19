@@ -71,20 +71,24 @@ def verified_report(repository, run_id, attempt, source):
     job_name = f"{caller} / {producer_job(source)}"
     require_source_job(specific, job_name, attempt, workflow["head_sha"])
     name = f"delivery-verified-{source}-{run_id}-{attempt}"
-    selected = [item for item in items(path + "/artifacts", "artifacts")
-                if item["name"] == name and not item["expired"]]
-    if len(selected) != 1:
-        raise Rejected("Verification report missing or expired; reverify the source")
-    item = selected[0]
-    if item["size_in_bytes"] > 1024 * 1024:
-        raise Rejected("Unexpected verification artifact size")
-    archive = api(f"repos/{repository}/actions/artifacts/{item['id']}/zip", binary=True)
-    with zipfile.ZipFile(io.BytesIO(archive)) as zipped:
-        if zipped.namelist() != ["verified.json"] or zipped.getinfo("verified.json").file_size > 65536:
-            raise Rejected("Unexpected verification artifact contents")
-        report = json.loads(zipped.read("verified.json"))
+    report = read_artifact(repository, path, name, "verified.json")
     if (report.get("config_revision") != workflow["head_sha"] or report.get("repository") != repository
             or report.get("run_id") != run_id or report.get("run_attempt") != attempt
             or report.get("environment") != source or report.get("producer_job") != producer_job(source)):
         raise Rejected("Report identity differs from its trusted source job")
     return report
+
+
+def read_artifact(repository, path, name, filename):
+    selected = [item for item in items(path + "/artifacts", "artifacts")
+                if item["name"] == name and not item["expired"]]
+    if len(selected) != 1:
+        raise Rejected("Required artifact missing or expired: " + name)
+    item = selected[0]
+    if item["size_in_bytes"] > 1024 * 1024:
+        raise Rejected("Unexpected verification artifact size")
+    archive = api(f"repos/{repository}/actions/artifacts/{item['id']}/zip", binary=True)
+    with zipfile.ZipFile(io.BytesIO(archive)) as zipped:
+        if zipped.namelist() != [filename] or zipped.getinfo(filename).file_size > 65536:
+            raise Rejected("Unexpected verification artifact contents")
+        return json.loads(zipped.read(filename))

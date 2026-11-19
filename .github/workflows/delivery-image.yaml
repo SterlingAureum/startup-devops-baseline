@@ -53,6 +53,7 @@ jobs:
       artifact-metadata: write
     outputs:
       image: ${{ steps.publish.outputs.image }}
+      attempt: ${{ steps.publish.outputs.attempt }}
     steps:
       - name: Require PR automation credentials before building
         env:
@@ -111,10 +112,11 @@ jobs:
           DIGEST="$(docker buildx imagetools inspect "${IMAGE}" --format '{{json .Manifest.Digest}}' | tr -d '"')"
           [[ "${DIGEST}" =~ ^sha256:[0-9a-f]{64}$ ]]
           echo "image=${IMAGE%:*}@${DIGEST}" >> "${GITHUB_OUTPUT}"
+          echo "attempt=${GITHUB_RUN_ATTEMPT}" >> "${GITHUB_OUTPUT}"
           echo "digest=${DIGEST}" >> "${GITHUB_OUTPUT}"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: delivery-image-sbom-${{ github.event.workflow_run.head_sha }}
+          name: delivery-image-sbom-${{ github.event.workflow_run.head_sha }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/delivery-image.spdx.json
           if-no-files-found: error
           retention-days: 30
@@ -132,7 +134,24 @@ jobs:
           sbom-path: ${{ runner.temp }}/delivery-image.spdx.json
           push-to-registry: true
 
+      - name: Record the scanned and attested publication
+        env:
+          SOURCE_REVISION: ${{ github.event.workflow_run.head_sha }}
+          IMAGE: ${{ steps.publish.outputs.image }}
+        run: |
+          python3 -m pip install PyYAML==6.0.3
+          python3 scripts/delivery/image_receipt.py "${RUNNER_TEMP}/published.json"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: delivery-image-receipt-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/published.json
+          if-no-files-found: error
+          retention-days: 30
+
   propose-dev:
+    permissions:
+      contents: read
+      actions: read
     concurrency:
       group: delivery-proposal-aws-dev
       cancel-in-progress: false
@@ -154,5 +173,7 @@ jobs:
           DELIVERY_PR_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
           GH_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
           IMAGE: ${{ needs.publish.outputs.image }}
+          REPORT_READ_TOKEN: ${{ github.token }}
+          PUBLISH_ATTEMPT: ${{ needs.publish.outputs.attempt }}
           SOURCE_REVISION: ${{ github.event.workflow_run.head_sha }}
         run: python3 scripts/delivery/flow.py pr --target aws-dev --image "${IMAGE}" --commit "${SOURCE_REVISION}"

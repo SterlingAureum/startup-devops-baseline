@@ -95,17 +95,18 @@ def render_children(root, directory):
     require((chart / "Chart.yaml").is_file(), "Initial lifecycle expects a Helm app-of-apps root; Kustomize/multi-source support is pending")
     helm = src.get("helm", {})
     require(not helm.get("fileParameters"), "Helm fileParameters are outside this initial root adapter")
-    command = ["helm", "template", helm.get("releaseName", root["metadata"]["name"]), str(chart), "--namespace", root["metadata"]["namespace"]]
+    command = ["helm", "template", helm.get("releaseName", root["metadata"]["name"]), str(chart),
+               "--namespace", root["spec"]["destination"].get("namespace", root["metadata"]["namespace"])]
     for file in helm.get("valueFiles", []):
         value_path = source_path(directory, str(Path(src["path"]) / file))
         require(value_path.is_file(), "Root values file is absent")
         command += ["-f", str(value_path)]
     with tempfile.TemporaryDirectory(prefix="baseline-values-") as temporary:
-        for key in ("values", "valuesObject"):
-            if key in helm:
-                file = Path(temporary) / (key + ".yaml")
-                file.write_text(yaml.safe_dump(helm[key]) if key == "valuesObject" else helm[key])
-                command += ["-f", str(file)]
+        key = "valuesObject" if "valuesObject" in helm else "values"
+        if key in helm:
+            file = Path(temporary) / (key + ".yaml")
+            file.write_text(yaml.safe_dump(helm[key]) if key == "valuesObject" else helm[key])
+            command += ["-f", str(file)]
         for parameter in helm_parameters(helm.get("parameters", [])):
             command += ["--set-string" if parameter["forceString"] else "--set", parameter["name"] + "=" + parameter["value"]]
         children = [item for item in yaml.safe_load_all(run(command, cwd=directory).stdout)

@@ -86,8 +86,13 @@ def release(path):
     return value
 
 
+IDENTITY_FIELDS = {"image": ("repository", "tag", "digest"), "release": ("applicationVersion",),
+                   "delivery": ("sourceRepository", "sourceCommit", "workflowRunId", "workflowRunAttempt")}
+
+
 def identity(value):
-    return {"image": value["image"], "release": value["release"], "delivery": value["delivery"]}
+    return {group: {k: value[group][k] for k in keys if k in value[group]}
+            for group, keys in IDENTITY_FIELDS.items()}
 
 
 def emit_output(name, value):

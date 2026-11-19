@@ -16,8 +16,8 @@ python3 scripts/ops/cli.py show --env aws-dev
 python3 scripts/ops/cli.py show --env aws-test
 ```
 
-Terraform validation needs Terraform and provider download access; app rendering
-needs Helm; platform rendering also needs kubectl. These checks do not apply
+Terraform validation needs Terraform and provider download access. AWS application
+and platform rendering use Helm and kubectl kustomize. These checks do not apply
 resources or prove that external controller chart combinations work live.
 
 Legacy apply/bootstrap/destroy/recovery/cost-audit scripts have moved together

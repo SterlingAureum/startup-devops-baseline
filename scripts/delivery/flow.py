@@ -11,9 +11,10 @@ import tempfile
 
 import yaml
 
-from common import (COMMIT, DIGEST, ROOT, Rejected, UniqueLoader, config, emit_output,
+from common import (COMMIT, DIGEST, IDENTITY_FIELDS, ROOT, Rejected, UniqueLoader, config, emit_output,
                     fingerprint, git, identity, load_yaml, release, repo_path, run)
-from offline import validate
+from gitops import render_environment
+from image_receipt import require_published
 from verification import require_pass, verified_report
 
 
@@ -65,29 +66,6 @@ def changed_paths(base, head):
     return [path for path in result.split("\0") if path]
 
 
-def render_environment(cfg, environment):
-    app = cfg["application"]
-    env = cfg["environments"][environment]
-    command = ["helm", "template", app["release_name"], str(repo_path(app["chart"])),
-               "--namespace", app["namespace"]]
-    for path in env["values"] + ([env["release"]] if env["release"] else []):
-        command += ["-f", str(repo_path(path))]
-    if environment == "local":
-        # Honor the actual local parent Application's Helm parameter overrides.
-        parent = run(["helm", "template", "local-platform", "clusters/local/platform"],
-                     cwd=ROOT, capture_output=True).stdout
-        child = next(item for item in yaml.load_all(parent, Loader=UniqueLoader)
-                     if item and item.get("kind") == "Application"
-                     and item["metadata"]["name"] == env["application"])
-        for item in child["spec"]["source"]["helm"].get("parameters", []):
-            command += ["--set" if item["name"].endswith((".enabled", "Seconds")) else "--set-string",
-                        f"{item['name']}={item['value']}"]
-    text = run(command, cwd=ROOT, capture_output=True).stdout
-    validate(list(yaml.load_all(text, Loader=UniqueLoader)), environment, app["namespace"],
-             app["metrics_required"], app["environment_annotation"])
-    return text
-
-
 def platform_check():
     charts = [path.parent for folder in ("platform", "clusters/local")
               for path in (ROOT / folder).rglob("Chart.yaml")]
@@ -110,12 +88,17 @@ def platform_check():
 def input_fingerprint(cfg, environment):
     """Bind runtime acceptance to effective deployment inputs, not unrelated app edits."""
     env = cfg["environments"][environment]
-    paths = {repo_path("delivery/standard/config.json"), *[repo_path(path) for path in env["values"]]}
-    for folder in (cfg["application"]["chart"], "platform", "clusters", "scripts/delivery"):
-        paths.update(path for path in repo_path(folder).rglob("*")
-                     if path.is_file() and "__pycache__" not in path.parts
-                     and "/values/releases/" not in str(path))
-    digest = hashlib.sha256()
+    chart = repo_path(cfg["application"]["chart"])
+    env_files = {repo_path(item) for entry in cfg["environments"].values()
+                 for item in [*entry["values"], entry["release"]] if item}
+    paths = {repo_path(item) for item in env["values"]}
+    for folder in (chart, repo_path("platform"), repo_path("scripts/delivery"),
+                   *(repo_path(item) for item in env["cluster_paths"])):
+        paths.update(path for path in folder.rglob("*")
+                     if path.is_file() and "__pycache__" not in path.parts and path not in env_files)
+    settings = {"version": 2, "environment": environment, "deployment": env,
+                "application": cfg["application"], "runtime": cfg["runtime"], "branch": cfg["base_branch"]}
+    digest = hashlib.sha256(json.dumps(settings, sort_keys=True, separators=(",", ":")).encode() + b"\0")
     for path in sorted(paths):
         digest.update(str(path.relative_to(ROOT)).encode() + b"\0" + path.read_bytes() + b"\0")
     return digest.hexdigest()
@@ -135,10 +118,13 @@ def prepare_release(cfg, target, candidate=None, image=None, commit=None, source
                 and value["delivery"].get("sourceCommit") == commit):
             return False
         tag = f"sha-{commit[:7]}"
-        value.update({"image": {"repository": repository, "tag": tag, "digest": digest},
-                      "release": {"applicationVersion": tag},
-                      "delivery": {"sourceRepository": source_repository, "sourceCommit": commit,
-                                   "workflowRunId": str(run_id)}})
+        attempt = os.getenv("PUBLISH_ATTEMPT")
+        if not attempt or not attempt.isdecimal():
+            raise Rejected("Dev entry requires the publish job attempt")
+        incoming = {"image": {"repository": repository, "tag": tag, "digest": digest},
+                    "release": {"applicationVersion": tag},
+                    "delivery": {"sourceRepository": source_repository, "sourceCommit": commit,
+                                 "workflowRunId": str(run_id), "workflowRunAttempt": attempt}}
         value.pop("promotion", None)
     else:
         expected_source = {"aws-test": "aws-dev", "aws-prod": "aws-test"}.get(target)
@@ -155,10 +141,14 @@ def prepare_release(cfg, target, candidate=None, image=None, commit=None, source
             raise Rejected("Source deployment inputs changed after verification; verify again")
         if identity(release(target_path)) == identity(current):
             return False
-        value.update(identity(current))
-        value["promotion"] = {"sourceEnvironment": expected_source,
-                              "verificationRunId": str(candidate["run_id"]),
-                              "verificationRunAttempt": str(candidate["run_attempt"])}
+        incoming = identity(current)
+        value.setdefault("promotion", {}).update(sourceEnvironment=expected_source,
+                                                 verificationRunId=str(candidate["run_id"]),
+                                                 verificationRunAttempt=str(candidate["run_attempt"]))
+    for group, keys in IDENTITY_FIELDS.items():
+        for key in keys:
+            value[group].pop(key, None)
+        value[group].update(incoming[group])
     original = target_path.read_text()
     target_path.write_text(yaml.safe_dump(value, sort_keys=False))
     release(target_path)
@@ -200,6 +190,8 @@ def pending_proposal(repository, target, path, prefix, value, candidate):
                         raise Rejected("Source inputs changed")
                 except (Rejected, KeyError) as error:
                     raise Rejected(f"Review and close stale PR {pr['html_url']} before proposing again: {error}") from error
+            else:
+                require_published(repository, previous)
             return pr["html_url"]
     return None
 

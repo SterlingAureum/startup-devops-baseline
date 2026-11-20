@@ -35,11 +35,14 @@ eks_cluster_version = "1.36"
 # NetworkPolicy uses it for pre-DNAT access to operator-managed Services.
 eks_service_ipv4_cidr = "172.21.0.0/16"
 
-# Public access fails closed unless a restricted CIDR is supplied at runtime.
-# Do not place a workstation public IP in this file. Use:
-# ./scripts/apply-eks-api-access-cidr.sh
 eks_endpoint_public_access  = true
 eks_endpoint_private_access = true
+# Public access requires at least one restricted IPv4 CIDR. In your private
+# tfvars, uncomment the next line and replace the placeholder. For one client,
+# check its egress IPv4 on the network/VPN used by kubectl:
+#   curl -4fsS https://checkip.amazonaws.com
+# eks_public_access_cidrs = ["<YOUR_EGRESS_IPV4>/32"]
+# For private-only access, set public access to false and leave the CIDRs unset.
 
 # Disposable day-to-day profile: retain the managed log group but ingest no
 # control-plane logs. Enable production-parity explicitly before formal tests.

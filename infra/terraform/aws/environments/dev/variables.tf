@@ -112,7 +112,7 @@ variable "eks_public_access_cidrs" {
       alltrue([for cidr in var.eks_public_access_cidrs : can(cidrnetmask(cidr))]) &&
       !contains(var.eks_public_access_cidrs, "0.0.0.0/0")
     )
-    error_message = "eks_public_access_cidrs must contain only valid restricted CIDRs and must not contain 0.0.0.0/0. Use scripts/apply-eks-api-access-cidr.sh for a dynamic workstation IP."
+    error_message = "eks_public_access_cidrs must contain only valid restricted CIDRs and must not contain 0.0.0.0/0. Set the CIDRs in the private environment tfvars when using the public endpoint."
   }
 }
 

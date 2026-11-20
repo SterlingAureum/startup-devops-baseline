@@ -99,7 +99,7 @@ def check_private_vars(values, account, cluster):
                 isinstance(x, str) and ipaddress.IPv4Network(x, strict=False).prefixlen > 0 for x in cidrs)
         except ValueError:
             valid = False
-        require(valid, "Supply restricted IPv4 CIDRs for the public EKS endpoint in the private inputs")
+        require(valid, "Set eks_public_access_cidrs in the selected private tfvars to restricted IPv4 CIDRs (for one client, its egress IPv4/32)")
 
 
 def check_bindings(objects, namespace, group, permissions):

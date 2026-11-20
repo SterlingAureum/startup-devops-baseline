@@ -66,7 +66,73 @@ resources. Keep login credentials, secret contents, state and kubeconfig outside
 | Promote to test | Prepare test's own inputs and cluster after dev passes. Keep dev available for reverification. Follow the reviewed promotion PR and verify the same digest on test. |
 | Clean up | Decide what happens to CNPG objects/backups and secrets first. Release Argo-managed workloads and cloud-controller resources while controllers and permissions are available. Review the destroy plan for the disposable environment root only. After removal, inspect residual load balancers, volumes, NAT/EIPs, logs and backups. Preserve shared state and persistent identities. |
 
-The current AWS lifecycle CLI offers show and offline preflight. An executable provisioning,
-bootstrap and teardown path for new clusters is still pending. The workflows for runtime
-validation operate on an existing cluster. Leave publication, cloud runtime and prod switches
-off for the offline phase. Archived v0.12 executors are historical material.
+## Deploy or resume the standard stack on provisioned dev
+
+Run from the repository on the workstation with the personal inventory, AWS CLI,
+Terraform and kubectl. This uses the dev S3 backend and default workspace. The
+operator profile needs access to EKS, Terraform outputs, Secrets Manager and the
+demo Route 53 zone. If role_arn is configured, select credentials for that role.
+Use the usual preflight Python environment.
+
+```bash
+.venv/bin/python scripts/ops/cli.py deploy --env aws-dev --config ~/.config/startup-devops-baseline/environments.yaml
+```
+
+The command refreshes `~/.kube/startup-devops-baseline/aws-dev.yaml`, prepares
+ServiceAccounts and Grafana, installs Argo CD, seeds the ALB Application, and
+applies the root. It reconciles the CNPG backup destination, seeds the demo's
+first AWS credential, preserves existing AWSCURRENT, and creates a DNS alias
+when absent. The root tracks main and may provision additional EC2 nodes, gp3
+volumes and an ALB. Convergence requires the expected Applications to be Synced
+and Healthy. Use the separate dev runtime workflow for HTTP and release validation.
+
+After interruption, run the same command again. An existing foreign backup
+destination or DNS record requires operator review. To inspect the cluster:
+
+```bash
+export KUBECONFIG="$HOME/.kube/startup-devops-baseline/aws-dev.yaml"
+kubectl -n argocd get applications
+```
+
+Provisioning uses the dev Terraform root. The following destroy entrypoint handles a provisioned standard personal dev stack. AWS test remains
+at the preparation stage. Archived v0.12 executors are historical material.
+
+### Destroy the personal dev cluster
+
+Run from the operator workstation after stopping other deploys and runtime jobs.
+Use the same private inventory, operator profile and backend as deployment.
+Without confirmation this reads AWS, the cluster, and a saved Terraform plan,
+then prints planned deletions and retained addresses. The preview requires AWS
+read and Terraform backend/lock access. The confirmed invocation generates and
+checks its own fresh plan before the first cluster mutation.
+
+```bash
+.venv/bin/python scripts/ops/cli.py destroy --env aws-dev --config ~/.config/startup-devops-baseline/environments.yaml
+.venv/bin/python scripts/ops/cli.py destroy --env aws-dev --config ~/.config/startup-devops-baseline/environments.yaml --confirm startup-devops-baseline-dev
+```
+
+The operation targets the dedicated personal dev cluster, including its
+startup-apps, data-platform and observability namespaces. The dev operator
+needs EC2 snapshot creation, tagging and read access in addition to existing
+cluster, DNS and Terraform teardown permissions. It stops Argo reconciliation,
+records crash-consistent EBS snapshots of the standard PVCs, waits for completed
+snapshots, removes the matching DNS alias/Ingress, then releases database and
+monitoring volumes, Karpenter workers and generated instance profiles. A
+completed EBS snapshot preserves blocks at snapshot time. Application-level
+restore validation is a separate operation.
+
+The dev state keeps the CNPG S3 bucket and its settings, and the demo Secrets
+Manager secret (needed with retained data). Existing S3 lifecycle policies
+still apply. Snapshots, retained objects and the secret incur storage/service
+charges. State-bootstrap and runtime-identities have separate ownership.
+Snapshots are identified in the local receipt under
+`~/.local/state/startup-devops-baseline/`. Dev state with these retained
+addresses is expected. On a fresh database deployment, check any retained
+AWSCURRENT credential against the new database; a rotated or stale value
+needs an explicit reconciliation decision.
+
+The executor verifies the saved plan's changes and applies that file only.
+Retry the same confirmed command from the same workstation on interruption.
+Keep the private inventory and local receipt for partial apply recovery.
+Completion checks require the cluster and VPC to be absent and only retained
+addresses to remain in the selected state.

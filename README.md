@@ -72,8 +72,8 @@ rules or enabling publication/runtime jobs.
 
 Terraform and AWS GitOps declarations remain in place. Legacy AWS apply,
 bootstrap, recovery and destroy scripts are archived together with their
-dependencies; AWS environment entries support configuration inspection only,
-and the new AWS operator lifecycle is pending. Do not run archived
+dependencies. AWS entries support offline inspection. Provisioned personal dev
+clusters support the [AWS deploy command](docs/operations/aws-transition.md). Do not run archived
 scripts from their relocated paths as current procedures. Read
 [the AWS transition boundary](docs/operations/aws-transition.md).
 

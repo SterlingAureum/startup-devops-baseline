@@ -44,7 +44,7 @@ python3 scripts/ops/cli.py preflight --env aws-test
 ```
 
 Install the preflight dependencies and follow [AWS preparation](aws-transition.md) for private inputs.
-AWS create, apply and destroy remain outside this CLI.
+Use the deploy command on a provisioned personal dev cluster. Terraform create, apply and destroy remain separate.
 The inventory does not create IAM profiles or permissions. Future AWS execution
 must resolve effective identities, compare the expected target account, separate
 backend and infrastructure identities where necessary, and use reviewed plan/apply

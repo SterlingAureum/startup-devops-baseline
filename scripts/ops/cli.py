@@ -1,4 +1,4 @@
-"""Environment-scoped lifecycle entrypoint; AWS execution is not implemented yet."""
+"""Environment-scoped lifecycle entrypoint for kind and personal AWS environments."""
 import argparse
 from copy import deepcopy
 import json
@@ -55,8 +55,10 @@ def configure(args, local_only=False):
     if local_only:
         require(env["driver"] == "kind", "local.py only accepts kind environments; use cli.py show to inspect AWS configuration")
     if env["driver"] == "aws":
-        require(args.command in ("show", "preflight"), "AWS lifecycle execution is pending; use show or offline preflight")
-        require(not any(getattr(args, key) is not None for key in ("cluster", "repo_url", "revision", "timeout", "http_port", "https_port", "node_image", "argocd_manifest", "confirm", "kubeconfig_file")), "AWS inspection does not accept kind command overrides")
+        require(args.command in ("show", "preflight") or (args.env == "aws-dev" and args.command in ("deploy", "destroy")),
+                "Supported AWS operations: show, preflight, and deploy/destroy on personal aws-dev")
+        require(args.confirm is None or args.command == "destroy", "--confirm only applies to destroy")
+        require(not any(getattr(args, key) is not None for key in ("cluster", "repo_url", "revision", "timeout", "http_port", "https_port", "node_image", "argocd_manifest", "kubeconfig_file")), "AWS inspection does not accept kind command overrides")
         return env
     require(args.command != "preflight", "preflight requires aws-dev or aws-test")
     for argument, section, key in (("cluster", "kind", "cluster"), ("node_image", "kind", "node_image"),
@@ -116,6 +118,20 @@ def main(argv=None, local_only=False):
     requested_revision = args.revision
     try:
         env = configure(args, local_only)
+        if env["driver"] == "aws" and args.command == "destroy":
+            from aws_destroy import destroy, PHASES
+            if args.dry_run:
+                print(json.dumps({"environment": args.env, "command": "destroy", "steps": PHASES, "executed": False}, indent=2))
+            else:
+                destroy(env, args.config, args.confirm)
+            return 0
+        if env["driver"] == "aws" and args.command == "deploy":
+            from aws_deploy import deploy, PHASES
+            if args.dry_run:
+                print(json.dumps({"environment": args.env, "command": "deploy", "steps": PHASES, "executed": False}, indent=2))
+            else:
+                deploy(env, args.config)
+            return 0
         if args.command == "show" or args.dry_run:
             print(json.dumps({"environment": args.env, "configuration": env, "command": args.command,
                               "steps": STEPS[args.command], "executed": False}, indent=2))

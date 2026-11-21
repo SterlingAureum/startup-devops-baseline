@@ -14,6 +14,7 @@ from connections import atomic_write
 
 PHASES = ["inspect selected account, backend, Terraform delete plan and live dev identity",
           "pause GitOps and apply the selected backup policy", "release exact DNS alias and ingress",
+          "wait for startup-apps ExternalSecrets to finalize before deleting namespaces",
           "release workloads, PVCs and Karpenter nodes while controllers are available",
           "apply reviewed Terraform plan and check remaining state, VPC and cluster"]
 MODULES = {"eks", "vpc", "github_actions_runtime_identity", "cnpg_backup", "external_secrets",
@@ -215,6 +216,34 @@ def release_ingress(g, vpc, expected):
         time.sleep(5)
 
 
+def release_external_secrets(g):
+    ns = "startup-apps"
+    kind = "externalsecrets.external-secrets.io"
+    if not g.obj(ns, "namespace/" + ns) or not g.obj(ns, "crd/" + kind):
+        return
+
+    items = resources(g, kind, "-n", ns)
+    if not items:
+        return
+    print("Releasing startup-apps ExternalSecrets while ESO and its RBAC are available", flush=True)
+    g.k("delete", kind, "--all", "-n", ns, "--ignore-not-found", "--wait=false", "--request-timeout=30s")
+    deadline = time.monotonic() + min(180, g.timeout)
+    last = None
+    while True:
+        items = resources(g, kind, "-n", ns)
+        if not items:
+            print("startup-apps ExternalSecrets finalized", flush=True)
+            return
+        pending = sorted((i["metadata"]["name"], i["metadata"].get("finalizers", [])) for i in items)
+        if pending != last:
+            print(f"Pending startup-apps ExternalSecrets (name, finalizers): {pending}", flush=True)
+            last = pending
+        if time.monotonic() >= deadline:
+            raise OpsError(f"ExternalSecret cleanup timed out: {pending}. Inspect the external-secrets "
+                           "controller logs, startup-apps RBAC and namespace conditions, then retry destroy.")
+        time.sleep(5)
+
+
 def remove_stack(g, out, journal, save, retain):
     expected_lbs = demo_lbs(g, out["vpc_id"])
     record = dns_record(g, out)
@@ -232,6 +261,7 @@ def remove_stack(g, out, journal, save, retain):
         g.aws("route53", "change-resource-record-sets", "--hosted-zone-id", out["route53_hosted_zone_id"],
               "--change-batch", json.dumps(batch))
     release_ingress(g, out["vpc_id"], expected_lbs)
+    release_external_secrets(g)
     require(set(storage(g)) <= set(current), "New persistent volume appeared; repeat the destroy preview")
     for ns, kind in [("data-platform", "scheduledbackups.postgresql.cnpg.io"),
                      ("data-platform", "clusters.postgresql.cnpg.io"),

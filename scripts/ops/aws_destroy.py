@@ -8,6 +8,7 @@ import tempfile
 import time
 
 from aws_deploy import Cluster, lifecycle_lock, reopen_receipt, run
+from aws_dev_network import release_network
 from aws_preflight import inspect, local_file, read_inputs
 from configuration import ROOT, OpsError, require
 from connections import atomic_write
@@ -16,7 +17,7 @@ PHASES = ["inspect selected account, backend, Terraform delete plan and live dev
           "pause GitOps and apply the selected backup policy", "release exact DNS alias and ingress",
           "wait for startup-apps ExternalSecrets to finalize before deleting namespaces",
           "release workloads, PVCs and Karpenter nodes while controllers are available",
-          "apply reviewed Terraform plan and check remaining state, VPC and cluster"]
+          "remove EKS, release verified cluster network dependencies, then destroy the VPC and check remaining state"]
 MODULES = {"eks", "vpc", "github_actions_runtime_identity", "cnpg_backup", "external_secrets",
            "tls_dns", "fis", "karpenter"}
 
@@ -364,6 +365,10 @@ def session(g, env, config, confirm, folder, tmp, retain=False):
         if journal.get("endpoint"):
             require(journal["endpoint"] == live["endpoint"], "Cluster changed during teardown")
         journal["endpoint"] = live["endpoint"]
+        cluster_sg = live["resourcesVpcConfig"].get("clusterSecurityGroupId")
+        if cluster_sg:
+            require(journal.get("cluster_sg", cluster_sg) == cluster_sg, "Cluster security group changed")
+            journal["cluster_sg"] = cluster_sg
         require(not owner or generation({"tags": live.get("tags")}) == owner, "Live EKS creation marker differs from state")
         if not journal["cleaned"]:
             g.path = Path(tmp) / "kubeconfig"
@@ -381,13 +386,23 @@ def session(g, env, config, confirm, folder, tmp, retain=False):
     else:
         require(journal.get("cleaned"), "EKS absent before Kubernetes cleanup could be verified")
     plan = tmp + "/destroy.tfplan"
-    terraform("plan", "-destroy", "-input=false", "-lock-timeout=60s", "-out=" + plan,
-              "-var-file=" + str(local_file(tf["variables_file"], base)),
-              *["-target=" + a for a in sorted(targets)])
-    deletes = check_plan(json.loads(terraform("show", "-json", plan)), targets, owner)
+
+    def review(addresses):
+        terraform("plan", "-destroy", "-input=false", "-lock-timeout=60s", "-out=" + plan,
+                  "-var-file=" + str(local_file(tf["variables_file"], base)),
+                  *["-target=" + a for a in sorted(addresses)])
+        return check_plan(json.loads(terraform("show", "-json", plan)), addresses, owner)
+
+    def apply():
+        subprocess.run(tfcmd + ["apply", "-input=false", "-lock-timeout=60s", plan], env=tfenv, check=True)
+
+    deletes = review(targets)
     for address, output in [(BUCKET, "cnpg_backup_bucket_name"), (SECRET, "external_secrets_secret_arn")]:
         if address in targets or address in keep:
             print("Retain" if address in keep else "Delete", address, out.get(output, "(see state address)"))
+    if any(a.startswith("module.vpc.") for a in targets):
+        print(f"After EKS deletion, inspect {vpc} for detached dev CNI ENIs and release "
+              f"the recorded EKS security group {journal.get('cluster_sg', '(unrecorded)')} if verified.")
     print("Terraform destroy:", *deletes, sep="\n  ")
     print("Previously recorded snapshots, preserved:", journal.get("prior_snapshots", []), journal["snapshots"])
     print("Shared state backend, its KMS key and separate runtime identity root are outside this plan.")
@@ -401,8 +416,31 @@ def session(g, env, config, confirm, folder, tmp, retain=False):
         remove_stack(g, out, journal, save, retain)
         journal["cleaned"] = True
         save()
-    print("Applying dev destroy plan", flush=True)
-    subprocess.run(tfcmd + ["apply", "-input=false", "-lock-timeout=60s", plan], env=tfenv, check=True)
+    save()
+    network = {a for a in targets if a.startswith("module.vpc.")}
+    services = targets - network
+    if services:
+        if network:
+            review(services)
+        print("Applying dev service destroy plan", flush=True)
+        apply()
+    if network:
+        current = json.loads(terraform("state", "pull"))
+        require(current.get("lineage") == state["lineage"], "Dev state lineage changed")
+        remaining, retained = partition(current, owner, retain)
+        require(remaining <= network and retained == keep, "Review changed state before dev network cleanup")
+        vpc_ids = [i["attributes"]["id"] for r in current["resources"] if r.get("module") == "module.vpc"
+                   and r["mode"] == "managed" and r["type"] == "aws_vpc" for i in r["instances"]]
+        if vpc_ids:
+            require(vpc_ids == [vpc], "VPC in remaining state differs from receipt")
+            release_network(g, journal, current)
+        else:
+            # A previous partial apply can leave independent network resources such as an EIP.
+            check_absent(g, vpc)
+        if remaining:
+            review(remaining)
+            print("Applying dev network destroy plan", flush=True)
+            apply()
     remaining, retained = partition(json.loads(terraform("state", "pull")), owner, retain)
     require(not remaining and retained == keep, "Review residual or changed Terraform state")
     check_absent(g, vpc)

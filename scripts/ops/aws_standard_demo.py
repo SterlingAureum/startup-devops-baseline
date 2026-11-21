@@ -4,39 +4,124 @@ import json
 import time
 import uuid
 
+from aws_eso_bootstrap import EXTERNAL, wait_for_consumer
 from configuration import require
 
 
-def seed_database(g, out):
-    ns = "startup-apps"
-    source = g.exists("data-platform", "secret/postgresql-baseline-app")
-    pending = "externalsecrets.external-secrets.io/demo-api-postgresql"
-    g.ready(ns, "crd/externalsecrets.external-secrets.io", "Established")
-    external = g.exists(ns, pending)
-    key = external["spec"]["data"][0]["remoteRef"]
-    arn = out["external_secrets_secret_arn"]
+BOOTSTRAP = "BASELINE_BOOTSTRAP"
+REBUILD = "BASELINE_CLI_DEMO_DB_REBUILD_V1"
+MARKER = "platform.startup.dev/demo-db-version"
+
+
+def database_version(g, arn, name, uri, adopt):
     metadata = json.loads(g.aws("secretsmanager", "describe-secret", "--secret-id", arn))
-    require(metadata["Name"] == out["external_secrets_secret_name"] == key["key"]
-            and key["property"] == "DATABASE_URL" and not metadata.get("DeletedDate"),
+    require(metadata["ARN"] == arn and metadata["Name"] == name and not metadata.get("DeletedDate"),
             "Demo ExternalSecret and Terraform secret differ")
-    if not any("AWSCURRENT" in stages for stages in metadata.get("VersionIdsToStages", {}).values()):
-        value = base64.b64decode(source["data"]["fqdn-uri"], validate=True).decode()
-        require(value.startswith("postgresql://"), "CNPG app Secret has no PostgreSQL URI")
-        token = str(uuid.uuid5(uuid.NAMESPACE_URL, arn + "/" + source["metadata"]["uid"]))
-        written = json.loads(g.aws(
-            "secretsmanager", "put-secret-value", "--secret-id", arn, "--client-request-token", token,
-            "--version-stages", "BASELINE_BOOTSTRAP", "--secret-string", "file:///dev/stdin",
-            data=json.dumps({"DATABASE_URL": value}), private=True))
-        # Omitting RemoveFromVersionId makes promotion fail if another writer already owns AWSCURRENT.
-        if "AWSCURRENT" not in written.get("VersionStages", []):
-            g.aws("secretsmanager", "update-secret-version-stage", "--secret-id", arn,
-                  "--version-stage", "AWSCURRENT", "--move-to-version-id", token)
-    # A rotated AWSCURRENT belongs to its operator. Refresh ESO without rewriting it.
-    g.k("-n", ns, "annotate", pending, "force-sync=" + str(time.time_ns()), "--overwrite")
-    g.ready(ns, pending)
-    g.k("-n", ns, "annotate", pending, "force-sync-")
-    target = g.exists(ns, "secret/demo-api-postgresql")
-    require(target.get("data", {}).get("DATABASE_URL"), "ESO target Secret has no DATABASE_URL")
+    stages = metadata.get("VersionIdsToStages", {})
+    current = next((v for v in stages if "AWSCURRENT" in stages[v]), None)
+    require(not adopt or current == adopt,
+            "AWSCURRENT changed since the requested demo credential adoption")
+    payload = {}
+    if current:
+        raw = json.loads(g.aws("secretsmanager", "get-secret-value", "--secret-id", arn, "--version-id", current,
+                               "--version-stage", "AWSCURRENT", private=True))
+        require(isinstance(raw.get("SecretString"), str), "Demo credential requires a JSON SecretString")
+        payload = json.loads(raw["SecretString"])
+        require(isinstance(payload, dict) and isinstance(payload.get("DATABASE_URL"), str),
+                "Expected a DATABASE_URL string in the standard demo secret")
+        managed = bool(set(stages[current]) & {BOOTSTRAP, REBUILD})
+        if payload["DATABASE_URL"] == uri and (adopt != current or managed):
+            return current
+        require(managed or adopt == current, "CNPG and operator-managed AWSCURRENT differ. "
+                "To transfer this standard demo version to the CLI, deploy with --adopt-demo-secret-version " + current)
+    require(not metadata.get("RotationEnabled") and not any("AWSPENDING" in labels for labels in stages.values()),
+            "Demo secret has active rotation; reconcile with its owner")
+    require(current or all(set(labels) <= {BOOTSTRAP, REBUILD} for labels in stages.values()),
+            "Demo secret contains unrecognized pending versions")
+    # Alternate labels so a failed promotion leaves the old AWSCURRENT ownership intact.
+    label = REBUILD if BOOTSTRAP in stages.get(current, []) else BOOTSTRAP
+    token = str(uuid.uuid4())
+    payload["DATABASE_URL"] = uri
+    written = json.loads(g.aws(
+        "secretsmanager", "put-secret-value", "--secret-id", arn, "--client-request-token", token,
+        "--version-stages", label, "--secret-string", "file:///dev/stdin", data=json.dumps(payload), private=True))
+    if not current and "AWSCURRENT" in written.get("VersionStages", []):
+        return token
+    args = ["--remove-from-version-id", current] if current else []
+    g.aws("secretsmanager", "update-secret-version-stage", "--secret-id", arn, "--version-stage", "AWSCURRENT",
+          "--move-to-version-id", token, *args)
+    return token
+
+
+def refresh_consumers(g, version):
+    def workload():
+        kinds = ["deployment.apps/demo-api"]
+        if g.obj("startup-apps", "crd/rollouts.argoproj.io"):
+            kinds.append("rollouts.argoproj.io/demo-api")
+        found = [(k, obj) for k in kinds if (obj := g.obj("startup-apps", k))]
+        require(len(found) < 2, "Both Deployment and Rollout exist for demo-api; finish the workload migration")
+        return found[0] if found else None
+
+    kind, obj = g.until("standard demo database consumer", workload)
+    template = obj["spec"]["template"]
+    require(any(e.get("name") == "DATABASE_URL" and
+                e.get("valueFrom", {}).get("secretKeyRef", {}).get("name") == "demo-api-postgresql" and
+                e["valueFrom"]["secretKeyRef"].get("key") == "DATABASE_URL"
+                for c in template["spec"]["containers"] for e in c.get("env", [])),
+            "Demo workload does not consume the expected database Secret")
+    if template.get("metadata", {}).get("annotations", {}).get(MARKER) != version:
+        patch = {"metadata": {"resourceVersion": obj["metadata"]["resourceVersion"]},
+                 "spec": {"template": {"metadata": {"annotations": {MARKER: version}}}}}
+        g.k("-n", "startup-apps", "patch", kind, "--type=merge", "-p", json.dumps(patch))
+
+    def ready():
+        latest = g.obj("startup-apps", kind) or {}
+        spec = latest.get("spec", {})
+        status = latest.get("status", {})
+        desired = spec.get("replicas", 1)
+        return (spec.get("template", {}).get("metadata", {}).get("annotations", {}).get(MARKER) == version
+                and desired > 0 and int(status.get("observedGeneration", 0)) >= int(latest["metadata"]["generation"])
+                and status.get("updatedReplicas") == desired and status.get("readyReplicas") == desired
+                and status.get("replicas") == desired
+                and (kind.startswith("deployment") or status.get("phase") == "Healthy"))
+    g.until(kind + " replicas ready with the reconciled database credential", ready)
+
+
+def seed_database(g, out, adopt=None):
+    external = wait_for_consumer(g)
+    spec = external["spec"]
+    key = out["external_secrets_secret_name"]
+    require(key == g.context + "/demo-api/postgresql" and
+            spec["secretStoreRef"] == {"kind": "SecretStore", "name": "aws-secrets-manager"} and
+            spec["target"]["name"] == "demo-api-postgresql" and
+            any(row["secretKey"] == "DATABASE_URL" and row["remoteRef"]["key"] == key and
+                row["remoteRef"]["property"] == "DATABASE_URL" and row["remoteRef"].get("version") == "AWSCURRENT"
+                for row in spec["data"]), "Unexpected demo ExternalSecret target or remote key")
+    source = g.exists("data-platform", "secret/postgresql-baseline-app")
+    encoded = source["data"]["fqdn-uri"]
+    value = base64.b64decode(encoded, validate=True).decode()
+    require(value.startswith("postgresql://"), "CNPG app Secret has no PostgreSQL URI")
+    arn = out["external_secrets_secret_arn"]
+    version = database_version(g, arn, key, value, adopt)
+    ns = "startup-apps"
+    refresh = str(time.time_ns())
+    g.k("-n", ns, "annotate", EXTERNAL, "force-sync=" + refresh, "--overwrite")
+
+    def synced():
+        target = g.obj(ns, "secret/demo-api-postgresql") or {}
+        return target.get("data", {}).get("DATABASE_URL") == encoded
+    g.until("ESO target DATABASE_URL to match the current CNPG app Secret", synced)
+    g.ready(ns, EXTERNAL)
+    after = g.obj(ns, EXTERNAL) or {}
+    if after.get("metadata", {}).get("annotations", {}).get("force-sync") == refresh:
+        patch = [{"op": "test", "path": "/metadata/annotations/force-sync", "value": refresh},
+                 {"op": "remove", "path": "/metadata/annotations/force-sync"}]
+        g.k("-n", ns, "patch", EXTERNAL, "--type=json", "-p", json.dumps(patch))
+    latest = g.obj("data-platform", "secret/postgresql-baseline-app") or {}
+    require(latest.get("data", {}).get("fqdn-uri") == encoded, "CNPG credential changed during deployment; rerun deploy")
+    labels = json.loads(g.aws("secretsmanager", "describe-secret", "--secret-id", arn))["VersionIdsToStages"]
+    require("AWSCURRENT" in labels.get(version, []), "Demo credential changed during deployment; rerun deploy")
+    refresh_consumers(g, version)
 
 
 def reconcile_dns(g, out):
@@ -77,6 +162,6 @@ def reconcile_dns(g, out):
     g.aws("route53", "wait", "resource-record-sets-changed", "--id", result["ChangeInfo"]["Id"])
 
 
-def complete(g, out):
-    seed_database(g, out)
+def complete(g, out, adopt=None):
+    seed_database(g, out, adopt)
     reconcile_dns(g, out)

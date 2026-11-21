@@ -43,6 +43,8 @@ def parser():
     value.add_argument("--node-image")
     value.add_argument("--argocd-manifest")
     value.add_argument("--confirm")
+    value.add_argument("--adopt-demo-secret-version", metavar="AWSCURRENT_VERSION_ID",
+                       help="AWS dev deploy: transfer this exact existing standard demo DB version to CLI management")
     value.add_argument("--retain-backups", action="store_true",
                        help="AWS dev destroy: snapshot standard PVCs and keep the CNPG bucket and demo DB secret")
     value.add_argument("--kubeconfig-file", help="Explicit shared config target for connect only")
@@ -56,6 +58,10 @@ def configure(args, local_only=False):
     require(not args.check_inputs or args.command == "preflight", "--check-inputs is only valid for AWS preflight")
     require(not args.retain_backups or (env["driver"] == "aws" and args.env == "aws-dev" and args.command == "destroy"),
             "--retain-backups applies only to personal aws-dev destroy")
+    if args.adopt_demo_secret_version is not None:
+        require(env["driver"] == "aws" and args.env == "aws-dev" and args.command == "deploy"
+                and re.fullmatch(r"[A-Za-z0-9-]{32,64}", args.adopt_demo_secret_version),
+                "--adopt-demo-secret-version requires an AWS dev deploy and a valid version ID")
     if local_only:
         require(env["driver"] == "kind", "local.py only accepts kind environments; use cli.py show to inspect AWS configuration")
     if env["driver"] == "aws":
@@ -134,7 +140,7 @@ def main(argv=None, local_only=False):
             if args.dry_run:
                 print(json.dumps({"environment": args.env, "command": "deploy", "steps": PHASES, "executed": False}, indent=2))
             else:
-                deploy(env, args.config)
+                deploy(env, args.config, args.adopt_demo_secret_version)
             return 0
         if args.command == "show" or args.dry_run:
             print(json.dumps({"environment": args.env, "configuration": env, "command": args.command,

@@ -12,11 +12,13 @@ import time
 import yaml
 
 from aws_preflight import inspect, kustomize, local_file
+from aws_standard_demo import complete
 from configuration import DEFAULT_CONFIG, ROOT, OpsError, environment, load_yaml, require
 from connections import atomic_write, private_path
 
 PHASES = ["check personal inventory, remote Terraform outputs and live EKS identity",
-          "refresh dedicated kubeconfig", "prepare IRSA and Grafana credentials",
+          "refresh dedicated kubeconfig", "check root Application and target namespaces for deletion",
+          "prepare IRSA and Grafana credentials",
           "install pinned Argo CD and seed ALB Application", "sync dev root and CNPG backup destination",
           "seed standard demo credential and reconcile DNS", "wait for GitOps applications"]
 ARGO = "argocd"
@@ -122,10 +124,24 @@ def prepare(g, out):
                 "Existing Grafana Secret is missing an admin key")
 
 
-def gitops(g, report, out, argo_manifest):
-    root = load_yaml((ROOT / report["gitops_root"]).read_text())
-    children = {doc["metadata"]["name"]: doc for doc in kustomize(root["spec"]["source"]["path"])
-                if doc and doc["kind"] == "Application"}
+def check_deploy_target(g, root, children):
+    namespaces = {ARGO, root["spec"]["destination"]["namespace"]}
+    namespaces.update(child["spec"]["destination"]["namespace"] for child in children.values())
+    live = json.loads(g.k("get", "namespaces", "--request-timeout=30s", "-o", "json"))["items"]
+    deleting = ["namespace/" + ns["metadata"]["name"] for ns in live
+                if ns["metadata"]["name"] in namespaces and
+                (ns["metadata"].get("deletionTimestamp") or ns.get("status", {}).get("phase") == "Terminating")]
+    # A new EKS cluster has no Argo CD CRDs yet.
+    if g.obj(ARGO, "crd/applications.argoproj.io"):
+        resource = "applications.argoproj.io/" + root["metadata"]["name"]
+        app = g.obj(ARGO, resource)
+        if app and app["metadata"].get("deletionTimestamp"):
+            deleting.append(ARGO + "/" + resource)
+    require(not deleting, "Deploy blocked by deletion in progress: " + ", ".join(deleting) +
+            ". Finish cleanup before redeploying.")
+
+
+def gitops(g, root, children, out, argo_manifest):
     controller = "statefulset/argocd-application-controller"
     existing = g.obj(ARGO, controller)
     if existing and existing["spec"].get("replicas") == 0:
@@ -173,7 +189,6 @@ def check_apps(g, names):
 
 
 def deploy(env, config):
-    from aws_standard_demo import complete
     report = inspect("aws-dev", env, config, personal=True)
     aws = env["aws"]
     settings = dict(os.environ, AWS_REGION=aws["region"], AWS_DEFAULT_REGION=aws["region"], AWS_PAGER="")
@@ -210,6 +225,12 @@ def deploy_stack(g, report, env, config, folder):
         kube = yaml.safe_load(raw)
         require(kube["current-context"] == g.context and kube["clusters"][0]["cluster"]["server"] == live["endpoint"],
                 "Generated kubeconfig differs from EKS")
+        atomic_write(g.path, raw)
+        print(f"Dedicated kubeconfig: {g.path}", flush=True)
+        root = load_yaml((ROOT / report["gitops_root"]).read_text())
+        children = {doc["metadata"]["name"]: doc for doc in kustomize(root["spec"]["source"]["path"])
+                    if doc and doc["kind"] == "Application"}
+        check_deploy_target(g, root, children)
         # A successful redeploy can change data on the same EBS volume IDs.
         # Invalidate the previous cleanup checkpoint before the first cluster write.
         # Read only the lineage from the private state payload.
@@ -221,13 +242,11 @@ def deploy_stack(g, report, env, config, folder):
                 if journal.get("vpc") == out["vpc_id"] and journal.get("endpoint") == live["endpoint"]:
                     reopen_receipt(journal)
                     atomic_write(receipt, json.dumps(journal, indent=2))
-        atomic_write(g.path, raw)
-    print(f"Dedicated kubeconfig: {g.path}", flush=True)
     g.k("get", "nodes")
     prepare(g, out)
     argocd = env.get("argocd", environment(DEFAULT_CONFIG, "local")["argocd"])
     require(argocd["namespace"] == ARGO, "AWS root requires the argocd namespace")
-    names = gitops(g, report, out, argocd["manifest"])
+    names = gitops(g, root, children, out, argocd["manifest"])
     complete(g, out)
     check_apps(g, names)
     print("AWS dev GitOps stack converged. Runtime qualification is a separate workflow.")

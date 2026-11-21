@@ -146,9 +146,15 @@ kubectl -n startup-apps get targetgroupbindings.elbv2.k8s.aws
 kubectl -n kube-system logs -l app.kubernetes.io/name=aws-load-balancer-controller --all-containers --prefix --since=15m --tail=100
 ```
 
+After releasing the Ingress, destroy deletes the ExternalSecrets in the dedicated
+startup-apps namespace while ESO and its namespaced permissions are available.
+The CLI waits for those objects to disappear before deleting namespaces. A
+timeout reports remaining names and finalizers so the operator can inspect ESO.
+
 After interruption, rerun the preview and confirmed destroy from the same
-workstation. A deliberate deploy first resumes the suspended Argo controller
-and invalidates the previous cleanup checkpoint. A later snapshot request
+workstation. Before invalidating the cleanup checkpoint or resuming Argo, deploy
+checks the root Application and its target namespaces. If any are being deleted,
+finish cleanup before rebuilding. A later snapshot request
 then takes fresh snapshots, including when the volume IDs are unchanged.
 Deploy and destroy share a workstation lock. Keep the local receipt under
 `~/.local/state/startup-devops-baseline/` for recovery after partial apply.

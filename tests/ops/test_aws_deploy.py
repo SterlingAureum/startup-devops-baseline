@@ -2,8 +2,9 @@ import base64
 import io
 import json
 import sys
+import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import nullcontext, redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -60,3 +61,64 @@ class AwsDeployTests(unittest.TestCase):
         with self.assertRaisesRegex(OpsError, "points elsewhere"):
             demo.reconcile_dns(g, {"demo_api_hostname": "demo.example", "vpc_id": "v", "route53_hosted_zone_id": "zone"})
         self.assertEqual(g.aws.call_count, 2)
+
+    def test_deploy_entry_rebuild_and_blocked_redeploy(self):
+        report = {"cluster": "startup-devops-baseline-dev", "gitops_root": "clusters/aws/overlays/dev/root-app.yaml"}
+        name = report["cluster"]
+        out = {"environment_name": "dev", "eks_cluster_name": name, "eks_cluster_endpoint": "https://eks",
+               "vpc_id": "vpc-1"}
+        def aws(*args):
+            if args[:2] == ("sts", "get-caller-identity"):
+                return '{"Account":"123456789012"}'
+            return '{"cluster":{"status":"ACTIVE","endpoint":"https://eks","resourcesVpcConfig":{"vpcId":"vpc-1"}}}'
+
+        def run(args, env, private=False):
+            if args[0] == "aws":
+                return json.dumps({"current-context": name, "clusters": [{"cluster": {"server": "https://eks"}}]})
+            if "output" in args:
+                return json.dumps({key: {"value": value} for key, value in out.items()})
+            if "init" in args:
+                return ""
+            self.fail("Unexpected command: " + str(args))
+
+        for scenario in ("fresh", "deleting namespace", "deleting root"):
+            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as tmp:
+                folder = Path(tmp)
+                if scenario != "fresh":
+                    (folder / "prior.json").write_text("preserve checkpoint")
+
+                def kubectl(*args):
+                    if "namespaces" in args:
+                        target = "startup-apps" if scenario == "deleting namespace" else "unrelated"
+                        return json.dumps({"items": [{"metadata": {"name": target, "deletionTimestamp": "now"}}]})
+                    if "crd/applications.argoproj.io" in args:
+                        return '{"kind":"CustomResourceDefinition"}' if scenario == "deleting root" else ""
+                    if "applications.argoproj.io/startup-devops-aws-dev-root" in args:
+                        return '{"metadata":{"deletionTimestamp":"now"}}'
+                    if "nodes" in args:
+                        return ""
+                    self.fail("Unexpected kubectl arguments: " + str(args))
+
+                with patch.object(deploy, "inspect", return_value=report), \
+                        patch.object(deploy, "lifecycle_lock", return_value=nullcontext(folder)), \
+                        patch.object(deploy, "private_path", return_value=folder / "kubeconfig"), \
+                        patch.object(deploy, "run", side_effect=run), \
+                        patch.object(deploy.Cluster, "aws", side_effect=aws), \
+                        patch.object(deploy.Cluster, "k", side_effect=kubectl), \
+                        patch.object(deploy, "prepare") as prepare, patch.object(deploy, "gitops") as gitops, \
+                        patch.object(demo, "seed_database") as seed, patch.object(demo, "reconcile_dns") as dns, \
+                        patch.object(deploy, "check_apps") as verify, redirect_stdout(io.StringIO()), \
+                        redirect_stderr(io.StringIO()) as errors:
+                    result = cli.main(["deploy", "--env", "aws-dev"])
+                    if scenario == "fresh":
+                        self.assertEqual(result, 0)
+                        seed.assert_called_once()
+                        dns.assert_called_once()
+                        verify.assert_called_once()
+                    else:
+                        self.assertEqual(result, 1)
+                        self.assertIn("Deploy blocked by deletion", errors.getvalue())
+                        prepare.assert_not_called()
+                        gitops.assert_not_called()
+                        seed.assert_not_called()
+                        self.assertEqual((folder / "prior.json").read_text(), "preserve checkpoint")

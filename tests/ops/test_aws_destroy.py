@@ -204,3 +204,33 @@ class TeardownTests(unittest.TestCase):
         self.assertEqual(result, 130)
         self.assertEqual(invoke.call_args.args[-2:], ("dev", True))
         self.assertEqual(cli.main(["deploy", "--env", "aws-dev", "--retain-backups", "--dry-run"]), 1)
+
+    def test_external_secrets_finish_before_namespace_delete_and_retry_skips_absent(self):
+        g = Mock(timeout=60)
+        g.obj.return_value = {"metadata": {}}
+        pending = [{"metadata": {"name": "example", "finalizers": ["external-secrets-cleanup"]}}]
+        calls = []
+        g.k.side_effect = lambda *args: calls.append(args)
+        # Model one pending poll, successful finalization and a second invocation after interruption.
+        with patch.object(teardown, "resources", side_effect=[pending, pending, [], []]), \
+                patch.object(teardown.time, "sleep"), redirect_stdout(io.StringIO()):
+            teardown.release_external_secrets(g)
+            teardown.release_external_secrets(g)
+        self.assertEqual(len(calls), 1)
+        self.assertIn("externalsecrets.external-secrets.io", calls[0])
+        self.assertIn("startup-apps", calls[0])
+
+    def test_stuck_external_secret_blocks_namespace_deletion(self):
+        g = Mock(timeout=30)
+        g.obj.return_value = {"metadata": {}}
+        g.until.side_effect = lambda description, done: done()
+        pending = [{"metadata": {"name": "demo-api-postgresql", "finalizers": ["eso-cleanup"]}}]
+        def resources(cluster, kind, *args):
+            return pending if kind == "externalsecrets.external-secrets.io" else []
+        with patch.object(teardown, "resources", side_effect=resources), \
+                patch.object(teardown, "dns_record", return_value=None), patch.object(teardown, "demo_lbs"), \
+                patch.object(teardown, "release_ingress"), patch.object(teardown, "storage", return_value={}), \
+                patch.object(teardown.time, "monotonic", side_effect=[0, 31]), patch.object(teardown, "delete") as delete, \
+                redirect_stdout(io.StringIO()), self.assertRaisesRegex(OpsError, "demo-api-postgresql.*eso-cleanup"):
+            teardown.remove_stack(g, {"vpc_id": "vpc"}, {"snapshots": {}}, Mock(), False)
+        delete.assert_not_called()

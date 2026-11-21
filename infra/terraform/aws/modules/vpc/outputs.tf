@@ -10,12 +10,18 @@ output "vpc_cidr" {
 
 output "public_subnet_ids" {
   description = "Public subnet IDs ordered by availability_zones."
-  value       = [for az in var.availability_zones : aws_subnet.public[az].id]
+  value = [
+    for az in var.availability_zones : aws_subnet.public[az].id
+    if contains(keys(aws_subnet.public), az)
+  ]
 }
 
 output "private_subnet_ids" {
   description = "Private subnet IDs ordered by availability_zones."
-  value       = [for az in var.availability_zones : aws_subnet.private[az].id]
+  value = [
+    for az in var.availability_zones : aws_subnet.private[az].id
+    if contains(keys(aws_subnet.private), az)
+  ]
 }
 
 output "public_route_table_id" {
@@ -25,10 +31,16 @@ output "public_route_table_id" {
 
 output "private_route_table_ids" {
   description = "Private route table IDs ordered by availability_zones."
-  value       = [for az in var.availability_zones : aws_route_table.private[az].id]
+  value = [
+    for az in var.availability_zones : aws_route_table.private[az].id
+    if contains(keys(aws_route_table.private), az)
+  ]
 }
 
 output "nat_gateway_ids" {
   description = "IDs of NAT Gateways created for private subnet egress."
-  value       = [for key in local.nat_gateway_keys : aws_nat_gateway.this[key].id]
+  value = [
+    for key in local.nat_gateway_keys : aws_nat_gateway.this[key].id
+    if contains(keys(aws_nat_gateway.this), key)
+  ]
 }

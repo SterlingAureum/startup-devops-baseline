@@ -109,6 +109,7 @@ class TeardownTests(unittest.TestCase):
         g.aws.side_effect = lambda service, action, *args: json.dumps(
             {"clusters": [g.context]} if action == "list-clusters" else {"cluster": live})
         with tempfile.TemporaryDirectory() as tmp, patch.object(teardown, "run", side_effect=command), \
+                patch.object(teardown, "demo_lbs", return_value=set()), \
                 patch.object(teardown, "storage", return_value={}), patch.object(teardown, "dns_record", return_value=None), \
                 patch.object(teardown, "remove_stack", side_effect=lambda *a: events.append("cleanup")), \
                 patch.object(teardown.subprocess, "run", side_effect=lambda *a, **kw: events.append("apply")), \
@@ -119,3 +120,87 @@ class TeardownTests(unittest.TestCase):
             self.assertEqual(events, ["plan"])
             teardown.session(g, env, folder / "config", g.context, folder, tmp)
             self.assertEqual(events, ["plan", "plan", "cleanup", "apply", "verify"])
+
+    def test_disposable_data_requires_matching_creation_plan(self):
+        attrs = {"tags": {teardown.GENERATION: "first"}, "force_destroy": True}
+        cluster = resource("eks", "aws_eks_cluster", attributes=attrs)
+        bucket = resource("cnpg_backup", "aws_s3_bucket", attributes=attrs)
+        settings = resource("cnpg_backup", "aws_s3_bucket_versioning")
+        secret = resource("external_secrets", "aws_secretsmanager_secret", attributes=attrs)
+        state = {"resources": [cluster, bucket, settings, secret]}
+        owner = teardown.creation_plan(state)
+        self.assertEqual(owner, "first")
+        self.assertFalse(teardown.partition(state, owner)[1])
+        for policy in [{"retain": True, "owner": owner}, {"owner": "next"}, {"owner": None}]:
+            self.assertEqual(len(teardown.partition(state, **policy)[1]), 3)
+        bucket["instances"][0]["attributes"] = dict(attrs, force_destroy=False)
+        self.assertEqual(len(teardown.partition(state, owner)[1]), 2)
+
+    def test_refreshed_marker_prevents_stale_deletion(self):
+        change = {"address": teardown.SECRET, "mode": "managed", "change": {"actions": ["delete"], "before": {}}}
+        with self.assertRaisesRegex(OpsError, "marker changed"):
+            teardown.check_plan({"resource_changes": [change]}, {teardown.SECRET}, "old")
+
+    def test_lb_progress_and_timeout_preserve_finalizers(self):
+        g = Mock(timeout=60)
+        g.obj.side_effect = [{"metadata": {"finalizers": ["ingress.k8s.aws/resources"]}},
+                             {"status": {"availableReplicas": 1}}]
+        with patch.object(teardown, "resources", return_value=[]), patch.object(teardown, "vpc_lbs", return_value=[]), \
+                patch.object(teardown.time, "monotonic", side_effect=[0, 61]), \
+                redirect_stdout(io.StringIO()) as log, self.assertRaisesRegex(OpsError, "before Terraform apply"):
+            teardown.release_ingress(g, "vpc", set())
+        self.assertIn("ingress.k8s.aws/resources", log.getvalue())
+        self.assertIn("controllerAvailable=1", log.getvalue())
+        self.assertIn("--wait=false", g.k.call_args.args)
+        g.k.assert_called_once()
+        g.aws.assert_not_called()
+
+    def test_resume_after_ingress_deleted_waits_for_exact_alb(self):
+        g = Mock(timeout=60)
+        g.obj.return_value = None
+        with patch.object(teardown, "resources", return_value=[]), \
+                patch.object(teardown, "vpc_lbs", side_effect=[[{"LoadBalancerArn": "arn:old"}], []]), \
+                patch.object(teardown.time, "sleep"), redirect_stdout(io.StringIO()):
+            teardown.release_ingress(g, "vpc", {"arn:old"})
+        with patch.object(teardown, "vpc_lbs", return_value=[{"LoadBalancerArn": "arn:other"}]), \
+                self.assertRaisesRegex(OpsError, "arn:other"):
+            teardown.release_ingress(g, "vpc", {"arn:old"})
+
+    def test_unrelated_lb_blocks_before_any_delete(self):
+        g = Mock(context="dev")
+        g.obj.return_value = None
+        lb = {"Type": "application", "LoadBalancerArn": "arn:other", "DNSName": "other.elb"}
+        g.aws.return_value = json.dumps({"TagDescriptions": [{"ResourceArn": "arn:other", "Tags": []}]})
+        with patch.object(teardown, "vpc_lbs", return_value=[lb]), self.assertRaisesRegex(OpsError, "other.elb"):
+            teardown.demo_lbs(g, "dev-vpc")
+        g.k.assert_not_called()
+
+    def test_default_releases_csi_volumes_without_creating_snapshots(self):
+        g = Mock()
+        journal = {"snapshots": {"vol-123": "snap-previous"}}
+        g.obj.return_value = None
+        g.until.side_effect = lambda description, read: read()
+        g.aws.side_effect = ['{"InstanceProfiles":[]}', '{"Reservations":[]}', '{"Volumes":[]}']
+        with patch.object(teardown, "demo_lbs", return_value=set()), patch.object(teardown, "dns_record", return_value=None), \
+                patch.object(teardown, "storage", return_value={"vol-456": "observability/prom"}), \
+                patch.object(teardown, "backup") as snapshot, patch.object(teardown, "release_ingress"), \
+                patch.object(teardown, "resources", return_value=[]), redirect_stdout(io.StringIO()):
+            teardown.remove_stack(g, {"vpc_id": "vpc", "karpenter_node_role_name": "role"}, journal, Mock(), False)
+        snapshot.assert_not_called()
+        self.assertEqual(journal["volumes"], ["vol-123", "vol-456"])
+        self.assertIn("Name=volume-id,Values=vol-123,vol-456", g.aws.call_args.args)
+
+    def test_redeploy_invalidates_old_cleanup_and_snapshot_checkpoint(self):
+        journal = {"cleaned": True, "snapshots": {"vol-123": "snap-old"}}
+        teardown.reopen_receipt(journal)
+        self.assertEqual(journal["prior_snapshots"], ["snap-old"])
+        self.assertEqual(journal["snapshots"], {})
+        self.assertFalse(journal["cleaned"])
+        self.assertIn("vol-123", journal["volumes"])
+
+    def test_cli_forwards_opt_in_and_interrupt_returns_130(self):
+        with patch.object(teardown, "destroy", side_effect=KeyboardInterrupt) as invoke:
+            result = cli.main(["destroy", "--env", "aws-dev", "--retain-backups", "--confirm", "dev"])
+        self.assertEqual(result, 130)
+        self.assertEqual(invoke.call_args.args[-2:], ("dev", True))
+        self.assertEqual(cli.main(["deploy", "--env", "aws-dev", "--retain-backups", "--dry-run"]), 1)

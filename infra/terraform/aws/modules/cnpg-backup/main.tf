@@ -20,9 +20,12 @@ resource "aws_s3_bucket" "this" {
 
   tags = merge(local.common_tags, {
     Name = local.bucket_name
-  })
+  }, var.environment == "dev" ? { BaselineDevCreationPlan = plantimestamp() } : {})
 
   lifecycle {
+    # Existing or retained resources keep their original ownership marker.
+    ignore_changes = [tags["BaselineDevCreationPlan"]]
+
     precondition {
       condition     = length(local.bucket_name) <= 63
       error_message = "The generated CloudNativePG backup bucket name exceeds 63 characters."

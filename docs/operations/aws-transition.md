@@ -111,28 +111,46 @@ checks its own fresh plan before the first cluster mutation.
 .venv/bin/python scripts/ops/cli.py destroy --env aws-dev --config ~/.config/startup-devops-baseline/environments.yaml --confirm startup-devops-baseline-dev
 ```
 
-The operation targets the dedicated personal dev cluster, including its
-startup-apps, data-platform and observability namespaces. The dev operator
-needs EC2 snapshot creation, tagging and read access in addition to existing
-cluster, DNS and Terraform teardown permissions. It stops Argo reconciliation,
-records crash-consistent EBS snapshots of the standard PVCs, waits for completed
-snapshots, removes the matching DNS alias/Ingress, then releases database and
-monitoring volumes, Karpenter workers and generated instance profiles. A
-completed EBS snapshot preserves blocks at snapshot time. Application-level
-restore validation is a separate operation.
+Default destroy releases the standard dev PVCs without creating EBS snapshots.
+To take crash-consistent snapshots of those volumes and keep the CNPG backup
+bucket and the demo DB secret, add `--retain-backups` to both commands.
+Snapshot mode requires EC2 snapshot creation, tagging and read permissions.
+Previously recorded snapshots are listed and preserved in either mode.
 
-The dev state keeps the CNPG S3 bucket and its settings, and the demo Secrets
-Manager secret (needed with retained data). Existing S3 lifecycle policies
-still apply. Snapshots, retained objects and the secret incur storage/service
-charges. State-bootstrap and runtime-identities have separate ownership.
-Snapshots are identified in the local receipt under
-`~/.local/state/startup-devops-baseline/`. Dev state with these retained
-addresses is expected. On a fresh database deployment, check any retained
-AWSCURRENT credential against the new database; a rotated or stale value
-needs an explicit reconciliation decision.
+For a fresh dev installation the EKS cluster, CNPG bucket and demo DB secret
+receive the same creation-plan tag when created in one Terraform plan. A
+normal destroy can remove the two data resources only with a matching marker.
+Bucket deletion also requires its stored force_destroy setting and includes
+its objects and versions. Secrets Manager uses the resource's configured
+recovery window. Legacy, imported without matching markers, or separately
+created data resources are retained. Existing tags are not backfilled on
+upgrade. Treat the disposable bucket as exclusive to this environment.
+The preview lists the data resource names, Terraform addresses, shared state
+location and recorded snapshots. Shared state, KMS and persistent runtime
+identities belong to separate roots. Retained backups and secrets can incur
+charges. Check a retained AWSCURRENT credential before reusing it with a fresh DB.
 
-The executor verifies the saved plan's changes and applies that file only.
-Retry the same confirmed command from the same workstation on interruption.
-Keep the private inventory and local receipt for partial apply recovery.
-Completion checks require the cluster and VPC to be absent and only retained
-addresses to remain in the selected state.
+Destroy pauses Argo application reconciliation and leaves the AWS Load Balancer
+Controller running. The operator needs ELBv2 DescribeLoadBalancers and
+DescribeTags. Other ELBv2 load balancers in this VPC block teardown before
+the first cluster change. The executor requests deletion of the standard demo
+Ingress and polls its finalizers and the identified ALB. Every 30 seconds it
+reports the ALB ARN, controller availability and latest Ingress warning.
+The wait is limited to ten minutes or the shorter environment timeout.
+If the wait expires, inspect the controller and bindings:
+
+```bash
+export KUBECONFIG="$HOME/.kube/startup-devops-baseline/aws-dev.yaml"
+kubectl -n startup-apps describe ingress demo-api
+kubectl -n startup-apps get targetgroupbindings.elbv2.k8s.aws
+kubectl -n kube-system logs -l app.kubernetes.io/name=aws-load-balancer-controller --all-containers --prefix --since=15m --tail=100
+```
+
+After interruption, rerun the preview and confirmed destroy from the same
+workstation. A deliberate deploy first resumes the suspended Argo controller
+and invalidates the previous cleanup checkpoint. A later snapshot request
+then takes fresh snapshots, including when the volume IDs are unchanged.
+Deploy and destroy share a workstation lock. Keep the local receipt under
+`~/.local/state/startup-devops-baseline/` for recovery after partial apply.
+Completion verifies the EKS cluster and VPC are absent and only the reported
+retained addresses remain in the dev state.

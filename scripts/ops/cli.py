@@ -43,6 +43,8 @@ def parser():
     value.add_argument("--node-image")
     value.add_argument("--argocd-manifest")
     value.add_argument("--confirm")
+    value.add_argument("--retain-backups", action="store_true",
+                       help="AWS dev destroy: snapshot standard PVCs and keep the CNPG bucket and demo DB secret")
     value.add_argument("--kubeconfig-file", help="Explicit shared config target for connect only")
     value.add_argument("--check-inputs", action="store_true", help="AWS preflight: read selected personal tfvars and backend file")
     value.add_argument("--dry-run", action="store_true", help="Read config and print phases; invoke no tools and write no files")
@@ -52,6 +54,8 @@ def parser():
 def configure(args, local_only=False):
     env = environment(args.config, args.env)
     require(not args.check_inputs or args.command == "preflight", "--check-inputs is only valid for AWS preflight")
+    require(not args.retain_backups or (env["driver"] == "aws" and args.env == "aws-dev" and args.command == "destroy"),
+            "--retain-backups applies only to personal aws-dev destroy")
     if local_only:
         require(env["driver"] == "kind", "local.py only accepts kind environments; use cli.py show to inspect AWS configuration")
     if env["driver"] == "aws":
@@ -121,9 +125,9 @@ def main(argv=None, local_only=False):
         if env["driver"] == "aws" and args.command == "destroy":
             from aws_destroy import destroy, PHASES
             if args.dry_run:
-                print(json.dumps({"environment": args.env, "command": "destroy", "steps": PHASES, "executed": False}, indent=2))
+                print(json.dumps({"environment": args.env, "command": "destroy", "retain_backups": args.retain_backups, "steps": PHASES, "executed": False}, indent=2))
             else:
-                destroy(env, args.config, args.confirm)
+                destroy(env, args.config, args.confirm, args.retain_backups)
             return 0
         if env["driver"] == "aws" and args.command == "deploy":
             from aws_deploy import deploy, PHASES
@@ -175,6 +179,11 @@ def main(argv=None, local_only=False):
                 "python3", str(Path(__file__).with_name("cli.py")), "connect", "--config",
                 str(args.config.expanduser().absolute()), "--env", args.env, "--cluster", args.cluster]))
         return 0
+    except KeyboardInterrupt:
+        if args.env == "aws-dev" and args.command == "destroy":
+            print("Dev teardown interrupted. Check the next destroy preview before retrying.", file=sys.stderr)
+            return 130
+        raise
     except (OpsError, OSError, subprocess.SubprocessError, yaml.YAMLError, KeyError, TypeError, ValueError) as error:
         print("FAILED: " + str(error), file=sys.stderr)
         if isinstance(error, subprocess.CalledProcessError) and error.stderr:

@@ -1,26 +1,53 @@
-"""Teardown of the standard personal dev stack. Keep durable data in its original state."""
-import fcntl
+"""Teardown of the standard personal dev stack. Preview, release and verify the selected environment."""
 import json
 import os
 import re
 from pathlib import Path
 import subprocess
 import tempfile
+import time
 
-from aws_deploy import Cluster, run
-from aws_preflight import inspect, local_file
-from configuration import ROOT, require
+from aws_deploy import Cluster, lifecycle_lock, reopen_receipt, run
+from aws_preflight import inspect, local_file, read_inputs
+from configuration import ROOT, OpsError, require
 from connections import atomic_write
 
 PHASES = ["inspect selected account, backend, Terraform delete plan and live dev identity",
-          "pause GitOps and snapshot dev persistent volumes", "release exact DNS alias and ingress",
+          "pause GitOps and apply the selected backup policy", "release exact DNS alias and ingress",
           "release workloads, PVCs and Karpenter nodes while controllers are available",
           "apply reviewed Terraform plan and check remaining state, VPC and cluster"]
 MODULES = {"eks", "vpc", "github_actions_runtime_identity", "cnpg_backup", "external_secrets",
            "tls_dns", "fis", "karpenter"}
 
 
-def partition(state):
+GENERATION = "BaselineDevCreationPlan"
+CLUSTER = "module.eks.aws_eks_cluster.this"
+BUCKET = "module.cnpg_backup.aws_s3_bucket.this"
+SECRET = "module.external_secrets.aws_secretsmanager_secret.this"
+
+
+def generation(attrs):
+    return (attrs.get("tags") or {}).get(GENERATION)
+
+
+def creation_plan(state):
+    for r in state.get("resources", []):
+        if (r["mode"], r.get("module"), r["type"], r["name"]) == ("managed", "module.eks", "aws_eks_cluster", "this"):
+            if len(r["instances"]) == 1:
+                return generation(r["instances"][0].get("attributes", {}))
+    return None
+
+
+def partition(state, owner=None, retain=False):
+    disposable = set()
+    if owner and not retain:
+        for r in state.get("resources", []):
+            addr = ".".join([r.get("module", ""), r["type"], r["name"]])
+            if r["mode"] == "managed" and addr in (BUCKET, SECRET) and len(r["instances"]) == 1:
+                attrs = r["instances"][0].get("attributes", {})
+                if generation(attrs) == owner and (addr != BUCKET or attrs.get("force_destroy") is True):
+                    disposable.add(addr)
+
     destroy, keep = set(), set()
     for r in state.get("resources", []):
         if r["mode"] != "managed":
@@ -35,11 +62,12 @@ def partition(state):
                     or addr == "module.external_secrets.aws_secretsmanager_secret.this")
         for instance in r["instances"]:
             suffix = "[" + json.dumps(instance["index_key"], ensure_ascii=False) + "]" if "index_key" in instance else ""
-            (keep if retained else destroy).add(addr + suffix)
+            protected = (BUCKET if module == "module.cnpg_backup" else SECRET) not in disposable
+            (keep if retained and protected else destroy).add(addr + suffix)
     return destroy, keep
 
 
-def check_plan(plan, targets):
+def check_plan(plan, targets, owner=None):
     deletes = set()
     for change in plan.get("resource_changes", []):
         actions = change["change"]["actions"]
@@ -47,6 +75,11 @@ def check_plan(plan, targets):
             continue
         require(actions == ["delete"] and change["address"] in targets,
                 f"Unexpected destroy plan action: {change['address']} {actions}")
+        if change["address"] in (BUCKET, SECRET) or (owner and change["address"] == CLUSTER):
+            before = change["change"]["before"]
+            require(owner and generation(before) == owner, "Creation marker changed during refresh: " + change["address"])
+            require(change["address"] != BUCKET or before.get("force_destroy") is True,
+                    "Refreshed bucket does not allow removal of its objects")
         deletes.add(change["address"])
     # Drifted resources already gone in AWS need no delete action.
     gone = {c["address"] for c in plan.get("resource_drift", []) if c["change"]["actions"] == ["delete"]}
@@ -118,21 +151,88 @@ def delete(g, *args):
     g.k("delete", *args, "--ignore-not-found", "--wait=true", f"--timeout={g.timeout}s")
 
 
-def remove_stack(g, out, journal, save):
+def vpc_lbs(g, vpc):
+    all_lbs = json.loads(g.aws("elbv2", "describe-load-balancers"))["LoadBalancers"]
+    return [lb for lb in all_lbs if lb["VpcId"] == vpc]
+
+
+def demo_lbs(g, vpc):
+    ingress = g.obj("startup-apps", "ingress/demo-api")
+    if ingress:
+        annotations = ingress["metadata"].get("annotations", {})
+        require(ingress["spec"].get("ingressClassName") == "alb" and
+                not annotations.get("alb.ingress.kubernetes.io/group.name"),
+                "Review nonstandard Ingress class or shared ALB group")
+    owned = set()
+    for lb in vpc_lbs(g, vpc):
+        arn = lb["LoadBalancerArn"]
+        try:
+            tags = json.loads(g.aws("elbv2", "describe-tags", "--resource-arns", arn))["TagDescriptions"]
+        except OpsError as error:
+            # The controller may have finished between the inventory and tag reads.
+            if "(LoadBalancerNotFound)" in str(error) and arn not in {item["LoadBalancerArn"] for item in vpc_lbs(g, vpc)}:
+                continue
+            raise
+        labels = {t["Key"]: t["Value"] for row in tags if row["ResourceArn"] == arn for t in row["Tags"]}
+        require(lb["Type"] == "application" and labels.get("elbv2.k8s.aws/cluster") == g.context and
+                labels.get("ingress.k8s.aws/stack") == "startup-apps/demo-api",
+                f"Review other load balancer in dev VPC before teardown: {arn} ({lb['DNSName']})")
+        owned.add(arn)
+    return owned
+
+
+def release_ingress(g, vpc, expected):
+    ingress = "ingress/demo-api"
+    namespace = "startup-apps"
+    g.k("-n", namespace, "delete", ingress, "--ignore-not-found", "--wait=false", "--request-timeout=30s")
+    deadline = time.monotonic() + min(g.timeout, 600)
+    next_report = 0
+    while True:
+        obj = g.obj(namespace, ingress)
+        lbs = vpc_lbs(g, vpc)
+        remaining = {lb["LoadBalancerArn"] for lb in lbs}
+        require(not remaining - expected, "Unexpected new load balancer in dev VPC: " + ", ".join(sorted(remaining - expected)))
+        if not obj and not lbs:
+            print("Demo Ingress and dev ALB released.", flush=True)
+            return
+        now = time.monotonic()
+        if now >= next_report or now >= deadline:
+            meta = (obj or {}).get("metadata", {})
+            controller = g.obj("kube-system", "deployment/aws-load-balancer-controller") or {}
+            events = resources(g, "events", "-n", namespace, "--field-selector",
+                               "involvedObject.kind=Ingress,involvedObject.name=demo-api,type=Warning")
+            warnings = [e for e in events if not meta.get("uid") or e["involvedObject"].get("uid") == meta["uid"]]
+            latest = max(warnings, key=lambda e: e.get("lastTimestamp") or e["metadata"].get("creationTimestamp", ""),
+                         default={})
+            print(f"Waiting for LB release: ingress={'present' if obj else 'absent'} "
+                  f"deletionTimestamp={meta.get('deletionTimestamp')} finalizers={meta.get('finalizers', [])} "
+                  f"controllerAvailable={controller.get('status', {}).get('availableReplicas', 0)} "
+                  f"ALBs={sorted(remaining)} latestWarning={latest.get('message', '-')}", flush=True)
+            next_report = now + 30
+        if now >= deadline:
+            raise OpsError("LB release timed out before Terraform apply. Inspect kube-system deployment/"
+                           "aws-load-balancer-controller logs and startup-apps Ingress events, then retry.")
+        time.sleep(5)
+
+
+def remove_stack(g, out, journal, save, retain):
+    expected_lbs = demo_lbs(g, out["vpc_id"])
     record = dns_record(g, out)
     print("Suspending Argo CD reconciliation", flush=True)
     g.k("scale", "-n", "argocd", "statefulset/argocd-application-controller", "--replicas=0")
     g.until("Argo application-controller shutdown", lambda: not resources(
         g, "pods", "-n", "argocd", "-l", "app.kubernetes.io/name=argocd-application-controller"))
-    backup(g, storage(g), journal, save)
+    current = storage(g)
+    journal["volumes"] = sorted(set(journal.get("volumes", [])) | set(journal["snapshots"]) | set(current))
+    save()
+    if retain:
+        backup(g, current, journal, save)
     if record:
         batch = {"Changes": [{"Action": "DELETE", "ResourceRecordSet": record}]}
         g.aws("route53", "change-resource-record-sets", "--hosted-zone-id", out["route53_hosted_zone_id"],
               "--change-batch", json.dumps(batch))
-    delete(g, "ingress/demo-api", "-n", "startup-apps")
-    g.until("load balancers in the dedicated dev VPC to disappear", lambda: not any(
-        lb["VpcId"] == out["vpc_id"] for lb in json.loads(g.aws("elbv2", "describe-load-balancers"))["LoadBalancers"]))
-    require(set(storage(g)) <= set(journal["snapshots"]), "New persistent volume appeared; rerun to snapshot it")
+    release_ingress(g, out["vpc_id"], expected_lbs)
+    require(set(storage(g)) <= set(current), "New persistent volume appeared; repeat the destroy preview")
     for ns, kind in [("data-platform", "scheduledbackups.postgresql.cnpg.io"),
                      ("data-platform", "clusters.postgresql.cnpg.io"),
                      ("observability", "prometheuses.monitoring.coreos.com"),
@@ -140,7 +240,7 @@ def remove_stack(g, out, journal, save):
         if g.obj(ns, "crd/" + kind):
             delete(g, kind, "--all", "-n", ns)
     # These namespaces belong to the dedicated personal dev stack.
-    require(set(storage(g)) <= set(journal["snapshots"]), "New persistent volume appeared; rerun to snapshot it")
+    require(set(storage(g)) <= set(current), "New persistent volume appeared; repeat the destroy preview")
     for ns in ("startup-apps", "data-platform", "observability"):
         delete(g, "namespace/" + ns)
     g.until("all dev persistent volumes to be released", lambda: not resources(g, "pv"))
@@ -157,13 +257,13 @@ def remove_stack(g, out, journal, save):
                                     "Name=instance-state-name,Values=pending,running,stopping,stopped,shutting-down"))
         return not any(r["Instances"] for r in response["Reservations"])
     g.until("Karpenter EC2 workers to terminate", workers_gone)
-    ids = list(journal["snapshots"])
+    ids = journal["volumes"]
     if ids:
-        g.until("snapshotted source volumes to be deleted by CSI", lambda: not json.loads(g.aws(
+        g.until("identified source volumes to be deleted by CSI", lambda: not json.loads(g.aws(
             "ec2", "describe-volumes", "--filters", "Name=volume-id,Values=" + ",".join(ids)))["Volumes"])
 
 
-def destroy(env, config, confirm):
+def destroy(env, config, confirm, retain=False):
     report = inspect("aws-dev", env, config, personal=True)
     name = report["cluster"]
     require(confirm in (None, name), "Destroy requires --confirm " + name)
@@ -178,14 +278,13 @@ def destroy(env, config, confirm):
         role = aws["role_arn"].rsplit("/", 1)[-1]
         require(caller["Arn"].startswith(f"arn:aws:sts::{caller['Account']}:assumed-role/{role}/"),
                 "Select credentials for the configured operator role")
-    folder = Path.home() / ".local/state/startup-devops-baseline" / caller["Account"] / aws["region"] / name
-    folder.mkdir(parents=True, mode=0o700, exist_ok=True)
-    with (folder / "destroy.lock").open("a") as lock, tempfile.TemporaryDirectory(prefix="aws-dev-destroy-") as tmp:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        session(g, env, config, confirm, folder, tmp)
+    backend = read_inputs(local_file(env["terraform"]["backend_file"], config.expanduser().resolve().parent))
+    print(f"Retained Terraform state: s3://{backend['bucket']}/{backend['key']}  KMS: {backend['kms_key_id']}", flush=True)
+    with lifecycle_lock(caller["Account"], aws["region"], name) as folder, tempfile.TemporaryDirectory(prefix="aws-dev-destroy-") as tmp:
+        session(g, env, config, confirm, folder, tmp, retain)
 
 
-def session(g, env, config, confirm, folder, tmp):
+def session(g, env, config, confirm, folder, tmp, retain=False):
     tf = env["terraform"]
     tfenv = dict(g.env, TF_DATA_DIR=tmp + "/tfdata", TF_WORKSPACE="default")
     tfcmd = ["terraform", "-chdir=" + str(ROOT / tf["root"])]
@@ -197,23 +296,32 @@ def session(g, env, config, confirm, folder, tmp):
             "Unset TF_CLI_ARGS overrides before dev teardown")
     terraform("init", "-input=false", "-backend-config=" + str(local_file(tf["backend_file"], base)))
     state = json.loads(terraform("state", "pull"))
-    targets, keep = partition(state)
     require(re.fullmatch(r"[0-9a-fA-F-]{36}", state.get("lineage", "")), "Invalid dev state lineage")
     receipt = folder / (state["lineage"] + ".json")
     journal = json.loads(receipt.read_text()) if receipt.exists() else {}
     out = {k: v["value"] for k, v in state.get("outputs", {}).items()}
     live_names = json.loads(g.aws("eks", "list-clusters"))["clusters"]
+    vpc = out.get("vpc_id") or journal.get("vpc")
+    if journal.get("vpc") != vpc or not journal:
+        previous = set(journal.get("prior_snapshots", [])) | set(journal.get("snapshots", {}).values())
+        journal = {"vpc": vpc, "prior_snapshots": sorted(previous), "snapshots": {}, "cleaned": False}
+    owner = creation_plan(state)
+    if owner is None and journal.get("cleaned") and g.context not in live_names:
+        owner = journal.get("owner")
+    if journal.get("complete") and g.context not in live_names:
+        retain = journal.get("retain", retain)
+    targets, keep = partition(state, owner, retain)
+    if targets and journal.get("cleaned") and "retain" in journal:
+        require(retain == journal["retain"], "Resume the pending Terraform apply with the previous backup policy")
     if not targets:
         require(g.context not in live_names, "EKS exists but dev state has no teardown targets")
         if journal.get("vpc"):
             check_absent(g, journal["vpc"])
+        print("Recorded snapshots:", journal.get("prior_snapshots", []), journal["snapshots"])
         print("No dev teardown targets. Retained state addresses:", *sorted(keep), sep="\n")
         return
-    vpc = out.get("vpc_id") or journal.get("vpc")
     require(vpc and (out.get("eks_cluster_name") == g.context or journal.get("cleaned")),
             "Cannot establish dev state ownership")
-    if journal.get("vpc") != vpc:
-        journal = {"vpc": vpc, "snapshots": {}, "cleaned": False}
     def save():
         atomic_write(receipt, json.dumps(journal, indent=2))
     if g.context in live_names:
@@ -226,11 +334,19 @@ def session(g, env, config, confirm, folder, tmp):
         if journal.get("endpoint"):
             require(journal["endpoint"] == live["endpoint"], "Cluster changed during teardown")
         journal["endpoint"] = live["endpoint"]
+        require(not owner or generation({"tags": live.get("tags")}) == owner, "Live EKS creation marker differs from state")
         if not journal["cleaned"]:
             g.path = Path(tmp) / "kubeconfig"
             run(["aws", "eks", "update-kubeconfig", "--name", g.context, "--alias", g.context,
                  "--kubeconfig", str(g.path)], g.env)
-            print("Volumes to snapshot:", storage(g))
+            if journal["snapshots"]:
+                controller = g.obj("argocd", "statefulset/argocd-application-controller") or {}
+                if controller.get("spec", {}).get("replicas", 1) > 0:
+                    reopen_receipt(journal)
+            volumes = storage(g)
+            print("Will delete PVC volumes:", volumes)
+            print("Will create EBS snapshots for:", sorted(volumes.keys() - journal["snapshots"].keys()) if retain else [])
+            print("Dev ALBs to release:", sorted(demo_lbs(g, vpc)))
             print("Demo DNS alias:", (dns_record(g, out) or {}).get("Name", "absent"))
     else:
         require(journal.get("cleaned"), "EKS absent before Kubernetes cleanup could be verified")
@@ -238,23 +354,31 @@ def session(g, env, config, confirm, folder, tmp):
     terraform("plan", "-destroy", "-input=false", "-lock-timeout=60s", "-out=" + plan,
               "-var-file=" + str(local_file(tf["variables_file"], base)),
               *["-target=" + a for a in sorted(targets)])
-    deletes = check_plan(json.loads(terraform("show", "-json", plan)), targets)
+    deletes = check_plan(json.loads(terraform("show", "-json", plan)), targets, owner)
+    for address, output in [(BUCKET, "cnpg_backup_bucket_name"), (SECRET, "external_secrets_secret_arn")]:
+        if address in targets or address in keep:
+            print("Retain" if address in keep else "Delete", address, out.get(output, "(see state address)"))
     print("Terraform destroy:", *deletes, sep="\n  ")
-    print("Retain in dev state:", *sorted(keep), sep="\n  ")
+    print("Previously recorded snapshots, preserved:", journal.get("prior_snapshots", []), journal["snapshots"])
+    print("Shared state backend, its KMS key and separate runtime identity root are outside this plan.")
+    print("Retain in dev state (backup policy, legacy ownership, or protected bucket):", *sorted(keep), sep="\n  ")
     if confirm is None:
         print("Preview complete. Execute the same command with --confirm " + g.context)
         return
     if not journal["cleaned"]:
+        journal.update(owner=owner, retain=retain)
         save()
-        remove_stack(g, out, journal, save)
+        remove_stack(g, out, journal, save, retain)
         journal["cleaned"] = True
         save()
     print("Applying dev destroy plan", flush=True)
     subprocess.run(tfcmd + ["apply", "-input=false", "-lock-timeout=60s", plan], env=tfenv, check=True)
-    remaining, retained = partition(json.loads(terraform("state", "pull")))
+    remaining, retained = partition(json.loads(terraform("state", "pull")), owner, retain)
     require(not remaining and retained == keep, "Review residual or changed Terraform state")
     check_absent(g, vpc)
-    print("AWS dev teardown complete. EKS and VPC absent. Retained snapshots:", journal["snapshots"])
+    journal["complete"] = True
+    save()
+    print("AWS dev teardown complete. EKS and VPC absent. Retained snapshots:", journal.get("prior_snapshots", []), journal["snapshots"])
     print("Local teardown receipt:", receipt)
 
 

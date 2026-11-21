@@ -17,7 +17,12 @@ resource "aws_secretsmanager_secret" "this" {
 
   tags = merge(local.common_tags, {
     Name = local.secret_name
-  })
+  }, var.environment == "dev" ? { BaselineDevCreationPlan = plantimestamp() } : {})
+
+  lifecycle {
+    # Existing or retained resources keep their original ownership marker.
+    ignore_changes = [tags["BaselineDevCreationPlan"]]
+  }
 }
 
 data "aws_iam_policy_document" "assume_role" {

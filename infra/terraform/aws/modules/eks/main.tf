@@ -72,6 +72,9 @@ resource "aws_eks_cluster" "this" {
   }
 
   lifecycle {
+    # Existing or retained resources keep their original ownership marker.
+    ignore_changes = [tags["BaselineDevCreationPlan"]]
+
     precondition {
       condition = (
         !var.endpoint_public_access ||
@@ -91,7 +94,7 @@ resource "aws_eks_cluster" "this" {
 
   tags = merge(local.common_tags, {
     Name = var.cluster_name
-  })
+  }, var.environment == "dev" ? { BaselineDevCreationPlan = plantimestamp() } : {})
 }
 
 resource "aws_iam_openid_connect_provider" "cluster" {

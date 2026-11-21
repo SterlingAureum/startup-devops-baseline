@@ -1,6 +1,9 @@
 """Bootstrap the standard GitOps stack on a provisioned personal dev cluster."""
+from contextlib import contextmanager
+import fcntl
 import json
 import os
+from pathlib import Path
 import secrets
 import subprocess
 import tempfile
@@ -25,6 +28,24 @@ def run(argv, env, data=None, private=False):
         detail = "private payload suppressed" if private else result.stderr.strip()
         raise OpsError(f"{argv[0]} failed: {detail}")
     return result.stdout
+
+
+@contextmanager
+def lifecycle_lock(account, region, cluster):
+    folder = Path.home() / ".local/state/startup-devops-baseline" / account / region / cluster
+    folder.mkdir(parents=True, mode=0o700, exist_ok=True)
+    with (folder / "destroy.lock").open("a") as lock:
+        try:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as error:
+            raise OpsError("Another dev deploy or destroy is running on this workstation") from error
+        yield folder
+
+
+def reopen_receipt(journal):
+    previous = set(journal.get("prior_snapshots", [])) | set(journal["snapshots"].values())
+    journal["volumes"] = sorted(set(journal.get("volumes", [])) | set(journal["snapshots"]))
+    journal.update(prior_snapshots=sorted(previous), snapshots={}, cleaned=False, complete=False)
 
 
 class Cluster:
@@ -105,6 +126,11 @@ def gitops(g, report, out, argo_manifest):
     root = load_yaml((ROOT / report["gitops_root"]).read_text())
     children = {doc["metadata"]["name"]: doc for doc in kustomize(root["spec"]["source"]["path"])
                 if doc and doc["kind"] == "Application"}
+    controller = "statefulset/argocd-application-controller"
+    existing = g.obj(ARGO, controller)
+    if existing and existing["spec"].get("replicas") == 0:
+        print("Resuming the suspended Argo CD application controller", flush=True)
+        g.k("-n", ARGO, "scale", controller, "--replicas=1", "--current-replicas=0")
     g.k("apply", "-n", ARGO, "--server-side", "-f", argo_manifest)
     for resource in ("deployment/argocd-repo-server", "deployment/argocd-server",
                      "statefulset/argocd-application-controller"):
@@ -160,6 +186,12 @@ def deploy(env, config):
         name = aws["role_arn"].rsplit("/", 1)[-1]
         require(caller["Arn"].startswith(f"arn:aws:sts::{caller['Account']}:assumed-role/{name}/"),
                 "Select operator credentials for the configured role")
+    with lifecycle_lock(caller["Account"], aws["region"], g.context) as folder:
+        deploy_stack(g, report, env, config, folder)
+
+
+def deploy_stack(g, report, env, config, folder):
+    settings = g.env
     tf = env["terraform"]
     backend = local_file(tf["backend_file"], config.expanduser().resolve().parent)
     with tempfile.TemporaryDirectory(prefix="aws-dev-deploy-") as tmp:
@@ -178,6 +210,17 @@ def deploy(env, config):
         kube = yaml.safe_load(raw)
         require(kube["current-context"] == g.context and kube["clusters"][0]["cluster"]["server"] == live["endpoint"],
                 "Generated kubeconfig differs from EKS")
+        # A successful redeploy can change data on the same EBS volume IDs.
+        # Invalidate the previous cleanup checkpoint before the first cluster write.
+        # Read only the lineage from the private state payload.
+        if any(folder.glob("*.json")):
+            state = json.loads(run(terraform + ["state", "pull"], tfenv, private=True))
+            receipt = folder / (state["lineage"] + ".json")
+            if receipt.exists():
+                journal = json.loads(receipt.read_text())
+                if journal.get("vpc") == out["vpc_id"] and journal.get("endpoint") == live["endpoint"]:
+                    reopen_receipt(journal)
+                    atomic_write(receipt, json.dumps(journal, indent=2))
         atomic_write(g.path, raw)
     print(f"Dedicated kubeconfig: {g.path}", flush=True)
     g.k("get", "nodes")

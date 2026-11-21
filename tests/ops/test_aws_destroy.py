@@ -121,6 +121,56 @@ class TeardownTests(unittest.TestCase):
             teardown.session(g, env, folder / "config", g.context, folder, tmp)
             self.assertEqual(events, ["plan", "plan", "cleanup", "apply", "verify"])
 
+    def test_interrupted_network_phase_resumes_with_saved_identity_and_a_fresh_plan(self):
+        g = Mock(context="demo-dev", env={})
+        eks = resource("eks", "aws_eks_cluster")
+        vpc = resource("vpc", "aws_vpc", attributes={"id": "vpc-a"})
+        held = resource("external_secrets", "aws_secretsmanager_secret")
+        state = {"lineage": "12345678-1234-1234-1234-123456789012", "resources": [eks, vpc, held],
+                 "outputs": {k: {"value": v} for k, v in {"eks_cluster_name": g.context,
+                             "vpc_id": "vpc-a", "eks_cluster_endpoint": "endpoint"}.items()}}
+        env = {"aws": {"region": "us-east-1", "expected_account_id": "123456789012"},
+               "terraform": {"root": "dev", "backend_file": "dev.backend", "variables_file": "dev.tfvars"}}
+        plans, applies = [], []
+        def terraform(args, env):
+            if "pull" in args:
+                return json.dumps(state)
+            if "plan" in args:
+                plans.append([a.removeprefix("-target=") for a in args if a.startswith("-target=")])
+            if "show" in args:
+                return json.dumps({"resource_changes": [{"address": a, "mode": "managed", "change": {"actions": ["delete"]}}
+                                                       for a in plans[-1]]})
+            return ""
+        def apply(*args, **kwargs):
+            applies.append(plans[-1])
+            state["resources"].remove(eks if eks in state["resources"] else vpc)
+        live = {"arn": "arn:aws:eks:us-east-1:123456789012:cluster/demo-dev", "endpoint": "endpoint",
+                "resourcesVpcConfig": {"vpcId": "vpc-a", "clusterSecurityGroupId": "sg-a"}}
+        def aws(svc, action, *args):
+            if action == "list-clusters":
+                return json.dumps({"clusters": [g.context] if eks in state["resources"] else []})
+            return json.dumps({"cluster": live})
+        g.aws.side_effect = aws
+        with tempfile.TemporaryDirectory() as tmp, patch.object(teardown, "run", side_effect=terraform), \
+                patch.object(teardown, "demo_lbs", return_value=[]), patch.object(teardown, "storage", return_value={}), \
+                patch.object(teardown, "dns_record", return_value=None), patch.object(teardown, "remove_stack") as cleanup, \
+                patch.object(teardown.subprocess, "run", side_effect=apply), patch.object(teardown, "check_absent"), \
+                patch.object(teardown, "release_network", side_effect=[OpsError("interrupted"), None]) as release, \
+                redirect_stdout(io.StringIO()):
+            folder = Path(tmp)
+            args = (g, env, folder / "inventory")
+            teardown.session(*args, None, folder, tmp)
+            release.assert_not_called()
+            self.assertFalse(applies)
+            with self.assertRaisesRegex(OpsError, "interrupted"):
+                teardown.session(*args, g.context, folder, tmp)
+            self.assertEqual(applies, [[teardown.CLUSTER]])
+            self.assertEqual(release.call_args.args[1]["cluster_sg"], "sg-a")
+            teardown.session(*args, g.context, folder, tmp)
+            cleanup.assert_called_once()
+            self.assertEqual(applies, [[teardown.CLUSTER], ["module.vpc.aws_vpc.this"]])
+            self.assertEqual(state["resources"], [held])
+
     def test_disposable_data_requires_matching_creation_plan(self):
         attrs = {"tags": {teardown.GENERATION: "first"}, "force_destroy": True}
         cluster = resource("eks", "aws_eks_cluster", attributes=attrs)

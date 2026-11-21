@@ -20,7 +20,8 @@ PHASES = ["check personal inventory, remote Terraform outputs and live EKS ident
           "refresh dedicated kubeconfig", "check root Application and target namespaces for deletion",
           "prepare IRSA and Grafana credentials",
           "install pinned Argo CD and seed ALB Application", "sync dev root and CNPG backup destination",
-          "seed standard demo credential and reconcile DNS", "wait for GitOps applications"]
+          "recover the ESO consumer and reconcile the standard demo database credential",
+          "wait for demo replicas using the synced credential, reconcile DNS, and check GitOps applications"]
 ARGO = "argocd"
 
 
@@ -188,7 +189,7 @@ def check_apps(g, names):
     g.until("expected dev Applications to be Synced and Healthy", converged)
 
 
-def deploy(env, config):
+def deploy(env, config, adopt=None):
     report = inspect("aws-dev", env, config, personal=True)
     aws = env["aws"]
     settings = dict(os.environ, AWS_REGION=aws["region"], AWS_DEFAULT_REGION=aws["region"], AWS_PAGER="")
@@ -202,10 +203,10 @@ def deploy(env, config):
         require(caller["Arn"].startswith(f"arn:aws:sts::{caller['Account']}:assumed-role/{name}/"),
                 "Select operator credentials for the configured role")
     with lifecycle_lock(caller["Account"], aws["region"], g.context) as folder:
-        deploy_stack(g, report, env, config, folder)
+        deploy_stack(g, report, env, config, folder, adopt)
 
 
-def deploy_stack(g, report, env, config, folder):
+def deploy_stack(g, report, env, config, folder, adopt=None):
     settings = g.env
     tf = env["terraform"]
     backend = local_file(tf["backend_file"], config.expanduser().resolve().parent)
@@ -247,6 +248,6 @@ def deploy_stack(g, report, env, config, folder):
     argocd = env.get("argocd", environment(DEFAULT_CONFIG, "local")["argocd"])
     require(argocd["namespace"] == ARGO, "AWS root requires the argocd namespace")
     names = gitops(g, root, children, out, argocd["manifest"])
-    complete(g, out)
+    complete(g, out, adopt)
     check_apps(g, names)
     print("AWS dev GitOps stack converged. Runtime qualification is a separate workflow.")

@@ -81,10 +81,23 @@ Use the usual preflight Python environment.
 The command refreshes `~/.kube/startup-devops-baseline/aws-dev.yaml`, prepares
 ServiceAccounts and Grafana, installs Argo CD, seeds the ALB Application, and
 applies the root. It reconciles the CNPG backup destination, seeds the demo's
-first AWS credential, preserves existing AWSCURRENT, and creates a DNS alias
+database credential and creates a DNS alias
 when absent. The root tracks main and may provision additional EC2 nodes, gp3
 volumes and an ALB. Convergence requires the expected Applications to be Synced
 and Healthy. Use the separate dev runtime workflow for HTTP and release validation.
+
+Deploy retries the ESO consumer Application once at the failed Git revision when the
+webhook Service was missing and now has a ready endpoint. It checks the actual
+ESO target value, then updates a Pod template annotation containing the AWS
+version ID and waits for the Deployment or Rollout replicas to become ready.
+
+The CLI can update a version carrying its bootstrap or rebuild stage. A manually
+written version with a different DATABASE_URL requires its operator to reconcile
+it or explicitly transfer that exact version. For the standard disposable demo,
+read the current VersionId from the CLI diagnostic and append
+`--adopt-demo-secret-version VERSION_ID` to one deploy. Subsequent deploys use
+the ordinary command. Other JSON properties are preserved. Rotation-enabled
+secrets or a pending rotation block writes.
 
 After interruption, run the same command again. An existing foreign backup
 destination or DNS record requires operator review. To inspect the cluster:
@@ -128,7 +141,16 @@ upgrade. Treat the disposable bucket as exclusive to this environment.
 The preview lists the data resource names, Terraform addresses, shared state
 location and recorded snapshots. Shared state, KMS and persistent runtime
 identities belong to separate roots. Retained backups and secrets can incur
-charges. Check a retained AWSCURRENT credential before reusing it with a fresh DB.
+charges.
+
+After Kubernetes cleanup, the CLI applies a checked service destroy plan. It
+then inspects the original VPC with EKS absent, releases detached VPC CNI ENIs
+whose tagged instance is confirmed terminated, and releases the recorded EKS
+cluster security group after checking ownership and attachments. The operator
+needs EC2 describe permissions and DeleteNetworkInterface/DeleteSecurityGroup.
+The CLI preserves NAT interfaces belonging to Terraform gateways for the final
+checked network plan. Review any reported unknown ENI or security group before
+resuming. An older receipt without the EKS group ID cannot authorize its deletion.
 
 Destroy pauses Argo application reconciliation and leaves the AWS Load Balancer
 Controller running. The operator needs ELBv2 DescribeLoadBalancers and

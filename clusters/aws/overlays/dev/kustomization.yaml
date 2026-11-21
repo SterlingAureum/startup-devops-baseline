@@ -19,3 +19,23 @@ patches:
           existingSecret: observability-grafana-admin
           userKey: admin-user
           passwordKey: admin-password
+  - target:
+      kind: Application
+      name: demo-api-aws-dev
+    patch: |-
+      - op: add
+        path: /spec/ignoreDifferences/-
+        value:
+          group: apps
+          kind: Deployment
+          name: demo-api
+          namespace: startup-apps
+          jsonPointers: [/spec/template/metadata/annotations/platform.startup.dev~1demo-db-version]
+      - op: add
+        path: /spec/ignoreDifferences/-
+        value:
+          group: argoproj.io
+          kind: Rollout
+          name: demo-api
+          namespace: startup-apps
+          jsonPointers: [/spec/template/metadata/annotations/platform.startup.dev~1demo-db-version]

@@ -31,24 +31,104 @@ class AwsDeployTests(unittest.TestCase):
             with self.assertRaisesRegex(OpsError, "Forbidden"):
                 cluster.exists("data-platform", "secret/db")
 
-    def test_existing_and_first_secret_versions(self):
-        for stages in ({}, {"existing": ["AWSCURRENT"]}):
-            with self.subTest(stages=stages):
+    def test_credential_promotion_and_adoption(self):
+        for labels, adopt, allowed in [({}, None, True), ({"old": ["AWSCURRENT", demo.BOOTSTRAP]}, None, True),
+                                      ({"old": ["AWSCURRENT"]}, None, False),
+                                      ({"old": ["AWSCURRENT"]}, "old", True),
+                                      ({"old": ["AWSCURRENT"]}, "changed", False)]:
+            with self.subTest(labels=labels, adopt=adopt):
                 g = Mock()
-                g.exists.side_effect = [
-                    {"data": {"fqdn-uri": base64.b64encode(b"postgresql://fixture").decode()},
-                     "metadata": {"uid": "fixture-uid"}},
-                    {"spec": {"data": [{"remoteRef": {"property": "DATABASE_URL", "key": "demo"}}]}},
-                    {"data": {"DATABASE_URL": "encoded"}},
-                ]
-                g.aws.return_value = json.dumps({"VersionIdsToStages": stages, "Name": "demo"})
-                demo.seed_database(g, {"external_secrets_secret_name": "demo", "external_secrets_secret_arn": "arn"})
-                calls = g.aws.call_args_list
-                self.assertEqual(len(calls), 1 if stages else 3)
-                if not stages:
-                    self.assertTrue(calls[1].kwargs["private"])
-                    self.assertNotIn("postgresql://fixture", calls[1].args)
-                    self.assertNotIn("--remove-from-version-id", calls[2].args)
+                metadata = {"ARN": "arn", "Name": "demo", "VersionIdsToStages": labels}
+                g.aws.side_effect = lambda service, action, *args, **kw: json.dumps({
+                    "describe-secret": metadata, "get-secret-value": {"SecretString": '{"DATABASE_URL":"old","other":42}'}
+                }.get(action, {}))
+                if not allowed:
+                    with self.assertRaises(OpsError):
+                        demo.database_version(g, "arn", "demo", "postgresql://fixture", adopt)
+                    self.assertFalse(any(c.args[1] == "put-secret-value" for c in g.aws.call_args_list))
+                    continue
+                version = demo.database_version(g, "arn", "demo", "postgresql://fixture", adopt)
+                put, move = g.aws.call_args_list[-2:]
+                self.assertTrue(put.kwargs["private"])
+                self.assertNotIn("postgresql://fixture", put.args)
+                self.assertEqual(json.loads(put.kwargs["data"])["DATABASE_URL"], "postgresql://fixture")
+                if labels:
+                    self.assertEqual(json.loads(put.kwargs["data"])["other"], 42)
+                    self.assertEqual(move.args[-2:], ("--remove-from-version-id", "old"))
+                else:
+                    self.assertNotIn("--remove-from-version-id", move.args)
+                self.assertIn(version, move.args)
+
+    def test_first_version_may_already_be_current_and_failed_compare_preserves_operator(self):
+        g = Mock()
+        metadata = {"ARN": "arn", "Name": "demo", "VersionIdsToStages": {}}
+        g.aws.side_effect = [json.dumps(metadata), '{"VersionStages":["AWSCURRENT","BASELINE_BOOTSTRAP"]}']
+        demo.database_version(g, "arn", "demo", "first", None)
+        self.assertEqual(g.aws.call_count, 2)
+        g.reset_mock()
+        metadata["VersionIdsToStages"] = {"old": ["AWSCURRENT", demo.BOOTSTRAP]}
+        g.aws.side_effect = [json.dumps(metadata), json.dumps({"SecretString": '{"DATABASE_URL":"old"}'}),
+                             '{}', OpsError("stage owner changed")]
+        with self.assertRaisesRegex(OpsError, "stage owner changed"):
+            demo.database_version(g, "arn", "demo", "new", None)
+        self.assertEqual(g.aws.call_args.args[-2:], ("--remove-from-version-id", "old"))
+        self.assertEqual(g.aws.call_count, 4)
+
+    def test_rotation_and_equal_value(self):
+        g = Mock()
+        metadata = {"ARN": "arn", "Name": "demo", "VersionIdsToStages": {"old": ["AWSCURRENT", demo.BOOTSTRAP]},
+                    "RotationEnabled": True}
+        for desired in ("same", "new"):
+            g.aws.side_effect = [json.dumps(metadata), json.dumps({"SecretString": '{"DATABASE_URL":"same"}'})]
+            if desired == "new":
+                with self.assertRaisesRegex(OpsError, "rotation"):
+                    demo.database_version(g, "arn", "demo", desired, None)
+            else:
+                self.assertEqual(demo.database_version(g, "arn", "demo", desired, None), "old")
+
+    def test_eso_waits_for_actual_target_data_before_restart(self):
+        g = Mock()
+        value = base64.b64encode(b"postgresql://fixture").decode()
+        g.exists.return_value = {"data": {"fqdn-uri": value}}
+        g.context = "example-dev"
+        name = "example-dev/demo-api/postgresql"
+        external = {"spec": {"secretStoreRef": {"kind": "SecretStore", "name": "aws-secrets-manager"}, "target": {"name": "demo-api-postgresql"}, "data": [{"secretKey": "DATABASE_URL",
+                    "remoteRef": {"key": name, "property": "DATABASE_URL", "version": "AWSCURRENT"}}]}}
+        g.obj.side_effect = [{"data": {"DATABASE_URL": "old"}}, {"data": {"DATABASE_URL": value}}, {}, g.exists.return_value]
+        def wait(description, read):
+            self.assertFalse(read())
+            self.assertTrue(read())
+        g.until.side_effect = wait
+        g.aws.return_value = '{"VersionIdsToStages":{"current":["AWSCURRENT"]}}'
+        with patch.object(demo, "database_version", return_value="current"), \
+                patch.object(demo, "wait_for_consumer", return_value=external), patch.object(demo, "refresh_consumers") as restart:
+            demo.seed_database(g, {"external_secrets_secret_name": name, "external_secrets_secret_arn": "arn"})
+            restart.assert_called_once_with(g, "current")
+
+    def test_workload_restart_is_versioned_and_idempotent_for_both_kinds(self):
+        for is_rollout in (True, False):
+            g = Mock()
+            template = {"metadata": {"annotations": {}}, "spec": {"containers": [{"env": [{"name": "DATABASE_URL",
+                        "valueFrom": {"secretKeyRef": {"name": "demo-api-postgresql", "key": "DATABASE_URL"}}}]}]}}
+            workload = {"metadata": {"resourceVersion": "1", "generation": 6}, "spec": {"replicas": 1, "template": template},
+                        "status": {"observedGeneration": "6", "replicas": 1, "readyReplicas": 1, "updatedReplicas": 1,
+                                   "phase": "Healthy"}}
+            kind = "rollouts.argoproj.io/demo-api" if is_rollout else "deployment.apps/demo-api"
+            g.obj.side_effect = lambda ns, k: workload if k == kind or (is_rollout and k.startswith("crd/")) else None
+            def patch_template(*args):
+                self.assertIn(kind, args)
+                changes = json.loads(args[-1])
+                self.assertEqual(changes["metadata"]["resourceVersion"], "1")
+                template["metadata"].update(changes["spec"]["template"]["metadata"])
+            g.k.side_effect = patch_template
+            def wait(description, read):
+                result = read()
+                self.assertTrue(result)
+                return result
+            g.until.side_effect = wait
+            demo.refresh_consumers(g, "current")
+            demo.refresh_consumers(g, "current")
+            g.k.assert_called_once()
 
     def test_dns_existing_foreign_alias_is_preserved(self):
         g = Mock()

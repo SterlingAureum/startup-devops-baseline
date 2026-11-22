@@ -14,7 +14,7 @@ class NetworkTests(unittest.TestCase):
         self.g = Mock(context="example-dev")
         self.g.until.side_effect = lambda description, read: self.assertTrue(read())
         self.eni = {"VpcId": "vpc", "NetworkInterfaceId": "eni-1", "SubnetId": "subnet-a", "InterfaceType": "interface",
-                    "Status": "available", "RequesterManaged": False, "Description": "aws-K8S-i-ab", "Tags": [
+                    "Status": "available", "RequesterManaged": False, "Description": "aws-K8S-i-ab", "TagSet": [
                         {"Key": "eks:eni:owner", "Value": "amazon-vpc-cni"},
                         {"Key": "node.k8s.amazonaws.com/instance_id", "Value": "i-ab"},
                         {"Key": "cluster.k8s.amazonaws.com/name", "Value": "example-dev"}]}
@@ -56,6 +56,17 @@ class NetworkTests(unittest.TestCase):
         for _ in range(2):
             release_network(self.g, self.journal, self.state)
         self.assertEqual(self.mutations, [("delete-network-interface", "eni-1"), ("delete-security-group", "sg-1")])
+
+    def test_missing_or_foreign_eni_ownership_blocks_before_delete(self):
+        owned = self.eni.pop("TagSet")
+        foreign = [dict(tag, Value="other-dev") if tag["Key"] == "cluster.k8s.amazonaws.com/name" else tag
+                   for tag in owned]
+        for fields in ({}, {"Tags": owned}, {"TagSet": foreign}):
+            with self.subTest(fields=fields):
+                self.enis[0] = dict(self.eni, **fields)
+                with self.assertRaisesRegex(OpsError, "Review ENI eni-1"):
+                    release_network(self.g, self.journal, self.state)
+                self.assertFalse(self.mutations)
 
     def test_live_cluster_or_node_blocks_and_unknown_sg_is_preserved(self):
         self.clusters = ["example-dev"]

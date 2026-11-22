@@ -55,6 +55,55 @@ class AwsPreflightTests(unittest.TestCase):
                 self.assertEqual(cli.main(command), 1)
                 self.assertIn("backend key", error.getvalue())
 
+    def test_inventory_aliases_preserve_physical_targets(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            inventory = Path(tmp) / "inventory.yaml"
+            for canonical, alias in (("aws-dev", "sandbox"), ("aws-test", "team-a-test")):
+                entry = configuration.environment(configuration.DEFAULT_CONFIG, canonical)
+                inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {alias: entry}}))
+                for command in ("show", "preflight"):
+                    with self.subTest(alias=alias, command=command), redirect_stdout(io.StringIO()) as output:
+                        self.assertEqual(cli.main([command, "--env", canonical]), 0)
+                        expected = json.loads(output.getvalue())
+                    with redirect_stdout(io.StringIO()) as output:
+                        self.assertEqual(cli.main([command, "--config", str(inventory), "--env", alias]), 0)
+                        self.assertEqual(json.loads(output.getvalue()), {**expected, "environment": alias})
+                    self.assertEqual(expected["delivery_environment"], canonical)
+
+    def test_missing_key_and_test_alias_fail_before_external_tools(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            inventory = Path(tmp) / "inventory.yaml"
+            entry = configuration.environment(configuration.DEFAULT_CONFIG, "aws-test")
+            # Even a dev-looking key cannot enable dev mutations against the test root.
+            inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"aws-dev": entry}}))
+            with patch.object(aws.subprocess, "run") as tool:
+                with redirect_stderr(io.StringIO()) as error:
+                    self.assertEqual(cli.main(["destroy", "--env", "AWS-dev", "--config", str(inventory)]), 1)
+                    self.assertIn("Unknown environment 'AWS-dev'. Available environments: aws-dev", error.getvalue())
+                for command in ("plan", "create", "up", "deploy", "destroy"):
+                    with self.subTest(command=command), redirect_stderr(io.StringIO()):
+                        self.assertEqual(cli.main([command, "--env", "aws-dev", "--config", str(inventory)]), 1)
+                tool.assert_not_called()
+
+    def test_dev_alias_confirmation_uses_real_cluster(self):
+        import aws_deploy
+        import aws_destroy
+
+        with tempfile.TemporaryDirectory() as tmp:
+            inventory = Path(tmp) / "inventory.yaml"
+            entry = configuration.environment(configuration.DEFAULT_CONFIG, "aws-dev")
+            inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"sandbox": entry}}))
+            for module, command in ((aws_deploy, "up"), (aws_destroy, "destroy")):
+                with self.subTest(command=command), redirect_stderr(io.StringIO()) as error, \
+                        patch.object(module, "inspect", return_value={"cluster": "actual-dev"}) as inspect, \
+                        patch.object(aws.subprocess, "run") as tool:
+                    self.assertEqual(cli.main([command, "--env", "sandbox", "--config", str(inventory),
+                                               "--confirm", "sandbox"]), 1)
+                    selected = inspect.call_args.args[0]
+                    self.assertEqual((selected.inventory_name, selected.stage), ("sandbox", "dev"))
+                    self.assertIn("--confirm actual-dev", error.getvalue())
+                    tool.assert_not_called()
+
     def test_template_backend_mismatch_reported_and_personal_test_refused(self):
         with redirect_stdout(io.StringIO()) as output:
             self.assertEqual(cli.main(["preflight", "--env", "aws-test"]), 0)

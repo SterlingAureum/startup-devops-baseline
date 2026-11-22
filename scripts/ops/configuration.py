@@ -1,5 +1,6 @@
 """Small environment inventory. Infrastructure and application settings stay in GitOps/IaC."""
 from copy import deepcopy
+from dataclasses import dataclass
 from pathlib import Path
 import re
 from urllib.parse import urlsplit
@@ -106,10 +107,37 @@ def validate_environment(env):
     return env
 
 
+@dataclass(frozen=True)
+class AwsTarget:
+    inventory_name: str
+    stage: str
+    terraform_root: Path
+
+    @property
+    def delivery_environment(self):
+        return f"aws-{self.stage}"
+
+    @property
+    def gitops_root(self):
+        return f"clusters/aws/overlays/{self.stage}/root-app.yaml"
+
+
+def standard_aws_target(name, env):
+    # Bind the physical target to the reviewed IaC root, never to its inventory alias.
+    root = (ROOT / env["terraform"]["root"]).resolve()
+    if root.parent == ROOT / "infra/terraform/aws/environments" and root.name in ("dev", "test"):
+        return AwsTarget(name, root.name, root)
+    return None
+
+
 def environment(path, name):
     doc = load_yaml(Path(path).expanduser().read_text())
     mapping(doc, ("schema_version", "environments"), "configuration", ("schema_version", "environments"))
     require(type(doc["schema_version"]) is int and doc["schema_version"] == 1, "Unsupported configuration schema_version")
-    require(isinstance(doc["environments"], dict) and name in doc["environments"], "Selected environment is absent from configuration")
+    entries = doc["environments"]
+    require(isinstance(entries, dict), "environments must be a mapping")
+    if name not in entries:
+        available = ", ".join(sorted(entries)) or "(none)"
+        raise OpsError(f"Unknown environment {name!r}. Available environments: {available}")
     # Validate the selected target only: an unfinished AWS example cannot break local operations.
-    return validate_environment(deepcopy(doc["environments"][name]))
+    return validate_environment(deepcopy(entries[name]))

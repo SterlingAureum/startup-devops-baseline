@@ -57,7 +57,7 @@ class ConfigurationTests(unittest.TestCase):
                 write.assert_not_called()
 
     def test_unimplemented_aws_commands_fail_even_for_dry_run(self):
-        for command in ("up", "create", "verify"):
+        for command in ("status", "connect", "verify"):
             with self.subTest(command=command), patch.object(local, "run") as run, redirect_stderr(io.StringIO()):
                 self.assertEqual(cli.main([command, "--env", "aws-dev", "--dry-run"]), 1)
                 run.assert_not_called()

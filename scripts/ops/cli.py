@@ -16,6 +16,7 @@ import local
 
 STEPS = {
     "show": ["read and validate selected environment configuration"],
+    "plan": ["initialize the selected AWS dev backend and preview infrastructure changes"],
     "preflight": ["check selected AWS file inputs", "render GitOps overlay and inspect bootstrap/runtime RBAC declarations"],
     "doctor": ["check installed tools"],
     "create": ["create named kind cluster if absent", "save dedicated kubeconfig", "wait for nodes"],
@@ -44,7 +45,7 @@ def parser():
     value.add_argument("--argocd-manifest")
     value.add_argument("--confirm")
     value.add_argument("--adopt-demo-secret-version", metavar="AWSCURRENT_VERSION_ID",
-                       help="AWS dev deploy: transfer this exact existing standard demo DB version to CLI management")
+                       help="AWS dev deploy/up: transfer this exact existing standard demo DB version to CLI management")
     value.add_argument("--retain-backups", action="store_true",
                        help="AWS dev destroy: snapshot standard PVCs and keep the CNPG bucket and demo DB secret")
     value.add_argument("--kubeconfig-file", help="Explicit shared config target for connect only")
@@ -59,18 +60,18 @@ def configure(args, local_only=False):
     require(not args.retain_backups or (env["driver"] == "aws" and args.env == "aws-dev" and args.command == "destroy"),
             "--retain-backups applies only to personal aws-dev destroy")
     if args.adopt_demo_secret_version is not None:
-        require(env["driver"] == "aws" and args.env == "aws-dev" and args.command == "deploy"
+        require(env["driver"] == "aws" and args.env == "aws-dev" and args.command in ("deploy", "up")
                 and re.fullmatch(r"[A-Za-z0-9-]{32,64}", args.adopt_demo_secret_version),
-                "--adopt-demo-secret-version requires an AWS dev deploy and a valid version ID")
+                "--adopt-demo-secret-version requires AWS dev deploy/up and a valid version ID")
     if local_only:
         require(env["driver"] == "kind", "local.py only accepts kind environments; use cli.py show to inspect AWS configuration")
     if env["driver"] == "aws":
-        require(args.command in ("show", "preflight") or (args.env == "aws-dev" and args.command in ("deploy", "destroy")),
-                "Supported AWS operations: show, preflight, and deploy/destroy on personal aws-dev")
-        require(args.confirm is None or args.command == "destroy", "--confirm only applies to destroy")
+        require(args.command in ("show", "preflight") or (args.env == "aws-dev" and args.command in ("plan", "create", "up", "deploy", "destroy")),
+                "Supported AWS operations: show, preflight, and plan/create/up/deploy/destroy on personal aws-dev")
+        require(args.confirm is None or args.command in ("create", "up", "destroy"), "AWS --confirm applies to create, up or destroy")
         require(not any(getattr(args, key) is not None for key in ("cluster", "repo_url", "revision", "timeout", "http_port", "https_port", "node_image", "argocd_manifest", "kubeconfig_file")), "AWS inspection does not accept kind command overrides")
         return env
-    require(args.command != "preflight", "preflight requires aws-dev or aws-test")
+    require(args.command not in ("preflight", "plan"), "preflight and plan require an AWS environment")
     for argument, section, key in (("cluster", "kind", "cluster"), ("node_image", "kind", "node_image"),
                                    ("http_port", "kind", "http_port"), ("https_port", "kind", "https_port"),
                                    ("repo_url", "gitops", "repository"), ("revision", "gitops", "revision"),
@@ -135,12 +136,18 @@ def main(argv=None, local_only=False):
             else:
                 destroy(env, args.config, args.confirm, args.retain_backups)
             return 0
-        if env["driver"] == "aws" and args.command == "deploy":
+        if env["driver"] == "aws" and args.command in ("plan", "create", "up", "deploy"):
             from aws_deploy import deploy, PHASES
             if args.dry_run:
-                print(json.dumps({"environment": args.env, "command": "deploy", "steps": PHASES, "executed": False}, indent=2))
+                from aws_provision import PHASES as provision_steps, APPLY
+                steps = list(provision_steps) if args.command != "deploy" else []
+                if args.command in ("create", "up"):
+                    steps.append(APPLY)
+                if args.command in ("deploy", "up"):
+                    steps.extend(PHASES)
+                print(json.dumps({"environment": args.env, "command": args.command, "steps": steps, "executed": False}, indent=2))
             else:
-                deploy(env, args.config, args.adopt_demo_secret_version)
+                deploy(env, args.config, args.adopt_demo_secret_version, operation=args.command, confirm=args.confirm)
             return 0
         if args.command == "show" or args.dry_run:
             print(json.dumps({"environment": args.env, "configuration": env, "command": args.command,
@@ -186,6 +193,9 @@ def main(argv=None, local_only=False):
                 str(args.config.expanduser().absolute()), "--env", args.env, "--cluster", args.cluster]))
         return 0
     except KeyboardInterrupt:
+        if args.env == "aws-dev" and args.command in ("plan", "create", "up"):
+            print("Dev provisioning interrupted. Rerun plan to inspect current state.", file=sys.stderr)
+            return 130
         if args.env == "aws-dev" and args.command == "destroy":
             print("Dev teardown interrupted. Check the next destroy preview before retrying.", file=sys.stderr)
             return 130

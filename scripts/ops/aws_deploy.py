@@ -1,4 +1,4 @@
-"""Bootstrap the standard GitOps stack on a provisioned personal dev cluster."""
+"""Provision the personal dev Terraform root and bootstrap its standard GitOps stack."""
 from contextlib import contextmanager
 import fcntl
 import json
@@ -13,6 +13,7 @@ import yaml
 
 from aws_preflight import inspect, kustomize, local_file
 from aws_standard_demo import complete
+from aws_provision import provision
 from configuration import DEFAULT_CONFIG, ROOT, OpsError, environment, load_yaml, require
 from connections import atomic_write, private_path
 
@@ -189,8 +190,11 @@ def check_apps(g, names):
     g.until("expected dev Applications to be Synced and Healthy", converged)
 
 
-def deploy(env, config, adopt=None):
+def deploy(env, config, adopt=None, *, operation="deploy", confirm=None):
     report = inspect("aws-dev", env, config, personal=True)
+    require(operation in ("plan", "create", "up", "deploy"), "Unknown AWS provisioning operation")
+    require(confirm is None or (operation in ("up", "create") and confirm == report["cluster"]),
+            "Provisioning requires --confirm " + report["cluster"])
     aws = env["aws"]
     settings = dict(os.environ, AWS_REGION=aws["region"], AWS_DEFAULT_REGION=aws["region"], AWS_PAGER="")
     if aws.get("profile"):
@@ -203,22 +207,40 @@ def deploy(env, config, adopt=None):
         require(caller["Arn"].startswith(f"arn:aws:sts::{caller['Account']}:assumed-role/{name}/"),
                 "Select operator credentials for the configured role")
     with lifecycle_lock(caller["Account"], aws["region"], g.context) as folder:
-        deploy_stack(g, report, env, config, folder, adopt)
+        deploy_stack(g, report, env, config, folder, adopt, operation=operation, confirm=confirm)
 
 
-def deploy_stack(g, report, env, config, folder, adopt=None):
+def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deploy", confirm=None):
     settings = g.env
     tf = env["terraform"]
-    backend = local_file(tf["backend_file"], config.expanduser().resolve().parent)
+    base = config.expanduser().resolve().parent
+    backend = local_file(tf["backend_file"], base)
     with tempfile.TemporaryDirectory(prefix="aws-dev-deploy-") as tmp:
         tfenv = dict(settings, TF_DATA_DIR=tmp + "/terraform", TF_WORKSPACE="default")
+        if operation != "deploy":
+            require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
+                    "Unset TF_CLI_ARGS overrides before dev provisioning")
+            print(f"Initializing {tf['root']} for {g.context} (default workspace)", flush=True)
+            # Use the same variable sources that personal preflight inspected.
+            tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
         terraform = ["terraform", "-chdir=" + str(ROOT / tf["root"])]
         run(terraform + ["init", "-input=false", "-backend-config=" + str(backend)], tfenv)
+        if operation != "deploy":
+            variables = local_file(tf["variables_file"], base)
+            provision(g, terraform, tfenv, variables, Path(tmp) / "create.tfplan", folder, confirm)
+            if operation != "up" or confirm is None:
+                return
         outputs = json.loads(run(terraform + ["output", "-json"], tfenv, private=True))
         out = {key: value["value"] for key, value in outputs.items()}
-        require(out["environment_name"] == "dev" and out["eks_cluster_name"] == g.context,
+        require(out.get("eks_cluster_name"), "Dev infrastructure is absent from outputs; use plan then up --env aws-dev")
+        require(out.get("environment_name") == "dev" and out["eks_cluster_name"] == g.context,
                 "Terraform output cluster differs from inventory")
-        live = json.loads(g.aws("eks", "describe-cluster", "--name", g.context))["cluster"]
+        try:
+            live = json.loads(g.aws("eks", "describe-cluster", "--name", g.context))["cluster"]
+        except OpsError as error:
+            if "(ResourceNotFoundException)" in str(error):
+                raise OpsError(f"EKS cluster {g.context} is absent; use plan then up --env aws-dev") from error
+            raise
         require(live["status"] == "ACTIVE" and live["endpoint"] == out["eks_cluster_endpoint"]
                 and live["resourcesVpcConfig"]["vpcId"] == out["vpc_id"], "Live EKS differs from Terraform")
         raw = run(["aws", "eks", "update-kubeconfig", "--dry-run", "--alias", g.context,

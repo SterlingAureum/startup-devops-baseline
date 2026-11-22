@@ -5,8 +5,8 @@ import re
 from configuration import OpsError, require
 
 
-def tags(obj):
-    return {entry["Key"]: entry["Value"] for entry in obj.get("Tags", [])}
+def tags(entries):
+    return {entry["Key"]: entry["Value"] for entry in entries}
 
 
 def release_network(g, journal, state):
@@ -40,7 +40,7 @@ def release_network(g, journal, state):
         identifier = eni["NetworkInterfaceId"]
         if identifier in nat_enis:
             continue
-        labels = tags(eni)
+        labels = tags(eni.get("TagSet", []))
         node = labels.get("node.k8s.amazonaws.com/instance_id", "")
         require(eni.get("VpcId") == vpc and eni.get("InterfaceType") == "interface"
                 and eni.get("Status") == "available" and eni.get("RequesterManaged") is False
@@ -63,7 +63,7 @@ def release_network(g, journal, state):
         if group["GroupName"] == "default":
             continue
         sg = group["GroupId"]
-        labels = tags(group)
+        labels = tags(group.get("Tags", []))
         require(sg == journal.get("cluster_sg") and group["VpcId"] == vpc
                 and group["GroupName"].startswith("eks-cluster-sg-" + g.context + "-")
                 and labels.get("aws:eks:cluster-name") == g.context

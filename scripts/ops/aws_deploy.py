@@ -190,8 +190,8 @@ def check_apps(g, names):
     g.until("expected dev Applications to be Synced and Healthy", converged)
 
 
-def deploy(env, config, adopt=None, *, operation="deploy", confirm=None):
-    report = inspect("aws-dev", env, config, personal=True)
+def deploy(selected, env, config, adopt=None, *, operation="deploy", confirm=None):
+    report = inspect(selected, env, config, personal=True)
     require(operation in ("plan", "create", "up", "deploy"), "Unknown AWS provisioning operation")
     require(confirm is None or (operation in ("up", "create") and confirm == report["cluster"]),
             "Provisioning requires --confirm " + report["cluster"])
@@ -232,14 +232,14 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
                 return
         outputs = json.loads(run(terraform + ["output", "-json"], tfenv, private=True))
         out = {key: value["value"] for key, value in outputs.items()}
-        require(out.get("eks_cluster_name"), "Dev infrastructure is absent from outputs; use plan then up --env aws-dev")
+        require(out.get("eks_cluster_name"), "Dev infrastructure is absent from outputs; use plan then up for the selected inventory entry")
         require(out.get("environment_name") == "dev" and out["eks_cluster_name"] == g.context,
                 "Terraform output cluster differs from inventory")
         try:
             live = json.loads(g.aws("eks", "describe-cluster", "--name", g.context))["cluster"]
         except OpsError as error:
             if "(ResourceNotFoundException)" in str(error):
-                raise OpsError(f"EKS cluster {g.context} is absent; use plan then up --env aws-dev") from error
+                raise OpsError(f"EKS cluster {g.context} is absent; use plan then up for the selected inventory entry") from error
             raise
         require(live["status"] == "ACTIVE" and live["endpoint"] == out["eks_cluster_endpoint"]
                 and live["resourcesVpcConfig"]["vpcId"] == out["vpc_id"], "Live EKS differs from Terraform")

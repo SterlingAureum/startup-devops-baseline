@@ -1,6 +1,8 @@
 # Copy outside the repository for workstation-specific configuration.
 # No access keys, tokens, passwords, kubeconfig or Terraform state belong here.
 schema_version: 1
+# --env selects a key exactly. You may rename a key without renaming any resources.
+# For standard AWS entries the Terraform root identifies the physical dev/test target.
 environments:
   local:
     driver: kind

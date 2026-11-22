@@ -131,12 +131,11 @@ def runtime_target(name):
     return environment, labels
 
 
-def inspect(name, env, config_path, personal=False):
-    require(name in ("aws-dev", "aws-test"), "AWS preflight supports the standard aws-dev and aws-test entries")
-    short = name.removeprefix("aws-")
+def inspect(selected, env, config_path, personal=False):
+    name = selected.delivery_environment
+    short = selected.stage
+    root = selected.terraform_root
     aws, tf = env["aws"], env["terraform"]
-    root = ROOT / "infra/terraform/aws/environments" / short
-    require((ROOT / tf["root"]).resolve() == root, "Terraform root differs from selected environment")
     config_dir = config_path.expanduser().resolve().parent
     variables = local_file(tf.get("variables_file"), config_dir) if personal else root / "terraform.tfvars.example"
     backend_path = (local_file(tf.get("backend_file"), config_dir) if personal else
@@ -169,7 +168,7 @@ def inspect(name, env, config_path, personal=False):
 
     cfg = json.loads((ROOT / "delivery/standard/config.json").read_text())
     target = cfg["environments"][name]
-    manifest = f"clusters/aws/overlays/{short}/root-app.yaml"
+    manifest = selected.gitops_root
     require(target["root_manifest"] == manifest, "Delivery selects another GitOps root")
     root_app = load_yaml((ROOT / manifest).read_text())
     spec = root_app["spec"]
@@ -212,7 +211,8 @@ def inspect(name, env, config_path, personal=False):
     example_repo = read_inputs(identities / "terraform.tfvars.example")["github_repository"]
     require(repo == example_repo, "Root GitHub repository differs from the runtime-identities declaration example")
     gh_env, labels = runtime_target(name)
-    return {"environment": name, "scope": "personal-files" if personal else "repository-examples",
+    return {"environment": selected.inventory_name, "delivery_environment": name,
+            "expected_account_id": aws["expected_account_id"], "scope": "personal-files" if personal else "repository-examples",
             "offline_result": "passed", "live_checks": "pending", "terraform_root": tf["root"],
             "declared_backend": declared_backend, "backend_file_key": backend["key"],
             "runtime_identities_backend": backend_type(identities), "live_blockers": blockers, "cluster": cluster, "region": aws["region"], "gitops_root": manifest,

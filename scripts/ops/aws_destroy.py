@@ -294,8 +294,8 @@ def remove_stack(g, out, journal, save, retain):
             "ec2", "describe-volumes", "--filters", "Name=volume-id,Values=" + ",".join(ids)))["Volumes"])
 
 
-def destroy(env, config, confirm, retain=False):
-    report = inspect("aws-dev", env, config, personal=True)
+def destroy(selected, env, config, confirm, retain=False):
+    report = inspect(selected, env, config, personal=True)
     name = report["cluster"]
     require(confirm in (None, name), "Destroy requires --confirm " + name)
     aws = env["aws"]

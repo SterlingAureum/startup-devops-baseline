@@ -17,6 +17,25 @@ The example intentionally reports `runtime_access_requested: false`. Each result
 The existing Terraform validate job checks provider schemas. The existing render job
 checks the effective application chart and release identity.
 
+### Select an inventory entry
+
+`--config` selects the inventory and `--env` selects an exact key under
+`environments`. Existing inventories work without edits. To use a local name,
+rename the example's `aws-test:` key to `team-a-test:` in a copy and keep its
+Terraform and AWS settings. Then run:
+
+```bash
+python3 scripts/ops/cli.py show --config /path/to/inventory.yaml --env team-a-test
+python3 scripts/ops/cli.py preflight --config /path/to/inventory.yaml --env team-a-test
+```
+
+Both commands report `environment: team-a-test` and `delivery_environment: aws-test`.
+The standard Terraform root selects the physical target and its GitOps overlay.
+Preflight reads the cluster name from the selected Terraform inputs and checks
+the overlay against it. The test runner labels and GitHub Environment remain
+bound to `aws-test`. Lifecycle commands currently run only for the standard dev
+root and use the real cluster name for confirmation.
+
 ### State ownership before 4B
 
 The dev root declares an S3 backend. The test and runtime-identities roots currently

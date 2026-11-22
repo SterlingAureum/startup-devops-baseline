@@ -11,7 +11,7 @@ import sys
 
 import yaml
 
-from configuration import DEFAULT_CONFIG, OpsError, environment, require, validate_environment
+from configuration import DEFAULT_CONFIG, OpsError, environment, require, standard_aws_target, validate_environment
 import local
 
 STEPS = {
@@ -34,7 +34,7 @@ def parser():
     value = argparse.ArgumentParser(description=__doc__)
     value.add_argument("command", choices=STEPS)
     value.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
-    value.add_argument("--env", default="local")
+    value.add_argument("--env", default="local", help="Exact entry name under environments in the selected inventory")
     value.add_argument("--cluster")
     value.add_argument("--repo-url")
     value.add_argument("--revision", help="Pushed branch/tag/SHA; verify defaults to the deployed pinned commit")
@@ -56,17 +56,21 @@ def parser():
 
 def configure(args, local_only=False):
     env = environment(args.config, args.env)
+    args.aws_target = standard_aws_target(args.env, env) if env["driver"] == "aws" else None
+    dev_lifecycle = args.aws_target is not None and args.aws_target.stage == "dev"
     require(not args.check_inputs or args.command == "preflight", "--check-inputs is only valid for AWS preflight")
-    require(not args.retain_backups or (env["driver"] == "aws" and args.env == "aws-dev" and args.command == "destroy"),
+    require(not args.retain_backups or (dev_lifecycle and args.command == "destroy"),
             "--retain-backups applies only to personal aws-dev destroy")
     if args.adopt_demo_secret_version is not None:
-        require(env["driver"] == "aws" and args.env == "aws-dev" and args.command in ("deploy", "up")
+        require(dev_lifecycle and args.command in ("deploy", "up")
                 and re.fullmatch(r"[A-Za-z0-9-]{32,64}", args.adopt_demo_secret_version),
                 "--adopt-demo-secret-version requires AWS dev deploy/up and a valid version ID")
     if local_only:
         require(env["driver"] == "kind", "local.py only accepts kind environments; use cli.py show to inspect AWS configuration")
     if env["driver"] == "aws":
-        require(args.command in ("show", "preflight") or (args.env == "aws-dev" and args.command in ("plan", "create", "up", "deploy", "destroy")),
+        require(args.command == "show" or args.aws_target is not None,
+                "AWS preflight and lifecycle commands require a standard personal dev or test Terraform root")
+        require(args.command in ("show", "preflight") or (dev_lifecycle and args.command in ("plan", "create", "up", "deploy", "destroy")),
                 "Supported AWS operations: show, preflight, and plan/create/up/deploy/destroy on personal aws-dev")
         require(args.confirm is None or args.command in ("create", "up", "destroy"), "AWS --confirm applies to create, up or destroy")
         require(not any(getattr(args, key) is not None for key in ("cluster", "repo_url", "revision", "timeout", "http_port", "https_port", "node_image", "argocd_manifest", "kubeconfig_file")), "AWS inspection does not accept kind command overrides")
@@ -127,14 +131,19 @@ def children_for(root, directory, args, commit):
 def main(argv=None, local_only=False):
     args = parser().parse_args(argv)
     requested_revision = args.revision
+    args.aws_target = None
     try:
         env = configure(args, local_only)
+        selection = {"environment": args.env}
+        if args.aws_target:
+            selection.update(delivery_environment=args.aws_target.delivery_environment,
+                             gitops_root=args.aws_target.gitops_root)
         if env["driver"] == "aws" and args.command == "destroy":
             from aws_destroy import destroy, PHASES
             if args.dry_run:
-                print(json.dumps({"environment": args.env, "command": "destroy", "retain_backups": args.retain_backups, "steps": PHASES, "executed": False}, indent=2))
+                print(json.dumps({**selection, "command": "destroy", "retain_backups": args.retain_backups, "steps": PHASES, "executed": False}, indent=2))
             else:
-                destroy(env, args.config, args.confirm, args.retain_backups)
+                destroy(args.aws_target, env, args.config, args.confirm, args.retain_backups)
             return 0
         if env["driver"] == "aws" and args.command in ("plan", "create", "up", "deploy"):
             from aws_deploy import deploy, PHASES
@@ -145,17 +154,17 @@ def main(argv=None, local_only=False):
                     steps.append(APPLY)
                 if args.command in ("deploy", "up"):
                     steps.extend(PHASES)
-                print(json.dumps({"environment": args.env, "command": args.command, "steps": steps, "executed": False}, indent=2))
+                print(json.dumps({**selection, "command": args.command, "steps": steps, "executed": False}, indent=2))
             else:
-                deploy(env, args.config, args.adopt_demo_secret_version, operation=args.command, confirm=args.confirm)
+                deploy(args.aws_target, env, args.config, args.adopt_demo_secret_version, operation=args.command, confirm=args.confirm)
             return 0
         if args.command == "show" or args.dry_run:
-            print(json.dumps({"environment": args.env, "configuration": env, "command": args.command,
+            print(json.dumps({**selection, "configuration": env, "command": args.command,
                               "steps": STEPS[args.command], "executed": False}, indent=2))
             return 0
         if args.command == "preflight":
             from aws_preflight import inspect
-            print(json.dumps(inspect(args.env, env, args.config, args.check_inputs), indent=2))
+            print(json.dumps(inspect(args.aws_target, env, args.config, args.check_inputs), indent=2))
             return 0
         missing = [tool for tool in tools_for(args.command) if shutil.which(tool) is None]
         require(not missing, "Missing tools: " + ", ".join(missing))
@@ -193,10 +202,10 @@ def main(argv=None, local_only=False):
                 str(args.config.expanduser().absolute()), "--env", args.env, "--cluster", args.cluster]))
         return 0
     except KeyboardInterrupt:
-        if args.env == "aws-dev" and args.command in ("plan", "create", "up"):
+        if args.aws_target and args.command in ("plan", "create", "up"):
             print("Dev provisioning interrupted. Rerun plan to inspect current state.", file=sys.stderr)
             return 130
-        if args.env == "aws-dev" and args.command == "destroy":
+        if args.aws_target and args.command == "destroy":
             print("Dev teardown interrupted. Check the next destroy preview before retrying.", file=sys.stderr)
             return 130
         raise

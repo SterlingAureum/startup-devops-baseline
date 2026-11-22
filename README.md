@@ -57,8 +57,8 @@ python3 -m unittest discover -s tests -v
 python3 scripts/delivery/flow.py render --environment local
 ```
 
-For the personal AWS dev/test path, run the [offline AWS preflight](docs/operations/aws-transition.md)
-before preparing a live cluster.
+For personal AWS dev, the lifecycle CLI supports `plan`, `create`, `up`, `deploy` and `destroy`.
+Prepare the private inventory and follow the [AWS dev rebuild instructions](docs/operations/aws-transition.md#rebuild-personal-aws-dev-from-the-inventory).
 
 With Terraform installed, `bash scripts/checks/terraform.sh` performs formatting
 and backend-disabled validation of the five roots. It does not plan, apply,

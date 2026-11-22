@@ -66,6 +66,41 @@ resources. Keep login credentials, secret contents, state and kubeconfig outside
 | Promote to test | Prepare test's own inputs and cluster after dev passes. Keep dev available for reverification. Follow the reviewed promotion PR and verify the same digest on test. |
 | Clean up | Decide what happens to CNPG objects/backups and secrets first. Release Argo-managed workloads and cloud-controller resources while controllers and permissions are available. Review the destroy plan for the disposable environment root only. After removal, inspect residual load balancers, volumes, NAT/EIPs, logs and backups. Preserve shared state and persistent identities. |
 
+## Rebuild personal AWS dev from the inventory
+
+Start in the repository root on the operator workstation. Use the existing dev
+S3 backend and persistent runtime role listed in the inventory. The CLI initializes
+the dev Terraform root automatically. The selected profile or role needs the
+same provisioning permissions as a direct Terraform apply. The following preview
+takes a backend lock during planning and prints Terraform's proposed changes.
+
+```bash
+inventory="$HOME/.config/startup-devops-baseline/environments.yaml"
+.venv/bin/python scripts/ops/cli.py plan --env aws-dev --config "$inventory"
+```
+
+To create the infrastructure and bootstrap the standard GitOps stack in one call:
+
+```bash
+.venv/bin/python scripts/ops/cli.py up --env aws-dev --config "$inventory" --confirm startup-devops-baseline-dev
+```
+
+Each confirmed invocation makes a fresh saved plan with the selected backend,
+default workspace and private variable file. It checks the plan and applies that
+same file under the workstation lifecycle lock. A separate preview expires at
+command exit. Plan and provider working data use a private temporary directory.
+Provisioning ignores shell TF_VAR inputs and rejects TF_CLI_ARGS overrides.
+The normal dev root can create or update resources. A delete or replacement,
+a same-name cluster outside a creation plan's state, or an unfinished network
+teardown recorded for the same VPC stops provisioning before apply.
+
+Use `create` with the same confirmation to finish after Terraform apply.
+Without confirmation, `create` and `up` stop after the preview. `--dry-run`
+prints phases offline. After a partial apply, run `plan` again and review the
+remaining changes. After a successful apply and a bootstrap failure, resume
+with `deploy`. The standard demo credential adoption option also works with
+`up`. Runtime qualification remains a separate workflow.
+
 ## Deploy or resume the standard stack on provisioned dev
 
 Run from the repository on the workstation with the personal inventory, AWS CLI,
@@ -107,7 +142,7 @@ export KUBECONFIG="$HOME/.kube/startup-devops-baseline/aws-dev.yaml"
 kubectl -n argocd get applications
 ```
 
-Provisioning uses the dev Terraform root. The following destroy entrypoint handles a provisioned standard personal dev stack. AWS test remains
+The following destroy entrypoint handles a provisioned standard personal dev stack. AWS test remains
 at the preparation stage. Archived v0.12 executors are historical material.
 
 ### Destroy the personal dev cluster

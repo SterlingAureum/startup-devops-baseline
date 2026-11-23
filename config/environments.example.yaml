@@ -2,6 +2,7 @@
 # No access keys, tokens, passwords, kubeconfig or Terraform state belong here.
 schema_version: 1
 # --env selects a key exactly. You may rename a key without renaming any resources.
+# Optional delivery_environment names an entry in delivery/standard/config.json. Defaults to the inventory key.
 # For standard AWS entries the Terraform root identifies the physical dev/test target.
 environments:
   local:
@@ -29,6 +30,7 @@ environments:
   aws-dev:
     # Offline preflight can check repository examples or these private files.
     driver: aws
+    delivery_environment: aws-dev
     aws:
       expected_account_id: '123456789012'
       region: us-east-1
@@ -39,6 +41,7 @@ environments:
       backend_file: ~/.config/startup-devops-baseline/aws-dev.tfbackend
   aws-test:
     driver: aws
+    delivery_environment: aws-test
     aws:
       expected_account_id: '123456789012'
       region: us-east-1

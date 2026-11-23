@@ -136,6 +136,13 @@ def inspect(selected, env, config_path, personal=False):
     short = selected.stage
     root = selected.terraform_root
     aws, tf = env["aws"], env["terraform"]
+    cfg = json.loads((ROOT / "delivery/standard/config.json").read_text())
+    require(name in cfg["environments"],
+            f"Unknown delivery environment {name!r} in delivery/standard/config.json. "
+            "Set delivery_environment in the inventory entry to its delivery key.")
+    target = cfg["environments"][name]
+    manifest = selected.gitops_root
+    require(target["root_manifest"] == manifest, f"Delivery environment {name!r} must select {manifest} for Terraform root {tf['root']}")
     config_dir = config_path.expanduser().resolve().parent
     variables = local_file(tf.get("variables_file"), config_dir) if personal else root / "terraform.tfvars.example"
     backend_path = (local_file(tf.get("backend_file"), config_dir) if personal else
@@ -144,7 +151,7 @@ def inspect(selected, env, config_path, personal=False):
     blockers = []
     if declared_backend != "s3":
         message = f"{name} root declares {declared_backend} state; its S3 backend file cannot select that backend"
-        require(not personal and name == "aws-test" and declared_backend == "local", message)
+        require(not personal and short == "test" and declared_backend == "local", message)
         blockers.append(message)
     backend = read_inputs(backend_path)
     check_backend(backend, short, aws, personal)
@@ -166,10 +173,6 @@ def inspect(selected, env, config_path, personal=False):
         if values.get("eks_endpoint_public_access") and not values.get("eks_public_access_cidrs"):
             blockers.append("Public endpoint needs restricted CIDRs in the personal inputs")
 
-    cfg = json.loads((ROOT / "delivery/standard/config.json").read_text())
-    target = cfg["environments"][name]
-    manifest = selected.gitops_root
-    require(target["root_manifest"] == manifest, "Delivery selects another GitOps root")
     root_app = load_yaml((ROOT / manifest).read_text())
     spec = root_app["spec"]
     src = spec["source"]

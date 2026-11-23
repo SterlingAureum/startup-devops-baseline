@@ -65,9 +65,12 @@ def https_url(value, location):
 
 
 def validate_environment(env):
-    mapping(env, ("driver", "timeout", "kind", "argocd", "gitops", "aws", "terraform"), "environment", ("driver",))
+    mapping(env, ("driver", "delivery_environment", "timeout", "kind", "argocd", "gitops", "aws", "terraform"), "environment", ("driver",))
     require(env["driver"] in ("kind", "aws"), "Supported drivers are kind and aws")
     require(type(env.get("timeout", 900)) is int and env.get("timeout", 900) > 0, "timeout must be a positive integer")
+    if "delivery_environment" in env:
+        require(env["driver"] == "aws", "delivery_environment is used by AWS delivery preflight")
+        text(env["delivery_environment"], "delivery_environment")
     if env["driver"] == "aws":
         mapping(env.get("aws"), ("expected_account_id", "region", "profile", "role_arn"), "aws", ("expected_account_id", "region"))
         aws = env["aws"]
@@ -112,10 +115,7 @@ class AwsTarget:
     inventory_name: str
     stage: str
     terraform_root: Path
-
-    @property
-    def delivery_environment(self):
-        return f"aws-{self.stage}"
+    delivery_environment: str
 
     @property
     def gitops_root(self):
@@ -126,7 +126,7 @@ def standard_aws_target(name, env):
     # Bind the physical target to the reviewed IaC root, never to its inventory alias.
     root = (ROOT / env["terraform"]["root"]).resolve()
     if root.parent == ROOT / "infra/terraform/aws/environments" and root.name in ("dev", "test"):
-        return AwsTarget(name, root.name, root)
+        return AwsTarget(name, root.name, root, env.get("delivery_environment", name))
     return None
 
 

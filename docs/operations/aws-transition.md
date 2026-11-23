@@ -20,9 +20,11 @@ checks the effective application chart and release identity.
 ### Select an inventory entry
 
 `--config` selects the inventory and `--env` selects an exact key under
-`environments`. Existing inventories work without edits. To use a local name,
-rename the example's `aws-test:` key to `team-a-test:` in a copy and keep its
-Terraform and AWS settings. Then run:
+`environments`. AWS preflight looks up `delivery_environment` in
+`delivery/standard/config.json`; omitting it uses the inventory key. Inventories
+using the standard names work without edits. If you previously renamed a key
+to `team-a-test`, add `delivery_environment: aws-test` beside `driver: aws`
+in that entry. The example includes this mapping so you can rename its key. Then run:
 
 ```bash
 python3 scripts/ops/cli.py show --config /path/to/inventory.yaml --env team-a-test

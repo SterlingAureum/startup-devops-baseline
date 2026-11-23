@@ -70,6 +70,27 @@ class AwsPreflightTests(unittest.TestCase):
                         self.assertEqual(json.loads(output.getvalue()), {**expected, "environment": alias})
                     self.assertEqual(expected["delivery_environment"], canonical)
 
+    def test_delivery_key_defaults_to_inventory_key_and_validates_before_tools(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            inventory = Path(tmp) / "inventory.yaml"
+            entry = configuration.environment(configuration.DEFAULT_CONFIG, "aws-test")
+            del entry["delivery_environment"]
+            inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"aws-test": entry}}))
+            with redirect_stdout(io.StringIO()) as output:
+                self.assertEqual(cli.main(["preflight", "--config", str(inventory), "--env", "aws-test"]), 0)
+            self.assertEqual(json.loads(output.getvalue())["delivery_environment"], "aws-test")
+            for override, message in ((None, "Unknown delivery environment 'team-a-test'"),
+                                      ("aws-dev", "must select clusters/aws/overlays/test"),
+                                      ("", "delivery_environment must be a nonempty string")):
+                if override is not None:
+                    entry["delivery_environment"] = override
+                inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"team-a-test": entry}}))
+                with self.subTest(override=override), redirect_stderr(io.StringIO()) as error, \
+                        patch.object(aws.subprocess, "run") as tool:
+                    self.assertEqual(cli.main(["preflight", "--config", str(inventory), "--env", "team-a-test"]), 1)
+                    self.assertIn(message, error.getvalue())
+                    tool.assert_not_called()
+
     def test_missing_key_and_test_alias_fail_before_external_tools(self):
         with tempfile.TemporaryDirectory() as tmp:
             inventory = Path(tmp) / "inventory.yaml"

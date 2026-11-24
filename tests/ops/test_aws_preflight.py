@@ -21,10 +21,10 @@ class AwsPreflightTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
             env = configuration.environment(configuration.DEFAULT_CONFIG, "aws-dev")
-            del env["terraform"]["backend"]  # Existing dev inventories use backend_file.
-            env["terraform"].update(variables_file="vars.tfvars.json", backend_file="dev.tfbackend")
+            env["terraform"]["variables_file"] = "vars.tfvars.json"
+            env["terraform"]["backend"]["config_file"] = "dev.tfbackend"
             inventory = folder / "environments.yaml"
-            inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"aws-dev": env}}))
+            inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"aws-dev": env}}))
             account = env["aws"]["expected_account_id"]
             backend = folder / "dev.tfbackend"
             backend.write_text(f'bucket = "fixture-only"\nkey = "environments/dev/terraform.tfstate"\n'
@@ -61,7 +61,7 @@ class AwsPreflightTests(unittest.TestCase):
             inventory = Path(tmp) / "inventory.yaml"
             for canonical, alias in (("aws-dev", "sandbox"), ("aws-test", "team-a-test")):
                 entry = configuration.environment(configuration.DEFAULT_CONFIG, canonical)
-                inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {alias: entry}}))
+                inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {alias: entry}}))
                 for command in ("show", "preflight"):
                     with self.subTest(alias=alias, command=command), redirect_stdout(io.StringIO()) as output:
                         self.assertEqual(cli.main([command, "--env", canonical]), 0)
@@ -71,21 +71,18 @@ class AwsPreflightTests(unittest.TestCase):
                         self.assertEqual(json.loads(output.getvalue()), {**expected, "environment": alias})
                     self.assertEqual(expected["delivery_environment"], canonical)
 
-    def test_delivery_key_defaults_to_inventory_key_and_validates_before_tools(self):
+    def test_delivery_key_is_explicit_and_validated_before_tools(self):
         with tempfile.TemporaryDirectory() as tmp:
             inventory = Path(tmp) / "inventory.yaml"
             entry = configuration.environment(configuration.DEFAULT_CONFIG, "aws-test")
             del entry["delivery_environment"]
-            inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"aws-test": entry}}))
-            with redirect_stdout(io.StringIO()) as output:
-                self.assertEqual(cli.main(["preflight", "--config", str(inventory), "--env", "aws-test"]), 0)
-            self.assertEqual(json.loads(output.getvalue())["delivery_environment"], "aws-test")
-            for override, message in ((None, "Unknown delivery environment 'team-a-test'"),
+            for override, message in ((None, "delivery_environment must be a nonempty string"),
+                                      ("missing", "Unknown delivery environment 'missing'"),
                                       ("aws-dev", "must select clusters/aws/overlays/test"),
                                       ("", "delivery_environment must be a nonempty string")):
                 if override is not None:
                     entry["delivery_environment"] = override
-                inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"team-a-test": entry}}))
+                inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"team-a-test": entry}}))
                 with self.subTest(override=override), redirect_stderr(io.StringIO()) as error, \
                         patch.object(aws.subprocess, "run") as tool:
                     self.assertEqual(cli.main(["preflight", "--config", str(inventory), "--env", "team-a-test"]), 1)
@@ -97,7 +94,7 @@ class AwsPreflightTests(unittest.TestCase):
             inventory = Path(tmp) / "inventory.yaml"
             entry = configuration.environment(configuration.DEFAULT_CONFIG, "aws-test")
             # Even a dev-looking key cannot enable dev mutations against the test root.
-            inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"aws-dev": entry}}))
+            inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"aws-dev": entry}}))
             with patch.object(aws.subprocess, "run") as tool:
                 with redirect_stderr(io.StringIO()) as error:
                     self.assertEqual(cli.main(["destroy", "--env", "AWS-dev", "--config", str(inventory)]), 1)
@@ -114,7 +111,7 @@ class AwsPreflightTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             inventory = Path(tmp) / "inventory.yaml"
             entry = configuration.environment(configuration.DEFAULT_CONFIG, "aws-dev")
-            inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"sandbox": entry}}))
+            inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"sandbox": entry}}))
             for module, command in ((aws_deploy, "up"), (aws_destroy, "destroy")):
                 with self.subTest(command=command), redirect_stderr(io.StringIO()) as error, \
                         patch.object(module, "inspect", return_value={"cluster": "actual-dev"}) as inspect, \
@@ -126,7 +123,7 @@ class AwsPreflightTests(unittest.TestCase):
                     self.assertIn("--confirm actual-dev", error.getvalue())
                     tool.assert_not_called()
 
-    def test_test_root_supports_local_and_rejects_legacy_s3_file(self):
+    def test_test_root_supports_local_and_rejects_s3(self):
         with redirect_stdout(io.StringIO()) as output:
             self.assertEqual(cli.main(["preflight", "--env", "aws-test"]), 0)
         report = json.loads(output.getvalue())
@@ -136,9 +133,8 @@ class AwsPreflightTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "inventory.yaml"
             entry = configuration.environment(configuration.DEFAULT_CONFIG, "aws-test")
-            del entry["terraform"]["backend"]
-            entry["terraform"]["backend_file"] = "old-test.tfbackend"
-            path.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"aws-test": entry}}))
+            entry["terraform"]["backend"] = {"type": "s3", "config_file": "test.tfbackend"}
+            path.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"aws-test": entry}}))
             with redirect_stderr(io.StringIO()) as error:
                 self.assertEqual(cli.main(["preflight", "--env", "aws-test", "--config", str(path), "--check-inputs"]), 1)
             self.assertIn("root declares local state", error.getvalue())

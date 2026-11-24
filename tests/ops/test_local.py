@@ -89,6 +89,30 @@ class ConfigurationTests(unittest.TestCase):
                 self.assertEqual(cli.main(extra), 1)
                 run.assert_not_called()
 
+    def test_old_inventory_and_conflicting_kind_targets_are_rejected_before_tools(self):
+        entry = configuration.environment(configuration.DEFAULT_CONFIG, "local")
+        with tempfile.TemporaryDirectory() as tmp, patch.object(local, "run") as run:
+            file = Path(tmp) / "inventory.yaml"
+            for version, target, duplicate_root, message in (
+                (1, "local", False, "schema_version: 2"),
+                (2, None, False, "delivery_environment"),
+                (2, "missing", False, "Unknown delivery environment"),
+                (2, "aws-test", False, "AWS GitOps root"),
+                (2, "local", True, "gitops"),
+            ):
+                env = deepcopy(entry)
+                if target is None:
+                    del env["delivery_environment"]
+                else:
+                    env["delivery_environment"] = target
+                if duplicate_root:
+                    env["gitops"]["root_manifest"] = "clusters/local/root-app.yaml"
+                file.write_text(yaml.safe_dump({"schema_version": version, "environments": {"local": env}}))
+                with self.subTest(version=version, target=target, duplicate=duplicate_root), redirect_stderr(io.StringIO()) as error:
+                    self.assertEqual(cli.main(["up", "--config", str(file), "--revision", "main"]), 1)
+                    self.assertIn(message, error.getvalue())
+            run.assert_not_called()
+
     def test_reject_duplicate_fields_and_embedded_credentials(self):
         with self.assertRaises(configuration.OpsError):
             configuration.load_yaml("schema_version: 1\nschema_version: 2\n")
@@ -105,7 +129,7 @@ class ConfigurationTests(unittest.TestCase):
             env = configuration.environment(configuration.DEFAULT_CONFIG, "local")
             env["kind"]["cluster"] = "my-local"
             env["gitops"]["repository"] = "https://example.invalid/team/gitops.git"
-            path.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"workstation": env}}))
+            path.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"workstation": env}}))
             value = args("status", "--config", str(path), "--env", "workstation", "--timeout", "20")
             self.assertEqual((value.cluster, value.repo_url, value.timeout), ("my-local", env["gitops"]["repository"], 20))
 
@@ -323,21 +347,27 @@ class GitOpsTests(unittest.TestCase):
                 self.assertFalse((checkout / "apps/demo-api").exists())
 
             entry = configuration.environment(configuration.DEFAULT_CONFIG, "local")
-            entry["gitops"].update(root_manifest="root.yaml", revision="missing", parameters={})
+            entry["gitops"].update(revision="missing", parameters={})
+            entry["delivery_environment"] = "custom-apps"
+            catalog = repo / "catalog.json"
+            catalog.write_text(json.dumps({"environments": {"custom-apps": {"root_manifest": "root.yaml"}}}))
             # Use a supported HTTPS inventory URL and route only this Git fixture to disk.
             url = "https://example.invalid/team/preflight.git"
             entry["gitops"]["repository"] = url
             inventory = repo / "inventory.yaml"
-            inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"workstation": entry}}))
+            inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"workstation": entry}}))
             command = ["preflight", "--env", "workstation", "--config", str(inventory), "--check-inputs"]
             git_config = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": f"url.{repo.as_uri()}.insteadOf",
                           "GIT_CONFIG_VALUE_0": url}
-            with patch.dict(os.environ, git_config), patch.object(local, "Driver") as driver, patch.object(cli, "require_tools"):
+            with patch.dict(os.environ, git_config), patch.object(configuration, "DELIVERY_CONFIG", catalog), \
+                    patch.object(local, "Driver") as driver, patch.object(cli, "require_tools"):
                 with redirect_stdout(io.StringIO()) as output, redirect_stderr(io.StringIO()):
                     self.assertEqual(cli.main(command + ["--revision", "HEAD"]), 0)
                     report = json.loads(output.getvalue())
                     self.assertTrue(report["inputs_checked"])
                     self.assertEqual(report["environment"], "workstation")
+                    self.assertEqual(report["delivery_environment"], "custom-apps")
+                    self.assertEqual(report["gitops_root"], "root.yaml")
                     self.assertEqual(report["resolved_revision"], expected)
                     self.assertEqual(report["child_applications"], ["custom-workload"])
                 with redirect_stderr(io.StringIO()):

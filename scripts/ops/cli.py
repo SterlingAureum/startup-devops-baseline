@@ -12,7 +12,7 @@ import sys
 
 import yaml
 
-from configuration import DEFAULT_CONFIG, OpsError, environment, require, standard_aws_target, validate_environment
+from configuration import DEFAULT_CONFIG, OpsError, delivery_target, environment, require, standard_aws_target, validate_environment
 import local
 
 STEPS = {
@@ -57,7 +57,8 @@ def parser():
 
 def configure(args, local_only=False):
     env = environment(args.config, args.env)
-    args.aws_target = standard_aws_target(args.env, env) if env["driver"] == "aws" else None
+    catalog, args.root_manifest = delivery_target(env)
+    args.aws_target = standard_aws_target(args.env, env, catalog, args.root_manifest) if env["driver"] == "aws" else None
     dev_lifecycle = args.aws_target is not None and args.aws_target.stage == "dev"
     require(not args.check_inputs or args.command == "preflight", "--check-inputs is only valid for preflight")
     require(not args.retain_backups or (dev_lifecycle and args.command == "destroy"),
@@ -92,7 +93,6 @@ def configure(args, local_only=False):
     args.https_port = env["kind"]["https_port"]
     args.repo_url = env["gitops"]["repository"]
     args.revision = env["gitops"].get("revision")
-    args.root_manifest = env["gitops"]["root_manifest"]
     args.root_application = env["gitops"]["root_application"]
     args.parameters = env["gitops"].get("parameters", {})
     args.argocd_namespace = env["argocd"]["namespace"]
@@ -141,9 +141,8 @@ def require_tools(command):
     require(not missing, "Missing tools: " + ", ".join(missing))
 
 
-def kind_preflight(args):
-    report = {"environment": args.env, "driver": "kind", "cluster": args.cluster,
-              "root_manifest": args.root_manifest, "inputs_checked": False}
+def kind_preflight(args, selection):
+    report = {**selection, "cluster": args.cluster, "inputs_checked": False}
     if args.check_inputs:
         require_tools("up")
         with redirect_stdout(sys.stderr):
@@ -159,10 +158,8 @@ def main(argv=None, local_only=False):
     args.aws_target = None
     try:
         env = configure(args, local_only)
-        selection = {"environment": args.env}
-        if args.aws_target:
-            selection.update(delivery_environment=args.aws_target.delivery_environment,
-                             gitops_root=args.aws_target.gitops_root)
+        selection = {"environment": args.env, "driver": env["driver"],
+                     "delivery_environment": env["delivery_environment"], "gitops_root": args.root_manifest}
         if env["driver"] == "aws" and args.command == "destroy":
             from aws_destroy import destroy, PHASES
             if args.dry_run:
@@ -190,7 +187,7 @@ def main(argv=None, local_only=False):
                     steps.extend(["check deployment tools", "fetch and pin GitOps source", "render root and validate child Applications"])
                 print(json.dumps({**selection, "command": "preflight", "steps": steps, "executed": False}, indent=2))
             else:
-                kind_preflight(args)
+                kind_preflight(args, selection)
             return 0
         if args.command == "show" or args.dry_run:
             print(json.dumps({**selection, "configuration": env, "command": args.command,

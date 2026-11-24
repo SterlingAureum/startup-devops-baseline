@@ -31,7 +31,7 @@ class StateTests(unittest.TestCase):
             config = folder / "environments.yaml"
             entry = environment(DEFAULT_CONFIG, "aws-test")
             entry["terraform"].update(variables_file="vars.tfvars.json", backend={"type": "local", "path": "data/state"})
-            config.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"team": entry}}))
+            config.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"team": entry}}))
             (folder / "vars.tfvars.json").write_text(json.dumps({
                 "enable_github_actions_runtime_identity": True, "eks_public_access_cidrs": ["192.0.2.1/32"],
                 "github_actions_runtime_role_arn": f"arn:aws:iam::{ACCOUNT}:role/{TARGET[1]}-github-runtime-read-role"}))

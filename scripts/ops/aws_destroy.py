@@ -10,7 +10,7 @@ import time
 from aws_deploy import Cluster, lifecycle_lock, reopen_receipt, run
 from aws_dev_network import release_network
 from aws_preflight import inspect, local_file
-from aws_state import backend_settings, check_selected_state, init_argument
+from aws_state import check_selected_state, init_argument
 from configuration import ROOT, OpsError, require
 from connections import atomic_write
 
@@ -325,7 +325,7 @@ def session(g, env, config, confirm, folder, tmp, retain=False):
     # Environment-supplied Terraform CLI arguments can silently change the reviewed plan.
     require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
             "Unset TF_CLI_ARGS overrides before dev teardown")
-    terraform("init", "-input=false", "-reconfigure", init_argument(backend_settings(tf), base))
+    terraform("init", "-input=false", "-reconfigure", init_argument(tf["backend"], base))
     state = json.loads(terraform("state", "pull"))
     require(re.fullmatch(r"[0-9a-fA-F-]{36}", state.get("lineage", "")), "Invalid dev state lineage")
     receipt = folder / (state["lineage"] + ".json")

@@ -44,6 +44,24 @@ The dev root uses S3. Set `terraform.backend.type: s3` and
 `terraform.backend.config_file` to the private backend file. When updating a dev
 inventory, move the path from `terraform.backend_file` to `terraform.backend.config_file`.
 
+With the default personal inventory, `config_file: aws-dev.tfbackend` resolves
+to `~/.config/startup-devops-baseline/aws-dev.tfbackend`. From the repository
+root, prepare a first private copy with the following commands. The copy skips
+an existing destination.
+
+```bash
+python3 scripts/ops/cli.py init-config
+cp -nT infra/terraform/aws/backend-config/dev.s3.tfbackend.example \
+  "$HOME/.config/startup-devops-baseline/aws-dev.tfbackend"
+```
+
+If you selected another inventory or configured another path, use the destination
+reported by `show --config FILE --env NAME` under `paths.backend_config_file`.
+Replace the bucket and KMS key placeholders with the dev state-bootstrap output,
+check the region and state key, and set the allowed account ID. After preparing
+the personal tfvars, run `preflight --env aws-dev --check-inputs` to validate
+both files locally.
+
 The test root uses a local file. Replace the old test `backend_file` entry
 with the following block inside `terraform`:
 

@@ -10,7 +10,7 @@ python3 scripts/ops/cli.py preflight --env aws-test
 ```
 
 A zero exit code with `scope: repository-examples` validates the selected Terraform
-root, example backend key, cluster/region/hostname wiring, rendered GitOps overlay,
+root, selected backend, cluster/region/hostname wiring, rendered GitOps overlay,
 bootstrap VPC placeholder, declared runtime RBAC, runner labels and GitHub Environment.
 The example intentionally reports `runtime_access_requested: false`. Each result includes
 `live_checks: pending`. The command reads files and invokes local `kubectl kustomize`.
@@ -35,18 +35,47 @@ Both commands report `environment: team-a-test` and `delivery_environment: aws-t
 The standard Terraform root selects the physical target and its GitOps overlay.
 Preflight reads the cluster name from the selected Terraform inputs and checks
 the overlay against it. The test runner labels and GitHub Environment remain
-bound to `aws-test`. Lifecycle commands currently run only for the standard dev
-root and use the real cluster name for confirmation.
+bound to `aws-test`. Both personal targets support `plan`. The dev target also supports
+`create/up/deploy/destroy`, with confirmation bound to its real cluster name.
 
-### State ownership before 4B
+### Select the state address
 
-The dev root declares an S3 backend. The test and runtime-identities roots currently
-use local state despite the presence of example S3 backend files. The test template
-report exposes this in `declared_backend` and `live_blockers`. Personal preflight
-refuses to treat test's S3 file as effective while its root declares local state.
-Before 4C identify any existing test state and decide where it will live. For
-runtime-identities, locate the original state and the existing IAM roles before
-considering creation. Preserve the persistent roles through dev/test teardown.
+The dev root uses S3. Set `terraform.backend.type: s3` and
+`terraform.backend.config_file` to the private backend file. Existing dev
+inventories can continue to use `terraform.backend_file`.
+
+The test root uses a local file. Replace the old test `backend_file` entry
+with the following block inside `terraform`:
+
+```yaml
+backend:
+  type: local
+  path: ~/.local/state/startup-devops-baseline/aws-test/terraform.tfstate
+```
+
+For an existing test deployment, set `path` to its original state file.
+For a new deployment choose a persistent path in your private operator directory.
+Relative paths resolve from the inventory directory. Each environment owns a
+separate state. Changing the address requires explicitly handling any existing
+state and resources. Keep the runtime-identities root and its persistent IAM
+roles separate.
+
+Run these from the repository root:
+
+```bash
+inventory="$HOME/.config/startup-devops-baseline/environments.yaml"
+.venv/bin/python scripts/ops/cli.py preflight --env aws-test --config "$inventory" --check-inputs
+.venv/bin/python -m unittest discover -s tests/ops -p 'test_aws_state.py' -v
+```
+
+Personal preflight reads private tfvars and the selected local snapshot and
+reports its status. Repository-example preflight and S3 preflight report
+`not-checked` for state contents. The optional live `plan` uses AWS credentials,
+checks the caller and reads the selected snapshot before Terraform initialization.
+It reports its address, lineage, serial and managed instance count when present.
+An existing empty snapshot keeps its lineage. A missing snapshot with a
+same-name EKS cluster or baseline VPC blocks creation. Read failures stop the
+operation. Test infrastructure creation follows in the next lifecycle increment.
 
 ## Check personal inputs
 
@@ -73,7 +102,7 @@ or mismatched target exits nonzero. Templates retain placeholders and cannot est
 personal readiness. The checks compare selected target fields from root variable defaults,
 terraform.tfvars, terraform.tfvars.json, then sorted auto files, with the explicitly
 selected file last. Shell TF_VAR/CLI overrides, workspace selection, live account
-identity, existing state, drift and actual node capacity need separate verification.
+identity, remote state, drift and actual node capacity need live verification.
 The standard personal profile assumes a single account for state and environment
 resources. Keep login credentials, secret contents, state and kubeconfig outside Git.
 

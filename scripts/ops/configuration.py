@@ -79,11 +79,19 @@ def validate_environment(env):
         for key in ("profile", "role_arn"):
             if key in aws:
                 text(aws[key], "aws." + key)
-        mapping(env.get("terraform"), ("root", "variables_file", "backend_file"), "terraform", ("root",))
+        mapping(env.get("terraform"), ("root", "variables_file", "backend_file", "backend"), "terraform", ("root",))
         repository_path(env["terraform"]["root"], "terraform.root")
         for key in ("variables_file", "backend_file"):
             if key in env["terraform"]:
                 text(env["terraform"][key], "terraform." + key)
+        if "backend" in env["terraform"]:
+            backend = env["terraform"]["backend"]
+            mapping(backend, ("type", "path", "config_file"), "terraform.backend", ("type",))
+            require(backend["type"] in ("s3", "local"), "terraform.backend.type must be s3 or local")
+            key = "path" if backend["type"] == "local" else "config_file"
+            mapping(backend, ("type", key), "terraform.backend", (key,))
+            text(backend[key], "terraform.backend." + key)
+            require("backend_file" not in env["terraform"], "Choose terraform.backend or legacy backend_file, not both")
         require("kind" not in env, "An AWS environment must not contain kind settings")
     else:
         require("aws" not in env and "terraform" not in env, "A kind environment must not contain AWS/Terraform settings")

@@ -9,7 +9,8 @@ import time
 
 from aws_deploy import Cluster, lifecycle_lock, reopen_receipt, run
 from aws_dev_network import release_network
-from aws_preflight import inspect, local_file, read_inputs
+from aws_preflight import inspect, local_file
+from aws_state import backend_settings, check_selected_state, init_argument
 from configuration import ROOT, OpsError, require
 from connections import atomic_write
 
@@ -309,9 +310,8 @@ def destroy(selected, env, config, confirm, retain=False):
         role = aws["role_arn"].rsplit("/", 1)[-1]
         require(caller["Arn"].startswith(f"arn:aws:sts::{caller['Account']}:assumed-role/{role}/"),
                 "Select credentials for the configured operator role")
-    backend = read_inputs(local_file(env["terraform"]["backend_file"], config.expanduser().resolve().parent))
-    print(f"Retained Terraform state: s3://{backend['bucket']}/{backend['key']}  KMS: {backend['kms_key_id']}", flush=True)
     with lifecycle_lock(caller["Account"], aws["region"], name) as folder, tempfile.TemporaryDirectory(prefix="aws-dev-destroy-") as tmp:
+        check_selected_state(g, report, "destroy")
         session(g, env, config, confirm, folder, tmp, retain)
 
 
@@ -325,7 +325,7 @@ def session(g, env, config, confirm, folder, tmp, retain=False):
     # Environment-supplied Terraform CLI arguments can silently change the reviewed plan.
     require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
             "Unset TF_CLI_ARGS overrides before dev teardown")
-    terraform("init", "-input=false", "-backend-config=" + str(local_file(tf["backend_file"], base)))
+    terraform("init", "-input=false", "-reconfigure", init_argument(backend_settings(tf), base))
     state = json.loads(terraform("state", "pull"))
     require(re.fullmatch(r"[0-9a-fA-F-]{36}", state.get("lineage", "")), "Invalid dev state lineage")
     receipt = folder / (state["lineage"] + ".json")

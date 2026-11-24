@@ -179,7 +179,7 @@ class AwsDeployTests(unittest.TestCase):
                         return ""
                     self.fail("Unexpected kubectl arguments: " + str(args))
 
-                with patch.object(deploy, "inspect", return_value=report), \
+                with patch.object(deploy, "check_selected_state"), patch.object(deploy, "inspect", return_value=report), \
                         patch.object(deploy, "lifecycle_lock", return_value=nullcontext(folder)), \
                         patch.object(deploy, "private_path", return_value=folder / "kubeconfig"), \
                         patch.object(deploy, "run", side_effect=run), \

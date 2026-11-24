@@ -1,6 +1,7 @@
 """Require every applicable current CI job to finish successfully."""
 import json
 import os
+from pathlib import Path
 import sys
 
 
@@ -17,8 +18,10 @@ def validate(results, event):
             applicable.add(job)
     if outputs["render"] == "true":
         environments = json.loads(outputs.get("environments", "null"))
+        catalog = Path(__file__).resolve().parents[2] / "delivery/standard/config.json"
+        supported = json.loads(catalog.read_text())["environments"]
         if not isinstance(environments, list) or not environments or any(
-            name not in ("local", "aws-dev", "aws-test", "aws-prod") for name in environments
+            name not in supported for name in environments
         ):
             raise ValueError("Rendering requires explicit supported environments")
     if event == "pull_request":

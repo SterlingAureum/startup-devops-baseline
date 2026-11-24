@@ -44,6 +44,13 @@ def config(path=DEFAULT_CONFIG):
         raise Rejected("This first workflow adapter supports protected main only")
     for item in [value["application"]["directory"], value["application"]["chart"]]:
         repo_path(item)
+    for name, env in value["environments"].items():
+        stage = env.get("runtime_stage")
+        if stage is not None and (stage not in ("dev", "test", "prod") or not env["release"]
+                                  or not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name)):
+            raise Rejected(f"Invalid AWS runtime target: {name}")
+        if name == "aws-prod" and stage not in (None, "prod"):
+            raise Rejected("The standard production target requires the prod runtime stage")
     return value
 
 

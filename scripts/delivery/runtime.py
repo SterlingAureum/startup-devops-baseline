@@ -203,7 +203,7 @@ def analysis_references(observed):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--environment", choices=["aws-dev", "aws-test", "aws-prod"], required=True)
+    parser.add_argument("--environment", required=True)
     parser.add_argument("--revision", required=True)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--timeout", type=int, default=900)
@@ -217,7 +217,10 @@ def main():
     try:
         cfg = config()
         report["application_id"] = cfg["application"]["release_name"]
-        if args.environment == "aws-prod" and os.getenv("DELIVERY_PROD_ENABLED") != "true":
+        stage = cfg["environments"].get(args.environment, {}).get("runtime_stage")
+        if not stage:
+            raise Rejected(f"Unknown or ineligible AWS runtime target: {args.environment}")
+        if stage == "prod" and os.getenv("DELIVERY_PROD_ENABLED") != "true":
             raise Rejected("Production runtime acceptance is disabled")
         if run(["git", "rev-parse", "HEAD"], cwd=ROOT, capture_output=True).stdout.strip() != args.revision:
             raise Rejected("Runtime checkout does not match the requested configuration revision")

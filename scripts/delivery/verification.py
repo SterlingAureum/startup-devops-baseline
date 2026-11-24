@@ -5,7 +5,7 @@ import os
 import subprocess
 import zipfile
 
-from common import Rejected
+from common import Rejected, config
 
 
 def api(path, binary=False):
@@ -60,7 +60,10 @@ def verified_report(repository, run_id, attempt, source):
     path = f"repos/{repository}/actions/runs/{run_id}"
     specific = f"{path}/attempts/{attempt}"
     workflow = api(specific)
-    callers = {".github/workflows/delivery-runtime.yaml": f"verify-{source.removeprefix('aws-')}",
+    stage = config()["environments"][source].get("runtime_stage")
+    if not stage:
+        raise Rejected("The source environment has no runtime stage")
+    callers = {".github/workflows/delivery-runtime.yaml": f"verify-{stage}",
                ".github/workflows/delivery-promote.yaml": "verify-source"}
     caller = callers.get(workflow.get("path"))
     if (not caller or workflow.get("head_branch") != "main"

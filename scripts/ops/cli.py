@@ -73,6 +73,8 @@ def configure(args, local_only=False):
     if local_only:
         require(env["driver"] == "kind", "local.py only accepts kind environments; use cli.py show to inspect AWS configuration")
     if env["driver"] == "aws":
+        if args.command in ("preflight", "deploy", "up"):
+            require(env["argocd"]["namespace"] == "argocd", "AWS root requires the argocd namespace")
         require(args.command == "show" or args.aws_target is not None,
                 "AWS preflight and lifecycle commands require a standard personal dev or test Terraform root")
         require(args.command in ("show", "preflight", "plan") or (dev_lifecycle and args.command in ("create", "up", "deploy", "destroy")),

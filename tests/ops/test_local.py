@@ -47,6 +47,22 @@ def application(name="custom-workload", commit=COMMIT):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_bootstrap_defaults_and_environment_overrides_are_independent(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            inventory = Path(tmp) / "inventory.yaml"
+            doc = configuration.load_yaml(EXAMPLE_CONFIG.read_text())
+            manifest = "https://example.invalid/kind-install.yaml"
+            doc["environments"]["local"]["argocd"] = {"manifest": manifest}
+            inventory.write_text(yaml.safe_dump(doc))
+            self.assertEqual(args("show", "--config", str(inventory)).argocd_manifest, manifest)
+            override = "https://example.invalid/cli-install.yaml"
+            self.assertEqual(args("show", "--config", str(inventory), "--argocd-manifest", override).argocd_manifest, override)
+            defaults = configuration.load_yaml(configuration.ARGOCD_BOOTSTRAP.read_text())
+            for name in ("aws-dev", "aws-test"):
+                with redirect_stdout(io.StringIO()) as out:
+                    self.assertEqual(cli.main(["show", "--config", str(inventory), "--env", name]), 0)
+                self.assertEqual(json.loads(out.getvalue())["configuration"]["argocd"], defaults)
+
     def test_personal_inventory_init_and_default_selection(self):
         with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ, {"HOME": tmp}):
             inventory = configuration.personal_inventory()

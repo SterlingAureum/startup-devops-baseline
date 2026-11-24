@@ -6,6 +6,7 @@
 schema_version: 2
 # --env selects a key exactly. You may rename a key without renaming any resources.
 # Every entry explicitly selects a delivery_environment in delivery/standard/config.json.
+# Argo CD defaults come from config/argocd-bootstrap.yaml. Set argocd.manifest in an entry to override.
 # For standard AWS entries the Terraform root identifies the physical dev/test target.
 environments:
   local:
@@ -17,9 +18,6 @@ environments:
       node_image: kindest/node:v1.30.0
       http_port: 8080
       https_port: 8443
-    argocd:
-      namespace: argocd
-      manifest: https://raw.githubusercontent.com/argoproj/argo-cd/v3.5.2/manifests/install.yaml
     gitops:
       repository: https://github.com/SterlingAureum/startup-devops-baseline.git
       # A real deploy/up needs --revision or a revision here.

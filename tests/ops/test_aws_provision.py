@@ -44,7 +44,7 @@ class ProvisionTests(unittest.TestCase):
         with self.assertRaisesRegex(OpsError, "incomplete"):
             provision.check_plan(dict(self.plan, complete=False), self.g)
         self.eks["change"]["after"]["name"] = "another-dev"
-        with self.assertRaisesRegex(OpsError, "expected dev EKS"):
+        with self.assertRaisesRegex(OpsError, "expected EKS"):
             provision.check_plan(self.plan, self.g)
 
     def test_preview_and_apply_use_exact_generated_plan(self):
@@ -151,7 +151,7 @@ class ProvisionTests(unittest.TestCase):
                     if fails:
                         raise subprocess.CalledProcessError(1, ["terraform", "apply"])
                 with patch.dict(deploy.os.environ, {"TF_VAR_project_name": "foreign"}), \
-                        patch.object(deploy, "inspect", return_value=report), patch.object(deploy.Cluster, "aws", side_effect=aws), \
+                        patch.object(deploy, "check_selected_state"), patch.object(deploy, "inspect", return_value=report), patch.object(deploy.Cluster, "aws", side_effect=aws), \
                         patch.object(deploy, "lifecycle_lock", return_value=nullcontext(folder)), \
                         patch.object(deploy, "provision", side_effect=provision_step), patch.object(deploy, "run", side_effect=run), \
                         patch.object(deploy, "private_path", return_value=folder / "kubeconfig"), \
@@ -177,7 +177,7 @@ class ProvisionTests(unittest.TestCase):
     def test_invalid_scope_or_confirmation_stops_before_aws(self):
         with patch.object(deploy, "inspect", return_value={"cluster": self.name}), \
                 patch.object(deploy.Cluster, "aws") as aws, redirect_stderr(io.StringIO()), redirect_stdout(io.StringIO()):
-            for args in (["plan", "--env", "aws-test"], ["plan", "--env", "local"],
+            for args in (["create", "--env", "aws-test"], ["plan", "--env", "local"],
                          ["create", "--env", "aws-dev", "--confirm", "wrong"],
                          ["plan", "--env", "aws-dev", "--confirm", self.name]):
                 self.assertEqual(cli.main(args), 1)

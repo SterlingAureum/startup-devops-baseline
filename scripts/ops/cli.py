@@ -16,7 +16,7 @@ import local
 
 STEPS = {
     "show": ["read and validate selected environment configuration"],
-    "plan": ["initialize the selected AWS dev backend and preview infrastructure changes"],
+    "plan": ["initialize the selected AWS backend and preview infrastructure changes"],
     "preflight": ["check selected AWS file inputs", "render GitOps overlay and inspect bootstrap/runtime RBAC declarations"],
     "doctor": ["check installed tools"],
     "create": ["create named kind cluster if absent", "save dedicated kubeconfig", "wait for nodes"],
@@ -49,7 +49,7 @@ def parser():
     value.add_argument("--retain-backups", action="store_true",
                        help="AWS dev destroy: snapshot standard PVCs and keep the CNPG bucket and demo DB secret")
     value.add_argument("--kubeconfig-file", help="Explicit shared config target for connect only")
-    value.add_argument("--check-inputs", action="store_true", help="AWS preflight: read selected personal tfvars and backend file")
+    value.add_argument("--check-inputs", action="store_true", help="AWS preflight: read personal tfvars and inspect the selected backend configuration")
     value.add_argument("--dry-run", action="store_true", help="Read config and print phases; invoke no tools and write no files")
     return value
 
@@ -70,8 +70,8 @@ def configure(args, local_only=False):
     if env["driver"] == "aws":
         require(args.command == "show" or args.aws_target is not None,
                 "AWS preflight and lifecycle commands require a standard personal dev or test Terraform root")
-        require(args.command in ("show", "preflight") or (dev_lifecycle and args.command in ("plan", "create", "up", "deploy", "destroy")),
-                "Supported AWS operations: show, preflight, and plan/create/up/deploy/destroy on personal aws-dev")
+        require(args.command in ("show", "preflight", "plan") or (dev_lifecycle and args.command in ("create", "up", "deploy", "destroy")),
+                "Supported AWS operations: show/preflight/plan on personal dev/test, create/up/deploy/destroy on dev")
         require(args.confirm is None or args.command in ("create", "up", "destroy"), "AWS --confirm applies to create, up or destroy")
         require(not any(getattr(args, key) is not None for key in ("cluster", "repo_url", "revision", "timeout", "http_port", "https_port", "node_image", "argocd_manifest", "kubeconfig_file")), "AWS inspection does not accept kind command overrides")
         return env

@@ -12,6 +12,7 @@ import time
 import yaml
 
 from aws_preflight import inspect, kustomize, local_file
+from aws_state import backend_settings, check_selected_state, init_argument
 from aws_standard_demo import complete
 from aws_provision import provision
 from configuration import DEFAULT_CONFIG, ROOT, OpsError, environment, load_yaml, require
@@ -214,17 +215,17 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
     settings = g.env
     tf = env["terraform"]
     base = config.expanduser().resolve().parent
-    backend = local_file(tf["backend_file"], base)
     with tempfile.TemporaryDirectory(prefix="aws-dev-deploy-") as tmp:
         tfenv = dict(settings, TF_DATA_DIR=tmp + "/terraform", TF_WORKSPACE="default")
+        require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
+                "Unset TF_CLI_ARGS overrides before provisioning")
         if operation != "deploy":
-            require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
-                    "Unset TF_CLI_ARGS overrides before dev provisioning")
             print(f"Initializing {tf['root']} for {g.context} (default workspace)", flush=True)
             # Use the same variable sources that personal preflight inspected.
             tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
         terraform = ["terraform", "-chdir=" + str(ROOT / tf["root"])]
-        run(terraform + ["init", "-input=false", "-backend-config=" + str(backend)], tfenv)
+        check_selected_state(g, report, operation)
+        run(terraform + ["init", "-input=false", "-reconfigure", init_argument(backend_settings(tf), base)], tfenv)
         if operation != "deploy":
             variables = local_file(tf["variables_file"], base)
             provision(g, terraform, tfenv, variables, Path(tmp) / "create.tfplan", folder, confirm)

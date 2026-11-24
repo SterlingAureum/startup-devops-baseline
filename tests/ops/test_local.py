@@ -48,6 +48,7 @@ def application(name="custom-workload", commit=COMMIT):
 class ConfigurationTests(unittest.TestCase):
     def test_dry_run_and_show_do_not_run_tools_or_write_files(self):
         for command in (["show"], ["up", "--revision", "main", "--dry-run"], ["connect", "--dry-run"],
+                        ["preflight", "--check-inputs", "--revision", "main", "--dry-run"],
                         ["destroy", "--confirm", "startup-devops-baseline", "--dry-run"], ["show", "--env", "aws-dev"]):
             with self.subTest(command=command), patch.object(local, "run") as run, patch.object(cli.shutil, "which") as which, patch.object(connections, "atomic_write") as write, redirect_stdout(io.StringIO()) as output:
                 self.assertEqual(cli.main(command), 0)
@@ -55,6 +56,24 @@ class ConfigurationTests(unittest.TestCase):
                 run.assert_not_called()
                 which.assert_not_called()
                 write.assert_not_called()
+
+    def test_kind_preflight_declarations_need_no_tools_revision_or_cluster(self):
+        with patch.object(cli.shutil, "which") as which, patch.object(local, "run") as run, redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(cli.main(["preflight", "--env", "local"]), 0)
+            self.assertFalse(json.loads(output.getvalue())["inputs_checked"])
+            which.assert_not_called()
+            run.assert_not_called()
+
+    def test_kind_preflight_requires_revision_and_up_tools_before_fetch(self):
+        with patch.object(local, "source") as source, patch.object(cli.shutil, "which", return_value=None) as which:
+            with redirect_stderr(io.StringIO()) as error:
+                self.assertEqual(cli.main(["preflight", "--check-inputs"]), 1)
+                self.assertIn("--revision", error.getvalue())
+                which.assert_not_called()
+            with redirect_stderr(io.StringIO()) as error:
+                self.assertEqual(cli.main(["preflight", "--check-inputs", "--revision", "main"]), 1)
+                self.assertIn("Missing tools", error.getvalue())
+            source.assert_not_called()
 
     def test_unimplemented_aws_commands_fail_even_for_dry_run(self):
         for command in ("status", "connect", "verify"):
@@ -302,6 +321,28 @@ class GitOpsTests(unittest.TestCase):
                 children = local.render_children(fetched, checkout)
                 self.assertEqual([child["metadata"]["name"] for child in children], ["custom-workload"])
                 self.assertFalse((checkout / "apps/demo-api").exists())
+
+            entry = configuration.environment(configuration.DEFAULT_CONFIG, "local")
+            entry["gitops"].update(root_manifest="root.yaml", revision="missing", parameters={})
+            # Use a supported HTTPS inventory URL and route only this Git fixture to disk.
+            url = "https://example.invalid/team/preflight.git"
+            entry["gitops"]["repository"] = url
+            inventory = repo / "inventory.yaml"
+            inventory.write_text(yaml.safe_dump({"schema_version": 1, "environments": {"workstation": entry}}))
+            command = ["preflight", "--env", "workstation", "--config", str(inventory), "--check-inputs"]
+            git_config = {"GIT_CONFIG_COUNT": "1", "GIT_CONFIG_KEY_0": f"url.{repo.as_uri()}.insteadOf",
+                          "GIT_CONFIG_VALUE_0": url}
+            with patch.dict(os.environ, git_config), patch.object(local, "Driver") as driver, patch.object(cli, "require_tools"):
+                with redirect_stdout(io.StringIO()) as output, redirect_stderr(io.StringIO()):
+                    self.assertEqual(cli.main(command + ["--revision", "HEAD"]), 0)
+                    report = json.loads(output.getvalue())
+                    self.assertTrue(report["inputs_checked"])
+                    self.assertEqual(report["environment"], "workstation")
+                    self.assertEqual(report["resolved_revision"], expected)
+                    self.assertEqual(report["child_applications"], ["custom-workload"])
+                with redirect_stderr(io.StringIO()):
+                    self.assertEqual(cli.main(command), 1)
+                driver.assert_not_called()
 
 
 if __name__ == "__main__":

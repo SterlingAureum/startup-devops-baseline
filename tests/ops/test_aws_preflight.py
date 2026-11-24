@@ -146,7 +146,7 @@ class AwsPreflightTests(unittest.TestCase):
     def test_dry_run_and_invalid_env_do_not_start_tools(self):
         with patch.object(aws.subprocess, "run") as tool, redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             self.assertEqual(cli.main(["preflight", "--env", "aws-dev", "--dry-run"]), 0)
-            self.assertEqual(cli.main(["preflight", "--env", "local"]), 1)
+            self.assertEqual(cli.main(["preflight", "--env", "unknown"]), 1)
             self.assertEqual(cli.main(["show", "--check-inputs"]), 1)
             tool.assert_not_called()
 

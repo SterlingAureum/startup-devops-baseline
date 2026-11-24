@@ -1,5 +1,6 @@
 """Environment-scoped lifecycle entrypoint for kind and personal AWS environments."""
 import argparse
+from contextlib import redirect_stdout
 from copy import deepcopy
 import json
 from pathlib import Path
@@ -49,7 +50,7 @@ def parser():
     value.add_argument("--retain-backups", action="store_true",
                        help="AWS dev destroy: snapshot standard PVCs and keep the CNPG bucket and demo DB secret")
     value.add_argument("--kubeconfig-file", help="Explicit shared config target for connect only")
-    value.add_argument("--check-inputs", action="store_true", help="AWS preflight: read personal tfvars and inspect the selected backend configuration")
+    value.add_argument("--check-inputs", action="store_true", help="Preflight: check kind deployment tools and render the selected Git revision, or inspect AWS tfvars and backend inputs")
     value.add_argument("--dry-run", action="store_true", help="Read config and print phases; invoke no tools and write no files")
     return value
 
@@ -58,7 +59,7 @@ def configure(args, local_only=False):
     env = environment(args.config, args.env)
     args.aws_target = standard_aws_target(args.env, env) if env["driver"] == "aws" else None
     dev_lifecycle = args.aws_target is not None and args.aws_target.stage == "dev"
-    require(not args.check_inputs or args.command == "preflight", "--check-inputs is only valid for AWS preflight")
+    require(not args.check_inputs or args.command == "preflight", "--check-inputs is only valid for preflight")
     require(not args.retain_backups or (dev_lifecycle and args.command == "destroy"),
             "--retain-backups applies only to personal aws-dev destroy")
     if args.adopt_demo_secret_version is not None:
@@ -75,7 +76,7 @@ def configure(args, local_only=False):
         require(args.confirm is None or args.command in ("create", "up", "destroy"), "AWS --confirm applies to create, up or destroy")
         require(not any(getattr(args, key) is not None for key in ("cluster", "repo_url", "revision", "timeout", "http_port", "https_port", "node_image", "argocd_manifest", "kubeconfig_file")), "AWS inspection does not accept kind command overrides")
         return env
-    require(args.command not in ("preflight", "plan"), "preflight and plan require an AWS environment")
+    require(args.command != "plan", "plan requires an AWS environment")
     for argument, section, key in (("cluster", "kind", "cluster"), ("node_image", "kind", "node_image"),
                                    ("http_port", "kind", "http_port"), ("https_port", "kind", "https_port"),
                                    ("repo_url", "gitops", "repository"), ("revision", "gitops", "revision"),
@@ -98,9 +99,9 @@ def configure(args, local_only=False):
     args.argocd_manifest = env["argocd"]["manifest"]
     args.timeout = env.get("timeout", 900)
     require(not args.kubeconfig_file or args.command == "connect", "--kubeconfig-file is only valid for connect")
-    if args.command in ("deploy", "up"):
-        require(bool(args.revision), "Supply --revision or gitops.revision for deploy/up")
-    if args.command in ("up", "install-argocd"):
+    if args.command in ("deploy", "up") or args.check_inputs:
+        require(bool(args.revision), f"Supply --revision or gitops.revision for {args.command}")
+    if args.command in ("up", "install-argocd", "preflight"):
         require(args.argocd_namespace == "argocd", "Pinned bootstrap supports namespace argocd")
     if args.command == "destroy":
         require(args.confirm == args.cluster, "Destroy requires --confirm equal to the selected kind cluster name")
@@ -126,6 +127,30 @@ def children_for(root, directory, args, commit):
         if source.get("repoURL") == args.repo_url:
             require(source.get("targetRevision") == commit, "Same-repository child Application must pin the root commit; configure the parent chart's Git revision parameter")
     return children
+
+
+def deployment_inputs(args):
+    with local.source(args) as (commit, directory):
+        root = local.root_application(args, commit, directory)
+        children = children_for(root, directory, args, commit)
+    return commit, root, children
+
+
+def require_tools(command):
+    missing = [tool for tool in tools_for(command) if shutil.which(tool) is None]
+    require(not missing, "Missing tools: " + ", ".join(missing))
+
+
+def kind_preflight(args):
+    report = {"environment": args.env, "driver": "kind", "cluster": args.cluster,
+              "root_manifest": args.root_manifest, "inputs_checked": False}
+    if args.check_inputs:
+        require_tools("up")
+        with redirect_stdout(sys.stderr):
+            commit, root, children = deployment_inputs(args)
+        report.update(inputs_checked=True, resolved_revision=commit, root_application=root["metadata"]["name"],
+                      child_applications=[child["metadata"]["name"] for child in children])
+    print(json.dumps(report, indent=2))
 
 
 def main(argv=None, local_only=False):
@@ -158,6 +183,15 @@ def main(argv=None, local_only=False):
             else:
                 deploy(args.aws_target, env, args.config, args.adopt_demo_secret_version, operation=args.command, confirm=args.confirm)
             return 0
+        if args.command == "preflight" and env["driver"] == "kind":
+            if args.dry_run:
+                steps = ["validate selected kind environment"]
+                if args.check_inputs:
+                    steps.extend(["check deployment tools", "fetch and pin GitOps source", "render root and validate child Applications"])
+                print(json.dumps({**selection, "command": "preflight", "steps": steps, "executed": False}, indent=2))
+            else:
+                kind_preflight(args)
+            return 0
         if args.command == "show" or args.dry_run:
             print(json.dumps({**selection, "configuration": env, "command": args.command,
                               "steps": STEPS[args.command], "executed": False}, indent=2))
@@ -166,21 +200,18 @@ def main(argv=None, local_only=False):
             from aws_preflight import inspect
             print(json.dumps(inspect(args.aws_target, env, args.config, args.check_inputs), indent=2))
             return 0
-        missing = [tool for tool in tools_for(args.command) if shutil.which(tool) is None]
-        require(not missing, "Missing tools: " + ", ".join(missing))
+        require_tools(args.command)
         driver = local.Driver(args)
         if args.command == "doctor":
             print("Required tools are installed; runtime/network readiness is checked during commands")
         elif args.command in ("up", "deploy"):
-            with local.source(args) as (commit, directory):
-                root = local.root_application(args, commit, directory)
-                children = children_for(root, directory, args, commit)
-                if args.command == "up":
-                    driver.create()
-                    driver.install()
-                driver.deploy(root)
-                if args.command == "up":
-                    driver.verify(root, children)
+            _, root, children = deployment_inputs(args)
+            if args.command == "up":
+                driver.create()
+                driver.install()
+            driver.deploy(root)
+            if args.command == "up":
+                driver.verify(root, children)
         elif args.command == "verify":
             deployed = driver.deployed_root()
             args.revision = requested_revision or deployed["spec"]["source"]["targetRevision"]
@@ -213,7 +244,7 @@ def main(argv=None, local_only=False):
         print("FAILED: " + str(error), file=sys.stderr)
         if isinstance(error, subprocess.CalledProcessError) and error.stderr:
             print(error.stderr, file=sys.stderr)
-        if isinstance(args.cluster, str) and re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", args.cluster):
+        if args.command != "preflight" and isinstance(args.cluster, str) and re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", args.cluster):
             path = local.connections.private_path(args.cluster)
             if path.is_file():
                 print("Saved connection; debug with: " + shlex.join([

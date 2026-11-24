@@ -35,6 +35,19 @@ Bootstrap authentication must work before any optional centralized config lookup
 If needed later, non-secret centralized parameters can use Parameter Store;
 application secrets use the existing secret-management/GitOps integration.
 
+For a kind entry, run the declaration check before choosing a Git revision.
+Add `--check-inputs` to check the deployment tools on PATH, fetch the revision,
+render the root chart and validate its child Applications. The command uses
+temporary files and can run before the cluster exists. The JSON report on
+stdout includes the resolved commit. Use that SHA with `up` to deploy exactly
+what you checked. Both commands read the selected inventory entry directly.
+
+```bash
+inventory="$HOME/.config/startup-devops-baseline/environments.yaml"
+python3 scripts/ops/cli.py preflight --env local --config "$inventory"
+python3 scripts/ops/cli.py preflight --env local --config "$inventory" --check-inputs --revision main
+```
+
 The aws-dev/aws-test entries deliberately contain placeholder account IDs and
 workstation file references. Inspect the selected inventory or run offline preparation:
 

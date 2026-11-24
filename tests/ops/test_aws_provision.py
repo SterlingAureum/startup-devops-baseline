@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/ops"))
 import aws_deploy as deploy
 import aws_provision as provision
 import cli
-from configuration import OpsError
+from configuration import EXAMPLE_CONFIG, OpsError
 
 
 def change(address, actions, before=None, after=None):
@@ -154,12 +154,12 @@ class ProvisionTests(unittest.TestCase):
                         patch.object(deploy, "check_selected_state"), patch.object(deploy, "inspect", return_value=report), patch.object(deploy.Cluster, "aws", side_effect=aws), \
                         patch.object(deploy, "lifecycle_lock", return_value=nullcontext(folder)), \
                         patch.object(deploy, "provision", side_effect=provision_step), patch.object(deploy, "run", side_effect=run), \
-                        patch.object(deploy, "private_path", return_value=folder / "kubeconfig"), \
+                        patch.object(deploy, "aws_private_path", return_value=folder / "kubeconfig"), \
                         patch.object(deploy, "kustomize", return_value=[]), patch.object(deploy, "check_deploy_target"), \
                         patch.object(deploy.Cluster, "k"), patch.object(deploy, "prepare"), patch.object(deploy, "gitops"), \
                         patch.object(deploy, "complete"), patch.object(deploy, "check_apps") as healthy, \
                         redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-                    result = cli.main([command, "--env", "aws-dev"] + (["--confirm", self.name] if confirm else []))
+                    result = cli.main(["--config", str(EXAMPLE_CONFIG), command, "--env", "aws-dev"] + (["--confirm", self.name] if confirm else []))
                     self.assertEqual(result, 1 if fails else 0)
                     bootstrap = command == "up" and confirm and not fails
                     self.assertEqual(events, ["init", "provision"] + (["output"] if bootstrap else []))
@@ -180,6 +180,6 @@ class ProvisionTests(unittest.TestCase):
             for args in (["create", "--env", "aws-test"], ["plan", "--env", "local"],
                          ["create", "--env", "aws-dev", "--confirm", "wrong"],
                          ["plan", "--env", "aws-dev", "--confirm", self.name]):
-                self.assertEqual(cli.main(args), 1)
-            self.assertEqual(cli.main(["up", "--env", "aws-dev", "--dry-run"]), 0)
+                self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), *args]), 1)
+            self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "up", "--env", "aws-dev", "--dry-run"]), 0)
             aws.assert_not_called()

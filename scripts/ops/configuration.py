@@ -2,14 +2,16 @@
 from copy import deepcopy
 from dataclasses import dataclass
 import json
+import os
 from pathlib import Path
 import re
+import tempfile
 from urllib.parse import urlsplit
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CONFIG = ROOT / "config/environments.example.yaml"
+EXAMPLE_CONFIG = ROOT / "config/environments.example.yaml"
 DELIVERY_CONFIG = ROOT / "delivery/standard/config.json"
 
 
@@ -150,6 +152,25 @@ def standard_aws_target(name, env, catalog, manifest):
                 f"Delivery environment {env['delivery_environment']!r} must select {expected} for Terraform root {root}")
         return AwsTarget(name, root.name, root, env["delivery_environment"], manifest, catalog)
     return None
+
+
+def personal_inventory():
+    return Path.home() / ".config/startup-devops-baseline/environments.yaml"
+
+
+def init_inventory(path):
+    path = path.expanduser().absolute()
+    path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
+    # Publish complete, private bytes without replacing another initializer's file.
+    with tempfile.NamedTemporaryFile(dir=path.parent) as tmp:
+        tmp.write(EXAMPLE_CONFIG.read_bytes())
+        tmp.flush()
+        try:
+            os.link(tmp.name, path)
+        except FileExistsError:
+            require(path.is_file() and not path.is_symlink(), f"Expected a regular inventory file at {path}")
+            return False
+    return True
 
 
 def environment(path, name):

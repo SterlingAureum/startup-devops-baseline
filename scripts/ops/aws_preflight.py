@@ -55,6 +55,11 @@ def deployment_inputs(root, selected):
     return values
 
 
+def cluster_name(values, stage, region):
+    require(values["environment"] == stage and values["aws_region"] == region, "Terraform environment/region mismatch")
+    return f"{values['project_name']}-{stage}"
+
+
 def local_file(value, config_dir):
     require(isinstance(value, str) and value, "Personal preflight needs terraform.variables_file")
     return config_dir / Path(value).expanduser()
@@ -160,11 +165,10 @@ def inspect(selected, env, config_path, personal=False):
         path = backend_path(settings, config_dir)
         state_info["state_address"] = str(path)
     values = deployment_inputs(root, variables)
-    require(values["environment"] == short and values["aws_region"] == aws["region"], "Terraform environment/region mismatch")
+    cluster = cluster_name(values, short, aws["region"])
     sizes = {k: values["eks_node_" + k + "_size"] for k in ("min", "desired", "max")}
     require(all(type(v) is int for v in sizes.values()) and 0 <= sizes["min"] <= sizes["desired"] <= sizes["max"]
             and sizes["max"] >= 1, "Check min/desired/max node capacity in the selected var-file")
-    cluster = f"{values['project_name']}-{short}"
     if personal:
         if declared_backend == "local":
             observed = local_snapshot(path, short, cluster, aws["expected_account_id"], aws["region"])

@@ -7,6 +7,10 @@ import tempfile
 from configuration import ROOT, OpsError, require
 
 
+def lifecycle_directory(account, region, cluster):
+    return Path.home() / ".local/state/startup-devops-baseline" / account / region / cluster
+
+
 def backend_path(settings, base):
     key = "path" if settings["type"] == "local" else "config_file"
     return (base / Path(settings[key]).expanduser()).resolve()

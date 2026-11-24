@@ -303,7 +303,8 @@ def destroy(selected, env, config, confirm, retain=False):
     settings = dict(os.environ, AWS_REGION=aws["region"], AWS_DEFAULT_REGION=aws["region"], AWS_PAGER="")
     if aws.get("profile"):
         settings["AWS_PROFILE"] = aws["profile"]
-    g = Cluster(name, settings, env.get("timeout", 1800))
+    # Teardown writes its own temporary connection only when the cluster exists.
+    g = Cluster(name, settings, env.get("timeout", 1800), None)
     caller = json.loads(g.aws("sts", "get-caller-identity"))
     require(caller["Account"] == aws["expected_account_id"], "AWS caller account differs from inventory")
     if aws.get("role_arn"):

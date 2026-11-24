@@ -17,6 +17,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts/ops"))
 import cli
+from configuration import EXAMPLE_CONFIG
 import configuration
 import connections
 import local
@@ -25,7 +26,7 @@ COMMIT = "a" * 40
 
 
 def args(command="verify", *extra):
-    value = cli.parser().parse_args([command, *extra])
+    value = cli.parser().parse_args(["--config", str(EXAMPLE_CONFIG), command, *extra])
     cli.configure(value)
     return value
 
@@ -46,12 +47,38 @@ def application(name="custom-workload", commit=COMMIT):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_personal_inventory_init_and_default_selection(self):
+        with tempfile.TemporaryDirectory() as tmp, patch.dict(os.environ, {"HOME": tmp}):
+            inventory = configuration.personal_inventory()
+            with redirect_stderr(io.StringIO()) as error:
+                self.assertEqual(cli.main(["show"]), 1)
+                self.assertIn("init-config", error.getvalue())
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(cli.main(["init-config", "--dry-run"]), 0)
+                self.assertFalse(inventory.parent.exists())
+                self.assertEqual(cli.main(["init-config"]), 0)
+            self.assertEqual(inventory.read_bytes(), EXAMPLE_CONFIG.read_bytes())
+            self.assertEqual(stat.S_IMODE(inventory.stat().st_mode), 0o600)
+            edited = inventory.read_text().replace("cluster: startup-devops-baseline", "cluster: my-kind")
+            inventory.write_text(edited)
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(cli.main(["init-config"]), 0)
+            self.assertEqual(inventory.read_text(), edited)
+            with redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(cli.main(["show"]), 0)
+                paths = json.loads(out.getvalue())["paths"]
+            self.assertEqual(paths["inventory"], str(inventory))
+            self.assertEqual(paths["kubeconfig"], str(connections.private_path("my-kind")))
+            with redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(cli.main(["show", "--config", str(EXAMPLE_CONFIG)]), 0)
+                self.assertEqual(json.loads(out.getvalue())["paths"]["inventory"], str(EXAMPLE_CONFIG))
+
     def test_dry_run_and_show_do_not_run_tools_or_write_files(self):
         for command in (["show"], ["up", "--revision", "main", "--dry-run"], ["connect", "--dry-run"],
                         ["preflight", "--check-inputs", "--revision", "main", "--dry-run"],
                         ["destroy", "--confirm", "startup-devops-baseline", "--dry-run"], ["show", "--env", "aws-dev"]):
             with self.subTest(command=command), patch.object(local, "run") as run, patch.object(cli.shutil, "which") as which, patch.object(connections, "atomic_write") as write, redirect_stdout(io.StringIO()) as output:
-                self.assertEqual(cli.main(command), 0)
+                self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), *command]), 0)
                 self.assertFalse(json.loads(output.getvalue())["executed"])
                 run.assert_not_called()
                 which.assert_not_called()
@@ -59,7 +86,7 @@ class ConfigurationTests(unittest.TestCase):
 
     def test_kind_preflight_declarations_need_no_tools_revision_or_cluster(self):
         with patch.object(cli.shutil, "which") as which, patch.object(local, "run") as run, redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(cli.main(["preflight", "--env", "local"]), 0)
+            self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "preflight", "--env", "local"]), 0)
             self.assertFalse(json.loads(output.getvalue())["inputs_checked"])
             which.assert_not_called()
             run.assert_not_called()
@@ -67,18 +94,18 @@ class ConfigurationTests(unittest.TestCase):
     def test_kind_preflight_requires_revision_and_up_tools_before_fetch(self):
         with patch.object(local, "source") as source, patch.object(cli.shutil, "which", return_value=None) as which:
             with redirect_stderr(io.StringIO()) as error:
-                self.assertEqual(cli.main(["preflight", "--check-inputs"]), 1)
+                self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "preflight", "--check-inputs"]), 1)
                 self.assertIn("--revision", error.getvalue())
                 which.assert_not_called()
             with redirect_stderr(io.StringIO()) as error:
-                self.assertEqual(cli.main(["preflight", "--check-inputs", "--revision", "main"]), 1)
+                self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "preflight", "--check-inputs", "--revision", "main"]), 1)
                 self.assertIn("Missing tools", error.getvalue())
             source.assert_not_called()
 
     def test_unimplemented_aws_commands_fail_even_for_dry_run(self):
         for command in ("status", "connect", "verify"):
             with self.subTest(command=command), patch.object(local, "run") as run, redirect_stderr(io.StringIO()):
-                self.assertEqual(cli.main([command, "--env", "aws-dev", "--dry-run"]), 1)
+                self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), command, "--env", "aws-dev", "--dry-run"]), 1)
                 run.assert_not_called()
 
     def test_invalid_targets_fail_before_tools(self):
@@ -86,11 +113,11 @@ class ConfigurationTests(unittest.TestCase):
                       ["create", "--repo-url", "https://user:token@example.invalid/repo.git"],
                       ["create", "--timeout", "0"], ["status", "--kubeconfig-file", "/tmp/not-used"]):
             with self.subTest(extra=extra), patch.object(local, "run") as run, redirect_stderr(io.StringIO()):
-                self.assertEqual(cli.main(extra), 1)
+                self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), *extra]), 1)
                 run.assert_not_called()
 
     def test_old_inventory_and_conflicting_kind_targets_are_rejected_before_tools(self):
-        entry = configuration.environment(configuration.DEFAULT_CONFIG, "local")
+        entry = configuration.environment(EXAMPLE_CONFIG, "local")
         with tempfile.TemporaryDirectory() as tmp, patch.object(local, "run") as run:
             file = Path(tmp) / "inventory.yaml"
             for version, target, duplicate_root, message in (
@@ -116,7 +143,7 @@ class ConfigurationTests(unittest.TestCase):
     def test_reject_duplicate_fields_and_embedded_credentials(self):
         with self.assertRaises(configuration.OpsError):
             configuration.load_yaml("schema_version: 1\nschema_version: 2\n")
-        env = configuration.environment(configuration.DEFAULT_CONFIG, "aws-dev")
+        env = configuration.environment(EXAMPLE_CONFIG, "aws-dev")
         for key in ("access_key", "secret_key", "session_token"):
             other = deepcopy(env)
             other["aws"][key] = "should-not-be-accepted"
@@ -126,7 +153,7 @@ class ConfigurationTests(unittest.TestCase):
     def test_custom_inventory_selects_cluster_and_overrides(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "environments.yaml"
-            env = configuration.environment(configuration.DEFAULT_CONFIG, "local")
+            env = configuration.environment(EXAMPLE_CONFIG, "local")
             env["kind"]["cluster"] = "my-local"
             env["gitops"]["repository"] = "https://example.invalid/team/gitops.git"
             path.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"workstation": env}}))
@@ -279,7 +306,7 @@ class GitOpsTests(unittest.TestCase):
         with patch.object(cli.shutil, "which", return_value="/fixture/tool"), patch.object(local, "Driver") as driver_class, patch.object(local, "source", return_value=nullcontext((COMMIT, ROOT))) as source, patch.object(local, "root_application", return_value=deepcopy(root)), patch.object(cli, "children_for", return_value=[application()]):
             driver = driver_class.return_value
             driver.deployed_root.return_value = root
-            self.assertEqual(cli.main(["verify"]), 0)
+            self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "verify"]), 0)
             self.assertEqual(source.call_args.args[0].revision, COMMIT)
             self.assertEqual(driver.verify.call_args.args[0]["spec"]["source"]["helm"], root["spec"]["source"]["helm"])
             driver.deploy.assert_not_called()
@@ -287,13 +314,13 @@ class GitOpsTests(unittest.TestCase):
 
     def test_source_preflight_failure_does_not_create_cluster(self):
         with patch.object(cli.shutil, "which", return_value="/fixture/tool"), patch.object(local, "source", side_effect=configuration.OpsError("missing source")), patch.object(local, "Driver") as driver, redirect_stderr(io.StringIO()):
-            self.assertEqual(cli.main(["up", "--revision", "main"]), 1)
+            self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "up", "--revision", "main"]), 1)
             driver.return_value.create.assert_not_called()
 
     def test_up_only_bootstraps_and_hands_off_to_gitops(self):
         root = application("startup-devops-root")
         with patch.object(cli.shutil, "which", return_value="/fixture/tool"), patch.object(local, "source", return_value=nullcontext((COMMIT, ROOT))), patch.object(local, "root_application", return_value=root), patch.object(cli, "children_for", return_value=[application()]), patch.object(local, "Driver") as driver_class, redirect_stdout(io.StringIO()):
-            self.assertEqual(cli.main(["up", "--revision", "main"]), 0)
+            self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "up", "--revision", "main"]), 0)
             calls = [call[0] for call in driver_class.return_value.method_calls]
             self.assertEqual(calls, ["create", "install", "deploy", "verify"])
 
@@ -346,7 +373,7 @@ class GitOpsTests(unittest.TestCase):
                 self.assertEqual([child["metadata"]["name"] for child in children], ["custom-workload"])
                 self.assertFalse((checkout / "apps/demo-api").exists())
 
-            entry = configuration.environment(configuration.DEFAULT_CONFIG, "local")
+            entry = configuration.environment(EXAMPLE_CONFIG, "local")
             entry["gitops"].update(revision="missing", parameters={})
             entry["delivery_environment"] = "custom-apps"
             catalog = repo / "catalog.json"

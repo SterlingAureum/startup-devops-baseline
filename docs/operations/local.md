@@ -50,11 +50,10 @@ nulls or invalid types fail, and real parameter changes remain mismatches.
 
 ## Configure and create
 
-The checked-in default is `config/environments.example.yaml`. For personal use:
+Initialize the personal inventory before the first run:
 
 ```bash
-mkdir -p ~/.config/startup-devops-baseline
-cp config/environments.example.yaml ~/.config/startup-devops-baseline/environments.yaml
+python3 scripts/ops/cli.py init-config
 ```
 
 Edit the local environment's cluster/repository/revision as appropriate, then:

@@ -13,6 +13,20 @@ Several inventory entries can select the same delivery target.
 | sandbox | aws | aws-dev | Dev Terraform root, AWS account, region and backend |
 | team-a-test | aws | aws-test | Test Terraform root, AWS account, region and backend |
 
+Run `python3 scripts/ops/cli.py init-config` once. It creates
+`~/.config/startup-devops-baseline/environments.yaml` with private permissions
+and preserves an existing file. Everyday commands read this inventory by default.
+Use `--config FILE` to select or initialize a different one. CI explicitly
+selects the checked-in example.
+
+Use `show --env NAME` and inspect `paths` for the resolved inventory, dedicated
+kubeconfig and, for AWS, tfvars and backend input or state file. AWS connection
+and lifecycle paths use the account, region and cluster name. When the personal
+tfvars are missing the CLI reports the expected input path and leaves kubeconfig
+unresolved. A reported path can precede creation of the file. The next dev deploy
+writes the new connection and prints a kubectl command. An older `aws-dev.yaml`
+can still be used for its original cluster until then.
+
 **Update your personal inventory in place.**
 
 1. Set the top-level `schema_version` to `2`.

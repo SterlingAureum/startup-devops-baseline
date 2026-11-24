@@ -5,8 +5,8 @@ Use Python 3.10+, kubectl with built-in Kustomize, and the dependencies below.
 
 ```bash
 python3 -m pip install -r scripts/ops/requirements-preflight.txt
-python3 scripts/ops/cli.py preflight --env aws-dev
-python3 scripts/ops/cli.py preflight --env aws-test
+python3 scripts/ops/cli.py preflight --config config/environments.example.yaml --env aws-dev
+python3 scripts/ops/cli.py preflight --config config/environments.example.yaml --env aws-test
 ```
 
 A zero exit code with `scope: repository-examples` validates the selected Terraform
@@ -79,8 +79,7 @@ operation. Test infrastructure creation follows in the next lifecycle increment.
 
 ## Check personal inputs
 
-Use your inventory outside Git. If starting fresh, copy `config/environments.example.yaml`
-there and prepare the files named in the selected environment. Relative input paths
+Use your inventory outside Git. If starting fresh, run `python3 scripts/ops/cli.py init-config` and prepare the files named in the selected environment. Relative input paths
 resolve from the inventory's directory. Tilde paths resolve from the operator's home.
 Existing personal files may be used directly.
 
@@ -163,7 +162,7 @@ Use the usual preflight Python environment.
 .venv/bin/python scripts/ops/cli.py deploy --env aws-dev --config ~/.config/startup-devops-baseline/environments.yaml
 ```
 
-The command refreshes `~/.kube/startup-devops-baseline/aws-dev.yaml`, prepares
+The command refreshes the dedicated kubeconfig shown by `show --env aws-dev`, prepares
 ServiceAccounts and Grafana, installs Argo CD, seeds the ALB Application, and
 applies the root. It reconciles the CNPG backup destination, seeds the demo's
 database credential and creates a DNS alias
@@ -188,7 +187,8 @@ After interruption, run the same command again. An existing foreign backup
 destination or DNS record requires operator review. To inspect the cluster:
 
 ```bash
-export KUBECONFIG="$HOME/.kube/startup-devops-baseline/aws-dev.yaml"
+kubeconfig="$(.venv/bin/python scripts/ops/cli.py show --env aws-dev | jq -er '.paths.kubeconfig')" || exit 1
+export KUBECONFIG="$kubeconfig"
 kubectl -n argocd get applications
 ```
 
@@ -247,7 +247,8 @@ The wait is limited to ten minutes or the shorter environment timeout.
 If the wait expires, inspect the controller and bindings:
 
 ```bash
-export KUBECONFIG="$HOME/.kube/startup-devops-baseline/aws-dev.yaml"
+kubeconfig="$(.venv/bin/python scripts/ops/cli.py show --env aws-dev | jq -er '.paths.kubeconfig')" || exit 1
+export KUBECONFIG="$kubeconfig"
 kubectl -n startup-apps describe ingress demo-api
 kubectl -n startup-apps get targetgroupbindings.elbv2.k8s.aws
 kubectl -n kube-system logs -l app.kubernetes.io/name=aws-load-balancer-controller --all-containers --prefix --since=15m --tail=100

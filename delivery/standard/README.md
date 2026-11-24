@@ -20,9 +20,10 @@ Ordinary documentation and `archive/` changes do not rebuild the app or replay
 historical validators. Repository syntax/entrypoint checks, tests and secret
 scanning still run. Archives are included in secret scanning.
 
-Operator inventory (`config/`) and optional example helpers (`scripts/examples/`)
-are shared tooling inputs. Repository checks validate the environment example
-schema without authenticating to AWS. Workflow names and required check names
+Operator configuration, lifecycle scripts, example helpers and ops tests use
+the mandatory repository and unit jobs. The unit job runs offline preflight
+for each entry in the example inventory. Mixed diffs also run the checks
+selected by the other changed paths. Workflow names and required check names
 are unchanged by the lifecycle entrypoint split.
 
 ### Checked plan and operator intent
@@ -46,11 +47,20 @@ cancelled main check can be retried from that checks run.
 | Change | Static application render | Push runtime targets before switches | Automatic test PR after dev acceptance |
 | --- | --- | --- | --- |
 | Local cluster declaration | local | None | No |
-| Standard AWS overlay | Corresponding AWS environment | Same environment | No |
-| AWS base | All AWS environments | All AWS environments | No |
-| Shared platform or chart template | All environments | All AWS environments | No |
+| Standard AWS overlay | Corresponding AWS environment | None | No |
+| AWS base | All AWS environments | None | No |
+| Shared platform or chart template | All environments | None | No |
+| One environment's values file | That environment | None | No |
 | One environment's release file | That environment | That AWS environment | Only a dev release change |
 | App source | All environments | None | No |
+
+Each AWS delivery entry can opt into live acceptance with `runtime_stage`
+(`dev`, `test` or `prod`) and a release path. A push selects that entry only
+when its release path changes. Dispatch **delivery runtime** with the delivery
+environment key to reverify after platform, chart or values changes. The route
+rejects an unknown or ineligible manual target before requesting a runner.
+The checks plan lists requested push targets before feature switches. The
+runtime matrix applies the production switch before it schedules jobs.
 
 Mixed changes take the union of affected targets. Platform static checks still
 lint shared charts and render the three standard AWS overlays. Production

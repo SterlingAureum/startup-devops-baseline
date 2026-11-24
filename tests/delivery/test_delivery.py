@@ -45,23 +45,28 @@ def fixture():
 class RoutingTests(unittest.TestCase):
     def test_docs_do_not_trigger_cloud_or_application_work(self):
         result = flow.classify(["README.md", "docs/guide.md"], CFG)
-        self.assertFalse(any(result[key] for key in ("application", "iac", "platform", "render", "runtime_dev")))
+        self.assertFalse(any(result[key] for key in ("application", "iac", "platform", "render", "runtime_targets")))
 
     def test_archived_scripts_do_not_reenter_current_checks(self):
         result = flow.classify(["archive/v0.12/scripts/validate-ci-quality-gates.sh"], CFG)
-        self.assertFalse(any(result[key] for key in ("application", "tests", "iac", "platform", "render", "runtime_dev")))
+        self.assertFalse(any(result[key] for key in ("application", "tests", "iac", "platform", "render", "runtime_targets")))
 
-    def test_local_tools_and_unknown_code_run_current_checks(self):
-        for path in ("scripts/ops/local.py", "new-tool/entry.py"):
+    def test_operator_paths_use_mandatory_checks(self):
+        for path in ("scripts/ops/cli.py", "scripts/examples/demo_api.py", "config/environments.example.yaml",
+                     "config/argocd-bootstrap.yaml", "tests/ops/test_local.py"):
             with self.subTest(path=path):
                 result = flow.classify([path], CFG)
-                self.assertTrue(result["tests"] and result["iac"] and result["platform"] and result["render"])
-                self.assertFalse(result["application"])
+                self.assertFalse(any(result.values()))
+
+    def test_unknown_code_runs_full_static_checks(self):
+        result = flow.classify(["new-tool/entry.py"], CFG)
+        self.assertTrue(result["tests"] and result["iac"] and result["platform"] and result["render"])
+        self.assertFalse(result["application"] or result["runtime_targets"])
 
     def test_source_runs_tests_and_render_but_not_iac_or_runtime(self):
         result = flow.classify(["apps/demo-api/src/main.py"], CFG)
         self.assertTrue(result["application"] and result["tests"] and result["render"])
-        self.assertFalse(result["iac"] or result["runtime_dev"])
+        self.assertFalse(result["iac"] or result["runtime_targets"])
 
     def test_mixed_change_combines_checks(self):
         result = flow.classify(["infra/terraform/aws/main.tf", "apps/demo-api/src/main.py"], CFG)
@@ -70,14 +75,13 @@ class RoutingTests(unittest.TestCase):
     def test_release_change_targets_one_environment_without_rebuild(self):
         result = flow.classify([CFG["environments"]["aws-test"]["release"]], CFG)
         self.assertEqual(result["environments"], ["aws-test"])
-        self.assertTrue(result["runtime_test"])
-        self.assertFalse(result["runtime_dev"] or result["application"])
+        self.assertEqual(result["runtime_targets"], ["aws-test"])
+        self.assertFalse(result["application"])
 
     def test_shared_chart_rechecks_environments(self):
         result = flow.classify(["apps/demo-api/helm/templates/service.yaml"], CFG)
         self.assertEqual(set(result["environments"]), set(CFG["environments"]))
-        self.assertTrue(result["runtime_dev"] and result["runtime_test"])
-        self.assertTrue(result["runtime_prod"])
+        self.assertEqual(result["runtime_targets"], [])
 
     def test_similarly_named_path_is_not_application_code(self):
         self.assertFalse(flow.classify(["apps/demo-api/src-backup/main.py"], CFG)["application"])

@@ -20,19 +20,23 @@
     "shared": [
       "scripts/delivery/",
       "scripts/checks/",
-      "scripts/ops/",
-      "scripts/examples/",
-      "config/",
-      "tests/",
       "delivery/standard/",
       ".github/workflows/",
       ".github/CODEOWNERS",
       ".gitignore",
       ".gitleaks.toml",
-      ".gitleaksignore"
+      ".gitleaksignore",
+      "tests/checks/",
+      "tests/delivery/"
     ],
     "app_config": [
       "apps/demo-api/helm/"
+    ],
+    "ops": [
+      "scripts/ops/",
+      "scripts/examples/",
+      "config/",
+      "tests/ops/"
     ]
   },
   "application": {
@@ -75,7 +79,8 @@
         "clusters/aws/base/",
         "clusters/aws/overlays/dev/"
       ],
-      "root_manifest": "clusters/aws/overlays/dev/root-app.yaml"
+      "root_manifest": "clusters/aws/overlays/dev/root-app.yaml",
+      "runtime_stage": "dev"
     },
     "aws-test": {
       "values": [
@@ -88,7 +93,8 @@
         "clusters/aws/base/",
         "clusters/aws/overlays/test/"
       ],
-      "root_manifest": "clusters/aws/overlays/test/root-app.yaml"
+      "root_manifest": "clusters/aws/overlays/test/root-app.yaml",
+      "runtime_stage": "test"
     },
     "aws-prod": {
       "values": [
@@ -101,7 +107,8 @@
         "clusters/aws/base/",
         "clusters/aws/overlays/prod/"
       ],
-      "root_manifest": "clusters/aws/overlays/prod/root-app.yaml"
+      "root_manifest": "clusters/aws/overlays/prod/root-app.yaml",
+      "runtime_stage": "prod"
     }
   },
   "runtime": {

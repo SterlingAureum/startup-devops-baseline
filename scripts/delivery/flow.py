@@ -18,7 +18,7 @@ from image_receipt import require_published
 from verification import require_pass, verified_report
 
 
-def classify(paths, cfg):
+def classify(paths, cfg, full_checks=False):
     def affected(group):
         return any(any(path.startswith(prefix) if prefix.endswith(("/", "-")) else path == prefix
                        for prefix in cfg["paths"][group]) for path in paths)
@@ -28,15 +28,14 @@ def classify(paths, cfg):
         return any(any(path.startswith(prefix) if prefix.endswith(("/", "-")) else path == prefix
                        for prefix in prefixes) for prefixes in cfg["paths"].values())
     documentation = ("README.md", "CHANGELOG.md", "LICENSE")
-    shared = affected("shared") or any(
+    shared = full_checks or affected("shared") or any(
         not known(path) and path not in documentation and not path.startswith(("docs/", "archive/"))
         for path in paths
     )
     app = affected("application")
     platform = affected("platform")
-    app_config = affected("app_config")
     selected = set()
-    runtime = set()
+    runtime = []
     for path in paths:
         targets = set()
         for name, env in cfg["environments"].items():
@@ -48,14 +47,29 @@ def classify(paths, cfg):
         if not targets and path.startswith("clusters/"):
             selected.update(cfg["environments"])
         selected.update(targets)
-        runtime.update(targets - {"local"})
+    for name, env in cfg["environments"].items():
+        if env.get("runtime_stage") and env["release"] in paths:
+            runtime.append(name)
     if app or shared:
         selected.update(cfg["environments"])
     return {"application": app, "tests": app or shared, "iac": affected("iac") or shared,
-            "platform": platform or shared, "render": bool(app or app_config or shared or platform),
-            "environments": sorted(selected), "runtime_dev": "aws-dev" in runtime,
-            "runtime_test": "aws-test" in runtime, "runtime_prod": "aws-prod" in runtime,
-            "dev_release_changed": cfg["environments"]["aws-dev"]["release"] in paths}
+            "platform": platform or shared, "render": bool(selected),
+            "environments": sorted(selected), "runtime_targets": sorted(runtime),
+            "dev_release_changed": "aws-dev" in runtime}
+
+
+def runtime_matrix(cfg, targets, manual, prod_enabled):
+    rows = []
+    for name in targets:
+        stage = cfg["environments"].get(name, {}).get("runtime_stage")
+        if not stage:
+            raise Rejected(f"Unknown or ineligible AWS runtime target: {name}")
+        if stage == "prod" and not prod_enabled:
+            if manual:
+                raise Rejected("Production runtime acceptance is disabled")
+            continue
+        rows.append({"environment": name, "stage": stage})
+    return rows
 
 
 def changed_paths(base, head):
@@ -273,8 +287,14 @@ def main():
     route = sub.add_parser("classify")
     route.add_argument("--base", required=True)
     route.add_argument("--head", required=True)
+    route.add_argument("--full-checks", action="store_true")
+    runtime_route = sub.add_parser("runtime-route")
+    inputs = runtime_route.add_mutually_exclusive_group(required=True)
+    inputs.add_argument("--environment")
+    inputs.add_argument("--base")
+    runtime_route.add_argument("--head")
     render = sub.add_parser("render")
-    render.add_argument("--environment", choices=["local", "aws-dev", "aws-test", "aws-prod"], required=True)
+    render.add_argument("--environment", required=True)
     sub.add_parser("platform")
     sub.add_parser("test-app")
     pr = sub.add_parser("pr")
@@ -286,11 +306,22 @@ def main():
     try:
         cfg = config()
         if args.command == "classify":
-            result = classify(changed_paths(args.base, args.head), cfg)
+            result = classify(changed_paths(args.base, args.head), cfg, args.full_checks)
             emit_output("application_id", cfg["application"]["release_name"])
             for name, value in result.items():
                 emit_output(name, json.dumps(value, separators=(",", ":")))
             print(json.dumps(result, indent=2))
+        elif args.command == "runtime-route":
+            if args.environment is not None:
+                targets = [args.environment]
+            else:
+                if not args.head:
+                    raise Rejected("Push routing requires --head")
+                targets = classify(changed_paths(args.base, args.head), cfg)["runtime_targets"]
+            rows = runtime_matrix(cfg, targets, args.environment is not None,
+                                  os.getenv("DELIVERY_PROD_ENABLED") == "true")
+            emit_output("matrix", json.dumps(rows, separators=(",", ":")))
+            print(json.dumps(rows))
         elif args.command == "render":
             render_environment(cfg, args.environment)
             print(f"PASS: rendered application for {args.environment}")

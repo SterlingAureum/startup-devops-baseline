@@ -69,9 +69,11 @@ class StateTests(unittest.TestCase):
                 aws_state.local_snapshot(path, *TARGET)
 
     def test_s3_distinguishes_existing_empty_missing_and_denied(self):
+        root = tempfile.TemporaryDirectory()
+        self.addCleanup(root.cleanup)
         g = Mock(context=TARGET[1])
         report = {"environment": "team", "stage": "test", "state_address": "s3://b/k", "declared_backend": "s3",
-                  "terraform_root": "infra/terraform/aws/environments/test", "state_bucket": "b", "backend_file_key": "k", "state_region": "us-east-2",
+                  "terraform_root": root.name, "state_bucket": "b", "backend_file_key": "k", "state_region": "us-east-2",
                   "expected_account_id": ACCOUNT, "region": TARGET[3]}
         def get(*args):
             self.assertEqual(args[:-1], ("s3api", "get-object", "--bucket", "b", "--key", "k", "--region",

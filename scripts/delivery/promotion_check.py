@@ -9,7 +9,7 @@ import zipfile
 
 import yaml
 
-from common import IDENTITY_FIELDS, UniqueLoader, git, Rejected, config, fingerprint, identity, release, repo_path
+from common import IDENTITY_FIELDS, UniqueLoader, git, Rejected, config, promotion_source, fingerprint, identity, release, repo_path
 from image_receipt import require_published
 from flow import changed_paths, input_fingerprint
 
@@ -49,7 +49,12 @@ def main():
     try:
         cfg = config()
         paths = changed_paths(args.base, args.head)
-        for target in ("aws-dev", "aws-test", "aws-prod"):
+        catalog_path = "delivery/standard/config.json"
+        if catalog_path in paths:
+            base_catalog = json.loads(git("show", f"{args.base}:{catalog_path}"))
+            if any(env["release"] in paths for env in base_catalog["environments"].values()):
+                raise Rejected("Change promotion configuration separately from an existing release file")
+        for target in cfg["environments"]:
             path = cfg["environments"][target]["release"]
             if path not in paths:
                 continue
@@ -59,17 +64,17 @@ def main():
             before = yaml.load(git("show", f"{args.base}:{path}"), Loader=UniqueLoader)
             if configuration_fields(before) != configuration_fields(value):
                 raise Rejected("Change deployment settings in environment values via a separate configuration PR")
-            if target == "aws-dev":
+            source = promotion_source(cfg, target)
+            if source is None:
                 require_published(os.environ["GITHUB_REPOSITORY"], value)
                 if git("diff", "--name-only", value["delivery"]["sourceCommit"], args.base, "--", *cfg["paths"]["application"]):
                     raise Rejected("Application source changed since publication; publish the current application")
                 continue
-            source = {"aws-test": "aws-dev", "aws-prod": "aws-test"}[target]
-            if target == "aws-prod" and os.getenv("DELIVERY_PROD_ENABLED") != "true":
+            if target == cfg["promotion"].get("prod") and os.getenv("DELIVERY_PROD_ENABLED") != "true":
                 raise Rejected("Production release updates are disabled")
             promotion = value.get("promotion", {})
             if promotion.get("sourceEnvironment") != source:
-                raise Rejected("Environment promotion must follow dev -> test -> prod")
+                raise Rejected(f"Promotion to {target} requires a verified release from {source}")
             run_id = str(promotion.get("verificationRunId", ""))
             attempt = str(promotion.get("verificationRunAttempt", ""))
             report = verified_report(os.environ["GITHUB_REPOSITORY"], run_id, attempt, source)

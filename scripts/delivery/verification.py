@@ -5,7 +5,7 @@ import os
 import subprocess
 import zipfile
 
-from common import Rejected, config
+from common import Rejected, config, promotion_chain
 
 
 def api(path, binary=False):
@@ -55,12 +55,13 @@ def require_source_job(specific, job_name, attempt, revision):
 
 
 def verified_report(repository, run_id, attempt, source):
-    if not run_id.isdecimal() or not attempt.isdecimal() or source not in ("aws-dev", "aws-test"):
+    cfg = config()
+    if not run_id.isdecimal() or not attempt.isdecimal() or source not in promotion_chain(cfg)[:-1]:
         raise Rejected("Invalid verification workflow identity")
     path = f"repos/{repository}/actions/runs/{run_id}"
     specific = f"{path}/attempts/{attempt}"
     workflow = api(specific)
-    stage = config()["environments"][source].get("runtime_stage")
+    stage = cfg["environments"][source].get("runtime_stage")
     if not stage:
         raise Rejected("The source environment has no runtime stage")
     callers = {".github/workflows/delivery-runtime.yaml": f"verify-{stage}",

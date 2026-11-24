@@ -1,5 +1,9 @@
 {
   "base_branch": "main",
+  "promotion": {
+    "dev": "aws-dev",
+    "test": "aws-test"
+  },
   "paths": {
     "application": [
       "apps/demo-api/src/",

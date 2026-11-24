@@ -16,9 +16,9 @@ on:
       stage:
         required: true
         type: string
-      propose_test:
-        type: boolean
-        default: false
+      test_target:
+        type: string
+        default: ''
       revision:
         required: true
         type: string
@@ -103,10 +103,10 @@ jobs:
 
   propose-test:
     needs: verify
-    if: needs.verify.result == 'success' && inputs.propose_test && inputs.environment == 'aws-dev'
+    if: needs.verify.result == 'success' && inputs.test_target != '' && inputs.stage == 'dev'
     runs-on: ubuntu-latest
     concurrency:
-      group: delivery-proposal-aws-test
+      group: delivery-proposal-${{ inputs.test_target }}
       cancel-in-progress: false
     timeout-minutes: 10
     permissions:
@@ -131,6 +131,7 @@ jobs:
       - name: Create test PR; never merge or replace an existing PR
         env:
           DELIVERY_PR_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
+          TARGET: ${{ inputs.test_target }}
           GH_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
           REPORT_READ_TOKEN: ${{ github.token }}
-        run: python3 scripts/delivery/flow.py pr --target aws-test --candidate "${RUNNER_TEMP}/delivery-candidate/verified.json"
+        run: python3 scripts/delivery/flow.py pr --target "${TARGET}" --candidate "${RUNNER_TEMP}/delivery-candidate/verified.json"

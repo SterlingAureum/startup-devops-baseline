@@ -51,7 +51,35 @@ def config(path=DEFAULT_CONFIG):
             raise Rejected(f"Invalid AWS runtime target: {name}")
         if name == "aws-prod" and stage not in (None, "prod"):
             raise Rejected("The standard production target requires the prod runtime stage")
+    promotion_chain(value)
     return value
+
+
+def promotion_chain(cfg):
+    """Resolve ordered release targets for the standard personal or enterprise path."""
+    stages = cfg.get("promotion")
+    if not isinstance(stages, dict) or set(stages) not in ({"dev", "test"}, {"dev", "test", "prod"}):
+        raise Rejected("promotion requires dev and test targets and accepts optional prod")
+    targets = []
+    for stage in ("dev", "test", "prod"):
+        if stage in stages:
+            target = stages[stage]
+            if not isinstance(target, str) or cfg["environments"].get(target, {}).get("runtime_stage") != stage:
+                raise Rejected(f"promotion.{stage} must select a delivery target with runtime_stage {stage}")
+            targets.append(target)
+    paths = [repo_path(env["release"]).resolve() for env in cfg["environments"].values() if env["release"]]
+    if len(paths) != len(set(paths)):
+        raise Rejected("Delivery environments must have distinct release files")
+    return targets
+
+
+def promotion_source(cfg, target):
+    chain = promotion_chain(cfg)
+    if target not in chain:
+        raise Rejected(f"Release target outside the configured promotion path: {target}")
+    if target == chain[0]:
+        return None
+    return chain[chain.index(target) - 1]
 
 
 def repo_path(value):

@@ -3,6 +3,8 @@ from copy import deepcopy
 import hashlib
 import json
 import os
+import re
+import shlex
 from pathlib import Path
 import tempfile
 
@@ -34,6 +36,17 @@ def atomic_write(path, contents):
 
 def private_path(cluster):
     return Path.home() / ".kube/startup-devops-baseline" / (cluster + ".yaml")
+
+
+def aws_private_path(account, region, cluster):
+    require(re.fullmatch(r"[0-9]{12}", account) and re.fullmatch(r"[a-z0-9-]+", region)
+            and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,99}", cluster),
+            "Invalid AWS identity for dedicated kubeconfig path")
+    return Path.home() / ".kube/startup-devops-baseline/aws" / account / region / (cluster + ".yaml")
+
+
+def kubectl_hint(path, context):
+    return shlex.join(["kubectl", "--kubeconfig", str(path), "--context", context, "get", "nodes"])
 
 
 def target_path(explicit=None):

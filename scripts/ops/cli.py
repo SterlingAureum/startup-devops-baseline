@@ -12,10 +12,12 @@ import sys
 
 import yaml
 
-from configuration import DEFAULT_CONFIG, OpsError, delivery_target, environment, require, standard_aws_target, validate_environment
+from configuration import OpsError, delivery_target, environment, init_inventory, personal_inventory, require, standard_aws_target, validate_environment
+from connections import aws_private_path, kubectl_hint, private_path
 import local
 
 STEPS = {
+    "init-config": ["create personal inventory if absent"],
     "show": ["read and validate selected environment configuration"],
     "plan": ["initialize the selected AWS backend and preview infrastructure changes"],
     "preflight": ["check selected AWS file inputs", "render GitOps overlay and inspect bootstrap/runtime RBAC declarations"],
@@ -34,7 +36,7 @@ STEPS = {
 def parser():
     value = argparse.ArgumentParser(description=__doc__)
     value.add_argument("command", choices=STEPS)
-    value.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
+    value.add_argument("--config", type=Path, default=personal_inventory())
     value.add_argument("--env", default="local", help="Exact entry name under environments in the selected inventory")
     value.add_argument("--cluster")
     value.add_argument("--repo-url")
@@ -56,6 +58,7 @@ def parser():
 
 
 def configure(args, local_only=False):
+    require(args.config.expanduser().is_file(), f"Inventory missing at {args.config}. Run init-config or specify --config FILE")
     env = environment(args.config, args.env)
     catalog, args.root_manifest = delivery_target(env)
     args.aws_target = standard_aws_target(args.env, env, catalog, args.root_manifest) if env["driver"] == "aws" else None
@@ -152,11 +155,46 @@ def kind_preflight(args, selection):
     print(json.dumps(report, indent=2))
 
 
+def show_paths(args, env):
+    inventory = args.config.expanduser().resolve()
+    paths = {"inventory": str(inventory)}
+    if env["driver"] == "kind":
+        paths["kubeconfig"] = str(private_path(args.cluster))
+        return paths
+    from aws_preflight import cluster_name, deployment_inputs
+    from aws_state import backend_path, lifecycle_directory
+    tf = env["terraform"]
+    variables = tf.get("variables_file")
+    variables = (inventory.parent / Path(variables).expanduser()).resolve() if variables else None
+    paths["variables_file"] = str(variables) if variables else None
+    backend = tf["backend"]
+    key = "state_file" if backend["type"] == "local" else "backend_config_file"
+    paths[key] = str(backend_path(backend, inventory.parent))
+    paths["kubeconfig"] = None
+    if args.aws_target and variables and variables.is_file():
+        target = args.aws_target
+        values = deployment_inputs(target.terraform_root, variables)
+        aws = env["aws"]
+        cluster = cluster_name(values, target.stage, aws["region"])
+        paths["kubeconfig"] = str(aws_private_path(aws["expected_account_id"], aws["region"], cluster))
+        paths["lifecycle_directory"] = str(lifecycle_directory(aws["expected_account_id"], aws["region"], cluster))
+    else:
+        paths["kubeconfig_note"] = "Requires a standard AWS root and its personal variables_file"
+    return paths
+
+
 def main(argv=None, local_only=False):
     args = parser().parse_args(argv)
     requested_revision = args.revision
     args.aws_target = None
     try:
+        if args.command == "init-config":
+            if args.dry_run:
+                print(json.dumps({"inventory": str(args.config.expanduser().absolute()), "executed": False}))
+            else:
+                created = init_inventory(args.config)
+                print(("Created inventory: " if created else "Existing inventory: ") + str(args.config.expanduser().absolute()))
+            return 0
         env = configure(args, local_only)
         selection = {"environment": args.env, "driver": env["driver"],
                      "delivery_environment": env["delivery_environment"], "gitops_root": args.root_manifest}
@@ -190,6 +228,8 @@ def main(argv=None, local_only=False):
                 kind_preflight(args, selection)
             return 0
         if args.command == "show" or args.dry_run:
+            if args.command == "show":
+                selection["paths"] = show_paths(args, env)
             print(json.dumps({**selection, "configuration": env, "command": args.command,
                               "steps": STEPS[args.command], "executed": False}, indent=2))
             return 0
@@ -225,6 +265,7 @@ def main(argv=None, local_only=False):
         else:
             getattr(driver, args.command)()
         if args.command in ("up", "create", "install-argocd", "deploy", "status", "verify"):
+            print(kubectl_hint(private_path(args.cluster), "kind-" + args.cluster))
             print("To use ordinary kubectl, explicitly connect: " + shlex.join([
                 "python3", str(Path(__file__).with_name("cli.py")), "connect", "--config",
                 str(args.config.expanduser().absolute()), "--env", args.env, "--cluster", args.cluster]))

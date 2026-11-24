@@ -28,6 +28,7 @@ Read [the local workflow](docs/operations/local.md). Its `--dry-run` mode shows
 targets and phases without invoking tools:
 
 ```bash
+python3 scripts/ops/cli.py init-config
 python3 scripts/ops/cli.py show --env local
 python3 scripts/ops/cli.py up --env local --revision YOUR_PUSHED_REF --dry-run
 ```

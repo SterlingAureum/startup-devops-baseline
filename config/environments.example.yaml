@@ -37,10 +37,10 @@ environments:
       profile: baseline-dev
     terraform:
       root: infra/terraform/aws/environments/dev
-      variables_file: ~/.config/startup-devops-baseline/aws-dev.tfvars
+      variables_file: aws-dev.tfvars
       backend:
         type: s3
-        config_file: ~/.config/startup-devops-baseline/aws-dev.tfbackend
+        config_file: aws-dev.tfbackend
   aws-test:
     driver: aws
     delivery_environment: aws-test
@@ -50,7 +50,7 @@ environments:
       profile: baseline-test
     terraform:
       root: infra/terraform/aws/environments/test
-      variables_file: ~/.config/startup-devops-baseline/aws-test.tfvars
+      variables_file: aws-test.tfvars
       backend:
         type: local
         path: ~/.local/state/startup-devops-baseline/aws-test/terraform.tfstate

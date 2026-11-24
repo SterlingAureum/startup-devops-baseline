@@ -16,7 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/ops"))
 import aws_deploy
 import aws_state
 import cli
-from configuration import DEFAULT_CONFIG, OpsError, environment
+from configuration import EXAMPLE_CONFIG, OpsError, environment
 
 ACCOUNT = "123456789012"
 TARGET = ("test", "startup-devops-baseline-test", ACCOUNT, "us-east-1")
@@ -29,7 +29,7 @@ class StateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
             config = folder / "environments.yaml"
-            entry = environment(DEFAULT_CONFIG, "aws-test")
+            entry = environment(EXAMPLE_CONFIG, "aws-test")
             entry["terraform"].update(variables_file="vars.tfvars.json", backend={"type": "local", "path": "data/state"})
             config.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"team": entry}}))
             (folder / "vars.tfvars.json").write_text(json.dumps({
@@ -101,7 +101,7 @@ class StateTests(unittest.TestCase):
     def test_s3_read_error_blocks_dev_before_terraform_init(self):
         g = Mock(context="startup-devops-baseline-dev", env={})
         g.aws.side_effect = OpsError("(AccessDenied) when calling the GetObject operation")
-        env = environment(DEFAULT_CONFIG, "aws-dev")
+        env = environment(EXAMPLE_CONFIG, "aws-dev")
         report = {"environment": "aws-dev", "stage": "dev", "state_address": "s3://b/k", "declared_backend": "s3",
                   "state_bucket": "b", "backend_file_key": "k", "state_region": "us-east-1",
                   "expected_account_id": ACCOUNT, "region": "us-east-1"}

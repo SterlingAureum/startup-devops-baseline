@@ -12,11 +12,11 @@ import time
 import yaml
 
 from aws_preflight import inspect, kustomize, local_file
-from aws_state import check_selected_state, init_argument
+from aws_state import check_selected_state, init_argument, lifecycle_directory
 from aws_standard_demo import complete
 from aws_provision import provision
-from configuration import DEFAULT_CONFIG, ROOT, OpsError, environment, load_yaml, require
-from connections import atomic_write, private_path
+from configuration import EXAMPLE_CONFIG, ROOT, OpsError, environment, load_yaml, require
+from connections import atomic_write, aws_private_path, kubectl_hint
 
 PHASES = ["check personal inventory, remote Terraform outputs and live EKS identity",
           "refresh dedicated kubeconfig", "check root Application and target namespaces for deletion",
@@ -37,7 +37,7 @@ def run(argv, env, data=None, private=False):
 
 @contextmanager
 def lifecycle_lock(account, region, cluster):
-    folder = Path.home() / ".local/state/startup-devops-baseline" / account / region / cluster
+    folder = lifecycle_directory(account, region, cluster)
     folder.mkdir(parents=True, mode=0o700, exist_ok=True)
     with (folder / "destroy.lock").open("a") as lock:
         try:
@@ -54,11 +54,11 @@ def reopen_receipt(journal):
 
 
 class Cluster:
-    def __init__(self, context, env, timeout):
+    def __init__(self, context, env, timeout, path):
         self.context = context
         self.env = env
         self.timeout = timeout
-        self.path = private_path("aws-dev")
+        self.path = path
 
     def aws(self, *args, data=None, private=False):
         return run(["aws", *args, "--output", "json"], self.env, data, private)
@@ -200,7 +200,8 @@ def deploy(selected, env, config, adopt=None, *, operation="deploy", confirm=Non
     settings = dict(os.environ, AWS_REGION=aws["region"], AWS_DEFAULT_REGION=aws["region"], AWS_PAGER="")
     if aws.get("profile"):
         settings["AWS_PROFILE"] = aws["profile"]
-    g = Cluster(report["cluster"], settings, env.get("timeout", 1800))
+    path = aws_private_path(aws["expected_account_id"], aws["region"], report["cluster"])
+    g = Cluster(report["cluster"], settings, env.get("timeout", 1800), path)
     caller = json.loads(g.aws("sts", "get-caller-identity"))
     require(caller["Account"] == aws["expected_account_id"], "AWS caller account differs from inventory")
     if aws.get("role_arn"):
@@ -268,9 +269,10 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
                     atomic_write(receipt, json.dumps(journal, indent=2))
     g.k("get", "nodes")
     prepare(g, out)
-    argocd = env.get("argocd", environment(DEFAULT_CONFIG, "local")["argocd"])
+    argocd = env.get("argocd", environment(EXAMPLE_CONFIG, "local")["argocd"])
     require(argocd["namespace"] == ARGO, "AWS root requires the argocd namespace")
     names = gitops(g, root, children, out, argocd["manifest"])
     complete(g, out, adopt)
     check_apps(g, names)
+    print(kubectl_hint(g.path, g.context))
     print("AWS dev GitOps stack converged. Runtime qualification is a separate workflow.")

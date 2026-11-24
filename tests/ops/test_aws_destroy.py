@@ -10,7 +10,7 @@ from unittest.mock import Mock, patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/ops"))
 import aws_destroy as teardown
 import cli
-from configuration import OpsError
+from configuration import EXAMPLE_CONFIG, OpsError
 
 
 def resource(module, kind, name="this", **instance):
@@ -46,7 +46,7 @@ class TeardownTests(unittest.TestCase):
 
     def test_preview_dry_run_starts_no_tools(self):
         with patch.object(teardown, "destroy") as destroy, redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(cli.main(["destroy", "--env", "aws-dev", "--dry-run"]), 0)
+            self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "destroy", "--env", "aws-dev", "--dry-run"]), 0)
             self.assertFalse(json.loads(output.getvalue())["executed"])
             destroy.assert_not_called()
 
@@ -250,10 +250,10 @@ class TeardownTests(unittest.TestCase):
 
     def test_cli_forwards_opt_in_and_interrupt_returns_130(self):
         with patch.object(teardown, "destroy", side_effect=KeyboardInterrupt) as invoke:
-            result = cli.main(["destroy", "--env", "aws-dev", "--retain-backups", "--confirm", "dev"])
+            result = cli.main(["--config", str(EXAMPLE_CONFIG), "destroy", "--env", "aws-dev", "--retain-backups", "--confirm", "dev"])
         self.assertEqual(result, 130)
         self.assertEqual(invoke.call_args.args[-2:], ("dev", True))
-        self.assertEqual(cli.main(["deploy", "--env", "aws-dev", "--retain-backups", "--dry-run"]), 1)
+        self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "deploy", "--env", "aws-dev", "--retain-backups", "--dry-run"]), 1)
 
     def test_external_secrets_finish_before_namespace_delete_and_retry_skips_absent(self):
         g = Mock(timeout=60)

@@ -12,18 +12,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/ops"))
 import aws_deploy as deploy
 import aws_standard_demo as demo
 import cli
-from configuration import OpsError
+from configuration import EXAMPLE_CONFIG, OpsError
 
 
 class AwsDeployTests(unittest.TestCase):
     def test_deploy_dry_run_does_not_contact_cloud(self):
         with patch.object(deploy, "deploy") as invoke, redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(cli.main(["deploy", "--env", "aws-dev", "--dry-run"]), 0)
+            self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "deploy", "--env", "aws-dev", "--dry-run"]), 0)
             self.assertIn("refresh dedicated kubeconfig", json.loads(output.getvalue())["steps"])
             invoke.assert_not_called()
 
     def test_wait_on_older_client_and_fail_on_forbidden(self):
-        cluster = deploy.Cluster("example", {}, 60)
+        cluster = deploy.Cluster("example", {}, 60, Path("/fixture/config"))
         with patch.object(cluster, "k", side_effect=["", '{"kind":"Secret"}']) as k, patch("time.sleep"):
             self.assertEqual(cluster.exists("data-platform", "secret/db")["kind"], "Secret")
             self.assertIn("--ignore-not-found", k.call_args.args)
@@ -181,7 +181,7 @@ class AwsDeployTests(unittest.TestCase):
 
                 with patch.object(deploy, "check_selected_state"), patch.object(deploy, "inspect", return_value=report), \
                         patch.object(deploy, "lifecycle_lock", return_value=nullcontext(folder)), \
-                        patch.object(deploy, "private_path", return_value=folder / "kubeconfig"), \
+                        patch.object(deploy, "aws_private_path", return_value=folder / "kubeconfig"), \
                         patch.object(deploy, "run", side_effect=run), \
                         patch.object(deploy.Cluster, "aws", side_effect=aws), \
                         patch.object(deploy.Cluster, "k", side_effect=kubectl), \
@@ -189,7 +189,7 @@ class AwsDeployTests(unittest.TestCase):
                         patch.object(demo, "seed_database") as seed, patch.object(demo, "reconcile_dns") as dns, \
                         patch.object(deploy, "check_apps") as verify, redirect_stdout(io.StringIO()), \
                         redirect_stderr(io.StringIO()) as errors:
-                    result = cli.main(["deploy", "--env", "aws-dev"])
+                    result = cli.main(["--config", str(EXAMPLE_CONFIG), "deploy", "--env", "aws-dev"])
                     if scenario == "fresh":
                         self.assertEqual(result, 0)
                         seed.assert_called_once()

@@ -20,11 +20,11 @@ checks the effective application chart and release identity.
 ### Select an inventory entry
 
 `--config` selects the inventory and `--env` selects an exact key under
-`environments`. AWS preflight looks up `delivery_environment` in
-`delivery/standard/config.json`; omitting it uses the inventory key. Inventories
-using the standard names work without edits. If you previously renamed a key
-to `team-a-test`, add `delivery_environment: aws-test` beside `driver: aws`
-in that entry. The example includes this mapping so you can rename its key. Then run:
+`environments`. Set `delivery_environment` explicitly beside `driver` in
+each schema-2 inventory entry. For example, a test environment named
+`team-a-test` selects `delivery_environment: aws-test`. The CLI reads
+that target's `root_manifest` from `delivery/standard/config.json` and checks
+that it matches the selected Terraform stage.
 
 ```bash
 python3 scripts/ops/cli.py show --config /path/to/inventory.yaml --env team-a-test
@@ -32,7 +32,7 @@ python3 scripts/ops/cli.py preflight --config /path/to/inventory.yaml --env team
 ```
 
 Both commands report `environment: team-a-test` and `delivery_environment: aws-test`.
-The standard Terraform root selects the physical target and its GitOps overlay.
+The standard Terraform root selects the physical infrastructure stage.
 Preflight reads the cluster name from the selected Terraform inputs and checks
 the overlay against it. The test runner labels and GitHub Environment remain
 bound to `aws-test`. Both personal targets support `plan`. The dev target also supports
@@ -41,8 +41,8 @@ bound to `aws-test`. Both personal targets support `plan`. The dev target also s
 ### Select the state address
 
 The dev root uses S3. Set `terraform.backend.type: s3` and
-`terraform.backend.config_file` to the private backend file. Existing dev
-inventories can continue to use `terraform.backend_file`.
+`terraform.backend.config_file` to the private backend file. When updating a dev
+inventory, move the path from `terraform.backend_file` to `terraform.backend.config_file`.
 
 The test root uses a local file. Replace the old test `backend_file` entry
 with the following block inside `terraform`:

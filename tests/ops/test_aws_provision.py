@@ -167,7 +167,7 @@ class ProvisionTests(unittest.TestCase):
 
     def test_hidden_plan_flags_block_before_init(self):
         env = {"terraform": {"root": "infra/terraform/aws/environments/dev", "variables_file": "dev.tfvars",
-                             "backend_file": "dev.backend"}}
+                             "backend": {"type": "s3", "config_file": "dev.backend"}}}
         self.g.env = {"TF_CLI_ARGS_plan": "-destroy"}
         with tempfile.TemporaryDirectory() as tmp, patch.object(deploy, "run") as run:
             with self.assertRaisesRegex(OpsError, "TF_CLI_ARGS"):

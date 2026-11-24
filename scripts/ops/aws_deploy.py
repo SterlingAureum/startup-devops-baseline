@@ -12,7 +12,7 @@ import time
 import yaml
 
 from aws_preflight import inspect, kustomize, local_file
-from aws_state import backend_settings, check_selected_state, init_argument
+from aws_state import check_selected_state, init_argument
 from aws_standard_demo import complete
 from aws_provision import provision
 from configuration import DEFAULT_CONFIG, ROOT, OpsError, environment, load_yaml, require
@@ -225,7 +225,7 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
             tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
         terraform = ["terraform", "-chdir=" + str(ROOT / tf["root"])]
         check_selected_state(g, report, operation)
-        run(terraform + ["init", "-input=false", "-reconfigure", init_argument(backend_settings(tf), base)], tfenv)
+        run(terraform + ["init", "-input=false", "-reconfigure", init_argument(tf["backend"], base)], tfenv)
         if operation != "deploy":
             variables = local_file(tf["variables_file"], base)
             provision(g, terraform, tfenv, variables, Path(tmp) / "create.tfplan", folder, confirm)

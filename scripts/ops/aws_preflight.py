@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 
 import yaml
 
-from aws_state import backend_path, backend_settings, local_snapshot
+from aws_state import backend_path, local_snapshot
 from configuration import ROOT, OpsError, UniqueLoader, load_yaml, require
 
 
@@ -56,7 +56,7 @@ def deployment_inputs(root, selected):
 
 
 def local_file(value, config_dir):
-    require(isinstance(value, str) and value, "Personal preflight needs variables_file and backend_file")
+    require(isinstance(value, str) and value, "Personal preflight needs terraform.variables_file")
     return config_dir / Path(value).expanduser()
 
 
@@ -137,21 +137,13 @@ def inspect(selected, env, config_path, personal=False):
     short = selected.stage
     root = selected.terraform_root
     aws, tf = env["aws"], env["terraform"]
-    cfg = json.loads((ROOT / "delivery/standard/config.json").read_text())
-    require(name in cfg["environments"],
-            f"Unknown delivery environment {name!r} in delivery/standard/config.json. "
-            "Set delivery_environment in the inventory entry to its delivery key.")
+    cfg = selected.catalog
     target = cfg["environments"][name]
     manifest = selected.gitops_root
-    require(target["root_manifest"] == manifest, f"Delivery environment {name!r} must select {manifest} for Terraform root {tf['root']}")
     config_dir = config_path.expanduser().resolve().parent
     variables = local_file(tf.get("variables_file"), config_dir) if personal else root / "terraform.tfvars.example"
     declared_backend = backend_type(root)
-    if not personal and not {"backend", "backend_file"}.intersection(tf):
-        # Older inventories can inspect repository examples before choosing a personal backend.
-        settings = {"type": declared_backend, "path": str(root / "terraform.tfstate")}
-    else:
-        settings = backend_settings(tf)
+    settings = tf["backend"]
     require(declared_backend in ("local", "s3"), f"Unsupported backend {declared_backend}")
     require(settings["type"] == declared_backend,
             f"{name} root declares {declared_backend} state. Configure terraform.backend for this type; "
@@ -198,7 +190,7 @@ def inspect(selected, env, config_path, personal=False):
             "Unexpected root Application source or destination")
     if "gitops" in env:
         configured = env["gitops"]
-        require(configured["repository"] == src["repoURL"] and configured["root_manifest"] == manifest
+        require(configured["repository"] == src["repoURL"]
                 and configured["root_application"] == root_app["metadata"]["name"]
                 and configured.get("revision") in (None, src["targetRevision"]) and not configured.get("parameters"),
                 "Inventory GitOps settings differ from the selected AWS root")
@@ -231,7 +223,7 @@ def inspect(selected, env, config_path, personal=False):
     example_repo = read_inputs(identities / "terraform.tfvars.example")["github_repository"]
     require(repo == example_repo, "Root GitHub repository differs from the runtime-identities declaration example")
     gh_env, labels = runtime_target(name)
-    return {"environment": selected.inventory_name, "stage": short, "delivery_environment": name,
+    return {"environment": selected.inventory_name, "driver": "aws", "stage": short, "delivery_environment": name,
             "expected_account_id": aws["expected_account_id"], "scope": "personal-files" if personal else "repository-examples",
             "offline_result": "passed", "live_checks": "pending", "terraform_root": tf["root"],
             "declared_backend": declared_backend, **state_info,

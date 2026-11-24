@@ -7,14 +7,6 @@ import tempfile
 from configuration import ROOT, OpsError, require
 
 
-def backend_settings(tf):
-    if "backend" in tf:
-        require("backend_file" not in tf, "Choose terraform.backend or legacy backend_file, not both")
-        return tf["backend"]
-    require(tf.get("backend_file"), "Configure terraform.backend (or the existing dev backend_file)")
-    return {"type": "s3", "config_file": tf["backend_file"]}
-
-
 def backend_path(settings, base):
     key = "path" if settings["type"] == "local" else "config_file"
     return (base / Path(settings[key]).expanduser()).resolve()

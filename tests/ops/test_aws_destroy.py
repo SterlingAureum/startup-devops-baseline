@@ -84,7 +84,7 @@ class TeardownTests(unittest.TestCase):
         g.env = {}
         aws = {"region": "us-east-1", "expected_account_id": "123456789012"}
         env = {"aws": aws, "terraform": {"root": "infra/terraform/aws/environments/dev",
-                                         "backend_file": "dev.tfbackend", "variables_file": "dev.tfvars"}}
+                                         "backend": {"type": "s3", "config_file": "dev.tfbackend"}, "variables_file": "dev.tfvars"}}
         name = "module.eks.aws_eks_cluster.this"
         retained = resource("cnpg_backup", "aws_s3_bucket")
         state = {"lineage": "12345678-1234-1234-1234-123456789012",
@@ -130,7 +130,7 @@ class TeardownTests(unittest.TestCase):
                  "outputs": {k: {"value": v} for k, v in {"eks_cluster_name": g.context,
                              "vpc_id": "vpc-a", "eks_cluster_endpoint": "endpoint"}.items()}}
         env = {"aws": {"region": "us-east-1", "expected_account_id": "123456789012"},
-               "terraform": {"root": "dev", "backend_file": "dev.backend", "variables_file": "dev.tfvars"}}
+               "terraform": {"root": "dev", "backend": {"type": "s3", "config_file": "dev.backend"}, "variables_file": "dev.tfvars"}}
         plans, applies = [], []
         def terraform(args, env):
             if "pull" in args:

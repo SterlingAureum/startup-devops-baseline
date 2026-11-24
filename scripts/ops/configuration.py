@@ -12,6 +12,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 EXAMPLE_CONFIG = ROOT / "config/environments.example.yaml"
+ARGOCD_BOOTSTRAP = ROOT / "config/argocd-bootstrap.yaml"
 DELIVERY_CONFIG = ROOT / "delivery/standard/config.json"
 
 
@@ -68,6 +69,14 @@ def https_url(value, location):
             and not url.query and not url.fragment, location + " must be a credential-free HTTPS URL")
 
 
+def argocd_bootstrap(overrides):
+    defaults = load_yaml(ARGOCD_BOOTSTRAP.read_text())
+    keys = ("namespace", "manifest")
+    mapping(defaults, keys, "Argo CD bootstrap defaults", keys)
+    mapping(overrides, keys, "argocd")
+    return {**defaults, **overrides}
+
+
 def validate_environment(env):
     mapping(env, ("driver", "delivery_environment", "timeout", "kind", "argocd", "gitops", "aws", "terraform"), "environment", ("driver",))
     require(env["driver"] in ("kind", "aws"), "Supported drivers are kind and aws")
@@ -103,7 +112,7 @@ def validate_environment(env):
         text(kind["node_image"], "kind.node_image")
         ports = [kind["http_port"], kind["https_port"]]
         require(all(type(port) is int and 1 <= port <= 65535 for port in ports) and ports[0] != ports[1], "Use two distinct valid kind host ports")
-    if env["driver"] == "kind" or "argocd" in env:
+    if "argocd" in env:
         mapping(env.get("argocd"), ("namespace", "manifest"), "argocd", ("namespace", "manifest"))
         require(isinstance(env["argocd"]["namespace"], str) and re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", env["argocd"]["namespace"]), "Invalid Argo CD namespace")
         https_url(env["argocd"]["manifest"], "argocd.manifest")
@@ -184,4 +193,7 @@ def environment(path, name):
         available = ", ".join(sorted(entries)) or "(none)"
         raise OpsError(f"Unknown environment {name!r}. Available environments: {available}")
     # Validate the selected target only: an unfinished AWS example cannot break local operations.
-    return validate_environment(deepcopy(entries[name]))
+    env = deepcopy(entries[name])
+    require(isinstance(env, dict), "environment must be a mapping")
+    env["argocd"] = argocd_bootstrap(env.get("argocd", {}))
+    return validate_environment(env)

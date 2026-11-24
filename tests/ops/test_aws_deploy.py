@@ -8,11 +8,13 @@ from contextlib import nullcontext, redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/ops"))
 import aws_deploy as deploy
 import aws_standard_demo as demo
 import cli
-from configuration import EXAMPLE_CONFIG, OpsError
+from configuration import EXAMPLE_CONFIG, OpsError, load_yaml
 
 
 class AwsDeployTests(unittest.TestCase):
@@ -164,6 +166,11 @@ class AwsDeployTests(unittest.TestCase):
         for scenario in ("fresh", "deleting namespace", "deleting root"):
             with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as tmp:
                 folder = Path(tmp)
+                entry = load_yaml(EXAMPLE_CONFIG.read_text())["environments"]["aws-dev"]
+                manifest = "https://example.invalid/aws-install.yaml"
+                entry["argocd"] = {"manifest": manifest}
+                inventory = folder / "personal.yaml"
+                inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"aws-dev": entry}}))
                 if scenario != "fresh":
                     (folder / "prior.json").write_text("preserve checkpoint")
 
@@ -189,9 +196,10 @@ class AwsDeployTests(unittest.TestCase):
                         patch.object(demo, "seed_database") as seed, patch.object(demo, "reconcile_dns") as dns, \
                         patch.object(deploy, "check_apps") as verify, redirect_stdout(io.StringIO()), \
                         redirect_stderr(io.StringIO()) as errors:
-                    result = cli.main(["--config", str(EXAMPLE_CONFIG), "deploy", "--env", "aws-dev"])
+                    result = cli.main(["--config", str(inventory), "deploy", "--env", "aws-dev"])
                     if scenario == "fresh":
                         self.assertEqual(result, 0)
+                        self.assertEqual(gitops.call_args.args[-1], manifest)
                         seed.assert_called_once()
                         dns.assert_called_once()
                         verify.assert_called_once()

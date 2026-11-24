@@ -27,6 +27,17 @@ unresolved. A reported path can precede creation of the file. The next dev deplo
 writes the new connection and prints a kubectl command. An older `aws-dev.yaml`
 can still be used for its original cluster until then.
 
+The kind and AWS lifecycle drivers read shared Argo CD installation defaults
+from `config/argocd-bootstrap.yaml` in the CLI checkout. Omit `argocd` to
+follow that pin, or set `argocd.manifest` in an individual entry. Existing
+explicit values continue to take precedence. For kind, `--argocd-manifest`
+overrides the inventory value for that command. The standard installer uses
+the `argocd` namespace. Inspect the effective settings before deployment:
+
+```bash
+python3 scripts/ops/cli.py show --env aws-dev | jq '.configuration.argocd'
+```
+
 **Update your personal inventory in place.**
 
 1. Set the top-level `schema_version` to `2`.

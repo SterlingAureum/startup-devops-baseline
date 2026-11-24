@@ -1,0 +1,2 @@
+namespace: argocd
+manifest: https://raw.githubusercontent.com/argoproj/argo-cd/v3.5.2/manifests/install.yaml

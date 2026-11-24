@@ -15,7 +15,7 @@ from aws_preflight import inspect, kustomize, local_file
 from aws_state import check_selected_state, init_argument, lifecycle_directory
 from aws_standard_demo import complete
 from aws_provision import provision
-from configuration import EXAMPLE_CONFIG, ROOT, OpsError, environment, load_yaml, require
+from configuration import ROOT, OpsError, load_yaml, require
 from connections import atomic_write, aws_private_path, kubectl_hint
 
 PHASES = ["check personal inventory, remote Terraform outputs and live EKS identity",
@@ -269,9 +269,7 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
                     atomic_write(receipt, json.dumps(journal, indent=2))
     g.k("get", "nodes")
     prepare(g, out)
-    argocd = env.get("argocd", environment(EXAMPLE_CONFIG, "local")["argocd"])
-    require(argocd["namespace"] == ARGO, "AWS root requires the argocd namespace")
-    names = gitops(g, root, children, out, argocd["manifest"])
+    names = gitops(g, root, children, out, env["argocd"]["manifest"])
     complete(g, out, adopt)
     check_apps(g, names)
     print(kubectl_hint(g.path, g.context))

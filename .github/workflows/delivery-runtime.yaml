@@ -6,10 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       environment:
-        description: Environment to reverify on current main
-        required: true
+        description: Delivery target to reverify (defaults to the configured dev target)
+        required: false
         type: string
-        default: aws-dev
       create_test_pr:
         description: Propose test after successful dev verification
         type: boolean
@@ -60,6 +59,6 @@ jobs:
       environment: ${{ matrix.environment }}
       stage: ${{ matrix.stage }}
       revision: ${{ github.sha }}
-      propose_test: ${{ matrix.environment == 'aws-dev' && (github.event_name == 'push' || inputs.create_test_pr) }}
+      test_target: ${{ (github.event_name == 'push' || inputs.create_test_pr) && matrix.test_target || '' }}
     secrets:
-      DELIVERY_PR_TOKEN: ${{ matrix.environment == 'aws-dev' && (github.event_name == 'push' || inputs.create_test_pr) && secrets.DELIVERY_PR_TOKEN || '' }}
+      DELIVERY_PR_TOKEN: ${{ matrix.test_target != '' && (github.event_name == 'push' || inputs.create_test_pr) && secrets.DELIVERY_PR_TOKEN || '' }}

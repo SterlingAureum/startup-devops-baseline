@@ -92,13 +92,35 @@ five roots with `init -backend=false` and validation, never plan/apply. Platform
 checks lint/render repository-owned charts and AWS Kustomize overlays. They do
 not download every external controller chart or prove live compatibility.
 
+## Promotion stages
+
+The repository's `config.json` selects one concrete target per promotion stage.
+The personal route ships with `"promotion": {"dev": "aws-dev", "test": "aws-test"}`.
+Each stage value selects an entry in `environments` whose `runtime_stage` matches the stage.
+The image workflow proposes the first release to dev. A verified dev candidate
+can advance to test. The PR gate checks the same predecessor and source report.
+Every release PR changes only its target release file.
+
+In **delivery promote selected release**, choose `source_stage=dev` to reverify
+the configured dev target and propose test. For a test-to-prod proposal, add
+`"prod": "aws-prod"` to the promotion map, enable `DELIVERY_PROD_ENABLED`, then
+choose `source_stage=test`. Configure each stage in its own target entry with
+a distinct release path. A target outside the promotion map can participate
+in runtime checks, but a release change there cannot pass the promotion gate.
+The runtime workflow still accepts a concrete delivery environment key for
+manual re-verification; leaving it empty selects the configured dev target.
+Personal inventory aliases and cloud access are configured separately.
+
+To inspect the resolved path offline, run
+`python3 scripts/delivery/flow.py promotion-route --source-stage dev`.
+
 ## Optional cloud jobs
 
 | Variable | Meaning |
 | --- | --- |
 | `DELIVERY_PUBLISH_ENABLED=true` | Permit image publication after successful main checks and preparation of a dev release PR |
 | `DELIVERY_RUNTIME_ENABLED=true` | Permit read-only acceptance against existing trusted runtime runners/clusters and subsequent promotion PR preparation |
-| `DELIVERY_PROD_ENABLED=true` | Additionally permit the prod path; keep unset during this restructuring |
+| `DELIVERY_PROD_ENABLED=true` | Permit prod runtime acceptance. Promotion into prod also requires a configured prod destination. |
 
 All three are unset/disabled by default. Checks run without them. The obsolete
 `DELIVERY_FLOW_ENABLED` can be removed from repository settings after migration.

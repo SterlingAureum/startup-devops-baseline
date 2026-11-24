@@ -12,7 +12,7 @@ import tempfile
 import yaml
 
 from common import (COMMIT, DIGEST, IDENTITY_FIELDS, ROOT, Rejected, UniqueLoader, config, emit_output,
-                    fingerprint, git, identity, load_yaml, release, repo_path, run)
+                    fingerprint, git, identity, load_yaml, promotion_chain, promotion_source, release, repo_path, run)
 from gitops import render_environment
 from image_receipt import require_published
 from verification import require_pass, verified_report
@@ -55,7 +55,7 @@ def classify(paths, cfg, full_checks=False):
     return {"application": app, "tests": app or shared, "iac": affected("iac") or shared,
             "platform": platform or shared, "render": bool(selected),
             "environments": sorted(selected), "runtime_targets": sorted(runtime),
-            "dev_release_changed": "aws-dev" in runtime}
+            "dev_release_changed": cfg["promotion"]["dev"] in runtime}
 
 
 def runtime_matrix(cfg, targets, manual, prod_enabled):
@@ -119,9 +119,12 @@ def input_fingerprint(cfg, environment):
 
 
 def prepare_release(cfg, target, candidate=None, image=None, commit=None, source_repository=None, run_id=None):
+    expected_source = promotion_source(cfg, target)
     target_path = repo_path(cfg["environments"][target]["release"])
     value = load_yaml(target_path)
-    if target == "aws-dev" and candidate is None:
+    if expected_source is None:
+        if candidate is not None:
+            raise Rejected("Dev requires a published image")
         if not isinstance(image, str) or "@" not in image or not isinstance(commit, str):
             raise Rejected("Dev entry requires a built image@digest and source commit")
         repository, digest = image.rsplit("@", 1)
@@ -141,11 +144,10 @@ def prepare_release(cfg, target, candidate=None, image=None, commit=None, source
                                  "workflowRunId": str(run_id), "workflowRunAttempt": attempt}}
         value.pop("promotion", None)
     else:
-        expected_source = {"aws-test": "aws-dev", "aws-prod": "aws-test"}.get(target)
         if not candidate or candidate.get("environment") != expected_source or candidate.get("verified") is not True:
             raise Rejected("Promotion requires a successful verification of the preceding environment")
         require_pass(candidate, cfg["application"]["release_name"], expected_source)
-        if target == "aws-prod" and os.getenv("DELIVERY_PROD_ENABLED") != "true":
+        if target == cfg["promotion"].get("prod") and os.getenv("DELIVERY_PROD_ENABLED") != "true":
             raise Rejected("Production promotion is disabled")
         source_path = repo_path(cfg["environments"][expected_source]["release"])
         current = release(source_path)
@@ -225,7 +227,7 @@ def create_pr(args, cfg):
     cfg = config()
     candidate = json.loads(Path(args.candidate).read_text()) if args.candidate else None
     if candidate is None:
-        if args.target != "aws-dev" or not args.commit:
+        if args.target != cfg["promotion"]["dev"] or not args.commit:
             raise Rejected("Only a built image can enter dev directly")
         # An old image build must not overwrite a newer source change.
         source_paths = cfg["paths"]["application"]
@@ -293,12 +295,14 @@ def main():
     inputs.add_argument("--environment")
     inputs.add_argument("--base")
     runtime_route.add_argument("--head")
+    promote = sub.add_parser("promotion-route")
+    promote.add_argument("--source-stage", choices=("dev", "test"))
     render = sub.add_parser("render")
     render.add_argument("--environment", required=True)
     sub.add_parser("platform")
     sub.add_parser("test-app")
     pr = sub.add_parser("pr")
-    pr.add_argument("--target", choices=["aws-dev", "aws-test", "aws-prod"], required=True)
+    pr.add_argument("--target", required=True)
     pr.add_argument("--candidate")
     pr.add_argument("--image")
     pr.add_argument("--commit")
@@ -313,15 +317,31 @@ def main():
             print(json.dumps(result, indent=2))
         elif args.command == "runtime-route":
             if args.environment is not None:
-                targets = [args.environment]
+                targets = [args.environment or cfg["promotion"]["dev"]]
             else:
                 if not args.head:
                     raise Rejected("Push routing requires --head")
                 targets = classify(changed_paths(args.base, args.head), cfg)["runtime_targets"]
             rows = runtime_matrix(cfg, targets, args.environment is not None,
                                   os.getenv("DELIVERY_PROD_ENABLED") == "true")
+            for row in rows:
+                row["test_target"] = cfg["promotion"]["test"] if row["environment"] == cfg["promotion"]["dev"] else ""
             emit_output("matrix", json.dumps(rows, separators=(",", ":")))
             print(json.dumps(rows))
+        elif args.command == "promotion-route":
+            chain = promotion_chain(cfg)
+            target = chain[0]
+            if args.source_stage:
+                source = cfg["promotion"][args.source_stage]
+                index = chain.index(source) + 1
+                if index == len(chain):
+                    raise Rejected(f"No promotion destination configured after {source}")
+                target = chain[index]
+                if target == cfg["promotion"].get("prod") and os.getenv("DELIVERY_PROD_ENABLED") != "true":
+                    raise Rejected("Production promotion is disabled")
+                emit_output("source", source)
+            emit_output("target", target)
+            print(f"{source} -> {target}" if args.source_stage else f"Image entry: {target}")
         elif args.command == "render":
             render_environment(cfg, args.environment)
             print(f"PASS: rendered application for {args.environment}")

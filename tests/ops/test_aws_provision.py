@@ -177,7 +177,7 @@ class ProvisionTests(unittest.TestCase):
     def test_invalid_scope_or_confirmation_stops_before_aws(self):
         with patch.object(deploy, "inspect", return_value={"cluster": self.name}), \
                 patch.object(deploy.Cluster, "aws") as aws, redirect_stderr(io.StringIO()), redirect_stdout(io.StringIO()):
-            for args in (["create", "--env", "aws-test"], ["plan", "--env", "local"],
+            for args in (["up", "--env", "aws-test"], ["plan", "--env", "local"],
                          ["create", "--env", "aws-dev", "--confirm", "wrong"],
                          ["plan", "--env", "aws-dev", "--confirm", self.name]):
                 self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), *args]), 1)

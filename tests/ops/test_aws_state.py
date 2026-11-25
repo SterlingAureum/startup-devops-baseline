@@ -25,7 +25,7 @@ EMPTY = {"version": 4, "lineage": "080a7801-0ed1-4582-9e9d-9a520a812356",
 
 
 class StateTests(unittest.TestCase):
-    def test_fresh_test_entry_uses_s3_on_first_init_and_stops_at_plan(self):
+    def test_fresh_test_entry_previews_then_creates_only_the_selected_infrastructure(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
             config = folder / "environments.yaml"
@@ -58,9 +58,23 @@ class StateTests(unittest.TestCase):
                 self.assertEqual(tf.call_args.args[0][-4:], ["init", "-input=false", "-reconfigure",
                                                              "-backend-config=" + str(backend)])
                 self.assertIsNone(plan.call_args.args[-1])
+                command = ["create", "--env", "team", "--config", str(config)]
+                with redirect_stderr(io.StringIO()):
+                    self.assertEqual(cli.main(command + ["--confirm", "startup-devops-baseline-dev"]), 1)
+                self.assertEqual(aws.call_count, len(replies))
+                for confirm in (None, TARGET[1]):
+                    aws.side_effect = replies
+                    tf.reset_mock()
+                    self.assertEqual(cli.main(command + (["--confirm", confirm] if confirm else [])), 0)
+                    tf.assert_called_once()
+                    argv = tf.call_args.args[0]
+                    self.assertTrue(argv[1].endswith("/infra/terraform/aws/environments/test"))
+                    self.assertIn("-backend-config=" + str(backend), argv)
+                    self.assertEqual(plan.call_args.args[3], folder / "vars.tfvars.json")
+                    self.assertEqual(plan.call_args.args[-1], confirm)
                 with redirect_stderr(io.StringIO()):
                     self.assertEqual(cli.main(["up", "--env", "team", "--config", str(config), "--confirm", TARGET[1]]), 1)
-                self.assertEqual(plan.call_count, 1)
+                self.assertEqual(plan.call_count, 3)
 
     def test_unreadable_malformed_cache_and_wrong_state_are_errors(self):
         with tempfile.TemporaryDirectory() as tmp:

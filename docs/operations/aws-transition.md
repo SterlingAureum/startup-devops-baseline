@@ -35,8 +35,8 @@ Both commands report `environment: team-a-test` and `delivery_environment: aws-t
 The standard Terraform root selects the physical infrastructure stage.
 Preflight reads the cluster name from the selected Terraform inputs and checks
 the overlay against it. The test runner labels and GitHub Environment remain
-bound to `aws-test`. Both personal targets support `plan`. The dev target also supports
-`create/up/deploy/destroy`, with confirmation bound to its real cluster name.
+bound to `aws-test`. Both personal targets support `plan` and `create`. The dev target also supports
+`up/deploy/destroy`. Confirmation uses the physical cluster name.
 
 ### Select the state address
 
@@ -97,7 +97,19 @@ If a retired `terraform.tfstate` exists directly in the test Terraform root,
 move that specific file to a private location outside the checkout before the
 first S3 plan. Confirm its resources are retired first. The CLI uses a temporary
 Terraform data directory and initializes with `-reconfigure`. Keep the bucket
-and KMS key in place. Test provisioning is a separate lifecycle increment.
+and KMS key in place.
+
+After reviewing the test plan, use the cluster name printed by preflight.
+With the default project name the infrastructure command is:
+
+```bash
+.venv/bin/python scripts/ops/cli.py create --env aws-test --config "$inventory" --confirm startup-devops-baseline-test
+```
+
+Without confirmation, `create` previews the changes. A confirmed call makes and
+checks a fresh plan, applies that saved plan to the selected test backend, then
+returns. The test cluster incurs AWS charges from creation. Test GitOps bootstrap
+and CLI teardown are separate lifecycle increments.
 
 ## Check personal inputs
 

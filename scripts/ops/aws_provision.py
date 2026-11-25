@@ -1,4 +1,4 @@
-"""Plan and apply the personal dev Terraform root in the initialized lifecycle session."""
+"""Plan and apply the selected personal AWS Terraform root in the initialized lifecycle session."""
 import json
 import subprocess
 
@@ -20,7 +20,7 @@ def check_plan(plan, g):
         actions = change["actions"]
         allowed = (["no-op"], ["read"]) if item["mode"] == "data" else (["no-op"], ["create"], ["update"])
         require(actions in allowed and not change.get("importing"),
-                f"Review dev infrastructure change outside create/update: {item['address']} {actions}")
+                f"Review infrastructure change outside create/update: {item['address']} {actions}")
         if item["address"] == "module.eks.aws_eks_cluster.this":
             cluster = change
         elif item["address"] == "module.vpc.aws_vpc.this":
@@ -49,10 +49,10 @@ def provision(g, terraform, tfenv, variables, plan_path, folder, confirm):
         for path in folder.glob("*.json"):
             receipt = json.loads(path.read_text())
             require(receipt.get("vpc") != vpc or not receipt.get("cleaned") or receipt.get("complete"),
-                    "Dev network teardown is pending for " + vpc + "; finish destroy before rebuilding")
+                    "Network teardown is pending for " + vpc + "; finish destroy before rebuilding")
     if confirm is None:
         print("Preview complete for " + g.context)
         return
-    print("Applying the checked dev infrastructure plan", flush=True)
+    print(f"Applying the checked infrastructure plan for {g.context}", flush=True)
     subprocess.run(terraform + ["apply", "-input=false", "-lock-timeout=60s", str(plan_path)], env=tfenv, check=True)
-    print("AWS dev infrastructure apply complete.", flush=True)
+    print(f"AWS infrastructure apply complete for {g.context}.", flush=True)

@@ -124,7 +124,7 @@ class AwsPreflightTests(unittest.TestCase):
                 with redirect_stderr(io.StringIO()) as error:
                     self.assertEqual(cli.main(["destroy", "--env", "AWS-dev", "--config", str(inventory)]), 1)
                     self.assertIn("Unknown environment 'AWS-dev'. Available environments: aws-dev", error.getvalue())
-                for command in ("create", "up", "deploy", "destroy"):
+                for command in ("up", "deploy", "destroy"):
                     with self.subTest(command=command), redirect_stderr(io.StringIO()):
                         self.assertEqual(cli.main([command, "--env", "aws-dev", "--config", str(inventory)]), 1)
                 tool.assert_not_called()

@@ -1,4 +1,4 @@
-"""Provision the personal dev Terraform root and bootstrap its standard GitOps stack."""
+"""Provision the selected personal AWS Terraform root and bootstrap its standard GitOps stack."""
 from contextlib import contextmanager
 import fcntl
 import json
@@ -21,7 +21,7 @@ from connections import atomic_write, aws_private_path, kubectl_hint
 CONNECTION_PHASES = ["check selected Terraform outputs and live EKS identity", "refresh dedicated kubeconfig"]
 PHASES = ["check root Application and target namespaces for deletion",
           "prepare IRSA and Grafana credentials",
-          "install pinned Argo CD and seed ALB Application", "sync dev root and CNPG backup destination",
+          "install pinned Argo CD and seed ALB Application", "sync selected root and CNPG backup destination",
           "recover the ESO consumer and reconcile the standard demo database credential",
           "wait for demo replicas using the synced credential, reconcile DNS, and check GitOps applications"]
 ARGO = "argocd"
@@ -188,7 +188,7 @@ def check_apps(g, names):
             print("Pending Applications: " + ", ".join(pending), flush=True)
         last = pending
         return not pending
-    g.until("expected dev Applications to be Synced and Healthy", converged)
+    g.until("expected Applications to be Synced and Healthy", converged)
 
 
 def deploy(selected, env, config, adopt=None, *, operation="deploy", confirm=None):
@@ -216,7 +216,7 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
     settings = g.env
     tf = env["terraform"]
     base = config.expanduser().resolve().parent
-    with tempfile.TemporaryDirectory(prefix="aws-dev-deploy-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="aws-deploy-") as tmp:
         tfenv = dict(settings, TF_DATA_DIR=tmp + "/terraform", TF_WORKSPACE="default")
         require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
                 "Unset TF_CLI_ARGS overrides before provisioning")
@@ -276,4 +276,4 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
     complete(g, out, adopt)
     check_apps(g, names)
     print(kubectl_hint(g.path, g.context))
-    print("AWS dev GitOps stack converged. Runtime qualification is a separate workflow.")
+    print(f"AWS {report['stage']} GitOps stack converged. Runtime qualification is a separate workflow.")

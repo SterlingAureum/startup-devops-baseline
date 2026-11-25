@@ -1,4 +1,4 @@
-"""Standard demo integration for the personal AWS dev GitOps stack."""
+"""Standard demo integration for the personal AWS GitOps stack."""
 import base64
 import json
 import time
@@ -74,10 +74,21 @@ def refresh_consumers(g, version):
                  "spec": {"template": {"metadata": {"annotations": {MARKER: version}}}}}
         g.k("-n", "startup-apps", "patch", kind, "--type=merge", "-p", json.dumps(patch))
 
+    reported_pause = None
+
     def ready():
+        nonlocal reported_pause
         latest = g.obj("startup-apps", kind) or {}
         spec = latest.get("spec", {})
         status = latest.get("status", {})
+        if kind.startswith("rollouts.") and status.get("phase") == "Paused":
+            index = status.get("currentStepIndex")
+            steps = spec.get("strategy", {}).get("canary", {}).get("steps", [])
+            if isinstance(index, int) and 0 <= index < len(steps) and steps[index].get("pause") == {}:
+                if index != reported_pause:
+                    print(f"{g.context}: demo-api awaits manual promotion at canary step {index + 1}. "
+                          f"Review the Rollout and AnalysisRuns in startup-apps with {g.path}.", flush=True)
+                    reported_pause = index
         desired = spec.get("replicas", 1)
         return (spec.get("template", {}).get("metadata", {}).get("annotations", {}).get(MARKER) == version
                 and desired > 0 and int(status.get("observedGeneration", 0)) >= int(latest["metadata"]["generation"])
@@ -138,11 +149,11 @@ def reconcile_dns(g, out):
         endpoints = obj.get("status", {}).get("loadBalancer", {}).get("ingress", [])
         return next((entry["hostname"] for entry in endpoints if entry.get("hostname")), None)
 
-    dns = g.until("dev Ingress ALB hostname", endpoint)
+    dns = g.until("demo Ingress ALB hostname", endpoint)
     lbs = json.loads(g.aws("elbv2", "describe-load-balancers"))["LoadBalancers"]
     matches = [lb for lb in lbs if lb["DNSName"] == dns and lb["VpcId"] == out["vpc_id"]
                and lb["Type"] == "application"]
-    require(len(matches) == 1, "Ingress ALB does not match the dev VPC")
+    require(len(matches) == 1, "Ingress ALB does not match the selected VPC")
     zone = out["route53_hosted_zone_id"]
     target = {"HostedZoneId": matches[0]["CanonicalHostedZoneId"], "DNSName": "dualstack." + dns,
               "EvaluateTargetHealth": True}

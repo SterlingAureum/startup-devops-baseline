@@ -58,8 +58,8 @@ python3 -m unittest discover -s tests -v
 python3 scripts/delivery/flow.py render --environment local
 ```
 
-For personal AWS dev, the lifecycle CLI supports `plan`, `create`, `up`, `deploy` and `destroy`.
-Prepare the private inventory and follow the [AWS dev rebuild instructions](docs/operations/aws-transition.md#rebuild-personal-aws-dev-from-the-inventory).
+For personal AWS dev and test, the lifecycle CLI supports `plan`, `create`, `up`, `deploy` and `destroy`.
+Prepare the private inventory and follow the [AWS lifecycle instructions](docs/operations/aws-transition.md).
 
 With Terraform installed, `bash scripts/checks/terraform.sh` performs formatting
 and backend-disabled validation of the five roots. It does not plan, apply,
@@ -73,7 +73,7 @@ rules or enabling publication/runtime jobs.
 
 Terraform and AWS GitOps declarations remain in place. Legacy AWS apply,
 bootstrap, recovery and destroy scripts are archived together with their
-dependencies. AWS entries support offline inspection. Provisioned personal dev
+dependencies. AWS entries support offline inspection. Provisioned personal dev and test
 clusters support the [AWS deploy command](docs/operations/aws-transition.md). Do not run archived
 scripts from their relocated paths as current procedures. Read
 [the AWS transition boundary](docs/operations/aws-transition.md).

@@ -48,7 +48,7 @@ def parser():
     value.add_argument("--argocd-manifest")
     value.add_argument("--confirm")
     value.add_argument("--adopt-demo-secret-version", metavar="AWSCURRENT_VERSION_ID",
-                       help="AWS dev deploy/up: transfer this exact existing standard demo DB version to CLI management")
+                       help="AWS dev/test deploy/up: transfer this exact existing standard demo DB version to CLI management")
     value.add_argument("--retain-backups", action="store_true",
                        help="AWS dev/test destroy: snapshot standard PVCs and keep the CNPG bucket and demo DB secret")
     value.add_argument("--kubeconfig-file", help="Explicit shared config target for connect only")
@@ -62,14 +62,13 @@ def configure(args, local_only=False):
     env = environment(args.config, args.env)
     catalog, args.root_manifest = delivery_target(env)
     args.aws_target = standard_aws_target(args.env, env, catalog, args.root_manifest) if env["driver"] == "aws" else None
-    dev_lifecycle = args.aws_target is not None and args.aws_target.stage == "dev"
     require(not args.check_inputs or args.command == "preflight", "--check-inputs is only valid for preflight")
     require(not args.retain_backups or (args.aws_target is not None and args.command == "destroy"),
             "--retain-backups applies only to personal AWS dev/test destroy")
     if args.adopt_demo_secret_version is not None:
-        require(dev_lifecycle and args.command in ("deploy", "up")
+        require(args.aws_target is not None and args.command in ("deploy", "up")
                 and re.fullmatch(r"[A-Za-z0-9-]{32,64}", args.adopt_demo_secret_version),
-                "--adopt-demo-secret-version requires AWS dev deploy/up and a valid version ID")
+                "--adopt-demo-secret-version requires AWS dev/test deploy/up and a valid version ID")
     if local_only:
         require(env["driver"] == "kind", "local.py only accepts kind environments; use cli.py show to inspect AWS configuration")
     if env["driver"] == "aws":
@@ -77,8 +76,8 @@ def configure(args, local_only=False):
             require(env["argocd"]["namespace"] == "argocd", "AWS root requires the argocd namespace")
         require(args.command == "show" or args.aws_target is not None,
                 "AWS preflight and lifecycle commands require a standard personal dev or test Terraform root")
-        require(args.command in ("show", "preflight", "plan", "create", "destroy") or (dev_lifecycle and args.command in ("up", "deploy")),
-                "Supported AWS operations: show/preflight/plan/create/destroy on personal dev/test, up/deploy on dev")
+        require(args.command in ("show", "preflight", "plan", "create", "up", "deploy", "destroy"),
+                "Supported AWS operations: show/preflight/plan/create/up/deploy/destroy on personal dev/test")
         require(args.confirm is None or args.command in ("create", "up", "destroy"), "AWS --confirm applies to create, up or destroy")
         require(not any(getattr(args, key) is not None for key in ("cluster", "repo_url", "revision", "timeout", "http_port", "https_port", "node_image", "argocd_manifest", "kubeconfig_file")), "AWS inspection does not accept kind command overrides")
         return env

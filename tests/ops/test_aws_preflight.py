@@ -78,7 +78,7 @@ class AwsPreflightTests(unittest.TestCase):
             file = folder / "inventory.yaml"
             entry = configuration.environment(EXAMPLE_CONFIG, "aws-test")
             entry["terraform"]["variables_file"] = "test.tfvars.json"
-            entry["terraform"]["backend"]["path"] = "state/test.tfstate"
+            entry["terraform"]["backend"]["config_file"] = "inputs/test.tfbackend"
             file.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"team": entry}}))
             def paths():
                 with redirect_stdout(io.StringIO()) as out:
@@ -91,10 +91,10 @@ class AwsPreflightTests(unittest.TestCase):
                 selected = paths()
                 run.assert_not_called()
             self.assertEqual(selected["variables_file"], str(var_file))
-            self.assertEqual(selected["state_file"], str(folder / "state/test.tfstate"))
+            self.assertEqual(selected["backend_config_file"], str(folder / "inputs/test.tfbackend"))
             self.assertEqual(selected["kubeconfig"], str(Path.home() /
                 ".kube/startup-devops-baseline/aws/123456789012/us-east-1/sandbox-test.yaml"))
-            self.assertFalse((folder / "state").exists())
+            self.assertFalse((folder / "inputs").exists())
 
     def test_delivery_key_is_explicit_and_validated_before_tools(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -148,21 +148,21 @@ class AwsPreflightTests(unittest.TestCase):
                     self.assertIn("--confirm actual-dev", error.getvalue())
                     tool.assert_not_called()
 
-    def test_test_root_supports_local_and_rejects_s3(self):
+    def test_test_root_supports_s3_and_rejects_old_local_inventory(self):
         with redirect_stdout(io.StringIO()) as output:
             self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "preflight", "--env", "aws-test"]), 0)
         report = json.loads(output.getvalue())
-        self.assertEqual(report["declared_backend"], "local")
-        self.assertTrue(Path(report["state_address"]).is_absolute())
+        self.assertEqual(report["declared_backend"], "s3")
+        self.assertEqual(report["backend_file_key"], "environments/test/terraform.tfstate")
         self.assertEqual(report["state_status"], "not-checked")
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "inventory.yaml"
             entry = configuration.environment(EXAMPLE_CONFIG, "aws-test")
-            entry["terraform"]["backend"] = {"type": "s3", "config_file": "test.tfbackend"}
+            entry["terraform"]["backend"] = {"type": "local", "path": "old-test.tfstate"}
             path.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"aws-test": entry}}))
             with redirect_stderr(io.StringIO()) as error:
                 self.assertEqual(cli.main(["preflight", "--env", "aws-test", "--config", str(path), "--check-inputs"]), 1)
-            self.assertIn("root declares local state", error.getvalue())
+            self.assertIn("root declares s3 state", error.getvalue())
 
     def test_dry_run_and_invalid_env_do_not_start_tools(self):
         with patch.object(aws.subprocess, "run") as tool, redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):

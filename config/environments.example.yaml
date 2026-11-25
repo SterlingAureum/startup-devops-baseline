@@ -56,6 +56,6 @@ environments:
       # Start from infra/terraform/aws/environments/test/terraform.tfvars.example.
       variables_file: aws-test.tfvars
       backend:
-        type: local
-        # Terraform writes the state itself here. For an existing environment use its current file.
-        path: ~/.local/state/startup-devops-baseline/aws-test/terraform.tfstate
+        type: s3
+        # Private copy of infra/terraform/aws/backend-config/test.s3.tfbackend.example.
+        config_file: aws-test.tfbackend

@@ -62,38 +62,42 @@ check the region and state key, and set the allowed account ID. After preparing
 the personal tfvars, run `preflight --env aws-dev --check-inputs` to validate
 both files locally.
 
-The test root uses a local file. Replace the old test `backend_file` entry
-with the following block inside `terraform`:
+For a fresh test deployment, use the existing state bucket and the dedicated
+key `environments/test/terraform.tfstate`. Set the backend in the **test** entry
+of your private inventory. Replace the former local backend block in full.
 
 ```yaml
 backend:
-  type: local
-  path: ~/.local/state/startup-devops-baseline/aws-test/terraform.tfstate
+  type: s3
+  config_file: aws-test.tfbackend
 ```
 
-For an existing test deployment, set `path` to its original state file.
-For a new deployment choose a persistent path in your private operator directory.
-Relative paths resolve from the inventory directory. Each environment owns a
-separate state. Changing the address requires explicitly handling any existing
-state and resources. Keep the runtime-identities root and its persistent IAM
-roles separate.
-
-Run these from the repository root:
+Prepare the private backend file beside the inventory. Fill in the bucket,
+bucket region, KMS key ARN and allowed account from state-bootstrap. Keep the
+test key, encryption and native locking from the template.
 
 ```bash
 inventory="$HOME/.config/startup-devops-baseline/environments.yaml"
+cp -nT infra/terraform/aws/backend-config/test.s3.tfbackend.example \
+  "$(dirname "$inventory")/aws-test.tfbackend"
+# Fill in the private backend and test tfvars before running these commands.
 .venv/bin/python scripts/ops/cli.py preflight --env aws-test --config "$inventory" --check-inputs
-.venv/bin/python -m unittest discover -s tests/ops -p 'test_aws_state.py' -v
+.venv/bin/python scripts/ops/cli.py plan --env aws-test --config "$inventory"
 ```
 
-Personal preflight reads private tfvars and the selected local snapshot and
-reports its status. Repository-example preflight and S3 preflight report
-`not-checked` for state contents. The optional live `plan` uses AWS credentials,
-checks the caller and reads the selected snapshot before Terraform initialization.
-It reports its address, lineage, serial and managed instance count when present.
-An existing empty snapshot keeps its lineage. A missing snapshot with a
-same-name EKS cluster or baseline VPC blocks creation. Read failures stop the
-operation. Test infrastructure creation follows in the next lifecycle increment.
+Preflight validates the files offline. Plan reads the selected S3 key and prints
+its address and state status before init. For this fresh start expect `absent`.
+An existing snapshot, including one with zero resources, has its own lineage;
+the standard plan reopens it. If a fresh state was expected, review that
+address before provisioning. Access or KMS failures stop the plan. A missing
+key also triggers checks for an existing cluster and VPC.
+
+A previous state under the operator's external state directory can stay there.
+If a retired `terraform.tfstate` exists directly in the test Terraform root,
+move that specific file to a private location outside the checkout before the
+first S3 plan. Confirm its resources are retired first. The CLI uses a temporary
+Terraform data directory and initializes with `-reconfigure`. Keep the bucket
+and KMS key in place. Test provisioning is a separate lifecycle increment.
 
 ## Check personal inputs
 
@@ -104,7 +108,7 @@ Existing personal files may be used directly.
 | Input | Preparation for aws-dev |
 | --- | --- |
 | Inventory | Select the real 12-digit account, region, operator profile or role, and `infra/terraform/aws/environments/dev`. The operator identity and the Actions runtime role serve different purposes. |
-| Private backend file | Use the dev values from the retained state-bootstrap output `backend_configuration`. Add `allowed_account_ids` for the expected account as shown in `infra/terraform/aws/backend-config/dev.s3.tfbackend.example`. Check the bucket, KMS key, region, encryption, native lockfile and environment key. |
+| Private backend file | Use the selected environment from the retained state-bootstrap output `backend_configuration`. Set `allowed_account_ids` to the expected account in the matching S3 template. Check the bucket, KMS key, region, encryption, native lockfile and environment key. |
 | Private tfvars | Start from `infra/terraform/aws/environments/dev/terraform.tfvars.example`. Review project, region, DNS and endpoint settings. For a public endpoint supply restricted IPv4 CIDRs through the private file. For a private endpoint confirm the operator and runner have a network path in 4B. |
 | Runtime identity | Use the retained runtime-identities output `aws_dev_runtime_role_arn` for `github_actions_runtime_role_arn`. Set `enable_github_actions_runtime_identity = true` in the intended environment file when preparing runtime access. This makes the future environment plan include the EKS access entry. |
 | Capacity and retention | Review the reported min/desired/max, NAT and backup settings before any plan. The dev root has a tracked `observability-capacity.auto.tfvars` at 4/4/4. Passing the unedited example as the explicit var-file sets 2/2/3. Check that the chosen capacity fits the platform. |

@@ -49,8 +49,9 @@ python3 scripts/ops/cli.py show --env aws-dev | jq '.configuration.argocd'
 3. Keep your AWS profiles, account IDs, regions, tfvars and state addresses.
    For a dev entry using `terraform.backend_file`, move its existing path to
    `terraform.backend.config_file` and set `terraform.backend.type: s3`.
-   For local Terraform state use `terraform.backend.type: local` and set
-   `terraform.backend.path` to the actual selected state file.
+   For a fresh test environment, set the backend type to `s3` and
+   `config_file` to `aws-test.tfbackend`. Use the dedicated test key.
+   Follow [AWS preparation](aws-transition.md#select-the-state-address) for prior local state.
 4. Run `show` for each inventory key. Check `environment`, `driver`,
    `delivery_environment` and `gitops_root` before running `preflight`.
    These inventory edits do not migrate Terraform state.
@@ -105,4 +106,4 @@ The inventory does not create IAM profiles or permissions. Future AWS execution
 must resolve effective identities, compare the expected target account, separate
 backend and infrastructure identities where necessary, and use reviewed plan/apply
 and destroy flows. Existing restricted application runtime roles must not silently
-become infrastructure provisioning roles. No IAM/state/backend change is included.
+become infrastructure provisioning roles.

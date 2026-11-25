@@ -145,7 +145,7 @@ class AwsDeployTests(unittest.TestCase):
         self.assertEqual(g.aws.call_count, 2)
 
     def test_deploy_entry_rebuild_and_blocked_redeploy(self):
-        report = {"cluster": "startup-devops-baseline-dev", "gitops_root": "clusters/aws/overlays/dev/root-app.yaml"}
+        report = {"stage": "dev", "cluster": "startup-devops-baseline-dev", "gitops_root": "clusters/aws/overlays/dev/root-app.yaml"}
         name = report["cluster"]
         out = {"environment_name": "dev", "eks_cluster_name": name, "eks_cluster_endpoint": "https://eks",
                "vpc_id": "vpc-1"}
@@ -194,10 +194,12 @@ class AwsDeployTests(unittest.TestCase):
                         patch.object(deploy.Cluster, "k", side_effect=kubectl), \
                         patch.object(deploy, "prepare") as prepare, patch.object(deploy, "gitops") as gitops, \
                         patch.object(demo, "seed_database") as seed, patch.object(demo, "reconcile_dns") as dns, \
-                        patch.object(deploy, "check_apps") as verify, redirect_stdout(io.StringIO()), \
+                        patch.object(deploy, "check_apps") as verify, redirect_stdout(io.StringIO()) as log, \
                         redirect_stderr(io.StringIO()) as errors:
                     result = cli.main(["--config", str(inventory), "deploy", "--env", "aws-dev"])
+                    self.assertIn(f"Dedicated kubeconfig: {folder / 'kubeconfig'}", log.getvalue())
                     if scenario == "fresh":
+                        self.assertIn(deploy.kubectl_hint(folder / "kubeconfig", name), log.getvalue())
                         self.assertEqual(result, 0)
                         self.assertEqual(gitops.call_args.args[-1], manifest)
                         seed.assert_called_once()

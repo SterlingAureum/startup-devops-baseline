@@ -18,8 +18,8 @@ from aws_provision import provision
 from configuration import ROOT, OpsError, load_yaml, require
 from connections import atomic_write, aws_private_path, kubectl_hint
 
-PHASES = ["check personal inventory, remote Terraform outputs and live EKS identity",
-          "refresh dedicated kubeconfig", "check root Application and target namespaces for deletion",
+CONNECTION_PHASES = ["check selected Terraform outputs and live EKS identity", "refresh dedicated kubeconfig"]
+PHASES = ["check root Application and target namespaces for deletion",
           "prepare IRSA and Grafana credentials",
           "install pinned Argo CD and seed ALB Application", "sync dev root and CNPG backup destination",
           "recover the ESO consumer and reconcile the standard demo database credential",
@@ -230,18 +230,18 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
         if operation != "deploy":
             variables = local_file(tf["variables_file"], base)
             provision(g, terraform, tfenv, variables, Path(tmp) / "create.tfplan", folder, confirm)
-            if operation != "up" or confirm is None:
+            if confirm is None:
                 return
         outputs = json.loads(run(terraform + ["output", "-json"], tfenv, private=True))
         out = {key: value["value"] for key, value in outputs.items()}
-        require(out.get("eks_cluster_name"), "Dev infrastructure is absent from outputs; use plan then up for the selected inventory entry")
-        require(out.get("environment_name") == "dev" and out["eks_cluster_name"] == g.context,
+        require(out.get("eks_cluster_name"), "Infrastructure is absent from outputs; run plan then create for the selected inventory entry")
+        require(out.get("environment_name") == report["stage"] and out["eks_cluster_name"] == g.context,
                 "Terraform output cluster differs from inventory")
         try:
             live = json.loads(g.aws("eks", "describe-cluster", "--name", g.context))["cluster"]
         except OpsError as error:
             if "(ResourceNotFoundException)" in str(error):
-                raise OpsError(f"EKS cluster {g.context} is absent; use plan then up for the selected inventory entry") from error
+                raise OpsError(f"EKS cluster {g.context} is absent; use plan then create for the selected inventory entry") from error
             raise
         require(live["status"] == "ACTIVE" and live["endpoint"] == out["eks_cluster_endpoint"]
                 and live["resourcesVpcConfig"]["vpcId"] == out["vpc_id"], "Live EKS differs from Terraform")
@@ -252,6 +252,9 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
                 "Generated kubeconfig differs from EKS")
         atomic_write(g.path, raw)
         print(f"Dedicated kubeconfig: {g.path}", flush=True)
+        if operation == "create":
+            print(kubectl_hint(g.path, g.context), flush=True)
+            return
         root = load_yaml((ROOT / report["gitops_root"]).read_text())
         children = {doc["metadata"]["name"]: doc for doc in kustomize(root["spec"]["source"]["path"])
                     if doc and doc["kind"] == "Application"}

@@ -119,11 +119,12 @@ class ProvisionTests(unittest.TestCase):
                 self.assertEqual(set(state.splitlines()), {"terraform_data.cluster", "terraform_data.keep"})
 
     def test_real_entry_dispatch_stops_at_selected_phase(self):
-        for command, confirm, fails in [("plan", False, False), ("up", False, False), ("create", True, False),
+        for command, confirm, fails in [("plan", False, False), ("up", False, False), ("create", False, False),
+                                        ("create", True, False), ("create", True, True),
                                         ("up", True, True), ("up", True, False)]:
             with self.subTest(command=command, confirm=confirm, fails=fails), tempfile.TemporaryDirectory() as tmp:
                 folder = Path(tmp)
-                report = {"cluster": self.name, "gitops_root": "clusters/aws/overlays/dev/root-app.yaml"}
+                report = {"stage": "dev", "cluster": self.name, "gitops_root": "clusters/aws/overlays/dev/root-app.yaml"}
                 outputs = {"environment_name": "dev", "eks_cluster_name": self.name,
                            "eks_cluster_endpoint": "https://eks", "vpc_id": "vpc"}
                 events = []
@@ -156,14 +157,20 @@ class ProvisionTests(unittest.TestCase):
                         patch.object(deploy, "provision", side_effect=provision_step), patch.object(deploy, "run", side_effect=run), \
                         patch.object(deploy, "aws_private_path", return_value=folder / "kubeconfig"), \
                         patch.object(deploy, "kustomize", return_value=[]), patch.object(deploy, "check_deploy_target"), \
-                        patch.object(deploy.Cluster, "k"), patch.object(deploy, "prepare"), patch.object(deploy, "gitops"), \
+                        patch.object(deploy.Cluster, "k") as kubectl, patch.object(deploy, "prepare"), patch.object(deploy, "gitops"), \
                         patch.object(deploy, "complete"), patch.object(deploy, "check_apps") as healthy, \
-                        redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                        redirect_stdout(io.StringIO()) as log, redirect_stderr(io.StringIO()):
                     result = cli.main(["--config", str(EXAMPLE_CONFIG), command, "--env", "aws-dev"] + (["--confirm", self.name] if confirm else []))
                     self.assertEqual(result, 1 if fails else 0)
                     bootstrap = command == "up" and confirm and not fails
-                    self.assertEqual(events, ["init", "provision"] + (["output"] if bootstrap else []))
+                    self.assertEqual(events, ["init", "provision"] + (["output"] if confirm and not fails else []))
                     self.assertEqual(healthy.called, bootstrap)
+                    self.assertEqual(kubectl.called, bootstrap)
+                    saved = confirm and not fails
+                    path = folder / "kubeconfig"
+                    self.assertEqual(path.exists(), saved)
+                    self.assertEqual(f"Dedicated kubeconfig: {path}" in log.getvalue(), saved)
+                    self.assertEqual(deploy.kubectl_hint(path, self.name) in log.getvalue(), saved)
 
     def test_hidden_plan_flags_block_before_init(self):
         env = {"terraform": {"root": "infra/terraform/aws/environments/dev", "variables_file": "dev.tfvars",

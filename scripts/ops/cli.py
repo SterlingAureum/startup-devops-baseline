@@ -208,12 +208,14 @@ def main(argv=None, local_only=False):
                 destroy(args.aws_target, env, args.config, args.confirm, args.retain_backups)
             return 0
         if env["driver"] == "aws" and args.command in ("plan", "create", "up", "deploy"):
-            from aws_deploy import deploy, PHASES
+            from aws_deploy import CONNECTION_PHASES, deploy, PHASES
             if args.dry_run:
                 from aws_provision import PHASES as provision_steps, APPLY
                 steps = list(provision_steps) if args.command != "deploy" else []
                 if args.command in ("create", "up"):
                     steps.append(APPLY)
+                if args.command != "plan":
+                    steps.extend(CONNECTION_PHASES)
                 if args.command in ("deploy", "up"):
                     steps.extend(PHASES)
                 print(json.dumps({**selection, "command": args.command, "steps": steps, "executed": False}, indent=2))

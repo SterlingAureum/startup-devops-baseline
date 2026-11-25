@@ -47,8 +47,28 @@ class StateTests(unittest.TestCase):
                 self.assertEqual(report["state_status"], "not-checked")
             replies = [json.dumps({"Account": ACCOUNT}), OpsError("(NoSuchKey) when calling the GetObject operation"),
                        json.dumps({"clusters": []}), json.dumps({"Vpcs": []})]
-            with patch.object(aws_state, "ROOT", folder), patch.object(aws_deploy.Cluster, "aws", side_effect=replies) as aws, \
-                    patch.object(aws_deploy, "run") as tf, patch.object(aws_deploy, "provision") as plan, \
+            kubeconfig = folder / "private" / "kubeconfig"
+            endpoint = "https://eks.test.invalid"
+            live = {"status": "ACTIVE", "endpoint": endpoint, "resourcesVpcConfig": {"vpcId": "vpc-test"}}
+            outputs = {"eks_cluster_name": TARGET[1], "environment_name": "test",
+                       "eks_cluster_endpoint": endpoint, "vpc_id": "vpc-test"}
+            raw = json.dumps({"current-context": TARGET[1], "clusters": [{"cluster": {"server": endpoint}}]})
+            def execute(argv, env, private=False):
+                if "init" in argv:
+                    self.assertTrue(argv[1].endswith("/infra/terraform/aws/environments/test"))
+                    self.assertIn("-backend-config=" + str(backend), argv)
+                    return ""
+                if "output" in argv:
+                    return json.dumps({key: {"value": value} for key, value in outputs.items()})
+                self.assertEqual(argv[:3], ["aws", "eks", "update-kubeconfig"])
+                self.assertIn("--dry-run", argv)
+                self.assertEqual(argv[argv.index("--alias") + 1], TARGET[1])
+                self.assertEqual(argv[argv.index("--name") + 1], TARGET[1])
+                self.assertEqual(env["AWS_PROFILE"], entry["aws"]["profile"])
+                return raw
+            with patch.object(aws_deploy, "aws_private_path", return_value=kubeconfig), \
+                    patch.object(aws_state, "ROOT", folder), patch.object(aws_deploy.Cluster, "aws", side_effect=replies) as aws, \
+                    patch.object(aws_deploy, "run", side_effect=execute) as tf, patch.object(aws_deploy, "provision") as plan, \
                     patch.object(aws_deploy, "lifecycle_lock"), redirect_stdout(io.StringIO()) as output:
                 self.assertEqual(cli.main(["plan", "--env", "team", "--config", str(config)]), 0)
                 self.assertEqual(aws.call_args_list[1].args[0:6], ("s3api", "get-object", "--bucket", "fixture-only",
@@ -63,13 +83,16 @@ class StateTests(unittest.TestCase):
                     self.assertEqual(cli.main(command + ["--confirm", "startup-devops-baseline-dev"]), 1)
                 self.assertEqual(aws.call_count, len(replies))
                 for confirm in (None, TARGET[1]):
-                    aws.side_effect = replies
+                    aws.side_effect = replies + ([json.dumps({"cluster": live})] if confirm else [])
                     tf.reset_mock()
                     self.assertEqual(cli.main(command + (["--confirm", confirm] if confirm else [])), 0)
-                    tf.assert_called_once()
-                    argv = tf.call_args.args[0]
-                    self.assertTrue(argv[1].endswith("/infra/terraform/aws/environments/test"))
-                    self.assertIn("-backend-config=" + str(backend), argv)
+                    self.assertEqual(tf.call_count, 3 if confirm else 1)
+                    self.assertEqual(kubeconfig.exists(), bool(confirm))
+                    self.assertEqual(f"Dedicated kubeconfig: {kubeconfig}" in output.getvalue(), bool(confirm))
+                    if confirm:
+                        self.assertEqual(kubeconfig.read_text(), raw)
+                        self.assertEqual(kubeconfig.stat().st_mode & 0o777, 0o600)
+                        self.assertIn(aws_deploy.kubectl_hint(kubeconfig, TARGET[1]), output.getvalue())
                     self.assertEqual(plan.call_args.args[3], folder / "vars.tfvars.json")
                     self.assertEqual(plan.call_args.args[-1], confirm)
                 with redirect_stderr(io.StringIO()):

@@ -107,9 +107,12 @@ With the default project name the infrastructure command is:
 ```
 
 Without confirmation, `create` previews the changes. A confirmed call makes and
-checks a fresh plan, applies that saved plan to the selected test backend, then
-returns. The test cluster incurs AWS charges from creation. You can run `destroy`
-immediately after `create`. Test GitOps bootstrap is a separate increment.
+checks a fresh plan, applies it, and saves the dedicated kubeconfig. Look for
+`Dedicated kubeconfig:` and copy the following `kubectl ... get nodes` command.
+To find the path again, run `show` with the same inventory and environment and
+read `paths.kubeconfig`. The file is scoped to your AWS account, region and cluster.
+The test cluster incurs AWS charges from creation. You can run `destroy` immediately
+after `create`. Test GitOps bootstrap is a separate increment.
 
 ## Check personal inputs
 
@@ -177,7 +180,9 @@ The normal dev root can create or update resources. A delete or replacement,
 a same-name cluster outside a creation plan's state, or an unfinished network
 teardown recorded for the same VPC stops provisioning before apply.
 
-Use `create` with the same confirmation to finish after Terraform apply.
+Use `create` with the same confirmation to finish after saving the cluster connection.
+Both commands print the dedicated path. A successful `up` or `deploy` also prints
+a ready-to-run kubectl command after GitOps convergence.
 Without confirmation, `create` and `up` stop after the preview. `--dry-run`
 prints phases offline. After a partial apply, run `plan` again and review the
 remaining changes. After a successful apply and a bootstrap failure, resume

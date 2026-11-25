@@ -25,37 +25,42 @@ EMPTY = {"version": 4, "lineage": "080a7801-0ed1-4582-9e9d-9a520a812356",
 
 
 class StateTests(unittest.TestCase):
-    def test_real_test_entry_resolves_relative_state_and_stops_at_plan(self):
+    def test_fresh_test_entry_uses_s3_on_first_init_and_stops_at_plan(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
             config = folder / "environments.yaml"
             entry = environment(EXAMPLE_CONFIG, "aws-test")
-            entry["terraform"].update(variables_file="vars.tfvars.json", backend={"type": "local", "path": "data/state"})
+            entry["terraform"]["variables_file"] = "vars.tfvars.json"
             config.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"team": entry}}))
             (folder / "vars.tfvars.json").write_text(json.dumps({
                 "enable_github_actions_runtime_identity": True, "eks_public_access_cidrs": ["192.0.2.1/32"],
                 "github_actions_runtime_role_arn": f"arn:aws:iam::{ACCOUNT}:role/{TARGET[1]}-github-runtime-read-role"}))
-            dest = folder / "data/state"
-            def aws(service, action):
-                self.assertEqual((service, action), ("sts", "get-caller-identity"))
-                return json.dumps({"Account": ACCOUNT})
+            backend = folder / "aws-test.tfbackend"
+            backend.write_text(f'bucket = "fixture-only"\nkey = "environments/test/terraform.tfstate"\n'
+                               f'region = "us-east-1"\nallowed_account_ids = ["{ACCOUNT}"]\n'
+                               f'kms_key_id = "arn:aws:kms:us-east-1:{ACCOUNT}:key/test-key"\n'
+                               'encrypt = true\nuse_lockfile = true\n')
             with redirect_stdout(io.StringIO()) as output:
                 self.assertEqual(cli.main(["preflight", "--env", "team", "--config", str(config), "--check-inputs"]), 0)
-                self.assertEqual(json.loads(output.getvalue())["state_status"], "absent")
-            self.assertFalse(dest.parent.exists())
-            dest.parent.mkdir()
-            dest.write_text(json.dumps(EMPTY))
-            with patch.object(aws_deploy.Cluster, "aws", side_effect=aws), patch.object(aws_deploy, "run") as tf, \
-                    patch.object(aws_deploy, "provision") as plan, patch.object(aws_deploy, "lifecycle_lock"), \
-                    redirect_stdout(io.StringIO()) as output:
+                report = json.loads(output.getvalue())
+                self.assertEqual(report["state_address"], "s3://fixture-only/environments/test/terraform.tfstate")
+                self.assertEqual(report["state_status"], "not-checked")
+            replies = [json.dumps({"Account": ACCOUNT}), OpsError("(NoSuchKey) when calling the GetObject operation"),
+                       json.dumps({"clusters": []}), json.dumps({"Vpcs": []})]
+            with patch.object(aws_state, "ROOT", folder), patch.object(aws_deploy.Cluster, "aws", side_effect=replies) as aws, \
+                    patch.object(aws_deploy, "run") as tf, patch.object(aws_deploy, "provision") as plan, \
+                    patch.object(aws_deploy, "lifecycle_lock"), redirect_stdout(io.StringIO()) as output:
                 self.assertEqual(cli.main(["plan", "--env", "team", "--config", str(config)]), 0)
-                self.assertIn("-backend-config=path=" + str(dest), tf.call_args.args[0])
-                self.assertIn('"serial": 19', output.getvalue())
+                self.assertEqual(aws.call_args_list[1].args[0:6], ("s3api", "get-object", "--bucket", "fixture-only",
+                                                                    "--key", "environments/test/terraform.tfstate"))
+                self.assertIn('"status": "absent"', output.getvalue())
+                tf.assert_called_once()
+                self.assertEqual(tf.call_args.args[0][-4:], ["init", "-input=false", "-reconfigure",
+                                                             "-backend-config=" + str(backend)])
                 self.assertIsNone(plan.call_args.args[-1])
                 with redirect_stderr(io.StringIO()):
                     self.assertEqual(cli.main(["up", "--env", "team", "--config", str(config), "--confirm", TARGET[1]]), 1)
                 self.assertEqual(plan.call_count, 1)
-            self.assertEqual(json.loads(dest.read_text()), EMPTY)
 
     def test_unreadable_malformed_cache_and_wrong_state_are_errors(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -97,6 +102,21 @@ class StateTests(unittest.TestCase):
                         aws_state.check_selected_state(g, report, "plan")
                 else:
                     aws_state.check_selected_state(g, report, "plan")
+
+    def test_missing_s3_test_key_with_retired_root_state_stops_before_init(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            local_state = Path(tmp) / "terraform.tfstate"
+            local_state.write_text(json.dumps(EMPTY))
+            g = Mock(context=TARGET[1])
+            g.aws.side_effect = OpsError("(NoSuchKey) when calling the GetObject operation")
+            report = {"environment": "aws-test", "stage": "test", "declared_backend": "s3",
+                      "expected_account_id": ACCOUNT, "region": TARGET[3], "terraform_root": tmp,
+                      "state_address": "s3://bucket/environments/test/terraform.tfstate", "state_bucket": "bucket",
+                      "backend_file_key": "environments/test/terraform.tfstate", "state_region": TARGET[3]}
+            with redirect_stdout(io.StringIO()), self.assertRaisesRegex(OpsError, "terraform.tfstate exists"):
+                aws_state.check_selected_state(g, report, "plan")
+            g.aws.assert_called_once()
+            self.assertEqual(json.loads(local_state.read_text()), EMPTY)
 
     def test_s3_read_error_blocks_dev_before_terraform_init(self):
         g = Mock(context="startup-devops-baseline-dev", env={})

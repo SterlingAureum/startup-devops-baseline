@@ -1,7 +1,11 @@
 # Run 'python3 scripts/ops/cli.py init-config' to create your personal inventory.
 # By default it lives in ~/.config/startup-devops-baseline/environments.yaml.
-# Relative tfvars, backend config and state file paths start at this inventory's directory.
-# terraform.root is relative to the CLI repository. Use 'show --env NAME' to see resolved input paths.
+# Copy the AWS input templates listed below to their personal paths and fill them in.
+# Relative input paths start in the directory containing the inventory selected by --config.
+# For example, with --config /srv/baseline/environments.yaml, aws-test.tfvars means /srv/baseline/aws-test.tfvars.
+# You can also use a subdirectory (inputs/aws-test.tfvars), an absolute path, or a path starting with ~/.
+# terraform.root is relative to the CLI repository. To see the resolved paths, run:
+# python3 scripts/ops/cli.py show --env aws-test   # add --config FILE for a custom inventory
 # No access keys, tokens, passwords, kubeconfig or Terraform state belong here.
 schema_version: 2
 # --env selects a key exactly. You may rename a key without renaming any resources.
@@ -38,11 +42,13 @@ environments:
       profile: baseline-dev
     terraform:
       root: infra/terraform/aws/environments/dev
-      # Start from infra/terraform/aws/environments/dev/terraform.tfvars.example.
+      # Copy infra/terraform/aws/environments/dev/terraform.tfvars.example
+      # to ~/.config/startup-devops-baseline/aws-dev.tfvars with the default inventory.
       variables_file: aws-dev.tfvars
       backend:
         type: s3
-        # Private copy of infra/terraform/aws/backend-config/dev.s3.tfbackend.example.
+        # Copy infra/terraform/aws/backend-config/dev.s3.tfbackend.example
+        # to ~/.config/startup-devops-baseline/aws-dev.tfbackend with the default inventory.
         config_file: aws-dev.tfbackend
   aws-test:
     driver: aws
@@ -53,9 +59,11 @@ environments:
       profile: baseline-test
     terraform:
       root: infra/terraform/aws/environments/test
-      # Start from infra/terraform/aws/environments/test/terraform.tfvars.example.
+      # Copy infra/terraform/aws/environments/test/terraform.tfvars.example
+      # to ~/.config/startup-devops-baseline/aws-test.tfvars with the default inventory.
       variables_file: aws-test.tfvars
       backend:
         type: s3
-        # Private copy of infra/terraform/aws/backend-config/test.s3.tfbackend.example.
+        # Copy infra/terraform/aws/backend-config/test.s3.tfbackend.example
+        # to ~/.config/startup-devops-baseline/aws-test.tfbackend with the default inventory.
         config_file: aws-test.tfbackend

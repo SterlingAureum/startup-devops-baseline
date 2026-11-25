@@ -35,8 +35,8 @@ Both commands report `environment: team-a-test` and `delivery_environment: aws-t
 The standard Terraform root selects the physical infrastructure stage.
 Preflight reads the cluster name from the selected Terraform inputs and checks
 the overlay against it. The test runner labels and GitHub Environment remain
-bound to `aws-test`. Both personal targets support `plan` and `create`. The dev target also supports
-`up/deploy/destroy`. Confirmation uses the physical cluster name.
+bound to `aws-test`. Both personal targets support `plan`, `create` and `destroy`.
+The dev target also supports `up` and `deploy`. Confirmation uses the physical cluster name.
 
 ### Select the state address
 
@@ -108,8 +108,8 @@ With the default project name the infrastructure command is:
 
 Without confirmation, `create` previews the changes. A confirmed call makes and
 checks a fresh plan, applies that saved plan to the selected test backend, then
-returns. The test cluster incurs AWS charges from creation. Test GitOps bootstrap
-and CLI teardown are separate lifecycle increments.
+returns. The test cluster incurs AWS charges from creation. You can run `destroy`
+immediately after `create`. Test GitOps bootstrap is a separate increment.
 
 ## Check personal inputs
 
@@ -226,10 +226,7 @@ export KUBECONFIG="$kubeconfig"
 kubectl -n argocd get applications
 ```
 
-The following destroy entrypoint handles a provisioned standard personal dev stack. AWS test remains
-at the preparation stage. Archived v0.12 executors are historical material.
-
-### Destroy the personal dev cluster
+### Destroy a personal dev or test cluster
 
 Run from the operator workstation after stopping other deploys and runtime jobs.
 Use the same private inventory, operator profile and backend as deployment.
@@ -243,20 +240,34 @@ checks its own fresh plan before the first cluster mutation.
 .venv/bin/python scripts/ops/cli.py destroy --env aws-dev --config ~/.config/startup-devops-baseline/environments.yaml --confirm startup-devops-baseline-dev
 ```
 
-Default destroy releases the standard dev PVCs without creating EBS snapshots.
+For test, preview the selected S3 state and check the account, cluster, VPC and retained addresses
+before confirming with the physical cluster name printed by the CLI.
+
+```bash
+.venv/bin/python scripts/ops/cli.py destroy --env aws-test --config "$inventory"
+.venv/bin/python scripts/ops/cli.py destroy --env aws-test --config "$inventory" --confirm startup-devops-baseline-test
+```
+
+A cluster with infrastructure only still requires Kubernetes API access to check for workloads
+and persistent volumes. The CLI scales down the Argo CD controller when present.
+
+Default destroy releases the standard PVCs without creating EBS snapshots.
 To take crash-consistent snapshots of those volumes and keep the CNPG backup
 bucket and the demo DB secret, add `--retain-backups` to both commands.
 Snapshot mode requires EC2 snapshot creation, tagging and read permissions.
 Previously recorded snapshots are listed and preserved in either mode.
 
-For a fresh dev installation the EKS cluster, CNPG bucket and demo DB secret
-receive the same creation-plan tag when created in one Terraform plan. A
-normal destroy can remove the two data resources only with a matching marker.
+For a fresh dev or test installation the EKS cluster, CNPG bucket and demo DB secret
+receive the same creation-plan tag (`BaselineDevCreationPlan`, the historical key)
+when created in one Terraform plan. A normal destroy can remove the two data resources only with a matching marker.
 Bucket deletion also requires its stored force_destroy setting and includes
 its objects and versions. Secrets Manager uses the resource's configured
-recovery window. Legacy, imported without matching markers, or separately
-created data resources are retained. Existing tags are not backfilled on
-upgrade. Treat the disposable bucket as exclusive to this environment.
+recovery window. The test example selects seven days, so a deleted secret name may
+be unavailable for an immediate rebuild. For repeated disposable test runs, set
+`external_secrets_recovery_window_in_days = 0` before creation if immediate deletion is intended.
+Destroy retains unmarked test buckets and secrets from earlier runs, along with
+imported or separately created data resources whose ownership markers differ. Existing tags are not
+backfilled on upgrade. Treat the disposable bucket as exclusive to this environment.
 The preview lists the data resource names, Terraform addresses, shared state
 location and recorded snapshots. Shared state, KMS and persistent runtime
 identities belong to separate roots. Retained backups and secrets can incur
@@ -301,4 +312,4 @@ then takes fresh snapshots, including when the volume IDs are unchanged.
 Deploy and destroy share a workstation lock. Keep the local receipt under
 `~/.local/state/startup-devops-baseline/` for recovery after partial apply.
 Completion verifies the EKS cluster and VPC are absent and only the reported
-retained addresses remain in the dev state.
+retained addresses remain in the selected state.

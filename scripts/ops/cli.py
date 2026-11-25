@@ -50,7 +50,7 @@ def parser():
     value.add_argument("--adopt-demo-secret-version", metavar="AWSCURRENT_VERSION_ID",
                        help="AWS dev deploy/up: transfer this exact existing standard demo DB version to CLI management")
     value.add_argument("--retain-backups", action="store_true",
-                       help="AWS dev destroy: snapshot standard PVCs and keep the CNPG bucket and demo DB secret")
+                       help="AWS dev/test destroy: snapshot standard PVCs and keep the CNPG bucket and demo DB secret")
     value.add_argument("--kubeconfig-file", help="Explicit shared config target for connect only")
     value.add_argument("--check-inputs", action="store_true", help="Preflight: check kind deployment tools and render the selected Git revision, or inspect AWS tfvars and backend inputs")
     value.add_argument("--dry-run", action="store_true", help="Read config and print phases; invoke no tools and write no files")
@@ -64,8 +64,8 @@ def configure(args, local_only=False):
     args.aws_target = standard_aws_target(args.env, env, catalog, args.root_manifest) if env["driver"] == "aws" else None
     dev_lifecycle = args.aws_target is not None and args.aws_target.stage == "dev"
     require(not args.check_inputs or args.command == "preflight", "--check-inputs is only valid for preflight")
-    require(not args.retain_backups or (dev_lifecycle and args.command == "destroy"),
-            "--retain-backups applies only to personal aws-dev destroy")
+    require(not args.retain_backups or (args.aws_target is not None and args.command == "destroy"),
+            "--retain-backups applies only to personal AWS dev/test destroy")
     if args.adopt_demo_secret_version is not None:
         require(dev_lifecycle and args.command in ("deploy", "up")
                 and re.fullmatch(r"[A-Za-z0-9-]{32,64}", args.adopt_demo_secret_version),
@@ -77,8 +77,8 @@ def configure(args, local_only=False):
             require(env["argocd"]["namespace"] == "argocd", "AWS root requires the argocd namespace")
         require(args.command == "show" or args.aws_target is not None,
                 "AWS preflight and lifecycle commands require a standard personal dev or test Terraform root")
-        require(args.command in ("show", "preflight", "plan", "create") or (dev_lifecycle and args.command in ("up", "deploy", "destroy")),
-                "Supported AWS operations: show/preflight/plan/create on personal dev/test, up/deploy/destroy on dev")
+        require(args.command in ("show", "preflight", "plan", "create", "destroy") or (dev_lifecycle and args.command in ("up", "deploy")),
+                "Supported AWS operations: show/preflight/plan/create/destroy on personal dev/test, up/deploy on dev")
         require(args.confirm is None or args.command in ("create", "up", "destroy"), "AWS --confirm applies to create, up or destroy")
         require(not any(getattr(args, key) is not None for key in ("cluster", "repo_url", "revision", "timeout", "http_port", "https_port", "node_image", "argocd_manifest", "kubeconfig_file")), "AWS inspection does not accept kind command overrides")
         return env
@@ -277,7 +277,7 @@ def main(argv=None, local_only=False):
             print("AWS provisioning interrupted. Rerun plan to inspect current state.", file=sys.stderr)
             return 130
         if args.aws_target and args.command == "destroy":
-            print("Dev teardown interrupted. Check the next destroy preview before retrying.", file=sys.stderr)
+            print(f"Teardown of {args.env} interrupted. Check the next destroy preview before retrying.", file=sys.stderr)
             return 130
         raise
     except (OpsError, OSError, subprocess.SubprocessError, yaml.YAMLError, KeyError, TypeError, ValueError) as error:

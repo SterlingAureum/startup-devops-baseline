@@ -20,7 +20,7 @@ resource "aws_s3_bucket" "this" {
 
   tags = merge(local.common_tags, {
     Name = local.bucket_name
-  }, var.environment == "dev" ? { BaselineDevCreationPlan = plantimestamp() } : {})
+  }, contains(["dev", "test"], var.environment) ? { BaselineDevCreationPlan = plantimestamp() } : {})
 
   lifecycle {
     # Existing or retained resources keep their original ownership marker.

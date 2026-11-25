@@ -77,8 +77,8 @@ def configure(args, local_only=False):
             require(env["argocd"]["namespace"] == "argocd", "AWS root requires the argocd namespace")
         require(args.command == "show" or args.aws_target is not None,
                 "AWS preflight and lifecycle commands require a standard personal dev or test Terraform root")
-        require(args.command in ("show", "preflight", "plan") or (dev_lifecycle and args.command in ("create", "up", "deploy", "destroy")),
-                "Supported AWS operations: show/preflight/plan on personal dev/test, create/up/deploy/destroy on dev")
+        require(args.command in ("show", "preflight", "plan", "create") or (dev_lifecycle and args.command in ("up", "deploy", "destroy")),
+                "Supported AWS operations: show/preflight/plan/create on personal dev/test, up/deploy/destroy on dev")
         require(args.confirm is None or args.command in ("create", "up", "destroy"), "AWS --confirm applies to create, up or destroy")
         require(not any(getattr(args, key) is not None for key in ("cluster", "repo_url", "revision", "timeout", "http_port", "https_port", "node_image", "argocd_manifest", "kubeconfig_file")), "AWS inspection does not accept kind command overrides")
         return env
@@ -274,7 +274,7 @@ def main(argv=None, local_only=False):
         return 0
     except KeyboardInterrupt:
         if args.aws_target and args.command in ("plan", "create", "up"):
-            print("Dev provisioning interrupted. Rerun plan to inspect current state.", file=sys.stderr)
+            print("AWS provisioning interrupted. Rerun plan to inspect current state.", file=sys.stderr)
             return 130
         if args.aws_target and args.command == "destroy":
             print("Dev teardown interrupted. Check the next destroy preview before retrying.", file=sys.stderr)

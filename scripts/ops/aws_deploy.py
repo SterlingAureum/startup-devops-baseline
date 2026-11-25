@@ -43,7 +43,7 @@ def lifecycle_lock(account, region, cluster):
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as error:
-            raise OpsError("Another dev deploy or destroy is running on this workstation") from error
+            raise OpsError(f"Another lifecycle command for {cluster} is running on this workstation") from error
         yield folder
 
 

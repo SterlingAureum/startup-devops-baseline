@@ -1,4 +1,4 @@
-"""Release EKS-created dependencies in the selected dev VPC after cluster deletion."""
+"""Release EKS-created dependencies in the selected VPC after cluster deletion."""
 import json
 import re
 
@@ -12,7 +12,7 @@ def tags(entries):
 def release_network(g, journal, state):
     vpc = journal["vpc"]
     require(journal.get("cleaned") and g.context not in json.loads(g.aws("eks", "list-clusters"))["clusters"],
-            "Network cleanup requires completed Kubernetes cleanup and an absent dev cluster")
+            "Network cleanup requires completed Kubernetes cleanup and an absent selected cluster")
     scope = "Name=vpc-id,Values=" + vpc
 
     def inventory(action, key, *filters):
@@ -34,7 +34,7 @@ def release_network(g, journal, state):
         except OpsError as error:
             if "(" + missing + ")" not in str(error):
                 raise OpsError(f"Network cleanup stopped at {identifier}: {error}") from error
-        print("Released dev network dependency: " + identifier, flush=True)
+        print("Released cluster network dependency: " + identifier, flush=True)
 
     for eni in inventory("describe-network-interfaces", "NetworkInterfaces"):
         identifier = eni["NetworkInterfaceId"]
@@ -68,7 +68,7 @@ def release_network(g, journal, state):
                 and group["GroupName"].startswith("eks-cluster-sg-" + g.context + "-")
                 and labels.get("aws:eks:cluster-name") == g.context
                 and labels.get("kubernetes.io/cluster/" + g.context) == "owned",
-                "Review non-default security group in dev VPC: " + sg)
+                "Review non-default security group in selected VPC: " + sg)
         attached = json.loads(g.aws("ec2", "describe-network-interfaces", "--filters", "Name=group-id,Values=" + sg))
         interfaces = [e["NetworkInterfaceId"] for e in attached["NetworkInterfaces"]]
         require(not interfaces, f"Cluster security group {sg} still attached to {interfaces}")

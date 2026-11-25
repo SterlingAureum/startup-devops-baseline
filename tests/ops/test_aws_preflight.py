@@ -114,19 +114,21 @@ class AwsPreflightTests(unittest.TestCase):
                     self.assertIn(message, error.getvalue())
                     tool.assert_not_called()
 
-    def test_missing_key_and_test_alias_fail_before_external_tools(self):
+    def test_missing_key_fails_and_alias_selects_physical_test_root(self):
         with tempfile.TemporaryDirectory() as tmp:
             inventory = Path(tmp) / "inventory.yaml"
             entry = configuration.environment(EXAMPLE_CONFIG, "aws-test")
-            # Even a dev-looking key cannot enable dev mutations against the test root.
+            # An inventory alias can have a different name from its physical target.
             inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"aws-dev": entry}}))
             with patch.object(aws.subprocess, "run") as tool:
                 with redirect_stderr(io.StringIO()) as error:
                     self.assertEqual(cli.main(["destroy", "--env", "AWS-dev", "--config", str(inventory)]), 1)
                     self.assertIn("Unknown environment 'AWS-dev'. Available environments: aws-dev", error.getvalue())
                 for command in ("up", "deploy"):
-                    with self.subTest(command=command), redirect_stderr(io.StringIO()):
-                        self.assertEqual(cli.main([command, "--env", "aws-dev", "--config", str(inventory)]), 1)
+                    with self.subTest(command=command), redirect_stdout(io.StringIO()) as output:
+                        self.assertEqual(cli.main([command, "--env", "aws-dev", "--config", str(inventory), "--dry-run"]), 0)
+                        self.assertEqual(json.loads(output.getvalue())["gitops_root"],
+                                         "clusters/aws/overlays/test/root-app.yaml")
                 tool.assert_not_called()
 
     def test_dev_alias_confirmation_uses_real_cluster(self):

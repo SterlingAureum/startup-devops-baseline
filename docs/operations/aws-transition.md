@@ -35,8 +35,8 @@ Both commands report `environment: team-a-test` and `delivery_environment: aws-t
 The standard Terraform root selects the physical infrastructure stage.
 Preflight reads the cluster name from the selected Terraform inputs and checks
 the overlay against it. The test runner labels and GitHub Environment remain
-bound to `aws-test`. Both personal targets support `plan`, `create` and `destroy`.
-The dev target also supports `up` and `deploy`. Confirmation uses the physical cluster name.
+bound to `aws-test`. Both personal targets support `plan`, `create`, `deploy`, `up` and `destroy`.
+`deploy` bootstraps an existing cluster. A confirmed `up` provisions and then deploys. Confirmation uses the physical cluster name.
 
 ### Select the state address
 
@@ -112,7 +112,50 @@ checks a fresh plan, applies it, and saves the dedicated kubeconfig. Look for
 To find the path again, run `show` with the same inventory and environment and
 read `paths.kubeconfig`. The file is scoped to your AWS account, region and cluster.
 The test cluster incurs AWS charges from creation. You can run `destroy` immediately
-after `create`. Test GitOps bootstrap is a separate increment.
+after `create`.
+
+### Deploy the test GitOps stack
+
+After `create`, use its printed kubectl command to check the test nodes.
+From a checkout matching the merged main configuration, run:
+
+```bash
+.venv/bin/python scripts/ops/cli.py deploy --env aws-test --config "$inventory"
+```
+
+For a fresh environment the one-command alternative is:
+
+```bash
+.venv/bin/python scripts/ops/cli.py up --env aws-test --config "$inventory" --confirm startup-devops-baseline-test
+```
+
+Both paths apply `startup-devops-aws-test-root`. Its demo Application uses the
+image digest in `apps/demo-api/helm/values/releases/aws-test.yaml` on main. To
+qualify a promoted image, check that the reviewed promotion PR has merged and
+that this file contains the intended digest.
+
+During a canary update the test Rollout can pause at the configured manual step.
+In a second terminal, use the dedicated test connection to inspect the rollout
+and analysis. The deployment command continues waiting for convergence.
+
+```bash
+inventory="$HOME/.config/startup-devops-baseline/environments.yaml"
+kubeconfig="$(.venv/bin/python scripts/ops/cli.py show --env aws-test --config "$inventory" | jq -er '.paths.kubeconfig')" || exit 1
+export KUBECONFIG="$kubeconfig"
+kubectl -n startup-apps get rollouts.argoproj.io/demo-api
+kubectl -n startup-apps get analysisruns.argoproj.io
+```
+
+When the Rollout reaches the manual pause and the analysis is satisfactory,
+the operator can advance that step with the Argo Rollouts kubectl plugin:
+
+```bash
+kubectl argo rollouts promote demo-api -n startup-apps
+```
+
+After the root and its children are Synced and Healthy, run `delivery runtime`
+on main with `environment=aws-test` using the configured test runner to qualify
+the live release. A successful deploy reports GitOps convergence.
 
 ## Check personal inputs
 

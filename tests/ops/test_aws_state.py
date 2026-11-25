@@ -96,7 +96,8 @@ class StateTests(unittest.TestCase):
                     self.assertEqual(plan.call_args.args[3], folder / "vars.tfvars.json")
                     self.assertEqual(plan.call_args.args[-1], confirm)
                 with redirect_stderr(io.StringIO()):
-                    self.assertEqual(cli.main(["up", "--env", "team", "--config", str(config), "--confirm", TARGET[1]]), 1)
+                    self.assertEqual(cli.main(["up", "--env", "team", "--config", str(config),
+                                               "--confirm", "startup-devops-baseline-dev"]), 1)
                 self.assertEqual(plan.call_count, 3)
 
     def test_unreadable_malformed_cache_and_wrong_state_are_errors(self):

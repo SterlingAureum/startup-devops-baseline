@@ -132,6 +132,35 @@ class AwsDeployTests(unittest.TestCase):
             demo.refresh_consumers(g, "current")
             g.k.assert_called_once()
 
+    def test_manual_canary_pause_waits_for_operator_without_mutating_rollout(self):
+        g = Mock(context="cluster-test", path=Path("/tmp/test-config"))
+        kind = "rollouts.argoproj.io/demo-api"
+        workload = {
+            "metadata": {"generation": 3},
+            "spec": {"replicas": 2, "template": {"metadata": {"annotations": {demo.MARKER: "v1"}},
+                     "spec": {"containers": [{"env": [{"name": "DATABASE_URL", "valueFrom": {"secretKeyRef": {
+                         "name": "demo-api-postgresql", "key": "DATABASE_URL"}}}]}]}},
+                     "strategy": {"canary": {"steps": [{"pause": {"duration": "60s"}}, {"pause": {}}]}}},
+            "status": {"observedGeneration": "3", "readyReplicas": 2, "updatedReplicas": 2,
+                       "replicas": 2, "phase": "Paused", "currentStepIndex": 0},
+        }
+        g.obj.side_effect = lambda ns, k: workload if k == kind or k.startswith("crd/") else None
+        def wait(description, read):
+            if description == "standard demo database consumer":
+                return read()
+            self.assertFalse(read())  # Timed pause.
+            self.assertNotIn("awaits manual promotion", log.getvalue())
+            workload["status"]["currentStepIndex"] = 1
+            self.assertFalse(read())
+            self.assertFalse(read())
+            self.assertEqual(log.getvalue().count("awaits manual promotion at canary step 2"), 1)
+            workload["status"]["phase"] = "Healthy"
+            self.assertTrue(read())
+        g.until.side_effect = wait
+        with redirect_stdout(io.StringIO()) as log:
+            demo.refresh_consumers(g, "v1")
+        g.k.assert_not_called()
+
     def test_dns_existing_foreign_alias_is_preserved(self):
         g = Mock()
         g.until.return_value = "dev.elb.amazonaws.com"
@@ -145,9 +174,15 @@ class AwsDeployTests(unittest.TestCase):
         self.assertEqual(g.aws.call_count, 2)
 
     def test_deploy_entry_rebuild_and_blocked_redeploy(self):
-        report = {"stage": "dev", "cluster": "startup-devops-baseline-dev", "gitops_root": "clusters/aws/overlays/dev/root-app.yaml"}
+        self.check_deploy_entry("dev", "deploy")
+        self.check_deploy_entry("test", "deploy")
+        self.check_deploy_entry("test", "up")
+
+    def check_deploy_entry(self, stage, command):
+        report = {"stage": stage, "cluster": f"startup-devops-baseline-{stage}",
+                  "gitops_root": f"clusters/aws/overlays/{stage}/root-app.yaml"}
         name = report["cluster"]
-        out = {"environment_name": "dev", "eks_cluster_name": name, "eks_cluster_endpoint": "https://eks",
+        out = {"environment_name": stage, "eks_cluster_name": name, "eks_cluster_endpoint": "https://eks",
                "vpc_id": "vpc-1"}
         def aws(*args):
             if args[:2] == ("sts", "get-caller-identity"):
@@ -164,13 +199,13 @@ class AwsDeployTests(unittest.TestCase):
             self.fail("Unexpected command: " + str(args))
 
         for scenario in ("fresh", "deleting namespace", "deleting root"):
-            with self.subTest(scenario=scenario), tempfile.TemporaryDirectory() as tmp:
+            with self.subTest(stage=stage, command=command, scenario=scenario), tempfile.TemporaryDirectory() as tmp:
                 folder = Path(tmp)
-                entry = load_yaml(EXAMPLE_CONFIG.read_text())["environments"]["aws-dev"]
+                entry = load_yaml(EXAMPLE_CONFIG.read_text())["environments"][f"aws-{stage}"]
                 manifest = "https://example.invalid/aws-install.yaml"
                 entry["argocd"] = {"manifest": manifest}
                 inventory = folder / "personal.yaml"
-                inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"aws-dev": entry}}))
+                inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"team": entry}}))
                 if scenario != "fresh":
                     (folder / "prior.json").write_text("preserve checkpoint")
 
@@ -180,7 +215,7 @@ class AwsDeployTests(unittest.TestCase):
                         return json.dumps({"items": [{"metadata": {"name": target, "deletionTimestamp": "now"}}]})
                     if "crd/applications.argoproj.io" in args:
                         return '{"kind":"CustomResourceDefinition"}' if scenario == "deleting root" else ""
-                    if "applications.argoproj.io/startup-devops-aws-dev-root" in args:
+                    if f"applications.argoproj.io/startup-devops-aws-{stage}-root" in args:
                         return '{"metadata":{"deletionTimestamp":"now"}}'
                     if "nodes" in args:
                         return ""
@@ -192,16 +227,31 @@ class AwsDeployTests(unittest.TestCase):
                         patch.object(deploy, "run", side_effect=run), \
                         patch.object(deploy.Cluster, "aws", side_effect=aws), \
                         patch.object(deploy.Cluster, "k", side_effect=kubectl), \
-                        patch.object(deploy, "prepare") as prepare, patch.object(deploy, "gitops") as gitops, \
+                        patch.object(deploy, "provision") as provision, patch.object(deploy, "prepare") as prepare, patch.object(deploy, "gitops") as gitops, \
                         patch.object(demo, "seed_database") as seed, patch.object(demo, "reconcile_dns") as dns, \
                         patch.object(deploy, "check_apps") as verify, redirect_stdout(io.StringIO()) as log, \
                         redirect_stderr(io.StringIO()) as errors:
-                    result = cli.main(["--config", str(inventory), "deploy", "--env", "aws-dev"])
+                    confirm = ["--confirm", name] if command == "up" else []
+                    result = cli.main(["--config", str(inventory), command, "--env", "team", *confirm])
+                    self.assertEqual(provision.called, command == "up")
                     self.assertIn(f"Dedicated kubeconfig: {folder / 'kubeconfig'}", log.getvalue())
                     if scenario == "fresh":
                         self.assertIn(deploy.kubectl_hint(folder / "kubeconfig", name), log.getvalue())
                         self.assertEqual(result, 0)
-                        self.assertEqual(gitops.call_args.args[-1], manifest)
+                        cluster, root, children, outputs, install = gitops.call_args.args
+                        self.assertEqual(install, manifest)
+                        self.assertEqual(cluster.context, name)
+                        self.assertEqual(root["spec"]["source"]["path"], f"clusters/aws/overlays/{stage}")
+                        self.assertEqual(outputs["eks_cluster_name"], name)
+                        child = children[f"demo-api-aws-{stage}"]["spec"]
+                        self.assertEqual(child["source"]["helm"]["valueFiles"], [
+                            f"values/environments/aws-{stage}.yaml", f"values/releases/aws-{stage}.yaml"])
+                        for kind in ("Rollout", "Deployment"):
+                            self.assertTrue(any(rule["kind"] == kind and rule.get("jsonPointers") ==
+                                                ["/spec/template/metadata/annotations/platform.startup.dev~1demo-db-version"]
+                                                for rule in child["ignoreDifferences"]))
+                        grafana = children[f"monitoring-aws-{stage}"]["spec"]["source"]["helm"]["valuesObject"]["grafana"]
+                        self.assertEqual(grafana["admin"]["existingSecret"], "observability-grafana-admin")
                         seed.assert_called_once()
                         dns.assert_called_once()
                         verify.assert_called_once()

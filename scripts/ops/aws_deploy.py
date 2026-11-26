@@ -11,6 +11,7 @@ import time
 
 import yaml
 
+from aws_cnpg import wait_for_cnpg
 from aws_preflight import inspect, kustomize, local_file
 from aws_state import check_selected_state, init_argument, lifecycle_directory
 from aws_standard_demo import complete
@@ -170,7 +171,7 @@ def gitops(g, root, children, out, argo_manifest):
         patch = [{"op": "test", "path": path, "value": current}, {"op": "replace", "path": path, "value": destination}]
         g.k("-n", "data-platform", "patch", resource, "--type=json", "-p", json.dumps(patch))
     g.ready("data-platform", "crd/clusters.postgresql.cnpg.io", "Established")
-    g.ready("data-platform", "clusters.postgresql.cnpg.io/postgresql-baseline")
+    wait_for_cnpg(g, "data-platform", "postgresql-baseline")
     return set(children) | {root["metadata"]["name"]}
 
 

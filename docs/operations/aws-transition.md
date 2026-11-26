@@ -162,6 +162,53 @@ After the root and its children are Synced and Healthy, run `delivery runtime`
 on main with `environment=aws-test` using the configured test runner to qualify
 the live release. A successful deploy reports GitOps convergence.
 
+## Choose the database for a new personal dev environment
+
+Select the database in your private inventory before running `plan`. Existing inventories
+default to `cnpg`. To run dev without PostgreSQL, add this field under your dev entry:
+
+```yaml
+environments:
+  aws-dev:
+    database:
+      mode: none
+    # Keep the existing driver, delivery_environment, aws and terraform fields here.
+```
+
+Keep the original dev Terraform root, backend and variable-file settings in the inventory.
+The CLI selects the composition. Merge the GitOps files into the branch tracked by the root
+Application before deploying. Run these offline checks first:
+
+```bash
+.venv/bin/python scripts/ops/cli.py preflight --env aws-dev --config "$inventory" --check-inputs
+.venv/bin/python scripts/ops/cli.py up --env aws-dev --config "$inventory" --dry-run
+```
+
+| Dependency | `cnpg` | `none` |
+| --- | --- | --- |
+| Terraform execution root | `environments/dev` | `environments/dev-no-database` shares the dev network, EKS, platform and runtime declarations through Git symlinks |
+| Dedicated AWS resources | CNPG backup bucket and role, demo DB secret and read role | Omitted from the root configuration |
+| GitOps | CNPG, PostgreSQL cluster, Barman, database capacity and credential consumer | Dedicated objects excluded; shared ESO and cert-manager remain available |
+| Demo | Reads the ESO-managed credential and checks database readiness | Same image runs with the database disabled; release identity, HTTP and metrics checks still apply |
+| Monitoring | CNPG monitor enabled | CNPG monitor disabled; shared recording rules and dashboard definitions may show no database metrics |
+
+The dev-only selector composes one environment. Both profiles use the same cluster identity
+and the selected backend. `preflight` prints `database_mode`, `terraform_execution_root` and
+`gitops_root`. For `none`, the installed root continuously reconciles
+`clusters/aws/profiles/dev-no-database` from Git. The shared modules retain their Terraform
+addresses. Keep Git symlinks enabled in the checkout used by Terraform (for example in WSL).
+
+`platform.startup.dev/feature: cnpg` marks dedicated Kubernetes declarations for the GitOps
+overlay. `BaselineFeature=cnpg` groups taggable AWS resources in the two database-specific
+modules. Ownership checks for deletion still use the state, cluster identity, creation
+marker and retention policy. The feature label alone never authorizes deletion.
+
+Plan a different profile in a fresh environment. For an existing cluster, preview and
+finish teardown with the intended retention policy before recreating it. The CLI uses
+the **recorded** profile for destroy. A state containing retained database resources
+continues to belong to the CNPG profile; keep it with those resources. Check the plan
+and backend before reusing an empty state. Test currently uses the full CNPG stack.
+
 ## Check personal inputs
 
 Use your inventory outside Git. If starting fresh, run `python3 scripts/ops/cli.py init-config` and prepare the files named in the selected environment. Relative input paths

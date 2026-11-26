@@ -28,6 +28,10 @@ def check_plan(plan, g):
             vpc = (change.get("before") or {}).get("id")
     require(cluster and (cluster.get("after") or {}).get("name") == g.context,
             "Terraform plan does not select the expected EKS cluster")
+    if cluster.get("before"):
+        previous = (cluster["before"].get("tags") or {}).get("BaselineDatabaseMode", "cnpg")
+        selected = (cluster["after"].get("tags") or {}).get("BaselineDatabaseMode", "cnpg")
+        require(previous == selected, "Cannot change an existing cluster's database mode in place")
     if cluster["actions"] == ["create"]:
         names = json.loads(g.aws("eks", "list-clusters"))["clusters"]
         require(g.context not in names, "Same-name EKS cluster already exists outside this creation plan; check the selected state")
@@ -37,9 +41,9 @@ def check_plan(plan, g):
     return vpc
 
 
-def provision(g, terraform, tfenv, variables, plan_path, folder, confirm):
+def provision(g, terraform, tfenv, variables, plan_path, folder, confirm, *, implicit=()):
     print(f"Planning infrastructure for {g.context} with {variables}", flush=True)
-    subprocess.run(terraform + ["plan", "-input=false", "-lock-timeout=60s", "-var-file=" + str(variables),
+    subprocess.run(terraform + ["plan", "-input=false", "-lock-timeout=60s", *implicit, "-var-file=" + str(variables),
                                 "-out=" + str(plan_path)], env=tfenv, check=True)
     raw = subprocess.run(terraform + ["show", "-json", str(plan_path)], env=tfenv, check=True,
                          stdout=subprocess.PIPE, text=True)

@@ -230,5 +230,6 @@ def reconcile_dns(g, out):
 
 
 def complete(g, out, adopt=None):
-    seed_database(g, out, adopt)
+    if out.get("database_mode", "cnpg") == "cnpg":
+        seed_database(g, out, adopt)
     reconcile_dns(g, out)

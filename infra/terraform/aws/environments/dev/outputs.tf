@@ -143,46 +143,6 @@ output "aws_load_balancer_controller_role_arn" {
   value       = module.eks.aws_load_balancer_controller_role_arn
 }
 
-output "cnpg_backup_bucket_name" {
-  description = "S3 bucket used for CloudNativePG physical backups and WAL archives."
-  value       = module.cnpg_backup.bucket_name
-}
-
-output "cnpg_backup_bucket_arn" {
-  description = "ARN of the CloudNativePG backup bucket."
-  value       = module.cnpg_backup.bucket_arn
-}
-
-output "cnpg_backup_role_arn" {
-  description = "IRSA role ARN used by the CloudNativePG cluster ServiceAccount."
-  value       = module.cnpg_backup.role_arn
-}
-
-output "external_secrets_secret_name" {
-  description = "Name of the Secrets Manager secret reserved for demo-api PostgreSQL material."
-  value       = module.external_secrets.secret_name
-}
-
-output "external_secrets_secret_arn" {
-  description = "ARN of the Secrets Manager secret reserved for demo-api PostgreSQL material."
-  value       = module.external_secrets.secret_arn
-}
-
-output "external_secrets_role_arn" {
-  description = "IRSA role ARN used by the External Secrets Operator ServiceAccount."
-  value       = module.external_secrets.role_arn
-}
-
-output "external_secrets_role_name" {
-  description = "Name of the External Secrets Operator IRSA role."
-  value       = module.external_secrets.role_name
-}
-
-output "external_secrets_policy_arn" {
-  description = "ARN of the least-privilege External Secrets read policy."
-  value       = module.external_secrets.policy_arn
-}
-
 output "github_actions_runtime_role_arn" {
   description = "IAM role ARN configured as AWS_RUNTIME_ROLE_ARN in aws-dev-runtime."
   value       = try(module.github_actions_runtime_identity[0].role_arn, null)

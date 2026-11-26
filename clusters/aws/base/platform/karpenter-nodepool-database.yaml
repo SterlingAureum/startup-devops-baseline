@@ -1,6 +1,8 @@
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
+  labels:
+    platform.startup.dev/feature: cnpg
   name: database-ondemand
   annotations:
     argocd.argoproj.io/sync-wave: "15"

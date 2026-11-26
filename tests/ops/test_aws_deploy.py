@@ -213,13 +213,18 @@ class AwsDeployTests(unittest.TestCase):
         self.check_deploy_entry("dev", "deploy")
         self.check_deploy_entry("test", "deploy")
         self.check_deploy_entry("test", "up")
+        self.check_deploy_entry("dev", "up", mode="none")
 
-    def check_deploy_entry(self, stage, command):
+    def check_deploy_entry(self, stage, command, mode="cnpg"):
         report = {"stage": stage, "cluster": f"startup-devops-baseline-{stage}",
                   "gitops_root": f"clusters/aws/overlays/{stage}/root-app.yaml"}
+        if mode == "none":
+            report.update(database_mode=mode, gitops_root="clusters/aws/profiles/dev-no-database/root-app.yaml")
         name = report["cluster"]
         out = {"environment_name": stage, "eks_cluster_name": name, "eks_cluster_endpoint": "https://eks",
                "vpc_id": "vpc-1"}
+        if mode == "none":
+            out["database_mode"] = mode
         def aws(*args):
             if args[:2] == ("sts", "get-caller-identity"):
                 return '{"Account":"123456789012"}'
@@ -240,6 +245,7 @@ class AwsDeployTests(unittest.TestCase):
                 entry = load_yaml(EXAMPLE_CONFIG.read_text())["environments"][f"aws-{stage}"]
                 manifest = "https://example.invalid/aws-install.yaml"
                 entry["argocd"] = {"manifest": manifest}
+                entry["database"] = {"mode": mode}
                 inventory = folder / "personal.yaml"
                 inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"team": entry}}))
                 if scenario != "fresh":
@@ -277,7 +283,7 @@ class AwsDeployTests(unittest.TestCase):
                         cluster, root, children, outputs, install = gitops.call_args.args
                         self.assertEqual(install, manifest)
                         self.assertEqual(cluster.context, name)
-                        self.assertEqual(root["spec"]["source"]["path"], f"clusters/aws/overlays/{stage}")
+                        self.assertEqual(root["spec"]["source"]["path"], str(Path(report["gitops_root"]).parent))
                         self.assertEqual(outputs["eks_cluster_name"], name)
                         child = children[f"demo-api-aws-{stage}"]["spec"]
                         self.assertEqual(child["source"]["helm"]["valueFiles"], [
@@ -288,7 +294,12 @@ class AwsDeployTests(unittest.TestCase):
                                                 for rule in child["ignoreDifferences"]))
                         grafana = children[f"monitoring-aws-{stage}"]["spec"]["source"]["helm"]["valuesObject"]["grafana"]
                         self.assertEqual(grafana["admin"]["existingSecret"], "observability-grafana-admin")
-                        seed.assert_called_once()
+                        if mode == "none":
+                            seed.assert_not_called()
+                            self.assertNotIn("postgresql-baseline", children)
+                            self.assertTrue(provision.call_args.args[1][1].endswith("/dev-no-database"))
+                        else:
+                            seed.assert_called_once()
                         dns.assert_called_once()
                         verify.assert_called_once()
                     else:

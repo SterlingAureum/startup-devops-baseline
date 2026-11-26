@@ -145,7 +145,7 @@ class ProvisionTests(unittest.TestCase):
                         return '{"Account":"123456789012"}'
                     self.assertEqual(action, "describe-cluster")
                     return '{"cluster":{"endpoint":"https://eks","status":"ACTIVE","resourcesVpcConfig":{"vpcId":"vpc"}}}'
-                def provision_step(g, terraform, settings, variables, plan, receipts, selected):
+                def provision_step(g, terraform, settings, variables, plan, receipts, selected, *, implicit=()):
                     self.assertEqual(selected, self.name if confirm else None)
                     self.assertEqual(settings["TF_WORKSPACE"], "default")
                     events.append("provision")

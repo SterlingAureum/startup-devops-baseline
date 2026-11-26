@@ -207,7 +207,7 @@ def main(argv=None, local_only=False):
                 destroy(args.aws_target, env, args.config, args.confirm, args.retain_backups)
             return 0
         if env["driver"] == "aws" and args.command in ("plan", "create", "up", "deploy"):
-            from aws_deploy import CONNECTION_PHASES, deploy, PHASES
+            from aws_deploy import CONNECTION_PHASES, deploy, deployment_phases
             if args.dry_run:
                 from aws_provision import PHASES as provision_steps, APPLY
                 steps = list(provision_steps) if args.command != "deploy" else []
@@ -216,7 +216,7 @@ def main(argv=None, local_only=False):
                 if args.command != "plan":
                     steps.extend(CONNECTION_PHASES)
                 if args.command in ("deploy", "up"):
-                    steps.extend(PHASES)
+                    steps.extend(deployment_phases(env.get("database", {}).get("mode", "cnpg")))
                 print(json.dumps({**selection, "command": args.command, "steps": steps, "executed": False}, indent=2))
             else:
                 deploy(args.aws_target, env, args.config, args.adopt_demo_secret_version, operation=args.command, confirm=args.confirm)

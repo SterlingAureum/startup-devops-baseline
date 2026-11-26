@@ -52,11 +52,19 @@ def render_chart(app):
 
 def render_environment(cfg, environment):
     env = cfg["environments"][environment]
+    primary = render_root(cfg, environment, env["root_manifest"])
+    for mode, manifest in env.get("database_profiles", {}).items():
+        render_root(cfg, environment, manifest, database_mode=mode)
+    return primary
+
+
+def render_root(cfg, environment, manifest, database_mode=None):
+    env = cfg["environments"][environment]
     app = cfg["application"]
-    root = load_yaml(repo_path(env["root_manifest"]))
+    root = load_yaml(repo_path(manifest))
     src = source(root)
     if not any(repo_path(src["path"]).resolve().is_relative_to(repo_path(folder).resolve())
-               and repo_path(env["root_manifest"]).resolve().is_relative_to(repo_path(folder).resolve())
+               and repo_path(manifest).resolve().is_relative_to(repo_path(folder).resolve())
                for folder in env["cluster_paths"]):
         raise Rejected("Root manifest and source must belong to the environment fingerprint")
     repo = src["repoURL"]
@@ -88,6 +96,11 @@ def render_environment(cfg, environment):
     text = render_chart(child)
     workload = validate(list(yaml.load_all(text, Loader=UniqueLoader)), environment, app["namespace"],
                         app["metrics_required"], app["environment_annotation"])
+    if database_mode == "none":
+        container = next(c for c in workload["spec"]["template"]["spec"]["containers"] if c["name"] == app["container"])
+        settings = {row["name"]: row for row in container.get("env", [])}
+        if settings.get("DATABASE_ENABLED", {}).get("value") != "false" or "DATABASE_URL" in settings:
+            raise Rejected(f"{environment}: database-free profile still depends on database credentials")
     if env["release"]:
         expected = release(repo_path(env["release"]))
         pod = workload["spec"]["template"]

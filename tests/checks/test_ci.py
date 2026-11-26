@@ -52,7 +52,7 @@ class AggregateTests(unittest.TestCase):
 
 
 class TerraformEntrypointTests(unittest.TestCase):
-    def test_moved_validation_keeps_all_five_roots_and_no_backend_access(self):
+    def test_validation_includes_database_free_dev_without_backend_access(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             log = directory / "calls.jsonl"
@@ -64,7 +64,8 @@ class TerraformEntrypointTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             calls = [json.loads(line) for line in log.read_text().splitlines()]
             initializes = [call for call in calls if "init" in call]
-            self.assertEqual(len(initializes), 5)
+            self.assertEqual(len(initializes), 6)
+            self.assertTrue(any(call[0].endswith("/environments/dev-no-database") for call in initializes))
             self.assertTrue(all("-backend=false" in call for call in initializes))
-            self.assertEqual(len([call for call in calls if "validate" in call]), 5)
+            self.assertEqual(len([call for call in calls if "validate" in call]), 6)
             self.assertFalse(any(word in call for call in calls for word in ("apply", "destroy", "plan", "-migrate-state")))

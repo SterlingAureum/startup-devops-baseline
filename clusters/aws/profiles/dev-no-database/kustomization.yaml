@@ -1,0 +1,42 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../overlays/dev
+patches:
+  - target:
+      labelSelector: platform.startup.dev/feature=cnpg
+    patch: |-
+      $patch: delete
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: selected-by-feature
+  - patch: |-
+      apiVersion: argoproj.io/v1alpha1
+      kind: Application
+      metadata:
+        name: demo-api-aws-dev
+        namespace: argocd
+      spec:
+        source:
+          helm:
+            valuesObject:
+              database:
+                enabled: false
+  - target:
+      kind: Application
+      name: observability-views-aws-dev
+    patch: |-
+      - op: test
+        path: /spec/source/helm/parameters/2/name
+        value: controllerMonitors.cloudNativePG.enabled
+      - op: replace
+        path: /spec/source/helm/parameters/2/value
+        value: "false"
+  - target:
+      kind: Application
+      name: startup-apps-network-policy-aws-dev
+    patch: |-
+      - op: replace
+        path: /spec/source/path
+        value: clusters/aws/profiles/dev-no-database/startup-apps-network-policy

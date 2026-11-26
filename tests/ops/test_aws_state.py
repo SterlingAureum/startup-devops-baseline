@@ -33,6 +33,9 @@ class StateTests(unittest.TestCase):
             entry["terraform"]["variables_file"] = "vars.tfvars.json"
             config.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"team": entry}}))
             (folder / "vars.tfvars.json").write_text(json.dumps({
+                "public_subnet_cidrs": ["10.20.0.0/24", "10.20.1.0/24"],
+                "private_subnet_cidrs": ["10.20.10.0/24", "10.20.11.0/24"],
+                "vpc_cidr": "10.20.0.0/16", "eks_service_ipv4_cidr": "172.20.0.0/16",
                 "enable_github_actions_runtime_identity": True, "eks_public_access_cidrs": ["192.0.2.1/32"],
                 "github_actions_runtime_role_arn": f"arn:aws:iam::{ACCOUNT}:role/{TARGET[1]}-github-runtime-read-role"}))
             backend = folder / "aws-test.tfbackend"

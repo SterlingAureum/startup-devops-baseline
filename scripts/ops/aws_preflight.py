@@ -108,6 +108,54 @@ def check_private_vars(values, account, cluster):
         require(valid, "Set eks_public_access_cidrs in the selected private tfvars to restricted IPv4 CIDRs (for one client, its egress IPv4/32)")
 
 
+def policy_cidrs(spec, direction, port):
+    peer_field = "to" if direction == "egress" else "from"
+    cidrs = set()
+    for rule in spec.get(direction, []):
+        if not any(item.get("port") == port for item in rule.get("ports", [])):
+            continue
+        for peer in rule.get(peer_field, []):
+            block = peer.get("ipBlock")
+            # The recovery policy has a separate public HTTPS rule with private ranges excluded.
+            if block and not block.get("except"):
+                cidrs.add(block["cidr"])
+    return cidrs
+
+
+def check_network_policies(children, name, values):
+    """Compare the standard AWS policy address groups with the effective Terraform inputs."""
+    service = ipaddress.IPv4Network(values["eks_service_ipv4_cidr"])
+    require(service.num_addresses > 10, "eks_service_ipv4_cidr must contain the API and DNS Service addresses")
+    private = set(values["private_subnet_cidrs"])
+    public = set(values["public_subnet_cidrs"])
+    api = private | {f"{service[1]}/32"}
+    rules = {
+        "data-platform": [
+            ("allow-cnpg-to-kubernetes-api", "egress", 443, api),
+            ("allow-dns-egress", "egress", 53, {f"{service[10]}/32"}),
+            ("allow-postgresql-baseline-join-egress", "egress", 443, api),
+            ("allow-postgresql-baseline-join-egress", "egress", 5432, {str(service)}),
+            ("allow-cnpg-to-postgresql-rw-service", "egress", 5432, {str(service)}),
+            ("allow-kubernetes-api-to-cnpg-status", "ingress", 8000, private),
+            ("allow-cnpg-to-barman-plugin", "egress", 9090, {str(service)}),
+            ("allow-cnpg-full-recovery-egress", "egress", 443, api),
+        ],
+        "startup-apps": [("allow-alb-to-demo-api", "ingress", 8080, public)],
+    }
+    for namespace, checks in rules.items():
+        application = f"{namespace}-network-policy-{name}"
+        require(application in children, f"Missing network policy Application: {application}")
+        path = children[application]["spec"]["source"]["path"]
+        policies = {doc["metadata"]["name"]: doc["spec"] for doc in kustomize(path)
+                    if doc and doc["kind"] == "NetworkPolicy" and doc["metadata"].get("namespace") == namespace}
+        for policy, direction, port, expected in checks:
+            actual = policy_cidrs(policies.get(policy, {}), direction, port)
+            require(actual == expected,
+                    f"Network CIDR mismatch for {namespace}/{policy} ({direction} port {port}). "
+                    f"Terraform expects {sorted(expected)}, {path} renders {sorted(actual)}. "
+                    "Align the GitOps policy with the selected environment network.")
+
+
 def check_bindings(objects, namespace, group, permissions):
     roles = {obj["metadata"]["name"]: obj for obj in objects
              if obj["kind"] == "Role" and obj["metadata"]["namespace"] == namespace}
@@ -137,7 +185,7 @@ def runtime_target(name):
     return environment, labels
 
 
-def inspect(selected, env, config_path, personal=False):
+def inspect(selected, env, config_path, personal=False, *, check_network=True):
     name = selected.delivery_environment
     short = selected.stage
     root = selected.terraform_root
@@ -205,6 +253,8 @@ def inspect(selected, env, config_path, personal=False):
     require(urlsplit(target["url"]).hostname == values["demo_api_hostname"], "Terraform hostname differs from delivery URL")
     children = {d["metadata"]["name"]: d for d in kustomize(src["path"]) if d and d["kind"] == "Application"}
     require(target["application"] in children, "Runtime target Application is absent from the overlay")
+    if check_network:
+        check_network_policies(children, name, values)
     alb = children["aws-load-balancer-controller"]["spec"]["source"]["helm"]["valuesObject"]
     require((alb["clusterName"], alb["region"], alb["vpcId"]) == (cluster, aws["region"], "__VPC_ID__"),
             "Load balancer controller wiring differs from the bootstrap contract")

@@ -298,7 +298,7 @@ def remove_stack(g, out, journal, save, retain):
 
 
 def destroy(selected, env, config, confirm, retain=False):
-    report = inspect(selected, env, config, personal=True)
+    report = inspect(selected, env, config, personal=True, check_network=False)
     name = report["cluster"]
     require(confirm in (None, name), "Destroy requires --confirm " + name)
     aws = env["aws"]

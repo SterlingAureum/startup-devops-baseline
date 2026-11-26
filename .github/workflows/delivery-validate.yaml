@@ -30,9 +30,7 @@ jobs:
       render: ${{ steps.route.outputs.render }}
       environments: ${{ steps.route.outputs.environments }}
       base: ${{ steps.route.outputs.base }}
-      runtime_dev: ${{ steps.route.outputs.runtime_dev }}
-      runtime_test: ${{ steps.route.outputs.runtime_test }}
-      runtime_prod: ${{ steps.route.outputs.runtime_prod }}
+      runtime_targets: ${{ steps.route.outputs.runtime_targets }}
       dev_release_changed: ${{ steps.route.outputs.dev_release_changed }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -49,14 +47,9 @@ jobs:
             if [[ "${GITHUB_EVENT_NAME}" == workflow_dispatch ]]; then BASE="$(git rev-parse HEAD)"; fi
           fi
           echo "base=${BASE}" >> "${GITHUB_OUTPUT}"
-          python3 scripts/delivery/flow.py classify --base "${BASE}" --head "$(git rev-parse HEAD)"
-          if [[ "${GITHUB_EVENT_NAME}" == workflow_dispatch ]]; then
-            echo 'tests=true' >> "${GITHUB_OUTPUT}"
-            echo 'iac=true' >> "${GITHUB_OUTPUT}"
-            echo 'platform=true' >> "${GITHUB_OUTPUT}"
-            echo 'render=true' >> "${GITHUB_OUTPUT}"
-            echo 'environments=["local","aws-dev","aws-test","aws-prod"]' >> "${GITHUB_OUTPUT}"
-          fi
+          flags=()
+          if [[ "${GITHUB_EVENT_NAME}" == workflow_dispatch ]]; then flags+=(--full-checks); fi
+          python3 scripts/delivery/flow.py classify --base "${BASE}" --head "$(git rev-parse HEAD)" "${flags[@]}"
 
   repository:
     runs-on: ubuntu-latest
@@ -84,10 +77,16 @@ jobs:
         with:
           version: v3.18.6
       - run: python3 -m pip install -r scripts/ops/requirements-preflight.txt
-      - name: Check standard AWS declarations offline
+      - name: Preflight every environment in the example inventory offline
         run: |
-          python3 scripts/ops/cli.py preflight --env aws-dev
-          python3 scripts/ops/cli.py preflight --env aws-test
+          python3 - <<'PYTHON'
+          from pathlib import Path
+          import subprocess
+          import yaml
+          inventory = Path("config/environments.example.yaml")
+          for name in yaml.safe_load(inventory.read_text())["environments"]:
+              subprocess.run(["python3", "scripts/ops/cli.py", "preflight", "--config", inventory, "--env", name], check=True)
+          PYTHON
       - run: python3 -m unittest discover -s tests -v
 
   application:

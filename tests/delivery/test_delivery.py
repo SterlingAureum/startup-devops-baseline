@@ -45,23 +45,28 @@ def fixture():
 class RoutingTests(unittest.TestCase):
     def test_docs_do_not_trigger_cloud_or_application_work(self):
         result = flow.classify(["README.md", "docs/guide.md"], CFG)
-        self.assertFalse(any(result[key] for key in ("application", "iac", "platform", "render", "runtime_dev")))
+        self.assertFalse(any(result[key] for key in ("application", "iac", "platform", "render", "runtime_targets")))
 
     def test_archived_scripts_do_not_reenter_current_checks(self):
         result = flow.classify(["archive/v0.12/scripts/validate-ci-quality-gates.sh"], CFG)
-        self.assertFalse(any(result[key] for key in ("application", "tests", "iac", "platform", "render", "runtime_dev")))
+        self.assertFalse(any(result[key] for key in ("application", "tests", "iac", "platform", "render", "runtime_targets")))
 
-    def test_local_tools_and_unknown_code_run_current_checks(self):
-        for path in ("scripts/ops/local.py", "new-tool/entry.py"):
+    def test_operator_paths_use_mandatory_checks(self):
+        for path in ("scripts/ops/cli.py", "scripts/examples/demo_api.py", "config/environments.example.yaml",
+                     "config/argocd-bootstrap.yaml", "tests/ops/test_local.py"):
             with self.subTest(path=path):
                 result = flow.classify([path], CFG)
-                self.assertTrue(result["tests"] and result["iac"] and result["platform"] and result["render"])
-                self.assertFalse(result["application"])
+                self.assertFalse(any(result.values()))
+
+    def test_unknown_code_runs_full_static_checks(self):
+        result = flow.classify(["new-tool/entry.py"], CFG)
+        self.assertTrue(result["tests"] and result["iac"] and result["platform"] and result["render"])
+        self.assertFalse(result["application"] or result["runtime_targets"])
 
     def test_source_runs_tests_and_render_but_not_iac_or_runtime(self):
         result = flow.classify(["apps/demo-api/src/main.py"], CFG)
         self.assertTrue(result["application"] and result["tests"] and result["render"])
-        self.assertFalse(result["iac"] or result["runtime_dev"])
+        self.assertFalse(result["iac"] or result["runtime_targets"])
 
     def test_mixed_change_combines_checks(self):
         result = flow.classify(["infra/terraform/aws/main.tf", "apps/demo-api/src/main.py"], CFG)
@@ -70,14 +75,13 @@ class RoutingTests(unittest.TestCase):
     def test_release_change_targets_one_environment_without_rebuild(self):
         result = flow.classify([CFG["environments"]["aws-test"]["release"]], CFG)
         self.assertEqual(result["environments"], ["aws-test"])
-        self.assertTrue(result["runtime_test"])
-        self.assertFalse(result["runtime_dev"] or result["application"])
+        self.assertEqual(result["runtime_targets"], ["aws-test"])
+        self.assertFalse(result["application"])
 
     def test_shared_chart_rechecks_environments(self):
         result = flow.classify(["apps/demo-api/helm/templates/service.yaml"], CFG)
         self.assertEqual(set(result["environments"]), set(CFG["environments"]))
-        self.assertTrue(result["runtime_dev"] and result["runtime_test"])
-        self.assertTrue(result["runtime_prod"])
+        self.assertEqual(result["runtime_targets"], [])
 
     def test_similarly_named_path_is_not_application_code(self):
         self.assertFalse(flow.classify(["apps/demo-api/src-backup/main.py"], CFG)["application"])
@@ -282,6 +286,69 @@ class PromotionTests(unittest.TestCase):
         self.assertEqual(actual["image"]["pullPolicy"], "Never")
         self.assertNotIn("workflowRunAttempt", actual["delivery"])
         self.assertEqual(actual["promotion"]["sourceEnvironment"], "aws-dev")
+
+    def test_renamed_targets_use_same_path_for_proposal_and_pr_gate(self):
+        cfg = self.cfg
+        for stage, target in (("dev", "sandbox"), ("test", "staging")):
+            cfg["environments"][target] = cfg["environments"].pop(cfg["promotion"][stage])
+            cfg["promotion"][stage] = target
+        path = cfg["environments"]["staging"]["release"]
+        before = common.repo_path(path).read_text()
+        report = dict(self.report, environment="sandbox", producer_job="verify (sandbox)",
+                      inputs_sha256=flow.input_fingerprint(cfg, "sandbox"))
+        self.assertTrue(flow.prepare_release(cfg, "staging", report))
+        args = ["promotion_check", "--base", "b" * 40, "--head", "c" * 40]
+        with patch.object(sys, "argv", args), patch.object(promotion_check, "config", return_value=cfg), \
+             patch.object(promotion_check, "changed_paths", return_value=[path]), \
+             patch.object(promotion_check, "git", return_value=before), \
+             patch.dict(os.environ, GITHUB_REPOSITORY="team/app"), \
+             patch.object(promotion_check, "verified_report", return_value=report) as verify:
+            self.assertEqual(promotion_check.main(), 0)
+            verify.assert_called_once_with("team/app", "123", "1", "sandbox")
+            cfg["promotion"]["dev"] = "different-source"
+            cfg["environments"]["different-source"] = cfg["environments"].pop("sandbox")
+            self.assertEqual(promotion_check.main(), 1)
+            self.assertEqual(verify.call_count, 1)
+
+    def test_manual_promotion_resolves_optional_production_before_runtime(self):
+        cfg = self.cfg
+        args = ["flow", "promotion-route", "--source-stage", "test"]
+        with patch.object(sys, "argv", args), patch.object(flow, "config", return_value=cfg), \
+             patch.object(flow, "emit_output") as emit, patch.dict(os.environ, DELIVERY_PROD_ENABLED="true"):
+            self.assertEqual(flow.main(), 1)
+            emit.assert_not_called()
+            cfg["promotion"]["prod"] = "aws-prod"
+            with patch.dict(os.environ, DELIVERY_PROD_ENABLED="false"):
+                self.assertEqual(flow.main(), 1)
+                emit.assert_not_called()
+            self.assertEqual(flow.main(), 0)
+            self.assertEqual([c.args for c in emit.call_args_list], [("source", "aws-test"), ("target", "aws-prod")])
+
+    def test_enterprise_promotion_verifies_test_and_preserves_the_digest(self):
+        cfg = self.cfg
+        cfg["promotion"]["prod"] = "aws-prod"
+        prod = common.repo_path(cfg["environments"]["aws-prod"]["release"])
+        before = prod.read_text()
+        flow.prepare_release(cfg, "aws-test", self.report)
+        source_path = common.repo_path(cfg["environments"]["aws-test"]["release"])
+        report = dict(self.report, environment="aws-test", producer_job="verify (aws-test)",
+                      release_sha256=common.fingerprint(source_path), inputs_sha256=flow.input_fingerprint(cfg, "aws-test"))
+        with patch.dict(os.environ, DELIVERY_PROD_ENABLED="false"), self.assertRaisesRegex(common.Rejected, "disabled"):
+            flow.prepare_release(cfg, "aws-prod", report)
+        self.assertEqual(prod.read_text(), before)
+        with patch.dict(os.environ, DELIVERY_PROD_ENABLED="true"):
+            self.assertTrue(flow.prepare_release(cfg, "aws-prod", report))
+        self.assertEqual(common.release(prod)["promotion"]["sourceEnvironment"], "aws-test")
+        promotion_check.validate_report(report, cfg, "aws-test", common.release(prod), "123", "1")
+
+    def test_catalog_rejects_ambiguous_or_incompatible_release_targets(self):
+        for broken in ({"dev": "local", "test": "aws-test"}, {"dev": "aws-dev", "prod": "aws-prod"},
+                       {"dev": "aws-dev", "test": "aws-dev"}):
+            with self.subTest(mapping=broken), self.assertRaises(common.Rejected):
+                common.promotion_chain(dict(self.cfg, promotion=broken))
+        self.cfg["environments"]["aws-test"]["release"] = self.cfg["environments"]["aws-dev"]["release"]
+        with self.assertRaisesRegex(common.Rejected, "distinct release"):
+            common.promotion_chain(self.cfg)
 
     def test_dev_write_records_publish_attempt_and_preserves_nested_settings(self):
         path = common.repo_path(self.cfg["environments"]["aws-dev"]["release"])

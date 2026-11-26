@@ -1,4 +1,4 @@
-"""Provision the personal dev Terraform root and bootstrap its standard GitOps stack."""
+"""Provision the selected personal AWS Terraform root and bootstrap its standard GitOps stack."""
 from contextlib import contextmanager
 import fcntl
 import json
@@ -12,15 +12,16 @@ import time
 import yaml
 
 from aws_preflight import inspect, kustomize, local_file
+from aws_state import check_selected_state, init_argument, lifecycle_directory
 from aws_standard_demo import complete
 from aws_provision import provision
-from configuration import DEFAULT_CONFIG, ROOT, OpsError, environment, load_yaml, require
-from connections import atomic_write, private_path
+from configuration import ROOT, OpsError, load_yaml, require
+from connections import atomic_write, aws_private_path, kubectl_hint
 
-PHASES = ["check personal inventory, remote Terraform outputs and live EKS identity",
-          "refresh dedicated kubeconfig", "check root Application and target namespaces for deletion",
+CONNECTION_PHASES = ["check selected Terraform outputs and live EKS identity", "refresh dedicated kubeconfig"]
+PHASES = ["check root Application and target namespaces for deletion",
           "prepare IRSA and Grafana credentials",
-          "install pinned Argo CD and seed ALB Application", "sync dev root and CNPG backup destination",
+          "install pinned Argo CD and seed ALB Application", "sync selected root and CNPG backup destination",
           "recover the ESO consumer and reconcile the standard demo database credential",
           "wait for demo replicas using the synced credential, reconcile DNS, and check GitOps applications"]
 ARGO = "argocd"
@@ -36,13 +37,13 @@ def run(argv, env, data=None, private=False):
 
 @contextmanager
 def lifecycle_lock(account, region, cluster):
-    folder = Path.home() / ".local/state/startup-devops-baseline" / account / region / cluster
+    folder = lifecycle_directory(account, region, cluster)
     folder.mkdir(parents=True, mode=0o700, exist_ok=True)
     with (folder / "destroy.lock").open("a") as lock:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError as error:
-            raise OpsError("Another dev deploy or destroy is running on this workstation") from error
+            raise OpsError(f"Another lifecycle command for {cluster} is running on this workstation") from error
         yield folder
 
 
@@ -53,11 +54,11 @@ def reopen_receipt(journal):
 
 
 class Cluster:
-    def __init__(self, context, env, timeout):
+    def __init__(self, context, env, timeout, path):
         self.context = context
         self.env = env
         self.timeout = timeout
-        self.path = private_path("aws-dev")
+        self.path = path
 
     def aws(self, *args, data=None, private=False):
         return run(["aws", *args, "--output", "json"], self.env, data, private)
@@ -187,11 +188,11 @@ def check_apps(g, names):
             print("Pending Applications: " + ", ".join(pending), flush=True)
         last = pending
         return not pending
-    g.until("expected dev Applications to be Synced and Healthy", converged)
+    g.until("expected Applications to be Synced and Healthy", converged)
 
 
-def deploy(env, config, adopt=None, *, operation="deploy", confirm=None):
-    report = inspect("aws-dev", env, config, personal=True)
+def deploy(selected, env, config, adopt=None, *, operation="deploy", confirm=None):
+    report = inspect(selected, env, config, personal=True)
     require(operation in ("plan", "create", "up", "deploy"), "Unknown AWS provisioning operation")
     require(confirm is None or (operation in ("up", "create") and confirm == report["cluster"]),
             "Provisioning requires --confirm " + report["cluster"])
@@ -199,7 +200,8 @@ def deploy(env, config, adopt=None, *, operation="deploy", confirm=None):
     settings = dict(os.environ, AWS_REGION=aws["region"], AWS_DEFAULT_REGION=aws["region"], AWS_PAGER="")
     if aws.get("profile"):
         settings["AWS_PROFILE"] = aws["profile"]
-    g = Cluster(report["cluster"], settings, env.get("timeout", 1800))
+    path = aws_private_path(aws["expected_account_id"], aws["region"], report["cluster"])
+    g = Cluster(report["cluster"], settings, env.get("timeout", 1800), path)
     caller = json.loads(g.aws("sts", "get-caller-identity"))
     require(caller["Account"] == aws["expected_account_id"], "AWS caller account differs from inventory")
     if aws.get("role_arn"):
@@ -214,32 +216,32 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
     settings = g.env
     tf = env["terraform"]
     base = config.expanduser().resolve().parent
-    backend = local_file(tf["backend_file"], base)
-    with tempfile.TemporaryDirectory(prefix="aws-dev-deploy-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="aws-deploy-") as tmp:
         tfenv = dict(settings, TF_DATA_DIR=tmp + "/terraform", TF_WORKSPACE="default")
+        require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
+                "Unset TF_CLI_ARGS overrides before provisioning")
         if operation != "deploy":
-            require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
-                    "Unset TF_CLI_ARGS overrides before dev provisioning")
             print(f"Initializing {tf['root']} for {g.context} (default workspace)", flush=True)
             # Use the same variable sources that personal preflight inspected.
             tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
         terraform = ["terraform", "-chdir=" + str(ROOT / tf["root"])]
-        run(terraform + ["init", "-input=false", "-backend-config=" + str(backend)], tfenv)
+        check_selected_state(g, report, operation)
+        run(terraform + ["init", "-input=false", "-reconfigure", init_argument(tf["backend"], base)], tfenv)
         if operation != "deploy":
             variables = local_file(tf["variables_file"], base)
             provision(g, terraform, tfenv, variables, Path(tmp) / "create.tfplan", folder, confirm)
-            if operation != "up" or confirm is None:
+            if confirm is None:
                 return
         outputs = json.loads(run(terraform + ["output", "-json"], tfenv, private=True))
         out = {key: value["value"] for key, value in outputs.items()}
-        require(out.get("eks_cluster_name"), "Dev infrastructure is absent from outputs; use plan then up --env aws-dev")
-        require(out.get("environment_name") == "dev" and out["eks_cluster_name"] == g.context,
+        require(out.get("eks_cluster_name"), "Infrastructure is absent from outputs; run plan then create for the selected inventory entry")
+        require(out.get("environment_name") == report["stage"] and out["eks_cluster_name"] == g.context,
                 "Terraform output cluster differs from inventory")
         try:
             live = json.loads(g.aws("eks", "describe-cluster", "--name", g.context))["cluster"]
         except OpsError as error:
             if "(ResourceNotFoundException)" in str(error):
-                raise OpsError(f"EKS cluster {g.context} is absent; use plan then up --env aws-dev") from error
+                raise OpsError(f"EKS cluster {g.context} is absent; use plan then create for the selected inventory entry") from error
             raise
         require(live["status"] == "ACTIVE" and live["endpoint"] == out["eks_cluster_endpoint"]
                 and live["resourcesVpcConfig"]["vpcId"] == out["vpc_id"], "Live EKS differs from Terraform")
@@ -250,6 +252,9 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
                 "Generated kubeconfig differs from EKS")
         atomic_write(g.path, raw)
         print(f"Dedicated kubeconfig: {g.path}", flush=True)
+        if operation == "create":
+            print(kubectl_hint(g.path, g.context), flush=True)
+            return
         root = load_yaml((ROOT / report["gitops_root"]).read_text())
         children = {doc["metadata"]["name"]: doc for doc in kustomize(root["spec"]["source"]["path"])
                     if doc and doc["kind"] == "Application"}
@@ -267,9 +272,8 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
                     atomic_write(receipt, json.dumps(journal, indent=2))
     g.k("get", "nodes")
     prepare(g, out)
-    argocd = env.get("argocd", environment(DEFAULT_CONFIG, "local")["argocd"])
-    require(argocd["namespace"] == ARGO, "AWS root requires the argocd namespace")
-    names = gitops(g, root, children, out, argocd["manifest"])
+    names = gitops(g, root, children, out, env["argocd"]["manifest"])
     complete(g, out, adopt)
     check_apps(g, names)
-    print("AWS dev GitOps stack converged. Runtime qualification is a separate workflow.")
+    print(kubectl_hint(g.path, g.context))
+    print(f"AWS {report['stage']} GitOps stack converged. Runtime qualification is a separate workflow.")

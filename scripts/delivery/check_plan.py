@@ -20,7 +20,9 @@ def record(outputs, env):
         raise ValueError("Missing application ID in the checked route")
     automatic = event == "push" and flag(outputs, "application")
     requested = event == "workflow_dispatch" and env["REQUEST_PUBLISH"] == "true"
-    runtime = [f"aws-{name}" for name in ("dev", "test", "prod") if flag(outputs, f"runtime_{name}")]
+    runtime = json.loads(outputs["runtime_targets"])
+    if not isinstance(runtime, list) or not all(isinstance(name, str) for name in runtime):
+        raise ValueError("Invalid runtime target list")
     return {
         "schema_version": 1, "application_id": outputs["application_id"],
         "repository": env["GITHUB_REPOSITORY"], "event": event,

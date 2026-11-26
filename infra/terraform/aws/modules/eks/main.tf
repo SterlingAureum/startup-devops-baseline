@@ -94,7 +94,7 @@ resource "aws_eks_cluster" "this" {
 
   tags = merge(local.common_tags, {
     Name = var.cluster_name
-  }, var.environment == "dev" ? { BaselineDevCreationPlan = plantimestamp() } : {})
+  }, contains(["dev", "test"], var.environment) ? { BaselineDevCreationPlan = plantimestamp() } : {})
 }
 
 resource "aws_iam_openid_connect_provider" "cluster" {

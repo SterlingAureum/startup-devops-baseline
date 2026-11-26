@@ -17,6 +17,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ops"))
 import local as lifecycle
+from configuration import argocd_bootstrap
 
 ROOT = Path(__file__).resolve().parents[2]
 IMAGE_REPOSITORY = "startup-devops-baseline/demo-api"
@@ -337,15 +338,16 @@ def parser():
     value.add_argument("--http-port", type=int, default=8080)
     value.add_argument("--https-port", type=int, default=8443)
     value.add_argument("--node-image", default="kindest/node:v1.30.0")
-    value.add_argument("--argocd-manifest", default="https://raw.githubusercontent.com/argoproj/argo-cd/v3.5.2/manifests/install.yaml")
+    bootstrap = argocd_bootstrap({})
+    value.add_argument("--argocd-manifest", default=bootstrap["manifest"])
     value.add_argument("--dry-run", action="store_true", help="Show targets and phases without invoking any tools")
-    value.set_defaults(argocd_namespace="argocd")
+    value.set_defaults(argocd_namespace=bootstrap["namespace"])
     return value
 
 
 def main(argv=None):
-    args = parser().parse_args(argv)
     try:
+        args = parser().parse_args(argv)
         validate_options(args)
         if args.dry_run:
             print(json.dumps({"command": args.command, "cluster": args.cluster, "context": "kind-" + args.cluster,

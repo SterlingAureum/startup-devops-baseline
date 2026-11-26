@@ -5,39 +5,168 @@ Use Python 3.10+, kubectl with built-in Kustomize, and the dependencies below.
 
 ```bash
 python3 -m pip install -r scripts/ops/requirements-preflight.txt
-python3 scripts/ops/cli.py preflight --env aws-dev
-python3 scripts/ops/cli.py preflight --env aws-test
+python3 scripts/ops/cli.py preflight --config config/environments.example.yaml --env aws-dev
+python3 scripts/ops/cli.py preflight --config config/environments.example.yaml --env aws-test
 ```
 
 A zero exit code with `scope: repository-examples` validates the selected Terraform
-root, example backend key, cluster/region/hostname wiring, rendered GitOps overlay,
+root, selected backend, cluster/region/hostname wiring, rendered GitOps overlay,
 bootstrap VPC placeholder, declared runtime RBAC, runner labels and GitHub Environment.
 The example intentionally reports `runtime_access_requested: false`. Each result includes
 `live_checks: pending`. The command reads files and invokes local `kubectl kustomize`.
 The existing Terraform validate job checks provider schemas. The existing render job
 checks the effective application chart and release identity.
 
-### State ownership before 4B
+### Select an inventory entry
 
-The dev root declares an S3 backend. The test and runtime-identities roots currently
-use local state despite the presence of example S3 backend files. The test template
-report exposes this in `declared_backend` and `live_blockers`. Personal preflight
-refuses to treat test's S3 file as effective while its root declares local state.
-Before 4C identify any existing test state and decide where it will live. For
-runtime-identities, locate the original state and the existing IAM roles before
-considering creation. Preserve the persistent roles through dev/test teardown.
+`--config` selects the inventory and `--env` selects an exact key under
+`environments`. Set `delivery_environment` explicitly beside `driver` in
+each schema-2 inventory entry. For example, a test environment named
+`team-a-test` selects `delivery_environment: aws-test`. The CLI reads
+that target's `root_manifest` from `delivery/standard/config.json` and checks
+that it matches the selected Terraform stage.
+
+```bash
+python3 scripts/ops/cli.py show --config /path/to/inventory.yaml --env team-a-test
+python3 scripts/ops/cli.py preflight --config /path/to/inventory.yaml --env team-a-test
+```
+
+Both commands report `environment: team-a-test` and `delivery_environment: aws-test`.
+The standard Terraform root selects the physical infrastructure stage.
+Preflight reads the cluster name from the selected Terraform inputs and checks
+the overlay against it. The test runner labels and GitHub Environment remain
+bound to `aws-test`. Both personal targets support `plan`, `create`, `deploy`, `up` and `destroy`.
+`deploy` bootstraps an existing cluster. A confirmed `up` provisions and then deploys. Confirmation uses the physical cluster name.
+
+### Select the state address
+
+The dev root uses S3. Set `terraform.backend.type: s3` and
+`terraform.backend.config_file` to the private backend file. When updating a dev
+inventory, move the path from `terraform.backend_file` to `terraform.backend.config_file`.
+
+With the default personal inventory, `config_file: aws-dev.tfbackend` resolves
+to `~/.config/startup-devops-baseline/aws-dev.tfbackend`. From the repository
+root, prepare a first private copy with the following commands. The copy skips
+an existing destination.
+
+```bash
+python3 scripts/ops/cli.py init-config
+cp -nT infra/terraform/aws/backend-config/dev.s3.tfbackend.example \
+  "$HOME/.config/startup-devops-baseline/aws-dev.tfbackend"
+```
+
+If you selected another inventory or configured another path, use the destination
+reported by `show --config FILE --env NAME` under `paths.backend_config_file`.
+Replace the bucket and KMS key placeholders with the dev state-bootstrap output,
+check the region and state key, and set the allowed account ID. After preparing
+the personal tfvars, run `preflight --env aws-dev --check-inputs` to validate
+both files locally.
+
+For a fresh test deployment, use the existing state bucket and the dedicated
+key `environments/test/terraform.tfstate`. Set the backend in the **test** entry
+of your private inventory. Replace the former local backend block in full.
+
+```yaml
+backend:
+  type: s3
+  config_file: aws-test.tfbackend
+```
+
+Prepare the private backend file beside the inventory. Fill in the bucket,
+bucket region, KMS key ARN and allowed account from state-bootstrap. Keep the
+test key, encryption and native locking from the template.
+
+```bash
+inventory="$HOME/.config/startup-devops-baseline/environments.yaml"
+cp -nT infra/terraform/aws/backend-config/test.s3.tfbackend.example \
+  "$(dirname "$inventory")/aws-test.tfbackend"
+# Fill in the private backend and test tfvars before running these commands.
+.venv/bin/python scripts/ops/cli.py preflight --env aws-test --config "$inventory" --check-inputs
+.venv/bin/python scripts/ops/cli.py plan --env aws-test --config "$inventory"
+```
+
+Preflight validates the files offline. Plan reads the selected S3 key and prints
+its address and state status before init. For this fresh start expect `absent`.
+An existing snapshot, including one with zero resources, has its own lineage;
+the standard plan reopens it. If a fresh state was expected, review that
+address before provisioning. Access or KMS failures stop the plan. A missing
+key also triggers checks for an existing cluster and VPC.
+
+A previous state under the operator's external state directory can stay there.
+If a retired `terraform.tfstate` exists directly in the test Terraform root,
+move that specific file to a private location outside the checkout before the
+first S3 plan. Confirm its resources are retired first. The CLI uses a temporary
+Terraform data directory and initializes with `-reconfigure`. Keep the bucket
+and KMS key in place.
+
+After reviewing the test plan, use the cluster name printed by preflight.
+With the default project name the infrastructure command is:
+
+```bash
+.venv/bin/python scripts/ops/cli.py create --env aws-test --config "$inventory" --confirm startup-devops-baseline-test
+```
+
+Without confirmation, `create` previews the changes. A confirmed call makes and
+checks a fresh plan, applies it, and saves the dedicated kubeconfig. Look for
+`Dedicated kubeconfig:` and copy the following `kubectl ... get nodes` command.
+To find the path again, run `show` with the same inventory and environment and
+read `paths.kubeconfig`. The file is scoped to your AWS account, region and cluster.
+The test cluster incurs AWS charges from creation. You can run `destroy` immediately
+after `create`.
+
+### Deploy the test GitOps stack
+
+After `create`, use its printed kubectl command to check the test nodes.
+From a checkout matching the merged main configuration, run:
+
+```bash
+.venv/bin/python scripts/ops/cli.py deploy --env aws-test --config "$inventory"
+```
+
+For a fresh environment the one-command alternative is:
+
+```bash
+.venv/bin/python scripts/ops/cli.py up --env aws-test --config "$inventory" --confirm startup-devops-baseline-test
+```
+
+Both paths apply `startup-devops-aws-test-root`. Its demo Application uses the
+image digest in `apps/demo-api/helm/values/releases/aws-test.yaml` on main. To
+qualify a promoted image, check that the reviewed promotion PR has merged and
+that this file contains the intended digest.
+
+During a canary update the test Rollout can pause at the configured manual step.
+In a second terminal, use the dedicated test connection to inspect the rollout
+and analysis. The deployment command continues waiting for convergence.
+
+```bash
+inventory="$HOME/.config/startup-devops-baseline/environments.yaml"
+kubeconfig="$(.venv/bin/python scripts/ops/cli.py show --env aws-test --config "$inventory" | jq -er '.paths.kubeconfig')" || exit 1
+export KUBECONFIG="$kubeconfig"
+kubectl -n startup-apps get rollouts.argoproj.io/demo-api
+kubectl -n startup-apps get analysisruns.argoproj.io
+```
+
+When the Rollout reaches the manual pause and the analysis is satisfactory,
+the operator can advance that step with the Argo Rollouts kubectl plugin:
+
+```bash
+kubectl argo rollouts promote demo-api -n startup-apps
+```
+
+After the root and its children are Synced and Healthy, run `delivery runtime`
+on main with `environment=aws-test` using the configured test runner to qualify
+the live release. A successful deploy reports GitOps convergence.
 
 ## Check personal inputs
 
-Use your inventory outside Git. If starting fresh, copy `config/environments.example.yaml`
-there and prepare the files named in the selected environment. Relative input paths
+Use your inventory outside Git. If starting fresh, run `python3 scripts/ops/cli.py init-config` and prepare the files named in the selected environment. Relative input paths
 resolve from the inventory's directory. Tilde paths resolve from the operator's home.
 Existing personal files may be used directly.
 
 | Input | Preparation for aws-dev |
 | --- | --- |
 | Inventory | Select the real 12-digit account, region, operator profile or role, and `infra/terraform/aws/environments/dev`. The operator identity and the Actions runtime role serve different purposes. |
-| Private backend file | Use the dev values from the retained state-bootstrap output `backend_configuration`. Add `allowed_account_ids` for the expected account as shown in `infra/terraform/aws/backend-config/dev.s3.tfbackend.example`. Check the bucket, KMS key, region, encryption, native lockfile and environment key. |
+| Private backend file | Use the selected environment from the retained state-bootstrap output `backend_configuration`. Set `allowed_account_ids` to the expected account in the matching S3 template. Check the bucket, KMS key, region, encryption, native lockfile and environment key. |
 | Private tfvars | Start from `infra/terraform/aws/environments/dev/terraform.tfvars.example`. Review project, region, DNS and endpoint settings. For a public endpoint supply restricted IPv4 CIDRs through the private file. For a private endpoint confirm the operator and runner have a network path in 4B. |
 | Runtime identity | Use the retained runtime-identities output `aws_dev_runtime_role_arn` for `github_actions_runtime_role_arn`. Set `enable_github_actions_runtime_identity = true` in the intended environment file when preparing runtime access. This makes the future environment plan include the EKS access entry. |
 | Capacity and retention | Review the reported min/desired/max, NAT and backup settings before any plan. The dev root has a tracked `observability-capacity.auto.tfvars` at 4/4/4. Passing the unedited example as the explicit var-file sets 2/2/3. Check that the chosen capacity fits the platform. |
@@ -52,7 +181,7 @@ or mismatched target exits nonzero. Templates retain placeholders and cannot est
 personal readiness. The checks compare selected target fields from root variable defaults,
 terraform.tfvars, terraform.tfvars.json, then sorted auto files, with the explicitly
 selected file last. Shell TF_VAR/CLI overrides, workspace selection, live account
-identity, existing state, drift and actual node capacity need separate verification.
+identity, remote state, drift and actual node capacity need live verification.
 The standard personal profile assumes a single account for state and environment
 resources. Keep login credentials, secret contents, state and kubeconfig outside Git.
 
@@ -94,7 +223,9 @@ The normal dev root can create or update resources. A delete or replacement,
 a same-name cluster outside a creation plan's state, or an unfinished network
 teardown recorded for the same VPC stops provisioning before apply.
 
-Use `create` with the same confirmation to finish after Terraform apply.
+Use `create` with the same confirmation to finish after saving the cluster connection.
+Both commands print the dedicated path. A successful `up` or `deploy` also prints
+a ready-to-run kubectl command after GitOps convergence.
 Without confirmation, `create` and `up` stop after the preview. `--dry-run`
 prints phases offline. After a partial apply, run `plan` again and review the
 remaining changes. After a successful apply and a bootstrap failure, resume
@@ -113,7 +244,7 @@ Use the usual preflight Python environment.
 .venv/bin/python scripts/ops/cli.py deploy --env aws-dev --config ~/.config/startup-devops-baseline/environments.yaml
 ```
 
-The command refreshes `~/.kube/startup-devops-baseline/aws-dev.yaml`, prepares
+The command refreshes the dedicated kubeconfig shown by `show --env aws-dev`, prepares
 ServiceAccounts and Grafana, installs Argo CD, seeds the ALB Application, and
 applies the root. It reconciles the CNPG backup destination, seeds the demo's
 database credential and creates a DNS alias
@@ -138,14 +269,12 @@ After interruption, run the same command again. An existing foreign backup
 destination or DNS record requires operator review. To inspect the cluster:
 
 ```bash
-export KUBECONFIG="$HOME/.kube/startup-devops-baseline/aws-dev.yaml"
+kubeconfig="$(.venv/bin/python scripts/ops/cli.py show --env aws-dev | jq -er '.paths.kubeconfig')" || exit 1
+export KUBECONFIG="$kubeconfig"
 kubectl -n argocd get applications
 ```
 
-The following destroy entrypoint handles a provisioned standard personal dev stack. AWS test remains
-at the preparation stage. Archived v0.12 executors are historical material.
-
-### Destroy the personal dev cluster
+### Destroy a personal dev or test cluster
 
 Run from the operator workstation after stopping other deploys and runtime jobs.
 Use the same private inventory, operator profile and backend as deployment.
@@ -159,20 +288,34 @@ checks its own fresh plan before the first cluster mutation.
 .venv/bin/python scripts/ops/cli.py destroy --env aws-dev --config ~/.config/startup-devops-baseline/environments.yaml --confirm startup-devops-baseline-dev
 ```
 
-Default destroy releases the standard dev PVCs without creating EBS snapshots.
+For test, preview the selected S3 state and check the account, cluster, VPC and retained addresses
+before confirming with the physical cluster name printed by the CLI.
+
+```bash
+.venv/bin/python scripts/ops/cli.py destroy --env aws-test --config "$inventory"
+.venv/bin/python scripts/ops/cli.py destroy --env aws-test --config "$inventory" --confirm startup-devops-baseline-test
+```
+
+A cluster with infrastructure only still requires Kubernetes API access to check for workloads
+and persistent volumes. The CLI scales down the Argo CD controller when present.
+
+Default destroy releases the standard PVCs without creating EBS snapshots.
 To take crash-consistent snapshots of those volumes and keep the CNPG backup
 bucket and the demo DB secret, add `--retain-backups` to both commands.
 Snapshot mode requires EC2 snapshot creation, tagging and read permissions.
 Previously recorded snapshots are listed and preserved in either mode.
 
-For a fresh dev installation the EKS cluster, CNPG bucket and demo DB secret
-receive the same creation-plan tag when created in one Terraform plan. A
-normal destroy can remove the two data resources only with a matching marker.
+For a fresh dev or test installation the EKS cluster, CNPG bucket and demo DB secret
+receive the same creation-plan tag (`BaselineDevCreationPlan`, the historical key)
+when created in one Terraform plan. A normal destroy can remove the two data resources only with a matching marker.
 Bucket deletion also requires its stored force_destroy setting and includes
 its objects and versions. Secrets Manager uses the resource's configured
-recovery window. Legacy, imported without matching markers, or separately
-created data resources are retained. Existing tags are not backfilled on
-upgrade. Treat the disposable bucket as exclusive to this environment.
+recovery window. The test example selects seven days, so a deleted secret name may
+be unavailable for an immediate rebuild. For repeated disposable test runs, set
+`external_secrets_recovery_window_in_days = 0` before creation if immediate deletion is intended.
+Destroy retains unmarked test buckets and secrets from earlier runs, along with
+imported or separately created data resources whose ownership markers differ. Existing tags are not
+backfilled on upgrade. Treat the disposable bucket as exclusive to this environment.
 The preview lists the data resource names, Terraform addresses, shared state
 location and recorded snapshots. Shared state, KMS and persistent runtime
 identities belong to separate roots. Retained backups and secrets can incur
@@ -197,7 +340,8 @@ The wait is limited to ten minutes or the shorter environment timeout.
 If the wait expires, inspect the controller and bindings:
 
 ```bash
-export KUBECONFIG="$HOME/.kube/startup-devops-baseline/aws-dev.yaml"
+kubeconfig="$(.venv/bin/python scripts/ops/cli.py show --env aws-dev | jq -er '.paths.kubeconfig')" || exit 1
+export KUBECONFIG="$kubeconfig"
 kubectl -n startup-apps describe ingress demo-api
 kubectl -n startup-apps get targetgroupbindings.elbv2.k8s.aws
 kubectl -n kube-system logs -l app.kubernetes.io/name=aws-load-balancer-controller --all-containers --prefix --since=15m --tail=100
@@ -216,4 +360,4 @@ then takes fresh snapshots, including when the volume IDs are unchanged.
 Deploy and destroy share a workstation lock. Keep the local receipt under
 `~/.local/state/startup-devops-baseline/` for recovery after partial apply.
 Completion verifies the EKS cluster and VPC are absent and only the reported
-retained addresses remain in the dev state.
+retained addresses remain in the selected state.

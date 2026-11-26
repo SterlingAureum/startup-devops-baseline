@@ -1,13 +1,19 @@
 """Small environment inventory. Infrastructure and application settings stay in GitOps/IaC."""
 from copy import deepcopy
+from dataclasses import dataclass
+import json
+import os
 from pathlib import Path
 import re
+import tempfile
 from urllib.parse import urlsplit
 
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_CONFIG = ROOT / "config/environments.example.yaml"
+EXAMPLE_CONFIG = ROOT / "config/environments.example.yaml"
+ARGOCD_BOOTSTRAP = ROOT / "config/argocd-bootstrap.yaml"
+DELIVERY_CONFIG = ROOT / "delivery/standard/config.json"
 
 
 class OpsError(ValueError):
@@ -63,10 +69,19 @@ def https_url(value, location):
             and not url.query and not url.fragment, location + " must be a credential-free HTTPS URL")
 
 
+def argocd_bootstrap(overrides):
+    defaults = load_yaml(ARGOCD_BOOTSTRAP.read_text())
+    keys = ("namespace", "manifest")
+    mapping(defaults, keys, "Argo CD bootstrap defaults", keys)
+    mapping(overrides, keys, "argocd")
+    return {**defaults, **overrides}
+
+
 def validate_environment(env):
-    mapping(env, ("driver", "timeout", "kind", "argocd", "gitops", "aws", "terraform"), "environment", ("driver",))
+    mapping(env, ("driver", "delivery_environment", "timeout", "kind", "argocd", "gitops", "aws", "terraform"), "environment", ("driver",))
     require(env["driver"] in ("kind", "aws"), "Supported drivers are kind and aws")
     require(type(env.get("timeout", 900)) is int and env.get("timeout", 900) > 0, "timeout must be a positive integer")
+    text(env.get("delivery_environment"), "delivery_environment")
     if env["driver"] == "aws":
         mapping(env.get("aws"), ("expected_account_id", "region", "profile", "role_arn"), "aws", ("expected_account_id", "region"))
         aws = env["aws"]
@@ -75,11 +90,19 @@ def validate_environment(env):
         for key in ("profile", "role_arn"):
             if key in aws:
                 text(aws[key], "aws." + key)
-        mapping(env.get("terraform"), ("root", "variables_file", "backend_file"), "terraform", ("root",))
-        repository_path(env["terraform"]["root"], "terraform.root")
-        for key in ("variables_file", "backend_file"):
-            if key in env["terraform"]:
-                text(env["terraform"][key], "terraform." + key)
+        tf = env.get("terraform")
+        require(not isinstance(tf, dict) or "backend_file" not in tf,
+                "Use terraform.backend.config_file for the S3 backend file")
+        mapping(tf, ("root", "variables_file", "backend"), "terraform", ("root", "backend"))
+        repository_path(tf["root"], "terraform.root")
+        if "variables_file" in tf:
+            text(tf["variables_file"], "terraform.variables_file")
+        backend = tf["backend"]
+        mapping(backend, ("type", "path", "config_file"), "terraform.backend", ("type",))
+        require(backend["type"] in ("s3", "local"), "terraform.backend.type must be s3 or local")
+        key = "path" if backend["type"] == "local" else "config_file"
+        mapping(backend, ("type", key), "terraform.backend", ("type", key))
+        text(backend[key], "terraform.backend." + key)
         require("kind" not in env, "An AWS environment must not contain kind settings")
     else:
         require("aws" not in env and "terraform" not in env, "A kind environment must not contain AWS/Terraform settings")
@@ -89,15 +112,16 @@ def validate_environment(env):
         text(kind["node_image"], "kind.node_image")
         ports = [kind["http_port"], kind["https_port"]]
         require(all(type(port) is int and 1 <= port <= 65535 for port in ports) and ports[0] != ports[1], "Use two distinct valid kind host ports")
-    if env["driver"] == "kind" or "argocd" in env:
+    if "argocd" in env:
         mapping(env.get("argocd"), ("namespace", "manifest"), "argocd", ("namespace", "manifest"))
         require(isinstance(env["argocd"]["namespace"], str) and re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", env["argocd"]["namespace"]), "Invalid Argo CD namespace")
         https_url(env["argocd"]["manifest"], "argocd.manifest")
     if env["driver"] == "kind" or "gitops" in env:
-        mapping(env.get("gitops"), ("repository", "revision", "root_manifest", "root_application", "parameters"), "gitops", ("repository", "root_manifest", "root_application"))
+        require(not isinstance(env.get("gitops"), dict) or "root_manifest" not in env["gitops"],
+                "Remove gitops.root_manifest from the inventory. Set root_manifest on the selected delivery target")
+        mapping(env.get("gitops"), ("repository", "revision", "root_application", "parameters"), "gitops", ("repository", "root_application"))
         gitops = env["gitops"]
         https_url(gitops["repository"], "gitops.repository")
-        repository_path(gitops["root_manifest"], "gitops.root_manifest")
         text(gitops["root_application"], "gitops.root_application")
         if gitops.get("revision") is not None:
             require(isinstance(gitops["revision"], str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._/-]*", gitops["revision"])
@@ -106,10 +130,70 @@ def validate_environment(env):
     return env
 
 
+@dataclass(frozen=True)
+class AwsTarget:
+    inventory_name: str
+    stage: str
+    terraform_root: Path
+    delivery_environment: str
+    gitops_root: str
+    catalog: dict
+
+
+def delivery_target(env):
+    catalog = json.loads(DELIVERY_CONFIG.read_text())
+    key = env["delivery_environment"]
+    targets = catalog["environments"]
+    require(key in targets, f"Unknown delivery environment {key!r} in delivery/standard/config.json")
+    manifest = repository_path(targets[key]["root_manifest"], f"delivery environment {key!r} root_manifest")
+    if env["driver"] == "kind":
+        require(not Path(manifest).is_relative_to("clusters/aws"),
+                f"Kind environment cannot select the AWS GitOps root {manifest}")
+    return catalog, manifest
+
+
+def standard_aws_target(name, env, catalog, manifest):
+    # The catalog chooses the overlay. The physical Terraform target must agree.
+    root = (ROOT / env["terraform"]["root"]).resolve()
+    if root.parent == ROOT / "infra/terraform/aws/environments" and root.name in ("dev", "test"):
+        expected = f"clusters/aws/overlays/{root.name}/root-app.yaml"
+        require(manifest == expected,
+                f"Delivery environment {env['delivery_environment']!r} must select {expected} for Terraform root {root}")
+        return AwsTarget(name, root.name, root, env["delivery_environment"], manifest, catalog)
+    return None
+
+
+def personal_inventory():
+    return Path.home() / ".config/startup-devops-baseline/environments.yaml"
+
+
+def init_inventory(path):
+    path = path.expanduser().absolute()
+    path.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
+    # Publish complete, private bytes without replacing another initializer's file.
+    with tempfile.NamedTemporaryFile(dir=path.parent) as tmp:
+        tmp.write(EXAMPLE_CONFIG.read_bytes())
+        tmp.flush()
+        try:
+            os.link(tmp.name, path)
+        except FileExistsError:
+            require(path.is_file() and not path.is_symlink(), f"Expected a regular inventory file at {path}")
+            return False
+    return True
+
+
 def environment(path, name):
     doc = load_yaml(Path(path).expanduser().read_text())
     mapping(doc, ("schema_version", "environments"), "configuration", ("schema_version", "environments"))
-    require(type(doc["schema_version"]) is int and doc["schema_version"] == 1, "Unsupported configuration schema_version")
-    require(isinstance(doc["environments"], dict) and name in doc["environments"], "Selected environment is absent from configuration")
+    require(type(doc["schema_version"]) is int and doc["schema_version"] == 2,
+            "Inventory requires schema_version: 2. Update your selected entries using config/environments.example.yaml")
+    entries = doc["environments"]
+    require(isinstance(entries, dict), "environments must be a mapping")
+    if name not in entries:
+        available = ", ".join(sorted(entries)) or "(none)"
+        raise OpsError(f"Unknown environment {name!r}. Available environments: {available}")
     # Validate the selected target only: an unfinished AWS example cannot break local operations.
-    return validate_environment(deepcopy(doc["environments"][name]))
+    env = deepcopy(entries[name])
+    require(isinstance(env, dict), "environment must be a mapping")
+    env["argocd"] = argocd_bootstrap(env.get("argocd", {}))
+    return validate_environment(env)

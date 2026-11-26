@@ -13,6 +13,12 @@ patches:
       kind: Application
       name: monitoring-aws-dev
     patch: |-
+      - op: add
+        path: /spec/source/helm/valuesObject/grafana/admin
+        value:
+          existingSecret: observability-grafana-admin
+          userKey: admin-user
+          passwordKey: admin-password
       - op: replace
         path: /metadata/name
         value: monitoring-aws-test
@@ -85,6 +91,22 @@ patches:
       kind: Application
       name: demo-api-aws-dev
     patch: |-
+      - op: add
+        path: /spec/ignoreDifferences/-
+        value:
+          group: apps
+          kind: Deployment
+          name: demo-api
+          namespace: startup-apps
+          jsonPointers: [/spec/template/metadata/annotations/platform.startup.dev~1demo-db-version]
+      - op: add
+        path: /spec/ignoreDifferences/-
+        value:
+          group: argoproj.io
+          kind: Rollout
+          name: demo-api
+          namespace: startup-apps
+          jsonPointers: [/spec/template/metadata/annotations/platform.startup.dev~1demo-db-version]
       - op: replace
         path: /metadata/name
         value: demo-api-aws-test

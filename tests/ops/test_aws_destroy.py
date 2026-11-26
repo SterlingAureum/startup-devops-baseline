@@ -3,14 +3,16 @@ import json
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import Mock, patch
+
+import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/ops"))
 import aws_destroy as teardown
 import cli
-from configuration import OpsError
+from configuration import EXAMPLE_CONFIG, OpsError, environment
 
 
 def resource(module, kind, name="this", **instance):
@@ -46,9 +48,40 @@ class TeardownTests(unittest.TestCase):
 
     def test_preview_dry_run_starts_no_tools(self):
         with patch.object(teardown, "destroy") as destroy, redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(cli.main(["destroy", "--env", "aws-dev", "--dry-run"]), 0)
+            self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "destroy", "--env", "aws-dev", "--dry-run"]), 0)
             self.assertFalse(json.loads(output.getvalue())["executed"])
             destroy.assert_not_called()
+
+    def test_test_alias_selects_test_state_and_requires_physical_confirmation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            config = folder / "inventory.yaml"
+            entry = environment(EXAMPLE_CONFIG, "aws-test")
+            config.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"sandbox": entry}}))
+            cluster = "startup-devops-baseline-test"
+            command = ["destroy", "--env", "sandbox", "--config", str(config), "--retain-backups"]
+            with patch.object(teardown, "inspect", return_value={"cluster": cluster}) as inspect, \
+                    patch.object(teardown.Cluster, "aws", return_value='{"Account":"123456789012"}') as aws, \
+                    patch.object(teardown, "lifecycle_lock") as lock, \
+                    patch.object(teardown, "check_selected_state") as check, patch.object(teardown, "session") as session, \
+                    redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as error:
+                self.assertEqual(cli.main(command + ["--dry-run"]), 0)
+                inspect.assert_not_called()
+                self.assertEqual(cli.main(command + ["--confirm", "startup-devops-baseline-dev"]), 1)
+                self.assertIn("--confirm " + cluster, error.getvalue())
+                aws.assert_not_called()
+                session.assert_not_called()
+                for confirm in (None, cluster):
+                    self.assertEqual(cli.main(command + (["--confirm", confirm] if confirm else [])), 0)
+                    target = inspect.call_args.args[0]
+                    self.assertEqual((target.inventory_name, target.stage), ("sandbox", "test"))
+                    self.assertEqual(check.call_args.args[-1], "destroy")
+                    lock.assert_called_with("123456789012", "us-east-1", cluster)
+                    g, env, path, confirmed, _, _, retain = session.call_args.args
+                    self.assertEqual(g.context, cluster)
+                    self.assertEqual(env["terraform"]["root"], "infra/terraform/aws/environments/test")
+                    self.assertEqual(env["terraform"]["backend"]["config_file"], "aws-test.tfbackend")
+                    self.assertEqual((path, confirmed, retain), (config, confirm, True))
 
     def test_foreign_dns_target_blocks(self):
         g = Mock()
@@ -79,22 +112,32 @@ class TeardownTests(unittest.TestCase):
         g.aws.assert_called_once_with("ec2", "describe-snapshots", "--snapshot-ids", "snap-ab")
 
     def test_session_previews_then_applies_only_after_cleanup(self):
+        for stage in ("dev", "test"):
+            with self.subTest(stage=stage):
+                self.check_session_preview_and_apply(stage)
+
+    def check_session_preview_and_apply(self, stage):
         g = Mock()
-        g.context = "example-dev"
-        g.env = {}
+        g.context = "example-" + stage
+        g.env = {"TF_VAR_environment": "unexpected"}
         aws = {"region": "us-east-1", "expected_account_id": "123456789012"}
-        env = {"aws": aws, "terraform": {"root": "infra/terraform/aws/environments/dev",
-                                         "backend_file": "dev.tfbackend", "variables_file": "dev.tfvars"}}
+        env = {"aws": aws, "terraform": {"root": "infra/terraform/aws/environments/" + stage,
+                                         "backend": {"type": "s3", "config_file": stage + ".tfbackend"}, "variables_file": stage + ".tfvars"}}
         name = "module.eks.aws_eks_cluster.this"
         retained = resource("cnpg_backup", "aws_s3_bucket")
         state = {"lineage": "12345678-1234-1234-1234-123456789012",
                  "outputs": {k: {"value": v} for k, v in {
-                     "eks_cluster_name": "example-dev", "eks_cluster_endpoint": "endpoint", "vpc_id": "vpc-1"}.items()},
+                     "eks_cluster_name": g.context, "eks_cluster_endpoint": "endpoint", "vpc_id": "vpc-1"}.items()},
                  "resources": [resource("eks", "aws_eks_cluster"), retained]}
-        live = {"arn": "arn:aws:eks:us-east-1:123456789012:cluster/example-dev", "endpoint": "endpoint",
+        live = {"arn": "arn:aws:eks:us-east-1:123456789012:cluster/" + g.context, "endpoint": "endpoint",
                 "resourcesVpcConfig": {"vpcId": "vpc-1"}}
         events = []
         def command(args, env):
+            if args[0] == "terraform":
+                self.assertNotIn("TF_VAR_environment", env)
+                self.assertTrue(args[1].endswith("/environments/" + stage))
+            if "init" in args:
+                self.assertIn("-backend-config=" + str(folder / (stage + ".tfbackend")), args)
             if "pull" in args:
                 if "apply" in events:
                     return json.dumps(dict(state, resources=[retained]))
@@ -103,6 +146,7 @@ class TeardownTests(unittest.TestCase):
                 return json.dumps({"resource_changes": [{"mode": "managed", "address": name,
                                                          "change": {"actions": ["delete"]}}]})
             if "plan" in args:
+                self.assertIn("-var-file=" + str(folder / (stage + ".tfvars")), args)
                 self.assertEqual([a for a in args if a.startswith("-target=")], ["-target=" + name])
                 events.append("plan")
             return ""
@@ -130,7 +174,7 @@ class TeardownTests(unittest.TestCase):
                  "outputs": {k: {"value": v} for k, v in {"eks_cluster_name": g.context,
                              "vpc_id": "vpc-a", "eks_cluster_endpoint": "endpoint"}.items()}}
         env = {"aws": {"region": "us-east-1", "expected_account_id": "123456789012"},
-               "terraform": {"root": "dev", "backend_file": "dev.backend", "variables_file": "dev.tfvars"}}
+               "terraform": {"root": "dev", "backend": {"type": "s3", "config_file": "dev.backend"}, "variables_file": "dev.tfvars"}}
         plans, applies = [], []
         def terraform(args, env):
             if "pull" in args:
@@ -225,6 +269,29 @@ class TeardownTests(unittest.TestCase):
             teardown.demo_lbs(g, "dev-vpc")
         g.k.assert_not_called()
 
+    def test_infra_only_cluster_skips_scale_but_checks_for_storage_and_network_dependencies(self):
+        g = Mock(context="example-test", timeout=60)
+        g.obj.return_value = None
+        g.until.side_effect = lambda description, read: self.assertTrue(read())
+        g.aws.side_effect = ['{"LoadBalancers":[]}', '{"ResourceRecordSets":[]}', '{"LoadBalancers":[]}',
+                             '{"InstanceProfiles":[]}', '{"Reservations":[]}']
+        with patch.object(teardown, "resources", return_value=[]) as listing, redirect_stdout(io.StringIO()):
+            teardown.remove_stack(g, {"vpc_id": "vpc-test", "karpenter_node_role_name": "role-test",
+                                      "route53_hosted_zone_id": "zone", "demo_api_hostname": "test.example"},
+                                  {"snapshots": {}}, Mock(), False)
+        self.assertNotIn("scale", [c.args[0] for c in g.k.call_args_list])
+        self.assertTrue(any(c.args[1] == "pv" for c in listing.call_args_list))
+        self.assertTrue(any("Name=vpc-id,Values=vpc-test" in c.args for c in g.aws.call_args_list))
+        self.assertEqual(g.aws.call_count, 5)
+
+    def test_controller_query_failure_stops_cleanup(self):
+        g = Mock()
+        g.obj.side_effect = OpsError("cannot read controller")
+        with patch.object(teardown, "demo_lbs", return_value=set()), patch.object(teardown, "dns_record", return_value=None), \
+                self.assertRaisesRegex(OpsError, "cannot read controller"):
+            teardown.remove_stack(g, {"vpc_id": "vpc-test"}, {"snapshots": {}}, Mock(), False)
+        g.k.assert_not_called()
+
     def test_default_releases_csi_volumes_without_creating_snapshots(self):
         g = Mock()
         journal = {"snapshots": {"vol-123": "snap-previous"}}
@@ -250,10 +317,10 @@ class TeardownTests(unittest.TestCase):
 
     def test_cli_forwards_opt_in_and_interrupt_returns_130(self):
         with patch.object(teardown, "destroy", side_effect=KeyboardInterrupt) as invoke:
-            result = cli.main(["destroy", "--env", "aws-dev", "--retain-backups", "--confirm", "dev"])
+            result = cli.main(["--config", str(EXAMPLE_CONFIG), "destroy", "--env", "aws-dev", "--retain-backups", "--confirm", "dev"])
         self.assertEqual(result, 130)
         self.assertEqual(invoke.call_args.args[-2:], ("dev", True))
-        self.assertEqual(cli.main(["deploy", "--env", "aws-dev", "--retain-backups", "--dry-run"]), 1)
+        self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "deploy", "--env", "aws-dev", "--retain-backups", "--dry-run"]), 1)
 
     def test_external_secrets_finish_before_namespace_delete_and_retry_skips_absent(self):
         g = Mock(timeout=60)

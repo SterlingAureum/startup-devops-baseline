@@ -14,7 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "scripts/ops"))
 import aws_deploy as deploy
 import aws_provision as provision
 import cli
-from configuration import OpsError
+from configuration import EXAMPLE_CONFIG, OpsError
 
 
 def change(address, actions, before=None, after=None):
@@ -44,7 +44,7 @@ class ProvisionTests(unittest.TestCase):
         with self.assertRaisesRegex(OpsError, "incomplete"):
             provision.check_plan(dict(self.plan, complete=False), self.g)
         self.eks["change"]["after"]["name"] = "another-dev"
-        with self.assertRaisesRegex(OpsError, "expected dev EKS"):
+        with self.assertRaisesRegex(OpsError, "expected EKS"):
             provision.check_plan(self.plan, self.g)
 
     def test_preview_and_apply_use_exact_generated_plan(self):
@@ -119,11 +119,12 @@ class ProvisionTests(unittest.TestCase):
                 self.assertEqual(set(state.splitlines()), {"terraform_data.cluster", "terraform_data.keep"})
 
     def test_real_entry_dispatch_stops_at_selected_phase(self):
-        for command, confirm, fails in [("plan", False, False), ("up", False, False), ("create", True, False),
+        for command, confirm, fails in [("plan", False, False), ("up", False, False), ("create", False, False),
+                                        ("create", True, False), ("create", True, True),
                                         ("up", True, True), ("up", True, False)]:
             with self.subTest(command=command, confirm=confirm, fails=fails), tempfile.TemporaryDirectory() as tmp:
                 folder = Path(tmp)
-                report = {"cluster": self.name, "gitops_root": "clusters/aws/overlays/dev/root-app.yaml"}
+                report = {"stage": "dev", "cluster": self.name, "gitops_root": "clusters/aws/overlays/dev/root-app.yaml"}
                 outputs = {"environment_name": "dev", "eks_cluster_name": self.name,
                            "eks_cluster_endpoint": "https://eks", "vpc_id": "vpc"}
                 events = []
@@ -151,23 +152,29 @@ class ProvisionTests(unittest.TestCase):
                     if fails:
                         raise subprocess.CalledProcessError(1, ["terraform", "apply"])
                 with patch.dict(deploy.os.environ, {"TF_VAR_project_name": "foreign"}), \
-                        patch.object(deploy, "inspect", return_value=report), patch.object(deploy.Cluster, "aws", side_effect=aws), \
+                        patch.object(deploy, "check_selected_state"), patch.object(deploy, "inspect", return_value=report), patch.object(deploy.Cluster, "aws", side_effect=aws), \
                         patch.object(deploy, "lifecycle_lock", return_value=nullcontext(folder)), \
                         patch.object(deploy, "provision", side_effect=provision_step), patch.object(deploy, "run", side_effect=run), \
-                        patch.object(deploy, "private_path", return_value=folder / "kubeconfig"), \
+                        patch.object(deploy, "aws_private_path", return_value=folder / "kubeconfig"), \
                         patch.object(deploy, "kustomize", return_value=[]), patch.object(deploy, "check_deploy_target"), \
-                        patch.object(deploy.Cluster, "k"), patch.object(deploy, "prepare"), patch.object(deploy, "gitops"), \
+                        patch.object(deploy.Cluster, "k") as kubectl, patch.object(deploy, "prepare"), patch.object(deploy, "gitops"), \
                         patch.object(deploy, "complete"), patch.object(deploy, "check_apps") as healthy, \
-                        redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
-                    result = cli.main([command, "--env", "aws-dev"] + (["--confirm", self.name] if confirm else []))
+                        redirect_stdout(io.StringIO()) as log, redirect_stderr(io.StringIO()):
+                    result = cli.main(["--config", str(EXAMPLE_CONFIG), command, "--env", "aws-dev"] + (["--confirm", self.name] if confirm else []))
                     self.assertEqual(result, 1 if fails else 0)
                     bootstrap = command == "up" and confirm and not fails
-                    self.assertEqual(events, ["init", "provision"] + (["output"] if bootstrap else []))
+                    self.assertEqual(events, ["init", "provision"] + (["output"] if confirm and not fails else []))
                     self.assertEqual(healthy.called, bootstrap)
+                    self.assertEqual(kubectl.called, bootstrap)
+                    saved = confirm and not fails
+                    path = folder / "kubeconfig"
+                    self.assertEqual(path.exists(), saved)
+                    self.assertEqual(f"Dedicated kubeconfig: {path}" in log.getvalue(), saved)
+                    self.assertEqual(deploy.kubectl_hint(path, self.name) in log.getvalue(), saved)
 
     def test_hidden_plan_flags_block_before_init(self):
         env = {"terraform": {"root": "infra/terraform/aws/environments/dev", "variables_file": "dev.tfvars",
-                             "backend_file": "dev.backend"}}
+                             "backend": {"type": "s3", "config_file": "dev.backend"}}}
         self.g.env = {"TF_CLI_ARGS_plan": "-destroy"}
         with tempfile.TemporaryDirectory() as tmp, patch.object(deploy, "run") as run:
             with self.assertRaisesRegex(OpsError, "TF_CLI_ARGS"):
@@ -177,9 +184,9 @@ class ProvisionTests(unittest.TestCase):
     def test_invalid_scope_or_confirmation_stops_before_aws(self):
         with patch.object(deploy, "inspect", return_value={"cluster": self.name}), \
                 patch.object(deploy.Cluster, "aws") as aws, redirect_stderr(io.StringIO()), redirect_stdout(io.StringIO()):
-            for args in (["plan", "--env", "aws-test"], ["plan", "--env", "local"],
+            for args in (["deploy", "--env", "aws-test", "--confirm", self.name], ["plan", "--env", "local"],
                          ["create", "--env", "aws-dev", "--confirm", "wrong"],
                          ["plan", "--env", "aws-dev", "--confirm", self.name]):
-                self.assertEqual(cli.main(args), 1)
-            self.assertEqual(cli.main(["up", "--env", "aws-dev", "--dry-run"]), 0)
+                self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), *args]), 1)
+            self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "up", "--env", "aws-dev", "--dry-run"]), 0)
             aws.assert_not_called()

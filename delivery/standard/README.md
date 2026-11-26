@@ -20,9 +20,10 @@ Ordinary documentation and `archive/` changes do not rebuild the app or replay
 historical validators. Repository syntax/entrypoint checks, tests and secret
 scanning still run. Archives are included in secret scanning.
 
-Operator inventory (`config/`) and optional example helpers (`scripts/examples/`)
-are shared tooling inputs. Repository checks validate the environment example
-schema without authenticating to AWS. Workflow names and required check names
+Operator configuration, lifecycle scripts, example helpers and ops tests use
+the mandatory repository and unit jobs. The unit job runs offline preflight
+for each entry in the example inventory. Mixed diffs also run the checks
+selected by the other changed paths. Workflow names and required check names
 are unchanged by the lifecycle entrypoint split.
 
 ### Checked plan and operator intent
@@ -46,11 +47,20 @@ cancelled main check can be retried from that checks run.
 | Change | Static application render | Push runtime targets before switches | Automatic test PR after dev acceptance |
 | --- | --- | --- | --- |
 | Local cluster declaration | local | None | No |
-| Standard AWS overlay | Corresponding AWS environment | Same environment | No |
-| AWS base | All AWS environments | All AWS environments | No |
-| Shared platform or chart template | All environments | All AWS environments | No |
+| Standard AWS overlay | Corresponding AWS environment | None | No |
+| AWS base | All AWS environments | None | No |
+| Shared platform or chart template | All environments | None | No |
+| One environment's values file | That environment | None | No |
 | One environment's release file | That environment | That AWS environment | Only a dev release change |
 | App source | All environments | None | No |
+
+Each AWS delivery entry can opt into live acceptance with `runtime_stage`
+(`dev`, `test` or `prod`) and a release path. A push selects that entry only
+when its release path changes. Dispatch **delivery runtime** with the delivery
+environment key to reverify after platform, chart or values changes. The route
+rejects an unknown or ineligible manual target before requesting a runner.
+The checks plan lists requested push targets before feature switches. The
+runtime matrix applies the production switch before it schedules jobs.
 
 Mixed changes take the union of affected targets. Platform static checks still
 lint shared charts and render the three standard AWS overlays. Production
@@ -82,13 +92,35 @@ five roots with `init -backend=false` and validation, never plan/apply. Platform
 checks lint/render repository-owned charts and AWS Kustomize overlays. They do
 not download every external controller chart or prove live compatibility.
 
+## Promotion stages
+
+The repository's `config.json` selects one concrete target per promotion stage.
+The personal route ships with `"promotion": {"dev": "aws-dev", "test": "aws-test"}`.
+Each stage value selects an entry in `environments` whose `runtime_stage` matches the stage.
+The image workflow proposes the first release to dev. A verified dev candidate
+can advance to test. The PR gate checks the same predecessor and source report.
+Every release PR changes only its target release file.
+
+In **delivery promote selected release**, choose `source_stage=dev` to reverify
+the configured dev target and propose test. For a test-to-prod proposal, add
+`"prod": "aws-prod"` to the promotion map, enable `DELIVERY_PROD_ENABLED`, then
+choose `source_stage=test`. Configure each stage in its own target entry with
+a distinct release path. A target outside the promotion map can participate
+in runtime checks, but a release change there cannot pass the promotion gate.
+The runtime workflow still accepts a concrete delivery environment key for
+manual re-verification; leaving it empty selects the configured dev target.
+Personal inventory aliases and cloud access are configured separately.
+
+To inspect the resolved path offline, run
+`python3 scripts/delivery/flow.py promotion-route --source-stage dev`.
+
 ## Optional cloud jobs
 
 | Variable | Meaning |
 | --- | --- |
 | `DELIVERY_PUBLISH_ENABLED=true` | Permit image publication after successful main checks and preparation of a dev release PR |
 | `DELIVERY_RUNTIME_ENABLED=true` | Permit read-only acceptance against existing trusted runtime runners/clusters and subsequent promotion PR preparation |
-| `DELIVERY_PROD_ENABLED=true` | Additionally permit the prod path; keep unset during this restructuring |
+| `DELIVERY_PROD_ENABLED=true` | Permit prod runtime acceptance. Promotion into prod also requires a configured prod destination. |
 
 All three are unset/disabled by default. Checks run without them. The obsolete
 `DELIVERY_FLOW_ENABLED` can be removed from repository settings after migration.

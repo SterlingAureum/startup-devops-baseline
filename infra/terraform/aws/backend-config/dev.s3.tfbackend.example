@@ -1,3 +1,7 @@
+# Personal AWS dev S3 backend template. Copy to the inventory's terraform.backend.config_file.
+# Use the dev entry in the state-bootstrap output backend_configuration for the six backend settings.
+# To reopen existing state, use its actual bucket and key. The filename on your workstation can differ.
+# Set allowed_account_ids to the same 12-digit account as aws.expected_account_id.
 bucket              = "replace-with-globally-unique-state-bucket-name"
 key                 = "environments/dev/terraform.tfstate"
 region              = "us-east-1"

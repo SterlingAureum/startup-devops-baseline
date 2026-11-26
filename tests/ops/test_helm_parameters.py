@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts/ops"))
 sys.path.insert(0, str(ROOT / "scripts/examples"))
 import cli
+from configuration import EXAMPLE_CONFIG
 import configuration
 import demo_api
 import local
@@ -105,7 +106,7 @@ class HelmParameterTests(unittest.TestCase):
                 output = json.dumps(live[name])
             return subprocess.CompletedProcess([], 0, output, "")
         with patch.object(cli.shutil, "which", return_value="/fixture/tool"), patch.object(local, "source", return_value=nullcontext((COMMIT, ROOT))), patch.object(local.Driver, "kubernetes", return_value=nullcontext()), patch.object(local.Driver, "kube", side_effect=read), redirect_stdout(io.StringIO()):
-            self.assertEqual(cli.main(["verify"]), 0)
+            self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "verify"]), 0)
         self.assertTrue(any("application" in command for command in commands))
         for command in commands:
             self.assertFalse(any(item in command for item in ("apply", "delete", "--raw", "promote")))

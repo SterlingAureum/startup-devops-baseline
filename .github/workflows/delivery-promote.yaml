@@ -3,12 +3,12 @@ name: delivery promote selected release
 on:
   workflow_dispatch:
     inputs:
-      source_environment:
+      source_stage:
         description: Reverify the current source release, then propose the next environment
         required: true
         type: choice
-        default: aws-dev
-        options: [aws-dev, aws-test]
+        default: dev
+        options: [dev, test]
 
 permissions:
   contents: read
@@ -17,31 +17,40 @@ jobs:
   preflight:
     if: github.ref == 'refs/heads/main' && vars.DELIVERY_RUNTIME_ENABLED == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      source: ${{ steps.route.outputs.source }}
+      target: ${{ steps.route.outputs.target }}
     steps:
-      - name: Require enabled destination and PR credentials
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: python3 -m pip install PyYAML==6.0.3
+      - id: route
         env:
-          SOURCE: ${{ inputs.source_environment }}
+          SOURCE_STAGE: ${{ inputs.source_stage }}
           DELIVERY_PROD_ENABLED: ${{ vars.DELIVERY_PROD_ENABLED }}
           DELIVERY_PR_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
         run: |
           test -n "${DELIVERY_PR_TOKEN}"
-          if [[ "${SOURCE}" == aws-test ]]; then test "${DELIVERY_PROD_ENABLED}" == true; fi
+          python3 scripts/delivery/flow.py promotion-route --source-stage "${SOURCE_STAGE}"
 
   verify-source:
     needs: preflight
     permissions:
       contents: read
+      actions: read
       id-token: write
     uses: ./.github/workflows/delivery-verify.yaml
     with:
-      environment: ${{ inputs.source_environment }}
+      environment: ${{ needs.preflight.outputs.source }}
+      stage: ${{ inputs.source_stage }}
       revision: ${{ github.sha }}
 
   propose:
-    needs: verify-source
+    needs: [preflight, verify-source]
     runs-on: ubuntu-latest
     concurrency:
-      group: delivery-proposal-${{ inputs.source_environment == 'aws-dev' && 'aws-test' || 'aws-prod' }}
+      group: delivery-proposal-${{ needs.preflight.outputs.target }}
       cancel-in-progress: false
     timeout-minutes: 10
     permissions:
@@ -65,11 +74,10 @@ jobs:
       - run: python3 -m pip install PyYAML==6.0.3
       - name: Propose the next environment with the verified digest
         env:
-          SOURCE: ${{ inputs.source_environment }}
+          TARGET: ${{ needs.preflight.outputs.target }}
           DELIVERY_PROD_ENABLED: ${{ vars.DELIVERY_PROD_ENABLED }}
           DELIVERY_PR_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
           GH_TOKEN: ${{ secrets.DELIVERY_PR_TOKEN }}
           REPORT_READ_TOKEN: ${{ github.token }}
         run: |
-          if [[ "${SOURCE}" == aws-dev ]]; then TARGET=aws-test; else TARGET=aws-prod; fi
           python3 scripts/delivery/flow.py pr --target "${TARGET}" --candidate "${RUNNER_TEMP}/delivery-candidate/verified.json"

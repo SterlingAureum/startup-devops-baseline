@@ -134,23 +134,28 @@ image digest in `apps/demo-api/helm/values/releases/aws-test.yaml` on main. To
 qualify a promoted image, check that the reviewed promotion PR has merged and
 that this file contains the intended digest.
 
-During a canary update the test Rollout can pause at the configured manual step.
-In a second terminal, use the dedicated test connection to inspect the rollout
-and analysis. The deployment command continues waiting for convergence.
+The personal test profile runs canary updates automatically. It requests 20%
+traffic, waits 60 seconds, runs the inline web analysis, then advances through
+50% to 100% after successful analysis. The CLI waits for the current workload
+generation and its ready replicas. A first installation can go straight to
+stable. A subsequent credential refresh can trigger a canary in the same deploy.
+
+For an operator approval step, insert `- pause: {}` after `- setWeight: 50` in
+`apps/demo-api/helm/values/environments/aws-test.yaml` and merge the configuration
+before deploying. At that step the CLI prints the scoped Argo Rollouts plugin
+command for promotion. Review the Rollout and AnalysisRuns before running it.
+The environment's top-level `timeout` (seconds, AWS default 1800) bounds the
+CLI wait for demo replicas. On expiry, inspect the workload with the printed
+commands, resolve the pause or failure, then rerun `deploy` against the same environment.
+
+To inspect the canary from a second terminal, point kubectl at the dedicated
+test connection:
 
 ```bash
 inventory="$HOME/.config/startup-devops-baseline/environments.yaml"
 kubeconfig="$(.venv/bin/python scripts/ops/cli.py show --env aws-test --config "$inventory" | jq -er '.paths.kubeconfig')" || exit 1
-export KUBECONFIG="$kubeconfig"
-kubectl -n startup-apps get rollouts.argoproj.io/demo-api
-kubectl -n startup-apps get analysisruns.argoproj.io
-```
-
-When the Rollout reaches the manual pause and the analysis is satisfactory,
-the operator can advance that step with the Argo Rollouts kubectl plugin:
-
-```bash
-kubectl argo rollouts promote demo-api -n startup-apps
+kubectl --kubeconfig "$kubeconfig" -n startup-apps get rollouts.argoproj.io/demo-api
+kubectl --kubeconfig "$kubeconfig" -n startup-apps get analysisruns.argoproj.io
 ```
 
 After the root and its children are Synced and Healthy, run `delivery runtime`

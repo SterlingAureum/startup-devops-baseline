@@ -417,8 +417,34 @@ class PromotionTests(unittest.TestCase):
         promotion_check.validate_report(self.report, self.cfg, "aws-dev", self.value, "123", "1")
         changed = deepcopy(self.value)
         changed["image"]["digest"] = "sha256:" + "d" * 64
-        with self.assertRaises(common.Rejected):
+        with self.assertRaises(common.Rejected) as failure:
             promotion_check.validate_report(self.report, self.cfg, "aws-dev", changed, "123", "1")
+        self.assertIn(changed["image"]["digest"], str(failure.exception))
+        self.assertIn(self.value["image"]["digest"], str(failure.exception))
+        changed = deepcopy(self.value)
+        changed["release"]["applicationVersion"] = "different"
+        with self.assertRaisesRegex(common.Rejected, r"release\.applicationVersion"):
+            promotion_check.validate_report(self.report, self.cfg, "aws-dev", changed, "123", "1")
+
+    def test_pr_rejection_names_stale_source_and_revisions(self):
+        cfg = self.cfg
+        path = cfg["environments"]["aws-test"]["release"]
+        before = common.repo_path(path).read_text()
+        flow.prepare_release(cfg, "aws-test", self.report)
+        args = ["promotion_check", "--base", "b" * 40, "--head", "e" * 40]
+        for field, reason in [("inputs_sha256", "Deployment inputs for aws-dev changed"),
+                              ("release_sha256", cfg["environments"]["aws-dev"]["release"])]:
+            report = dict(self.report, **{field: "0" * 64})
+            with self.subTest(field=field), patch.object(sys, "argv", args), \
+                    patch.object(promotion_check, "config", return_value=cfg), \
+                    patch.object(promotion_check, "changed_paths", return_value=[path]), \
+                    patch.object(promotion_check, "git", return_value=before), \
+                    patch.dict(os.environ, GITHUB_REPOSITORY="team/app"), \
+                    patch.object(promotion_check, "verified_report", return_value=report), \
+                    patch("sys.stderr", new_callable=io.StringIO) as log:
+                self.assertEqual(promotion_check.main(), 1)
+                for expected in (reason, "Reverify aws-dev", report["config_revision"], args[-1]):
+                    self.assertIn(expected, log.getvalue())
 
     def test_local_git_pr_changes_only_target_without_rebuild_or_merge(self):
         def git(*args):
@@ -501,6 +527,13 @@ class ReportProvenanceTests(unittest.TestCase):
         self.workflow.update(path=".github/workflows/delivery-promote.yaml", event="workflow_dispatch")
         self.job["name"] = "verify-source / verify (aws-dev)"
         self.assertEqual(self.read(), self.report)
+
+    def test_report_reference_mismatch_identifies_requested_and_received_attempt(self):
+        report = dict(self.report, run_attempt="2")
+        with patch.object(verification, "api", side_effect=[self.workflow, {"jobs": [self.job]}]), \
+                patch.object(verification, "read_artifact", return_value=report), \
+                self.assertRaisesRegex(common.Rejected, "aws-dev: requested 123/1, received 123/2"):
+            verification.verified_report("team/app", "123", "1", "aws-dev")
 
     def test_rejects_failed_or_wrong_job(self):
         for key, value in (("conclusion", "failure"), ("run_attempt", 2), ("name", "verify-test / verify (aws-test)"),

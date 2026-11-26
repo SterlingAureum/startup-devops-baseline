@@ -118,7 +118,20 @@ def input_fingerprint(cfg, environment):
     return digest.hexdigest()
 
 
-def prepare_release(cfg, target, candidate=None, image=None, commit=None, source_repository=None, run_id=None):
+def require_current_source(cfg, source, report, checked_revision):
+    path = cfg["environments"][source]["release"]
+    if report.get("release_sha256") != fingerprint(repo_path(path)):
+        reason = f"Source release file changed: {path}"
+    elif report.get("inputs_sha256") != input_fingerprint(cfg, source):
+        reason = f"Deployment inputs for {source} changed"
+    else:
+        return
+    raise Rejected(f"{reason}. Verified revision {report['config_revision']}, "
+                   f"checked revision {checked_revision}. Reverify {source} and generate a new promotion PR.")
+
+
+def prepare_release(cfg, target, candidate=None, image=None, commit=None, source_repository=None, run_id=None,
+                    *, checked_revision="HEAD"):
     expected_source = promotion_source(cfg, target)
     target_path = repo_path(cfg["environments"][target]["release"])
     value = load_yaml(target_path)
@@ -151,10 +164,10 @@ def prepare_release(cfg, target, candidate=None, image=None, commit=None, source
             raise Rejected("Production promotion is disabled")
         source_path = repo_path(cfg["environments"][expected_source]["release"])
         current = release(source_path)
-        if (fingerprint(source_path) != candidate["release_sha256"] or
-                identity(current) != candidate["release"] or
-                input_fingerprint(cfg, expected_source) != candidate["inputs_sha256"]):
-            raise Rejected("Source deployment inputs changed after verification; verify again")
+        require_current_source(cfg, expected_source, candidate, checked_revision)
+        if identity(current) != candidate["release"]:
+            raise Rejected(f"Verified artifact identity differs from the release in {source_path.name} for "
+                           f"{expected_source}. Reverify {expected_source} before proposing this release.")
         if identity(release(target_path)) == identity(current):
             return False
         incoming = identity(current)
@@ -234,7 +247,7 @@ def create_pr(args, cfg):
         if git("diff", "--name-only", args.commit, base, "--", *source_paths):
             raise Rejected("Application changed after this build; use the newer build")
     changed = prepare_release(cfg, args.target, candidate, args.image, args.commit,
-                              os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_RUN_ID"])
+                              os.environ["GITHUB_REPOSITORY"], os.environ["GITHUB_RUN_ID"], checked_revision=base)
     if not changed:
         print("Target already uses this release; no PR needed")
         return

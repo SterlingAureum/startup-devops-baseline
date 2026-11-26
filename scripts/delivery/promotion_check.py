@@ -9,23 +9,30 @@ import zipfile
 
 import yaml
 
-from common import IDENTITY_FIELDS, UniqueLoader, git, Rejected, config, promotion_source, fingerprint, identity, release, repo_path
+from common import IDENTITY_FIELDS, UniqueLoader, git, Rejected, config, promotion_source, identity, release, repo_path
 from image_receipt import require_published
-from flow import changed_paths, input_fingerprint
+from flow import changed_paths, require_current_source
+
+from verification import reference_mismatch, require_pass, verified_report
 
 
-from verification import require_pass, verified_report
-
-
-def validate_report(report, cfg, source, target, run_id, attempt):
+def validate_report(report, cfg, source, target, run_id, attempt, *, checked_revision="HEAD"):
     require_pass(report, cfg["application"]["release_name"], source)
-    path = repo_path(cfg["environments"][source]["release"])
-    if (report.get("verified") is not True or report.get("environment") != source or
-            str(report.get("run_id")) != run_id or str(report.get("run_attempt")) != attempt or
-            report.get("release") != identity(target) or
-            report.get("release_sha256") != fingerprint(path) or
-            report.get("inputs_sha256") != input_fingerprint(cfg, source)):
-        raise Rejected("Verification does not match the current source release and deployment inputs")
+    if str(report.get("run_id")) != run_id or str(report.get("run_attempt")) != attempt:
+        raise Rejected(reference_mismatch(source, run_id, attempt, report.get("run_id"), report.get("run_attempt")))
+    require_current_source(cfg, source, report, checked_revision)
+    proposed = identity(target)
+    verified = report.get("release")
+    if verified != proposed:
+        if verified["image"]["digest"] != proposed["image"]["digest"]:
+            raise Rejected(f"PR image digest {proposed['image']['digest']} differs from "
+                           f"{source} verified digest {verified['image']['digest']}. "
+                           "Regenerate the promotion PR from the verified release.")
+        missing = object()
+        fields = [f"{group}.{key}" for group, keys in IDENTITY_FIELDS.items() for key in keys
+                  if verified.get(group, {}).get(key, missing) != proposed[group].get(key, missing)]
+        raise Rejected(f"PR release identity differs from the {source} verification "
+                       f"({', '.join(fields) or 'unexpected report fields'}). Regenerate the PR from the verified release.")
 
 
 def configuration_fields(value):
@@ -78,7 +85,7 @@ def main():
             run_id = str(promotion.get("verificationRunId", ""))
             attempt = str(promotion.get("verificationRunAttempt", ""))
             report = verified_report(os.environ["GITHUB_REPOSITORY"], run_id, attempt, source)
-            validate_report(report, cfg, source, value, run_id, attempt)
+            validate_report(report, cfg, source, value, run_id, attempt, checked_revision=args.head)
         print("PASS: release changes follow the configured promotion order")
     except (Rejected, KeyError, ValueError, OSError, subprocess.CalledProcessError, zipfile.BadZipFile) as error:
         print(f"REJECTED: {error}", file=sys.stderr)

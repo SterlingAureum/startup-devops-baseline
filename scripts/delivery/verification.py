@@ -54,6 +54,11 @@ def require_source_job(specific, job_name, attempt, revision):
         raise Rejected(f"Successful source job required: {job_name} (attempt {attempt})")
 
 
+def reference_mismatch(source, run_id, attempt, actual_id, actual_attempt):
+    return (f"Verification run/attempt mismatch for {source}: requested {run_id}/{attempt}, "
+            f"received {actual_id}/{actual_attempt}. Check the promotion reference.")
+
+
 def verified_report(repository, run_id, attempt, source):
     cfg = config()
     if not run_id.isdecimal() or not attempt.isdecimal() or source not in promotion_chain(cfg)[:-1]:
@@ -69,15 +74,17 @@ def verified_report(repository, run_id, attempt, source):
     caller = callers.get(workflow.get("path"))
     if (not caller or workflow.get("head_branch") != "main"
             or workflow.get("head_repository", {}).get("full_name", "").lower() != repository.lower()
-            or str(workflow.get("id")) != run_id or str(workflow.get("run_attempt")) != attempt
             or workflow.get("event") not in ("push", "workflow_dispatch")):
         raise Rejected("Verification must come from a trusted main workflow attempt")
+    if str(workflow.get("id")) != run_id or str(workflow.get("run_attempt")) != attempt:
+        raise Rejected(reference_mismatch(source, run_id, attempt, workflow.get("id"), workflow.get("run_attempt")))
     job_name = f"{caller} / {producer_job(source)}"
     require_source_job(specific, job_name, attempt, workflow["head_sha"])
     name = f"delivery-verified-{source}-{run_id}-{attempt}"
     report = read_artifact(repository, path, name, "verified.json")
+    if report.get("run_id") != run_id or report.get("run_attempt") != attempt:
+        raise Rejected(reference_mismatch(source, run_id, attempt, report.get("run_id"), report.get("run_attempt")))
     if (report.get("config_revision") != workflow["head_sha"] or report.get("repository") != repository
-            or report.get("run_id") != run_id or report.get("run_attempt") != attempt
             or report.get("environment") != source or report.get("producer_job") != producer_job(source)):
         raise Rejected("Report identity differs from its trusted source job")
     return report

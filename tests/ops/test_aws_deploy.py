@@ -140,9 +140,9 @@ class AwsDeployTests(unittest.TestCase):
             "spec": {"replicas": 2, "template": {"metadata": {"annotations": {demo.MARKER: "v1"}},
                      "spec": {"containers": [{"env": [{"name": "DATABASE_URL", "valueFrom": {"secretKeyRef": {
                          "name": "demo-api-postgresql", "key": "DATABASE_URL"}}}]}]}},
-                     "strategy": {"canary": {"steps": [{"pause": {"duration": "60s"}}, {"pause": {}}]}}},
+                     "strategy": {"canary": {"steps": [{"setWeight": 50}, {"pause": {"duration": "60s"}}, {"pause": {}}]}}},
             "status": {"observedGeneration": "3", "readyReplicas": 2, "updatedReplicas": 2,
-                       "replicas": 2, "phase": "Paused", "currentStepIndex": 0},
+                       "replicas": 2, "phase": "Paused", "currentStepIndex": 1},
         }
         g.obj.side_effect = lambda ns, k: workload if k == kind or k.startswith("crd/") else None
         def wait(description, read):
@@ -150,16 +150,52 @@ class AwsDeployTests(unittest.TestCase):
                 return read()
             self.assertFalse(read())  # Timed pause.
             self.assertNotIn("awaits manual promotion", log.getvalue())
-            workload["status"]["currentStepIndex"] = 1
+            self.assertIn("timed pause=60s", log.getvalue())
+            workload["status"]["currentStepIndex"] = 2
             self.assertFalse(read())
             self.assertFalse(read())
-            self.assertEqual(log.getvalue().count("awaits manual promotion at canary step 2"), 1)
+            self.assertEqual(log.getvalue().count("awaits manual promotion"), 1)
+            self.assertIn("canary step 3/3, target weight=50%", log.getvalue())
+            self.assertIn("promote demo-api --kubeconfig /tmp/test-config --context cluster-test", log.getvalue())
             workload["status"]["phase"] = "Healthy"
             self.assertTrue(read())
         g.until.side_effect = wait
         with redirect_stdout(io.StringIO()) as log:
             demo.refresh_consumers(g, "v1")
         g.k.assert_not_called()
+
+    def test_current_rollout_failure_reports_analysis_and_ignores_stale_generation(self):
+        g = deploy.Cluster("sample-test", {}, 60, Path("/fixture/test"))
+        kind = "rollouts.argoproj.io/demo-api"
+        spec = {"template": {"metadata": {"annotations": {demo.MARKER: "v1"}}},
+                "strategy": {"canary": {"steps": [{"analysis": {}}]}}}
+        status = {"phase": "Degraded", "abort": True, "currentStepIndex": 0, "canary": {
+            "currentStepAnalysisRunStatus": {"name": "demo-check", "status": "Failed"}}}
+        def snapshot(observed):
+            return {"metadata": {"generation": 2}, "spec": spec, "status": dict(status, observedGeneration=observed)}
+        with patch.object(g, "obj", side_effect=[snapshot("1"), snapshot("2")]), patch("time.sleep") as sleep:
+            with self.assertRaises(OpsError) as failure:
+                demo.wait_for_replicas(g, kind, "v1")
+        sleep.assert_called_once()
+        self.assertIn("Rollout controller reported failure", str(failure.exception))
+        self.assertIn("AnalysisRun=demo-check (Failed)", str(failure.exception))
+        self.assertIn("--context sample-test -n startup-apps describe", str(failure.exception))
+
+    def test_inconclusive_analysis_times_out_with_last_observation(self):
+        g = deploy.Cluster("sample-test", {}, 10, Path("/fixture/test"))
+        spec = {"template": {"metadata": {"annotations": {demo.MARKER: "v1"}}},
+                "strategy": {"canary": {"steps": [{"analysis": {}}]}}}
+        workload = {"metadata": {"generation": 1}, "spec": spec, "status": {"observedGeneration": 1,
+                    "phase": "Paused", "currentStepIndex": 0, "pauseConditions": [{"reason": "InconclusiveAnalysisRun"}]}}
+        with patch.object(g, "obj", return_value=workload), patch("time.monotonic", side_effect=[0, 0, 0, 0, 10, 10]), \
+                patch("time.sleep"), self.assertRaises(OpsError) as failure:
+            demo.wait_for_replicas(g, "rollouts.argoproj.io/demo-api", "v1")
+        detail = str(failure.exception)
+        self.assertIn("Timed out:", detail)
+        self.assertIn("timeout 10s", detail)
+        self.assertIn("pause=InconclusiveAnalysisRun", detail)
+        self.assertIn("get analysisruns.argoproj.io", detail)
+        self.assertNotIn("promote demo-api", detail)
 
     def test_dns_existing_foreign_alias_is_preserved(self):
         g = Mock()

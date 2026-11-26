@@ -1,11 +1,12 @@
 """Standard demo integration for the personal AWS GitOps stack."""
 import base64
 import json
+import shlex
 import time
 import uuid
 
 from aws_eso_bootstrap import EXTERNAL, wait_for_consumer
-from configuration import require
+from configuration import OpsError, require
 
 
 BOOTSTRAP = "BASELINE_BOOTSTRAP"
@@ -74,28 +75,83 @@ def refresh_consumers(g, version):
                  "spec": {"template": {"metadata": {"annotations": {MARKER: version}}}}}
         g.k("-n", "startup-apps", "patch", kind, "--type=merge", "-p", json.dumps(patch))
 
-    reported_pause = None
+    wait_for_replicas(g, kind, version)
+
+
+def canary_progress(spec, status, connection):
+    phase = status.get("phase", "Unknown")
+    parts = [f"phase={phase}"]
+    steps = spec.get("strategy", {}).get("canary", {}).get("steps", [])
+    index = status.get("currentStepIndex")
+    reasons = [c["reason"] for c in status.get("pauseConditions", []) if c.get("reason")]
+    if spec.get("paused"):
+        parts.append("spec.paused=true")
+    if reasons:
+        parts.append("pause=" + ",".join(reasons))
+    if type(index) is int and 0 <= index < len(steps):
+        step = steps[index]
+        parts.append(f"canary step {index + 1}/{len(steps)}")
+        weight = next((s["setWeight"] for s in reversed(steps[:index + 1]) if "setWeight" in s), None)
+        if weight is not None:
+            parts.append(f"target weight={weight}%")
+        if "pause" in step:
+            duration = step["pause"].get("duration")
+            if duration is not None:
+                parts.append(f"timed pause={duration}")
+            elif phase == "Paused" and not spec.get("paused") and set(reasons) <= {"CanaryPauseStep"}:
+                promote = shlex.join(["kubectl", "argo", "rollouts", "promote", "demo-api", *connection])
+                parts.append(f"awaits manual promotion. After reviewing the Rollout and AnalysisRuns, run: {promote}")
+        elif "analysis" in step:
+            parts.append("inline analysis")
+    analysis = status.get("canary", {}).get("currentStepAnalysisRunStatus") or {}
+    if analysis:
+        parts.append(f"AnalysisRun={analysis.get('name', '?')} ({analysis.get('status', 'Unknown')})")
+    if status.get("abort"):
+        parts.append("aborted")
+    for condition in status.get("conditions", []):
+        if condition.get("status") == "False" and condition.get("type") == "Progressing" and condition.get("reason"):
+            parts.append(condition["reason"])
+    return ", ".join(parts)
+
+
+def wait_for_replicas(g, kind, version):
+    rollout = kind.startswith("rollouts.")
+    connection = ["--kubeconfig", str(g.path), "--context", g.context, "-n", "startup-apps"]
+    started = last_print = time.monotonic()
+    last = None
 
     def ready():
-        nonlocal reported_pause
+        nonlocal last, last_print
         latest = g.obj("startup-apps", kind) or {}
         spec = latest.get("spec", {})
         status = latest.get("status", {})
-        if kind.startswith("rollouts.") and status.get("phase") == "Paused":
-            index = status.get("currentStepIndex")
-            steps = spec.get("strategy", {}).get("canary", {}).get("steps", [])
-            if isinstance(index, int) and 0 <= index < len(steps) and steps[index].get("pause") == {}:
-                if index != reported_pause:
-                    print(f"{g.context}: demo-api awaits manual promotion at canary step {index + 1}. "
-                          f"Review the Rollout and AnalysisRuns in startup-apps with {g.path}.", flush=True)
-                    reported_pause = index
         desired = spec.get("replicas", 1)
-        return (spec.get("template", {}).get("metadata", {}).get("annotations", {}).get(MARKER) == version
-                and desired > 0 and int(status.get("observedGeneration", 0)) >= int(latest["metadata"]["generation"])
-                and status.get("updatedReplicas") == desired and status.get("readyReplicas") == desired
-                and status.get("replicas") == desired
-                and (kind.startswith("deployment") or status.get("phase") == "Healthy"))
-    g.until(kind + " replicas ready with the reconciled database credential", ready)
+        marked = spec.get("template", {}).get("metadata", {}).get("annotations", {}).get(MARKER) == version
+        observed = marked and int(status.get("observedGeneration", 0)) >= int(latest["metadata"]["generation"])
+        summary = f"ready={status.get('readyReplicas', 0)}/{desired}, updated={status.get('updatedReplicas', 0)}"
+        if not observed:
+            summary += ", waiting for the controller to observe the reconciled template"
+        elif rollout:
+            summary += ", " + canary_progress(spec, status, connection)
+        now = time.monotonic()
+        if last != summary or now - last_print >= 60:
+            print(f"{kind} [{int(now - started)}s]: {summary}", flush=True)
+            last, last_print = summary, now
+        if observed and rollout and (status.get("abort") or status.get("phase") == "Degraded"):
+            raise OpsError("Rollout controller reported failure")
+        return (observed and desired > 0 and status.get("updatedReplicas") == desired
+                and status.get("readyReplicas") == desired and status.get("replicas") == desired
+                and (not rollout or (status.get("phase") == "Healthy" and not status.get("pauseConditions")
+                                     and not spec.get("paused"))))
+
+    try:
+        g.until(f"{kind} replicas ready with the reconciled database credential (timeout {g.timeout}s)", ready)
+    except OpsError as error:
+        inspect = shlex.join(["kubectl", *connection, "describe", kind])
+        detail = f"{error}\nLast observation: {last or 'unavailable'}\nInspect: {inspect}"
+        if rollout:
+            detail += "\nAnalysis: " + shlex.join(["kubectl", *connection, "get", "analysisruns.argoproj.io"])
+        raise OpsError(detail) from error
 
 
 def seed_database(g, out, adopt=None):

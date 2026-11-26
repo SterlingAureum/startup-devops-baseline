@@ -28,7 +28,6 @@ rollout:
             templates:
               - templateName: demo-api-canary-health
         - setWeight: 50
-        - pause: {}
         - setWeight: 100
 
 analysis:

@@ -73,6 +73,7 @@ class TeardownTests(unittest.TestCase):
                 session.assert_not_called()
                 for confirm in (None, cluster):
                     self.assertEqual(cli.main(command + (["--confirm", confirm] if confirm else [])), 0)
+                    self.assertFalse(inspect.call_args.kwargs["check_network"])
                     target = inspect.call_args.args[0]
                     self.assertEqual((target.inventory_name, target.stage), ("sandbox", "test"))
                     self.assertEqual(check.call_args.args[-1], "destroy")

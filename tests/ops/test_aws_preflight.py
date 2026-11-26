@@ -52,6 +52,16 @@ class AwsPreflightTests(unittest.TestCase):
                 private.write_text(json.dumps({**values, key: value}))
                 with self.subTest(key=key), redirect_stderr(io.StringIO()):
                     self.assertEqual(cli.main(command), 1)
+            for key, override, policy in (
+                    ("eks_service_ipv4_cidr", "172.21.0.0/16", "allow-cnpg-to-kubernetes-api"),
+                    ("private_subnet_cidrs", ["10.30.10.0/24", "10.30.11.0/24"], "allow-cnpg-to-kubernetes-api"),
+                    ("public_subnet_cidrs", ["10.30.0.0/24", "10.30.1.0/24"], "allow-alb-to-demo-api")):
+                private.write_text(json.dumps({**values, key: override}))
+                with self.subTest(policy=policy, key=key), redirect_stderr(io.StringIO()) as error:
+                    self.assertEqual(cli.main(command), 1)
+                    self.assertIn(policy, error.getvalue())
+                    self.assertIn("Terraform expects", error.getvalue())
+                    self.assertIn("renders", error.getvalue())
             backend.write_text(backend.read_text().replace("environments/dev/", "environments/test/"))
             with redirect_stderr(io.StringIO()) as error:
                 self.assertEqual(cli.main(command), 1)

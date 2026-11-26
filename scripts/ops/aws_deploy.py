@@ -12,20 +12,25 @@ import time
 import yaml
 
 from aws_cnpg import wait_for_cnpg
-from aws_preflight import inspect, kustomize, local_file
-from aws_state import check_selected_state, init_argument, lifecycle_directory
+from aws_preflight import inspect, kustomize, local_file, profile_var_args
+from aws_state import check_selected_state, execution_root, init_argument, lifecycle_directory
 from aws_standard_demo import complete
 from aws_provision import provision
 from configuration import ROOT, OpsError, load_yaml, require
 from connections import atomic_write, aws_private_path, kubectl_hint
 
 CONNECTION_PHASES = ["check selected Terraform outputs and live EKS identity", "refresh dedicated kubeconfig"]
-PHASES = ["check root Application and target namespaces for deletion",
-          "prepare IRSA and Grafana credentials",
-          "install pinned Argo CD and seed ALB Application", "sync selected root and CNPG backup destination",
-          "recover the ESO consumer and reconcile the standard demo database credential",
-          "wait for demo replicas using the synced credential, reconcile DNS, and check GitOps applications"]
 ARGO = "argocd"
+
+
+def deployment_phases(mode):
+    phases = ["check root Application and target namespaces for deletion",
+              "prepare service accounts and Grafana credentials",
+              "install pinned Argo CD, seed ALB Application and sync selected root"]
+    if mode == "cnpg":
+        phases.extend(["configure CNPG backups and wait for PostgreSQL",
+                       "reconcile the demo credential and wait for ready replicas"])
+    return phases + ["reconcile DNS and check GitOps applications"]
 
 
 def run(argv, env, data=None, private=False):
@@ -108,14 +113,16 @@ def prepare(g, out):
                                      "pod-security.kubernetes.io/enforce-version": "v1.30",
                                      "pod-security.kubernetes.io/warn": "restricted",
                                      "pod-security.kubernetes.io/audit": "restricted"})
-    g.namespace("data-platform")
-    for ns, name, key in [
-        ("kube-system", "aws-load-balancer-controller", "aws_load_balancer_controller_role_arn"),
-        ("kube-system", "karpenter", "karpenter_controller_role_arn"),
-        ("external-secrets", "external-secrets", "external_secrets_role_arn"),
-        ("data-platform", "postgresql-baseline", "cnpg_backup_role_arn"),
-    ]:
-        g.irsa(ns, name, out[key])
+    g.irsa("kube-system", "aws-load-balancer-controller", out["aws_load_balancer_controller_role_arn"])
+    g.irsa("kube-system", "karpenter", out["karpenter_controller_role_arn"])
+    if out.get("database_mode", "cnpg") == "cnpg":
+        g.namespace("data-platform")
+        g.irsa("external-secrets", "external-secrets", out["external_secrets_role_arn"])
+        g.irsa("data-platform", "postgresql-baseline", out["cnpg_backup_role_arn"])
+    else:
+        # The shared ESO chart uses an externally prepared ServiceAccount.
+        g.apply({"apiVersion": "v1", "kind": "ServiceAccount", "metadata": {
+            "name": "external-secrets", "namespace": "external-secrets"}})
 
     name = "observability-grafana-admin"
     existing = g.obj("observability", "secret/" + name)
@@ -141,6 +148,9 @@ def check_deploy_target(g, root, children):
         app = g.obj(ARGO, resource)
         if app and app["metadata"].get("deletionTimestamp"):
             deleting.append(ARGO + "/" + resource)
+        if app and not deleting:
+            require(app.get("spec", {}).get("source", {}).get("path") == root["spec"]["source"]["path"],
+                    "Live root Application uses a different GitOps profile. Review the existing deployment before switching.")
     require(not deleting, "Deploy blocked by deletion in progress: " + ", ".join(deleting) +
             ". Finish cleanup before redeploying.")
 
@@ -160,6 +170,12 @@ def gitops(g, root, children, out, argo_manifest):
     alb["spec"]["source"]["helm"]["valuesObject"]["vpcId"] = out["vpc_id"]
     g.apply(alb)
     g.apply(root)
+    if out.get("database_mode", "cnpg") == "cnpg":
+        configure_database(g, out)
+    return set(children) | {root["metadata"]["name"]}
+
+
+def configure_database(g, out):
     g.ready("data-platform", "crd/objectstores.barmancloud.cnpg.io", "Established")
     resource = "objectstores.barmancloud.cnpg.io/postgresql-baseline-backup"
     store = g.exists("data-platform", resource)
@@ -172,7 +188,6 @@ def gitops(g, root, children, out, argo_manifest):
         g.k("-n", "data-platform", "patch", resource, "--type=json", "-p", json.dumps(patch))
     g.ready("data-platform", "crd/clusters.postgresql.cnpg.io", "Established")
     wait_for_cnpg(g, "data-platform", "postgresql-baseline")
-    return set(children) | {root["metadata"]["name"]}
 
 
 def check_apps(g, names):
@@ -197,6 +212,7 @@ def deploy(selected, env, config, adopt=None, *, operation="deploy", confirm=Non
     require(operation in ("plan", "create", "up", "deploy"), "Unknown AWS provisioning operation")
     require(confirm is None or (operation in ("up", "create") and confirm == report["cluster"]),
             "Provisioning requires --confirm " + report["cluster"])
+    require(not adopt or report.get("database_mode") != "none", "Demo credential adoption requires CNPG")
     aws = env["aws"]
     settings = dict(os.environ, AWS_REGION=aws["region"], AWS_DEFAULT_REGION=aws["region"], AWS_PAGER="")
     if aws.get("profile"):
@@ -217,24 +233,29 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
     settings = g.env
     tf = env["terraform"]
     base = config.expanduser().resolve().parent
+    source = ROOT / tf["root"]
+    actual = execution_root(source, report.get("database_mode", "cnpg"))
     with tempfile.TemporaryDirectory(prefix="aws-deploy-") as tmp:
         tfenv = dict(settings, TF_DATA_DIR=tmp + "/terraform", TF_WORKSPACE="default")
         require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
                 "Unset TF_CLI_ARGS overrides before provisioning")
         if operation != "deploy":
-            print(f"Initializing {tf['root']} for {g.context} (default workspace)", flush=True)
+            print(f"Initializing {actual.relative_to(ROOT)} for {g.context} (default workspace)", flush=True)
             # Use the same variable sources that personal preflight inspected.
             tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
-        terraform = ["terraform", "-chdir=" + str(ROOT / tf["root"])]
+        terraform = ["terraform", "-chdir=" + str(actual)]
         check_selected_state(g, report, operation)
         run(terraform + ["init", "-input=false", "-reconfigure", init_argument(tf["backend"], base)], tfenv)
         if operation != "deploy":
             variables = local_file(tf["variables_file"], base)
-            provision(g, terraform, tfenv, variables, Path(tmp) / "create.tfplan", folder, confirm)
+            provision(g, terraform, tfenv, variables, Path(tmp) / "create.tfplan", folder, confirm,
+                      implicit=profile_var_args(source, actual))
             if confirm is None:
                 return
         outputs = json.loads(run(terraform + ["output", "-json"], tfenv, private=True))
         out = {key: value["value"] for key, value in outputs.items()}
+        require(out.get("database_mode", "cnpg") == report.get("database_mode", "cnpg"),
+                "Selected database mode differs from applied Terraform state. Existing environments keep their profile.")
         require(out.get("eks_cluster_name"), "Infrastructure is absent from outputs; run plan then create for the selected inventory entry")
         require(out.get("environment_name") == report["stage"] and out["eks_cluster_name"] == g.context,
                 "Terraform output cluster differs from inventory")

@@ -78,10 +78,14 @@ def argocd_bootstrap(overrides):
 
 
 def validate_environment(env):
-    mapping(env, ("driver", "delivery_environment", "timeout", "kind", "argocd", "gitops", "aws", "terraform"), "environment", ("driver",))
+    mapping(env, ("driver", "delivery_environment", "timeout", "kind", "argocd", "gitops", "aws", "terraform", "database"), "environment", ("driver",))
     require(env["driver"] in ("kind", "aws"), "Supported drivers are kind and aws")
     require(type(env.get("timeout", 900)) is int and env.get("timeout", 900) > 0, "timeout must be a positive integer")
     text(env.get("delivery_environment"), "delivery_environment")
+    if "database" in env:
+        mapping(env["database"], ("mode",), "database", ("mode",))
+        require(env["driver"] == "aws" and env["database"]["mode"] in ("cnpg", "none"),
+                "Select database.mode cnpg or none for an AWS environment")
     if env["driver"] == "aws":
         mapping(env.get("aws"), ("expected_account_id", "region", "profile", "role_arn"), "aws", ("expected_account_id", "region"))
         aws = env["aws"]
@@ -146,6 +150,10 @@ def delivery_target(env):
     targets = catalog["environments"]
     require(key in targets, f"Unknown delivery environment {key!r} in delivery/standard/config.json")
     manifest = repository_path(targets[key]["root_manifest"], f"delivery environment {key!r} root_manifest")
+    if env.get("database", {}).get("mode") == "none":
+        profiles = targets[key].get("database_profiles", {})
+        require("none" in profiles, "The selected delivery environment has no database-free profile")
+        manifest = repository_path(profiles["none"], "database-free root_manifest")
     if env["driver"] == "kind":
         require(not Path(manifest).is_relative_to("clusters/aws"),
                 f"Kind environment cannot select the AWS GitOps root {manifest}")
@@ -157,6 +165,9 @@ def standard_aws_target(name, env, catalog, manifest):
     root = (ROOT / env["terraform"]["root"]).resolve()
     if root.parent == ROOT / "infra/terraform/aws/environments" and root.name in ("dev", "test"):
         expected = f"clusters/aws/overlays/{root.name}/root-app.yaml"
+        if env.get("database", {}).get("mode") == "none":
+            require(root.name == "dev", "The database-free profile currently supports AWS dev")
+            expected = "clusters/aws/profiles/dev-no-database/root-app.yaml"
         require(manifest == expected,
                 f"Delivery environment {env['delivery_environment']!r} must select {expected} for Terraform root {root}")
         return AwsTarget(name, root.name, root, env["delivery_environment"], manifest, catalog)
@@ -197,6 +208,7 @@ def environment(path, name, *, for_destroy=False):
     require(isinstance(env, dict), "environment must be a mapping")
     if for_destroy and env.get("driver") == "aws":
         # Teardown identifies the target through its catalog binding, Terraform and live ownership.
+        env.pop("database", None)
         env.pop("gitops", None)
         env.pop("argocd", None)
     else:

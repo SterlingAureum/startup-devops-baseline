@@ -81,10 +81,14 @@
       "url": "https://demo.dev.aureumstack.com",
       "cluster_paths": [
         "clusters/aws/base/",
-        "clusters/aws/overlays/dev/"
+        "clusters/aws/overlays/dev/",
+        "clusters/aws/profiles/dev-no-database/"
       ],
       "root_manifest": "clusters/aws/overlays/dev/root-app.yaml",
-      "runtime_stage": "dev"
+      "runtime_stage": "dev",
+      "database_profiles": {
+        "none": "clusters/aws/profiles/dev-no-database/root-app.yaml"
+      }
     },
     "aws-test": {
       "values": [

@@ -21,6 +21,7 @@ module "eks" {
 
   project_name                = var.project_name
   environment                 = var.environment
+  tags                        = { BaselineDatabaseMode = local.database_mode }
   cluster_name                = local.cluster_name
   cluster_version             = var.eks_cluster_version
   service_ipv4_cidr           = var.eks_service_ipv4_cidr
@@ -73,33 +74,6 @@ module "fis" {
   target_tag_key   = "KarpenterFISTest"
   target_tag_value = "${local.cluster_name}-spot-interruption"
   tags             = var.additional_tags
-}
-
-module "cnpg_backup" {
-  source = "../../modules/cnpg-backup"
-
-  project_name              = var.project_name
-  environment               = var.environment
-  aws_region                = var.aws_region
-  oidc_provider_arn         = module.eks.oidc_provider_arn
-  oidc_provider_url         = module.eks.oidc_provider_url
-  force_destroy             = var.cnpg_backup_force_destroy
-  service_account_name      = "postgresql-baseline"
-  service_account_namespace = "data-platform"
-  tags                      = var.additional_tags
-}
-
-module "external_secrets" {
-  source = "../../modules/external-secrets"
-
-  project_name              = var.project_name
-  environment               = var.environment
-  oidc_provider_arn         = module.eks.oidc_provider_arn
-  oidc_provider_url         = module.eks.oidc_provider_url
-  service_account_name      = "external-secrets"
-  service_account_namespace = "external-secrets"
-  recovery_window_in_days   = var.external_secrets_recovery_window_in_days
-  tags                      = var.additional_tags
 }
 
 module "github_actions_runtime_identity" {

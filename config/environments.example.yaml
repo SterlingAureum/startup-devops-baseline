@@ -33,6 +33,9 @@ environments:
         git.repoURL: '${repository}'
         git.targetRevision: '${revision}'
   aws-dev:
+    # Select when creating dev. Use none to omit the database stack and its dedicated AWS resources.
+    database:
+      mode: cnpg
     # Offline preflight can check repository examples or these private files.
     driver: aws
     delivery_environment: aws-dev

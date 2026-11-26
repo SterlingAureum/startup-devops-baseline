@@ -1,6 +1,8 @@
 apiVersion: karpenter.k8s.aws/v1
 kind: EC2NodeClass
 metadata:
+  labels:
+    platform.startup.dev/feature: cnpg
   name: database
   annotations:
     argocd.argoproj.io/sync-wave: "10"

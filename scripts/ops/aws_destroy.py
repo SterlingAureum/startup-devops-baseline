@@ -9,8 +9,8 @@ import time
 
 from aws_deploy import Cluster, lifecycle_lock, reopen_receipt, run
 from aws_dev_network import release_network
-from aws_preflight import inspect_infrastructure, local_file
-from aws_state import check_selected_state, init_argument
+from aws_preflight import inspect_infrastructure, local_file, profile_var_args
+from aws_state import execution_root, check_selected_state, init_argument
 from configuration import ROOT, OpsError, require
 from connections import atomic_write
 
@@ -314,15 +314,19 @@ def destroy(selected, env, config, confirm, retain=False):
         require(caller["Arn"].startswith(f"arn:aws:sts::{caller['Account']}:assumed-role/{role}/"),
                 "Select credentials for the configured operator role")
     with lifecycle_lock(caller["Account"], aws["region"], name) as folder, tempfile.TemporaryDirectory(prefix="aws-destroy-") as tmp:
-        check_selected_state(g, report, "destroy")
-        session(g, env, config, confirm, folder, tmp, retain)
+        summary = check_selected_state(g, report, "destroy")
+        mode = summary.get("database_mode", "cnpg")
+        print(f"Teardown profile from Terraform state: database.mode={mode}", flush=True)
+        session(g, env, config, confirm, folder, tmp, retain, database_mode=mode)
 
 
-def session(g, env, config, confirm, folder, tmp, retain=False):
+def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode="cnpg"):
     tf = env["terraform"]
     tfenv = dict(g.env, TF_DATA_DIR=tmp + "/tfdata", TF_WORKSPACE="default")
     tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
-    tfcmd = ["terraform", "-chdir=" + str(ROOT / tf["root"])]
+    source = ROOT / tf["root"]
+    actual = execution_root(source, database_mode)
+    tfcmd = ["terraform", "-chdir=" + str(actual)]
     def terraform(*args):
         return run(tfcmd + list(args), tfenv)
     base = config.expanduser().resolve().parent
@@ -335,6 +339,8 @@ def session(g, env, config, confirm, folder, tmp, retain=False):
     receipt = folder / (state["lineage"] + ".json")
     journal = json.loads(receipt.read_text()) if receipt.exists() else {}
     out = {k: v["value"] for k, v in state.get("outputs", {}).items()}
+    if out.get("database_mode"):
+        require(out["database_mode"] == database_mode, "Database mode in state changed since destroy preflight")
     live_names = json.loads(g.aws("eks", "list-clusters"))["clusters"]
     vpc = out.get("vpc_id") or journal.get("vpc")
     if journal.get("vpc") != vpc or not journal:
@@ -393,7 +399,7 @@ def session(g, env, config, confirm, folder, tmp, retain=False):
 
     def review(addresses):
         terraform("plan", "-destroy", "-input=false", "-lock-timeout=60s", "-out=" + plan,
-                  "-var-file=" + str(local_file(tf["variables_file"], base)),
+                  *profile_var_args(source, actual), "-var-file=" + str(local_file(tf["variables_file"], base)),
                   *["-target=" + a for a in sorted(addresses)])
         return check_plan(json.loads(terraform("show", "-json", plan)), addresses, owner)
 

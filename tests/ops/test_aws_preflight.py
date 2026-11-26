@@ -149,9 +149,11 @@ class AwsPreflightTests(unittest.TestCase):
             inventory = Path(tmp) / "inventory.yaml"
             entry = configuration.environment(EXAMPLE_CONFIG, "aws-dev")
             inventory.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"sandbox": entry}}))
-            for module, command in ((aws_deploy, "up"), (aws_destroy, "destroy")):
+            for module, command, entrypoint, result in (
+                    (aws_deploy, "up", "inspect", {"cluster": "actual-dev"}),
+                    (aws_destroy, "destroy", "inspect_infrastructure", ({"cluster": "actual-dev"}, {}))):
                 with self.subTest(command=command), redirect_stderr(io.StringIO()) as error, \
-                        patch.object(module, "inspect", return_value={"cluster": "actual-dev"}) as inspect, \
+                        patch.object(module, entrypoint, return_value=result) as inspect, \
                         patch.object(aws.subprocess, "run") as tool:
                     self.assertEqual(cli.main([command, "--env", "sandbox", "--config", str(inventory),
                                                "--confirm", "sandbox"]), 1)

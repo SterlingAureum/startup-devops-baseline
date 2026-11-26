@@ -3,7 +3,7 @@ import json
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import nullcontext, redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -60,7 +60,7 @@ class TeardownTests(unittest.TestCase):
             config.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"sandbox": entry}}))
             cluster = "startup-devops-baseline-test"
             command = ["destroy", "--env", "sandbox", "--config", str(config), "--retain-backups"]
-            with patch.object(teardown, "inspect", return_value={"cluster": cluster}) as inspect, \
+            with patch.object(teardown, "inspect_infrastructure", return_value=({"cluster": cluster}, {})) as inspect, \
                     patch.object(teardown.Cluster, "aws", return_value='{"Account":"123456789012"}') as aws, \
                     patch.object(teardown, "lifecycle_lock") as lock, \
                     patch.object(teardown, "check_selected_state") as check, patch.object(teardown, "session") as session, \
@@ -73,7 +73,6 @@ class TeardownTests(unittest.TestCase):
                 session.assert_not_called()
                 for confirm in (None, cluster):
                     self.assertEqual(cli.main(command + (["--confirm", confirm] if confirm else [])), 0)
-                    self.assertFalse(inspect.call_args.kwargs["check_network"])
                     target = inspect.call_args.args[0]
                     self.assertEqual((target.inventory_name, target.stage), ("sandbox", "test"))
                     self.assertEqual(check.call_args.args[-1], "destroy")
@@ -111,6 +110,70 @@ class TeardownTests(unittest.TestCase):
         g.aws.return_value = '{"Snapshots":[{"State":"completed"}]}'
         teardown.backup(g, {"vol-ab": "data-platform/pg"}, {"snapshots": {"vol-ab": "snap-ab"}}, Mock())
         g.aws.assert_called_once_with("ec2", "describe-snapshots", "--snapshot-ids", "snap-ab")
+
+    def test_bad_deployment_hostname_still_allows_owned_destroy_preview(self):
+        account = "123456789012"
+        cluster = "startup-devops-baseline-test"
+        arn = f"arn:aws:eks:us-east-1:{account}:cluster/{cluster}"
+        state = {"version": 4, "serial": 1, "lineage": "12345678-1234-1234-1234-123456789012",
+                 "resources": [resource("eks", "aws_eks_cluster", attributes={"arn": arn})],
+                 "outputs": {k: {"value": v} for k, v in {
+                     "eks_cluster_name": cluster, "vpc_id": "vpc-test", "eks_cluster_endpoint": "test-endpoint",
+                     "route53_hosted_zone_id": "test-zone", "demo_api_hostname": "original.example.org"}.items()}}
+        live = {"arn": arn, "endpoint": "test-endpoint", "resourcesVpcConfig": {"vpcId": "vpc-test"}}
+        def aws(service, action, *args):
+            if action == "get-object":
+                Path(args[-1]).write_text(json.dumps(state))
+                return "{}"
+            results = {"get-caller-identity": {"Account": account}, "list-clusters": {"clusters": [cluster]},
+                       "describe-cluster": {"cluster": live}, "describe-load-balancers": {"LoadBalancers": []},
+                       "list-resource-record-sets": {"ResourceRecordSets": []}}
+            return json.dumps(results[action])
+
+        def tool(args, env):
+            if "pull" in args:
+                return json.dumps(state)
+            if "show" in args:
+                return json.dumps({"resource_changes": [{"mode": "managed", "address": teardown.CLUSTER,
+                                                         "change": {"actions": ["delete"]}}]})
+            self.assertTrue(any(cmd in args for cmd in ("init", "update-kubeconfig", "plan")))
+            return ""
+
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = Path(tmp)
+            entry = environment(EXAMPLE_CONFIG, "aws-test")
+            config = folder / "inventory.yaml"
+            config.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"sandbox": entry}}))
+            variables = folder / entry["terraform"]["variables_file"]
+            variables.write_text('demo_api_hostname = "mistyped.example.org"\n'
+                                 'enable_github_actions_runtime_identity = true\n'
+                                 f'github_actions_runtime_role_arn = "arn:aws:iam::{account}:role/{cluster}-github-runtime-read-role"\n'
+                                 'eks_public_access_cidrs = ["192.0.2.1/32"]\n')
+            backend = folder / entry["terraform"]["backend"]["config_file"]
+            backend.write_text('bucket = "fixture"\nkey = "environments/test/terraform.tfstate"\n'
+                               f'region = "us-east-1"\nallowed_account_ids = ["{account}"]\n'
+                               f'kms_key_id = "arn:aws:kms:us-east-1:{account}:key/test"\n'
+                               'encrypt = true\nuse_lockfile = true\n')
+            flags = ["--env", "sandbox", "--config", str(config)]
+            with patch.object(teardown.Cluster, "aws", side_effect=AssertionError), redirect_stderr(io.StringIO()) as err:
+                self.assertEqual(cli.main(["deploy", *flags]), 1)
+                self.assertIn("Terraform hostname differs from delivery URL", err.getvalue())
+
+            with patch.object(teardown.Cluster, "aws", side_effect=aws), \
+                    patch.object(teardown, "lifecycle_lock", return_value=nullcontext(folder)), \
+                    patch.object(teardown, "run", side_effect=tool), \
+                    patch.object(teardown.Cluster, "k", side_effect=lambda *args: '{"items": []}' if "pv" in args else ""), \
+                    patch("aws_preflight.kustomize", side_effect=AssertionError), \
+                    patch("configuration.argocd_bootstrap", side_effect=AssertionError), \
+                    patch.object(teardown, "remove_stack", side_effect=AssertionError), \
+                    patch.object(teardown.subprocess, "run", side_effect=AssertionError), redirect_stdout(io.StringIO()) as out:
+                self.assertEqual(cli.main(["destroy", *flags]), 0)
+                self.assertIn("Preview complete. Execute the same command with --confirm " + cluster, out.getvalue())
+                self.assertIn(teardown.CLUSTER, out.getvalue())
+                live["resourcesVpcConfig"]["vpcId"] = "vpc-other"
+                with redirect_stderr(io.StringIO()) as err:
+                    self.assertEqual(cli.main(["destroy", *flags, "--confirm", cluster]), 1)
+                    self.assertIn("VPC differs from selected state", err.getvalue())
 
     def test_session_previews_then_applies_only_after_cleanup(self):
         for stage in ("dev", "test"):

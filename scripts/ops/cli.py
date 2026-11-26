@@ -59,7 +59,7 @@ def parser():
 
 def configure(args, local_only=False):
     require(args.config.expanduser().is_file(), f"Inventory missing at {args.config}. Run init-config or specify --config FILE")
-    env = environment(args.config, args.env)
+    env = environment(args.config, args.env, for_destroy=args.command == "destroy")
     catalog, args.root_manifest = delivery_target(env)
     args.aws_target = standard_aws_target(args.env, env, catalog, args.root_manifest) if env["driver"] == "aws" else None
     require(not args.check_inputs or args.command == "preflight", "--check-inputs is only valid for preflight")

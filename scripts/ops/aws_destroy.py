@@ -9,7 +9,7 @@ import time
 
 from aws_deploy import Cluster, lifecycle_lock, reopen_receipt, run
 from aws_dev_network import release_network
-from aws_preflight import inspect, local_file
+from aws_preflight import inspect_infrastructure, local_file
 from aws_state import check_selected_state, init_argument
 from configuration import ROOT, OpsError, require
 from connections import atomic_write
@@ -298,7 +298,7 @@ def remove_stack(g, out, journal, save, retain):
 
 
 def destroy(selected, env, config, confirm, retain=False):
-    report = inspect(selected, env, config, personal=True, check_network=False)
+    report, _ = inspect_infrastructure(selected, env, config, personal=True)
     name = report["cluster"]
     require(confirm in (None, name), "Destroy requires --confirm " + name)
     aws = env["aws"]

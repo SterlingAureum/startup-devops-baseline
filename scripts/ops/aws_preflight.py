@@ -57,7 +57,11 @@ def deployment_inputs(root, selected):
 
 def cluster_name(values, stage, region):
     require(values["environment"] == stage and values["aws_region"] == region, "Terraform environment/region mismatch")
-    return f"{values['project_name']}-{stage}"
+    project = values["project_name"]
+    require(isinstance(project, str), "Terraform project_name must be a string")
+    cluster = f"{project}-{stage}"
+    require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]{0,99}", cluster), "Invalid physical EKS cluster name")
+    return cluster
 
 
 def local_file(value, config_dir):
@@ -185,14 +189,12 @@ def runtime_target(name):
     return environment, labels
 
 
-def inspect(selected, env, config_path, personal=False, *, check_network=True):
+def inspect_infrastructure(selected, env, config_path, personal):
+    """Read the physical target and state settings shared by provisioning and teardown."""
     name = selected.delivery_environment
     short = selected.stage
     root = selected.terraform_root
     aws, tf = env["aws"], env["terraform"]
-    cfg = selected.catalog
-    target = cfg["environments"][name]
-    manifest = selected.gitops_root
     config_dir = config_path.expanduser().resolve().parent
     variables = local_file(tf.get("variables_file"), config_dir) if personal else root / "terraform.tfvars.example"
     declared_backend = backend_type(root)
@@ -201,7 +203,6 @@ def inspect(selected, env, config_path, personal=False, *, check_network=True):
     require(settings["type"] == declared_backend,
             f"{name} root declares {declared_backend} state. Configure terraform.backend for this type; "
             "changing the inventory does not migrate state")
-    blockers = []
     state_info = {"state_status": "not-checked"}
     if declared_backend == "s3":
         path = backend_path(settings, config_dir) if personal else root.parents[1] / "backend-config" / f"{short}.s3.tfbackend.example"
@@ -214,9 +215,6 @@ def inspect(selected, env, config_path, personal=False, *, check_network=True):
         state_info["state_address"] = str(path)
     values = deployment_inputs(root, variables)
     cluster = cluster_name(values, short, aws["region"])
-    sizes = {k: values["eks_node_" + k + "_size"] for k in ("min", "desired", "max")}
-    require(all(type(v) is int for v in sizes.values()) and 0 <= sizes["min"] <= sizes["desired"] <= sizes["max"]
-            and sizes["max"] >= 1, "Check min/desired/max node capacity in the selected var-file")
     if personal:
         if declared_backend == "local":
             observed = local_snapshot(path, short, cluster, aws["expected_account_id"], aws["region"])
@@ -226,8 +224,26 @@ def inspect(selected, env, config_path, personal=False, *, check_network=True):
         if "role_arn" in aws:
             require(re.fullmatch(r"arn:aws:iam::" + aws["expected_account_id"] + r":role/[A-Za-z0-9+=,.@_/-]+", aws["role_arn"]),
                     "Operator role ARN differs from the personal target account")
-        check_private_vars(values, aws["expected_account_id"], cluster)
+    report = {"environment": selected.inventory_name, "stage": short, "cluster": cluster,
+              "terraform_root": tf["root"], "expected_account_id": aws["expected_account_id"],
+              "region": aws["region"], "declared_backend": declared_backend, **state_info}
+    return report, values
 
+
+def inspect(selected, env, config_path, personal=False):
+    report, values = inspect_infrastructure(selected, env, config_path, personal)
+    cluster = report["cluster"]
+    root = selected.terraform_root
+    name = selected.delivery_environment
+    cfg = selected.catalog
+    target = cfg["environments"][name]
+    manifest = selected.gitops_root
+    sizes = {k: values["eks_node_" + k + "_size"] for k in ("min", "desired", "max")}
+    require(all(type(v) is int for v in sizes.values()) and 0 <= sizes["min"] <= sizes["desired"] <= sizes["max"]
+            and sizes["max"] >= 1, "Check min/desired/max node capacity in the selected var-file")
+    if personal:
+        check_private_vars(values, env["aws"]["expected_account_id"], cluster)
+    blockers = []
     if not personal:
         if values.get("enable_github_actions_runtime_identity") is not True:
             blockers.append("Runtime EKS access entry disabled in the example inputs")
@@ -253,10 +269,9 @@ def inspect(selected, env, config_path, personal=False, *, check_network=True):
     require(urlsplit(target["url"]).hostname == values["demo_api_hostname"], "Terraform hostname differs from delivery URL")
     children = {d["metadata"]["name"]: d for d in kustomize(src["path"]) if d and d["kind"] == "Application"}
     require(target["application"] in children, "Runtime target Application is absent from the overlay")
-    if check_network:
-        check_network_policies(children, name, values)
+    check_network_policies(children, name, values)
     alb = children["aws-load-balancer-controller"]["spec"]["source"]["helm"]["valuesObject"]
-    require((alb["clusterName"], alb["region"], alb["vpcId"]) == (cluster, aws["region"], "__VPC_ID__"),
+    require((alb["clusterName"], alb["region"], alb["vpcId"]) == (cluster, report["region"], "__VPC_ID__"),
             "Load balancer controller wiring differs from the bootstrap contract")
     require("RespectIgnoreDifferences=true" in spec["syncPolicy"]["syncOptions"] and any(
         item.get("kind") == "Application" and item.get("name") == "aws-load-balancer-controller"
@@ -277,11 +292,10 @@ def inspect(selected, env, config_path, personal=False, *, check_network=True):
     example_repo = read_inputs(identities / "terraform.tfvars.example")["github_repository"]
     require(repo == example_repo, "Root GitHub repository differs from the runtime-identities declaration example")
     gh_env, labels = runtime_target(name)
-    return {"environment": selected.inventory_name, "driver": "aws", "stage": short, "delivery_environment": name,
-            "expected_account_id": aws["expected_account_id"], "scope": "personal-files" if personal else "repository-examples",
-            "offline_result": "passed", "live_checks": "pending", "terraform_root": tf["root"],
-            "declared_backend": declared_backend, **state_info,
-            "runtime_identities_backend": backend_type(identities), "live_blockers": blockers, "cluster": cluster, "region": aws["region"], "gitops_root": manifest,
+    return {**report, "driver": "aws", "delivery_environment": name,
+            "scope": "personal-files" if personal else "repository-examples",
+            "offline_result": "passed", "live_checks": "pending",
+            "runtime_identities_backend": backend_type(identities), "live_blockers": blockers, "gitops_root": manifest,
             "application": target["application"], "runtime_environment": gh_env,
             "runner_labels": labels,
             "expected_oidc_subject": f"repo:{repo}:environment:{gh_env}", "eks_group": group,

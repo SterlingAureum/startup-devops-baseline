@@ -182,7 +182,7 @@ def init_inventory(path):
     return True
 
 
-def environment(path, name):
+def environment(path, name, *, for_destroy=False):
     doc = load_yaml(Path(path).expanduser().read_text())
     mapping(doc, ("schema_version", "environments"), "configuration", ("schema_version", "environments"))
     require(type(doc["schema_version"]) is int and doc["schema_version"] == 2,
@@ -195,5 +195,10 @@ def environment(path, name):
     # Validate the selected target only: an unfinished AWS example cannot break local operations.
     env = deepcopy(entries[name])
     require(isinstance(env, dict), "environment must be a mapping")
-    env["argocd"] = argocd_bootstrap(env.get("argocd", {}))
+    if for_destroy and env.get("driver") == "aws":
+        # Teardown identifies the target through its catalog binding, Terraform and live ownership.
+        env.pop("gitops", None)
+        env.pop("argocd", None)
+    else:
+        env["argocd"] = argocd_bootstrap(env.get("argocd", {}))
     return validate_environment(env)

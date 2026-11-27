@@ -263,7 +263,7 @@ class AwsDeployTests(unittest.TestCase):
                         return ""
                     self.fail("Unexpected kubectl arguments: " + str(args))
 
-                with patch.object(deploy, "check_selected_state"), patch.object(deploy, "inspect", return_value=report), \
+                with patch.object(deploy, "check_selected_state", return_value={}), patch.object(deploy, "inspect", return_value=report), \
                         patch.object(deploy, "lifecycle_lock", return_value=nullcontext(folder)), \
                         patch.object(deploy, "aws_private_path", return_value=folder / "kubeconfig"), \
                         patch.object(deploy, "run", side_effect=run), \
@@ -297,7 +297,7 @@ class AwsDeployTests(unittest.TestCase):
                         if mode == "none":
                             seed.assert_not_called()
                             self.assertNotIn("postgresql-baseline", children)
-                            self.assertTrue(provision.call_args.args[1][1].endswith("/dev-no-database"))
+                            self.assertTrue(provision.call_args.args[1][1].endswith("/dev"))
                         else:
                             seed.assert_called_once()
                         dns.assert_called_once()

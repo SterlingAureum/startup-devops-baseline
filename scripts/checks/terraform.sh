@@ -3,7 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 readonly TF_ROOT="${ROOT_DIR}/infra/terraform/aws"
-readonly ROOTS=(state-bootstrap runtime-identities environments/dev environments/dev-no-database environments/test environments/prod)
+readonly ROOTS=(state-bootstrap runtime-identities environments/dev environments/test environments/prod)
 
 if ! command -v terraform >/dev/null 2>&1; then
   echo "terraform was not found in PATH" >&2
@@ -21,5 +21,7 @@ for root in "${ROOTS[@]}"; do
   echo "==> Validating Terraform configuration for ${root}"
   terraform -chdir="${tf_dir}" validate
 done
+
+terraform -chdir="${TF_ROOT}/environments/dev" test -filter=tests/database.tftest.hcl
 
 echo "All Terraform roots validated"

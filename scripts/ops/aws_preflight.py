@@ -8,7 +8,7 @@ from urllib.parse import urlsplit
 
 import yaml
 
-from aws_state import backend_path, execution_root, local_snapshot
+from aws_state import backend_path, local_snapshot
 from configuration import ROOT, OpsError, UniqueLoader, load_yaml, require
 
 
@@ -47,17 +47,6 @@ def implicit_inputs(root):
     return [path for path in [root / "terraform.tfvars", root / "terraform.tfvars.json",
                               *sorted([*root.glob("*.auto.tfvars"), *root.glob("*.auto.tfvars.json")])]
             if path.is_file()]
-
-
-def profile_var_args(root, actual):
-    if actual == root:
-        return []
-    # Replay the canonical root's implicit files in Terraform precedence order.
-    canonical = implicit_inputs(root)
-    reviewed = {path.resolve() for path in canonical}
-    require(all(path.resolve() in reviewed for path in implicit_inputs(actual)),
-            "Move profile-specific Terraform variables into the inventory variables_file")
-    return ["-var-file=" + str(path) for path in canonical]
 
 
 def deployment_inputs(root, selected):
@@ -255,11 +244,8 @@ def inspect(selected, env, config_path, personal=False):
     target = cfg["environments"][name]
     mode = env.get("database", {}).get("mode", "cnpg")
     manifest = selected.gitops_root
-    require("database_mode" not in values, "Select database.mode in the environment inventory, not in Terraform variables")
-    actual = execution_root(root, mode)
-    if actual != root:
-        require(backend_type(actual) == report["declared_backend"], "Database profile must use the selected dev backend")
-        profile_var_args(root, actual)
+    require(not {"database_mode", "retained_database_bucket", "retained_database_secret", "database_creation_marker"}.intersection(values),
+            "Select database.mode in the inventory. The CLI derives database retention and ownership from state.")
     sizes = {k: values["eks_node_" + k + "_size"] for k in ("min", "desired", "max")}
     require(all(type(v) is int for v in sizes.values()) and 0 <= sizes["min"] <= sizes["desired"] <= sizes["max"]
             and sizes["max"] >= 1, "Check min/desired/max node capacity in the selected var-file")
@@ -321,7 +307,7 @@ def inspect(selected, env, config_path, personal=False):
     example_repo = read_inputs(identities / "terraform.tfvars.example")["github_repository"]
     require(repo == example_repo, "Root GitHub repository differs from the runtime-identities declaration example")
     gh_env, labels = runtime_target(name)
-    return {**report, "terraform_execution_root": str(actual.relative_to(ROOT)), "database_mode": mode, "driver": "aws", "delivery_environment": name,
+    return {**report, "terraform_execution_root": str(root.relative_to(ROOT)), "database_mode": mode, "driver": "aws", "delivery_environment": name,
             "scope": "personal-files" if personal else "repository-examples",
             "offline_result": "passed", "live_checks": "pending",
             "runtime_identities_backend": backend_type(identities), "live_blockers": blockers, "gitops_root": manifest,

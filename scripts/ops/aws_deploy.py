@@ -1,6 +1,8 @@
 """Provision the selected personal AWS Terraform root and bootstrap its standard GitOps stack."""
+from copy import deepcopy
 from contextlib import contextmanager
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -11,10 +13,11 @@ import time
 
 import yaml
 
+from aws_database import dev_variables
 from aws_cnpg import wait_for_cnpg
-from aws_preflight import inspect, kustomize, local_file, profile_var_args
-from aws_state import check_selected_state, execution_root, init_argument, lifecycle_directory
-from aws_standard_demo import complete
+from aws_preflight import inspect, kustomize, local_file
+from aws_state import check_selected_state, init_argument, lifecycle_directory
+from aws_standard_demo import complete, seed_database, refresh_consumers, reconcile_dns
 from aws_provision import provision
 from configuration import ROOT, OpsError, load_yaml, require
 from connections import atomic_write, aws_private_path, kubectl_hint
@@ -142,6 +145,7 @@ def check_deploy_target(g, root, children):
     deleting = ["namespace/" + ns["metadata"]["name"] for ns in live
                 if ns["metadata"]["name"] in namespaces and
                 (ns["metadata"].get("deletionTimestamp") or ns.get("status", {}).get("phase") == "Terminating")]
+    adding_database = False
     # A new EKS cluster has no Argo CD CRDs yet.
     if g.obj(ARGO, "crd/applications.argoproj.io"):
         resource = "applications.argoproj.io/" + root["metadata"]["name"]
@@ -149,10 +153,40 @@ def check_deploy_target(g, root, children):
         if app and app["metadata"].get("deletionTimestamp"):
             deleting.append(ARGO + "/" + resource)
         if app and not deleting:
-            require(app.get("spec", {}).get("source", {}).get("path") == root["spec"]["source"]["path"],
-                    "Live root Application uses a different GitOps profile. Review the existing deployment before switching.")
+            source = app["spec"]["source"]
+            desired = root["spec"]["source"]
+            if source.get("path") != desired["path"]:
+                adding_database = (desired["path"] == "clusters/aws/overlays/dev"
+                                   and source.get("path") in ("clusters/aws/profiles/dev-no-database", DB_PREPARE)
+                                   and source.get("repoURL") == desired["repoURL"]
+                                   and source.get("targetRevision") == desired["targetRevision"]
+                                   and app["spec"].get("destination") == root["spec"]["destination"]
+                                   and app["spec"].get("project") == root["spec"]["project"])
+                require(adding_database, "Unexpected live root Application. Only the dev database addition is supported.")
     require(not deleting, "Deploy blocked by deletion in progress: " + ", ".join(deleting) +
             ". Finish cleanup before redeploying.")
+    return adding_database
+
+
+DB_PREPARE = "clusters/aws/profiles/dev-prepare-database"
+
+
+def enable_database(g, root, children, out, manifest, adopt):
+    # Argo can reconcile this intermediate root across CLI restarts while the app
+    # keeps its database-free configuration. The same path resumes this phase.
+    staged = deepcopy(root)
+    staged["spec"]["source"]["path"] = DB_PREPARE
+    names = gitops(g, staged, children, out, manifest)
+    # ESO already runs in database-free dev. Recreate its Pods so IRSA admission
+    # picks up the role added by prepare() before the consumer begins syncing.
+    g.exists("external-secrets", "deployment/external-secrets")
+    g.k("-n", "external-secrets", "rollout", "restart", "deployment/external-secrets")
+    g.k("-n", "external-secrets", "rollout", "status", "deployment/external-secrets", f"--timeout={g.timeout}s")
+    version = seed_database(g, out, adopt, refresh=False)
+    g.apply(root)
+    refresh_consumers(g, version)
+    reconcile_dns(g, out)
+    return names
 
 
 def gitops(g, root, children, out, argo_manifest):
@@ -181,6 +215,10 @@ def configure_database(g, out):
     store = g.exists("data-platform", resource)
     destination = "s3://" + out["cnpg_backup_bucket_name"] + "/postgresql-baseline"
     current = store["spec"]["configuration"]["destinationPath"]
+    if out.get("environment_name") == "dev" and current != destination:
+        # A new cluster with a retained bucket needs its own WAL archive.
+        generation = hashlib.sha256(out["eks_cluster_endpoint"].encode()).hexdigest()[:20]
+        destination += "/" + generation
     if current != destination:
         require(current == "s3://__CNPG_BACKUP_BUCKET__/postgresql-baseline", "Unexpected live backup destination")
         path = "/spec/configuration/destinationPath"
@@ -234,28 +272,29 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
     tf = env["terraform"]
     base = config.expanduser().resolve().parent
     source = ROOT / tf["root"]
-    actual = execution_root(source, report.get("database_mode", "cnpg"))
     with tempfile.TemporaryDirectory(prefix="aws-deploy-") as tmp:
         tfenv = dict(settings, TF_DATA_DIR=tmp + "/terraform", TF_WORKSPACE="default")
         require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
                 "Unset TF_CLI_ARGS overrides before provisioning")
         if operation != "deploy":
-            print(f"Initializing {actual.relative_to(ROOT)} for {g.context} (default workspace)", flush=True)
+            print(f"Initializing {source.relative_to(ROOT)} for {g.context} (default workspace)", flush=True)
             # Use the same variable sources that personal preflight inspected.
             tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
-        terraform = ["terraform", "-chdir=" + str(actual)]
-        check_selected_state(g, report, operation)
+        terraform = ["terraform", "-chdir=" + str(source)]
+        summary = check_selected_state(g, report, operation)
         run(terraform + ["init", "-input=false", "-reconfigure", init_argument(tf["backend"], base)], tfenv)
         if operation != "deploy":
             variables = local_file(tf["variables_file"], base)
             provision(g, terraform, tfenv, variables, Path(tmp) / "create.tfplan", folder, confirm,
-                      implicit=profile_var_args(source, actual))
+                      implicit=dev_variables(report["stage"], report.get("database_mode", "cnpg"), summary),
+                      adding_database=report["stage"] == "dev" and summary.get("cluster_database_mode") == "none"
+                      and report.get("database_mode", "cnpg") == "cnpg")
             if confirm is None:
                 return
         outputs = json.loads(run(terraform + ["output", "-json"], tfenv, private=True))
         out = {key: value["value"] for key, value in outputs.items()}
         require(out.get("database_mode", "cnpg") == report.get("database_mode", "cnpg"),
-                "Selected database mode differs from applied Terraform state. Existing environments keep their profile.")
+                "Selected database mode differs from applied Terraform state. Run plan then up before deploying a new capability.")
         require(out.get("eks_cluster_name"), "Infrastructure is absent from outputs; run plan then create for the selected inventory entry")
         require(out.get("environment_name") == report["stage"] and out["eks_cluster_name"] == g.context,
                 "Terraform output cluster differs from inventory")
@@ -280,7 +319,7 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
         root = load_yaml((ROOT / report["gitops_root"]).read_text())
         children = {doc["metadata"]["name"]: doc for doc in kustomize(root["spec"]["source"]["path"])
                     if doc and doc["kind"] == "Application"}
-        check_deploy_target(g, root, children)
+        adding_database = check_deploy_target(g, root, children)
         # A successful redeploy can change data on the same EBS volume IDs.
         # Invalidate the previous cleanup checkpoint before the first cluster write.
         # Read only the lineage from the private state payload.
@@ -294,8 +333,11 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
                     atomic_write(receipt, json.dumps(journal, indent=2))
     g.k("get", "nodes")
     prepare(g, out)
-    names = gitops(g, root, children, out, env["argocd"]["manifest"])
-    complete(g, out, adopt)
+    if adding_database:
+        names = enable_database(g, root, children, out, env["argocd"]["manifest"], adopt)
+    else:
+        names = gitops(g, root, children, out, env["argocd"]["manifest"])
+        complete(g, out, adopt)
     check_apps(g, names)
     print(kubectl_hint(g.path, g.context))
     print(f"AWS {report['stage']} GitOps stack converged. Runtime qualification is a separate workflow.")

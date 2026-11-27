@@ -4,6 +4,7 @@ from pathlib import Path
 import re
 import tempfile
 
+from aws_database import BUCKET, SECRET, DURABLE, DEV_MOVES, original
 from configuration import ROOT, OpsError, require
 
 
@@ -20,14 +21,6 @@ def init_argument(settings, base):
     path = backend_path(settings, base)
     value = f"path={path}" if settings["type"] == "local" else str(path)
     return "-backend-config=" + value
-
-
-def execution_root(root, mode):
-    if mode == "none":
-        require(root.name == "dev", "Database-free Terraform composition requires the dev root")
-        return root.with_name("dev-no-database")
-    require(mode == "cnpg", "Unrecognized database mode in selected state or inventory")
-    return root
 
 
 def snapshot(path, stage, cluster, account, region):
@@ -59,18 +52,53 @@ def snapshot(path, stage, cluster, account, region):
             if resource["type"] == "aws_vpc":
                 require(attrs.get("owner_id") == account and attrs.get("tags", {}).get("Name") == cluster + "-vpc",
                         "State VPC owner or name differs from the selected target")
-    profile = outputs.get("database_mode", {}).get("value")
-    if stage == "dev" and count and profile is None:
-        # An interrupted first apply may precede outputs. The EKS tag records the selected composition.
-        for resource in state["resources"]:
-            if resource["mode"] == "managed" and resource["type"] == "aws_eks_cluster" and resource["instances"]:
-                tags = resource["instances"][0]["attributes"].get("tags") or {}
-                profile = tags.get("BaselineDatabaseMode", "cnpg")
-                break
-            if resource.get("module") in ("module.cnpg_backup", "module.external_secrets") and resource["instances"]:
-                profile = "cnpg"
-                break
     result = {"status": "existing", "lineage": state["lineage"], "serial": state["serial"], "managed_instances": count}
+    profile = outputs.get("database_mode", {}).get("value")
+    if stage == "dev" and count:
+        bucket = f"{cluster}-{account}-{region}-cnpg"
+        storage = set()
+        runtime = False
+        cluster_mode = None
+        for resource in state["resources"]:
+            if resource["mode"] != "managed":
+                continue
+            raw = ".".join((resource.get("module", ""), resource["type"], resource.get("name", "")))
+            addr = original(raw)
+            if raw in DEV_MOVES and resource["instances"]:
+                result["legacy_database_addresses"] = True
+            for instance in resource["instances"]:
+                attrs = instance["attributes"]
+                if addr in DURABLE:
+                    require("index_key" not in instance and not instance.get("deposed") and addr not in storage,
+                            "Unexpected duplicate or indexed database storage in selected state")
+                    storage.add(addr)
+                    if addr == BUCKET:
+                        require(attrs.get("id") == bucket,
+                                "Retained database bucket differs from the selected dev target")
+                    elif addr != SECRET:
+                        require(attrs.get("bucket") == bucket, "Retained bucket configuration belongs to another bucket")
+                    else:
+                        require(attrs.get("name") == cluster + "/demo-api/postgresql" and
+                                (attrs.get("arn") or "").startswith(f"arn:aws:secretsmanager:{region}:{account}:secret:"),
+                                "Retained database secret differs from the selected dev target")
+                elif addr in DEV_MOVES:
+                    runtime = True
+                if resource["type"] == "aws_eks_cluster":
+                    tags = attrs.get("tags") or {}
+                    cluster_mode = tags.get("BaselineDatabaseMode", "cnpg")
+                    if tags.get("BaselineDevCreationPlan"):
+                        result["cluster_creation_marker"] = tags["BaselineDevCreationPlan"]
+        if cluster_mode:
+            result["cluster_database_mode"] = cluster_mode
+        result.update(database_storage=sorted(storage), retained_only=len(storage) == count)
+        # Interrupted apply can leave stale outputs. A live CNPG tag or its IAM resources
+        # always wins over a stale 'none' when deciding whether removal would be safe.
+        if runtime or cluster_mode == "cnpg":
+            profile = "cnpg"
+        elif cluster_mode:
+            profile = cluster_mode
+        elif profile is None and storage:
+            profile = "cnpg"
     if profile is not None:
         require(profile in ("cnpg", "none"), "Unrecognized database mode in Terraform state")
         result["database_mode"] = profile
@@ -105,13 +133,18 @@ def check_selected_state(g, report, operation):
             else:
                 result = snapshot(copy, *target)
     print("Terraform state:", json.dumps(result), flush=True)
-    if operation != "destroy" and result.get("managed_instances") and result.get("database_mode"):
-        require(result["database_mode"] == report.get("database_mode", "cnpg"),
-                f"Existing state uses database.mode={result['database_mode']}. "
-                "Review retention and destroy the old environment before selecting a different profile.")
+    mode = report.get("database_mode", "cnpg")
+    if operation != "destroy" and mode == "none" and result.get("database_mode") == "cnpg":
+        require(not result.get("managed_instances") or result.get("retained_only"),
+                "Existing state uses database.mode=cnpg. Removing an installed database is unsupported.")
+    if operation == "deploy" and result.get("database_mode") == "none" and mode == "cnpg":
+        raise OpsError("Run plan then up to provision CNPG infrastructure before deploy")
+    if result.get("retained_only") and operation in ("plan", "create", "up"):
+        print("Rebuilding with retained database storage in the selected state.", flush=True)
     if result["status"] == "absent":
         root = ROOT / report["terraform_root"]
-        roots = [root, execution_root(root, "none")] if report["stage"] == "dev" else [root]
+        # A private state may remain under the retired execution directory.
+        roots = [root, root.with_name("dev-no-database")] if report["stage"] == "dev" else [root]
         for directory in roots:
             former_default = directory / "terraform.tfstate"
             if former_default != Path(address) and former_default.exists():

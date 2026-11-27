@@ -61,7 +61,10 @@ def refresh_consumers(g, version):
             kinds.append("rollouts.argoproj.io/demo-api")
         found = [(k, obj) for k in kinds if (obj := g.obj("startup-apps", k))]
         require(len(found) < 2, "Both Deployment and Rollout exist for demo-api; finish the workload migration")
-        return found[0] if found else None
+        if found and any(e.get("name") == "DATABASE_URL" for c in found[0][1]["spec"]["template"]["spec"]["containers"]
+                         for e in c.get("env", [])):
+            return found[0]
+        return None  # Argo may still be applying the database-enabled child Application.
 
     kind, obj = g.until("standard demo database consumer", workload)
     template = obj["spec"]["template"]
@@ -154,7 +157,7 @@ def wait_for_replicas(g, kind, version):
         raise OpsError(detail) from error
 
 
-def seed_database(g, out, adopt=None):
+def seed_database(g, out, adopt=None, *, refresh=True):
     external = wait_for_consumer(g)
     spec = external["spec"]
     key = out["external_secrets_secret_name"]
@@ -188,7 +191,9 @@ def seed_database(g, out, adopt=None):
     require(latest.get("data", {}).get("fqdn-uri") == encoded, "CNPG credential changed during deployment; rerun deploy")
     labels = json.loads(g.aws("secretsmanager", "describe-secret", "--secret-id", arn))["VersionIdsToStages"]
     require("AWSCURRENT" in labels.get(version, []), "Demo credential changed during deployment; rerun deploy")
-    refresh_consumers(g, version)
+    if refresh:
+        refresh_consumers(g, version)
+    return version
 
 
 def reconcile_dns(g, out):

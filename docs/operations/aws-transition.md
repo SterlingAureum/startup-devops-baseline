@@ -162,7 +162,7 @@ After the root and its children are Synced and Healthy, run `delivery runtime`
 on main with `environment=aws-test` using the configured test runner to qualify
 the live release. A successful deploy reports GitOps convergence.
 
-## Choose the database for a new personal dev environment
+## Choose or add the personal dev database
 
 Select the database in your private inventory before running `plan`. Existing inventories
 default to `cnpg`. To run dev without PostgreSQL, add this field under your dev entry:
@@ -184,30 +184,40 @@ Application before deploying. Run these offline checks first:
 .venv/bin/python scripts/ops/cli.py up --env aws-dev --config "$inventory" --dry-run
 ```
 
-| Dependency | `cnpg` | `none` |
-| --- | --- | --- |
-| Terraform execution root | `environments/dev` | `environments/dev-no-database` shares the dev network, EKS, platform and runtime declarations through Git symlinks |
-| Dedicated AWS resources | CNPG backup bucket and role, demo DB secret and read role | Omitted from the root configuration |
-| GitOps | CNPG, PostgreSQL cluster, Barman, database capacity and credential consumer | Dedicated objects excluded; shared ESO and cert-manager remain available |
-| Demo | Reads the ESO-managed credential and checks database readiness | Same image runs with the database disabled; release identity, HTTP and metrics checks still apply |
-| Monitoring | CNPG monitor enabled | CNPG monitor disabled; shared recording rules and dashboard definitions may show no database metrics |
+| Dev transition | What to expect from plan and up |
+| --- | --- |
+| Fresh environment, `none` | Base VPC/EKS and shared platform. No CNPG resources, database nodes, backup IAM or database credential. |
+| Previous teardown with retained database storage, `none` | Same dev root, backend and lineage. Terraform records address moves for the existing backup bucket, its settings and the existing Secrets Manager secret. The application runs without a database. Review any tag updates. |
+| Fresh environment, `cnpg` | Full dev stack with PostgreSQL, Barman backups, demo credential and database monitoring. |
+| Running `none` environment, select `cnpg` | Run `plan`, then `up` with the physical cluster confirmation. EKS and VPC retain their identities. Database access roles are added and existing storage is reused. |
+| Running CNPG environment, select `none` | The lifecycle CLI stops before applying the change. Whole-environment teardown remains available through `destroy`. |
 
-The dev-only selector composes one environment. Both profiles use the same cluster identity
-and the selected backend. `preflight` prints `database_mode`, `terraform_execution_root` and
-`gitops_root`. For `none`, the installed root continuously reconciles
-`clusters/aws/profiles/dev-no-database` from Git. The shared modules retain their Terraform
-addresses. Keep Git symlinks enabled in the checkout used by Terraform (for example in WSL).
+For a retained-only dev state, keep the existing S3 key and run:
 
-`platform.startup.dev/feature: cnpg` marks dedicated Kubernetes declarations for the GitOps
-overlay. `BaselineFeature=cnpg` groups taggable AWS resources in the two database-specific
-modules. Ownership checks for deletion still use the state, cluster identity, creation
-marker and retention policy. The feature label alone never authorizes deletion.
+```bash
+.venv/bin/python scripts/ops/cli.py plan --env aws-dev
+```
 
-Plan a different profile in a fresh environment. For an existing cluster, preview and
-finish teardown with the intended retention policy before recreating it. The CLI uses
-the **recorded** profile for destroy. A state containing retained database resources
-continues to belong to the CNPG profile; keep it with those resources. Check the plan
-and backend before reusing an empty state. Test currently uses the full CNPG stack.
+The plan may show the existing bucket and secret moving to `module.cnpg_backup_storage[0]`
+and `module.external_secrets_storage[0]`. Their AWS identities stay the same. The CLI checks
+the saved plan for removal, replacement, or recreation of retained storage. Confirm
+`up` only after reviewing the plan. Use a Git revision containing the dev GitOps profiles.
+
+When adding PostgreSQL online, Argo first reconciles `clusters/aws/profiles/dev-prepare-database`.
+The demo keeps its database-free configuration while CNPG becomes ready and ESO reconciles
+the credential. The CLI then selects the full dev overlay and waits for the updated replicas.
+A failure during preparation leaves the intermediate root in place. Resolve the reported
+cause and rerun `up`. A retained operator-managed secret may require explicit adoption of
+its exact current version. Installing CNPG on a rebuilt dev cluster starts a new database
+and uses a separate WAL prefix in its backup bucket. Existing configured archive paths
+remain in use when redeploying their cluster.
+
+`preflight` reports the selected GitOps profile and the canonical `environments/dev` Terraform root.
+The CLI derives retention flags from the selected state and passes them to Terraform.
+Use the lifecycle CLI for a state containing retained resources. Feature tags group related
+resources. Teardown uses the recorded state, cluster generation and retention policy to decide
+ownership. Previously recorded snapshots remain governed by the existing teardown policy.
+Test continues to use the full CNPG stack.
 
 ## Check personal inputs
 

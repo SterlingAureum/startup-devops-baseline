@@ -1,1 +1,0 @@
-../dev/observability-capacity.auto.tfvars

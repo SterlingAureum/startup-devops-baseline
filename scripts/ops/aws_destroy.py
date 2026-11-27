@@ -3,14 +3,16 @@ import json
 import os
 import re
 from pathlib import Path
+import shutil
 import subprocess
 import tempfile
 import time
 
 from aws_deploy import Cluster, lifecycle_lock, reopen_receipt, run
 from aws_dev_network import release_network
-from aws_preflight import inspect_infrastructure, local_file, profile_var_args
-from aws_state import execution_root, check_selected_state, init_argument
+from aws_preflight import inspect_infrastructure, local_file
+from aws_database import BUCKET, SECRET, DURABLE, DEV_MOVES, original, dev_variables
+from aws_state import check_selected_state, init_argument
 from configuration import ROOT, OpsError, require
 from connections import atomic_write
 
@@ -25,8 +27,6 @@ MODULES = {"eks", "vpc", "github_actions_runtime_identity", "cnpg_backup", "exte
 
 GENERATION = "BaselineDevCreationPlan"
 CLUSTER = "module.eks.aws_eks_cluster.this"
-BUCKET = "module.cnpg_backup.aws_s3_bucket.this"
-SECRET = "module.external_secrets.aws_secretsmanager_secret.this"
 
 
 def generation(attrs):
@@ -46,26 +46,28 @@ def partition(state, owner=None, retain=False):
     if owner and not retain:
         for r in state.get("resources", []):
             addr = ".".join([r.get("module", ""), r["type"], r["name"]])
-            if r["mode"] == "managed" and addr in (BUCKET, SECRET) and len(r["instances"]) == 1:
+            if r["mode"] == "managed" and original(addr) in (BUCKET, SECRET) and len(r["instances"]) == 1:
                 attrs = r["instances"][0].get("attributes", {})
-                if generation(attrs) == owner and (addr != BUCKET or attrs.get("force_destroy") is True):
-                    disposable.add(addr)
+                if generation(attrs) == owner and (original(addr) != BUCKET or attrs.get("force_destroy") is True):
+                    disposable.add(original(addr))
 
     destroy, keep = set(), set()
     for r in state.get("resources", []):
         if r["mode"] != "managed":
             continue
         module = r.get("module", "")
-        require(module.startswith("module.") and module.split(".")[1].split("[")[0] in MODULES,
+        require(module.startswith("module.") and (module.split(".")[1].split("[")[0] in MODULES or
+                ".".join([module, r["type"], r["name"]]) in DEV_MOVES.values()),
                 "Unexpected managed resource outside the standard environment modules: " + module)
         if module.startswith("module.github_actions_runtime_identity"):
             require(r["type"] == "aws_eks_access_entry", "Review unexpected persistent identity in selected state")
         addr = ".".join([module, r["type"], r["name"]])
-        retained = ((module == "module.cnpg_backup" and r["type"].startswith("aws_s3_bucket"))
-                    or addr == "module.external_secrets.aws_secretsmanager_secret.this")
+        if module in ("module.cnpg_backup", "module.external_secrets") and addr not in DEV_MOVES:
+            require(not r["instances"], f"Review unexpected database resource before teardown: {addr}")
+        retained = original(addr) in DURABLE
         for instance in r["instances"]:
             suffix = "[" + json.dumps(instance["index_key"], ensure_ascii=False) + "]" if "index_key" in instance else ""
-            protected = (BUCKET if module == "module.cnpg_backup" else SECRET) not in disposable
+            protected = (SECRET if original(addr) == SECRET else BUCKET) not in disposable
             (keep if retained and protected else destroy).add(addr + suffix)
     return destroy, keep
 
@@ -78,10 +80,10 @@ def check_plan(plan, targets, owner=None):
             continue
         require(actions == ["delete"] and change["address"] in targets,
                 f"Unexpected destroy plan action: {change['address']} {actions}")
-        if change["address"] in (BUCKET, SECRET) or (owner and change["address"] == CLUSTER):
+        if original(change["address"]) in (BUCKET, SECRET) or (owner and change["address"] == CLUSTER):
             before = change["change"]["before"]
             require(owner and generation(before) == owner, "Creation marker changed during refresh: " + change["address"])
-            require(change["address"] != BUCKET or before.get("force_destroy") is True,
+            require(original(change["address"]) != BUCKET or before.get("force_destroy") is True,
                     "Refreshed bucket does not allow removal of its objects")
         deletes.add(change["address"])
     # Drifted resources already gone in AWS need no delete action.
@@ -317,15 +319,31 @@ def destroy(selected, env, config, confirm, retain=False):
         summary = check_selected_state(g, report, "destroy")
         mode = summary.get("database_mode", "cnpg")
         print(f"Teardown profile from Terraform state: database.mode={mode}", flush=True)
-        session(g, env, config, confirm, folder, tmp, retain, database_mode=mode)
+        session(g, env, config, confirm, folder, tmp, retain, database_mode=mode,
+                legacy_addresses=summary.get("legacy_database_addresses", False),
+                expected_state=(summary.get("lineage"), summary.get("serial")))
 
 
-def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode="cnpg"):
+def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode="cnpg", legacy_addresses=False, expected_state=None):
     tf = env["terraform"]
     tfenv = dict(g.env, TF_DATA_DIR=tmp + "/tfdata", TF_WORKSPACE="default")
     tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
     source = ROOT / tf["root"]
-    actual = execution_root(source, database_mode)
+    actual = source
+    if legacy_addresses:
+        # Targeted destroy acts on addresses as recorded. Applying move declarations
+        # here would require targeting retained storage as well. Use the same backend
+        # and inputs with a temporary configuration that omits only those moves.
+        require(source.name == "dev", "Unexpected legacy database layout outside dev")
+        actual = Path(tmp) / "aws/environments/dev"
+        actual.mkdir(parents=True)
+        (actual.parents[1] / "modules").symlink_to(source.parents[1] / "modules", target_is_directory=True)
+        for file in source.iterdir():
+            if file.name != "database-moves.tf" and file.name.endswith((".tf", ".tf.json", ".tfvars", ".tfvars.json")):
+                (actual / file.name).symlink_to(file)
+        lock = source / ".terraform.lock.hcl"
+        if lock.is_file():
+            shutil.copyfile(lock, actual / lock.name)
     tfcmd = ["terraform", "-chdir=" + str(actual)]
     def terraform(*args):
         return run(tfcmd + list(args), tfenv)
@@ -339,8 +357,9 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
     receipt = folder / (state["lineage"] + ".json")
     journal = json.loads(receipt.read_text()) if receipt.exists() else {}
     out = {k: v["value"] for k, v in state.get("outputs", {}).items()}
-    if out.get("database_mode"):
-        require(out["database_mode"] == database_mode, "Database mode in state changed since destroy preflight")
+    if expected_state:
+        require((state["lineage"], state["serial"]) == expected_state,
+                "Selected state changed since destroy preflight. Rerun destroy preview.")
     live_names = json.loads(g.aws("eks", "list-clusters"))["clusters"]
     vpc = out.get("vpc_id") or journal.get("vpc")
     if journal.get("vpc") != vpc or not journal:
@@ -397,9 +416,11 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
         require(journal.get("cleaned"), "EKS absent before Kubernetes cleanup could be verified")
     plan = tmp + "/destroy.tfplan"
 
+    database_storage = sorted({original(a) for a in targets | keep} & DURABLE)
+    variables = dev_variables(source.name, database_mode, {"database_storage": database_storage})
     def review(addresses):
         terraform("plan", "-destroy", "-input=false", "-lock-timeout=60s", "-out=" + plan,
-                  *profile_var_args(source, actual), "-var-file=" + str(local_file(tf["variables_file"], base)),
+                  "-var-file=" + str(local_file(tf["variables_file"], base)), *variables,
                   *["-target=" + a for a in sorted(addresses)])
         return check_plan(json.loads(terraform("show", "-json", plan)), addresses, owner)
 
@@ -407,8 +428,9 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
         subprocess.run(tfcmd + ["apply", "-input=false", "-lock-timeout=60s", plan], env=tfenv, check=True)
 
     deletes = review(targets)
-    for address, output in [(BUCKET, "cnpg_backup_bucket_name"), (SECRET, "external_secrets_secret_arn")]:
-        if address in targets or address in keep:
+    for address in sorted(targets | keep):
+        if original(address) in (BUCKET, SECRET):
+            output = "cnpg_backup_bucket_name" if original(address) == BUCKET else "external_secrets_secret_arn"
             print("Retain" if address in keep else "Delete", address, out.get(output, "(see state address)"))
     if any(a.startswith("module.vpc.") for a in targets):
         print(f"After EKS deletion, inspect {vpc} for detached CNI ENIs and release "

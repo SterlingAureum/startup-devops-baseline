@@ -97,7 +97,6 @@ crash.*.log
 
 # Reviewed dev capacity only; contains no credentials or workstation addresses.
 !infra/terraform/aws/environments/dev/observability-capacity.auto.tfvars
-!infra/terraform/aws/environments/dev-no-database/observability-capacity.auto.tfvars
 override.tf
 override.tf.json
 *_override.tf

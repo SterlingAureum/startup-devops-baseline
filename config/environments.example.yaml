@@ -33,7 +33,7 @@ environments:
         git.repoURL: '${repository}'
         git.targetRevision: '${revision}'
   aws-dev:
-    # Select when creating dev. Use none to omit the database stack and its dedicated AWS resources.
+    # Use none for a base dev cluster. Switch to cnpg and run up to add PostgreSQL later.
     database:
       mode: cnpg
     # Offline preflight can check repository examples or these private files.

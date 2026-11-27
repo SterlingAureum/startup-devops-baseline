@@ -86,12 +86,12 @@ class ProvisionTests(unittest.TestCase):
         # to the EKS shape that the AWS-specific ownership check consumes.
         check = provision.check_plan
 
-        def fixture_identity(plan, cluster):
+        def fixture_identity(plan, cluster, **options):
             for row in plan["resource_changes"]:
                 if row["address"] == "terraform_data.cluster":
                     row["address"] = "module.eks.aws_eks_cluster.this"
                     row["change"]["after"]["name"] = row["change"]["after"]["input"]
-            return check(plan, cluster)
+            return check(plan, cluster, **options)
 
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
@@ -145,18 +145,18 @@ class ProvisionTests(unittest.TestCase):
                         return '{"Account":"123456789012"}'
                     self.assertEqual(action, "describe-cluster")
                     return '{"cluster":{"endpoint":"https://eks","status":"ACTIVE","resourcesVpcConfig":{"vpcId":"vpc"}}}'
-                def provision_step(g, terraform, settings, variables, plan, receipts, selected, *, implicit=()):
+                def provision_step(g, terraform, settings, variables, plan, receipts, selected, *, implicit=(), adding_database=False):
                     self.assertEqual(selected, self.name if confirm else None)
                     self.assertEqual(settings["TF_WORKSPACE"], "default")
                     events.append("provision")
                     if fails:
                         raise subprocess.CalledProcessError(1, ["terraform", "apply"])
                 with patch.dict(deploy.os.environ, {"TF_VAR_project_name": "foreign"}), \
-                        patch.object(deploy, "check_selected_state"), patch.object(deploy, "inspect", return_value=report), patch.object(deploy.Cluster, "aws", side_effect=aws), \
+                        patch.object(deploy, "check_selected_state", return_value={}), patch.object(deploy, "inspect", return_value=report), patch.object(deploy.Cluster, "aws", side_effect=aws), \
                         patch.object(deploy, "lifecycle_lock", return_value=nullcontext(folder)), \
                         patch.object(deploy, "provision", side_effect=provision_step), patch.object(deploy, "run", side_effect=run), \
                         patch.object(deploy, "aws_private_path", return_value=folder / "kubeconfig"), \
-                        patch.object(deploy, "kustomize", return_value=[]), patch.object(deploy, "check_deploy_target"), \
+                        patch.object(deploy, "kustomize", return_value=[]), patch.object(deploy, "check_deploy_target", return_value=False), \
                         patch.object(deploy.Cluster, "k") as kubectl, patch.object(deploy, "prepare"), patch.object(deploy, "gitops"), \
                         patch.object(deploy, "complete"), patch.object(deploy, "check_apps") as healthy, \
                         redirect_stdout(io.StringIO()) as log, redirect_stderr(io.StringIO()):

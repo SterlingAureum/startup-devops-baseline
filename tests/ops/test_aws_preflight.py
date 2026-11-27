@@ -18,6 +18,21 @@ import configuration
 
 
 class AwsPreflightTests(unittest.TestCase):
+    def test_personal_backend_encryption_modes(self):
+        account = "123456789012"
+        inventory = {"expected_account_id": account}
+        arn = f"arn:aws:kms:us-east-1:{account}:key/test-key"
+        for stage in ("dev", "test"):
+            template = ROOT / f"infra/terraform/aws/backend-config/{stage}.s3.tfbackend.example"
+            backend = dict(aws.read_inputs(template), bucket="fixture-only", allowed_account_ids=[account])
+            self.assertNotIn("kms_key_id", backend)
+            aws.check_backend(backend, stage, inventory, True)
+            aws.check_backend(dict(backend, kms_key_id=arn), stage, inventory, True)
+            for invalid in ("", None, "replace-with-kms-key-arn", arn.replace(account, "999999999999"),
+                            arn.replace("us-east-1", "us-west-2")):
+                with self.subTest(stage=stage, invalid=invalid), self.assertRaises(configuration.OpsError):
+                    aws.check_backend(dict(backend, kms_key_id=invalid), stage, inventory, True)
+
     def test_personal_inputs_and_wrong_target_from_cli(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)

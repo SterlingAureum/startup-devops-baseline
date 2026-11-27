@@ -12,6 +12,7 @@ from aws_deploy import Cluster, lifecycle_lock, reopen_receipt, run
 from aws_dev_network import release_network
 from aws_preflight import inspect_infrastructure, local_file
 from aws_database import BUCKET, SECRET, DURABLE, DEV_MOVES, original, dev_variables
+from aws_retention import observe, report_storage
 from aws_state import check_selected_state, init_argument
 from configuration import ROOT, OpsError, require
 from connections import atomic_write
@@ -141,6 +142,9 @@ def backup(g, volumes, journal, save):
                                     g.context + " teardown " + claim, "--tag-specifications",
                                     json.dumps([{"ResourceType": "snapshot", "Tags": tags}])))
             journal["snapshots"][vol] = snap["SnapshotId"]
+            journal.setdefault("snapshot_sources", {})[snap["SnapshotId"]] = {
+                "cluster": g.context, "region": g.env["AWS_REGION"], "claim": claim, "volume": vol,
+            }
             save()
         print(f"{claim}: {vol} -> {journal['snapshots'][vol]}", flush=True)
     ids = list(journal["snapshots"].values())
@@ -248,6 +252,40 @@ def release_external_secrets(g):
         time.sleep(5)
 
 
+def record_archive(g, out, journal, save):
+    bucket = out.get("cnpg_backup_bucket_name")
+    if not bucket or out.get("database_mode", "cnpg") == "none":
+        return
+    ns = "data-platform"
+    kind = "clusters.postgresql.cnpg.io"
+    if not g.obj(ns, "crd/" + kind):
+        print("CNPG backup source unavailable: cluster CRD absent.")
+        return
+    cluster = g.obj(ns, kind + "/postgresql-baseline")
+    if not cluster:
+        print("CNPG backup source unavailable: database cluster absent.")
+        return
+    plugin = next((p for p in cluster["spec"].get("plugins", [])
+                   if p["name"] == "barman-cloud.cloudnative-pg.io" and p.get("enabled", True)), {})
+    params = plugin.get("parameters", {})
+    store_name = params.get("barmanObjectName")
+    store = None
+    if store_name and g.obj(ns, "crd/objectstores.barmancloud.cnpg.io"):
+        store = g.obj(ns, "objectstores.barmancloud.cnpg.io/" + store_name)
+    destination = (store or {}).get("spec", {}).get("configuration", {}).get("destinationPath", "")
+    if not destination.startswith("s3://" + bucket + "/"):
+        print("CNPG backup source unavailable: no configured ObjectStore path in the selected backup bucket.")
+        return
+    source = {"cluster": g.context, "region": g.env["AWS_REGION"], "namespace": ns,
+              "database_cluster": cluster["metadata"]["name"], "object_store": store_name,
+              "server_name": params.get("serverName", cluster["metadata"]["name"]), "destination": destination}
+    archives = journal.setdefault("cnpg_archives", [])
+    if source not in archives:
+        archives.append(source)
+        save()
+    print(f"CNPG backup source: {destination} (server {source['server_name']}); backup contents unverified.")
+
+
 def remove_stack(g, out, journal, save, retain):
     expected_lbs = demo_lbs(g, out["vpc_id"])
     record = dns_record(g, out)
@@ -261,6 +299,7 @@ def remove_stack(g, out, journal, save, retain):
     journal["volumes"] = sorted(set(journal.get("volumes", [])) | set(journal["snapshots"]) | set(current))
     save()
     if retain:
+        record_archive(g, out, journal, save)
         backup(g, current, journal, save)
     if record:
         batch = {"Changes": [{"Action": "DELETE", "ResourceRecordSet": record}]}
@@ -318,10 +357,41 @@ def destroy(selected, env, config, confirm, retain=False):
     with lifecycle_lock(caller["Account"], aws["region"], name) as folder, tempfile.TemporaryDirectory(prefix="aws-destroy-") as tmp:
         summary = check_selected_state(g, report, "destroy")
         mode = summary.get("database_mode", "cnpg")
-        print(f"Teardown profile from Terraform state: database.mode={mode}", flush=True)
+        print(f"Teardown database mode: {mode} ({'state' if 'database_mode' in summary else 'standard default'})", flush=True)
         session(g, env, config, confirm, folder, tmp, retain, database_mode=mode,
                 legacy_addresses=summary.get("legacy_database_addresses", False),
                 expected_state=(summary.get("lineage"), summary.get("serial")))
+
+
+def refresh_missing(terraform, tfcmd, tfenv, tmp, tf, base, stage, mode, missing, keep, confirm, context, state_id):
+    """Only persist refresh of the independently confirmed missing addresses."""
+    print("Stale Terraform addresses (AWS absent):", *sorted(missing), sep="\n  ")
+    if not confirm:
+        print(f"Preview only. Repeat destroy with --confirm {context} to reconcile these state records.")
+        return
+    plan = tmp + "/refresh.tfplan"
+    storage = sorted({original(a) for a in keep} & DURABLE)
+    terraform("plan", "-refresh-only", "-input=false", "-lock-timeout=60s", "-out=" + plan,
+              "-var-file=" + str(local_file(tf["variables_file"], base)),
+              *dev_variables(stage, mode, {"database_storage": storage}), *["-target=" + a for a in sorted(missing)])
+    document = json.loads(terraform("show", "-json", plan))
+    drift = {r["address"] for r in document.get("resource_drift", []) if r["mode"] == "managed"
+             and r["change"]["actions"] == ["delete"]}
+    require(not any(document.get(k) for k in ("errored", "deferred_changes", "action_invocations"))
+            and drift == missing and
+            all(r["mode"] == "data" or (r["address"] in missing and r["change"]["actions"] == ["delete"])
+                for r in document.get("resource_drift", [])) and
+            all(r["mode"] == "data" or (r["change"]["actions"] == ["no-op"] and
+                not r["change"].get("importing") and not r.get("previous_address"))
+                for r in document.get("resource_changes", [])),
+            "Refresh differs from the verified missing addresses; state preserved. Review the plan.")
+    before = json.loads(terraform("state", "pull"))
+    require((before["lineage"], before["serial"]) == state_id,
+            "Selected state changed since storage inspection. Rerun destroy preview.")
+    subprocess.run(tfcmd + ["apply", "-input=false", "-lock-timeout=60s", plan], env=tfenv, check=True)
+    targets, remaining = partition(json.loads(terraform("state", "pull")))
+    require(not targets and remaining == keep - missing, "Review state after refreshing absent database storage")
+    print("State refreshed. Verified missing addresses removed; no AWS deletion requested.")
 
 
 def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode="cnpg", legacy_addresses=False, expected_state=None):
@@ -364,7 +434,8 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
     vpc = out.get("vpc_id") or journal.get("vpc")
     if journal.get("vpc") != vpc or not journal:
         previous = set(journal.get("prior_snapshots", [])) | set(journal.get("snapshots", {}).values())
-        journal = {"vpc": vpc, "prior_snapshots": sorted(previous), "snapshots": {}, "cleaned": False}
+        journal = {"vpc": vpc, "prior_snapshots": sorted(previous), "snapshots": {}, "cleaned": False,
+                   "snapshot_sources": journal.get("snapshot_sources", {}), "cnpg_archives": journal.get("cnpg_archives", [])}
     owner = creation_plan(state)
     if owner is None and journal.get("cleaned") and g.context not in live_names:
         owner = journal.get("owner")
@@ -373,12 +444,25 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
     targets, keep = partition(state, owner, retain)
     if targets and journal.get("cleaned") and "retain" in journal:
         require(retain == journal["retain"], "Resume the pending Terraform apply with the previous backup policy")
+    recorded = sorted(set(journal.get("prior_snapshots", [])) | set(journal["snapshots"].values()))
+    print("Recorded snapshot IDs (historical; AWS existence not checked):", recorded)
+    missing = report_storage(g, env["aws"], state, targets, keep, owner, retain)
     if not targets:
         require(g.context not in live_names, "EKS exists but selected state has no teardown targets")
         if journal.get("vpc"):
             check_absent(g, journal["vpc"])
-        print("Recorded snapshots:", journal.get("prior_snapshots", []), journal["snapshots"])
-        print(f"No teardown targets for {g.context}. Retained state addresses:", *sorted(keep), sep="\n")
+        print(f"No AWS deletion targets for {g.context}. Shared Terraform backend retained.")
+        if journal.get("pending_data_deletions"):
+            verify_deleted_storage(g, env["aws"], journal)
+            if confirm:
+                journal["complete"] = True
+                journal.pop("pending_data_deletions")
+                atomic_write(receipt, json.dumps(journal, indent=2))
+        if receipt.is_file():
+            print("Local teardown receipt:", receipt)
+        if missing:
+            refresh_missing(terraform, tfcmd, tfenv, tmp, tf, base, source.name, database_mode,
+                            missing, keep, confirm, g.context, (state["lineage"], state["serial"]))
         return
     require(vpc and (out.get("eks_cluster_name") == g.context or journal.get("cleaned")),
             "Cannot establish selected state ownership")
@@ -428,20 +512,23 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
         subprocess.run(tfcmd + ["apply", "-input=false", "-lock-timeout=60s", plan], env=tfenv, check=True)
 
     deletes = review(targets)
-    for address in sorted(targets | keep):
-        if original(address) in (BUCKET, SECRET):
-            output = "cnpg_backup_bucket_name" if original(address) == BUCKET else "external_secrets_secret_arn"
-            print("Retain" if address in keep else "Delete", address, out.get(output, "(see state address)"))
     if any(a.startswith("module.vpc.") for a in targets):
         print(f"After EKS deletion, inspect {vpc} for detached CNI ENIs and release "
               f"the recorded EKS security group {journal.get('cluster_sg', '(unrecorded)')} if verified.")
     print("Terraform destroy:", *deletes, sep="\n  ")
-    print("Previously recorded snapshots, preserved:", journal.get("prior_snapshots", []), journal["snapshots"])
     print("Shared state backend, its KMS key and separate runtime identity root are outside this plan.")
-    print("Retain in selected state (backup policy, legacy ownership, or protected bucket):", *sorted(keep), sep="\n  ")
+    if keep - missing:
+        print("Protected data addresses:", *sorted(keep - missing), sep="\n  ")
+    if missing:
+        print("Stale state addresses (AWS absent):", *sorted(missing), sep="\n  ")
     if confirm is None:
         print("Preview complete. Execute the same command with --confirm " + g.context)
         return
+    pending = journal.setdefault("pending_data_deletions", {})
+    for row in state["resources"]:
+        address = ".".join((row.get("module", ""), row["type"], row["name"]))
+        if row["mode"] == "managed" and address in targets and original(address) in (BUCKET, SECRET):
+            pending[original(address)] = row["instances"][0]["attributes"].get("arn")
     if not journal["cleaned"]:
         journal.update(owner=owner, retain=retain)
         save()
@@ -460,7 +547,7 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
         current = json.loads(terraform("state", "pull"))
         require(current.get("lineage") == state["lineage"], "Terraform state lineage changed")
         remaining, retained = partition(current, owner, retain)
-        require(remaining <= network and retained == keep, "Review changed state before network cleanup")
+        require(remaining <= network and keep - missing <= retained <= keep, "Review changed state before network cleanup")
         vpc_ids = [i["attributes"]["id"] for r in current["resources"] if r.get("module") == "module.vpc"
                    and r["mode"] == "managed" and r["type"] == "aws_vpc" for i in r["instances"]]
         if vpc_ids:
@@ -474,12 +561,23 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
             print("Applying network destroy plan", flush=True)
             apply()
     remaining, retained = partition(json.loads(terraform("state", "pull")), owner, retain)
-    require(not remaining and retained == keep, "Review residual or changed Terraform state")
+    require(not remaining and keep - missing <= retained <= keep, "Review residual or changed Terraform state")
     check_absent(g, vpc)
+    report_storage(g, env["aws"], state, set(), retained, owner, retain)
+    verify_deleted_storage(g, env["aws"], journal)
+    journal.pop("pending_data_deletions", None)
     journal["complete"] = True
     save()
-    print(f"AWS teardown complete for {g.context}. EKS and VPC absent. Retained snapshots:", journal.get("prior_snapshots", []), journal["snapshots"])
+    print(f"AWS teardown complete for {g.context}. EKS and VPC absent.")
     print("Local teardown receipt:", receipt)
+
+
+def verify_deleted_storage(g, aws, journal):
+    for kind, arn in journal.get("pending_data_deletions", {}).items():
+        require(kind in (BUCKET, SECRET), "Unexpected database entry in teardown receipt")
+        live = observe(g, kind, aws["expected_account_id"], aws["region"], expected_arn=arn)
+        require(live.status != "present", f"Cleanup incomplete: {live.name} still exists in AWS.")
+        print(f"AWS {live.status}: {live.name}" + (f" on {live.deletion_date}" if live.deletion_date else ""))
 
 
 def check_absent(g, vpc):

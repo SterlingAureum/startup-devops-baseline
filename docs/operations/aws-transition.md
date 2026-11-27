@@ -187,7 +187,7 @@ Application before deploying. Run these offline checks first:
 | Dev transition | What to expect from plan and up |
 | --- | --- |
 | Fresh environment, `none` | Base VPC/EKS and shared platform. No CNPG resources, database nodes, backup IAM or database credential. |
-| Previous teardown with retained database storage, `none` | Same dev root, backend and lineage. Terraform records address moves for the existing backup bucket, its settings and the existing Secrets Manager secret. The application runs without a database. Review any tag updates. |
+| Previous teardown with retained database storage, `none` | Use the same dev root, backend and lineage. The CLI checks the bucket and secret in AWS separately. Terraform can move the addresses of surviving storage and refresh records for missing storage. The application runs without a database. Review any tag updates. |
 | Fresh environment, `cnpg` | Full dev stack with PostgreSQL, Barman backups, demo credential and database monitoring. |
 | Running `none` environment, select `cnpg` | Run `plan`, then `up` with the physical cluster confirmation. EKS and VPC retain their identities. Database access roles are added and existing storage is reused. |
 | Running CNPG environment, select `none` | The lifecycle CLI stops before applying the change. Whole-environment teardown remains available through `destroy`. |
@@ -365,7 +365,13 @@ Default destroy releases the standard PVCs without creating EBS snapshots.
 To take crash-consistent snapshots of those volumes and keep the CNPG backup
 bucket and the demo DB secret, add `--retain-backups` to both commands.
 Snapshot mode requires EC2 snapshot creation, tagging and read permissions.
-Previously recorded snapshots are listed and preserved in either mode.
+Previously recorded snapshot IDs are historical references; destroy does not verify their current existence.
+The private teardown receipt records each newly captured snapshot ID with its source volume,
+cluster, region and namespace/PVC. In retention mode it also records the live CNPG ObjectStore
+destination (bucket and prefix), database cluster and Barman server name when available.
+Destroy neither requests a final CNPG physical backup nor certifies that the archive is restorable.
+Use a separate CNPG recovery manifest or restore the chosen EBS snapshot to a volume when
+data recovery is required. Ordinary up starts the configured environment.
 
 For a fresh dev or test installation the EKS cluster, CNPG bucket and demo DB secret
 receive the same creation-plan tag (`BaselineDevCreationPlan`, the historical key)
@@ -378,8 +384,17 @@ be unavailable for an immediate rebuild. For repeated disposable test runs, set
 Destroy retains unmarked test buckets and secrets from earlier runs, along with
 imported or separately created data resources whose ownership markers differ. Existing tags are not
 backfilled on upgrade. Treat the disposable bucket as exclusive to this environment.
-The preview lists the data resource names, Terraform addresses, shared state
-location and recorded snapshots. Shared state, KMS and persistent runtime
+Destroy checks the physical bucket with GetBucketTagging (expected account owner) and the
+secret with DescribeSecret (name and stored ARN). Grant the operator these metadata reads.
+The output distinguishes present and kept (including the retention reason), missing in AWS
+with stale state addresses, and a secret scheduled for deletion with its date.
+When only stale addresses and protected data remain, preview lists the stale addresses.
+Confirming that same destroy applies a targeted refresh-only Terraform plan only if its managed
+drift exactly matches the missing addresses. This updates state without deleting AWS objects.
+Alternatively a dev rebuild in database.mode=none checks both stores before planning: an
+absent bucket is omitted and a live secret remains managed. The reviewed create/update plan
+must still contain no destructive actions. An authorization error or ambiguous identity
+stops the operation. Preview leaves the selected state unchanged. Shared state, KMS and persistent runtime
 identities belong to separate roots. Retained backups and secrets can incur
 charges.
 

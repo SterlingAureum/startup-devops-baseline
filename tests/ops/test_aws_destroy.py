@@ -94,6 +94,7 @@ class TeardownTests(unittest.TestCase):
     def test_snapshot_failure_stops_before_deleting_volumes(self):
         g = Mock()
         g.context = "test-dev"
+        g.env = {"AWS_REGION": "us-east-1"}
         g.aws.side_effect = ['{"SnapshotId":"snap-1"}', '{"Snapshots":[{"State":"error"}]}']
         g.until.side_effect = lambda _, read: read()
         journal = {"snapshots": {}}
@@ -188,7 +189,7 @@ class TeardownTests(unittest.TestCase):
         env = {"aws": aws, "terraform": {"root": "infra/terraform/aws/environments/" + stage,
                                          "backend": {"type": "s3", "config_file": stage + ".tfbackend"}, "variables_file": stage + ".tfvars"}}
         name = "module.eks.aws_eks_cluster.this"
-        retained = resource("cnpg_backup", "aws_s3_bucket")
+        retained = resource("cnpg_backup", "aws_s3_bucket", attributes={"id": g.context + "-123456789012-us-east-1-cnpg"})
         state = {"lineage": "12345678-1234-1234-1234-123456789012",
                  "outputs": {k: {"value": v} for k, v in {
                      "eks_cluster_name": g.context, "eks_cluster_endpoint": "endpoint", "vpc_id": "vpc-1"}.items()},
@@ -215,7 +216,7 @@ class TeardownTests(unittest.TestCase):
                 events.append("plan")
             return ""
         g.aws.side_effect = lambda service, action, *args: json.dumps(
-            {"clusters": [g.context]} if action == "list-clusters" else {"cluster": live})
+            {"clusters": [g.context]} if action == "list-clusters" else {"TagSet": []} if action == "get-bucket-tagging" else {"cluster": live})
         with tempfile.TemporaryDirectory() as tmp, patch.object(teardown, "run", side_effect=command), \
                 patch.object(teardown, "demo_lbs", return_value=set()), \
                 patch.object(teardown, "storage", return_value={}), patch.object(teardown, "dns_record", return_value=None), \
@@ -233,7 +234,9 @@ class TeardownTests(unittest.TestCase):
         g = Mock(context="demo-dev", env={})
         eks = resource("eks", "aws_eks_cluster")
         vpc = resource("vpc", "aws_vpc", attributes={"id": "vpc-a"})
-        held = resource("external_secrets", "aws_secretsmanager_secret")
+        name = g.context + "/demo-api/postgresql"
+        secret_arn = "arn:aws:secretsmanager:us-east-1:123456789012:secret:" + name + "-abcdef"
+        held = resource("external_secrets", "aws_secretsmanager_secret", attributes={"name": name, "arn": secret_arn})
         state = {"lineage": "12345678-1234-1234-1234-123456789012", "resources": [eks, vpc, held],
                  "outputs": {k: {"value": v} for k, v in {"eks_cluster_name": g.context,
                              "vpc_id": "vpc-a", "eks_cluster_endpoint": "endpoint"}.items()}}
@@ -255,6 +258,8 @@ class TeardownTests(unittest.TestCase):
         live = {"arn": "arn:aws:eks:us-east-1:123456789012:cluster/demo-dev", "endpoint": "endpoint",
                 "resourcesVpcConfig": {"vpcId": "vpc-a", "clusterSecurityGroupId": "sg-a"}}
         def aws(svc, action, *args):
+            if action == "describe-secret":
+                return json.dumps({"Name": name, "ARN": secret_arn})
             if action == "list-clusters":
                 return json.dumps({"clusters": [g.context] if eks in state["resources"] else []})
             return json.dumps({"cluster": live})

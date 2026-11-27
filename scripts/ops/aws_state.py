@@ -81,6 +81,7 @@ def snapshot(path, stage, cluster, account, region):
                         require(attrs.get("name") == cluster + "/demo-api/postgresql" and
                                 (attrs.get("arn") or "").startswith(f"arn:aws:secretsmanager:{region}:{account}:secret:"),
                                 "Retained database secret differs from the selected dev target")
+                        result["database_secret_arn"] = attrs["arn"]
                 elif addr in DEV_MOVES:
                     runtime = True
                 if resource["type"] == "aws_eks_cluster":

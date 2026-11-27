@@ -57,8 +57,10 @@ cp -nT infra/terraform/aws/backend-config/dev.s3.tfbackend.example \
 
 If you selected another inventory or configured another path, use the destination
 reported by `show --config FILE --env NAME` under `paths.backend_config_file`.
-Replace the bucket and KMS key placeholders with the dev state-bootstrap output,
-check the region and state key, and set the allowed account ID. After preparing
+Set the actual bucket, bucket region and allowed account ID, and check the state key.
+For an existing SSE-S3 bucket, leave `kms_key_id` omitted. For an SSE-KMS backend,
+set it to the existing key ARN. The project's `state-bootstrap` provisions a KMS-backed
+bucket and returns the ARN in `backend_configuration`; keep that value when using its bucket. After preparing
 the personal tfvars, run `preflight --env aws-dev --check-inputs` to validate
 both files locally.
 
@@ -73,7 +75,7 @@ backend:
 ```
 
 Prepare the private backend file beside the inventory. Fill in the bucket,
-bucket region, KMS key ARN and allowed account from state-bootstrap. Keep the
+bucket region and allowed account. For SSE-KMS, set the key ARN as for dev. Keep the
 test key, encryption and native locking from the template.
 
 ```bash
@@ -97,7 +99,7 @@ If a retired `terraform.tfstate` exists directly in the test Terraform root,
 move that specific file to a private location outside the checkout before the
 first S3 plan. Confirm its resources are retired first. The CLI uses a temporary
 Terraform data directory and initializes with `-reconfigure`. Keep the bucket
-and KMS key in place.
+and any associated KMS key in place.
 
 After reviewing the test plan, use the cluster name printed by preflight.
 With the default project name the infrastructure command is:
@@ -228,7 +230,7 @@ Existing personal files may be used directly.
 | Input | Preparation for aws-dev |
 | --- | --- |
 | Inventory | Select the real 12-digit account, region, operator profile or role, and `infra/terraform/aws/environments/dev`. The operator identity and the Actions runtime role serve different purposes. |
-| Private backend file | Use the selected environment from the retained state-bootstrap output `backend_configuration`. Set `allowed_account_ids` to the expected account in the matching S3 template. Check the bucket, KMS key, region, encryption, native lockfile and environment key. |
+| Private backend file | Use the selected environment from the retained state-bootstrap output `backend_configuration`. Set `allowed_account_ids` to the expected account in the matching S3 template. For SSE-S3 omit `kms_key_id`; for SSE-KMS keep the key ARN. Check the bucket, region, encryption, native lockfile and environment key. |
 | Private tfvars | Start from `infra/terraform/aws/environments/dev/terraform.tfvars.example`. Review project, region, DNS and endpoint settings. For a public endpoint supply restricted IPv4 CIDRs through the private file. For a private endpoint confirm the operator and runner have a network path in 4B. |
 | Runtime identity | Use the retained runtime-identities output `aws_dev_runtime_role_arn` for `github_actions_runtime_role_arn`. Set `enable_github_actions_runtime_identity = true` in the intended environment file when preparing runtime access. This makes the future environment plan include the EKS access entry. |
 | Capacity and retention | Review the reported min/desired/max, NAT and backup settings before any plan. The dev root has a tracked `observability-capacity.auto.tfvars` at 4/4/4. Passing the unedited example as the explicit var-file sets 2/2/3. Check that the chosen capacity fits the platform. |

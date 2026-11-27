@@ -85,15 +85,19 @@ def check_backend(backend, environment, aws, personal):
             "Unexpected backend key for the selected standard environment")
     require(backend.get("use_lockfile") is True and backend.get("encrypt") is True,
             "The standard backend requires native locking and encryption")
-    for key in ("bucket", "region", "kms_key_id"):
+    for key in ("bucket", "region"):
         require(isinstance(backend.get(key), str) and backend[key], f"Backend requires {key}")
     if personal:
         require(backend.get("allowed_account_ids") == [aws["expected_account_id"]],
                 "Backend allowed_account_ids must match the inventory for the personal single-account profile")
-        require(not backend["bucket"].startswith("replace-") and
-                re.fullmatch(r"arn:aws:kms:" + re.escape(backend["region"]) + ":" +
-                             aws["expected_account_id"] + r":key/[A-Za-z0-9-]+", backend["kms_key_id"]),
-                "Supply the actual state bucket and matching KMS key ARN from state-bootstrap")
+        require(not backend["bucket"].startswith("replace-"), "Supply the actual state bucket name")
+    if "kms_key_id" in backend:
+        arn = backend["kms_key_id"]
+        require(isinstance(arn, str) and arn, "Supply a KMS key ARN or omit kms_key_id for SSE-S3")
+        if personal:
+            require(re.fullmatch(r"arn:aws:kms:" + re.escape(backend["region"]) + ":" +
+                                 aws["expected_account_id"] + r":key/[A-Za-z0-9-]+", arn),
+                    "State KMS key ARN must match the selected backend region and account")
 
 
 def check_private_vars(values, account, cluster):

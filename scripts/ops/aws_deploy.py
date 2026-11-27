@@ -13,6 +13,7 @@ import time
 
 import yaml
 
+from aws_retention import live_dev_storage
 from aws_database import dev_variables
 from aws_cnpg import wait_for_cnpg
 from aws_preflight import inspect, kustomize, local_file
@@ -282,6 +283,9 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
             tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
         terraform = ["terraform", "-chdir=" + str(source)]
         summary = check_selected_state(g, report, operation)
+        if (operation != "deploy" and report["stage"] == "dev" and report.get("database_mode") == "none"
+                and summary.get("database_storage")):
+            summary = live_dev_storage(g, report, summary)
         run(terraform + ["init", "-input=false", "-reconfigure", init_argument(tf["backend"], base)], tfenv)
         if operation != "deploy":
             variables = local_file(tf["variables_file"], base)

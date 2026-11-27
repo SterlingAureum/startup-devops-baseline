@@ -63,7 +63,9 @@ class RetentionTests(unittest.TestCase):
         self.g.aws.side_effect = [self.missing, json.dumps(dict(self.secret, DeletedDate="2026-12-01"))]
         with self.assertRaisesRegex(OpsError, "scheduled for deletion"):
             retention.live_dev_storage(self.g, self.aws, self.summary)
-        self.g.aws.side_effect = [self.missing, json.dumps(dict(self.secret, ARN=self.arn + "changed"))]
+        replacement = self.secret.copy()
+        replacement["ARN"] = self.arn.removesuffix("abcdef") + "uvwxyz"
+        self.g.aws.side_effect = [self.missing, json.dumps(replacement)]
         with self.assertRaisesRegex(OpsError, "identity differs"):
             retention.live_dev_storage(self.g, self.aws, self.summary)
         self.g.aws.reset_mock()

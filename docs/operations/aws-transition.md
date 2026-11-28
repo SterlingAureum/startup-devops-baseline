@@ -61,11 +61,10 @@ Set the actual bucket, bucket region and allowed account ID, and check the state
 For an existing SSE-S3 bucket, leave `kms_key_id` omitted. For an SSE-KMS backend,
 set it to the existing key ARN. For a new bucket, follow the [state-bootstrap instructions](../../infra/terraform/aws/state-bootstrap/README.md).
 Use the configured key ARN whenever its backend output includes one. After preparing
-the personal tfvars, run `preflight --env aws-dev --check-inputs` to validate
-both files locally.
+the personal tfvars, run `preflight --env aws-dev --check-inputs` to check the deployment inputs and locate the backend file.
 
 For a fresh test deployment, select a distinct state object. The example uses
-`environments/test/terraform.tfstate`. The CLI reads the actual bucket and key from
+`environments/test/terraform.tfstate`. Terraform reads the actual bucket and key from
 your private backend file. For an existing deployment, use its original address. Set the backend in the **test** entry
 of your private inventory. Replace the former local backend block in full.
 
@@ -87,12 +86,16 @@ cp -nT infra/terraform/aws/backend-config/test.s3.tfbackend.example \
 .venv/bin/python scripts/ops/cli.py plan --env aws-test --config "$inventory"
 ```
 
-Preflight validates the files offline. Plan reads the selected S3 key and prints
-its address and state status before init. For this fresh start expect `absent`.
-An existing snapshot, including one with zero resources, has its own lineage;
-the standard plan reopens it. If a fresh state was expected, review that
-address before provisioning. Access or KMS failures stop the plan. A missing
-key also triggers checks for an existing cluster and VPC.
+Offline preflight reports the selected backend file path. During plan, create,
+up, deploy and destroy, the CLI passes the file to Terraform init in the default
+workspace. Terraform interprets backend options, including role assumption,
+profiles and endpoints. The template enables encryption and native locking.
+The inventory account and role checks apply to the AWS deployment identity.
+
+After initialization, the CLI inspects the result of `terraform state pull`.
+Terraform errors stop the operation. When provisioning against an absent state
+or a snapshot with zero managed resources, the CLI checks AWS for a conflicting
+EKS cluster and VPC before continuing. An existing snapshot retains its lineage.
 
 A previous state under the operator's external state directory can stay there.
 If a retired `terraform.tfstate` exists directly in the test Terraform root,

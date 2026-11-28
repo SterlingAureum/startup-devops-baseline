@@ -18,21 +18,6 @@ import configuration
 
 
 class AwsPreflightTests(unittest.TestCase):
-    def test_personal_backend_encryption_modes(self):
-        account = "123456789012"
-        inventory = {"expected_account_id": account}
-        arn = f"arn:aws:kms:us-east-1:{account}:key/test-key"
-        for stage in ("dev", "test"):
-            template = ROOT / f"infra/terraform/aws/backend-config/{stage}.s3.tfbackend.example"
-            backend = dict(aws.read_inputs(template), bucket="fixture-only", allowed_account_ids=[account])
-            self.assertNotIn("kms_key_id", backend)
-            aws.check_backend(backend, inventory, True)
-            aws.check_backend(dict(backend, kms_key_id=arn), inventory, True)
-            for invalid in ("", None, "replace-with-kms-key-arn", arn.replace(account, "999999999999"),
-                            arn.replace("us-east-1", "us-west-2")):
-                with self.subTest(stage=stage, invalid=invalid), self.assertRaises(configuration.OpsError):
-                    aws.check_backend(dict(backend, kms_key_id=invalid), inventory, True)
-
     def test_personal_inputs_and_wrong_target_from_cli(self):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
@@ -77,10 +62,14 @@ class AwsPreflightTests(unittest.TestCase):
                     self.assertIn(policy, error.getvalue())
                     self.assertIn("Terraform expects", error.getvalue())
                     self.assertIn("renders", error.getvalue())
-            backend.write_text(backend.read_text().replace("environments/dev/terraform.tfstate", ""))
+            private.write_text(json.dumps(values))
+            backend.write_text('assume_role = { role_arn = "arn:aws:iam::123456789012:role/state" }')
+            with redirect_stdout(io.StringIO()):
+                self.assertEqual(cli.main(command), 0)
+            backend.unlink()
             with redirect_stderr(io.StringIO()) as error:
                 self.assertEqual(cli.main(command), 1)
-                self.assertIn("backend key", error.getvalue())
+                self.assertIn(str(backend), error.getvalue())
 
     def test_inventory_aliases_preserve_physical_targets(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -182,7 +171,7 @@ class AwsPreflightTests(unittest.TestCase):
             self.assertEqual(cli.main(["--config", str(EXAMPLE_CONFIG), "preflight", "--env", "aws-test"]), 0)
         report = json.loads(output.getvalue())
         self.assertEqual(report["declared_backend"], "s3")
-        self.assertEqual(report["backend_file_key"], "environments/test/terraform.tfstate")
+        self.assertTrue(report["backend_config_file"].endswith("test.s3.tfbackend.example"))
         self.assertEqual(report["state_status"], "not-checked")
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "inventory.yaml"

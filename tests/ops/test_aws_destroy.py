@@ -63,7 +63,7 @@ class TeardownTests(unittest.TestCase):
             with patch.object(teardown, "inspect_infrastructure", return_value=({"cluster": cluster}, {})) as inspect, \
                     patch.object(teardown.Cluster, "aws", return_value='{"Account":"123456789012"}') as aws, \
                     patch.object(teardown, "lifecycle_lock") as lock, \
-                    patch.object(teardown, "check_selected_state") as check, patch.object(teardown, "session") as session, \
+                    patch.object(teardown, "run"), patch.object(teardown, "check_selected_state") as check, patch.object(teardown, "session") as session, \
                     redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()) as error:
                 self.assertEqual(cli.main(command + ["--dry-run"]), 0)
                 inspect.assert_not_called()
@@ -123,9 +123,6 @@ class TeardownTests(unittest.TestCase):
                      "route53_hosted_zone_id": "test-zone", "demo_api_hostname": "original.example.org"}.items()}}
         live = {"arn": arn, "endpoint": "test-endpoint", "resourcesVpcConfig": {"vpcId": "vpc-test"}}
         def aws(service, action, *args):
-            if action == "get-object":
-                Path(args[-1]).write_text(json.dumps(state))
-                return "{}"
             results = {"get-caller-identity": {"Account": account}, "list-clusters": {"clusters": [cluster]},
                        "describe-cluster": {"cluster": live}, "describe-load-balancers": {"LoadBalancers": []},
                        "list-resource-record-sets": {"ResourceRecordSets": []}}

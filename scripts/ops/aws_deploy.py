@@ -17,7 +17,7 @@ from aws_retention import live_dev_storage
 from aws_database import dev_variables
 from aws_cnpg import wait_for_cnpg
 from aws_preflight import inspect, kustomize, local_file
-from aws_state import check_selected_state, init_argument, lifecycle_directory
+from aws_state import check_selected_state, initialize_backend, lifecycle_directory
 from aws_standard_demo import complete, seed_database, refresh_consumers, reconcile_dns
 from aws_provision import provision
 from configuration import ROOT, OpsError, load_yaml, require
@@ -282,11 +282,12 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
             # Use the same variable sources that personal preflight inspected.
             tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
         terraform = ["terraform", "-chdir=" + str(source)]
-        summary = check_selected_state(g, report, operation)
+        initialize_backend(run, terraform, tfenv, source, tf["backend"], base)
+        summary = check_selected_state(g, report, operation,
+                                       pull=lambda: run(terraform + ["state", "pull"], tfenv))
         if (operation != "deploy" and report["stage"] == "dev" and report.get("database_mode") == "none"
                 and summary.get("database_storage")):
             summary = live_dev_storage(g, report, summary)
-        run(terraform + ["init", "-input=false", "-reconfigure", init_argument(tf["backend"], base)], tfenv)
         if operation != "deploy":
             variables = local_file(tf["variables_file"], base)
             provision(g, terraform, tfenv, variables, Path(tmp) / "create.tfplan", folder, confirm,

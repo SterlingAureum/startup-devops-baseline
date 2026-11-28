@@ -2,7 +2,6 @@
 import json
 from pathlib import Path
 import re
-import tempfile
 
 from aws_database import BUCKET, SECRET, DURABLE, DEV_MOVES, original
 from configuration import ROOT, OpsError, require
@@ -23,12 +22,24 @@ def init_argument(settings, base):
     return "-backend-config=" + value
 
 
-def snapshot(path, stage, cluster, account, region):
+def initialize_backend(run, terraform, tfenv, root, backend, base):
+    # With a fresh TF_DATA_DIR, init can attempt to copy old local state into S3.
+    if backend["type"] == "s3" and ((root / "terraform.tfstate").exists() or
+                                    any((root / "terraform.tfstate.d").glob("*/terraform.tfstate"))):
+        raise OpsError(f"Local state exists in {root}. Review it before initializing S3")
+    run(terraform + ["init", "-input=false", "-reconfigure", init_argument(backend, base)], tfenv)
+
+
+def snapshot(raw, stage, cluster, account, region, *, pulled=False):
     try:
-        with path.open() as stream:
-            state = json.load(stream)
+        state = json.loads(raw)
     except (ValueError, UnicodeError) as error:
         raise OpsError("Invalid JSON in selected Terraform state") from error
+    # Terraform can serialize a missing remote snapshot as a pristine v4 state.
+    if (pulled and isinstance(state, dict) and state.get("version") == 4 and state.get("lineage") == ""
+            and type(state.get("serial")) is int and state["serial"] == 0
+            and state.get("resources") == [] and state.get("outputs") == {}):
+        return {"status": "absent"}
     require(isinstance(state, dict) and state.get("version") == 4
             and isinstance(state.get("lineage"), str)
             and re.fullmatch(r"[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12}", state["lineage"])
@@ -108,31 +119,23 @@ def snapshot(path, stage, cluster, account, region):
 
 def local_snapshot(path, stage, cluster, account, region):
     try:
-        return snapshot(path, stage, cluster, account, region)
+        return snapshot(path.read_bytes(), stage, cluster, account, region)
     except FileNotFoundError:
         return {"status": "absent"}
 
 
-def check_selected_state(g, report, operation):
-    address = report["state_address"]
+def check_selected_state(g, report, operation, *, pull=None):
+    local = report["declared_backend"] == "local"
+    address = report["state_address"] if local else report["backend_config_file"]
+    label = "state" if local else "backend file"
     print(f"Environment {report['environment']} | account {report['expected_account_id']} | "
-          f"{report['region']} | cluster {g.context} | state {address}", flush=True)
+          f"{report['region']} | cluster {g.context} | {label} {address}", flush=True)
     target = (report["stage"], g.context, report["expected_account_id"], report["region"])
-    if report["declared_backend"] == "local":
+    if local:
         result = local_snapshot(Path(address), *target)
     else:
-        # GetObject exercises both S3 and KMS read permissions before terraform init.
-        with tempfile.TemporaryDirectory(prefix="baseline-state-") as tmp:
-            copy = Path(tmp) / "snapshot"
-            try:
-                g.aws("s3api", "get-object", "--bucket", report["state_bucket"], "--key", report["backend_file_key"],
-                      "--region", report["state_region"], "--expected-bucket-owner", report["expected_account_id"], str(copy))
-            except OpsError as error:
-                if "(NoSuchKey) when calling the GetObject operation" not in str(error):
-                    raise
-                result = {"status": "absent"}
-            else:
-                result = snapshot(copy, *target)
+        raw = pull()
+        result = snapshot(raw, *target, pulled=True) if raw != "" else {"status": "absent"}
     print("Terraform state:", json.dumps(result), flush=True)
     mode = report.get("database_mode", "cnpg")
     if operation != "destroy" and mode == "none" and result.get("database_mode") == "cnpg":
@@ -142,15 +145,16 @@ def check_selected_state(g, report, operation):
         raise OpsError("Run plan then up to provision CNPG infrastructure before deploy")
     if result.get("retained_only") and operation in ("plan", "create", "up"):
         print("Rebuilding with retained database storage in the selected state.", flush=True)
-    if result["status"] == "absent":
+    provisioning = operation in ("plan", "create", "up")
+    if result["status"] == "absent" or (provisioning and result["managed_instances"] == 0):
         root = ROOT / report["terraform_root"]
         # A private state may remain under the retired execution directory.
         roots = [root, root.with_name("dev-no-database")] if report["stage"] == "dev" else [root]
         for directory in roots:
             former_default = directory / "terraform.tfstate"
             if former_default != Path(address) and former_default.exists():
-                raise OpsError(f"Selected state is absent but {former_default} exists. Review that state before initialization")
-        require(operation in ("plan", "create", "up"), "Selected state is absent. Check its address before " + operation)
+                raise OpsError(f"Selected state has no managed resources but {former_default} exists. Review that state before provisioning")
+        require(provisioning, "Selected state is absent. Check its address before " + operation)
         clusters = json.loads(g.aws("eks", "list-clusters"))["clusters"]
         require(g.context not in clusters, "EKS already exists without selected state. Locate its original state")
         vpcs = json.loads(g.aws("ec2", "describe-vpcs", "--filters", "Name=tag:Name,Values=" + g.context + "-vpc"))["Vpcs"]

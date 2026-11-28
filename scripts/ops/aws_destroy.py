@@ -13,7 +13,7 @@ from aws_dev_network import release_network
 from aws_preflight import inspect_infrastructure, local_file
 from aws_database import BUCKET, SECRET, DURABLE, DEV_MOVES, original, dev_variables
 from aws_retention import observe, report_storage
-from aws_state import check_selected_state, init_argument
+from aws_state import check_selected_state, initialize_backend
 from configuration import ROOT, OpsError, require
 from connections import atomic_write
 
@@ -355,12 +355,17 @@ def destroy(selected, env, config, confirm, retain=False):
         require(caller["Arn"].startswith(f"arn:aws:sts::{caller['Account']}:assumed-role/{role}/"),
                 "Select credentials for the configured operator role")
     with lifecycle_lock(caller["Account"], aws["region"], name) as folder, tempfile.TemporaryDirectory(prefix="aws-destroy-") as tmp:
-        summary = check_selected_state(g, report, "destroy")
+        tf = env["terraform"]
+        tfenv = destroy_tfenv(g, tmp)
+        source = ROOT / tf["root"]
+        tfcmd = ["terraform", "-chdir=" + str(source)]
+        initialize_backend(run, tfcmd, tfenv, source, tf["backend"], config.expanduser().resolve().parent)
+        summary = check_selected_state(g, report, "destroy", pull=lambda: run(tfcmd + ["state", "pull"], tfenv))
         mode = summary.get("database_mode", "cnpg")
         print(f"Teardown database mode: {mode} ({'state' if 'database_mode' in summary else 'standard default'})", flush=True)
         session(g, env, config, confirm, folder, tmp, retain, database_mode=mode,
                 legacy_addresses=summary.get("legacy_database_addresses", False),
-                expected_state=(summary.get("lineage"), summary.get("serial")))
+                expected_state=(summary["lineage"], summary["serial"]), initialized=True)
 
 
 def refresh_missing(terraform, tfcmd, tfenv, tmp, tf, base, stage, mode, missing, keep, confirm, context, state_id):
@@ -394,10 +399,16 @@ def refresh_missing(terraform, tfcmd, tfenv, tmp, tf, base, stage, mode, missing
     print("State refreshed. Verified missing addresses removed; no AWS deletion requested.")
 
 
-def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode="cnpg", legacy_addresses=False, expected_state=None):
-    tf = env["terraform"]
+def destroy_tfenv(g, tmp):
     tfenv = dict(g.env, TF_DATA_DIR=tmp + "/tfdata", TF_WORKSPACE="default")
-    tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
+    require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
+            "Unset TF_CLI_ARGS overrides before teardown")
+    return {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
+
+
+def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode="cnpg", legacy_addresses=False, expected_state=None, initialized=False):
+    tf = env["terraform"]
+    tfenv = destroy_tfenv(g, tmp)
     source = ROOT / tf["root"]
     actual = source
     if legacy_addresses:
@@ -418,10 +429,8 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
     def terraform(*args):
         return run(tfcmd + list(args), tfenv)
     base = config.expanduser().resolve().parent
-    # Environment-supplied Terraform CLI arguments can silently change the reviewed plan.
-    require(not any(v for k, v in tfenv.items() if k.startswith("TF_CLI_ARGS")),
-            "Unset TF_CLI_ARGS overrides before teardown")
-    terraform("init", "-input=false", "-reconfigure", init_argument(tf["backend"], base))
+    if not initialized or legacy_addresses:
+        initialize_backend(run, tfcmd, tfenv, actual, tf["backend"], base)
     state = json.loads(terraform("state", "pull"))
     require(re.fullmatch(r"[0-9a-fA-F-]{36}", state.get("lineage", "")), "Invalid Terraform state lineage")
     receipt = folder / (state["lineage"] + ".json")

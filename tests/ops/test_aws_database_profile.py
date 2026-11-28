@@ -91,7 +91,7 @@ class DevDatabaseProfileTests(unittest.TestCase):
                 with patch.object(aws_destroy, "inspect_infrastructure", return_value=({"cluster": "demo-dev"}, {})), \
                         patch.object(aws_destroy.Cluster, "aws", return_value='{"Account":"123456789012"}'), \
                         patch.object(aws_destroy, "lifecycle_lock", return_value=nullcontext(Path(tmp))), \
-                        patch.object(aws_destroy, "check_selected_state", return_value={"database_mode": recorded}), \
+                        patch.object(aws_destroy, "run"), patch.object(aws_destroy, "check_selected_state", return_value={"database_mode": recorded, "lineage": "test", "serial": 1}), \
                         patch.object(aws_destroy, "session") as session:
                     self.assertEqual(cli.main(["destroy", "--config", str(inventory), "--env", "aws-dev"]), 0)
                     self.assertEqual(session.call_args.kwargs["database_mode"], recorded)

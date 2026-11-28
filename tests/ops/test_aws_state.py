@@ -30,6 +30,7 @@ class StateTests(unittest.TestCase):
             folder = Path(tmp)
             config = folder / "environments.yaml"
             entry = environment(EXAMPLE_CONFIG, "aws-test")
+            entry["terraform"]["backend"] = {"type": "s3", "config_file": "aws-test.tfbackend"}
             entry["terraform"]["variables_file"] = "vars.tfvars.json"
             config.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"team": entry}}))
             (folder / "vars.tfvars.json").write_text(json.dumps({

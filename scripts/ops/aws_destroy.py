@@ -3,14 +3,13 @@ import json
 import os
 import re
 from pathlib import Path
-import shutil
 import subprocess
 import tempfile
 import time
 
 from aws_deploy import Cluster, lifecycle_lock, reopen_receipt, run
 from aws_dev_network import release_network
-from aws_preflight import inspect_infrastructure, local_file
+from aws_preflight import execution_root, inspect_infrastructure, local_file
 from aws_database import BUCKET, SECRET, DURABLE, DATABASE_MOVES, original, database_variables
 from aws_retention import observe, report_storage
 from aws_state import check_selected_state, initialize_backend
@@ -358,14 +357,15 @@ def destroy(selected, env, config, confirm, retain=False):
         tf = env["terraform"]
         tfenv = destroy_tfenv(g, tmp)
         source = ROOT / tf["root"]
-        tfcmd = ["terraform", "-chdir=" + str(source)]
+        actual = execution_root(source, tf["backend"], tmp)
+        tfcmd = ["terraform", "-chdir=" + str(actual)]
         initialize_backend(run, tfcmd, tfenv, source, tf["backend"], config.expanduser().resolve().parent)
         summary = check_selected_state(g, report, "destroy", pull=lambda: run(tfcmd + ["state", "pull"], tfenv))
         mode = summary.get("database_mode", "cnpg")
         print(f"Teardown database mode: {mode} ({'state' if 'database_mode' in summary else 'standard default'})", flush=True)
         session(g, env, config, confirm, folder, tmp, retain, database_mode=mode,
                 legacy_addresses=summary.get("legacy_database_addresses", False),
-                expected_state=(summary["lineage"], summary["serial"]), initialized=True)
+                expected_state=(summary["lineage"], summary["serial"]), prepared_root=actual)
 
 
 def refresh_missing(terraform, tfcmd, tfenv, tmp, tf, base, mode, missing, keep, confirm, context, state_id):
@@ -406,31 +406,19 @@ def destroy_tfenv(g, tmp):
     return {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
 
 
-def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode="cnpg", legacy_addresses=False, expected_state=None, initialized=False):
+def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode="cnpg", legacy_addresses=False, expected_state=None, prepared_root=None):
     tf = env["terraform"]
     tfenv = destroy_tfenv(g, tmp)
     source = ROOT / tf["root"]
-    actual = source
-    if legacy_addresses:
-        # Targeted destroy acts on addresses as recorded. Applying move declarations
-        # here would require targeting retained storage as well. Use the same backend
-        # and inputs with a temporary configuration that omits only those moves.
-        require(source.name in ("dev", "test"), "Unexpected legacy database layout")
-        actual = Path(tmp) / "aws/environments" / source.name
-        actual.mkdir(parents=True)
-        (actual.parents[1] / "modules").symlink_to(source.parents[1] / "modules", target_is_directory=True)
-        for file in source.iterdir():
-            if file.name != "database-moves.tf" and file.name.endswith((".tf", ".tf.json", ".tfvars", ".tfvars.json")):
-                (actual / file.name).symlink_to(file)
-        lock = source / ".terraform.lock.hcl"
-        if lock.is_file():
-            shutil.copyfile(lock, actual / lock.name)
+    actual = prepared_root
+    if actual is None or legacy_addresses:
+        actual = execution_root(source, tf["backend"], tmp, legacy=legacy_addresses)
     tfcmd = ["terraform", "-chdir=" + str(actual)]
     def terraform(*args):
         return run(tfcmd + list(args), tfenv)
     base = config.expanduser().resolve().parent
-    if not initialized or legacy_addresses:
-        initialize_backend(run, tfcmd, tfenv, actual, tf["backend"], base)
+    if prepared_root is None or legacy_addresses:
+        initialize_backend(run, tfcmd, tfenv, source, tf["backend"], base)
     state = json.loads(terraform("state", "pull"))
     require(re.fullmatch(r"[0-9a-fA-F-]{36}", state.get("lineage", "")), "Invalid Terraform state lineage")
     receipt = folder / (state["lineage"] + ".json")

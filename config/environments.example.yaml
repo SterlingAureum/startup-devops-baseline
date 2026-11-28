@@ -49,10 +49,9 @@ environments:
       # to ~/.config/startup-devops-baseline/aws-dev.tfvars with the default inventory.
       variables_file: aws-dev.tfvars
       backend:
-        type: s3
-        # Copy infra/terraform/aws/backend-config/dev.s3.tfbackend.example
-        # to ~/.config/startup-devops-baseline/aws-dev.tfbackend with the default inventory.
-        config_file: aws-dev.tfbackend
+        type: local
+        path: ~/.local/state/startup-devops-baseline/aws-dev/terraform.tfstate
+        # For S3 replace type/path with: type: s3 and config_file: aws-dev.tfbackend
   aws-test:
     database:
       mode: none
@@ -68,7 +67,6 @@ environments:
       # to ~/.config/startup-devops-baseline/aws-test.tfvars with the default inventory.
       variables_file: aws-test.tfvars
       backend:
-        type: s3
-        # Copy infra/terraform/aws/backend-config/test.s3.tfbackend.example
-        # to ~/.config/startup-devops-baseline/aws-test.tfbackend with the default inventory.
-        config_file: aws-test.tfbackend
+        type: local
+        path: ~/.local/state/startup-devops-baseline/aws-test/terraform.tfstate
+        # For S3 replace type/path with: type: s3 and config_file: aws-test.tfbackend

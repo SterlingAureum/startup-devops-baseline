@@ -57,6 +57,7 @@ class TeardownTests(unittest.TestCase):
             folder = Path(tmp)
             config = folder / "inventory.yaml"
             entry = environment(EXAMPLE_CONFIG, "aws-test")
+            entry["terraform"]["backend"] = {"type": "s3", "config_file": "aws-test.tfbackend"}
             config.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"sandbox": entry}}))
             cluster = "startup-devops-baseline-test"
             command = ["destroy", "--env", "sandbox", "--config", str(config), "--retain-backups"]
@@ -140,6 +141,7 @@ class TeardownTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
             entry = environment(EXAMPLE_CONFIG, "aws-test")
+            entry["terraform"]["backend"] = {"type": "s3", "config_file": "aws-test.tfbackend"}
             config = folder / "inventory.yaml"
             config.write_text(yaml.safe_dump({"schema_version": 2, "environments": {"sandbox": entry}}))
             variables = folder / entry["terraform"]["variables_file"]
@@ -238,7 +240,7 @@ class TeardownTests(unittest.TestCase):
                  "outputs": {k: {"value": v} for k, v in {"eks_cluster_name": g.context,
                              "vpc_id": "vpc-a", "eks_cluster_endpoint": "endpoint"}.items()}}
         env = {"aws": {"region": "us-east-1", "expected_account_id": "123456789012"},
-               "terraform": {"root": "dev", "backend": {"type": "s3", "config_file": "dev.backend"}, "variables_file": "dev.tfvars"}}
+               "terraform": {"root": "infra/terraform/aws/environments/dev", "backend": {"type": "s3", "config_file": "dev.backend"}, "variables_file": "dev.tfvars"}}
         plans, applies = [], []
         def terraform(args, env):
             if "pull" in args:

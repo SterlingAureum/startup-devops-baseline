@@ -22,6 +22,7 @@ class AwsPreflightTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             folder = Path(tmp)
             env = configuration.environment(EXAMPLE_CONFIG, "aws-dev")
+            env["database"] = {"mode": "cnpg"}
             env["terraform"]["variables_file"] = "vars.tfvars.json"
             env["terraform"]["backend"]["config_file"] = "dev.tfbackend"
             inventory = folder / "environments.yaml"
@@ -117,7 +118,7 @@ class AwsPreflightTests(unittest.TestCase):
             del entry["delivery_environment"]
             for override, message in ((None, "delivery_environment must be a nonempty string"),
                                       ("missing", "Unknown delivery environment 'missing'"),
-                                      ("aws-dev", "must select clusters/aws/overlays/test"),
+                                      ("aws-dev", "must select clusters/aws/profiles/test-no-database"),
                                       ("", "delivery_environment must be a nonempty string")):
                 if override is not None:
                     entry["delivery_environment"] = override
@@ -142,7 +143,7 @@ class AwsPreflightTests(unittest.TestCase):
                     with self.subTest(command=command), redirect_stdout(io.StringIO()) as output:
                         self.assertEqual(cli.main([command, "--env", "aws-dev", "--config", str(inventory), "--dry-run"]), 0)
                         self.assertEqual(json.loads(output.getvalue())["gitops_root"],
-                                         "clusters/aws/overlays/test/root-app.yaml")
+                                         "clusters/aws/profiles/test-no-database/root-app.yaml")
                 tool.assert_not_called()
 
     def test_dev_alias_confirmation_uses_real_cluster(self):

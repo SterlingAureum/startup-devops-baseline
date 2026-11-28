@@ -50,7 +50,7 @@ def observe(g, kind, account, region, *, expected_arn=None):
     return Observation(name, "present", marker)
 
 
-def live_dev_storage(g, report, summary):
+def live_database_storage(g, report, summary):
     storage = set(summary.get("database_storage", []))
     for kind, group in ((BUCKET, DURABLE - {SECRET}), (SECRET, {SECRET})):
         if not storage.intersection(group):

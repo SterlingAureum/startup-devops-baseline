@@ -46,9 +46,9 @@ variable "additional_tags" {
 }
 
 variable "state_encryption" {
-  description = "New installations select sse-s3 in terraform.tfvars.example. Omitted values preserve the managed key on existing installations."
+  description = "S3-managed encryption by default. Existing managed-key installations must explicitly select managed-kms."
   type        = string
-  default     = "managed-kms"
+  default     = "sse-s3"
 
   validation {
     condition     = contains(["sse-s3", "managed-kms", "existing-kms"], var.state_encryption)

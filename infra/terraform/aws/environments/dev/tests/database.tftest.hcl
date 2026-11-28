@@ -1,4 +1,4 @@
-# Exercise the actual dev module counts without creating AWS resources.
+# Exercise the environment module counts without creating AWS resources.
 mock_provider "aws" {
   mock_data "aws_iam_policy_document" {
     defaults = { json = "{\"Version\":\"2012-10-17\",\"Statement\":[]}" }
@@ -47,7 +47,7 @@ run "fresh_base" {
       length(module.cnpg_backup_storage) == 0 && length(module.external_secrets_storage) == 0 &&
       length(module.cnpg_backup_access) == 0 && length(module.external_secrets_access) == 0
     )
-    error_message = "A fresh base dev environment requested database resources."
+    error_message = "A fresh base environment requested database resources."
   }
 }
 

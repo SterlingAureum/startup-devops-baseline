@@ -32,15 +32,28 @@ def read_inputs(path):
 
 
 def backend_type(root):
-    names = []
-    for path in sorted(root.glob("*.tf")):
-        for block in read_inputs(path).get("terraform", []):
-            for backend in block.get("backend", []):
+    primary = []
+    overrides = []
+    for path in sorted([*root.glob("*.tf"), *root.glob("*.tf.json")]):
+        if path.name.startswith("."):
+            continue
+        stem = path.name.removesuffix(".json").removesuffix(".tf")
+        override = stem == "override" or stem.endswith("_override")
+        names = []
+        blocks = read_inputs(path).get("terraform", [])
+        for block in [blocks] if isinstance(blocks, dict) else blocks:
+            backends = block.get("backend", [])
+            for backend in [backends] if isinstance(backends, dict) else backends:
                 names.extend(backend)
             if "cloud" in block:
                 names.append("cloud")
-    require(len(names) <= 1, f"Multiple backend declarations under {root.name}")
-    return names[0] if names else "local"
+        require(len(names) <= 1, f"Multiple backend declarations in {path.name}")
+        if override:
+            overrides.extend(names)
+        else:
+            primary.extend(names)
+    require(len(primary) <= 1, f"Multiple backend declarations under {root.name}")
+    return (overrides or primary or ["local"])[-1]
 
 
 def implicit_inputs(root):
@@ -226,7 +239,7 @@ def inspect(selected, env, config_path, personal=False):
     target = cfg["environments"][name]
     mode = env.get("database", {}).get("mode", "cnpg")
     manifest = selected.gitops_root
-    require(not {"database_mode", "retained_database_bucket", "retained_database_secret", "database_creation_marker"}.intersection(values),
+    require(not {"retained_database_bucket", "retained_database_secret", "database_creation_marker"}.intersection(values),
             "Select database.mode in the inventory. The CLI derives database retention and ownership from state.")
     sizes = {k: values["eks_node_" + k + "_size"] for k in ("min", "desired", "max")}
     require(all(type(v) is int for v in sizes.values()) and 0 <= sizes["min"] <= sizes["desired"] <= sizes["max"]

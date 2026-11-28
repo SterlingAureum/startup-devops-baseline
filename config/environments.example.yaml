@@ -35,7 +35,7 @@ environments:
   aws-dev:
     # Use none for a base dev cluster. Switch to cnpg and run up to add PostgreSQL later.
     database:
-      mode: cnpg
+      mode: none
     # Offline preflight can check repository examples or these private files.
     driver: aws
     delivery_environment: aws-dev
@@ -54,6 +54,8 @@ environments:
         # to ~/.config/startup-devops-baseline/aws-dev.tfbackend with the default inventory.
         config_file: aws-dev.tfbackend
   aws-test:
+    database:
+      mode: none
     driver: aws
     delivery_environment: aws-test
     aws:

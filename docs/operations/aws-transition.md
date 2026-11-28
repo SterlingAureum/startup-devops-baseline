@@ -38,9 +38,67 @@ the overlay against it. The test runner labels and GitHub Environment remain
 bound to `aws-test`. Both personal targets support `plan`, `create`, `deploy`, `up` and `destroy`.
 `deploy` bootstraps an existing cluster. A confirmed `up` provisions and then deploys. Confirmation uses the physical cluster name.
 
+### Use local state for a fresh AWS environment
+
+In a dedicated checkout, copy the native backend override for the selected root.
+Keep a distinct, durable state file per environment. Use the same absolute path
+for direct Terraform commands and for the inventory. The CLI also accepts a
+path relative to the inventory file.
+
+```bash
+root=infra/terraform/aws/environments/dev
+state_dir="$HOME/.local/state/startup-devops-baseline/aws-dev"
+umask 077
+mkdir -p "$state_dir"
+cp -n "$root/local_override.tf.example" "$root/local_override.tf"
+terraform -chdir="$root" init -backend-config="path=$state_dir/terraform.tfstate"
+```
+
+Replace the selected inventory entry's entire `terraform.backend` mapping:
+
+```yaml
+backend:
+  type: local
+  path: ~/.local/state/startup-devops-baseline/aws-dev/terraform.tfstate
+```
+
+Use the test root and a separate path for test. For a new S3 deployment use a
+checkout without the local override. To move an existing deployment, use
+Terraform's explicit state migration with its original initialized working directory.
+
+### Deploy the stack after a direct Terraform apply
+
+Select the same AWS profile, region, root and private inputs as the intended
+inventory entry. For a fresh environment the supplied tfvars examples select
+`database_mode = "none"`. Older raw Terraform inputs that omit this variable
+keep the historical CNPG default. The CLI supplies its inventory selection as
+an explicit Terraform argument. When alternating entry points, keep the private
+tfvars and inventory selections aligned. For retained storage, direct Terraform
+also needs the corresponding `retained_database_bucket` and
+`retained_database_secret` values. Review the saved plan for the original addresses.
+
+After initializing the chosen backend (local above, S3 below), run:
+
+```bash
+set -o pipefail
+inventory="$HOME/.config/startup-devops-baseline/environments.yaml"
+inputs="$HOME/.config/startup-devops-baseline/aws-dev.tfvars"
+root=infra/terraform/aws/environments/dev
+plan_dir=$(mktemp -d)
+terraform -chdir="$root" plan -var-file="$inputs" -out="$plan_dir/create.tfplan" &&
+  terraform -chdir="$root" apply "$plan_dir/create.tfplan" &&
+  terraform -chdir="$root" output -json |
+    python3 scripts/ops/deploy_aws_stack.py --env aws-dev --config "$inventory"
+```
+
+The deployment command consumes the outputs on stdin, validates the selected
+cluster, AWS identity, VPC, endpoint, hostname and GitOps profile, and writes a
+dedicated kubeconfig. It can rerun against the same live cluster. The CLI's
+`up` and `deploy` use the same cluster deployment function.
+
 ### Select the state address
 
-The dev root uses S3. Set `terraform.backend.type: s3` and
+Both environment roots declare S3 in the checked-in configuration. Set `terraform.backend.type: s3` and
 `terraform.backend.config_file` to the private backend file. When updating a dev
 inventory, move the path from `terraform.backend_file` to `terraform.backend.config_file`.
 
@@ -167,10 +225,12 @@ After the root and its children are Synced and Healthy, run `delivery runtime`
 on main with `environment=aws-test` using the configured test runner to qualify
 the live release. A successful deploy reports GitOps convergence.
 
-## Choose or add the personal dev database
+## Choose or add the personal dev/test database
 
-Select the database in your private inventory before running `plan`. Existing inventories
-default to `cnpg`. To run dev without PostgreSQL, add this field under your dev entry:
+New dev and test inventory entries default to `none`. For an existing CNPG
+cluster, set `mode: cnpg` before upgrading. The CLI checks the selected state
+before provisioning and blocks removal of a running database. For a fresh
+base environment use the following setting under the selected entry:
 
 ```yaml
 environments:
@@ -180,7 +240,7 @@ environments:
     # Keep the existing driver, delivery_environment, aws and terraform fields here.
 ```
 
-Keep the original dev Terraform root, backend and variable-file settings in the inventory.
+Keep the original environment Terraform root, backend and variable-file settings in the inventory.
 The CLI selects the composition. Merge the GitOps files into the branch tracked by the root
 Application before deploying. Run these offline checks first:
 
@@ -189,7 +249,7 @@ Application before deploying. Run these offline checks first:
 .venv/bin/python scripts/ops/cli.py up --env aws-dev --config "$inventory" --dry-run
 ```
 
-| Dev transition | What to expect from plan and up |
+| Dev/test transition | What to expect from plan and up |
 | --- | --- |
 | Fresh environment, `none` | Base VPC/EKS and shared platform. No CNPG resources, database nodes, backup IAM or database credential. |
 | Previous teardown with retained database storage, `none` | Use the same dev root, backend and lineage. The CLI checks the bucket and secret in AWS separately. Terraform can move the addresses of surviving storage and refresh records for missing storage. The application runs without a database. Review any tag updates. |
@@ -206,7 +266,7 @@ For a retained-only dev state, keep the existing S3 key and run:
 The plan may show the existing bucket and secret moving to `module.cnpg_backup_storage[0]`
 and `module.external_secrets_storage[0]`. Their AWS identities stay the same. The CLI checks
 the saved plan for removal, replacement, or recreation of retained storage. Confirm
-`up` only after reviewing the plan. Use a Git revision containing the dev GitOps profiles.
+`up` only after reviewing the plan. Use a Git revision containing the selected GitOps profiles.
 
 When adding PostgreSQL online, Argo first reconciles `clusters/aws/profiles/dev-prepare-database`.
 The demo keeps its database-free configuration while CNPG becomes ready and ESO reconciles
@@ -222,7 +282,7 @@ The CLI derives retention flags from the selected state and passes them to Terra
 Use the lifecycle CLI for a state containing retained resources. Feature tags group related
 resources. Teardown uses the recorded state, cluster generation and retention policy to decide
 ownership. Previously recorded snapshots remain governed by the existing teardown policy.
-Test continues to use the full CNPG stack.
+The same transition is supported for test using its own GitOps profiles and Terraform root.
 
 ## Check personal inputs
 
@@ -378,7 +438,7 @@ Destroy neither requests a final CNPG physical backup nor certifies that the arc
 Use a separate CNPG recovery manifest or restore the chosen EBS snapshot to a volume when
 data recovery is required. Ordinary up starts the configured environment.
 
-For a fresh dev or test installation the EKS cluster, CNPG bucket and demo DB secret
+For a fresh dev or test installation with CNPG enabled, the EKS cluster, CNPG bucket and demo DB secret
 receive the same creation-plan tag (`BaselineDevCreationPlan`, the historical key)
 when created in one Terraform plan. A normal destroy can remove the two data resources only with a matching marker.
 Bucket deletion also requires its stored force_destroy setting and includes
@@ -443,3 +503,21 @@ Deploy and destroy share a workstation lock. Keep the local receipt under
 `~/.local/state/startup-devops-baseline/` for recovery after partial apply.
 Completion verifies the EKS cluster and VPC are absent and only the reported
 retained addresses remain in the selected state.
+
+### Verify a new environment and release
+
+1. Check the first plan for the intended backend and database composition. Verify
+   `database_mode` in the outputs. In base mode, demo-api starts without a DB Secret.
+2. For a new S3 foundation, inspect the actual state object after apply with
+   `aws s3api head-object --bucket "$bucket" --key "$key"`. Expect `AES256` for
+   SSE-S3, or `aws:kms` and the intended key ARN for SSE-KMS. For reuse, reconnect
+   from a clean checkout and check the same lineage and resource addresses.
+3. Merging the dev values changes the workload kind from Deployment to Rollout
+   on dev clusters already tracking main. Check that Argo CD prunes the old
+   Deployment and the stable Service has ready endpoints. Deploy a second image revision through GitOps. Check the Rollout and its owned
+   AnalysisRun in `startup-apps`. Both dev and test use a 60-second timed pause.
+   A successful analysis advances automatically. A failed analysis must stop
+   the release. Initial installation alone does not exercise this transition.
+4. For an isolation check, record the other environment's state lineage and EKS
+   ARN. After tearing down the selected environment, recheck those identifiers
+   and the other application's endpoint. Shared state foundations have their own lifecycle.

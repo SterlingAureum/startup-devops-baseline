@@ -5,7 +5,10 @@ project_name = "startup-devops-baseline"
 # file and do not include account identity, operator identity, or credentials.
 state_bucket_name = "replace-with-globally-unique-state-bucket-name"
 
-state_kms_alias = "alias/startup-devops-baseline-terraform-state"
+state_encryption = "sse-s3"
+# To reuse a key, select "existing-kms" and set existing_kms_key_arn.
+# To create a key and alias, select "managed-kms".
+# state_key_overrides = { dev = "team-a/dev/terraform.tfstate" }
 
 additional_tags = {
   Owner      = "replace-me"

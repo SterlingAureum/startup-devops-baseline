@@ -5,7 +5,7 @@ bucket              = "replace-with-globally-unique-state-bucket-name"
 key                 = "environments/dev/terraform.tfstate"
 region              = "us-east-1"
 encrypt             = true
-# For SSE-KMS (including state-bootstrap), uncomment and use the actual key ARN.
+# For SSE-KMS, uncomment and use the actual key ARN.
 # kms_key_id        = "replace-with-kms-key-arn"
 use_lockfile        = true
 allowed_account_ids = ["replace-with-aws-account-id"]

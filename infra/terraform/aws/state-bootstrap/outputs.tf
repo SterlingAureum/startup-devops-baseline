@@ -10,12 +10,12 @@ output "state_bucket_arn" {
 
 output "state_kms_key_arn" {
   description = "ARN of the customer-managed KMS key used for state encryption."
-  value       = aws_kms_key.state.arn
+  value       = local.key_arn
 }
 
 output "state_kms_alias" {
   description = "KMS alias used by the state foundation."
-  value       = aws_kms_alias.state.name
+  value       = one(aws_kms_alias.state[*].name)
 }
 
 output "state_keys" {
@@ -31,13 +31,12 @@ output "root_state_access_policy_arns" {
 output "backend_configuration" {
   description = "Non-credential backend values. Materialize them only in ignored private tfbackend files."
   value = {
-    for root, key in local.state_keys : root => {
+    for root, key in local.state_keys : root => merge({
       bucket       = aws_s3_bucket.state.id
       encrypt      = true
       key          = key
-      kms_key_id   = aws_kms_key.state.arn
       region       = var.aws_region
       use_lockfile = true
-    }
+    }, local.use_kms ? { kms_key_id = local.key_arn } : {})
   }
 }

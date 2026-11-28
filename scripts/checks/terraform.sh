@@ -22,6 +22,7 @@ for root in "${ROOTS[@]}"; do
   terraform -chdir="${tf_dir}" validate
 done
 
+terraform -chdir="${TF_ROOT}/state-bootstrap" test -filter=tests/foundation.tftest.hcl
 terraform -chdir="${TF_ROOT}/environments/dev" test -filter=tests/database.tftest.hcl
 
 echo "All Terraform roots validated"

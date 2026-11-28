@@ -3,13 +3,16 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 locals {
-  state_keys = {
+  state_keys = merge({
     bootstrap          = "bootstrap/terraform.tfstate"
     runtime-identities = "runtime-identities/terraform.tfstate"
     dev                = "environments/dev/terraform.tfstate"
     test               = "environments/test/terraform.tfstate"
     prod               = "environments/prod/terraform.tfstate"
-  }
+  }, var.state_key_overrides)
+  use_kms    = var.state_encryption != "sse-s3"
+  create_kms = var.state_encryption == "managed-kms"
+  key_arn    = local.create_kms ? aws_kms_key.state[0].arn : var.existing_kms_key_arn
 }
 
 data "aws_iam_policy_document" "kms" {
@@ -28,6 +31,8 @@ data "aws_iam_policy_document" "kms" {
 }
 
 resource "aws_kms_key" "state" {
+  count = local.create_kms ? 1 : 0
+
   description             = "Customer-managed key for ${var.project_name} Terraform state and lock files"
   deletion_window_in_days = 30
   enable_key_rotation     = true
@@ -39,8 +44,20 @@ resource "aws_kms_key" "state" {
 }
 
 resource "aws_kms_alias" "state" {
+  count = local.create_kms ? 1 : 0
+
   name          = var.state_kms_alias
-  target_key_id = aws_kms_key.state.key_id
+  target_key_id = aws_kms_key.state[0].key_id
+}
+
+moved {
+  from = aws_kms_key.state
+  to   = aws_kms_key.state[0]
+}
+
+moved {
+  from = aws_kms_alias.state
+  to   = aws_kms_alias.state[0]
 }
 
 resource "aws_s3_bucket" "state" {
@@ -49,6 +66,13 @@ resource "aws_s3_bucket" "state" {
 
   lifecycle {
     prevent_destroy = true
+
+    precondition {
+      condition = length(distinct(flatten([
+        for key in values(local.state_keys) : [key, "${key}.tflock"]
+      ]))) == 2 * length(local.state_keys)
+      error_message = "State and lock object paths must be distinct across roots."
+    }
   }
 }
 
@@ -81,11 +105,11 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "state" {
   bucket = aws_s3_bucket.state.id
 
   rule {
-    bucket_key_enabled = true
+    bucket_key_enabled = local.use_kms ? true : null
 
     apply_server_side_encryption_by_default {
-      kms_master_key_id = aws_kms_key.state.arn
-      sse_algorithm     = "aws:kms"
+      kms_master_key_id = local.key_arn
+      sse_algorithm     = local.use_kms ? "aws:kms" : "AES256"
     }
   }
 }
@@ -163,23 +187,26 @@ data "aws_iam_policy_document" "root_state_access" {
     resources = ["${aws_s3_bucket.state.arn}/${each.value}.tflock"]
   }
 
-  statement {
-    sid    = "UseStateEncryptionKeyThroughS3"
-    effect = "Allow"
+  dynamic "statement" {
+    for_each = local.use_kms ? [1] : []
+    content {
+      sid    = "UseStateEncryptionKeyThroughS3"
+      effect = "Allow"
 
-    actions = [
-      "kms:Decrypt",
-      "kms:DescribeKey",
-      "kms:Encrypt",
-      "kms:GenerateDataKey",
-    ]
+      actions = [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey",
+      ]
 
-    resources = [aws_kms_key.state.arn]
+      resources = [local.key_arn]
 
-    condition {
-      test     = "StringEquals"
-      variable = "kms:ViaService"
-      values   = ["s3.${var.aws_region}.${data.aws_partition.current.dns_suffix}"]
+      condition {
+        test     = "StringEquals"
+        variable = "kms:ViaService"
+        values   = ["s3.${var.aws_region}.${data.aws_partition.current.dns_suffix}"]
+      }
     }
   }
 }

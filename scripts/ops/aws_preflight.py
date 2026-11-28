@@ -80,9 +80,8 @@ def kustomize(path):
     return list(yaml.load_all(result.stdout, Loader=UniqueLoader))
 
 
-def check_backend(backend, environment, aws, personal):
-    require(backend.get("key") == f"environments/{environment}/terraform.tfstate",
-            "Unexpected backend key for the selected standard environment")
+def check_backend(backend, aws, personal):
+    require(isinstance(backend.get("key"), str) and backend["key"].strip(), "Supply the backend key")
     require(backend.get("use_lockfile") is True and backend.get("encrypt") is True,
             "The standard backend requires native locking and encryption")
     for key in ("bucket", "region"):
@@ -216,7 +215,7 @@ def inspect_infrastructure(selected, env, config_path, personal):
     if declared_backend == "s3":
         path = backend_path(settings, config_dir) if personal else root.parents[1] / "backend-config" / f"{short}.s3.tfbackend.example"
         backend = read_inputs(path)
-        check_backend(backend, short, aws, personal)
+        check_backend(backend, aws, personal)
         state_info.update(state_address=f"s3://{backend['bucket']}/{backend['key']}", state_bucket=backend["bucket"],
                           backend_file_key=backend["key"], state_region=backend["region"])
     else:

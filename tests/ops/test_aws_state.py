@@ -39,14 +39,14 @@ class StateTests(unittest.TestCase):
                 "enable_github_actions_runtime_identity": True, "eks_public_access_cidrs": ["192.0.2.1/32"],
                 "github_actions_runtime_role_arn": f"arn:aws:iam::{ACCOUNT}:role/{TARGET[1]}-github-runtime-read-role"}))
             backend = folder / "aws-test.tfbackend"
-            backend.write_text(f'bucket = "fixture-only"\nkey = "environments/test/terraform.tfstate"\n'
+            backend.write_text(f'bucket = "fixture-only"\nkey = "team-a/platform/test.state"\n'
                                f'region = "us-east-1"\nallowed_account_ids = ["{ACCOUNT}"]\n'
                                f'kms_key_id = "arn:aws:kms:us-east-1:{ACCOUNT}:key/test-key"\n'
                                'encrypt = true\nuse_lockfile = true\n')
             with redirect_stdout(io.StringIO()) as output:
                 self.assertEqual(cli.main(["preflight", "--env", "team", "--config", str(config), "--check-inputs"]), 0)
                 report = json.loads(output.getvalue())
-                self.assertEqual(report["state_address"], "s3://fixture-only/environments/test/terraform.tfstate")
+                self.assertEqual(report["state_address"], "s3://fixture-only/team-a/platform/test.state")
                 self.assertEqual(report["state_status"], "not-checked")
             replies = [json.dumps({"Account": ACCOUNT}), OpsError("(NoSuchKey) when calling the GetObject operation"),
                        json.dumps({"clusters": []}), json.dumps({"Vpcs": []})]
@@ -75,7 +75,7 @@ class StateTests(unittest.TestCase):
                     patch.object(aws_deploy, "lifecycle_lock"), redirect_stdout(io.StringIO()) as output:
                 self.assertEqual(cli.main(["plan", "--env", "team", "--config", str(config)]), 0)
                 self.assertEqual(aws.call_args_list[1].args[0:6], ("s3api", "get-object", "--bucket", "fixture-only",
-                                                                    "--key", "environments/test/terraform.tfstate"))
+                                                                    "--key", "team-a/platform/test.state"))
                 self.assertIn('"status": "absent"', output.getvalue())
                 tf.assert_called_once()
                 self.assertEqual(tf.call_args.args[0][-4:], ["init", "-input=false", "-reconfigure",

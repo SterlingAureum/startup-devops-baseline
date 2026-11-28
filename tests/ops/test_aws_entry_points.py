@@ -22,6 +22,20 @@ from configuration import EXAMPLE_CONFIG, OpsError
 
 
 class EntryPointTests(unittest.TestCase):
+    def test_s3_override_is_private_and_legacy_teardown_keeps_same_backend(self):
+        for stage in ("dev", "test"):
+            root = ROOT / "infra/terraform/aws/environments" / stage
+            with self.subTest(stage=stage), tempfile.TemporaryDirectory() as tmp:
+                for legacy in (False, True):
+                    actual = aws_preflight.execution_root(root, {"type": "s3"}, tmp, legacy=legacy)
+                    self.assertEqual(aws_preflight.backend_type(actual), "s3")
+                    self.assertEqual((actual / "s3_override.tf").read_bytes(),
+                                     (root / "s3_override.tf.example").read_bytes())
+                    self.assertEqual((actual / "database-moves.tf").exists(), not legacy)
+                    self.assertTrue((actual / "../../modules/eks/main.tf").is_file())
+                self.assertEqual(aws_preflight.execution_root(root, {"type": "local"}, tmp), root)
+                self.assertEqual(aws_preflight.backend_type(root), "local")
+
     @unittest.skipUnless(shutil.which("terraform"), "requires terraform")
     def test_two_native_local_states_reopen_from_clean_directories(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -31,7 +45,6 @@ class EntryPointTests(unittest.TestCase):
                 root = base / name
                 root.mkdir()
                 shutil.copy(fixture / "backend.tf", root)
-                shutil.copy(fixture / "local_override.tf.example", root / "local_override.tf")
                 (root / "main.tf").write_text('resource "terraform_data" "instance" {}\n')
                 self.assertEqual(aws_preflight.backend_type(root), "local")
                 return root

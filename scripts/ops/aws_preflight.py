@@ -4,6 +4,8 @@ import json
 from pathlib import Path
 import re
 import subprocess
+import shutil
+import tempfile
 from urllib.parse import urlsplit
 
 import yaml
@@ -54,6 +56,28 @@ def backend_type(root):
             primary.extend(names)
     require(len(primary) <= 1, f"Multiple backend declarations under {root.name}")
     return (overrides or primary or ["local"])[-1]
+
+
+def execution_root(root, backend, tmp, *, legacy=False):
+    """Prepare a private S3 root or omit address moves for legacy targeted destroy."""
+    if backend["type"] == "local" and not legacy:
+        return root
+    actual = Path(tempfile.mkdtemp(dir=tmp)) / "infra/terraform/aws/environments" / root.name
+    actual.mkdir(parents=True)
+    (actual.parents[1] / "modules").symlink_to(root.parents[1] / "modules", target_is_directory=True)
+    for item in root.iterdir():
+        if legacy and item.name == "database-moves.tf":
+            continue
+        if item.name == ".terraform.lock.hcl":
+            shutil.copyfile(item, actual / item.name)
+        elif item.name.endswith((".tf", ".tf.json", ".tfvars", ".tfvars.json")):
+            (actual / item.name).symlink_to(item)
+    if backend["type"] == "s3" and backend_type(root) == "local":
+        dest = actual / "s3_override.tf"
+        require(not dest.is_symlink(), f"Conflicting override in {root}")
+        shutil.copyfile(root / "s3_override.tf.example", dest)
+    require(backend_type(actual) == backend["type"], "Active Terraform override conflicts with inventory backend")
+    return actual
 
 
 def implicit_inputs(root):
@@ -202,6 +226,8 @@ def inspect_infrastructure(selected, env, config_path, personal):
     declared_backend = backend_type(root)
     settings = tf["backend"]
     require(declared_backend in ("local", "s3"), f"Unsupported backend {declared_backend}")
+    if settings["type"] == "s3" and declared_backend == "local" and (root / "s3_override.tf.example").is_file():
+        declared_backend = "s3"
     require(settings["type"] == declared_backend,
             f"{name} root declares {declared_backend} state. Configure terraform.backend for this type; "
             "changing the inventory does not migrate state")

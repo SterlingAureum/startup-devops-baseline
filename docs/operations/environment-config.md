@@ -49,9 +49,9 @@ python3 scripts/ops/cli.py show --env aws-dev | jq '.configuration.argocd'
 3. Keep your AWS profiles, account IDs, regions, tfvars and state addresses.
    For a dev entry using `terraform.backend_file`, move its existing path to
    `terraform.backend.config_file` and set `terraform.backend.type: s3`.
-   For a fresh test environment, set the backend type to `s3` and
-   `config_file` to `aws-test.tfbackend`. Use the dedicated test key.
-   Follow [AWS preparation](aws-transition.md#select-the-state-address) for prior local state.
+   New dev/test environments use separate local files by default. To use S3,
+   set the backend type to `s3` and `config_file` to the native backend file.
+   Follow [AWS preparation](aws-transition.md#select-s3-state) for direct Terraform or migration.
 4. Run `show` for each inventory key. Check `environment`, `driver`,
    `delivery_environment` and `gitops_root` before running `preflight`.
    These inventory edits do not migrate Terraform state.

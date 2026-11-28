@@ -40,7 +40,9 @@ bound to `aws-test`. Both personal targets support `plan`, `create`, `deploy`, `
 
 ### Use local state for a fresh AWS environment
 
-In a dedicated checkout, copy the native backend override for the selected root.
+New dev/test inventories and both Terraform roots default to local state.
+With the CLI, keep the generated backend settings and go directly to preflight.
+For direct Terraform use the following initialization to share the CLI state.
 Keep a distinct, durable state file per environment. Use the same absolute path
 for direct Terraform commands and for the inventory. The CLI also accepts a
 path relative to the inventory file.
@@ -50,11 +52,10 @@ root=infra/terraform/aws/environments/dev
 state_dir="$HOME/.local/state/startup-devops-baseline/aws-dev"
 umask 077
 mkdir -p "$state_dir"
-cp -n "$root/local_override.tf.example" "$root/local_override.tf"
 terraform -chdir="$root" init -backend-config="path=$state_dir/terraform.tfstate"
 ```
 
-Replace the selected inventory entry's entire `terraform.backend` mapping:
+The generated dev entry uses this `terraform.backend` mapping:
 
 ```yaml
 backend:
@@ -62,8 +63,7 @@ backend:
   path: ~/.local/state/startup-devops-baseline/aws-dev/terraform.tfstate
 ```
 
-Use the test root and a separate path for test. For a new S3 deployment use a
-checkout without the local override. To move an existing deployment, use
+Use the test root and a separate state path for test. To move an existing deployment, use
 Terraform's explicit state migration with its original initialized working directory.
 
 ### Deploy the stack after a direct Terraform apply
@@ -96,13 +96,28 @@ cluster, AWS identity, VPC, endpoint, hostname and GitOps profile, and writes a
 dedicated kubeconfig. It can rerun against the same live cluster. The CLI's
 `up` and `deploy` use the same cluster deployment function.
 
-### Select the state address
+### Select S3 state
 
-Both environment roots declare S3 in the checked-in configuration. Set `terraform.backend.type: s3` and
+To select S3 for an environment, set `terraform.backend.type: s3` and
 `terraform.backend.config_file` to the private backend file. When updating a dev
 inventory, move the path from `terraform.backend_file` to `terraform.backend.config_file`.
 
-With the default personal inventory, `config_file: aws-dev.tfbackend` resolves
+The CLI activates the checked-in `s3_override.tf.example` in a private execution directory
+and passes the backend file unchanged to Terraform. Keep an existing S3 inventory and
+its original bucket/key when upgrading. For direct Terraform use a dedicated checkout:
+
+```bash
+root=infra/terraform/aws/environments/dev
+cp "$root/s3_override.tf.example" "$root/s3_override.tf"
+terraform -chdir="$root" init -backend-config="$HOME/.config/startup-devops-baseline/aws-dev.tfbackend"
+```
+
+For a fresh environment, use an existing bucket and unused key. To move existing local resources,
+initialize the original local path first, then enable the override and run native
+`terraform init -migrate-state` with the destination backend file in the same checkout.
+Changing inventory alone selects an address. Keep a private backup and verify the migrated lineage.
+
+With the default inventory location, `config_file: aws-dev.tfbackend` resolves
 to `~/.config/startup-devops-baseline/aws-dev.tfbackend`. From the repository
 root, prepare a first private copy with the following commands. The copy skips
 an existing destination.
@@ -155,7 +170,7 @@ Terraform errors stop the operation. When provisioning against an absent state
 or a snapshot with zero managed resources, the CLI checks AWS for a conflicting
 EKS cluster and VPC before continuing. An existing snapshot retains its lineage.
 
-A previous state under the operator's external state directory can stay there.
+For an empty S3 destination the CLI checks the standard local state path for an existing deployment. If you used a custom local path, explicitly check that file and migrate it before switching.
 If a retired `terraform.tfstate` exists directly in the test Terraform root,
 move that specific file to a private location outside the checkout before the
 first S3 plan. Confirm its resources are retired first. The CLI uses a temporary
@@ -293,7 +308,7 @@ Existing personal files may be used directly.
 | Input | Preparation for aws-dev |
 | --- | --- |
 | Inventory | Select the real 12-digit account, region, operator profile or role, and `infra/terraform/aws/environments/dev`. The operator identity and the Actions runtime role serve different purposes. |
-| Private backend file | Use the selected environment from the retained state-bootstrap output `backend_configuration`. Set `allowed_account_ids` to the expected account in the matching S3 template. For SSE-S3 omit `kms_key_id`; for SSE-KMS keep the key ARN. Check the bucket, region, encryption, native lockfile and environment key. |
+| Private backend file (S3 only) | Use the selected environment from the retained state-bootstrap output `backend_configuration`. Set `allowed_account_ids` to the expected account in the matching S3 template. For SSE-S3 omit `kms_key_id`; for SSE-KMS keep the key ARN. Check the bucket, region, encryption, native lockfile and environment key. |
 | Private tfvars | Start from `infra/terraform/aws/environments/dev/terraform.tfvars.example`. Review project, region, DNS and endpoint settings. For a public endpoint supply restricted IPv4 CIDRs through the private file. For a private endpoint confirm the operator and runner have a network path in 4B. |
 | Runtime identity | Use the retained runtime-identities output `aws_dev_runtime_role_arn` for `github_actions_runtime_role_arn`. Set `enable_github_actions_runtime_identity = true` in the intended environment file when preparing runtime access. This makes the future environment plan include the EKS access entry. |
 | Capacity and retention | Review the reported min/desired/max, NAT and backup settings before any plan. The dev root has a tracked `observability-capacity.auto.tfvars` at 4/4/4. Passing the unedited example as the explicit var-file sets 2/2/3. Check that the chosen capacity fits the platform. |
@@ -316,7 +331,7 @@ resources. Keep login credentials, secret contents, state and kubeconfig outside
 
 | Stage | Evidence to obtain in 4B/4C |
 | --- | --- |
-| Select or provision dev | Confirm the operator's actual account and region and the state bucket/key before using Terraform. Reconcile existing state and cluster ownership first. For a new cluster, review the environment plan and expected charges before apply. Retain state-bootstrap and runtime-identities separately. |
+| Select or provision dev | Confirm the operator's actual account and region and the local state path or S3 bucket/key before using Terraform. Reconcile existing state and cluster ownership first. For a new cluster, review the environment plan and expected charges before apply. Retain state-bootstrap and runtime-identities separately. |
 | Bootstrap | From the selected environment outputs match the real cluster name, VPC ID, AWS Load Balancer Controller and Karpenter IRSA roles. Bind the kube-system service accounts, install the reviewed Argo CD version, seed the ALB child with its VPC ID, then apply the selected root. Verify child sync, TLS/DNS and ingress reachability. |
 | Verify dev | Register the matching trusted runner and GitHub Environment. Set AWS_REGION, DELIVERY_CLUSTER_NAME and AWS_RUNTIME_ROLE_ARN for that environment. Confirm the actual OIDC subject, EKS access entry and permissions for the reported Kubernetes group. Run the manual dev verification with test proposal disabled and check the observed release and metrics. |
 | Promote to test | Prepare test's own inputs and cluster after dev passes. Keep dev available for reverification. Follow the reviewed promotion PR and verify the same digest on test. |
@@ -325,7 +340,7 @@ resources. Keep login credentials, secret contents, state and kubeconfig outside
 ## Rebuild personal AWS dev from the inventory
 
 Start in the repository root on the operator workstation. Use the existing dev
-S3 backend and persistent runtime role listed in the inventory. The CLI initializes
+backend and persistent runtime role listed in the inventory. The CLI initializes
 the dev Terraform root automatically. The selected profile or role needs the
 same provisioning permissions as a direct Terraform apply. The following preview
 takes a backend lock during planning and prints Terraform's proposed changes.
@@ -362,7 +377,7 @@ with `deploy`. The standard demo credential adoption option also works with
 ## Deploy or resume the standard stack on provisioned dev
 
 Run from the repository on the workstation with the personal inventory, AWS CLI,
-Terraform and kubectl. This uses the dev S3 backend and default workspace. The
+Terraform and kubectl. This uses the selected dev backend and default workspace. The
 operator profile needs access to EKS, Terraform outputs, Secrets Manager and the
 demo Route 53 zone. If role_arn is configured, select credentials for that role.
 Use the usual preflight Python environment.
@@ -415,7 +430,7 @@ checks its own fresh plan before the first cluster mutation.
 .venv/bin/python scripts/ops/cli.py destroy --env aws-dev --config ~/.config/startup-devops-baseline/environments.yaml --confirm startup-devops-baseline-dev
 ```
 
-For test, preview the selected S3 state and check the account, cluster, VPC and retained addresses
+For test, preview the selected state and check the account, cluster, VPC and retained addresses
 before confirming with the physical cluster name printed by the CLI.
 
 ```bash

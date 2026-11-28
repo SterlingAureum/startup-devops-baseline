@@ -27,6 +27,8 @@ def initialize_backend(run, terraform, tfenv, root, backend, base):
     if backend["type"] == "s3" and ((root / "terraform.tfstate").exists() or
                                     any((root / "terraform.tfstate.d").glob("*/terraform.tfstate"))):
         raise OpsError(f"Local state exists in {root}. Review it before initializing S3")
+    if backend["type"] == "local":
+        backend_path(backend, base).parent.mkdir(mode=0o700, parents=True, exist_ok=True)
     run(terraform + ["init", "-input=false", "-reconfigure", init_argument(backend, base)], tfenv)
 
 
@@ -136,6 +138,12 @@ def check_selected_state(g, report, operation, *, pull=None):
     else:
         raw = pull()
         result = snapshot(raw, *target, pulled=True) if raw != "" else {"status": "absent"}
+    if not local and not result.get("managed_instances"):
+        previous = Path.home() / ".local/state/startup-devops-baseline" / ("aws-" + report["stage"]) / "terraform.tfstate"
+        prior = local_snapshot(previous, *target)
+        if prior.get("managed_instances") and prior["lineage"] != result.get("lineage"):
+            raise OpsError(f"Empty S3 destination with managed local state at {previous}. "
+                           "Migrate the existing state explicitly before provisioning.")
     print("Terraform state:", json.dumps(result), flush=True)
     mode = report.get("database_mode", "cnpg")
     if operation != "destroy" and mode == "none" and result.get("database_mode") == "cnpg":

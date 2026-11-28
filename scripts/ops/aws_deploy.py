@@ -16,7 +16,7 @@ import yaml
 from aws_retention import live_database_storage
 from aws_database import database_variables
 from aws_cnpg import wait_for_cnpg
-from aws_preflight import inspect, kustomize, local_file
+from aws_preflight import execution_root, inspect, kustomize, local_file
 from aws_state import check_selected_state, initialize_backend, lifecycle_directory
 from aws_standard_demo import complete, seed_database, refresh_consumers, reconcile_dns
 from aws_provision import provision
@@ -286,7 +286,8 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
             print(f"Initializing {source.relative_to(ROOT)} for {g.context} (default workspace)", flush=True)
             # Use the same variable sources that personal preflight inspected.
             tfenv = {k: v for k, v in tfenv.items() if not k.startswith("TF_VAR_")}
-        terraform = ["terraform", "-chdir=" + str(source)]
+        actual = execution_root(source, tf["backend"], tmp)
+        terraform = ["terraform", "-chdir=" + str(actual)]
         initialize_backend(run, terraform, tfenv, source, tf["backend"], base)
         summary = check_selected_state(g, report, operation,
                                        pull=lambda: run(terraform + ["state", "pull"], tfenv))

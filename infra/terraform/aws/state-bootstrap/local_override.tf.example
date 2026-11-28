@@ -1,0 +1,7 @@
+terraform {
+  backend "local" {}
+}
+
+variable "state_encryption" {
+  default = "sse-s3"
+}

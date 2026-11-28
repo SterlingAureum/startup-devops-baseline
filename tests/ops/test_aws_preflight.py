@@ -26,12 +26,12 @@ class AwsPreflightTests(unittest.TestCase):
             template = ROOT / f"infra/terraform/aws/backend-config/{stage}.s3.tfbackend.example"
             backend = dict(aws.read_inputs(template), bucket="fixture-only", allowed_account_ids=[account])
             self.assertNotIn("kms_key_id", backend)
-            aws.check_backend(backend, stage, inventory, True)
-            aws.check_backend(dict(backend, kms_key_id=arn), stage, inventory, True)
+            aws.check_backend(backend, inventory, True)
+            aws.check_backend(dict(backend, kms_key_id=arn), inventory, True)
             for invalid in ("", None, "replace-with-kms-key-arn", arn.replace(account, "999999999999"),
                             arn.replace("us-east-1", "us-west-2")):
                 with self.subTest(stage=stage, invalid=invalid), self.assertRaises(configuration.OpsError):
-                    aws.check_backend(dict(backend, kms_key_id=invalid), stage, inventory, True)
+                    aws.check_backend(dict(backend, kms_key_id=invalid), inventory, True)
 
     def test_personal_inputs_and_wrong_target_from_cli(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -77,7 +77,7 @@ class AwsPreflightTests(unittest.TestCase):
                     self.assertIn(policy, error.getvalue())
                     self.assertIn("Terraform expects", error.getvalue())
                     self.assertIn("renders", error.getvalue())
-            backend.write_text(backend.read_text().replace("environments/dev/", "environments/test/"))
+            backend.write_text(backend.read_text().replace("environments/dev/terraform.tfstate", ""))
             with redirect_stderr(io.StringIO()) as error:
                 self.assertEqual(cli.main(command), 1)
                 self.assertIn("backend key", error.getvalue())

@@ -59,13 +59,14 @@ If you selected another inventory or configured another path, use the destinatio
 reported by `show --config FILE --env NAME` under `paths.backend_config_file`.
 Set the actual bucket, bucket region and allowed account ID, and check the state key.
 For an existing SSE-S3 bucket, leave `kms_key_id` omitted. For an SSE-KMS backend,
-set it to the existing key ARN. The project's `state-bootstrap` provisions a KMS-backed
-bucket and returns the ARN in `backend_configuration`; keep that value when using its bucket. After preparing
+set it to the existing key ARN. For a new bucket, follow the [state-bootstrap instructions](../../infra/terraform/aws/state-bootstrap/README.md).
+Use the configured key ARN whenever its backend output includes one. After preparing
 the personal tfvars, run `preflight --env aws-dev --check-inputs` to validate
 both files locally.
 
-For a fresh test deployment, use the existing state bucket and the dedicated
-key `environments/test/terraform.tfstate`. Set the backend in the **test** entry
+For a fresh test deployment, select a distinct state object. The example uses
+`environments/test/terraform.tfstate`. The CLI reads the actual bucket and key from
+your private backend file. For an existing deployment, use its original address. Set the backend in the **test** entry
 of your private inventory. Replace the former local backend block in full.
 
 ```yaml
@@ -75,8 +76,7 @@ backend:
 ```
 
 Prepare the private backend file beside the inventory. Fill in the bucket,
-bucket region and allowed account. For SSE-KMS, set the key ARN as for dev. Keep the
-test key, encryption and native locking from the template.
+bucket region and allowed account. For SSE-KMS, set the key ARN as for dev. Keep encryption and native locking enabled.
 
 ```bash
 inventory="$HOME/.config/startup-devops-baseline/environments.yaml"

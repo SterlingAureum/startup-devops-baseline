@@ -44,3 +44,43 @@ variable "additional_tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "state_encryption" {
+  description = "New installations select sse-s3 in terraform.tfvars.example. Omitted values preserve the managed key on existing installations."
+  type        = string
+  default     = "managed-kms"
+
+  validation {
+    condition     = contains(["sse-s3", "managed-kms", "existing-kms"], var.state_encryption)
+    error_message = "Choose sse-s3, managed-kms or existing-kms."
+  }
+}
+
+variable "existing_kms_key_arn" {
+  description = "ARN of the existing KMS key when using existing-kms."
+  type        = string
+  default     = null
+
+  validation {
+    condition = var.state_encryption == "existing-kms" ? can(regex(
+      "^arn:[^:]+:kms:${var.aws_region}:[0-9]{12}:key/[A-Za-z0-9-]+$", var.existing_kms_key_arn
+    )) : var.existing_kms_key_arn == null
+    error_message = "Set a regional KMS key ARN only for existing-kms."
+  }
+}
+
+variable "state_key_overrides" {
+  description = "Optional object paths for the five roots. Used in both IAM policies and backend outputs."
+  type        = map(string)
+  default     = {}
+
+  validation {
+    condition = alltrue([
+      for root, key in var.state_key_overrides :
+      contains(["bootstrap", "runtime-identities", "dev", "test", "prod"], root) &&
+      try(length(trimspace(key)) > 0 && !startswith(key, "/") && !endswith(key, "/") &&
+      !can(regex("[*?]|\\$\\{", key)), false)
+    ])
+    error_message = "Use known root names and literal object paths without a leading or trailing slash, IAM wildcards or policy variables."
+  }
+}

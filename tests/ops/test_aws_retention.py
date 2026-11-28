@@ -41,16 +41,16 @@ class RetentionTests(unittest.TestCase):
             if migrated:
                 for r in self.resources:
                     a = ".".join((r["module"], r["type"], r["name"]))
-                    r["module"] = db.DEV_MOVES[a].rsplit(".", 2)[0]
+                    r["module"] = db.DATABASE_MOVES[a].rsplit(".", 2)[0]
             targets, keep = destroy.partition(state)
             self.g.aws.side_effect = [self.missing, json.dumps(self.secret)] * 2
             with redirect_stdout(io.StringIO()) as output:
                 missing = retention.report_storage(self.g, self.aws, state, targets, keep, None, False)
-                result = retention.live_dev_storage(self.g, self.aws, self.summary)
+                result = retention.live_database_storage(self.g, self.aws, self.summary)
             self.assertEqual({db.original(a) for a in missing}, db.DURABLE - {db.SECRET})
             self.assertEqual(result["database_storage"], [db.SECRET])
-            self.assertIn("-var=retained_database_bucket=false", db.dev_variables("dev", "none", result))
-            self.assertIn("-var=retained_database_secret=true", db.dev_variables("dev", "none", result))
+            self.assertIn("-var=retained_database_bucket=false", db.database_variables("none", result))
+            self.assertIn("-var=retained_database_secret=true", db.database_variables("none", result))
             self.assertIn("Stale state addresses: 7", output.getvalue())
             self.assertIn(self.name + " (creation marker missing in state)", output.getvalue())
 
@@ -59,15 +59,15 @@ class RetentionTests(unittest.TestCase):
         self.assertEqual(retention.observe(self.g, db.BUCKET, self.account, self.region).status, "present")
         self.g.aws.side_effect = OpsError("(AccessDenied) when calling the GetBucketTagging operation")
         with self.assertRaisesRegex(OpsError, "AccessDenied"):
-            retention.live_dev_storage(self.g, self.aws, self.summary)
+            retention.live_database_storage(self.g, self.aws, self.summary)
         self.g.aws.side_effect = [self.missing, json.dumps(dict(self.secret, DeletedDate="2026-12-01"))]
         with self.assertRaisesRegex(OpsError, "scheduled for deletion"):
-            retention.live_dev_storage(self.g, self.aws, self.summary)
+            retention.live_database_storage(self.g, self.aws, self.summary)
         replacement = self.secret.copy()
         replacement["ARN"] = self.arn.removesuffix("abcdef") + "uvwxyz"
         self.g.aws.side_effect = [self.missing, json.dumps(replacement)]
         with self.assertRaisesRegex(OpsError, "identity differs"):
-            retention.live_dev_storage(self.g, self.aws, self.summary)
+            retention.live_database_storage(self.g, self.aws, self.summary)
         self.g.aws.reset_mock()
         with self.assertRaisesRegex(OpsError, "identity differs"):
             retention.observe(self.g, db.SECRET, self.account, self.region, expected_arn=self.arn.replace(self.region, "us-west-2"))
@@ -113,7 +113,7 @@ class RetentionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             def refresh(confirm):
                 destroy.refresh_missing(tf, ["terraform"], {}, tmp, {"variables_file": "dev.tfvars"},
-                                        Path(tmp), "dev", "cnpg", missing, db.DURABLE, confirm, self.g.context, ("dev", 85))
+                                        Path(tmp), "cnpg", missing, db.DURABLE, confirm, self.g.context, ("dev", 85))
             tf = Mock(side_effect=["", json.dumps(plan), '{"lineage":"dev","serial":85}', json.dumps(state)])
             with patch.object(destroy.subprocess, "run") as apply:
                 refresh(None)

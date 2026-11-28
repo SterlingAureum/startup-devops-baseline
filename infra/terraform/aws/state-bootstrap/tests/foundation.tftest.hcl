@@ -17,7 +17,6 @@ variables {
 run "fresh_sse_s3" {
   command = plan
   variables {
-    state_encryption    = "sse-s3"
     state_key_overrides = { dev = "team-a/dev/state" }
   }
   assert {
@@ -47,8 +46,11 @@ run "existing_key" {
   }
 }
 
-run "old_tfvars" {
+run "managed_key" {
   command = plan
+  variables {
+    state_encryption = "managed-kms"
+  }
   assert {
     condition = (
       length(aws_kms_key.state) == 1 && length(aws_kms_alias.state) == 1 &&

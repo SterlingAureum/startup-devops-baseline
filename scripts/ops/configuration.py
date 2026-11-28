@@ -166,8 +166,7 @@ def standard_aws_target(name, env, catalog, manifest):
     if root.parent == ROOT / "infra/terraform/aws/environments" and root.name in ("dev", "test"):
         expected = f"clusters/aws/overlays/{root.name}/root-app.yaml"
         if env.get("database", {}).get("mode") == "none":
-            require(root.name == "dev", "The database-free profile currently supports AWS dev")
-            expected = "clusters/aws/profiles/dev-no-database/root-app.yaml"
+            expected = f"clusters/aws/profiles/{root.name}-no-database/root-app.yaml"
         require(manifest == expected,
                 f"Delivery environment {env['delivery_environment']!r} must select {expected} for Terraform root {root}")
         return AwsTarget(name, root.name, root, env["delivery_environment"], manifest, catalog)
@@ -213,4 +212,6 @@ def environment(path, name, *, for_destroy=False):
         env.pop("argocd", None)
     else:
         env["argocd"] = argocd_bootstrap(env.get("argocd", {}))
+    if not for_destroy and env.get("driver") == "aws" and env.get("delivery_environment") in ("aws-dev", "aws-test"):
+        env.setdefault("database", {"mode": "none"})
     return validate_environment(env)

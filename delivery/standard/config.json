@@ -82,7 +82,8 @@
       "cluster_paths": [
         "clusters/aws/base/",
         "clusters/aws/overlays/dev/",
-        "clusters/aws/profiles/dev-no-database/"
+        "clusters/aws/profiles/dev-no-database/",
+        "clusters/aws/profiles/dev-prepare-database/"
       ],
       "root_manifest": "clusters/aws/overlays/dev/root-app.yaml",
       "runtime_stage": "dev",
@@ -99,10 +100,15 @@
       "url": "https://demo.test.aureumstack.com",
       "cluster_paths": [
         "clusters/aws/base/",
-        "clusters/aws/overlays/test/"
+        "clusters/aws/overlays/test/",
+        "clusters/aws/profiles/test-no-database/",
+        "clusters/aws/profiles/test-prepare-database/"
       ],
       "root_manifest": "clusters/aws/overlays/test/root-app.yaml",
-      "runtime_stage": "test"
+      "runtime_stage": "test",
+      "database_profiles": {
+        "none": "clusters/aws/profiles/test-no-database/root-app.yaml"
+      }
     },
     "aws-prod": {
       "values": [

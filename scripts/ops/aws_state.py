@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import re
 
-from aws_database import BUCKET, SECRET, DURABLE, DEV_MOVES, original
+from aws_database import BUCKET, SECRET, DURABLE, DATABASE_MOVES, original
 from configuration import ROOT, OpsError, require
 
 
@@ -65,8 +65,8 @@ def snapshot(raw, stage, cluster, account, region, *, pulled=False):
                         "State VPC owner or name differs from the selected target")
     result = {"status": "existing", "lineage": state["lineage"], "serial": state["serial"], "managed_instances": count}
     profile = outputs.get("database_mode", {}).get("value")
-    if stage == "dev" and count:
-        bucket = f"{cluster}-{account}-{region}-cnpg"
+    if stage in ("dev", "test") and count:
+        bucket = f"{cluster}-{account}-{region}-cnpg".lower()
         storage = set()
         runtime = False
         cluster_mode = None
@@ -75,7 +75,7 @@ def snapshot(raw, stage, cluster, account, region, *, pulled=False):
                 continue
             raw = ".".join((resource.get("module", ""), resource["type"], resource.get("name", "")))
             addr = original(raw)
-            if raw in DEV_MOVES and resource["instances"]:
+            if raw in DATABASE_MOVES and resource["instances"]:
                 result["legacy_database_addresses"] = True
             for instance in resource["instances"]:
                 attrs = instance["attributes"]
@@ -85,15 +85,15 @@ def snapshot(raw, stage, cluster, account, region, *, pulled=False):
                     storage.add(addr)
                     if addr == BUCKET:
                         require(attrs.get("id") == bucket,
-                                "Retained database bucket differs from the selected dev target")
+                                "Retained database bucket differs from the selected target")
                     elif addr != SECRET:
                         require(attrs.get("bucket") == bucket, "Retained bucket configuration belongs to another bucket")
                     else:
                         require(attrs.get("name") == cluster + "/demo-api/postgresql" and
                                 (attrs.get("arn") or "").startswith(f"arn:aws:secretsmanager:{region}:{account}:secret:"),
-                                "Retained database secret differs from the selected dev target")
+                                "Retained database secret differs from the selected target")
                         result["database_secret_arn"] = attrs["arn"]
-                elif addr in DEV_MOVES:
+                elif addr in DATABASE_MOVES:
                     runtime = True
                 if resource["type"] == "aws_eks_cluster":
                     tags = attrs.get("tags") or {}

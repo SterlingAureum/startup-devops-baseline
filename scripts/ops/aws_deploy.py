@@ -13,8 +13,8 @@ import time
 
 import yaml
 
-from aws_retention import live_dev_storage
-from aws_database import dev_variables
+from aws_retention import live_database_storage
+from aws_database import database_variables
 from aws_cnpg import wait_for_cnpg
 from aws_preflight import inspect, kustomize, local_file
 from aws_state import check_selected_state, initialize_backend, lifecycle_directory
@@ -157,26 +157,26 @@ def check_deploy_target(g, root, children):
             source = app["spec"]["source"]
             desired = root["spec"]["source"]
             if source.get("path") != desired["path"]:
-                adding_database = (desired["path"] == "clusters/aws/overlays/dev"
-                                   and source.get("path") in ("clusters/aws/profiles/dev-no-database", DB_PREPARE)
+                stage = Path(desired["path"]).name
+                adding_database = (stage in ("dev", "test") and desired["path"] == f"clusters/aws/overlays/{stage}"
+                                   and source.get("path") in (f"clusters/aws/profiles/{stage}-no-database",
+                                                              f"clusters/aws/profiles/{stage}-prepare-database")
                                    and source.get("repoURL") == desired["repoURL"]
                                    and source.get("targetRevision") == desired["targetRevision"]
                                    and app["spec"].get("destination") == root["spec"]["destination"]
                                    and app["spec"].get("project") == root["spec"]["project"])
-                require(adding_database, "Unexpected live root Application. Only the dev database addition is supported.")
+                require(adding_database, "Unexpected live root Application. Only an in-place database addition is supported.")
     require(not deleting, "Deploy blocked by deletion in progress: " + ", ".join(deleting) +
             ". Finish cleanup before redeploying.")
     return adding_database
-
-
-DB_PREPARE = "clusters/aws/profiles/dev-prepare-database"
 
 
 def enable_database(g, root, children, out, manifest, adopt):
     # Argo can reconcile this intermediate root across CLI restarts while the app
     # keeps its database-free configuration. The same path resumes this phase.
     staged = deepcopy(root)
-    staged["spec"]["source"]["path"] = DB_PREPARE
+    stage = Path(root["spec"]["source"]["path"]).name
+    staged["spec"]["source"]["path"] = f"clusters/aws/profiles/{stage}-prepare-database"
     names = gitops(g, staged, children, out, manifest)
     # ESO already runs in database-free dev. Recreate its Pods so IRSA admission
     # picks up the role added by prepare() before the consumer begins syncing.
@@ -246,25 +246,30 @@ def check_apps(g, names):
     g.until("expected Applications to be Synced and Healthy", converged)
 
 
-def deploy(selected, env, config, adopt=None, *, operation="deploy", confirm=None):
-    report = inspect(selected, env, config, personal=True)
-    require(operation in ("plan", "create", "up", "deploy"), "Unknown AWS provisioning operation")
-    require(confirm is None or (operation in ("up", "create") and confirm == report["cluster"]),
-            "Provisioning requires --confirm " + report["cluster"])
-    require(not adopt or report.get("database_mode") != "none", "Demo credential adoption requires CNPG")
+def operator_cluster(env, name):
     aws = env["aws"]
     settings = dict(os.environ, AWS_REGION=aws["region"], AWS_DEFAULT_REGION=aws["region"], AWS_PAGER="")
     if aws.get("profile"):
         settings["AWS_PROFILE"] = aws["profile"]
-    path = aws_private_path(aws["expected_account_id"], aws["region"], report["cluster"])
-    g = Cluster(report["cluster"], settings, env.get("timeout", 1800), path)
+    path = aws_private_path(aws["expected_account_id"], aws["region"], name)
+    g = Cluster(name, settings, env.get("timeout", 1800), path)
     caller = json.loads(g.aws("sts", "get-caller-identity"))
     require(caller["Account"] == aws["expected_account_id"], "AWS caller account differs from inventory")
     if aws.get("role_arn"):
         name = aws["role_arn"].rsplit("/", 1)[-1]
         require(caller["Arn"].startswith(f"arn:aws:sts::{caller['Account']}:assumed-role/{name}/"),
                 "Select operator credentials for the configured role")
-    with lifecycle_lock(caller["Account"], aws["region"], g.context) as folder:
+    return g
+
+
+def deploy(selected, env, config, adopt=None, *, operation="deploy", confirm=None):
+    report = inspect(selected, env, config, personal=True)
+    require(operation in ("plan", "create", "up", "deploy"), "Unknown AWS provisioning operation")
+    require(confirm is None or (operation in ("up", "create") and confirm == report["cluster"]),
+            "Provisioning requires --confirm " + report["cluster"])
+    require(not adopt or report.get("database_mode") != "none", "Demo credential adoption requires CNPG")
+    g = operator_cluster(env, report["cluster"])
+    with lifecycle_lock(env["aws"]["expected_account_id"], env["aws"]["region"], g.context) as folder:
         deploy_stack(g, report, env, config, folder, adopt, operation=operation, confirm=confirm)
 
 
@@ -285,57 +290,57 @@ def deploy_stack(g, report, env, config, folder, adopt=None, *, operation="deplo
         initialize_backend(run, terraform, tfenv, source, tf["backend"], base)
         summary = check_selected_state(g, report, operation,
                                        pull=lambda: run(terraform + ["state", "pull"], tfenv))
-        if (operation != "deploy" and report["stage"] == "dev" and report.get("database_mode") == "none"
+        if (operation != "deploy" and report.get("database_mode") == "none"
                 and summary.get("database_storage")):
-            summary = live_dev_storage(g, report, summary)
+            summary = live_database_storage(g, report, summary)
         if operation != "deploy":
             variables = local_file(tf["variables_file"], base)
             provision(g, terraform, tfenv, variables, Path(tmp) / "create.tfplan", folder, confirm,
-                      implicit=dev_variables(report["stage"], report.get("database_mode", "cnpg"), summary),
-                      adding_database=report["stage"] == "dev" and summary.get("cluster_database_mode") == "none"
+                      implicit=database_variables(report.get("database_mode", "cnpg"), summary),
+                      adding_database=summary.get("cluster_database_mode") == "none"
                       and report.get("database_mode", "cnpg") == "cnpg")
             if confirm is None:
                 return
         outputs = json.loads(run(terraform + ["output", "-json"], tfenv, private=True))
         out = {key: value["value"] for key, value in outputs.items()}
-        require(out.get("database_mode", "cnpg") == report.get("database_mode", "cnpg"),
-                "Selected database mode differs from applied Terraform state. Run plan then up before deploying a new capability.")
-        require(out.get("eks_cluster_name"), "Infrastructure is absent from outputs; run plan then create for the selected inventory entry")
-        require(out.get("environment_name") == report["stage"] and out["eks_cluster_name"] == g.context,
-                "Terraform output cluster differs from inventory")
-        try:
-            live = json.loads(g.aws("eks", "describe-cluster", "--name", g.context))["cluster"]
-        except OpsError as error:
-            if "(ResourceNotFoundException)" in str(error):
-                raise OpsError(f"EKS cluster {g.context} is absent; use plan then create for the selected inventory entry") from error
-            raise
-        require(live["status"] == "ACTIVE" and live["endpoint"] == out["eks_cluster_endpoint"]
-                and live["resourcesVpcConfig"]["vpcId"] == out["vpc_id"], "Live EKS differs from Terraform")
-        raw = run(["aws", "eks", "update-kubeconfig", "--dry-run", "--alias", g.context,
-                   "--name", g.context, "--kubeconfig", tmp + "/config"], settings)
-        kube = yaml.safe_load(raw)
-        require(kube["current-context"] == g.context and kube["clusters"][0]["cluster"]["server"] == live["endpoint"],
-                "Generated kubeconfig differs from EKS")
-        atomic_write(g.path, raw)
-        print(f"Dedicated kubeconfig: {g.path}", flush=True)
-        if operation == "create":
-            print(kubectl_hint(g.path, g.context), flush=True)
-            return
-        root = load_yaml((ROOT / report["gitops_root"]).read_text())
-        children = {doc["metadata"]["name"]: doc for doc in kustomize(root["spec"]["source"]["path"])
-                    if doc and doc["kind"] == "Application"}
-        adding_database = check_deploy_target(g, root, children)
-        # A successful redeploy can change data on the same EBS volume IDs.
-        # Invalidate the previous cleanup checkpoint before the first cluster write.
-        # Read only the lineage from the private state payload.
-        if any(folder.glob("*.json")):
-            state = json.loads(run(terraform + ["state", "pull"], tfenv, private=True))
-            receipt = folder / (state["lineage"] + ".json")
-            if receipt.exists():
-                journal = json.loads(receipt.read_text())
-                if journal.get("vpc") == out["vpc_id"] and journal.get("endpoint") == live["endpoint"]:
-                    reopen_receipt(journal)
-                    atomic_write(receipt, json.dumps(journal, indent=2))
+        apply_outputs(g, report, env, out, folder, Path(tmp), adopt, operation=operation)
+
+
+def apply_outputs(g, report, env, out, folder, tmp, adopt, *, operation="deploy"):
+    require(out.get("database_mode", "cnpg") == report.get("database_mode", "cnpg"),
+            "Selected database mode differs from applied Terraform state. Run plan then up before deploying a new capability.")
+    require(out.get("eks_cluster_name"), "Infrastructure is absent from outputs; run plan then create for the selected inventory entry")
+    require(out.get("environment_name") == report["stage"] and out["eks_cluster_name"] == g.context,
+            "Terraform output cluster differs from inventory")
+    try:
+        live = json.loads(g.aws("eks", "describe-cluster", "--name", g.context))["cluster"]
+    except OpsError as error:
+        if "(ResourceNotFoundException)" in str(error):
+            raise OpsError(f"EKS cluster {g.context} is absent; use plan then create for the selected inventory entry") from error
+        raise
+    require(live["status"] == "ACTIVE" and live["endpoint"] == out["eks_cluster_endpoint"]
+            and live["resourcesVpcConfig"]["vpcId"] == out["vpc_id"], "Live EKS differs from Terraform")
+    raw = run(["aws", "eks", "update-kubeconfig", "--dry-run", "--alias", g.context,
+               "--name", g.context, "--kubeconfig", str(tmp / "config")], g.env)
+    kube = yaml.safe_load(raw)
+    require(kube["current-context"] == g.context and kube["clusters"][0]["cluster"]["server"] == live["endpoint"],
+            "Generated kubeconfig differs from EKS")
+    atomic_write(g.path, raw)
+    print(f"Dedicated kubeconfig: {g.path}", flush=True)
+    if operation == "create":
+        print(kubectl_hint(g.path, g.context), flush=True)
+        return
+    root = load_yaml((ROOT / report["gitops_root"]).read_text())
+    children = {doc["metadata"]["name"]: doc for doc in kustomize(root["spec"]["source"]["path"])
+                if doc and doc["kind"] == "Application"}
+    adding_database = check_deploy_target(g, root, children)
+    # A successful redeploy can change data on the same EBS volume IDs.
+    # Invalidate the previous cleanup checkpoint before the first cluster write.
+    for receipt in folder.glob("*.json"):
+        journal = json.loads(receipt.read_text())
+        if journal.get("vpc") == out["vpc_id"] and journal.get("endpoint") == live["endpoint"]:
+            reopen_receipt(journal)
+            atomic_write(receipt, json.dumps(journal, indent=2))
     g.k("get", "nodes")
     prepare(g, out)
     if adding_database:

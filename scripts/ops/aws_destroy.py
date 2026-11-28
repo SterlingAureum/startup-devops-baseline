@@ -11,7 +11,7 @@ import time
 from aws_deploy import Cluster, lifecycle_lock, reopen_receipt, run
 from aws_dev_network import release_network
 from aws_preflight import inspect_infrastructure, local_file
-from aws_database import BUCKET, SECRET, DURABLE, DEV_MOVES, original, dev_variables
+from aws_database import BUCKET, SECRET, DURABLE, DATABASE_MOVES, original, database_variables
 from aws_retention import observe, report_storage
 from aws_state import check_selected_state, initialize_backend
 from configuration import ROOT, OpsError, require
@@ -58,12 +58,12 @@ def partition(state, owner=None, retain=False):
             continue
         module = r.get("module", "")
         require(module.startswith("module.") and (module.split(".")[1].split("[")[0] in MODULES or
-                ".".join([module, r["type"], r["name"]]) in DEV_MOVES.values()),
+                ".".join([module, r["type"], r["name"]]) in DATABASE_MOVES.values()),
                 "Unexpected managed resource outside the standard environment modules: " + module)
         if module.startswith("module.github_actions_runtime_identity"):
             require(r["type"] == "aws_eks_access_entry", "Review unexpected persistent identity in selected state")
         addr = ".".join([module, r["type"], r["name"]])
-        if module in ("module.cnpg_backup", "module.external_secrets") and addr not in DEV_MOVES:
+        if module in ("module.cnpg_backup", "module.external_secrets") and addr not in DATABASE_MOVES:
             require(not r["instances"], f"Review unexpected database resource before teardown: {addr}")
         retained = original(addr) in DURABLE
         for instance in r["instances"]:
@@ -368,7 +368,7 @@ def destroy(selected, env, config, confirm, retain=False):
                 expected_state=(summary["lineage"], summary["serial"]), initialized=True)
 
 
-def refresh_missing(terraform, tfcmd, tfenv, tmp, tf, base, stage, mode, missing, keep, confirm, context, state_id):
+def refresh_missing(terraform, tfcmd, tfenv, tmp, tf, base, mode, missing, keep, confirm, context, state_id):
     """Only persist refresh of the independently confirmed missing addresses."""
     print("Stale Terraform addresses (AWS absent):", *sorted(missing), sep="\n  ")
     if not confirm:
@@ -378,7 +378,7 @@ def refresh_missing(terraform, tfcmd, tfenv, tmp, tf, base, stage, mode, missing
     storage = sorted({original(a) for a in keep} & DURABLE)
     terraform("plan", "-refresh-only", "-input=false", "-lock-timeout=60s", "-out=" + plan,
               "-var-file=" + str(local_file(tf["variables_file"], base)),
-              *dev_variables(stage, mode, {"database_storage": storage}), *["-target=" + a for a in sorted(missing)])
+              *database_variables(mode, {"database_storage": storage}), *["-target=" + a for a in sorted(missing)])
     document = json.loads(terraform("show", "-json", plan))
     drift = {r["address"] for r in document.get("resource_drift", []) if r["mode"] == "managed"
              and r["change"]["actions"] == ["delete"]}
@@ -415,8 +415,8 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
         # Targeted destroy acts on addresses as recorded. Applying move declarations
         # here would require targeting retained storage as well. Use the same backend
         # and inputs with a temporary configuration that omits only those moves.
-        require(source.name == "dev", "Unexpected legacy database layout outside dev")
-        actual = Path(tmp) / "aws/environments/dev"
+        require(source.name in ("dev", "test"), "Unexpected legacy database layout")
+        actual = Path(tmp) / "aws/environments" / source.name
         actual.mkdir(parents=True)
         (actual.parents[1] / "modules").symlink_to(source.parents[1] / "modules", target_is_directory=True)
         for file in source.iterdir():
@@ -470,7 +470,7 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
         if receipt.is_file():
             print("Local teardown receipt:", receipt)
         if missing:
-            refresh_missing(terraform, tfcmd, tfenv, tmp, tf, base, source.name, database_mode,
+            refresh_missing(terraform, tfcmd, tfenv, tmp, tf, base, database_mode,
                             missing, keep, confirm, g.context, (state["lineage"], state["serial"]))
         return
     require(vpc and (out.get("eks_cluster_name") == g.context or journal.get("cleaned")),
@@ -510,7 +510,7 @@ def session(g, env, config, confirm, folder, tmp, retain=False, *, database_mode
     plan = tmp + "/destroy.tfplan"
 
     database_storage = sorted({original(a) for a in targets | keep} & DURABLE)
-    variables = dev_variables(source.name, database_mode, {"database_storage": database_storage})
+    variables = database_variables(database_mode, {"database_storage": database_storage})
     def review(addresses):
         terraform("plan", "-destroy", "-input=false", "-lock-timeout=60s", "-out=" + plan,
                   "-var-file=" + str(local_file(tf["variables_file"], base)), *variables,

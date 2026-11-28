@@ -47,10 +47,12 @@ the migration. Verify the resource list with `terraform -chdir="$root" state lis
 
 For an existing installation, reopen the original state with its existing
 backend settings and private tfvars. Existing remote installations keep their
-S3 backend declaration. Only the new-install example defaults to SSE-S3.
-An existing installation that omits `state_encryption` continues to use its
-managed KMS key. Terraform records address moves for the key and alias at index
-zero. Review the plan for moves without deletion or replacement.
+S3 backend declaration. The root defaults to SSE-S3. Before planning an upgrade
+of a foundation that created its own KMS key, set `state_encryption = "managed-kms"`
+in the original private tfvars. Keep `existing-kms` and the original ARN when
+using an external key. The managed key has `prevent_destroy`. An unexpected
+plan to remove it stops planning. Restore the original selection and review
+the plan for address moves without deletion or replacement.
 
 | state_encryption | Encryption and ownership |
 | --- | --- |

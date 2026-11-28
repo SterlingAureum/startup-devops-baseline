@@ -53,7 +53,7 @@ class StateTests(unittest.TestCase):
             kubeconfig = folder / "private" / "kubeconfig"
             endpoint = "https://eks.test.invalid"
             live = {"status": "ACTIVE", "endpoint": endpoint, "resourcesVpcConfig": {"vpcId": "vpc-test"}}
-            outputs = {"eks_cluster_name": TARGET[1], "environment_name": "test",
+            outputs = {"database_mode": "none", "eks_cluster_name": TARGET[1], "environment_name": "test",
                        "eks_cluster_endpoint": endpoint, "vpc_id": "vpc-test"}
             raw = json.dumps({"current-context": TARGET[1], "clusters": [{"cluster": {"server": endpoint}}]})
             def execute(argv, env, private=False):

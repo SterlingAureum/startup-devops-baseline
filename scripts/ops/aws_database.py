@@ -1,4 +1,4 @@
-"""Personal dev database resource addresses and compatibility with the original CNPG modules."""
+"""Personal AWS database resource addresses and compatibility with the original CNPG modules."""
 BUCKET = "module.cnpg_backup.aws_s3_bucket.this"
 SECRET = "module.external_secrets.aws_secretsmanager_secret.this"
 BUCKET_TYPES = {
@@ -8,21 +8,19 @@ BUCKET_TYPES = {
 }
 DURABLE = {"module.cnpg_backup." + kind + ".this" for kind in BUCKET_TYPES} | {SECRET}
 ACCESS_TYPES = {"aws_iam_role", "aws_iam_policy", "aws_iam_role_policy_attachment"}
-DEV_MOVES = {}
+DATABASE_MOVES = {}
 for module in ("cnpg_backup", "external_secrets"):
     for kind in ACCESS_TYPES | (BUCKET_TYPES if module == "cnpg_backup" else {"aws_secretsmanager_secret"}):
         part = "access" if kind in ACCESS_TYPES else "storage"
-        DEV_MOVES[f"module.{module}.{kind}.this"] = f"module.{module}_{part}[0].{kind}.this"
-ORIGINAL = {new: old for old, new in DEV_MOVES.items()}
+        DATABASE_MOVES[f"module.{module}.{kind}.this"] = f"module.{module}_{part}[0].{kind}.this"
+ORIGINAL = {new: old for old, new in DATABASE_MOVES.items()}
 
 
 def original(address):
     return ORIGINAL.get(address, address)
 
 
-def dev_variables(stage, mode, summary):
-    if stage != "dev":
-        return []
+def database_variables(mode, summary):
     storage = summary.get("database_storage", [])
     arguments = [f"-var=database_mode={mode}"]
     for address, name in ((BUCKET, "bucket"), (SECRET, "secret")):

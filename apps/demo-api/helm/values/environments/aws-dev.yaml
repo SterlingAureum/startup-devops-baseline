@@ -4,10 +4,33 @@ image:
   pullPolicy: IfNotPresent
 
 rollout:
-  enabled: false
+  enabled: true
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      stableService: demo-api-stable
+      canaryService: demo-api-canary
+      trafficRouting:
+        nginx:
+          enabled: false
+        alb:
+          enabled: true
+          ingress: demo-api
+          servicePort: 80
+      steps:
+        - setWeight: 20
+        - pause:
+            duration: 60s
+        - analysis:
+            templates:
+              - templateName: demo-api-canary-health
+        - setWeight: 50
+        - setWeight: 100
 
 analysis:
-  enabled: false
+  enabled: true
+  provider: web
 
 service:
   type: ClusterIP
